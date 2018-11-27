@@ -490,6 +490,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                         if ($d->{denoised_stitched_image}) {
                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{denoised_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{denoised_stitched_image_username}.'</br><b>Date</b>: '.$d->{denoised_stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{denoised_stitched_image}.'</div></div></div>';
 
+                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_add_georeference" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Add Georeferenced Points</button><br/><br/>';
+
                             if ($d->{vegetative_index_tgi_stitched_image}) {
                                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>TGI Vegetative Index Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{vegetative_index_tgi_image_id}.'"></span></h5><b>By</b>: '.$d->{vegetative_index_tgi_username}.'</br><b>Date</b>: '.$d->{vegetative_index_tgi_modified_date}.'</div><div class="col-sm-6">'.$d->{vegetative_index_tgi_stitched_image}.'</div></div></div>';
 
@@ -783,6 +785,30 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     }
     print STDERR Dumper \@plot_polygon_image_fullpaths;
     print STDERR Dumper \@plot_polygon_image_urls;
+
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
+    if ($previous_plot_polygons_rs->count > 1) {
+        die "There should not be more than one saved entry for plot polygons for a drone run band";
+    }
+
+    my $save_stock_polygons;
+    if ($previous_plot_polygons_rs->count > 0) {
+        $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
+    }
+    foreach my $stock_name (keys %$polygon_objs) {
+        $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
+    }
+
+    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$drone_run_band_plot_polygons_type_id,
+        project_id=>$drone_run_band_project_id,
+        rank=>0,
+        value=> encode_json($save_stock_polygons)
+    },
+    {
+        key=>'projectprop_c1'
+    });
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }

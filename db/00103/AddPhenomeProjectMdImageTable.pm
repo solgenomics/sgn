@@ -110,7 +110,8 @@ sub patch {
             'drone_run_band_background_removed_tgi_threshold',
             'drone_run_band_background_removed_vari_threshold',
             'drone_run_band_background_removed_ndvi_threshold',
-            'drone_run_band_background_removed_threshold'
+            'drone_run_band_background_removed_threshold',
+            'drone_run_band_plot_polygons'
         ],
         'project_relationship' => [
             'drone_run_on_field_trial',
