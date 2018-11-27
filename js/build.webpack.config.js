@@ -5,8 +5,7 @@ const UglifyWebpackPlugin = require("uglifyjs-webpack-plugin");
 
 const sourcePath = path.resolve(__dirname, "source");
 const entryPath = path.resolve(sourcePath, "entries");
-const testPath = path.resolve(__dirname, "tests");
-const legacyPath = path.resolve(__dirname, "legacy/");
+const legacyPath = path.resolve(__dirname, "legacy");
 
 module.exports = {
     mode: "production",
@@ -14,15 +13,8 @@ module.exports = {
     entry: (() => {
         var entries = {};
         glob.sync(path.resolve(entryPath, "**/*.js")).forEach(val => {
-            console.log(val);
             var prekey = val.replace(entryPath+"/","");
             var key = prekey.match(/(.*)\.js$/)[1];
-            entries[key] = val;
-        });
-        glob.sync(path.resolve(testPath, "**/*.js")).forEach(val => {
-            console.log(val);
-            var prekey = val.replace(testPath+"/","");
-            var key = "_tests/"+prekey.match(/(.*)\.js$/)[1];
             entries[key] = val;
         });
         return entries;
@@ -40,7 +32,6 @@ module.exports = {
             {
                 test: /\.js$/,
                 exclude: /(node_modules|bower_components)/,
-                include: sourcePath,
                 use: [{
                     loader: 'babel-loader',
                     options: {
@@ -95,5 +86,5 @@ module.exports = {
         }
     },
     devtool: "source-map",
-    plugins: [new filemap({'legacy_regex':"./webpack_util/dependency.regex"})],
+    plugins: [new filemap({'legacy_regex':"./webpack_util/dependency.regex"})]
 };
