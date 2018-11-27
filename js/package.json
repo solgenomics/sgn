@@ -4,8 +4,11 @@
   "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
-    "build": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack --config build.webpack.config.js",
-    "build-watch": "npm config set engine-strict true; rm -r build/ || true && npm install . && webpack --config build.webpack.config.js -w"
+    "reset": "npm config set engine-strict true; rm -r build/ || true && npm install .",
+    "build": "npm run reset && webpack --config build.webpack.config.js",
+    "build-watch": "npm run reset && webpack --config build.webpack.config.js -w",
+    "reset-test": "npm config set engine-strict true; rm -r build_test/ || true && npm install .",
+    "build-test": "npm run reset-test && webpack --config test.webpack.config.js"
   },
   "private": true,
   "author": "",
@@ -14,8 +17,11 @@
     "@babel/core": "^7.0.0-beta.55",
     "@babel/preset-env": "^7.0.0-beta.55",
     "babel-loader": "^8.0.0-beta.4",
+    "deepmerge": "^2.2.1",
+    "del": "^3.0.0",
     "jsdom": "^13.0.0",
     "loader-utils": "^1.1.0",
+    "source-map-support": "^0.5.9",
     "tape": "^4.9.1",
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.16.3",
