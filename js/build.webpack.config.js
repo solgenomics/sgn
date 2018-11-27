@@ -19,6 +19,7 @@ module.exports = {
         });
         return entries;
     })(),
+    // Give entries a common library name
     output: {
         path: path.resolve(__dirname, "build/"),
         publicPath: '/js',
@@ -27,6 +28,7 @@ module.exports = {
         library: ["jsMod","[name]"],
         libraryTarget: "umd"
     },
+    // Set up babel and JSAN processing
     module: {
         rules: [
             {
@@ -50,6 +52,7 @@ module.exports = {
             }
         ]
     },
+    // Chunks and Minimization settings
     optimization: {
         minimize: true,
         namedChunks: true,

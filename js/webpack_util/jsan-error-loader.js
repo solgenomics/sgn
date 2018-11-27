@@ -1,4 +1,4 @@
-
+// Throws an error if a JSAN import is reached without being filtered by the loader
 module.exports = function(import_text) {
 	throw_err(this,import_text);
 };

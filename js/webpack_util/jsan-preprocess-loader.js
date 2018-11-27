@@ -1,3 +1,5 @@
+// Handles JSAN imports and adds the JSAN adaptor as needed.
+
 const path = require('path');
 const fs = require('fs');
 const loaderUtils = require('loader-utils');

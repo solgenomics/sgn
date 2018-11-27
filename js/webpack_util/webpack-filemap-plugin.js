@@ -1,3 +1,5 @@
+// Creates JSON dependency mapping from webpack compilation.
+
 const path = require('path');
 const fs = require('fs');
 
