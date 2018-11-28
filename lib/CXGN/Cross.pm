@@ -431,6 +431,9 @@ sub delete {
 	}
 	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 
+	# TO DO: check if this row is actually a cross
+
+
 	# delete the nd_experiment entries
 	#
 	print STDERR "Deleting nd_experiment entry for cross...\n";
