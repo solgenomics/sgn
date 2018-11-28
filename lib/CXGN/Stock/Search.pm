@@ -274,12 +274,18 @@ sub search {
         $end = '';
     }
 
+    my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    
     if ($any_name) {
-        $or_conditions = [
-            { 'me.name'          => {'ilike' => $start.$any_name.$end} },
-            { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
-            { 'me.description'   => {'ilike' => $start.$any_name.$end} },
-        ];
+	$or_conditions = [
+	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
+	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
+	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
+	    { -and => [
+		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
+		   'stockprops.type_id' => $stock_synonym_cvterm_id,
+		  ],},
+	    ];
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
     }
