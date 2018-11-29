@@ -4,44 +4,33 @@ $data => 'Default'
 </%args>
 
 
-<& /page/page_title.mas, title=>"Carry out quality control genotyping" &>
+<& /page/page_title.mas, title=>"<b>Carry out quality control genotyping</b>" &>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
-<div class="container-fluid">
-
-    <&| /page/info_section.mas, title=>"QC assay upload",  collapsible => 1, collapsed=>0 &>
-        <div class="well well-sm">
-            <div class="panel panel-default">
-                    <b><p>Upload KASP assays for quality control genotyping</p></b>
-                    <ul>
-                    <li>Upload new KASP assay to validate genotypes true to type or Upload a new Fingerprint to store in the database</li>
-                    
-                    <br><br>
-                    
-                    <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotype Data</button>
-                    <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype QC</button>
-                    </ul>
-                </div>
-            </div>
-            
-        </div>
-    </&>
-
-    <div class="well well-sm">
-    <&| /page/info_section.mas, title=>"Perform QC on your assay",  collapsible => 1, collapsed=>1 &>
-        
-            <div class="panel panel-default">
-                    <b><p>Evaluate your assay with existing fingerprint in the database</p></b>
-                    <div class="list_upload" id="qc_assay_list">
-                      <label for="qc_genotypes_list">Select</label>
-                    </div> 
-                    <div class="list_upload" id="cluster_genotypes_list">      
-                    </div>
-                </div>
-            </div>
-        </&>
-
+<div id= "header" class="container-fluid">
+    <div id="tabs">
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#upload" aria-controls="upload" role="tab" data-toggle="tab">1. Upload QC data</a></li>
+        <li role="presentation"><a href="#run" aria-controls="run" role="tab" data-toggle="tab">2. Run</a></li>
+        <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">3. Results</a></li>
+      </ul>
+  </div>
+</div>
+      <br/>
+    <div>  
+<ul>
+      <li><font size="3" color="green">QC assay upload:</font> </li>
+      <li><font size="3" color="green">Upload a CSV file format </font></li>
+  </ul>
+</div>
+  <br/><br/><br/><br/>
+  <center>
+        <button class="btn btn-primary" name="upload_genotyping_data_link">Upload new QC Data</button>
+        <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype QC</button>
+    </center>
+     
+    
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_qc_dialogs.mas &>
 
