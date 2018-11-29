@@ -194,9 +194,10 @@ sub set_description {
 
 sub get_nd_experiment_id {
     my $self = shift;
-    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $nd_experiment_field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $nd_experiment_genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $nd_experiment_rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-        { 'me.type_id' => $nd_experiment_type_id, 'project.project_id' => $self->get_trial_id },
+        { 'me.type_id' => [$nd_experiment_field_layout_type_id, $nd_experiment_genotyping_layout_type_id], 'project.project_id' => $self->get_trial_id },
         { 'join' => {'nd_experiment_projects'=>'project'}}
     );
     if ($nd_experiment_rs->count > 1){
