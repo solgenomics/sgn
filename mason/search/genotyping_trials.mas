@@ -13,7 +13,7 @@ $nd_geolocation => 'not_provided'
             <table id="genotyping_trial_search_results" width="100%" class="table table-hover table-striped">
             <thead>
               <tr>
-                  <th>Trial name</th>
+                  <th>Plate Name</th>
                   <th>Description</th>
                   <th>Breeding program</th>
                   <th>Folder</th>

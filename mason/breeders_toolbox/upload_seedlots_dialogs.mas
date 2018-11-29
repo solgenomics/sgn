@@ -36,8 +36,8 @@
                                 <div class="col-sm-9">
                                     <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
                                         <option value=""></option>
-                                        <option data-desc="If you have seed lots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the seed was not harvested from plots that are in the database; this implies that the seed did not come from a cross you made." value="from_accession">I have seed lots for named accessions</option>
-                                        <option data-desc="If you have seed lots that were harvested from plots that are in the database, use this option. Since you are harvesting seed, this means that a cross was performed and that cross needs to be in the database." value="from_cross">I have seed lots harvested from a plant or plot in the field where a cross was performed</option>
+                                        <option data-desc="If you have seed lots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the seed was not harvested from a cross that is in the database." value="from_accession">I have seed lots for named accessions</option>
+                                        <option data-desc="If you have seed lots that were harvested from crosses that are in the database, use this option." value="from_cross">I have seed lots harvested from crosses</option>
                                     </select>
                                 </div>
                             </div>
@@ -269,12 +269,12 @@
                     <br/><b>AND/OR</b><br/>
                     weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
                     </li>
+                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
                     <li>description (information about why this seedlot is being added)</li>
-                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
                 </div>
@@ -329,12 +329,12 @@
                     <br/><b>AND/OR</b><br/>
                     weight(g) (weight in grams of seedlot. can be provided in conjunction with amount. must provide a value for amount or weight(g) or both.)
                     </li>
+                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
                     <li>description (information about why this seedlot is being added)</li>
-                    <li>box_name (the box name that the seed is located in. can be any name.)</li>
                     </ul>
 
                 </div>
