@@ -12,14 +12,13 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     required => 1,
     );
 
-has 'cross_stock_id' => (isa => "Int",
+has 'cross_stock_id' => (isa => "Maybe[Int]",
     is => 'rw',
     required => 0,
 );
 
-has 'cross_name' => (isa => 'Str',
+has 'cross_name' => (isa => 'Maybe[Str]',
 		     is => 'rw',
-		     required => 0,
     );
 
 has 'female_parent' => (isa => 'Str',
@@ -45,6 +44,9 @@ has 'trial_id' => (isa => "Int",
     required => 0,
 );
 
+has 'progenies' => (isa => 'Ref',
+		    is => 'rw',
+    );
 
 
 sub BUILD {
@@ -52,20 +54,29 @@ sub BUILD {
     my $args = shift;
     
     my $bcs_schema = $args->{bcs_schema};
-    my $cross_id = $args->{cross_id};
+    my $cross_id = $args->{cross_stock_id};
     
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
-    my $name = $bcs_schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+    my $row = $bcs_schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+    
+    if ($row) { 
+	 my $name = $row->uniquename();
+	 
+	 $self->cross_name($name);
+	 $self->cross_stock_id($cross_id);
+	 
+    }
 
-    $self->cross_name($name);
-    $self->cross_id($cross_id);
-
-    my $female_parent
+    # to do: populate female_parent, male_parent etc.
+    my ($female_parent, $male_parent, @progenies) = $self->get_cross_relationships();
     
-    
-    
+    $self->female_parent($female_parent->[0]);
+    $self->female_parent_id($female_parent->[1]);
+    $self->male_parent($male_parent->[0]);
+    $self->male_parent_id($male_parent->[1]);
+    $self->progenies(\@progenies);
 }
 
 sub get_cross_relationships {

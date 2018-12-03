@@ -1373,13 +1373,13 @@ sub hard_delete {
     
     # delete sgn.stock_owner entry
     #
-    my $q = "DELETE FROM sgn.stock_owner WHERE stock_id=?";
+    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
     my $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
     
     # delete sgn.stock_image entry
     #
-    $q = "DELETE FROM sgn.stock_image WHERE stock_id=?";
+    $q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
     $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
     
