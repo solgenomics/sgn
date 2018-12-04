@@ -30,8 +30,8 @@
                     </div>
 
                     <ul class="nav nav-pills nav-justified" id="cross_wishlist_tab_select">
-                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Lists</a></li>
-                        <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Not Using Lists</a></li>
+                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Accession Lists</a></li>
+                        <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Using Crossing Blocks</a></li>
                     </ul>
 
                     <div class="tab-content">

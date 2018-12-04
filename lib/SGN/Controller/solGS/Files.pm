@@ -177,7 +177,8 @@ sub phenotype_file_name {
     {
 	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
 			   file      => 'phenotype_data_' . $pop_id . '.txt',
-			   stash_key => 'phenotype_file_name'
+			   stash_key => 'phenotype_file_name',
+			   cache_dir => $c->stash->{solgs_cache_dir}
 	};
     
 	$self->cache_file($c, $cache_data);
@@ -238,9 +239,10 @@ sub genotype_file_name {
     }
     else
     {
-	my $cache_data = { key   => 'genotype_data_' . $pop_id, 
-                       file      => 'genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'genotype_file_name'
+	my $cache_data = { key       => 'genotype_data_' . $pop_id, 
+			   file      => 'genotype_data_' . $pop_id . '.txt',
+			   stash_key => 'genotype_file_name',
+			   cache_dir => $c->stash->{solgs_cache_dir}
 	};
     
 	$self->cache_file($c, $cache_data);
