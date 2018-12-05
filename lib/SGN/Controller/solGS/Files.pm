@@ -177,7 +177,8 @@ sub phenotype_file_name {
     {
 	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
 			   file      => 'phenotype_data_' . $pop_id . '.txt',
-			   stash_key => 'phenotype_file_name'
+			   stash_key => 'phenotype_file_name',
+			   cache_dir => $c->stash->{solgs_cache_dir}
 	};
     
 	$self->cache_file($c, $cache_data);
@@ -238,9 +239,10 @@ sub genotype_file_name {
     }
     else
     {
-	my $cache_data = { key   => 'genotype_data_' . $pop_id, 
-                       file      => 'genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'genotype_file_name'
+	my $cache_data = { key       => 'genotype_data_' . $pop_id, 
+			   file      => 'genotype_data_' . $pop_id . '.txt',
+			   stash_key => 'genotype_file_name',
+			   cache_dir => $c->stash->{solgs_cache_dir}
 	};
     
 	$self->cache_file($c, $cache_data);
@@ -264,7 +266,8 @@ sub rrblup_training_gebvs_file {
         my $combo_identifier = $c->stash->{combo_pops_id};
         $cache_data = {key       => 'rrblup_training_gebvs_combined_pops_'.  $combo_identifier . "_" . $trait,
                        file      => 'rrblup_training_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops',
-                       stash_key => 'rrblup_training_gebvs_file'
+                       stash_key => 'rrblup_training_gebvs_file',
+		       cache_dir => $c->stash->{solgs_cache_dir}
 
         };
     }
@@ -273,7 +276,8 @@ sub rrblup_training_gebvs_file {
     
         $cache_data = {key       => 'rrblup_training_gebvs_' . $pop_id . '_'.  $trait,
                        file      => 'rrblup_training_gebvs_' . $trait . '_' . $pop_id,
-                       stash_key => 'rrblup_training_gebvs_file'
+                       stash_key => 'rrblup_training_gebvs_file',
+		       cache_dir => $c->stash->{solgs_cache_dir}
         };
     }
 
@@ -363,7 +367,8 @@ sub combined_gebvs_file {
      
     my $cache_data = {key       => 'selected_traits_gebv_' . $pop_id . '_' . $identifier, 
                       file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier,
-                      stash_key => 'selected_traits_gebv_file'
+                      stash_key => 'selected_traits_gebv_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $self->cache_file($c, $cache_data);
@@ -407,7 +412,8 @@ sub all_traits_file {
 
     my $cache_data = {key       => 'all_traits_pop' . $pop_id,
                       file      => 'all_traits_pop_' . $pop_id,
-                      stash_key => 'all_traits_file'
+                      stash_key => 'all_traits_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $self->cache_file($c, $cache_data);
@@ -449,7 +455,8 @@ sub rrblup_selection_gebvs_file {
 
     my $cache_data = {key       => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id, 
                       file      => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id,
-                      stash_key => 'rrblup_selection_gebvs_file'
+                      stash_key => 'rrblup_selection_gebvs_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $self->cache_file($c, $cache_data);
