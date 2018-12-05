@@ -71,7 +71,7 @@ sub add_progeny {
 
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
 
-        my $member_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'member_of', 'stock_relationship');
+        my $offspring_of_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
 
         my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 
@@ -119,7 +119,7 @@ sub add_progeny {
         #create relationship to cross population
         $accession_stock
             ->find_or_create_related('stock_relationship_objects', {
-                type_id => $member_cvterm->cvterm_id(),
+                type_id => $offspring_of_cvterm->cvterm_id(),
                 object_id => $cross_stock->stock_id(),
                 subject_id => $accession_stock->stock_id(),
             });

@@ -56,7 +56,7 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
 ['<a href = "/stock/38845/view">new_test_cross</a>', 'cross', 'new_test_cross']
-]}, 'member_of');
+]}, 'offspring_of');
 
 
 done_testing();
