@@ -334,6 +334,13 @@ sub search {
             push @return_observations, $o;
         }
 
+        $notes =~ s/\R//g;
+        $trial_description =~ s/\R//g;
+        $breeding_program_description =~ s/\R//g;
+        $folder_description =~ s/\R//g;
+        my $seedlot_transaction_description = $seedlot_transaction->{description};
+        $seedlot_transaction_description =~ s/\R//g;
+
         push @result, {
             observationunit_stock_id => $observationunit_stock_id,
             observationunit_uniquename => $observationunit_uniquename,
@@ -373,7 +380,7 @@ sub search {
             seedlot_transaction_weight_gram => $seedlot_transaction->{weight_gram},
             seedlot_transaction_timestamp => $seedlot_transaction->{timestamp},
             seedlot_transaction_operator => $seedlot_transaction->{operator},
-            seedlot_transaction_description => $seedlot_transaction->{description},
+            seedlot_transaction_description => $seedlot_transaction_description,
             seedlot_stock_id => $seedlot_stock_id,
             seedlot_uniquename => $seedlot_uniquename,
             seedlot_current_count => $seedlot_current_count,

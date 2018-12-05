@@ -688,7 +688,7 @@ sub store {
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN ($accession_type_id,$tissue_sample_type_id) AND stock.is_obsolete = 'F' AND organism_id = $organism_id;";
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN ($accession_type_id,$tissue_sample_type_id) AND stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %stock_lookup;

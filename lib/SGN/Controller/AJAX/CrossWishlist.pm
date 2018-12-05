@@ -192,8 +192,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $data = decode_json $c->req->param('crosses');
     my $female_trial_id = $c->req->param('female_trial_id');
     my $male_trial_id = $c->req->param('male_trial_id');
-    my $ona_form_id = $c->req->param('form_id');
-    my $ona_form_name = $c->req->param('form_name');
+    my $ona_form_id = $c->req->param('form_id') || '0';
+    my $ona_form_name = $c->req->param('form_name') || '';
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
     my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
     my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
@@ -719,114 +719,127 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
 
-    my $ua = LWP::UserAgent->new;
-    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
-    my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+    my $cross_wishlist_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $cross_wishlist_md_row->insert();
+    my $cross_wishlist_file_row = $metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($uploaded_file),
+            dirname => dirname($uploaded_file),
+            filetype => $file_type,
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $cross_wishlist_md_row->metadata_id()
+        });
+    $cross_wishlist_file_row->insert();
+    my $cross_wishlist_file_id = $cross_wishlist_file_row->file_id();
 
-    my $server_endpoint = "https://api.ona.io/api/v1/metadata";
+    my $germplasm_info_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $germplasm_info_md_row->insert();
+    my $germplasm_info_file_row = $metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($germplasm_info_uploaded_file),
+            dirname => dirname($germplasm_info_uploaded_file),
+            filetype => $germplasm_info_file_type,
+            md5checksum => $germplasm_info_md5->hexdigest(),
+            metadata_id => $germplasm_info_md_row->metadata_id()
+        });
+    $germplasm_info_file_row->insert();
+    my $germplasm_info_file_id = $germplasm_info_file_row->file_id();
 
-    if ($previously_saved_metadata_id){
-        my $delete_resp = $ua->delete(
-            $server_endpoint."/$previously_saved_metadata_id"
-        );
-        if ($delete_resp->is_success) {
-            print STDERR "Deleted metadata file $previously_saved_metadata_id\n";
-        }
-        else {
-            print STDERR "ERROR: Did not delete metadata file\n";
-            #print STDERR Dumper $delete_resp;
-        }
-    }
-    if ($previously_saved_germplasm_info_metadata_id){
-        my $delete_resp = $ua->delete(
-            $server_endpoint."/$previously_saved_germplasm_info_metadata_id"
-        );
-        if ($delete_resp->is_success) {
-            print STDERR "Deleted metadata file $previously_saved_germplasm_info_metadata_id\n";
-        }
-        else {
-            print STDERR "ERROR: Did not delete metadata file\n";
-            #print STDERR Dumper $delete_resp;
-        }
-    }
+    $c->stash->{rest}->{success} = 'The cross wishlist file can be downloaded <a href="/cross_wishlist/file_download/'.$cross_wishlist_file_id.'">here</a>. The germplasm info file can be downloaded <a href="/cross_wishlist/file_download/'.$germplasm_info_file_id.'">here</a>.';
 
-
-    my $resp = $ua->post(
-        $server_endpoint,
-        Content_Type => 'form-data',
-        Content => [
-            data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>$ona_form_id,
-            "data_type"=>"media",
-            "data_value"=>$uploaded_file
-        ]
-    );
-
-    if ($resp->is_success) {
-        my $message = $resp->decoded_content;
-        my $message_hash = decode_json $message;
-        #print STDERR Dumper $message_hash;
-        if ($message_hash->{id}){
-
-            my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-            $md_row->insert();
-            my $file_row = $metadata_schema->resultset("MdFiles")
-                ->create({
-                    basename => basename($uploaded_file),
-                    dirname => dirname($uploaded_file),
-                    filetype => $file_type,
-                    md5checksum => $md5->hexdigest(),
-                    metadata_id => $md_row->metadata_id(),
-                    comment => $message_hash->{id}
-                });
-            $file_row->insert();
-
-            $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
-        } else {
-            $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
-        }
+    if ($odk_crossing_data_service_name eq 'NULL') {
+        $c->detach();
     } else {
-        #print STDERR Dumper $resp;
-        $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
-    }
 
-    my $germplasm_info_resp = $ua->post(
-        $server_endpoint,
-        Content_Type => 'form-data',
-        Content => [
-            data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
-            "xform"=>$ona_form_id,
-            "data_type"=>"media",
-            "data_value"=>$germplasm_info_uploaded_file
-        ]
-    );
+        my $ua = LWP::UserAgent->new;
+        $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
+        my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
 
-    if ($germplasm_info_resp->is_success) {
-        my $message = $germplasm_info_resp->decoded_content;
-        my $message_hash = decode_json $message;
-        #print STDERR Dumper $message_hash;
-        if ($message_hash->{id}){
+        my $server_endpoint = "https://api.ona.io/api/v1/metadata";
 
-            my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-            $md_row->insert();
-            my $file_row = $metadata_schema->resultset("MdFiles")
-                ->create({
-                    basename => basename($germplasm_info_uploaded_file),
-                    dirname => dirname($germplasm_info_uploaded_file),
-                    filetype => $germplasm_info_file_type,
-                    md5checksum => $germplasm_info_md5->hexdigest(),
-                    metadata_id => $md_row->metadata_id(),
-                    comment => $message_hash->{id}
-                });
-            $file_row->insert();
-
-            $c->stash->{rest}->{success} .= 'The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
-        } else {
-            $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';
+        if ($previously_saved_metadata_id){
+            my $delete_resp = $ua->delete(
+                $server_endpoint."/$previously_saved_metadata_id"
+            );
+            if ($delete_resp->is_success) {
+                print STDERR "Deleted metadata file $previously_saved_metadata_id\n";
+            }
+            else {
+                print STDERR "ERROR: Did not delete metadata file\n";
+                #print STDERR Dumper $delete_resp;
+            }
         }
-    } else {
-        #print STDERR Dumper $germplasm_info_resp;
-        $c->stash->{rest}->{error} .= "There was an error submitting germplasm info file to ONA. Please try again.";
+        if ($previously_saved_germplasm_info_metadata_id){
+            my $delete_resp = $ua->delete(
+                $server_endpoint."/$previously_saved_germplasm_info_metadata_id"
+            );
+            if ($delete_resp->is_success) {
+                print STDERR "Deleted metadata file $previously_saved_germplasm_info_metadata_id\n";
+            }
+            else {
+                print STDERR "ERROR: Did not delete metadata file\n";
+                #print STDERR Dumper $delete_resp;
+            }
+        }
+
+
+        my $resp = $ua->post(
+            $server_endpoint,
+            Content_Type => 'form-data',
+            Content => [
+                data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
+                "xform"=>$ona_form_id,
+                "data_type"=>"media",
+                "data_value"=>$uploaded_file
+            ]
+        );
+
+        if ($resp->is_success) {
+            my $message = $resp->decoded_content;
+            my $message_hash = decode_json $message;
+            #print STDERR Dumper $message_hash;
+            if ($message_hash->{id}){
+
+                my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $cross_wishlist_file_id});
+                $file_row->update({comment => $message_hash->{id}});
+
+                $c->stash->{rest}->{success} .= 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
+            } else {
+                $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
+            }
+        } else {
+            #print STDERR Dumper $resp;
+            $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
+        }
+
+        my $germplasm_info_resp = $ua->post(
+            $server_endpoint,
+            Content_Type => 'form-data',
+            Content => [
+                data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
+                "xform"=>$ona_form_id,
+                "data_type"=>"media",
+                "data_value"=>$germplasm_info_uploaded_file
+            ]
+        );
+
+        if ($germplasm_info_resp->is_success) {
+            my $message = $germplasm_info_resp->decoded_content;
+            my $message_hash = decode_json $message;
+            #print STDERR Dumper $message_hash;
+            if ($message_hash->{id}){
+
+                my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $germplasm_info_file_id});
+                $file_row->update({comment => $message_hash->{id}});
+
+                $c->stash->{rest}->{success} .= 'The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
+            } else {
+                $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';
+            }
+        } else {
+            #print STDERR Dumper $germplasm_info_resp;
+            $c->stash->{rest}->{error} .= "There was an error submitting germplasm info file to ONA. Please try again.";
+        }
     }
 
 }

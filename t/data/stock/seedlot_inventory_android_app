@@ -1,4 +1,4 @@
 box_id,seed_id,inventory_date,inventory_person,weight_gram
 box1,test_accession4_001,2018-04-01-02-04-34,nmorales,10
 box2,test_accession3_001,2018-04-01-02-04-33,nmorales,12
-box2,test_accession2_001,2018-04-01-02-04-32,some user,34
+box2,test_accession2_001,2018-04-01-02-04-32,some user,0

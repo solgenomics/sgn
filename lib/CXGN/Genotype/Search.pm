@@ -360,7 +360,6 @@ sub get_genotype_info {
         }
         my $protocolprop_top_key_select_sql = scalar(@protocolprop_top_key_select_arr) > 0 ? ', '.join ',', @protocolprop_top_key_select_arr : '';
         my $protocolprop_top_key_q = "SELECT nd_protocol_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
-
         my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
         $protocolprop_top_key_h->execute();
         while (my ($protocol_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
