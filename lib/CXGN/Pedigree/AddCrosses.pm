@@ -386,6 +386,7 @@ sub _get_accession {
     my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
     my $stock;
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+    #not sure why vector_construct is in this function
     my $vector_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'vector_construct', 'stock_type');
     my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'population', 'stock_type');
 
@@ -393,12 +394,13 @@ sub _get_accession {
     $stock = $stock_lookup->get_stock_exact();
 
     if (!$stock) {
-        print STDERR "Name in pedigree is not a stock\n";
+        print STDERR "Parent name is not a stock\n";
         return;
     }
 
+	#not sure why vector_construct is in this function
     if (($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $population_cvterm->cvterm_id())  && ($stock->type_id() != $vector_cvterm->cvterm_id()) ) {
-        print STDERR "Name in pedigree is not a stock of type accession or population or vector_construct\n";
+        print STDERR "Parent name is not a stock of type accession or population or vector_construct\n";
         return;
     }
 
@@ -417,10 +419,14 @@ sub _get_plot {
     $stock = $stock_lookup->get_stock_exact();
 
     if (!$stock) {
-        print STDERR "Name in pedigree is not a plot\n";
+        print STDERR "Parent name is not a stock\n";
         return;
     }
 
+	if ($stock->type_id() != $plot_cvterm->cvterm_id()) {
+        print STDERR "Parent name is not a stock of type plot\n";
+        return;
+    }
 
     return $stock;
 }
@@ -437,7 +443,12 @@ sub _get_plant {
     $stock = $stock_lookup->get_stock_exact();
 
     if (!$stock) {
-        print STDERR "Name in pedigree is not plant type\n";
+        print STDERR "Parent name is not a stock\n";
+        return;
+    }
+
+	if ($stock->type_id() != $plant_cvterm->cvterm_id()) {
+        print STDERR "Parent name is not a stock of type plant\n";
         return;
     }
 

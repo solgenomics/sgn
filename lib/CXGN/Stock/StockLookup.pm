@@ -202,11 +202,11 @@ sub get_stock_synonyms {
     my $search_type = shift; # 'stock_id' | 'uniquename' | 'any_name'
     my $stock_type = shift; # type of stock ex 'accession'
     my $to_get = shift; # array ref
-	
+
 	my $schema = $self->get_schema();
-	
+
   my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,$stock_type,'stock_type')->cvterm_id;
-  
+
 	my $table_joins = {
 		join => { 'stockprops' => 'type'},
 		'+select' => ['stockprops.value','type.name'],
@@ -247,6 +247,29 @@ sub get_stock_synonyms {
   	}
 	return $synonym_hash;
 }
+
+=head2 function get_stock_exact()
+
+retrieves the stock row with an exact match to the stock name or synonym
+
+=cut
+
+sub get_cross_exact {
+    my $self = shift;
+	my $schema = $self->get_schema();
+	my $stock_name = $self->get_stock_name();
+	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,'cross','stock_type')->cvterm_id;
+
+	my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.is_obsolete' => { '!=' => 't' }, 'uniquename' => $stock_name, 'type_id' => $cross_type_id });
+    my $stock;
+    if ($stock_rs->count == 1) {
+        $stock = $stock_rs->first;
+    } else {
+        return;
+    }
+    return $stock;
+}
+
 
 #######
 1;
