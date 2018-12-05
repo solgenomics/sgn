@@ -71,12 +71,21 @@ sub BUILD {
 
     # to do: populate female_parent, male_parent etc.
     my ($female_parent, $male_parent, @progenies) = $self->get_cross_relationships();
+    print STDERR Dumper($female_parent);
+
     
-    $self->female_parent($female_parent->[0]);
-    $self->female_parent_id($female_parent->[1]);
-    $self->male_parent($male_parent->[0]);
-    $self->male_parent_id($male_parent->[1]);
-    $self->progenies(\@progenies);
+
+    if (ref($female_parent)) { 
+	$self->female_parent($female_parent->[0]); 
+	$self->female_parent_id($female_parent->[1]);
+    }
+    if (ref($male_parent)) { 
+	$self->male_parent($male_parent->[0]);
+	$self->male_parent_id($male_parent->[1]);
+    }
+    if (@progenies) { 
+	$self->progenies(\@progenies);
+    }
 }
 
 sub get_cross_relationships {
@@ -435,7 +444,8 @@ sub delete {
 	    ($properties->{images} == 0);
 
 	if (! $can_delete) {
-	    return "Cross has associated data. ($properties->{trials} trials, $properties->{traits} traits and $properties->{genoytpes} genotypes. Cannot delete...\n";
+	    print STDERR "Cross has associated data. Cannot delete.\n";
+	    die "Cross has associated data. ($properties->{trials} trials, $properties->{traits} traits and $properties->{genoytpes} genotypes. Cannot delete...\n";
 	}
 	else { 
 	    print STDERR "This cross has no associated data that would prevent deletion.";

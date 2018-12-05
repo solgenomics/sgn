@@ -1226,6 +1226,8 @@ sub delete_cross_POST : Args(0) {
     }
 
     my $error = $cross->delete();
+
+    print STDERR "ERROR = $error\n";
     
     if ($error) { 
 	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
