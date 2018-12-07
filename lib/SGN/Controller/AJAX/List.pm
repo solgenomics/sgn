@@ -440,7 +440,7 @@ sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my %response;
     $response{'count'} = 0;
     foreach (@$cross_id_list) {
-        my $cross = CXGN::Cross->new({bcs_schema=>$c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
+        my $cross = CXGN::Cross->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
         my ($maternal_parent, $paternal_parent, $progeny) = $cross->get_cross_relationships();
 
         my @accession_names;

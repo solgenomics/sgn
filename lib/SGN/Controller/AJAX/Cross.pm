@@ -358,7 +358,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 	    return;
     }
 
-    my $cross_obj = CXGN::Cross->new({bcs_schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
     my ($maternal_parent, $paternal_parent, $progeny) = $cross_obj->get_cross_relationships();
 
     $c->stash->{rest} = {
@@ -583,6 +583,16 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
     $c->stash->{rest} = { success => 1};
 
 }
+
+
+my $new_cross = CXGN::Cross->new({ schema=>schema });
+$new_cross->female_parent($fjfj);
+$new_cross->male_parent(kdkjf);
+$new_cross->location(kjlsdlkjdfskj);
+...type
+...cross_name
+...plots...
+$new_cross->store();
 
 sub add_individual_cross {
   my $self = shift;
@@ -1212,7 +1222,7 @@ sub delete_cross_POST : Args(0) {
 
     my $cross_stock_id = $c->req->param("cross_id");
 
-    my $cross = CXGN::Cross->new( { bcs_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+    my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
 
     if (!$cross->cross_stock_id()) { 
 	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };

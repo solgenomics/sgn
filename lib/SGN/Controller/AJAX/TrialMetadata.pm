@@ -1814,7 +1814,7 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_crosses_in_trial();
     my @crosses;
@@ -1838,7 +1838,7 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_properties_trial();
 
@@ -1866,7 +1866,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
