@@ -425,23 +425,17 @@ sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
-    my $cross_json_row = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_info_cvterm});
-    my $cross_json_string = "";
-    if (!$cross_json_row) { 
-	print STDERR "WARNING! No cross properties detected for this cross $cross_id\n";
-	$cross_json_string = "{}";
-    }
-    else { 
-	$cross_json_string = $cross_json_row->value();
-    }
-    
 
-#    print STDERR Dumper($cross_json_string);
+    my $cross_info = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_info_cvterm});
+
+    if($cross_info){
+        $cross_json_string = $cross_info->value();
+    }
 
     my $cross_props_hash ={};
-    $cross_props_hash = decode_json $cross_json_string;
-
-#    print STDERR Dumper($cross_props_hash);
+    if($cross_json_string){
+        $cross_props_hash = decode_json $cross_json_string;
+    }
 
     my $cross_properties = $c->config->{cross_properties};
     my @column_order = split ',',$cross_properties;

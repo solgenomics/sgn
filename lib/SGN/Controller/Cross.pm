@@ -584,11 +584,11 @@ sub cross_detail : Path('/cross') Args(1) {
 
     #get cross from stock id
     my $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->search( { stock_id => $id, type_id => $cross_type_id } )->first();
-    
+
     if (!$cross) { #or from project id
         $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
     }
-    
+
     my $cross_id;
 
     if (!$cross) {
@@ -598,10 +598,10 @@ sub cross_detail : Path('/cross') Args(1) {
     } else {
         $cross_id = $cross->stock_id();
     }
-    
+
     #print STDERR "Cross stock_id is $cross_id\n";
-    
-    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
+
+    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'offspring_of'  }, { join =>  'type' } );
 
     my $progeny_count = $progeny->count();
 

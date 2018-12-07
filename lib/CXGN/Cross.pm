@@ -103,7 +103,7 @@ sub get_cross_relationships {
         if ($child->type->name() eq "male_parent") {
           $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
         }
-        if ($child->type->name() eq "member_of") {
+        if ($child->type->name() eq "offspring_of") {
           push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
         }
     }
@@ -190,10 +190,11 @@ sub get_cross_info_for_progeny {
     my $male_parent_id = shift;
     my $progeny_id = shift;
 
-    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-    my $member_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $offspring_of_typeid =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
+
     my $cross_experiment_type_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
     my $project_year_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
 
@@ -211,7 +212,8 @@ sub get_cross_info_for_progeny {
         ORDER BY female_stock_relationship.value, male_stock_relationship.subject_id";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($cross_type_id, $female_parent_type_id, $female_parent_id, $male_parent_type_id, $male_parent_id, $member_type_id, $progeny_id, $cross_experiment_type_cvterm_id, $project_year_cvterm_id);
+    $h->execute($cross_typeid, $female_parent_typeid, $female_parent_id, $male_parent_typeid, $male_parent_id, $offspring_of_typeid, $progeny_id, $cross_experiment_type_cvterm_id, $project_year_cvterm_id);
+
 
     my @cross_info = ();
     while (my ($cross_entry_id, $cross_name, $cross_type, $year) = $h->fetchrow_array()){
@@ -246,10 +248,11 @@ sub get_progeny_info {
     my $female_parent = shift;
     my $male_parent = shift;
 
-    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $member_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $accession_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $offspring_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
+
 
     my $where_female = "";
     if ($female_parent){
@@ -274,16 +277,16 @@ sub get_progeny_info {
     my $h = $schema->storage->dbh()->prepare($q);
 
     if($female_parent && $male_parent){
-        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id, $female_parent, $male_parent);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $offspring_of_typeid, $female_parent_typeid, $female_parent, $male_parent);
     }
     elsif ($female_parent) {
-        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id, $female_parent);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $offspring_of_typeid, $female_parent_typeid, $female_parent);
     }
     elsif ($male_parent) {
-        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id, $male_parent);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $offspring_of_typeid, $female_parent_typeid, $male_parent);
     }
     else {
-        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $member_type_id, $female_parent_type_id);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $offspring_of_typeid, $female_parent_typeid);
     }
 
     my @progeny_info = ();
@@ -383,7 +386,7 @@ sub get_cross_progenies_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
-    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_property")->cvterm_id();
 
     my $q = "SELECT progeny_count_table.cross_id, progeny_count_table.cross_name, progeny_count_table.progeny_number, stockprop.value
@@ -398,7 +401,7 @@ sub get_cross_progenies_trial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($member_of_type_id, $trial_id, $family_name_type_id);
+    $h->execute($offspring_of_type_id, $trial_id, $family_name_type_id);
 
     my @data =();
     while(my($cross_id, $cross_name, $progeny_number, $family_name) = $h->fetchrow_array()){

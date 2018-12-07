@@ -90,7 +90,7 @@ sub _validate_with_plugin {
         if (!$columns[3] || $columns[3] eq ''){
             push @error_messages, 'The fourth column must contain an inventory_person on row: '.$row;
         }
-        if (!$columns[4] || $columns[4] eq ''){
+        if (!defined($columns[4]) || $columns[4] eq ''){
             push @error_messages, 'The fifth column must contain weight_gram on row: '.$row;
         }
     }
