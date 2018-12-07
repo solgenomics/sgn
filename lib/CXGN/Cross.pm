@@ -7,6 +7,7 @@ use CXGN::Stock;
 use Data::Dumper;
 use JSON;
 
+
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1,
@@ -72,8 +73,6 @@ sub BUILD {
     # to do: populate female_parent, male_parent etc.
     my ($female_parent, $male_parent, @progenies) = $self->get_cross_relationships();
     print STDERR Dumper($female_parent);
-
-    
 
     if (ref($female_parent)) { 
 	$self->female_parent($female_parent->[0]); 
