@@ -46,19 +46,30 @@ sub get_cross_relationships {
     my $maternal_parent = "";
     my $paternal_parent = "";
     my @progeny = ();
+    my @filtered_progeny = ();
 
     foreach my $child ($crs->all()) {
         if ($child->type->name() eq "female_parent") {
-          $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+            $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
         }
         if ($child->type->name() eq "male_parent") {
-          $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+            $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
         }
         if ($child->type->name() eq "offspring_of") {
-          push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
+            my $progeny = $child->subject->stock_id();
+
+            my $offspring_rs = $self->bcs_schema->resultset("Stock::Stock")->search ({
+                'stock_id' => $progeny,
+                'is_obsolete' => {'!=' => 't'}
+            });
+
+            if ($offspring_rs->count>0){
+                push @filtered_progeny, [ $child->subject->name, $child->subject->stock_id() ]
+            }
         }
     }
-    return ($maternal_parent, $paternal_parent, \@progeny);
+
+    return ($maternal_parent, $paternal_parent, \@filtered_progeny);
 }
 
 =head2 get_cross_info
