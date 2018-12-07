@@ -171,6 +171,16 @@ has 'modification_note' => (
     is => 'rw',
 );
 
+has 'objects' => (
+    isa => 'Maybe[Ref]',
+    is => 'rw',
+);
+
+has 'subjects' => ( 
+    isa => 'Maybe[Ref]',
+    is => 'rw',
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -193,8 +203,27 @@ sub BUILD {
         $self->_retrieve_populations();
     }
 
+    
+    if ($self->stock_id()) { 
+	
+	my @objects;
+	my $object_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_objects();
+	foreach my $object ($object_rs->all()) { 
+	    push @objects, [ $object->object->stock_id, $object->object->uniquename(), $object->type->name() ];
+	}
+	$self->objects(\@objects);
+	
+	my @subjects;
+	my $subject_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_subjects();
+	foreach my $subject ($subject_rs->all()) { 
+	    push @subjects, [ $subject->subject->stock_id, $subject->subject->uniquename(), $subject->type->name() ];
+	}
+	
+	$self->subjects(\@subjects);
+    }
     return $self;
 }
+
 
 sub _retrieve_stock_owner {
     my $self = shift;
