@@ -29,11 +29,10 @@ package CXGN::Cross;
 
 use Moose;
 use SGN::Model::Cvterm;
-use CXGN::Stock;
 use Data::Dumper;
 use JSON;
 
-extends CXGN::Stock;
+extends 'CXGN::Stock';
 
 has 'cross_stock_id' => (isa => "Maybe[Int]",
     is => 'rw',
@@ -78,7 +77,9 @@ sub BUILD {
     
     my $schema = $args->{schema};
     my $cross_id = $args->{cross_stock_id};
-    
+
+    $self->stock_id($cross_id);
+
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
