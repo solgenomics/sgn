@@ -25,6 +25,7 @@ use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
 use Text::CSV;
+use CXGN::Phenotypes::StorePhenotypes;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -1332,6 +1333,8 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $phenotype_method = $c->req->param('method');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -1411,6 +1414,9 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
 
     my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' '.$out_paths_string.' --results_outfile_path '.$archive_temp_results);
 
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
     my @header_cols;
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_results)
@@ -1443,6 +1449,8 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
             }
         }
         my $line = 0;
+        my %zonal_stat_phenotype_data;
+        my %plots_seen;
         while ( my $row = <$fh> ){
             my @columns;
             if ($csv->parse($row)) {
@@ -1450,10 +1458,72 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
             }
             #print STDERR Dumper \@columns;
             $stocks[$line]->{result} = \@columns;
+
+            $plots_seen{$stocks[$line]->{stock_uniquename}} = 1;
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Nonzero Pixel Count|G2F:0000014'} = [$columns[0], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Total Pixel Sum|G2F:0000015'} = [$columns[1], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Mean Pixel Value|G2F:0000016'} = [$columns[2], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Harmonic Mean Pixel Value|G2F:0000017'} = [$columns[3], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Median Pixel Value|G2F:0000018'} = [$columns[4], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Variance|G2F:0000019'} = [$columns[5], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Standard Deviation|G2F:0000020'} = [$columns[6], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Population Standard Deviation|G2F:0000021'} = [$columns[7], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minimum Pixel Value|G2F:0000022'} = [$columns[8], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Maximum Pixel Value|G2F:0000023'} = [$columns[9], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minority Pixel Value|G2F:0000024'} = [$columns[10], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minority Pixel Count|G2F:0000025'} = [$columns[11], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Majority Pixel Value|G2F:0000026'} = [$columns[12], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Majority Pixel Count|G2F:0000027'} = [$columns[13], $timestamp, $user_name, ''];
+            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Group Count|G2F:0000028'} = [$columns[14], $timestamp, $user_name, ''];
+
             $line++;
         }
     
     close $fh;
+
+    if ($line > 0) {
+        my %phenotype_metadata = (
+            'archived_file' => $archive_temp_results,
+            'archived_file_type' => 'zonal_statistics_image_phenotypes',
+            'operator' => $user_name,
+            'date' => $timestamp
+        );
+        my @plot_units_seen = keys %plots_seen;
+        my @traits_seen = (
+            'Nonzero Pixel Count|G2F:0000014',
+            'Total Pixel Sum|G2F:0000015',
+            'Mean Pixel Value|G2F:0000016',
+            'Harmonic Mean Pixel Value|G2F:0000017',
+            'Median Pixel Value|G2F:0000018',
+            'Pixel Variance|G2F:0000019',
+            'Pixel Standard Deviation|G2F:0000020',
+            'Pixel Population Standard Deviation|G2F:0000021',
+            'Minimum Pixel Value|G2F:0000022',
+            'Maximum Pixel Value|G2F:0000023',
+            'Minority Pixel Value|G2F:0000024',
+            'Minority Pixel Count|G2F:0000025',
+            'Majority Pixel Value|G2F:0000026',
+            'Majority Pixel Count|G2F:0000027',
+            'Pixel Group Count|G2F:0000028'
+        );
+        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+            bcs_schema=>$schema,
+            metadata_schema=>$metadata_schema,
+            phenome_schema=>$phenome_schema,
+            user_id=>$user_id,
+            stock_list=>\@plot_units_seen,
+            trait_list=>\@traits_seen,
+            values_hash=>\%zonal_stat_phenotype_data,
+            has_timestamps=>1,
+            overwrite_values=>1,
+            metadata_hash=>\%phenotype_metadata
+        );
+        my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+        my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+        
+        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    }
 
     my $count = 0;
     foreach (@out_paths) {

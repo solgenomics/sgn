@@ -197,6 +197,8 @@ sub create_hash_lookups {
 
 sub verify {
     my $self = shift;
+    print STDERR "CXGN::Phenotypes::StorePhenotypes verify\n";
+
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
@@ -361,6 +363,8 @@ sub verify {
 
 sub store {
     my $self = shift;
+    print STDERR "CXGN::Phenotypes::StorePhenotypes store\n";
+
     $self->create_hash_lookups();
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
