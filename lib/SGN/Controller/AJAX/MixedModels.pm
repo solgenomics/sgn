@@ -5,6 +5,7 @@ use Moose;
 
 use Data::Dumper;
 use File::Slurp;
+use File::Spec qw | catfile |;
 use File::Basename qw | basename |;
 use CXGN::Dataset::File;
 
@@ -129,7 +130,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     
     $file = basename($file);
 
-    my $temppath = $c->config->{basepath}."/static/documents/tempfiles/mixedmodels/".$file;
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/mixedmodels/".$file);
     
     my $F;
     if (! open($F, "<", $temppath)) { 
@@ -142,19 +143,20 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     
     my @keys = split("\t", $header);
     
-    print STDERR "keys = ( ".(join ",", @keys).")\n";
+#    print STDERR "keys = ( ".(join ",", @keys).")\n";
 
     my @data = ();
 
     while (<$F>) { 
 	chomp;
-	if (//) { next; }
+#	print STDERR $_;
+#	if (//) { next; }
 	my @fields = split "\t";
 	my %line = {};
 	for(my $n=0; $n <@keys; $n++) { 
-	    if (exists($fields[$n]) && 
-		!($fields[$n] eq "" ||
-		$fields[$n] eq "null")) { 
+#	    print STDERR "$n: $fields[$n]\n";
+	    if (exists($fields[$n]) && defined($fields[$n])) {
+
 		$line{$keys[$n]}=$fields[$n];   
 	    }
 	}
@@ -162,7 +164,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 	push @data, \%line;
     }
 
-    print STDERR Dumper(\@data);
+#    print STDERR "Data: ".Dumper(\@data);
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }

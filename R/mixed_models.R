@@ -16,6 +16,9 @@ if(length(args)==0){
     }
 }
 
+workdir = dirname(datafile);
+setwd(workdir);
+
 library(lme4)
 
 pd = read.csv(datafile, sep="\t")
@@ -37,4 +40,12 @@ print(paste('MODEL STRING:', model_string));
 model = lmer(as.formula(model_string), data=pd)
 
 model_summary = summary(model)
-write(model_summary), file=paste(datafile, ".results", sep=""));
+outfile = paste(datafile, ".results", sep="")
+print(outfile)
+print(model)
+print(model_summary)
+print(colnames(model))
+print(coef(model))
+sink(outfile)
+write.table(coef(model)$germplasmName)
+sink();

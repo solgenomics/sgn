@@ -34,11 +34,15 @@ Choose fixed factors:
 <br />
 <div id="fixed_factors">
 </div>
+<input type="checkbox" id="fixed_factors_interaction">Interaction</input>
 <br />
 Choose random factors
 <br />
 <div id="random_factors">
+
 </div>
+<input type="checkbox" id="random_factors_random_slope">Random slope</input>
+
 <br />
 <div id="tempfile" style="display:none" >
 </div>
@@ -78,17 +82,20 @@ Choose random factors
    });
 
    jQuery('#dependent_variable').on('change', '#dependent_variable_select', function() { 
-      alert("click!");
+      // alert("click!");
       var tempfile = jQuery('#tempfile').html();
       var trait = jQuery('#dependent_variable_select').val();
       jQuery.ajax( {
          url: '/ajax/mixedmodels/grabdata',
          data: { 'file' : tempfile },
          success: function(r)  { 
-           alert(JSON.stringify(r.data));
+         //alert("data grabbed "+JSON.stringify(r.data));
            var v = {
              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-             "data": r.data,
+             "width": 200,
+             "height": 100,
+             "padding": 5,
+             "data": { 'values': r.data },
              "mark": "bar",
              "encoding": {
              "x": {
@@ -103,9 +110,9 @@ Choose random factors
             }
            }; 
            
-           alert("embedding"+ JSON.stringify(v));
+  //alert("embedding"+ JSON.stringify(v));
            vegaEmbed("#trait_histogram", v);
-           alert("done");
+           //alert("done");
          },
        
        
@@ -119,8 +126,8 @@ Choose random factors
       var random_factors = jQuery('#random_factors_select').val();
       var tempfile = jQuery('#tempfile').html();
 
-      alert('Dependent variable: '+ dependent_variable +' Fixed Factors: '+ fixed_factors +' Random Factors: '+ random_factors +' Tempfile: '+tempfile);
-      alert(JSON.stringify(fixed_factors));
+      // alert('Dependent variable: '+ dependent_variable +' Fixed Factors: '+ fixed_factors +' Random Factors: '+ random_factors +' Tempfile: '+tempfile);
+      // alert(JSON.stringify(fixed_factors));
       jQuery.ajax( {
         url: '/ajax/mixedmodels/run',
         data: { 
@@ -132,8 +139,8 @@ Choose random factors
         success: function(r) { 
           if (r.error) { alert(r.error);}
           else{ 
-            alert('success...');
-            jQuery('#mixed_models_results_div').html(r.html);
+            // alert('success...');
+            jQuery('#mixed_models_results_div').html('<pre>' + r.html + '</pre>');
           }
         },
         error: function(r) { 
