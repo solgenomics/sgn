@@ -425,9 +425,9 @@ sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property')->cvterm_id();
-
     my $cross_info = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_info_cvterm});
 
+    my $cross_json_string;
     if($cross_info){
         $cross_json_string = $cross_info->value();
     }
@@ -585,14 +585,14 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 }
 
 
-my $new_cross = CXGN::Cross->new({ schema=>schema });
-$new_cross->female_parent($fjfj);
-$new_cross->male_parent(kdkjf);
-$new_cross->location(kjlsdlkjdfskj);
-...type
-...cross_name
-...plots...
-$new_cross->store();
+#my $new_cross = CXGN::Cross->new({ schema=>schema });
+#$new_cross->female_parent($fjfj);
+#$new_cross->male_parent(kdkjf);
+#$new_cross->location(kjlsdlkjdfskj);
+#...type
+#...cross_name
+#...plots...
+#$new_cross->store();
 
 sub add_individual_cross {
   my $self = shift;
@@ -1224,7 +1224,7 @@ sub delete_cross_POST : Args(0) {
 
     my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
 
-    if (!$cross->cross_stock_id()) { 
+    if (!$cross->cross_stock_id()) {
 	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };
 	return;
     }
@@ -1232,8 +1232,8 @@ sub delete_cross_POST : Args(0) {
     my $error = $cross->delete();
 
     print STDERR "ERROR = $error\n";
-    
-    if ($error) { 
+
+    if ($error) {
 	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
 	return;
     }
