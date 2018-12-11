@@ -26,6 +26,7 @@ use CXGN::ODK::Crosses;
 use Carp;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw(make_path);
+use CXGN::List;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -82,8 +83,7 @@ sub get_crossing_available_forms_GET {
             $message_hash = decode_json $message;
         }
     } else {
-        $c->stash->{rest} = { error => 'Error: We only support ONA as an ODK crossing service for now.' };
-        $c->detach();
+        $message_hash = [];
     }
     $c->stash->{rest} = { success => 1, forms=>$message_hash };
 }
@@ -281,15 +281,17 @@ sub get_crossing_data_cronjobs_GET {
 
     my @entries;
     my $crontab_file = $c->config->{crontab_file};
-    open(my $fh, '<:encoding(UTF-8)', $crontab_file)
-        or die "Could not open file '$crontab_file' $!";
- 
-    while (my $row = <$fh>) {
-        chomp $row;
-        my @c = split 'export', $row;
-        push @entries, $c[0];
+    if ($crontab_file ne 'NULL') {
+        open(my $fh, '<:encoding(UTF-8)', $crontab_file)
+            or die "Could not open file '$crontab_file' $!";
+     
+        while (my $row = <$fh>) {
+            chomp $row;
+            my @c = split 'export', $row;
+            push @entries, $c[0];
+        }
+        close $fh;
     }
-    close $fh;
 
     $c->stash->{rest} = { success => 1, entries=>\@entries };
     $c->detach();
@@ -379,13 +381,13 @@ sub get_odk_cross_progress_cached_GET {
     my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
+    open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = decode_json <$fh>;
+        $contents = <$fh> ? decode_json <$fh> : undef;
     }
     close($fh);
-    my $json = $contents->{top_level_json};
+    my $json = $contents->{top_level_json} || {};
 
     my $top_level_id = $c->req->param('id');
     print STDERR "ODK Cross Tree Progress Node: ".$top_level_id."\n";
@@ -441,10 +443,10 @@ sub get_odk_cross_summary_cached_GET {
     my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
+    open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = decode_json <$fh>;
+        $contents = <$fh> ? decode_json <$fh> : undef;
     }
     close($fh);
     my $summary = $contents->{summary_info};
@@ -452,6 +454,52 @@ sub get_odk_cross_summary_cached_GET {
 
     #print STDERR Dumper $summary;
     $c->stash->{rest} = { summary => $summary, plant_status_summary => $plant_status_summary };
+}
+
+sub get_crossing_saved_ona_forms : Path('/ajax/odk/get_crossing_saved_ona_forms') : ActionClass('REST') { }
+
+sub get_crossing_saved_ona_forms_GET {
+    my ( $self, $c ) = @_;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to see your saved odk ona forms!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to see your saved odk ona forms!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $bcs_schema->storage->dbh;
+    
+    my $odk_ona_lists = CXGN::List::available_public_lists($dbh, 'odk_ona_forms');
+    my %odk_ona_forms_unique;
+    foreach (@$odk_ona_lists) {
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $_->[0] });
+        my $elements = $list->elements();
+        foreach (@$elements) {
+            $odk_ona_forms_unique{$_}++;
+        }
+    }
+    my @odk_ona_forms = keys %odk_ona_forms_unique;
+
+    $c->stash->{rest} = {success => 1, odk_ona_forms => \@odk_ona_forms};
 }
 
 1;

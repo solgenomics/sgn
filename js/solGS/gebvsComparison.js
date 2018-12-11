@@ -47,10 +47,10 @@ function gebvsComparison () {
 
     function getGebvsParams () {
 	
-	var trainingPopId  = jQuery('#training_pop_id').val();
-	var selectionPopId = jQuery('#selection_pop_id').val();
-	var traitId        = jQuery('#trait_id').val();
-	
+	var trainingPopId  = jQuery('#compare_gebvs_canvas #training_pop_id').val();
+	var selectionPopId = jQuery('#compare_gebvs_canvas #selection_pop_id').val();
+	var traitId        = jQuery('#compare_gebvs_canvas #trait_id').val();
+
 	var gebvParams = { 
 	    'training_pop_id'  : trainingPopId,
 	    'selection_pop_id' : selectionPopId,

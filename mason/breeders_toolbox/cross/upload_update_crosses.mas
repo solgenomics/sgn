@@ -221,6 +221,8 @@
                     <br>
                         <b>-At least one of the following columns:</b> (all of the experimental info of a cross must be in a single row)
                     <br>
+                        (Dates must be in the format YYYY/MM/DD)
+                    <br>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
 % foreach my $column_header(@column_header){

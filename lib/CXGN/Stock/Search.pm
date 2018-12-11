@@ -274,12 +274,18 @@ sub search {
         $end = '';
     }
 
+    my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    
     if ($any_name) {
-        $or_conditions = [
-            { 'me.name'          => {'ilike' => $start.$any_name.$end} },
-            { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
-            { 'me.description'   => {'ilike' => $start.$any_name.$end} },
-        ];
+	$or_conditions = [
+	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
+	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
+	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
+	    { -and => [
+		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
+		   'stockprops.type_id' => $stock_synonym_cvterm_id,
+		  ],},
+	    ];
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
     }
@@ -436,9 +442,9 @@ sub search {
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, $term_name."::text \\?| array[$search_vals_sql]";
+                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
                 } else {
-                    push @stockprop_wheres, $term_name."::text ilike $search";
+                    push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
                 }
 
             } else {

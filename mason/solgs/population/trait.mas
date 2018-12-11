@@ -82,7 +82,8 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id">$project_name</a> |;
 
 </&>
 
-<& /solgs/model/pca.mas &>
+<& /solgs/pca/analysis.mas &>
+<& /solgs/cluster/analysis.mas &>  
 
 % if ($show_data) 
 %{

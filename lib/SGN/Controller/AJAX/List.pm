@@ -48,22 +48,24 @@ sub get_list_data_action :Path('/list/data') Args(0) {
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
     my $public = $list->check_if_public();
     if ($public == 0) {
-	my $error = $self->check_user($c, $list_id);
-	if ($error) {
-	    $c->stash->{rest} = { error => $error };
-	    return;
-	}
+        my $error = $self->check_user($c, $list_id);
+        if ($error) {
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
     }
+    my $description = $list->description;
 
     $list = $self->retrieve_list($c, $list_id);
 
     my $metadata = $self->get_list_metadata($c, $list_id);
 
     $c->stash->{rest} = {
-	list_id     => $list_id,
-	type_id     => $metadata->{type_id},
-	type_name   => $metadata->{list_type},
-	elements    => $list,
+        list_id     => $list_id,
+        type_id     => $metadata->{type_id},
+        type_name   => $metadata->{list_type},
+        elements    => $list,
+        description => $description
     };
 }
 
@@ -123,18 +125,32 @@ sub update_list_name_action :Path('/list/name/update') :Args(0) {
     my $error = $self->check_user($c, $list_id);
 
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    $list->name($name);
 
-    $error = $list->name($name);
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub update_list_description_action :Path('/list/description/update') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param('list_id');
+    my $description = $c->req->param('description');
+
+    my $user_id = $self->get_user($c);
+    my $error = $self->check_user($c, $list_id);
 
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
+
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    $list->description($description);
 
     $c->stash->{rest} = { success => 1 };
 }
