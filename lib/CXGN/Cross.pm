@@ -121,15 +121,19 @@ sub get_cross_relationships {
 
     foreach my $child ($crs->all()) {
         if ($child->type->name() eq "female_parent") {
-          $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+            $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
         }
         if ($child->type->name() eq "male_parent") {
-          $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+            $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
         }
         if ($child->type->name() eq "offspring_of") {
-          push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
+            my $is_progeny_obsolete = $child->subject->is_obsolete();
+            if ($is_progeny_obsolete == 0 ){
+                push @progeny, [ $child->subject->name, $child->subject->stock_id() ]
+            }
         }
     }
+
     return ($maternal_parent, $paternal_parent, \@progeny);
 }
 
