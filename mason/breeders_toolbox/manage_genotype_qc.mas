@@ -39,8 +39,8 @@ $data => 'Default'
 </div>
   <br/><br/><br/><br/>
   <center>
-        <button class="btn btn-primary" name="upload_genotyping_data_link">Upload new QC Data</button>
-        <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype QC</button>
+        <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotyping Data (VCF or Intertek Format)</button>
+        <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype Quality Control</button>
     </center>
      
     

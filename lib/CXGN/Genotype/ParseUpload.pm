@@ -25,6 +25,11 @@ has 'filename_intertek_marker_info' => (
     isa => 'Str|Undef',
 );
 
+has 'nd_protocol_id' => (
+    is => 'ro',
+    isa => 'Int|Undef',
+);
+
 has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample
     isa => 'Str',
     is => 'ro',

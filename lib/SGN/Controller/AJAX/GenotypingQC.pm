@@ -28,6 +28,8 @@ use CXGN::Genotype::ParseUpload;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -80,6 +82,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
 
     #archive uploaded file
     my $upload_file = $c->req->upload('upload_genotype_qc_file_input');
+    my $protocol_id = $c->req->param('genotype_qc_protocol_id');
 
     if (!defined($upload_file)) {
         $c->stash->{rest} = { error => 'Please provide a genotype qc file.' };
@@ -93,7 +96,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     my $upload_original_name = $upload_file->filename();
     my $upload_tempfile = $upload_file->tempname;
     my $subdirectory = "genotype_qc_upload";
-    my $parser_plugin = 'IntertekCSV';
+    my $parser_plugin = 'GridFileIntertekCSV';
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -118,6 +121,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         observation_unit_type_name => 'accession',
+        nd_protocol_id => $protocol_id
     });
     $parser->load_plugin($parser_plugin);
     my $parsed_data = $parser->parse();
@@ -142,11 +146,46 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     my $genotype_info = $parsed_data->{genotypes_info};
     my $protocol_info = $parsed_data->{protocol_info};
 
+    my $stored_genotypes = CXGN::Genotype::Search->new({
+        bcs_schema=>$schema,
+        protocol_id_list=>[$protocol_id],
+        genotypeprop_hash_select=>['GT'],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[],
+        return_only_first_genotypeprop_for_stock=>0
+    });
+    my $stored_genotypes_result = $stored_genotypes->get_genotype_info();
+
+    my %distance_matrix;
+    my %seen_stored_genotype_names;
+    while (my ($sample_name, $genotype_val) = each %$genotype_info) {
+        my $c_gt = CXGN::Genotype->new({
+            marker_encoding=>'GT',
+            markerscores=>$genotype_val,
+            markers=>$protocol_info->{marker_names}
+        });
+        
+        foreach (@$stored_genotypes_result) {
+            my $stock_name = $_->{stock_name};
+            $seen_stored_genotype_names{$stock_name}++;
+            my $gt = CXGN::Genotype->new({
+                marker_encoding=>'GT',
+                markerscores=>$_->{selected_genotype_hash},
+                markers=>$protocol_info->{marker_names}
+            });
+            
+            my $distance = $gt->calculate_distance($c_gt);
+            $distance_matrix{$sample_name}->{$stock_name} = $distance;
+        }
+    }
+    my @protocol_stock_names = keys %seen_stored_genotype_names;
+
+    #print STDERR Dumper \%distance_matrix;
     #print STDERR Dumper $genotype_info;
     #print STDERR Dumper $protocol_info;
     #print STDERR Dumper $observation_unit_uniquenames;
 
-    $c->stash->{rest} = {success => 1};
+    $c->stash->{rest} = {success => 1, distance_matrix => \%distance_matrix, users_stock_names => $observation_unit_uniquenames, protocol_stock_names => \@protocol_stock_names };
 }
 
 1;
