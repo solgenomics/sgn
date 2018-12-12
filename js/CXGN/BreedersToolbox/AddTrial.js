@@ -48,27 +48,27 @@ jQuery(document).ready(function ($) {
     function create_trial_validate_form(){
         var trial_name = $("#new_trial_name").val();
         var breeding_program = $("#select_breeding_program").val();
-        var location = $("#add_project_location").val();
+        var location = $("#add_project_location").val().toString().trim(); // remove whitespace
         var trial_year = $("#add_project_year").val();
         var description = $("#add_project_description").val();
         var design_type = $("#select_design_method").val();
         if (trial_name === '') {
-            alert("Please give a trial name");
+            alert("Please supply a trial name");
         }
         else if (breeding_program === '') {
-            alert("Please give a breeding program");
+            alert("Please select a breeding program");
         }
         else if (location === '') {
-            alert("Please give a location");
+            alert("Please select at least one location");
         }
         else if (trial_year === '') {
-            alert("Please give a trial year");
+            alert("Please select a trial year");
         }
         else if (description === '') {
-            alert("Please give a description");
+            alert("Please supply a description");
         }
         else if (design_type === '') {
-            alert("Please give a design type");
+            alert("Please select a design type");
         }
         else {
             verify_create_trial_name(trial_name);
