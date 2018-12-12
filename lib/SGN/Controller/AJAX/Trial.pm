@@ -107,7 +107,6 @@ sub generate_experimental_design_POST : Args(0) {
     my $start_number =  $c->req->param('start_number');
     my $increment =  $c->req->param('increment');
     my $trial_location = $c->req->param('trial_location');
-    print STDERR "Location is $trial_location\n";
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
     my $plot_layout_format = $c->req->param('plot_layout_format');
@@ -205,7 +204,6 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
     catch {
-        print STDERR "Something went wrong with the decoding, just pushing the whole variable\n";
         push @locations, $trial_location;
     };
 
@@ -233,7 +231,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     foreach my $location (@locations) {
 
-        print STDERR "Working on location $location\n";
+        #print STDERR "Working on location $location\n";
 
         my $trial_name = $c->req->param('project_name');
         my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
@@ -256,8 +254,6 @@ sub generate_experimental_design_POST : Args(0) {
             my $abbreviation = $location_object->get_prop('abbreviation');
             #print STDERR "Abbreviation is $abbreviation\n";
 
-            #print STDERR "Trial name before change is $trial_name\n";
-
             if ($abbreviation) {
                 $trial_name = $trial_name.$abbreviation;
             } else {
@@ -268,7 +264,6 @@ sub generate_experimental_design_POST : Args(0) {
 
         #strip name of any invalid filename characters
         $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
-        #print STDERR "Trial name after strip is $trial_name\n";
         $trial_design->set_trial_name($trial_name);
 
         my $design_created = 0;

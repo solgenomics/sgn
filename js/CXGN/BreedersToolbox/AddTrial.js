@@ -254,7 +254,7 @@ jQuery(document).ready(function ($) {
                 'seedlot_list': seedlot_list,
             },
             success: function (response) {
-                console.log(response);
+                //console.log(response);
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
@@ -315,10 +315,9 @@ jQuery(document).ready(function ($) {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('#add_project_description').val();
-        // var trial_location = $('#add_project_location').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
-        console.log("Trial location is "+trial_location);
+        //console.log("Trial location is "+trial_location);
         var block_number = $('#block_number').val();
         //alert(block_number);
         var row_number= $('#row_number').val();

@@ -55,9 +55,6 @@ $locations
                                         <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
                                             <option value="">Select Location</option>
 <%perl>
-    # foreach my $location (@locations) {
-    #     print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-    # }
     foreach my $location_hashref (@$locations) {
         my $properties = $location_hashref->{'properties'};
         my $program = $properties->{'Program'};

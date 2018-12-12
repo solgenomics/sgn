@@ -71,10 +71,8 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my $breeding_programs = $projects->get_breeding_programs();
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
-    # print STDERR "Role is $roles\n";
-    # my @roles = @$roles;
-    print STDERR "My roles are @roles\n";
 
+    #Add true false field to breeding program array indicating whether program is linked to current user
     foreach my $role (@roles) {
         for (my $i=0; $i < scalar @breeding_programs; $i++) {
             if ($role eq $breeding_programs[$i][1]){
@@ -85,32 +83,15 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
         }
     }
 
-    print STDERR "Breeding programs are ".Dumper(@breeding_programs);
-    # my @user_program = map { my $match = $_; grep { $_[1] eq $match } @roles } @$breeding_programs;
-    #
-    # print STDERR "User program is @user_program\n";
-    #
-    # if (scalar @user_program < 1) {
-    #     push @user_program, "Select your breeding program";
-    #     push @breeding_programs, [0,"Select your breeding program"];
-    # }
+    #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
 
-    # $c->stash->{user_program} = \@user_program;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
     my $locations = decode_json $projects->get_location_geojson();
 
-    print STDERR "Locations are ".Dumper($locations)."\n";
-
-    print STDERR "type of locations: " . ref($locations) . "\n";
-
-
-    foreach my $location_hash (@$locations) {
-        print STDERR "type of location hash: " . ref($location_hash) . "\n";
-        print STDERR "location hash dumper ".Dumper($location_hash)."\n";
-    }
+    #print STDERR "Locations are ".Dumper($locations)."\n";
 
     $c->stash->{locations} = $locations;
 
