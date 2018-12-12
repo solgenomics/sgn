@@ -95,6 +95,7 @@ function generate_trait_file() {
         return;
     }
 
+    var include_notes = jQuery('#include_notes_trait').is(':checked');
     var trait_file_name = jQuery('#trait_file_name').val();
 
     if (trait_file_name == '') {
@@ -110,6 +111,7 @@ function generate_trait_file() {
             'trait_list': trait_list,
             'trait_ids': trait_ids,
             'trait_file_name': trait_file_name,
+            'include_notes': include_notes,
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");

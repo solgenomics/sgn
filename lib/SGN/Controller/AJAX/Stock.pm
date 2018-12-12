@@ -779,6 +779,38 @@ sub project_year_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+
+=head2 seedlot_name_autocomplete
+
+Public Path: /ajax/stock/seedlot_name_autocomplete
+
+Autocomplete a seedlot name.  Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+
+=cut
+
+sub seedlot_name_autocomplete : Local : ActionClass('REST') { }
+
+sub seedlot_name_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
+    my @response_list;
+    my $q = "SELECT uniquename FROM stock where type_id = ? AND uniquename ilike ? LIMIT 1000";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( $seedlot_cvterm_id , '%'.$term.'%');
+    while  (my ($uniquename) = $sth->fetchrow_array ) {
+        push @response_list, $uniquename;
+    }
+    $c->stash->{rest} = \@response_list;
+}
+
+
 =head2 stockproperty_autocomplete
 
 Public Path: /ajax/stock/stockproperty_autocomplete
@@ -1725,11 +1757,14 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_
     my $related_groups = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
     my $result = $related_groups->get_group_and_member();
     my @group;
+
     foreach my $r (@$result){
-
-      my ($stock_id, $stock_name, $cvterm_name) = @$r;
-
-      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
+        my ($stock_id, $stock_name, $cvterm_name) = @$r;
+        if ($cvterm_name eq "cross"){
+            push @group, [qq{<a href=\"/cross/$stock_id\">$stock_name</a>}, $cvterm_name, $stock_name];
+        } else {
+            push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
+        }
     }
 
     $c->stash->{rest}={data=>\@group};

@@ -41,14 +41,18 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $offset = $params->{start};
     my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
 
-    my %stockprops_values;
-    my $stockprops_search = $params->{editable_stockprop_values} ? decode_json $params->{editable_stockprop_values} : {};
-    while (my ($property, $value) = each %$stockprops_search){
-        my @values = split ',', $value;
-        foreach (@values){
-            push @{$stockprops_values{$property}}, $_;
-        }
-    }
+    # my %stockprops_values;
+    my $stockprops_values = $params->{editable_stockprop_values} ? decode_json $params->{editable_stockprop_values} : {};
+
+    # print STDERR "Stockprops are: ".Dumper($stockprops_search);
+    #
+    # while (my ($property, $value) = each %$stockprops_search){
+    #     print STDERR "Property is: $property and value is $value\n";
+        # my @values = split ',', $value;
+        # foreach (@values){
+        #     push @{$stockprops_values{$property}}, $_;
+        # }
+    # }
 
     #This defines the stockprops that will be returned in the results.
     my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
@@ -73,7 +77,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         breeding_program_id_list=>$params->{breeding_program} ? [$params->{breeding_program}] : undef,
         location_name_list=>$params->{location} ? [$params->{location}] : undef,
         year_list=>$params->{year} ? [$params->{year}] : undef,
-        stockprops_values=>\%stockprops_values,
+        stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
         limit=>$limit,
         offset=>$offset,

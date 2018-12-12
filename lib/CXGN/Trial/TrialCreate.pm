@@ -10,7 +10,7 @@ Will do the following:
 3) Will associate the location to the project through the nd_experiment as well as through a projectprop. Location lookup happens based on location name that is provided. Assumes locations already stored in database.
 4) Will associate the trial to its breeding program. Lookup is by breeding program name that is provided and assumes bp already exists in database. Will return an error if breeding program name not found.
 5) Creates a single nd_experiment_project entry, linking project to nd_experiment.
-6) Creates a year and design projectprop. Also a project_type projectprop if provided. For genotyping trials also creates others like, genotyping_facility and plate_format projectprops
+6) Creates a year and design projectprop. Also a project_type projectprop if provided. For genotyping plates also creates others like, genotyping_facility and plate_format projectprops
 7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (tissue_samples, or plots and plants and subplots) and stockprops (rep, block, well, etc)
 
 =head1 USAGE
@@ -44,7 +44,7 @@ Will do the following:
         print STDERR "ERROR SAVING TRIAL!\n";
     };
 
-    FOR GENOTYPING TRIALS:
+    FOR GENOTYPING PLATES:
     my $ct = CXGN::Trial::TrialCreate->new( {
         chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
         dbh => $c->dbc->dbh(),
@@ -165,10 +165,10 @@ has 'field_trial_is_planned_to_be_genotyped' => (isa => 'Str', is => 'rw', predi
 has 'field_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_field_trial_from_field_trial', required => 0);
 has 'crossing_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_crossing_trial_from_field_trial', required => 0);
 
-#Trial linkage when saving either a field trial or genotyping trial
+#Trial linkage when saving either a field trial or genotyping plate
 has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_genotyping_trial_from_field_trial', required => 0);
 
-#Properties for genotyping trials
+#Properties for genotyping plates
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');

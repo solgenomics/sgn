@@ -1,0 +1,109 @@
+
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Search Accessions with Specific Genotypes' &>
+
+<&| /page/info_section.mas, title=>''&>
+
+<div class="row" id="genotype_search_form" >
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Dataset:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_dataset">
+                                    <option value="">Select a dataset</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Marker set:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="selected_markerset">
+                                    <option value="">Select a marker set</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-4"></label>
+                            <div class="col-sm-8" >
+                                <button class="btn btn-info" id="search_genotypes_accessions"><i class="glyphicon glyphicon-search"></i> Accessions</button>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+
+<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
+
+    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+    <table id="genotype_search_results" width="100%" class="table table-hover table-striped">
+    </table>
+</&>
+
+<script>
+
+
+jQuery(document).ready(function (){
+
+    var data_set = new CXGN.Dataset();
+    var lo = new CXGN.List();
+
+    get_select_box('datasets','selected_dataset');
+    jQuery('#selected_markerset').html(lo.listSelect('selected_markerset', ['markers'], 'Select a marker set'));
+
+    jQuery("#search_genotypes_accessions").click(function(){
+
+        var dataset_id = jQuery('#selected_dataset').val();
+        var markerset_id = jQuery('#selected_markerset').val();
+        var marker_name = jQuery('#input_marker').val();
+        var allele_dosage = jQuery('#selected_dosage').val();
+
+        var table = jQuery('#genotype_search_results').DataTable({
+            'destroy' : true,
+            'ajax': { 'url':'/ajax/search/get_selected_accessions',
+                'data':{
+                    'dataset_id': dataset_id,
+                    'markerset_id': markerset_id,
+                    'marker_name': marker_name,
+                    'allele_dosage': allele_dosage,
+                }
+            },
+            columns: [
+                {
+                    title: "Accessions",
+                    data: null,
+                    render: function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}},
+                {
+                    title: "Genotypes",
+                    data: "genotypes",
+                    render: function(data, type,row){
+                        var newFormat = data.split(",").join("&nbsp &nbsp &nbsp &nbsp &nbsp");
+                        return newFormat;
+                    }
+                },
+            ],
+        });
+    });
+
+});
+
+
+</script>

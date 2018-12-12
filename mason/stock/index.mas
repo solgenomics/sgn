@@ -138,7 +138,7 @@ my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 my $members_phenotypes = $stockref->{members_phenotypes};
 my $p_download_link = '<a class="btn btn-sm btn-default" style="margin:3px" target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&">Download All Phenotypes</a>';
 my $direct_genotypes = $stockref->{direct_genotypes};
-my $g_download_link = keys %$direct_genotypes ? qq|<a class="btn btn-default btn-sm" style="margin:3px" href =  "/stock/$stock_id/genotypes">Download Genotypes</a>| : 'No genotypes available!' ;
+my $g_download_link = scalar(@$direct_genotypes) > 0 ? qq|<a class="btn btn-default btn-sm" style="margin:3px" href =  "/stock/$stock_id/genotypes">Download All Genotypes</a>| : 'No genotypes available!' ;
 ############################
 my $map_html = $stockref->{map_html};
 my $map;
@@ -205,7 +205,7 @@ function jqueryStuff() {
 <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
 
 
-<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' href='/phenome/qtl_form.pl'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' href='/search/stocks/'>Back to stock search</button>"  &>
+<&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' name='stock_new_qtl_link'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' name='stock_go_to_stock_search'>Back to stock search</button>"  &>
 
     <div class="panel panel-default">
         <div class="panel-body">
@@ -347,6 +347,14 @@ function jqueryStuff() {
 <script>
     jQuery(document).ready(function() {
         stock_detail_page_init_dialogs();
+
+        jQuery('[name="stock_new_qtl_link"]').click(function(){
+            window.location.href = '/phenome/qtl_form.pl';
+        });
+
+        jQuery('[name="stock_go_to_stock_search"]').click(function(){
+            window.location.href = '/search/stocks/';
+        });
 
         jQuery('#stock_add_synonym').click(function(){
             synonyms_addPropDialog();

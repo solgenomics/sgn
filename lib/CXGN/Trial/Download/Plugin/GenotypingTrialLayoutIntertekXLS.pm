@@ -11,7 +11,7 @@ This plugin module is loaded from CXGN::Trial::Download
 
 ------------------------------------------------------------------
 
-For downloading a genotyping trial's layout (as used from CXGN::Trial::Download->trial_download):
+For downloading a genotyping plate's layout (as used from CXGN::Trial::Download->trial_download):
 
 my $plugin = "GenotypingTrialLayoutIntertekXLS";
 

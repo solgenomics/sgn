@@ -197,10 +197,18 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
  
     # look up our blastdb
     my $schema = $c->dbic_schema("SGN::Schema");
-    my $bdbo = $schema->resultset("BlastDb")->find($blast_db_id)
-    	or $c->throw( is_error => 0,
-		      message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
-    my $seq = $bdbo->get_sequence($id) # returns a Bio::Seq object.
+#    my $bdbo = $schema->resultset("BlastDb")->find($blast_db_id)
+#    	or $c->throw( is_error => 0,
+#		      message => "The blast database with id $blast_db_id could not be found (please set the blast_db_id parameter).");
+    my $bo = CXGN::Blast->new( { 
+	sgn_schema => $schema,  
+	blast_db_id => $blast_db_id,
+	dbpath => $c->config->{blast_db_path}	       
+			       });
+
+    print STDERR "Path:". $c->config->{blast_db_path}." db_id: ".$blast_db_id."\n";
+
+    my $seq = $bo->get_sequence($id) # returns a Bio::Seq object.
 	or $c->throw( is_error => 0,
 		      message => "The sequence could not be found in the blast database with id $blast_db_id.");
 
@@ -223,7 +231,7 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
 	$c->stash->{template} = '/blast/show_seq/html.mas';
 	$c->stash->{seq} = $seq;
 	$c->stash->{highlight_coords} = \@coords;
-	$c->stash->{source} = '"'.$bdbo->title().'" BLAST dataset ';
+	$c->stash->{source} = '"'.$bo->title().'" BLAST dataset ';
 	$c->stash->{format_links} = [
             ( $seq->length > 500_000 ? () : [ 'View as FASTA' => $view_link ] ),
             [ 'Download as FASTA' => $download_link ],

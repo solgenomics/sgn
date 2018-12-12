@@ -29,21 +29,27 @@ message('pheno file: ', phenoDataFile)
 traitsFile <- grep("traits", inputFiles, value = TRUE)
 message('traits file: ', traitsFile)
 
+metadataFile <- grep("metadata", inputFiles, value = TRUE)
+message('metadata file: ', metadataFile)
 
-phenoData <- fread(phenoDataFile,
+metaData <- scan(metadataFile, what="character")
+
+designFactors <- c('germplasmName','studyYear', 'studyDesign', 'blockNumber', 'locationName', 'replicate')
+dropCols <-  metaData[! metaData %in% designFactors]
+
+phenoData <- fread(phenoDataFile, sep="\t",
+                   drop=dropCols,
                    na.strings=c("NA", "-", " ", ".", ".."))
 
 phenoData <- data.frame(phenoData)
 
-traits  <- scan(traitsFile,
-                what = "character")
-
+traits  <- scan(traitsFile,  what = "character")
 traits  <- strsplit(traits, "\t")
 
 
 #needs more work for multi traits anova
 for (trait in traits) {
-
+    
     message('trait: ', trait)
     anovaFiles     <- grep("anova_table",
                            outputFiles,
@@ -79,10 +85,19 @@ for (trait in traits) {
     errorFile  <- grep("anova_error",
                        outputFiles,
                        value = TRUE)
-    
+
     anovaOut <- runAnova(phenoData, trait)
-  
-    if (class(anovaOut)[1] == 'merModLmerTest') {
+    
+    if (class(anovaOut) == 'character') {
+        cat(anovaOut, file=errorFile)
+    } else if (is.null(anovaOut)) {
+        
+        cat('Error occured fitting anova model to this trait data.
+             Please check the trait data and design factors.',
+            file=errorFile)
+        
+    } else if (class(anovaOut)[1] == 'lmerModLmerTest' ||
+               class(anovaOut)[1] == 'merModLmerTest') {
     
         png(diagnosticsFile, 960, 480)
         par(mfrow=c(1,2))
@@ -98,14 +113,15 @@ for (trait in traits) {
                                     tableType="html",
                                     traitName=trait,
                                     out=anovaHtmlFile)
-
+       
         anovaTable <- getAnovaTable(anovaOut,
                                     tableType="text",
                                     traitName=trait,
                                     out=anovaTxtFile)
-      
-        adjMeans   <- getAdjMeans(phenoData, trait)
-
+        
+  
+        adjMeans   <- getAdjMeans(traitName=trait, modelOut=anovaOut)
+  
         fwrite(adjMeans,
                file      = adjMeansFile,
                row.names = FALSE,
@@ -116,8 +132,6 @@ for (trait in traits) {
         sink(modelSummFile)
         print(anovaOut)
         sink()
-    } else {
-        cat(anovaOut, file=errorFile)        
     }
   
 }

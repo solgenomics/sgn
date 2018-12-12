@@ -78,7 +78,7 @@ $acronym
 % if ($pop_id !~ /list/)
 % {
 
-<& /anova.mas,
+<& /solgs/anova/analysis.mas,
    pop_id => $pop_id,
 &>
 
@@ -124,4 +124,5 @@ $acronym
 %}
 
 
- <input type="hidden" id="population_id" value="<% $pop_id %>" />
+<input type="hidden" id="population_id" value="<% $pop_id %>" />
+

@@ -31,8 +31,6 @@ jQuery(document).ready( function() {
     });
 
 
-
-
 jQuery(document).ready( function() { 
     var listId;
         
@@ -121,22 +119,21 @@ function getListTypeSelectionPopDetail(listId) {
 	var listData;
 	var listType;
 	var listName;
-	var listElements;
-	var listElementsNames;
+	//var listElements;
+	//var listElementsNames;
 
 	if (listId) {
             listData      = list.getListData(listId);
 	    listType      = list.getListType(listId);
 	    listName      = list.listNameById(listId);
-	    listElements  = listData.elements;
+	   // listElements  = listData.elements;
 
-	    listElementsNames = getSelectionListElementsNames(listElements);
+	    //listElementsNames = getSelectionListElementsNames(listElements);
 	}
 	
 	return {'name'          : listName,
-		'list'          : listElements,
+		'list_id'       : listId,
 		'type'          : listType,
-		'elementsNames' : listElementsNames,
                };
     }
 }
@@ -172,7 +169,6 @@ if (typeof(listId) == 'number') {
     
     var args = {
 	'list_name'        : listName,
-	'list'             : list,
 	'list_id'          : listId,
 	'analysis_type'    : 'selection prediction',
 	'data_set_type'    : dataSetType,
@@ -201,9 +197,10 @@ function getGenotypesList(listId) {
     var listType;// = list.getListType(listId);
 
     return {'name'      : listName,
-            'list'      : genotypesList.elements,
+            'listId'      : listId,
             'list_type' : listType,
-            };
+           };
+    
 }
 
 

@@ -30,43 +30,43 @@ my $create_spreadsheet = CXGN::Trial::Download->new({
 
 $create_spreadsheet->download();
 
-my @contents = ReadData ($tempfile);
+my $contents = ReadData $tempfile;
 
 #print STDERR Dumper \@contents;
 
 #print STDERR Dumper @contents->[0]->[0];
-is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
-is(@contents->[0]->[0]->{'sheets'}, '8', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '8', "check that type of file is correct");
 
-my $columns_1 = @contents->[0]->[1]->{'cell'};
+my $columns_1 = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns_1);
 ok(scalar(@$columns_1) == 3, "check number of columns in first sheet.");
 
-my $columns_2 = @contents->[0]->[2]->{'cell'};
+my $columns_2 = $contents->[2]->{'cell'};
 #print STDERR Dumper scalar(@$columns_2);
 ok(scalar(@$columns_2) == 3, "check number of columns in second sheet.");
 
-my $columns_3 = @contents->[0]->[3]->{'cell'};
+my $columns_3 = $contents->[3]->{'cell'};
 #print STDERR Dumper scalar(@$columns_3);
 ok(scalar(@$columns_3) == 14, "check number of columns in third sheet.");
 
-my $columns_4 = @contents->[0]->[4]->{'cell'};
+my $columns_4 = $contents->[4]->{'cell'};
 #print STDERR Dumper scalar(@$columns_4);
 ok(scalar(@$columns_4) == 14, "check number of columns in fourth sheet.");
 
-my $columns_5 = @contents->[0]->[5]->{'cell'};
+my $columns_5 = $contents->[5]->{'cell'};
 #print STDERR Dumper scalar(@$columns_5);
 ok(scalar(@$columns_5) == 15, "check number of columns in fifth sheet.");
 
-my $columns_6 = @contents->[0]->[6]->{'cell'};
+my $columns_6 = $contents->[6]->{'cell'};
 #print STDERR Dumper scalar(@$columns_6);
 ok(scalar(@$columns_6) == 10, "check number of columns in sixth sheet.");
 
-my $columns_7 = @contents->[0]->[7]->{'cell'};
+my $columns_7 = $contents->[7]->{'cell'};
 #print STDERR Dumper scalar(@$columns_7);
 ok(scalar(@$columns_7) == 7, "check number of columns in seventh sheet.");
 
-my $columns_8 = @contents->[0]->[8]->{'cell'};
+my $columns_8 = $contents->[8]->{'cell'};
 #print STDERR Dumper scalar(@$columns_8);
 ok(scalar(@$columns_8) == 9, "check number of columns in eigth sheet.");
 

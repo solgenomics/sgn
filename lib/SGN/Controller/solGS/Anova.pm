@@ -4,13 +4,13 @@ Isaak Y Tecle <iyt2@cornell.edu>
 
 =head1 Name
 
-SGN::Controller::AJAX::Analyze::Anova - a controller for ANOVA. For now, this implements a one-way
+SGN::Controller::solGS::Anova - a controller for ANOVA. For now, this implements a one-way
 single trial ANOVA with a possibility for simultanously running anova for multiple traits.
  
 =cut
 
 
-package SGN::Controller::AJAX::Analyze::Anova;
+package SGN::Controller::solGS::Anova;
 
 use Moose;
 use namespace::autoclean;
@@ -115,7 +115,6 @@ sub create_anova_phenodata_file {
     $c->stash->{pop_id} = $c->stash->{trial_id};
     $c->controller('solGS::solGS')->phenotype_file($c);
       
-    $self->copy_pheno_file_to_anova_dir($c);
     my $pheno_file =  $c->stash->{phenotype_file};
       
     if (!-s $pheno_file) {
@@ -220,7 +219,7 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 
     foreach my $tr (@$traits) 
     {
-	foreach my $k (keys $tr) 
+	foreach my $k (keys %$tr) 
 	{
 	    $c->stash->{$k} = $tr->{$k};	   
 	}
@@ -261,7 +260,6 @@ sub check_anova_output {
 	return 1;
 
     } else {
-	 
 	$self->anova_error_file($c);
 	my $error_file = $c->stash->{anova_error_file};
 
@@ -298,21 +296,12 @@ sub prep_download_files {
   $self->anova_error_file($c);    
   my $error_file = $c->stash->{anova_error_file};
   
-  copy($anova_txt_file, $base_tmp_dir)  
-      or die "could not copy $anova_txt_file to $base_tmp_dir";
-
-  copy($model_file, $base_tmp_dir)  
-      or die "could not copy $model_file to $base_tmp_dir";
-  
-  copy($means_file, $base_tmp_dir)  
-      or die "could not copy $means_file to $base_tmp_dir";
-
-  copy($diagnostics_file, $base_tmp_dir)  
-      or die "could not copy $diagnostics_file to $base_tmp_dir";
-
-  copy($error_file, $base_tmp_dir)  
-      or die "could not copy $error_file to $base_tmp_dir";
-
+  $c->controller('solGS::Files')->copy_file($anova_txt_file, $base_tmp_dir);					     
+  $c->controller('solGS::Files')->copy_file($model_file, $base_tmp_dir); 
+  $c->controller('solGS::Files')->copy_file($means_file, $base_tmp_dir);  
+  $c->controller('solGS::Files')->copy_file($diagnostics_file, $base_tmp_dir);
+  $c->controller('solGS::Files')->copy_file($error_file, $base_tmp_dir);
+										     
   $anova_txt_file = fileparse($anova_txt_file);
   $anova_txt_file = catfile($tmp_dir, $anova_txt_file);
 
@@ -354,7 +343,7 @@ sub run_anova {
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "anova-${trial_id}-${trait_id}";
-    $c->stash->{r_script}     = 'R/anova.r';
+    $c->stash->{r_script}     = 'R/solGS/anova.r';
 
     $c->controller("solGS::solGS")->run_r_script($c);
 
@@ -371,8 +360,7 @@ sub copy_pheno_file_to_anova_dir {
 
     my $anova_cache = $c->stash->{anova_cache_dir};
 
-    copy($pheno_file, $anova_cache) or 
-	die "could not copy $pheno_file to $anova_cache";
+    $c->controller('solGS::Files')->copy_file($pheno_file, $anova_cache);
 
     my $file = basename($pheno_file);
     $c->stash->{phenotype_file} = catfile($anova_cache, $file);
@@ -392,9 +380,13 @@ sub anova_input_files {
     $self->anova_traits_file($c);   
     my $traits_file = $c->stash->{anova_traits_file};
 
+    $c->controller("solGS::Files")->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+
     my $file_list = join ("\t",
                           $pheno_file,
                           $traits_file,
+			  $metadata_file
 	);
      
     my $tmp_dir = $c->stash->{anova_temp_dir};
@@ -526,20 +518,15 @@ sub anova_model_file {
 
 }
 
+
 sub anova_error_file {
     my ($self, $c) = @_;
 
-    my $trial_id = $c->stash->{trial_id};
-    my $trait_id = $c->stash->{trait_id};
-    
-    $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};;
+    $c->stash->{file_id} = $c->stash->{trait_id} . '_' . $c->stash->{trial_id}; 
+    $c->stash->{cache_dir} = $c->stash->{anova_cache_dir};
+    $c->stash->{analysis_type} = 'anova';
 
-    my $cache_data = {key       => "anova_error_${trial_id}_${trait_id}",
-                      file      => "anova_error_${trial_id}_${trait_id}.txt",
-                      stash_key => "anova_error_file"
-    };
-
-    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+    $c->controller('solGS::Files')->analysis_error_file($c);
 
 }
 

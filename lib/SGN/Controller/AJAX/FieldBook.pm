@@ -96,10 +96,9 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     my $selected_trait_list_id = $c->req->param('trait_list');
     my @selected_traits;
-    my @trait_list;
     if ($selected_trait_list_id){
         my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
-        @trait_list = @{$list->elements()};
+        my @trait_list = @{$list->elements()};
         my $validator = CXGN::List::Validate->new();
         my @absent_traits = @{$validator->validate($schema, 'traits', \@trait_list)->{'missing'}};
         if (scalar(@absent_traits)>0){
@@ -126,7 +125,6 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         treatment_project_ids => $treatment_project_ids,
         selected_columns => $selected_columns,
         selected_trait_ids => \@selected_traits,
-        selected_trait_names => \@trait_list
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
@@ -160,6 +158,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
   my @trait_list;
   my $trait_file_name = $c->req->param('trait_file_name');
+  my $include_notes = $c->req->param('include_notes');
   my $user_id = $c->user()->get_object()->get_sp_person_id();
   my $user_name = $c->user()->get_object()->get_username();
   my $time = DateTime->now();
@@ -223,8 +222,14 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       #return error if not $trait_info_string;
       #print line with trait info
       #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
-      print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
+      #print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
       print FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
+  }
+
+  if ($include_notes eq 'true') {
+      $order++;
+      #print STDERR " Adding notes line \"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
+      print FILE "\"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
   }
 
   close FILE;

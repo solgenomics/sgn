@@ -814,7 +814,7 @@ sub structure_genotype_data {
    
     if (@$dataref)
     {
-	my $geno_row  = @$dataref[0]->{genotype_hash};
+	my $geno_row  = @$dataref[0]->{selected_genotype_hash};
 	my $markers   = $self->_get_dataset_markers($geno_row);
 	my $headers   = $self->_create_genotype_dataset_headers($markers);
 	
@@ -832,21 +832,21 @@ sub structure_genotype_data {
 
 	    if ($cnt > 1)
 	    {
-		$duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
-	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
+		$duplicate_stock =  grep(/^$stock$/, @stocks); #$stock ~~ @stocks;
 	    }
 	    
 	    if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
 	    {
 		push @stocks, $stock;
 		
-		my $geno_hash = $dg->{genotype_hash}; 
+		my $geno_hash = $dg->{selected_genotype_hash}; 
 		
 		$geno_data .= $stock . "\t";
 		$geno_data .= $self->_create_genotype_row($headers, $geno_hash);
 		$geno_data .= "\n";
 	    }
 	}
+    print STDERR scalar(@stocks)."\n";
     }
 
     return \$geno_data;
@@ -855,63 +855,19 @@ sub structure_genotype_data {
 
 
 sub genotypes_list_genotype_data {
-    my ($self, $genotypes) = @_;
+    my ($self, $genotypes_ids) = @_;
 
-   
- #    my $protocol_id = $self->protocol_id();
+    my $protocol_id = $self->protocol_id();
 	    
- #    my $dataset = CXGN::Dataset->new({
- # 	people_schema => $self->people_schema,
- # 	schema  => $self->schema,
- # 	accessions => $genotypes_ids});	
+    my $dataset = CXGN::Dataset->new({
+ 	people_schema => $self->people_schema,
+ 	schema  => $self->schema,
+ 	accessions => $genotypes_ids});	
 
- #    my $dataref = $dataset->retrieve_genotypes($protocol_id);
- #    $geno_data  = $self->structure_genotype_data($dataref);	   
+    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+    my $geno_data  = $self->structure_genotype_data($dataref);	   
 
-
-    my $genotypes_rs = $self->accessions_list_genotypes_rs($genotypes);
-
-    my $markers;
-  
-    while (my $stock_rs = $genotypes_rs->next) 
-    {
-	$markers = $self->extract_project_markers($stock_rs);
-	last if $markers;
-    }
-
-    my $geno_data = "\t" . $markers . "\n";
-
-    my @markers = split(/\t/, $markers);
-
-    my $cnt = 0;
-    my @stocks;
-    
-    while (my $stock_rs = $genotypes_rs->next) 
-    {
-	$cnt++;
-	my $duplicate_stock;
-	my $stock;
-
-	if ($cnt > 1)
-	{
-		$stock = $stock_rs->get_column('stock_name');
-		$duplicate_stock = $stock ~~ @stocks; #grep(/^$stock$/, @stocks);
-	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
-	    
-	} 
-   
-	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
-	{
-	    push @stocks, $stock;
-
-	    my $geno_values = $self->stock_genotype_values(\@markers, $stock_rs);	    
-	    $geno_data .= $geno_values;
-	}
-	
-
-    }
-
-    return \$geno_data;
+    return $geno_data;
 
 }
 
@@ -995,7 +951,7 @@ sub project_genotype_data_rs {
     my @accessions;
 
     foreach my $st  (@$trial_accessions){
-	push @accessions, $st->{accession_name};
+	push @accessions, $st->{stock_id};
     }
 
     my $genotype_rs = $self->accessions_list_genotypes_rs(\@accessions);
@@ -1043,22 +999,15 @@ sub individual_stock_genotypes_rs {
 
 
 sub accessions_list_genotypes_rs {
-    my ($self, $accessions_list) = @_;
+    my ($self, $genotypes_ids) = @_;
 
-    my $stocks_rs = $self->get_stocks_rs($accessions_list);
-   
-    my @genotypes_ids;    
-    while (my $row = $stocks_rs->next)
-    {
-    	push @genotypes_ids, $row->get_column('stock_id');
-    }
-    
+
     my $protocol = $self->genotyping_protocol();
     my $genotype_rs = $self->schema->resultset('NaturalDiversity::NdExperiment')
 	->search(
 	{ 
 	    'nd_protocol.name' => $protocol,
-	    'stock.stock_id' => {-in =>\@genotypes_ids},
+	    'stock.stock_id' => {-in =>$genotypes_ids},
 	    'type.name'  => 'snp genotyping',
 	    'cv.name' => 'genotype_property',	   
 	},
@@ -1187,7 +1136,7 @@ sub _create_genotype_row {
     {   
 	no warnings 'uninitialized';
 	
-	$geno_values .= $genotype_hash->{$marker};
+	$geno_values .= $genotype_hash->{$marker}->{'DS'};
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
 
@@ -1716,7 +1665,9 @@ sub structure_phenotype_data {
     my $round = Math::Round::Var->new(0.001);
 
     my $formatted_data;
-
+    
+    no warnings 'uninitialized';
+    
     for (my $i =0; $i < @$data; $i++) 
     {
 	my $row = $data->[$i];
@@ -1726,6 +1677,18 @@ sub structure_phenotype_data {
     
     return $formatted_data;
 }
+
+
+sub trial_metadata  {
+    my ($self) = @_;
+       
+    my @headers =   ('studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate',    'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber' ,  'colNumber',  'entryType', 'plantNumber', 'plantedSeedlotStockDbId',  'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames', 'notes');
+
+     	
+    return \@headers;
+
+}
+
 
 
 sub structure_plots_list_phenotype_data {
@@ -2093,11 +2056,6 @@ sub protocol_id {
     {
 	$protocol = $self->context->config->{default_genotyping_protocol};
     }
-
-    #my $protocol_id = $self->schema->resultset("NaturalDiversity::NdProtocol")
-    #->search({'name'=>$protocol})
-    #->first
-    #->nd_protocol_id();
    
     my $q = 'SELECT nd_protocol_id FROM nd_protocol WHERE name = ?';
     my $sth = $self->context->dbc->dbh->prepare($q);
@@ -2109,6 +2067,21 @@ sub protocol_id {
     return $protocol_id;
 
     
+}
+
+
+sub get_genotypes_from_dataset {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my  $genotypes_ids  = $dataset->retrieve_accessions();
+    my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
+   
+    return \@genotypes_ids;
 }
 
 
