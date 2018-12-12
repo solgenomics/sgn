@@ -234,6 +234,9 @@ $sample_observation_unit_type_name => undef
 % if ($info_section_id eq 'stock_comments_section'){
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
+% if ($info_section_id eq 'stock_delete_section'){
+                                <& /stock/delete.mas, stock_id=>$stock_id &>
+% } #End stock_delete_section
 
 
 % if ($info_section_id eq 'manage_tissue_samples_field_trials'){
