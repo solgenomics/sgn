@@ -313,6 +313,10 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
 
+% if (!$info_section_id){
+                                <p>No section specified! Main content goes here!</p>
+% }
+
                             </div>
                         </div>
                     </&>
