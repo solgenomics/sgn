@@ -311,9 +311,9 @@ sub store {
                 $self->_store_stockprop('organization', $self->organization_name());
             }
             if ($self->population_name){
-		print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
-		#DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
-		##$self->_store_population_relationship();
+                print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
+                #DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
+                $self->_store_population_relationship();
             }
 
         }
@@ -338,9 +338,9 @@ sub store {
             $self->_update_stockprop('organization', $self->organization_name());
         }
         if ($self->population_name){
-	    print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
+            print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
             #DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
-            ##$self->_update_population_relationship();
+            $self->_update_population_relationship();
         }
     }
     $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note);
