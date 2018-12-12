@@ -71,7 +71,9 @@ my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
     $location,
     $minimum_count,
     $contents_accession,
-    $contents_cross
+    $contents_cross,
+    $exact_match_uniquenames,
+    $minimum_weight
 );
 
 ------------------------------------------------------------------------------
@@ -268,6 +270,7 @@ sub list_seedlots {
     my $contents_accession = shift; #arrayref of uniquenames
     my $contents_cross = shift; #arrayref of uniquenames
     my $exact_match_uniquenames = shift;
+    my $minimum_weight = shift;
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -312,18 +315,28 @@ sub list_seedlots {
             }
         }
     }
-    if ($minimum_count) {
-        $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };
+
+    my @seedlot_search_joins = (
+        {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
+        {'stock_relationship_objects' => 'subject'}
+    );
+
+    if ($minimum_count || $minimum_weight) {
+        if ($minimum_count) {
+            $search_criteria{'stockprops.value' }  = { '>=' => $minimum_count };
+            $search_criteria{'stockprops.type_id' }  = $current_count_cvterm_id;
+        } elsif ($minimum_weight) {
+            $search_criteria{'stockprops.value' }  = { '>=' => $minimum_weight };
+            $search_criteria{'stockprops.type_id' }  = $current_weight_cvterm_id;
+        }
+        push @seedlot_search_joins, 'stockprops';
     }
     #print STDERR Dumper \%search_criteria;
     #$schema->storage->debug(1);
     my $rs = $schema->resultset("Stock::Stock")->search(
         \%search_criteria,
         {
-            join => [
-                {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
-                {'stock_relationship_objects' => 'subject'}
-            ],
+            join => \@seedlot_search_joins,
             '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
             '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id'],
             order_by => {-asc=>'project.name'},

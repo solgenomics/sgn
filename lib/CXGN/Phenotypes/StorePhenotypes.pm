@@ -47,6 +47,7 @@ use SGN::Image;
 use CXGN::ZipFile;
 use CXGN::UploadFile;
 use CXGN::List::Transform;
+use CXGN::Stock;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -148,6 +149,7 @@ sub create_hash_lookups {
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -197,6 +199,7 @@ sub verify {
     my $self = shift;
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -208,7 +211,6 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    @trait_list = @{$self->trait_list};
     my $error_message;
     my $warning_message;
 
@@ -278,7 +280,7 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if ($trait_value) {
+            if ($trait_value || $trait_value eq '0') {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
@@ -363,6 +365,7 @@ sub store {
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes trait list so it can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
@@ -418,6 +421,12 @@ sub store {
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
 
+            # Check if there is a note for this plot, If so add it using dedicated function
+            my $note_array = $plot_trait_value{$plot_name}->{'notes'};
+            if (defined $note_array) {
+                $self->store_stock_note($stock_id, $note_array, $operator);
+            }
+
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
@@ -427,7 +436,7 @@ sub store {
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
-                my $operator = $value_array->[2] ? $value_array->[2] : $operator;
+                $operator = $value_array->[2] ? $value_array->[2] : $operator;
                 my $observation = $value_array->[3];
                 my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
@@ -557,6 +566,21 @@ sub store {
     return ($error_message, $success_message, \@stored_details);
 }
 
+sub store_stock_note {
+    my $self = shift;
+    my $stock_id = shift;
+    my $note_array = shift;
+    my $operator = shift;
+    my $note = $note_array->[0];
+    my $timestamp = $note_array->[1];
+    $operator = $note_array->[2] ? $note_array->[2] : $operator;
+
+    print STDERR "Stock_id is $stock_id and note in sub is $note, timestamp is $timestamp, operator is $operator\n";
+
+    $note = $note ." (Operator: $operator, Time: $timestamp)";
+    my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+    $stock->create_stockprops( { 'notes' => $note } );
+}
 
 sub delete_previous_phenotypes {
     my $self = shift;

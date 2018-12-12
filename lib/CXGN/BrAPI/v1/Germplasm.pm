@@ -89,10 +89,20 @@ sub germplasm_search {
 
     my %stockprops_values;
     if (scalar(@accession_numbers)>0){
-        $stockprops_values{'accession number'} = \@accession_numbers;
+        foreach (@accession_numbers) {
+            $stockprops_values{'accession number'} = {
+                matchtype => 'contains',
+                value => $_
+            };
+        }
     }
     if (scalar(@germplasm_puis)>0){
-        $stockprops_values{'PUI'} = \@germplasm_puis;
+        foreach (@germplasm_puis) {
+            $stockprops_values{'PUI'} = {
+                matchtype => 'contains',
+                value => $_
+            };
+        }
     }
 
     my $stock_search = CXGN::Stock::Search->new({
@@ -229,7 +239,7 @@ sub germplasm_pedigree {
     if ($notation) {
         push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
         if ($notation ne 'purdy') {
-            push @$status, { 'error' => 'Unsupported notation code. Allowed notation: purdy' };
+            push @$status, { 'error' => "Unsupported notation code '$notation'. Allowed notation: 'purdy'" };
         }
     }
 
@@ -253,16 +263,18 @@ sub germplasm_pedigree {
         my $cross_year = $cross_info ? $cross_info->[3] : '';
         my $cross_type = $cross_info ? $cross_info->[2] : '';
 
-        my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
-        #print STDERR Dumper $progenies;
         my @siblings;
-        foreach (@$progenies){
-            if ($_->[5] ne $uniquename){
-                my $germplasm_id = $_->[4];
-                push @siblings, {
-                    germplasmDbId => qq|$germplasm_id|,
-                    defaultDisplayName => $_->[5]
-                };
+        if ($female_name || $male_name){
+            my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
+            #print STDERR Dumper $progenies;
+            foreach (@$progenies){
+                if ($_->[5] ne $uniquename){
+                    my $germplasm_id = $_->[4];
+                    push @siblings, {
+                        germplasmDbId => qq|$germplasm_id|,
+                        defaultDisplayName => $_->[5]
+                    };
+                }
             }
         }
 
@@ -366,7 +378,7 @@ sub germplasm_markerprofiles {
     my $status = $self->status;
     my @marker_profiles;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
         {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},

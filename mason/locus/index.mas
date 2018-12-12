@@ -206,9 +206,8 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
     form_div_name        => 'locus_details',
     js_object_name       => 'locusForm',
     page_url             => "/locus/$locus_id/view/",
-    alternate_new_button => '<button class="btn btn-sm btn-default" href ="/locus/0/new">New</a>'
+    alternate_new_button => '<a class="btn btn-sm btn-default" href ="/locus/0/new">New</a>'
     &>
-
 <table><tr><td>
       <table>
 	<tr><td>

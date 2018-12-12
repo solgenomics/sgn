@@ -142,9 +142,12 @@ sub _validate_with_plugin {
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross name missing";
-        } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
-        } elsif ($seen_cross_names{$cross_name}) {
+        } else {
+            $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
+        }
+#        } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
+#            push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
+        if ($seen_cross_names{$cross_name}) {
             push @error_messages, "Cell A$row_name: duplicate cross name: $cross_name";
         }
 
@@ -250,6 +253,7 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $cross_name = $worksheet->get_cell($row,0)->value();
+            $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
         }
         if ($worksheet->get_cell($row,1)) {
             $cross_type = $worksheet->get_cell($row,1)->value();

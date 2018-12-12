@@ -101,18 +101,21 @@ sub trial_phenotype_data {
     my $pheno_file  = $args->{phenotype_file};
     my $pop_id      = $args->{population_id};
     my $traits_file = $args->{traits_list_file};
+    my $metadata_file = $args->{metadata_file};
 
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
    
     my $pheno_data = $model->phenotype_data($pop_id);
+    my $metadata   = $model->trial_metadata();
 
     if ($pheno_data)
     {
-	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
+	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
 	write_file($pheno_file, $pheno_data);
     }
-    
+
+    write_file($metadata_file, join("\t", @$metadata));
 }
 
 
@@ -125,15 +128,13 @@ sub genotypes_list_genotype_data {
     my $genotypes     = $args->{genotypes_list};
     my $genotypes_ids = $args->{genotypes_ids};
     my $data_dir      = $args->{list_data_dir};
+    my $geno_file     = $args->{genotype_file};
    
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
 					      });
 
-    my $geno_data = $model->genotypes_list_genotype_data($genotypes);
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $list_pop_id);
-
-    my $geno_file = $files->{geno_file};
+    my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids);
     write_file($geno_file, $geno_data);
 
 }
@@ -149,16 +150,17 @@ sub plots_list_phenotype_data {
     my $plots_ids   = $args->{plots_ids};
     my $traits_file = $args->{traits_file};
     my $data_dir    = $args->{list_data_dir};
+    my $pheno_file  = $args->{phenotype_file};
+    my $metadata_file = $args->{metadata_file};
    
     my $model = SGN::Model::solGS::solGS->new({schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
     my $pheno_data = $model->plots_list_phenotype_data($plots_names);
+    my $metadata = $model->trial_metadata();
   
-    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
-    
-    my $files = SGN::Controller::solGS::List->create_list_pop_tempfiles($data_dir, $model_id);
-    my $pheno_file = $files->{pheno_file};
-    
+    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
+        
     write_file($pheno_file, $pheno_data);
+    write_file($metadata_file, join("\t", @$metadata));
       
 }
 

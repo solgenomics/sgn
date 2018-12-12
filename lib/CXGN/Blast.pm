@@ -152,6 +152,13 @@ has 'description' => (isa => 'Maybe[Str]',
 		      is => 'rw',
     );
 
+has 'jbrowse_src' => (isa => 'Maybe[Str]',
+		      is => 'rw',
+    );
+
+
+
+
 ###our @column_names =
   # ('blast_db_id',  #-database serial number
   #  'file_base',    #-basename of the database files, with a path prepended,
@@ -190,6 +197,7 @@ sub BUILD {
 	$self->index_seqs($row->index_seqs());
 	$self->web_interface_visible($row->web_interface_visible());
 	$self->description($row->description());
+	$self->jbrowse_src($row->jbrowse_src());
     }
     else { 
 	print STDERR "No blast_db_id provided. Creating empty object...\n";

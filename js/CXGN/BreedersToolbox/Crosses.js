@@ -27,7 +27,7 @@ jQuery(document).ready(function($) {
     $('#create_crossingtrial_submit').click(function() {
         var crossingtrial_name = $("#crossingtrial_name").val();
         if (!crossingtrial_name) {
-            alert("Crossing trial name is required");
+            alert("Crossing Experiment name is required");
             return;
         }
 
@@ -155,7 +155,7 @@ jQuery(document).ready(function($) {
 
         var crossing_trial_id = $("#crossing_trial").val();
             if (!crossing_trial_id) {
-                alert("A crossing trial is required");
+                alert("A crossing experiment is required");
                 return;
             }
 
@@ -253,91 +253,6 @@ jQuery(document).ready(function($) {
         jQuery('#upload_crosses_dialog').modal('hide');
     });
 
-    jQuery("#upload_progenies_existing_crosses").click(function(){
-
-        jQuery("#update_progenies_spreadsheet_format_info").click(function(){
-            jQuery("#update_progenies_spreadsheet_info_dialog").modal("show");
-        });
-
-        jQuery("#update_progenies_crosses_dialog").modal("show");
-    });
-
-    jQuery("#update_progenies_submit").click(function(){
-        var uploadFile = $("#progenies_upload_file").val();
-        jQuery('#upload_progenies_form').attr("action", "/ajax/cross/upload_progenies");
-        if (uploadFile === ''){
-            alert("Please select a file");
-            return;
-        }
-        jQuery("#upload_progenies_form").submit();
-        jQuery("#update_progenies_crosses_dialog").modal("hide");
-    });
-
-    jQuery('#upload_progenies_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_progenies_error_display tbody").html('');
-                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
-                jQuery("#upload_progenies_error_display").modal("show");
-                return;
-            }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success) {
-                jQuery('#cross_saved_dialog_message').modal("show");
-            }
-        }
-    });
-
-    jQuery("#upload_cross_info").click(function(){
-
-        jQuery("#update_crossinfo_spreadsheet_format").click(function(){
-            jQuery("#update_crossinfo_spreadsheet_info_dialog").modal("show");
-        });
-
-        jQuery("#update_crossinfo_dialog").modal("show");
-    });
-
-    jQuery("#update_crossinfo_submit").click(function(){
-        var uploadFile = $("#crossinfo_upload_file").val();
-        jQuery('#upload_crossinfo_form').attr("action", "/ajax/cross/upload_info");
-        if (uploadFile === ''){
-            alert("Please select a file");
-            return;
-        }
-        jQuery("#upload_crossinfo_form").submit();
-        jQuery("#update_crossinfo_dialog").modal("hide");
-    });
-
-    jQuery('#upload_crossinfo_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_crossinfo_error_display tbody").html('');
-                jQuery("#upload_crossinfo_error_display tbody").append(response.error_string);
-                jQuery("#upload_crossinfo_error_display").modal("show");
-                return;
-            }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success) {
-                jQuery('#cross_saved_dialog_message').modal("show");
-            }
-        }
-    });
 
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
 
@@ -436,7 +351,7 @@ jQuery(document).ready(function($) {
     function upload_crosses_file() {
         var crossing_trial_id = $("#cross_upload_crossing_trial").val();
         if (!crossing_trial_id) {
-            alert("A crossing trial is required");
+            alert("A crossing experiment is required");
             return;
         }
 
@@ -519,7 +434,6 @@ jQuery(document).ready(function($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery("#working_modal").modal("hide");
                     refreshCrossJsTree(0);
                     get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
                     get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
@@ -527,6 +441,7 @@ jQuery(document).ready(function($) {
                     get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
                     Workflow.focus("#add_crossing_trial_workflow", -1); //Go to success page
                     Workflow.check_complete("#add_crossing_trial_workflow");
+                    jQuery("#working_modal").modal("hide");
                 }
             },
         });

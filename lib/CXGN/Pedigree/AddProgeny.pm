@@ -71,7 +71,7 @@ sub add_progeny {
 
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
 
-        my $member_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'member_of', 'stock_relationship');
+        my $offspring_of_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
 
         my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 
@@ -119,7 +119,7 @@ sub add_progeny {
         #create relationship to cross population
         $accession_stock
             ->find_or_create_related('stock_relationship_objects', {
-                type_id => $member_cvterm->cvterm_id(),
+                type_id => $offspring_of_cvterm->cvterm_id(),
                 object_id => $cross_stock->stock_id(),
                 subject_id => $accession_stock->stock_id(),
             });
@@ -173,27 +173,22 @@ sub add_progeny {
 
 
 sub _get_cross {
-  my $self = shift;
-  my $cross_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-  my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
+    my $self = shift;
+    my $cross_name = shift;
+    my $chado_schema = $self->get_chado_schema();
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+    my $stock;
+    my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
-  $stock_lookup->set_stock_name($cross_name);
-  $stock = $stock_lookup->get_stock_exact();
+    $stock_lookup->set_stock_name($cross_name);
+    $stock = $stock_lookup->get_cross_exact();
 
-  if (!$stock) {
-    print STDERR "Cross name does not exist\n";
-    return;
-  }
+    if (!$stock) {
+        print STDERR "Cross name does not exist\n";
+        return;
+    }
 
-  if ($stock->type_id() != $cross_cvterm->cvterm_id()) {
-    print STDERR "Cross name is not a stock of type cross\n";
-    return;
-  }
-
-  return $stock;
+    return $stock;
 }
 
 #######

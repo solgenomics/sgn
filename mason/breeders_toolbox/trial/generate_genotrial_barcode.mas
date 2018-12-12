@@ -57,6 +57,7 @@ $plate_id=> ''
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         Generate barcode for plots and accessions.
                     </p>
+                    OR  <button type="button" class="btn btn-primary" name="custom_barcode_page_link" id="custom_barcode_page_link">Design Custom Barcode</button>  ON LABEL DESIGNER PAGE!
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
@@ -81,17 +82,17 @@ $plate_id=> ''
                               <label class="col-sm-4 control-label">Barcode Type: </label>
                               <div class="col-sm-8">
                                   <select class="form-control" id="select_barcode_type" name="select_barcode_type">
-                                    <option value="1D">1D Barcode</option>
                                     <option value="2D">2D Barcode</option>
+                                    <option value="1D">1D Barcode</option>
                                   </select>
                               </div>
                              </div>
 
-                               <div id="2D_fieldbook_option" style="display: none">
+                               <div id="2D_fieldbook_option" >
                                <div class="form-group form-group-sm" >
                                  <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
                                  <div class="col-sm-8">
-                                   <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" />
+                                   <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" checked/>
                                  </div>
                                </div>
                                </div>
@@ -107,6 +108,14 @@ $plate_id=> ''
                                        else if (barcode_type == "1D") {
                                          jQuery("#2D_fieldbook_option").hide();
                                        }
+                                   });
+                                   
+                                   jQuery('#custom_barcode_page_link').click(function () {
+                                       location.href = '/tools/label_designer';
+                                   });
+                                   
+                                   jQuery('#custom_barcode_geno_link').click(function () {
+                                       location.href = '/tools/label_designer';
                                    });
 
                                    jQuery(document).on('change', '#select_print_format', function () {
@@ -223,7 +232,7 @@ $plate_id=> ''
                                  </div>
                                </div>
 
-                                <div class="form-group form-group-sm">
+                                <div class="form-group form-group-sm" style="display: none">
                                   <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
                                   <div class="col-sm-8">
                                     <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
@@ -265,8 +274,9 @@ $plate_id=> ''
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Generate genotyping trial barcode.
+                        Generate genotyping plate barcode.
                     </p>
+                    OR  <button type="button" class="btn btn-primary" name="custom_barcode_geno_link" id="custom_barcode_geno_link">Design Custom Barcode</button>  ON LABEL DESIGNER PAGE!
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
@@ -284,7 +294,7 @@ $plate_id=> ''
             <div class="modal-footer">
 
                 <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes">Download Barcodes</button>
-                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 
             </div>
         </form>

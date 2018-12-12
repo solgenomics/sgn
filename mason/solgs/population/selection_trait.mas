@@ -90,7 +90,7 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 
 </&>
 
-<& /solgs/model/pca.mas &>
+<& /solgs/pca/analysis.mas &>
 
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,

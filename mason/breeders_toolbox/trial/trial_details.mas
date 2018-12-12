@@ -1,0 +1,206 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_name
+$breeding_program_id
+$location_name
+$year
+$trial_type
+$planting_date
+$harvest_date
+$trial_description
+$folder_name
+$folder_id
+$identifier_prefix
+$plot_width
+$plot_length
+$field_size
+$field_trial_is_planned_to_be_genotyped
+$field_trial_is_planned_to_cross
+</%args>
+
+<div class="row">
+    <div class="col-sm-8">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Trial Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "<span class='text-danger'>[No Trial Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Breeding Program </b></td>
+                <td>
+                    <span id="breeding_program">
+% if ($breeding_program_name) {
+                    <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
+% }
+% else {
+%  print "<span class='text-danger'>[No Breeding Program]</span>";
+% }
+                    </span>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Trial Location</b></td>
+                <td>
+                    <div id="trial_location">
+% if ($location_name) {
+%  print "$location_name";
+% } else {
+%  print "<span class='text-danger'>[No Location]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Year</b></td>
+                <td>
+                    <div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Trial Type</b></td>
+                <td>
+                    <div id="trial_type">
+% if ($trial_type) {
+%  print "$trial_type";
+% } else {
+% print "<span class='text-danger'>[Type not set]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Planting Date</b></td>
+                <td>
+                    <div id="planting_date">
+% if ($planting_date) {
+<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
+% } else {
+%  print "<span class='text-danger'>[No Planting Date]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Harvest Date</b></td>
+                <td>
+                    <div id="harvest_date">
+% if ($harvest_date) {
+<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
+% } else {
+%  print "<span class='text-danger'>[No Harvest Date]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Folder</b></td>
+                <td>
+                    <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                    <br/><br/>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+    <div class="col-sm-4">
+        <div class="well well-sm">
+            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+        </div>
+
+        <table class="table table-hover table-bordered">
+            <tr><td><b>Plot Width (m)</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($plot_width) {
+%  print "$plot_width";
+% } else {
+%  print "<span class='text-default'>[No Plot Width]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+            <tr><td><b>Plot Length (m)</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($plot_length) {
+%  print "$plot_length";
+% } else {
+%  print "<span class='text-default'>[No Plot Length]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+            <tr><td><b>Field Size (ha)</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($field_size) {
+%  print "$field_size";
+% } else {
+%  print "<span class='text-default'>[No Field Size]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+            <tr><td><b>Trial Will Be Genotyped</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($field_trial_is_planned_to_be_genotyped) {
+%  print "$field_trial_is_planned_to_be_genotyped";
+% } else {
+%  print "no";
+% }
+                    </div>
+                </td>
+            </tr>
+            <tr><td><b>Trial Will Be In Crosses</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($field_trial_is_planned_to_cross) {
+%  print "$field_trial_is_planned_to_cross";
+% } else {
+%  print "no";
+% }
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

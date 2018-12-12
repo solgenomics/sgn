@@ -33,7 +33,7 @@ $westcott_description => "Generates fieldplan for an unreplicated design with ge
 
 rect.bordered {
     stroke: #E6E6E6;
-    stroke-width:2px;   
+    stroke-width:2px;
   }
 
   text.mono {
@@ -49,7 +49,7 @@ rect.bordered {
   text.axis-worktime {
     fill: #000;
   }
-  
+
   .legend { list-style: none; }
   .legend li { float: left; margin-right: 10px; }
   .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
@@ -137,26 +137,43 @@ rect.bordered {
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
                                             <option value="">NA</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.15">0.15</option>
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.25">0.25</option>
+                                            <option value="0.3">0.3</option>
+                                            <option value="0.35">0.35</option>
+                                            <option value="0.4">0.4</option>
+                                            <option value="0.45">0.45</option>
                                             <option value="0.5">0.5</option>
-                                            <option value="1">1.0</option>
+                                            <option value="0.55">0.55</option>
+                                            <option value="0.6">0.6</option>
+                                            <option value="0.65">0.65</option>
+                                            <option value="0.7">0.7</option>
+                                            <option value="0.75">0.75</option>
+                                            <option value="0.8">0.8</option>
+                                            <option value="0.85">0.85</option>
+                                            <option value="0.9">0.9</option>
+                                            <option value="0.95">0.95</option>
+                                            <option value="1">1</option>
                                             <option value="1.5">1.5</option>
-                                            <option value="2">2.0</option>
+                                            <option value="2">2</option>
                                             <option value="2.5">2.5</option>
-                                            <option value="3">3.0</option>
+                                            <option value="3">3</option>
                                             <option value="3.5">3.5</option>
-                                            <option value="4">4.0</option>
+                                            <option value="4">4</option>
                                             <option value="4.5">4.5</option>
-                                            <option value="5">5.0</option>
+                                            <option value="5">5</option>
                                             <option value="5.5">5.5</option>
-                                            <option value="6">6.0</option>
+                                            <option value="6">6</option>
                                             <option value="6.5">6.5</option>
-                                            <option value="7">7.0</option>
+                                            <option value="7">7</option>
                                             <option value="7.5">7.5</option>
-                                            <option value="8">8.0</option>
+                                            <option value="8">8</option>
                                             <option value="8.5">8.5</option>
-                                            <option value="9">9.0</option>
+                                            <option value="9">9</option>
                                             <option value="9.5">9.5</option>
-                                            <option value="10">10.0</option>
+                                            <option value="10">10</option>
                                             <option value="10.5">10.5</option>
                                             <option value="11">11.0</option>
                                             <option value="11.5">11.5</option>
@@ -170,26 +187,43 @@ rect.bordered {
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
                                             <option value="">NA</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.15">0.15</option>
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.25">0.25</option>
+                                            <option value="0.3">0.3</option>
+                                            <option value="0.35">0.35</option>
+                                            <option value="0.4">0.4</option>
+                                            <option value="0.45">0.45</option>
                                             <option value="0.5">0.5</option>
-                                            <option value="1">1.0</option>
+                                            <option value="0.55">0.55</option>
+                                            <option value="0.6">0.6</option>
+                                            <option value="0.65">0.65</option>
+                                            <option value="0.7">0.7</option>
+                                            <option value="0.75">0.75</option>
+                                            <option value="0.8">0.8</option>
+                                            <option value="0.85">0.85</option>
+                                            <option value="0.9">0.9</option>
+                                            <option value="0.95">0.95</option>
+                                            <option value="1">1</option>
                                             <option value="1.5">1.5</option>
-                                            <option value="2">2.0</option>
+                                            <option value="2">2</option>
                                             <option value="2.5">2.5</option>
-                                            <option value="3">3.0</option>
+                                            <option value="3">3</option>
                                             <option value="3.5">3.5</option>
-                                            <option value="4">4.0</option>
+                                            <option value="4">4</option>
                                             <option value="4.5">4.5</option>
-                                            <option value="5">5.0</option>
+                                            <option value="5">5</option>
                                             <option value="5.5">5.5</option>
-                                            <option value="6">6.0</option>
+                                            <option value="6">6</option>
                                             <option value="6.5">6.5</option>
-                                            <option value="7">7.0</option>
+                                            <option value="7">7</option>
                                             <option value="7.5">7.5</option>
-                                            <option value="8">8.0</option>
+                                            <option value="8">8</option>
                                             <option value="8.5">8.5</option>
-                                            <option value="9">9.0</option>
+                                            <option value="9">9</option>
                                             <option value="9.5">9.5</option>
-                                            <option value="10">10.0</option>
+                                            <option value="10">10</option>
                                             <option value="10.5">10.5</option>
                                             <option value="11">11.0</option>
                                             <option value="11.5">11.5</option>
@@ -254,7 +288,7 @@ rect.bordered {
                                         <label class="col-sm-7 control-label">List of accessions to include (required):</label>
                                         <div class="col-sm-5" id="select_list" name="select_list">
                                         </div>
-                                    </div>                                    
+                                    </div>
                                     <div class="form-group" id="westcott_check_1_section" style="display: none">
                                       <label class="col-sm-3 control-label">Name of Check 1: </label>
                                       <div class="col-sm-9" >
@@ -266,7 +300,7 @@ rect.bordered {
                                       <div class="col-sm-9" >
                                         <input class="form-control" id="westcott_check_2" name="westcott_check_2" placeholder="Required"> </input>
                                       </div>
-                                    </div>                                    
+                                    </div>
                                     <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
                                         <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                         <div class="col-sm-5" id="list_of_checks_section" >
@@ -336,7 +370,7 @@ rect.bordered {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                     <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                     <div class="col-sm-5" >
@@ -416,6 +450,15 @@ rect.bordered {
                                                 <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
                                             </div>
                                         </div>
+                                        <div id="create_trial_with_treatment_additional_treatment">
+                                            <input type="hidden" id="create_trial_with_treatment_additional_count" value=0>
+                                            <div class="form-group form-group-sm" >
+                                                <label class="col-sm-7 control-label">Add Another Treatment: </label>
+                                                <div class="col-sm-5" >
+                                                    <button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
@@ -491,7 +534,7 @@ rect.bordered {
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping plates, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
                                 <br/>
                                 <div class="well">
@@ -513,7 +556,7 @@ rect.bordered {
                                     </div>
                                 </div>
 
-                                <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping trial (plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
+                                <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping plate (96 well plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -527,7 +570,7 @@ rect.bordered {
                                     </div>
                                 </div>
 
-                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
+                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -548,6 +591,8 @@ rect.bordered {
                             </&>
                             <&| /util/workflow.mas:step, title=> "Field Map Information" &>
                                 <& /page/page_title.mas, title=>"Specify the number of rows and columns for the entire field" &>
+                                <p>By default field map display is set to serpentine and uses the block or rep number as row number.</p>
+                                <p>If you do not want to create field map along with this trial, set 'Plot layout format' to 'select plot layout format'.</p>
                                 <p>If you do not know exactly in which rows and columns you will end up planting the plots, do not provide this and go to the next step.</p>
                                 <p>If you will plant your plots in an irregular (non-rectangular) layout, do not provide this and go to the next step.</p>
                                 <p>You can upload the exact row and column information for your plots (in any layout shape) on the Trial Detail Page after you have created the trial in the database and actually planted the experiment.</p>
@@ -562,11 +607,11 @@ rect.bordered {
                                 <div class="form-group"  id="FieldMap">
                                     <label class="col-sm-4 control-label">Field map display: </label>
                                     <div class="col-sm-8" >
-                                        <input type="checkbox" id="show_field_map_options" />
+                                        <input type="checkbox" id="show_field_map_options" checked="checked"/>
                                     </div>
                                 </div>
 
-                                <div id="field_map_options" style="display: none">
+                                <div id="field_map_options" >
                                     <!--<div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Number of columns per row (uses accession number by default): </label>
                                         <div class="col-sm-5" >
@@ -585,7 +630,7 @@ rect.bordered {
                                           <select class="form-control" id="plot_layout_format" name="plot_layout_format">
                                             <option value="">select plot layout format</option>
                                             <option value=zigzag>Zigzag(unserpentine)</option>
-                                            <option value=serpentine>Serpentine</option>
+                                            <option value=serpentine selected="selected">Serpentine</option>
                                           </select>
                                         </div>
                                     </div>
@@ -618,7 +663,13 @@ rect.bordered {
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Plot start number: </label>
                                         <div class="col-sm-5" >
-                                            <input type="text" class="form-control" id="start_number" name="start_number" />
+                                            <select class="form-control" id="start_number" name="start_number">
+                                                <option value="">select starting number</option>
+                                                <option value=1 >1</option>
+                                                <option value=101 >101</option>
+                                                <option value=1001 >1001</option>
+                                            </select>
+                                            <!--<input type="text" class="form-control" id="start_number" name="start_number" />-->
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
@@ -694,7 +745,7 @@ rect.bordered {
                             </&>
 
                         </&><!-- End of workflow-->
-                    </form>    
+                    </form>
 
                 </div>
             </div>

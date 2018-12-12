@@ -166,6 +166,10 @@ sub _validate_with_plugin {
         if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
+
+        if (!defined($box_name) || $box_name eq '') {
+            push @error_messages, "Cell G$row_name: box_name missing";
+        }
     }
 
     my @accessions = keys %seen_accession_names;

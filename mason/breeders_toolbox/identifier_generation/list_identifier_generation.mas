@@ -1,0 +1,100 @@
+<%args>
+</%args>
+
+<table class="table table-hover table-bordered" id="identifier_generator_list_table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Prefix</th>
+            <th>Number of Digits</th>
+            <th>Current Number</th>
+            <th>Next Identifier</th>
+            <th>History</th>
+            <th>Download Next Identifiers</th>
+        </tr>
+    </thead>
+</table>
+
+<div class="modal fade" id="identifier_generation_history_dialog" name="identifier_generation_history_dialog" tabindex="-1" role="dialog" aria-labelledby="identifierGenerationHistoryDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="identifierGenerationHistoryDialog">Identifier Generation History</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="identifier_generation_history_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+    var identifier_generation_list_table = jQuery('#identifier_generator_list_table').DataTable({
+        ajax : '/ajax/breeders/identifier_generation_list'
+    });
+
+    jQuery(document).on('click', 'button[name="identifier_generation_download"]', function(){
+        var list_id = jQuery(this).data('list_id');
+        var next_number = jQuery('#identifier_generation_next_numbers_'+list_id).val();
+        jQuery.ajax({
+            url : '/ajax/breeders/identifier_generation_download',
+            data : {
+                'list_id':list_id,
+                'next_number':next_number
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error){
+                    alert(response.error);
+                }
+                if(response.success){
+                    window.location.href = "/download/"+response.filename;
+                    identifier_generation_list_table.ajax.reload();
+                }
+            },
+            error: function(response){
+                alert('Error downloading new identifiers!');
+            }
+        });
+    });
+
+    jQuery(document).on('click', 'button[name="identifier_generation_history"]', function(){
+        var list_id = jQuery(this).data('list_id');
+        jQuery.ajax({
+            url : '/ajax/breeders/identifier_generation_history',
+            data : {
+                'list_id':list_id,
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error){
+                    alert(response.error);
+                }
+                if(response.success){
+                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Timestamp</th><th>Username</th><th>Next Count</th><th>Action Type</th></tr></thead><tbody>';
+                    for(var i=0; i<response.records.length; i++){
+                        html = html + '<tr><td>' + response.records[i].timestamp + '</td><td>' + response.records[i].username + '</td><td>' + response.records[i].next_number + '</td><td>' + response.records[i].type + '</td></tr>';
+                    }
+                    html = html + '</tbody></table>';
+                    jQuery('#identifier_generation_history_div').html(html);
+                    jQuery('#identifier_generation_history_dialog').modal('show');
+                }
+            },
+            error: function(response){
+                alert('Error getting identifier list history!');
+            }
+        });
+    });
+});
+
+</script>

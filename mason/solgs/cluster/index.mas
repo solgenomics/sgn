@@ -1,0 +1,52 @@
+<%doc>
+
+=head1 NAME
+ 
+/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster on. 
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id => undef
+$data_set_type => undef
+
+</%args>
+
+<%perl>
+
+my $list_id = $pop_id if $pop_id =~ /list/;
+
+my $combo_pops_id;
+
+if ($c->req->referer =~ /solgs\/selection\// || $data_set_type =~ /combined_populations/) {
+$combo_pops_id =  $pop_id
+}
+
+$pop_id = undef if $list_id || $combo_pops_id;
+
+</%perl>
+
+<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster", "solGS.Dataset", "CXGN.List"] &>
+
+<br />
+
+<&| /page/info_section.mas, 
+    collapsible => 0, 
+    collapsed   => 0,
+    title       => "Select a list of accessions or trials and run cluster analysis using k-means method",
+  &>
+
+  
+  <& select_menu.mas &>
+    <& plot.mas &>
+ 
+
+</&>

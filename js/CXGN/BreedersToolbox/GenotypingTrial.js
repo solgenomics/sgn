@@ -4,7 +4,7 @@
 
 =head1 Trial.js
 
-Display for managing genotyping trials
+Display for managing genotyping plates
 
 
 =head1 AUTHOR
@@ -379,28 +379,10 @@ jQuery(document).ready(function ($) {
                         alert(response.error);
                     }
                     else {
-                        jQuery.ajax({
-                            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-                            beforeSend: function(){
-                                jQuery('#working_msg').html("Removing the project entry...");
-                            },
-                            success: function(response) {
-                                jQuery('#working_modal').modal("hide");
-                                jQuery('#working_msg').html('');
-                                if (response.error) {
-                                    alert(response.error);
-                                }
-                                else {
-                                    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-                                    window.location.href="/breeders/trial/"+trial_id;
-                                }
-                            },
-                            error: function(response) {
-                                jQuery('#working_modal').modal("hide");
-                                jQuery('#working_msg').html('');
-                                alert("An error occurred.");
-                            }
-                        });
+                        jQuery('#working_modal').modal("hide");
+                        jQuery('#working_msg').html('');
+                        alert('The genotyping plate has been deleted.'); // to do: give some idea how many items were deleted.
+                        window.location.href="/breeders/trial/"+trial_id;
                     }
                 },
                 error: function(response) {
@@ -456,8 +438,17 @@ jQuery(document).ready(function ($) {
         complete: function (response) {
             console.log(response);
             jQuery('#working_modal').modal('hide');
-            if (response.errors || response.error_string) {
-                alert(response.error);
+            if (response.error || response.errors || response.error_string) {
+                //alert(response.error_string);
+                var error_html = '';
+                if (response.error){
+                    error_html = error_html + response.error;
+                }
+                if (response.error_string){
+                    error_html = error_html + response.error_string;
+                }
+                jQuery('#upload_genotypes_errors_div').html(error_html);
+
                 if (response.missing_stocks && response.missing_stocks.length > 0){
                     jQuery('#upload_genotypes_missing_stocks_div').show();
                     var missing_stocks_html = "<div class='well well-sm'><h3>Add the missing stocks to a list as accessions</h3><div id='upload_genotypes_missing_stock_vals' style='display:none'></div><div id='upload_genotypes_add_missing_stocks'></div></div><br/>";
@@ -474,7 +465,10 @@ jQuery(document).ready(function ($) {
                     });
                 }
                 return;
+            } else {
+                jQuery('#upload_genotypes_errors_div').html('');
             }
+
             if (response.warning) {
                 jQuery('#upload_genotypes_warnings_html').html(response.warning);
                 jQuery('#upload_genotypes_warnings_div').show();

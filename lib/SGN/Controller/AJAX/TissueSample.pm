@@ -38,7 +38,7 @@ sub tissue_sample_field_trials_GET : Args(0) {
         bcs_schema=>$bcs_schema,
         trial_has_tissue_samples=>1,
     });
-    my $data = $trial_search->search();
+    my ($data, $total_count) = $trial_search->search();
     my @result;
     my %selected_columns = ('tissue_sample_name'=>1, 'tissue_sample_id'=>1, 'plant_name'=>1, 'plot_name'=>1, 'block_number'=>1, 'plant_number'=>1, 'plot_number'=>1, 'rep_number'=>1, 'row_number'=>1, 'col_number'=>1, 'accession_name'=>1, 'is_a_control'=>1);
     my $selected_columns_json = encode_json \%selected_columns;
@@ -59,7 +59,7 @@ sub tissue_sample_field_trials_GET : Args(0) {
             $_->{design},
             $_->{project_planting_date},
             $_->{project_harvest_date},
-            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>Download Layout</a>"
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>Download Layout</a>"
           ];
     }
     #print STDERR Dumper \@result;
@@ -78,7 +78,7 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
         bcs_schema=>$bcs_schema,
         trial_design_list=>['genotyping_plate']
     });
-    my $data = $trial_search->search();
+    my ($data, $total_count) = $trial_search->search();
     my @result;
     foreach (@$data){
         my $folder_string = '';
@@ -93,7 +93,10 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
-            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            $_->{genotyping_facility},
+            $_->{genotyping_plate_format},
+            $_->{genotyping_plate_sample_type},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
           ];
     }
     #print STDERR Dumper \@result;

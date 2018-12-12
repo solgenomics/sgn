@@ -97,26 +97,43 @@ $locations
                                     <div class="col-sm-9">
                                         <select class="form-control" id="trial_upload_plot_width" name="trial_upload_plot_width">
                                             <option value="">NA</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.15">0.15</option>
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.25">0.25</option>
+                                            <option value="0.3">0.3</option>
+                                            <option value="0.35">0.35</option>
+                                            <option value="0.4">0.4</option>
+                                            <option value="0.45">0.45</option>
                                             <option value="0.5">0.5</option>
-                                            <option value="1">1.0</option>
+                                            <option value="0.55">0.55</option>
+                                            <option value="0.6">0.6</option>
+                                            <option value="0.65">0.65</option>
+                                            <option value="0.7">0.7</option>
+                                            <option value="0.75">0.75</option>
+                                            <option value="0.8">0.8</option>
+                                            <option value="0.85">0.85</option>
+                                            <option value="0.9">0.9</option>
+                                            <option value="0.95">0.95</option>
+                                            <option value="1">1</option>
                                             <option value="1.5">1.5</option>
-                                            <option value="2">2.0</option>
+                                            <option value="2">2</option>
                                             <option value="2.5">2.5</option>
-                                            <option value="3">3.0</option>
+                                            <option value="3">3</option>
                                             <option value="3.5">3.5</option>
-                                            <option value="4">4.0</option>
+                                            <option value="4">4</option>
                                             <option value="4.5">4.5</option>
-                                            <option value="5">5.0</option>
+                                            <option value="5">5</option>
                                             <option value="5.5">5.5</option>
-                                            <option value="6">6.0</option>
+                                            <option value="6">6</option>
                                             <option value="6.5">6.5</option>
-                                            <option value="7">7.0</option>
+                                            <option value="7">7</option>
                                             <option value="7.5">7.5</option>
-                                            <option value="8">8.0</option>
+                                            <option value="8">8</option>
                                             <option value="8.5">8.5</option>
-                                            <option value="9">9.0</option>
+                                            <option value="9">9</option>
                                             <option value="9.5">9.5</option>
-                                            <option value="10">10.0</option>
+                                            <option value="10">10</option>
                                             <option value="10.5">10.5</option>
                                             <option value="11">11.0</option>
                                             <option value="11.5">11.5</option>
@@ -130,26 +147,43 @@ $locations
                                     <div class="col-sm-9">
                                         <select class="form-control" id="trial_upload_plot_length" name="trial_upload_plot_length">
                                             <option value="">NA</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.15">0.15</option>
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.25">0.25</option>
+                                            <option value="0.3">0.3</option>
+                                            <option value="0.35">0.35</option>
+                                            <option value="0.4">0.4</option>
+                                            <option value="0.45">0.45</option>
                                             <option value="0.5">0.5</option>
-                                            <option value="1">1.0</option>
+                                            <option value="0.55">0.55</option>
+                                            <option value="0.6">0.6</option>
+                                            <option value="0.65">0.65</option>
+                                            <option value="0.7">0.7</option>
+                                            <option value="0.75">0.75</option>
+                                            <option value="0.8">0.8</option>
+                                            <option value="0.85">0.85</option>
+                                            <option value="0.9">0.9</option>
+                                            <option value="0.95">0.95</option>
+                                            <option value="1">1</option>
                                             <option value="1.5">1.5</option>
-                                            <option value="2">2.0</option>
+                                            <option value="2">2</option>
                                             <option value="2.5">2.5</option>
-                                            <option value="3">3.0</option>
+                                            <option value="3">3</option>
                                             <option value="3.5">3.5</option>
-                                            <option value="4">4.0</option>
+                                            <option value="4">4</option>
                                             <option value="4.5">4.5</option>
-                                            <option value="5">5.0</option>
+                                            <option value="5">5</option>
                                             <option value="5.5">5.5</option>
-                                            <option value="6">6.0</option>
+                                            <option value="6">6</option>
                                             <option value="6.5">6.5</option>
-                                            <option value="7">7.0</option>
+                                            <option value="7">7</option>
                                             <option value="7.5">7.5</option>
-                                            <option value="8">8.0</option>
+                                            <option value="8">8</option>
                                             <option value="8.5">8.5</option>
-                                            <option value="9">9.0</option>
+                                            <option value="9">9</option>
                                             <option value="9.5">9.5</option>
-                                            <option value="10">10.0</option>
+                                            <option value="10">10</option>
                                             <option value="10.5">10.5</option>
                                             <option value="11">11.0</option>
                                             <option value="11.5">11.5</option>
@@ -200,7 +234,7 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping trials, or crossing trials in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
+                                <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping plates, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -221,7 +255,7 @@ $locations
                                     </div>
                                 </div>
 
-                                <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping trial (plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
+                                <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping plate (96 well plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -235,7 +269,7 @@ $locations
                                     </div>
                                 </div>
 
-                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing trial in the database.</p>
+                                <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -358,7 +392,7 @@ $locations
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                     The trial file was uploaded successfully
                                 </p>
-                                
+
                                 <ul>
                                     <li>You may want to proceed to the trial detail page for the trial you just created.</li>
                                     <li>You can print barcodes for the plots or plants or tissue samples in this trial.</li>
@@ -462,4 +496,3 @@ jQuery(document).ready(function(){
     });
 })
 </script>
-

@@ -150,6 +150,18 @@ has 'plots' =>       ( isa => 'Maybe[ArrayRef]',
 		       predicate => 'has_plots',
     );
 
+=head2 plants()
+
+accessor for defining the plants that are part of this dataset (ArrayRef).
+
+=cut
+
+has 'plants' =>       ( isa => 'Maybe[ArrayRef]',
+		       is => 'rw',
+		       predicate => 'has_plants',
+    );
+
+
 
 =head2 trials()
 
@@ -285,6 +297,7 @@ sub BUILD {
 	$self->sp_person_id($row->sp_person_id());
 	$self->accessions($dataset->{categories}->{accessions});
 	$self->plots($dataset->{categories}->{plots});
+	$self->plants($dataset->{categories}->{plants});
 	$self->trials($dataset->{categories}->{trials});
 	$self->traits($dataset->{categories}->{traits});
 	$self->years($dataset->{categories}->{years});
@@ -403,6 +416,7 @@ sub get_dataset_data {
     my $dataref;
     $dataref->{categories}->{accessions} = $self->accessions() if $self->has_accessions();
     $dataref->{categories}->{plots} = $self->plots() if $self->has_plots();
+		$dataref->{categories}->{plants} = $self->plants() if $self->has_plants();
     $dataref->{categories}->{trials} = $self->trials() if $self->has_trials();
     $dataref->{categories}->{traits} = $self->traits() if $self->has_traits();
     $dataref->{categories}->{years} = $self->years() if $self->has_years();
@@ -421,6 +435,7 @@ sub _get_dataref {
 
     $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
     $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
+		$dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
     $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
     $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
     $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
@@ -452,13 +467,21 @@ Retrieves genotypes as a listref of hashrefs.
 sub retrieve_genotypes {
     my $self = shift;
     my $protocol_id = shift;
+    my $genotypeprop_hash_select = shift || ['DS'];
+    my $protocolprop_top_key_select = shift || [];
+    my $protocolprop_marker_hash_select = shift || [];
+    my $return_only_first_genotypeprop_for_stock = shift || 1;
 
     my $genotypes_search = CXGN::Genotype::Search->new(
-	bcs_schema => $self->schema(),
-	accession_list => $self->accessions(),
-	trial_list => $self->trials(),
-	protocol_id => $protocol_id
-	);
+        bcs_schema => $self->schema(),
+        accession_list => $self->accessions(),
+        trial_list => $self->trials(),
+        protocol_id_list => [$protocol_id],
+        genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
+        protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
+        protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
+        return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
+    );
     my ($total_count, $dataref) = $genotypes_search->get_genotype_info();
     return $dataref;
 }
@@ -523,6 +546,26 @@ sub retrieve_plots {
 	$plots = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plots"));
     }
     return $plots->{results};
+}
+
+=head2 retrieve_plants()
+
+Retrieves plants as a listref of listrefs.
+
+=cut
+
+sub retrieve_plants {
+    my $self = shift;
+    my $plants;
+    if ($self->has_plants()) {
+	return $self->plants();
+    }
+    else {
+	my $criteria = $self->get_dataset_definition();
+	push @$criteria, "plants";
+	$plants = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plants"));
+    }
+    return $plants->{results};
 }
 
 =head2 retrieve_trials()
@@ -748,6 +791,9 @@ sub get_dataset_definition  {
     }
     if ($self->has_plots()) {
 	push @criteria, "plots";
+    }
+		if ($self->has_plants()) {
+	push @criteria, "plants";
     }
     if ($self->has_trials()) {
 	push @criteria, "trials";

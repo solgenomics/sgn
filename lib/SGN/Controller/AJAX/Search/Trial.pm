@@ -39,7 +39,7 @@ sub search : Path('/ajax/search/trials') Args(0) {
         field_trials_only=>$field_trials_only,
         trial_design_list=>$trial_design_list
     });
-    my $data = $trial_search->search();
+    my ($data, $total_count) = $trial_search->search();
     my @result;
     my %selected_columns = ('plot_name'=>1, 'plot_id'=>1, 'block_number'=>1, 'plot_number'=>1, 'rep_number'=>1, 'row_number'=>1, 'col_number'=>1, 'accession_name'=>1, 'is_a_control'=>1);
     my $selected_columns_json = encode_json \%selected_columns;
@@ -63,7 +63,7 @@ sub search : Path('/ajax/search/trials') Args(0) {
             $_->{design},
             $_->{project_planting_date},
             $_->{project_harvest_date},
-            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plots&selected_columns=$selected_columns_json'>Download Plot Layout</a>"
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plots&selected_columns=$selected_columns_json'>Download Plot Layout</a>"
         );
         push @result, \@res;
     }
