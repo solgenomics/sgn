@@ -114,18 +114,12 @@ sub _get_cross {
     my $cross_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type');
 
     $stock_lookup->set_stock_name($cross_name);
-    $stock = $stock_lookup->get_stock_exact();
+    $stock = $stock_lookup->get_cross_exact();
 
     if (!$stock) {
         print STDERR "Cross name does not exist\n";
         return;
     }
-
-    if ($stock->type_id() != $cross_cvterm->cvterm_id()) {
-        print STDERR "Cross name is not a stock of type cross\n";
-        return;
-    }
-
     return $stock;
 }
 
