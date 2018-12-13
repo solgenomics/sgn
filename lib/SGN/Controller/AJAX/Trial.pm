@@ -251,7 +251,8 @@ sub generate_experimental_design_POST : Args(0) {
                 bcs_schema => $schema,
                 nd_geolocation_id => $location_id,
             });
-            my $abbreviation = $location_object->get_prop('abbreviation');
+
+            my $abbreviation = $location_object->abbreviation();
             #print STDERR "Abbreviation is $abbreviation\n";
 
             if ($abbreviation) {
@@ -552,7 +553,7 @@ sub save_experimental_design_POST : Args(0) {
                 bcs_schema => $schema,
                 nd_geolocation_id => $location_id,
             });
-            my $abbreviation = $location_object->get_prop('abbreviation');
+            my $abbreviation = $location_object->abbreviation();
             #print STDERR "Abbreviation is $abbreviation\n";
 
             #print STDERR "Trial name before change is $trial_name\n";
