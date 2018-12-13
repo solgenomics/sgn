@@ -225,8 +225,8 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
     # dispatch to the proper view
     if ($format eq 'html') {
 	
-	my $view_link     = '';
-	my $download_link = ''; #do { $format => 'fasta_file'; '?'.$c->req->body };
+	my $view_link     = "/tools/blast/match/show?format=fasta_text&blast_db_id=$blast_db_id&id=$id";
+	my $download_link = "/tools/blast/match/show?format=fasta_file&blast_db_id=$blast_db_id&id=$id"; #do { $format => 'fasta_file'; '?'.$c->req->body };
 	
 	$c->stash->{template} = '/blast/show_seq/html.mas';
 	$c->stash->{seq} = $seq;
@@ -243,11 +243,14 @@ sub show_match_seq : Path('/tools/blast/match/show') Args(0) {
 
 
 	my $attachment =  $format eq 'fasta_file' ? 'attachment;' : '';
-	$c->res->body(qq | Content-Type: text/plain\n\n | . 
+
+	$c->res->headers->content_type("text/plain");
 		      
-		      "Content-Disposition: $attachment filename=$id.fa\n\n".
-		      Bio::SeqIO->new( -fh => \*STDOUT, -format => 'fasta' )
-		      ->write_seq( $seq ));
+	if ($attachment) { 
+	    $c->res->headers->header("Content-Disposition" => "$attachment filename=$id.fa");
+	}
+	
+	$c->res->body(">".$seq->id()." sequence match in blast db ".$bo->title()."\n". $seq->seq() );
     }
 }
 
