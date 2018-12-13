@@ -22,17 +22,17 @@ $user_id => undef
 <&| /page/info_section.mas, title => "Cross information" &>
 
 <& /page/form.mas,
-  object_type=>'cross',
-  object_id=> $cross_id,
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/cross/$cross_id" ,
-  alternate_new_button => '',
-  alternate_ghosted_new_button => '',
-  alternate_delete_button => '',
-  alternate_ghosted_delete_button => ''
+    object_type=>'cross',
+    object_id=> $cross_id,
+    form_name=> 'stock_form',
+    server_side_script => '/phenome/stock/stock_ajax_form.pl',
+    form_div_name=>'stock_details',
+    js_object_name=> 'stockForm',
+    page_url => "/cross/$cross_id" ,
+    alternate_new_button => '',
+    alternate_ghosted_new_button => '',
+    alternate_delete_button => '',
+    alternate_ghosted_delete_button => ''
 &>
 
 </&>
