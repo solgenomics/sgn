@@ -69,32 +69,25 @@ my $pedigree = $s->get_parents(1);
 my $t_s = CXGN::Stock->new(schema => $schema, stock_id => 38880);
 @trial_list = $t_s->get_trials();
 print STDERR Dumper(\@trial_list);
-is_deeply(\@trial_list, 
+is_deeply(\@trial_list,
 [
-          [
-            141,
-            'trial2 NaCRRI',
-            '23',
-            'test_location'
-          ],
-          [
-            144,
-            'test_t',
-            '23',
-            'test_location'
-          ],
-          [
-            139,
-            'Kasese solgs trial',
-            '23',
-            'test_location'
-          ]
+    [
+        139,
+        'Kasese solgs trial',
+        '23',
+        'test_location'
+    ],
+    [
+        141,
+        'trial2 NaCRRI',
+        '23',
+        'test_location'
+    ],
+    [
+        144,
+        'test_t',
+        '23',
+        'test_location'
+    ]
 ], "trial list check");
 done_testing();
-
-
-
-
-
-
-
