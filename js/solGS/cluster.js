@@ -92,27 +92,46 @@ solGS.cluster = {
 	var rowId = 'cluster_row_select_' + selectId;
 	return rowId;
     },
-   
+
+    createClusterTypeSelect: function() {
+
+	var clusterTypeGroup  = '<select class="form-control" id="cluster_type_select">'
+	    + '<option value="k-means">K-Means</option>'
+	    + '<option value="heirarchical">Heirarchical</option>'	   
+	    +  '</select>';
+
+	return clusterTypeGroup;
+	
+    },
+
+    createDataTypeSelect: function() {
+	var dataTypeGroup = '<select class="form-control" id="data_type_select">'
+	    + '<option value="genotype">Genotype</option>'
+	    + '<option value="phenotype">phenotype</option>'
+	    +  '<option value="gebv">GEBV</option>'
+	    +  '</select>';
+	
+	return dataTypeGroup;
+     },
+    
+
+    
     selectRow: function(selectId, dataStructureType) {
 
 	var selectName = this.getSelectName(selectId, dataStructureType);
 	var rowId = this.selectRowId(selectId);
 
-	var kMeans = '<div class="checkbox-inline"><label><input type="checkbox"  name="analysis_select"'
-	    + '  id="k_means_select" value="k-means">K-Means</label></div>';
-	
-	var hierarchical= '<div class="checkbox-inline"><label><input type="checkbox"  name="analysis_select"'
-	    + ' id="heirarchical_select" value="heirarchical" disabled>Hierarchical</label></div>';
-
-	var formGroup = '<form>' + kMeans + hierarchical + '</form>';
-	
+	var clusterTypeGroup = this.createClusterTypeSelect();
+	var dataTypeGroup =  this.createDataTypeSelect();
+		
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
             + '<a href="#"  onclick="solGS.cluster.runCluster(' + selectId + ",'" + dataStructureType + "'" + '); return false;">' 
             + selectName + '</a>'
             + '</td>'
 	    + '<td>' + dataStructureType + '</td>'
-	    + '<td>' + formGroup + '</td>'
+	    + '<td>' + clusterTypeGroup + '</td>'
+	    + '<td>' + dataTypeGroup + '</td>'
             + '<td id="list_cluster_page_' + selectId +  '">'
             + '<a href="#" onclick="solGS.cluster.runCluster(' + selectId + ",'" + dataStructureType + "'" + ');return false;">' 
             + '[ Run Cluster ] </a>'                                     
@@ -124,16 +143,16 @@ solGS.cluster = {
 
     createTable: function(tableId) {
 
-	var table ='<div>'
-	    + '<table class="table table-striped" id="' + tableId + '" style="width:100%; text-align:left">'
+	var table ='<table class="table table-striped" id="' + tableId + '">'
 	    + '<thead>'
 	    + '<tr>'
             + '<th>Name</th>'
             + '<th>Data Structure</th>'
             + '<th>Cluster type</th>'
+	    + '<th>Data type</th>'
 	    + '<th>Run</th>'
             + '</tr>'
-            + '</thead></table></div>';
+            + '</thead></table>';
 
 	return table;
 	
@@ -154,6 +173,7 @@ solGS.cluster = {
 	var datasetId;
 	var datasetName;
 	var dataStructure = dataStructureType;
+	var dataType;
 	
 	if (dataStructureType == 'list') {
 	    var genoList = this.getClusterGenotypesListData(selectId);
@@ -191,6 +211,7 @@ solGS.cluster = {
 		   'data_structure': dataStructure,
 		   'dataset_id': datasetId,
 		   'dataset_name': datasetName,
+		   'data_type': dataType
 		  },
             url: '/cluster/result',
             success: function(res) {
@@ -378,9 +399,18 @@ jQuery(document).ready( function() {
 jQuery(document).ready( function() { 
    
     var url = window.location.pathname;
+    
+    var urlMatch = ['solgs\/trait', 
+                    'breeders_toolbox\/trial', 
+                    'breeders\/trial\/', 
+                    'solgs\/selection\/', 
+                    'solgs\/model\/combined\/populations\/'];
+       
+    urlMatch = urlMatch.join('|');
 
-    if (url.match(/solgs\/trait|breeders_toolbox\/trial|breeders\/trial\/|solgs\/selection\/|solgs\/model\/combined\/populations\//)) {
-       solGS.cluster.checkClusterResult();  
+    if (url.match(urlMatch)) {
+	
+        solGS.cluster.checkClusterResult();  
     } 
  
 });

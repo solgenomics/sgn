@@ -131,8 +131,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
 
-    my $dataset_id  =  $c->req->param('dataset_id');
+    my $dataset_id     =  $c->req->param('dataset_id');
     my $data_structure =  $c->req->param('data_structure');
+    my $data_type      =  $c->req->param('data_type');
     
     my $cluster_type = $c->req->param('cluster_type');
     $cluster_type = 'k-means' if !$cluster_type;
@@ -145,6 +146,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{dataset_id}       = $dataset_id;
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
+    $c->stash->{data_type}        = $data_type;
 
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
@@ -156,11 +158,29 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     if (!$cluster_plot_exists)
     {	
-	$self->create_cluster_genotype_data($c);
+	if ($data_type == 'genotype') 
+	{
+	    $self->create_cluster_genotype_data($c);
+	} 
+	elsif ($data_type == 'phenotype')
+	{
+	   $self->create_cluster_phenotype_data($c);  
+	}
+
+	my $no_cluster_data;
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
-	    $ret->{result} = 'There is no genotype data. Aborted Cluster analysis.';                
+	    $no_cluster_data = 'There is no genotype data. Aborted Cluster analysis.';                
 	}
+	elsif (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
+	{
+	     $no_cluster_data = 'There is no phenotype data. Aborted Cluster analysis.';
+	}
+
+	if ($no_cluster_data)
+	{
+	    $ret->{result} = $no_cluster_data; 
+	}  
 	else 
 	{	    
 	    $self->run_cluster($c);
