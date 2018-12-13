@@ -30,7 +30,9 @@ $user_id => undef
   js_object_name=> 'stockForm',
   page_url => "/cross/$cross_id" ,
   alternate_new_button => '',
-  alternate_delete_button => ''
+  alternate_ghosted_new_button => '',
+  alternate_delete_button => '',
+  alternate_ghosted_delete_button => ''
 &>
 
 </&>
@@ -142,26 +144,26 @@ $user_id => undef
 </&>
 
 <script>
-  
-  jQuery(document).ready( function() { 
-    jQuery('#delete_cross_button').click( function() { 
+
+  jQuery(document).ready( function() {
+    jQuery('#delete_cross_button').click( function() {
        var response = confirm('Really delete this cross? This action cannot be undone.');
-       if (response) { 
-         jQuery.ajax( { 
+       if (response) {
+         jQuery.ajax( {
            url: '/ajax/cross/delete',
-           data: { 'cross_id' : <% $cross_id %>}, 
+           data: { 'cross_id' : <% $cross_id %>},
            method: 'POST',
            error: function(r) { alert('An error occurred.'); },
-           success: function(r) { 
+           success: function(r) {
              if (r.error) { alert(r.error); }
-             else { 
+             else {
                alert('Deletion was successful.');
              }
            }
          });
-       } 
+       }
     });
 
   });
-  
+
 </script>
