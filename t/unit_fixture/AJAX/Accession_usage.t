@@ -51,4 +51,12 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'data' => [['<a href="/stock/38844/view">test_accession5</a>',15],['<a href="/stock/38841/view">test_accession2</a>',1]]}, 'male usage');
 
+$mech->get_ok('http://localhost:3010/ajax/accession_usage_phenotypes?display=plots_accession');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+print STDERR Dumper scalar(@{$response->{data}});
+
+is(scalar(@{$response->{data}}), 1563, 'accession phenotypes usage');
+
+
 done_testing();
