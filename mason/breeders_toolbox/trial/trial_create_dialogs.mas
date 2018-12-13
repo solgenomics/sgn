@@ -94,29 +94,43 @@ rect.bordered {
                                 <& /page/page_title.mas, title=>"Enter basic information about the trial" &>
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Trial Name: </label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
-                                    </div>
-                                </div>
-                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_breeding_program" name="select_breeding_program">
-                                        <%perl>foreach my $program (@$breeding_programs) {
-                                            print "<option value='".@$program[1]."'>".@$program[1]."</option>"; }
+                                        <%perl>
+                                        foreach my $program (@$breeding_programs) {
+                                            if (@$program[3]) {
+                                                print STDERR "Selected Program is ".@$program[1]."\n";
+                                                print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+                                            } else {
+                                                print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                            }
+                                        }
                                         </%perl>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Location: </label>
+                                    <label class="col-sm-3 control-label">Locations: (One or More)</label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_location" name="add_project_location">
-                                        <%perl>foreach my $location (@$locations) { print "
-                                            <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
+                                        <select multiple class="form-control" id="add_project_location" name="add_project_location">
+                                        <%perl>
+                                        foreach my $location_hashref (@$locations) {
+                                            my $properties = $location_hashref->{'properties'};
+                                            my $program = $properties->{'Program'};
+                                            my $name = $properties->{'Name'};
+                                            print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
+                                        }
                                         </%perl>
                                         </select>
+                                        <div class="well well-sm"><div id="locations_count" >No Locations Selected</div></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
+                                        <p><i>Location abbreviation will automatically be added as a prefix if multiple locations are selected.</i></p>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -268,6 +282,12 @@ rect.bordered {
                                         <div id="prephelp" style="display: none">
                                             <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="randomization_div" style="display:none;">
+                                    <label class="col-sm-4 control-label">Use same randomization for all locations: </label>
+                                    <div class="col-sm-8" >
+                                        <input type="checkbox" id="use_same_layout" value="same_design" />
                                     </div>
                                 </div>
                                 <hr>
@@ -848,3 +868,31 @@ Development Core Team, 2009).</p></center>
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function(){
+
+    var selectedProgram = jQuery('#select_breeding_program').val()
+
+    filter_options(selectedProgram, 'program', 'add_project_location');
+
+    jQuery('#select_breeding_program').change(function() {
+        filter_options(jQuery(this).val(), 'program', 'add_project_location');
+    });
+
+    jQuery('#add_project_location').change(function() {
+        var number_selected = jQuery(this).val().length;
+        if (number_selected > 1) {
+            jQuery('#locations_count').html('Locations Selected: '+number_selected);
+            jQuery('#randomization_div').show();
+        } else if (number_selected > 0) {
+            jQuery('#locations_count').html('Locations Selected: '+number_selected);
+            jQuery('#randomization_div').hide();
+        } else {
+            jQuery('#locations_count').html('No Locations Selected');
+            jQuery('#randomization_div').hide();
+        }
+    });
+
+})
+</script>
