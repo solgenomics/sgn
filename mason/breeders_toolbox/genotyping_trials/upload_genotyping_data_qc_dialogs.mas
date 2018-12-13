@@ -21,8 +21,26 @@
 
                                 <ul>
                                     <li>Genotype QC does not save your genotypes in the database, it only scans them against genotyping protocols already saved in the database.</li>
+                                    <li>To actually store data into the database, please use "Upload Genotyping Data".</li>
                                     <li>The marker names should be exactly the marker names that you want to compare against and not any other ID</li>
                                 </ul>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+
+                            <&| /util/workflow.mas:step, title=> "Genotype Protocol" &>
+                                <& /page/page_title.mas, title=>"Select the genotyping protocol you want to compare against" &>
+
+                                <ul>
+                                    <li>Select a genotyping protocol in the database against which you want to compare genotypes against.</li>
+                                </ul>
+                                <br/><br/>
+
+                                <div id="genotype_qc_selected_protocol">
+                                </div>
 
                                 <br/><br/>
                                 <center>
@@ -33,7 +51,6 @@
                             <&| /util/workflow.mas:step, title=> "Genotype Info" &>
                                 <& /page/page_title.mas, title=>"Provide genotype information" &>
                                 <br/><br/>
-
 
                                 <div class="row">
                                     <div class="col-sm-4">
@@ -64,6 +81,12 @@
                                 <center>
                                 <button class="btn btn-primary" id="genotype_qc_upload_submit_button">Submit</button>
                                 </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Results" &>
+                                <& /page/page_title.mas, title=>"A similarity matrix between the samples in your file and the saved genotypes for the protocol you selected" &>
+
+                                <div id="genotype_qc_result_div"></div>
+
                             </&>
                         </&>
 
@@ -98,8 +121,8 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>COLUMN1</td>
-                                <td>COLUMN2</td>
+                                <td>SampleName.LabID</td>
+                                <td>Separate Column For Each Marker Name (e.g. S12_7926132)</td>
                             </tr>
                         </tbody>
                     </table>
@@ -127,6 +150,8 @@ jQuery(document).ready(function(){
         jQuery('#upload_genotypes_qc_dialog').modal('show');
     });
 
+    get_select_box('genotyping_protocol','genotype_qc_selected_protocol', {'empty':'1', 'id':'genotype_qc_protocol_id', 'name':'genotype_qc_protocol_id'});
+
     jQuery('#upload_genotype_qc_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_qc_spreadsheet_info_format_dialog').modal('show');
     });
@@ -145,9 +170,28 @@ jQuery(document).ready(function(){
         post: function () {
         },
         complete: function (response) {
-            console.log(response);
+            //console.log(response);
             jQuery('#working_modal').modal('hide');
             if (response.success) {
+            
+                var html = '<table class="table table-hover"><thead><tr><th>Samples In File</th>';
+                for(var i=0; i<response.protocol_stock_names.length; i++) {
+                    html = html + '<th>'+response.protocol_stock_names[i]+'</th>';
+                }
+                html = html + '</tr></thead><tbody>';
+                for(var j=0; j<response.users_stock_names.length; j++) {
+                    html = html + '<tr><td>'+response.users_stock_names[j]+'</td>';
+                    for(var k=0; k<response.protocol_stock_names.length; k++) {
+                        var distance = response.distance_matrix[response.users_stock_names[j]][response.protocol_stock_names[k]];
+                        html = html + '<td>'+distance+'</td>';
+                    }
+                    html = html + '</tr>';
+                }
+                html = html + '</tbody></table>';
+                jQuery('#genotype_qc_result_div').html(html);
+            
+                Workflow.complete('#genotype_qc_upload_submit_button');
+                Workflow.focus("#upload_genotypes_qc_workflow", 3);
             }
         }
     });

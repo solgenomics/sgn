@@ -6,6 +6,19 @@ use Moose;
 use JSON::Any;
 use Math::Round qw | :all |;
 
+has 'genotypeprop_id' => ( isa => 'Int',
+			   is => 'rw',
+    );
+
+has 'bcs_schema' => (isa => 'Ref',
+		     is => 'rw',
+    );
+
+has 'marker_encoding' => (isa => 'Str',
+			  is => 'rw',
+			  default => 'DS',
+    );
+
 has 'id' => ( isa => 'Int',
 	      is => 'rw',
     );
@@ -22,35 +35,64 @@ has 'markerscores' => ( isa => 'HashRef',
 			is  => 'rw',
     );
 
-has 'rawscores' => (isa => 'HashRef',
-		    is => 'rw',
-    );
+#has 'rawscores' => (isa => 'HashRef',
+#		    is => 'rw',
+#    );
 
 has 'markers' => (isa => 'ArrayRef',
 		  is => 'rw',
     );
 
-has 'dosages' => (isa => 'HashRef',
-		  is => 'rw',
-    );
+#has 'dosages' => (isa => 'HashRef',
+#		  is => 'rw',
+#    );
 
 
+
+sub BUILD { 
+    my $self = shift;
+
+    my $genotypeprop_id = $self->genotypeprop_id();
+    my $bcs_schema = $self->bcs_schema();
+
+
+
+    if ( defined($genotypeprop_id) && defined($bcs_schema)) { 
+	print STDERR "Creating CXGN::Genotype object from genotypeprop_id ".$self->genotypeprop_id()." and the schema object\n";
+
+	my $row = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->find( { genotypeprop_id=> $self->genotypeprop_id() });
+
+	if ($row) { 
+	    $self->from_json($row->value());
+	}
+	else { 
+	    die "The CXGN::Genotype object could not be created with the genotypeprop_id ".$self->genotypeprop_id()." and the provided schema.";
+	}
+	print STDERR "Done!\n";
+    }
+}
+	
 sub from_json { 
     my $self = shift;
     my $json = shift;
+    
+    #print STDERR "JSON = $json\n";
     
     my $data = JSON::Any->decode($json);
 
     $self->markerscores($data);
 
-    my @markers = keys(%$data);
+    my @markers = keys(%{$data});
     $self->markers( \@markers );
     
 }
 
 sub to_json { 
-
-
+    my $self = shift;
+    
+    my $json = JSON::Any->encode($self->markerscores());
+    
+    return $json;
 }
 
     
@@ -84,8 +126,8 @@ sub calculate_distance {
     my $this_genotype_score = $self->markerscores();
 
     foreach my $m (@{$self->markers()}) { 
-	if ($self->good_score($other_genotype_score->{$m}) && $self->good_score($this_genotype_score->{$m})) { 
-	    if ($self->scores_are_equal($other_genotype_score->{$m}, $this_genotype_score->{$m})) { 
+	if ($self->good_score($other_genotype_score->{$m}->{$self->marker_encoding()}) && $self->good_score($this_genotype_score->{$m}->{$self->marker_encoding() })) { 
+	    if ($self->scores_are_equal($other_genotype_score->{$m}->{$self->marker_encoding()}, $this_genotype_score->{$m}->{$self->marker_encoding()})) { 
 		$total_matches++;
 		#print STDERR "$m: $other_genotype_score->{$m} matches $this_genotype_score->{$m}\n";
 	    }
@@ -142,6 +184,8 @@ sub good_score {
     my $score = shift;
 
     if (!defined($score)) { return 0; }
+
+    if ($score =~ /0|1\/0|1/) { return 1; }
 
     if ($score =~ /^[A-Za-z?]+$/) { return 0; }
     

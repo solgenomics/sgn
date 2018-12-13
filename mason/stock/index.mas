@@ -222,7 +222,10 @@ function jqueryStuff() {
                         js_object_name=> 'stockForm',
                         page_url => "/stock/$stock_id/view/" ,
                         #alternate_new_button => '<a class="btn btn-sm btn-default" href ="/stock/0/new">New</a>'
-                        alternate_new_button => ''
+                        alternate_new_button => '',,
+                        alternate_ghosted_new_button => '',
+                        alternate_delete_button => '',
+                        alternate_ghosted_delete_button => ''
                     &>
 
                 </div>
@@ -285,6 +288,8 @@ function jqueryStuff() {
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>JBrowse Genome Alignments</h4>", info_section_subtitle => 'View JBrowse tracks for this stock.', icon_class => "glyphicon glyphicon-align-left", info_section_id => "stock_jbrowse_section" &>
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Comments</h4>", info_section_subtitle => 'View and add comments to this stock.', icon_class => "glyphicon glyphicon-pencil", info_section_id => "stock_comments_section", referer => $this_page &>
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 
 </&>
 

@@ -4,6 +4,20 @@ package CXGN::Genotype::Protocol;
 
 CXGN::Genotype::Protocol - an object to handle genotyping protocols (breeding data)
 
+To get info for a specific protocol:
+
+my $protocol = CXGN::Genotype::Protocol->new({
+    bcs_schema => $schema,
+    nd_protocol_id => $protocol_id
+});
+And then use Moose attributes to retrieve markers, refrence name, etc
+
+----------------
+
+To get a list of protocols and their info:
+my $protocol_list = CXGN::Genotype::Protocol::list($schema);
+This can take search params in, like protocol_ids, accessions, etc
+
 =head1 USAGE
 
 =head1 DESCRIPTION

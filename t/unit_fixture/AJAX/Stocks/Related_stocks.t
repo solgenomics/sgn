@@ -55,8 +55,8 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
-['<a href = "/stock/38845/view">new_test_cross</a>', 'cross', 'new_test_cross']
-]}, 'member_of');
+['<a href="/cross/38845">new_test_cross</a>', 'cross', 'new_test_cross']
+]}, 'group_and_member');
 
 
 done_testing();
