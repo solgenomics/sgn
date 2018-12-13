@@ -1806,14 +1806,14 @@ sub stock_obsolete_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+        $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
         $c->detach();
     }
-    
+
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
 
