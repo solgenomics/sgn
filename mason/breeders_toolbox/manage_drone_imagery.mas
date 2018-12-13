@@ -759,9 +759,10 @@ jQuery(document).ready(function() {
 
         var num_rows_val = jQuery('#drone_imagery_plot_polygons_num_rows').val();
         var num_cols_val = jQuery('#drone_imagery_plot_polygons_num_cols').val();
-        var section_left_offset_val = jQuery('#drone_imagery_plot_polygons_left_offset').val();
+        var section_top_left_offset_val = jQuery('#drone_imagery_plot_polygons_top_left_offset').val();
+        var section_bottom_left_offset_val = jQuery('#drone_imagery_plot_polygons_bottom_left_offset').val();
         var section_top_offset_val = jQuery('#drone_imagery_plot_polygons_top_offset').val();
-        var section_right_offset_val = jQuery('#drone_imagery_plot_polygons_right_offset').val();
+        var section_top_right_offset_val = jQuery('#drone_imagery_plot_polygons_top_right_offset').val();
         var section_bottom_offset_val = jQuery('#drone_imagery_plot_polygons_bottom_offset').val();
 
         if (num_rows_val == ''){
@@ -772,20 +773,24 @@ jQuery(document).ready(function() {
             alert('Please give the number of columns!');
             return;
         }
-        if (section_left_offset_val == ''){
-            alert('Please give the section left offset! This can be 0 if there is no offset.');
+        if (section_top_left_offset_val == ''){
+            alert('Please give the top left margin! This can be 0 if there is no offset.');
+            return;
+        }
+        if (section_bottom_left_offset_val == ''){
+            alert('Please give the bottom left margin! This can be 0 if there is no offset.');
             return;
         }
         if (section_top_offset_val == ''){
-            alert('Please give the section top offset! This can be 0 if there is no offset.');
+            alert('Please give the top margin! This can be 0 if there is no offset.');
             return;
         }
-        if (section_right_offset_val == ''){
-            alert('Please give the section right offset! This can be 0 if there is no offset.');
+        if (section_top_right_offset_val == ''){
+            alert('Please give the top right margin! This can be 0 if there is no offset.');
             return;
         }
         if (section_bottom_offset_val == ''){
-            alert('Please give the section bottom offset! This can be 0 if there is no offset.');
+            alert('Please give the bottom margin! This can be 0 if there is no offset.');
             return;
         }
 
@@ -793,29 +798,35 @@ jQuery(document).ready(function() {
         var num_cols = parseInt(num_cols_val);
         var section_width = background_image_width;
         var section_height = background_image_height;
-        var section_left_offset = parseInt(section_left_offset_val);
+        var section_top_left_offset = parseInt(section_top_left_offset_val);
+        var section_bottom_left_offset = parseInt(section_bottom_left_offset_val);
         var section_top_offset = parseInt(section_top_offset_val);
-        var section_right_offset = parseInt(section_right_offset_val);
+        var section_top_right_offset = parseInt(section_top_right_offset_val);
         var section_bottom_offset = parseInt(section_bottom_offset_val);
 
-        var col_width = (section_width - section_left_offset - section_right_offset) / num_cols;
-        var row_width = (section_height - section_top_offset - section_bottom_offset) / num_rows;
+        var total_left_shift = section_bottom_left_offset - section_top_left_offset;
+        var col_left_shift = total_left_shift / num_rows;
 
-        var x_pos = section_left_offset;
+        var col_width = (section_width - section_top_left_offset - section_top_right_offset) / num_cols;
+        var row_height = (section_height - section_top_offset - section_bottom_offset) / num_rows;
+
+        var x_pos = section_top_left_offset;
         var y_pos = section_top_offset;
         var generated_polygons = [];
+        var row_num = 1;
         for (var i=0; i<num_rows; i++) {
             for (var j=0; j<num_cols; j++) {
                 generated_polygons.push([
                     {x:x_pos, y:y_pos},
                     {x:x_pos + col_width, y:y_pos},
-                    {x:x_pos + col_width, y:y_pos + row_width},
-                    {x:x_pos, y:y_pos + row_width}
+                    {x:x_pos + col_width, y:y_pos + row_height},
+                    {x:x_pos, y:y_pos + row_height}
                 ]);
                 x_pos = x_pos + col_width;
             }
-            x_pos = section_left_offset;
-            y_pos = y_pos + row_width;
+            x_pos = section_top_left_offset + (row_num * col_left_shift);
+            y_pos = y_pos + row_height;
+            row_num = row_num + 1;
         }
         //console.log(generated_polygons);
 
