@@ -2,6 +2,7 @@ package SGN::Controller::AJAX::Accession_usage;
 
 use Moose;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -174,18 +175,20 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
-        my $cv = 0;
-        if ($stddev && $average != 0) {
-            $cv = ($stddev /  $average) * 100;
-            $cv = $round->round($cv) . '%';
-        }
-        if ($average) { $average = $round->round($average); }
-        if ($min) { $min = $round->round($min); }
-        if ($max) { $max = $round->round($max); }
-        if ($stddev) { $stddev = $round->round($stddev); }
+        if (looks_like_number($average)){
+            my $cv = 0;
+            if ($stddev && $average != 0) {
+                $cv = ($stddev /  $average) * 100;
+                $cv = $round->round($cv) . '%';
+            }
+            if ($average) { $average = $round->round($average); }
+            if ($min) { $min = $round->round($min); }
+            if ($max) { $max = $round->round($max); }
+            if ($stddev) { $stddev = $round->round($stddev); }
 
-        my @return_array = ( qq{<a href="/stock/$stock_id/view">$stock_name</a>}, qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count );
-        push @phenotype_data, \@return_array;
+            my @return_array = ( qq{<a href="/stock/$stock_id/view">$stock_name</a>}, qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count );
+            push @phenotype_data, \@return_array;
+        }
     }
     $c->stash->{rest} = { data => \@phenotype_data };
 }
