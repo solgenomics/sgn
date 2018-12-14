@@ -306,11 +306,13 @@ solGS.cluster = {
     },
 
     runCluster: function(selectId, dataStructureType) {
-	//	this.setListId(selectId, dataStructureType);
-	var dataType = jQuery('#data_type_select').val();
-	var clusterType = jQuery('#cluster_type_select').val();
+	
+	var analysisRowId = this.selectRowId(selectId);
+	var dataType      = jQuery('#'+analysisRowId + ' #data_type_select').val();
+	var clusterType   = jQuery('#'+analysisRowId + ' #cluster_type_select').val();
+
 	console.log(dataType + ' ' + clusterType)
-	//var clusterType = this.registerClusterType(selectId, dataStructureType);
+
     	this.clusterResult(selectId, dataStructureType, clusterType, dataType);
     },
 
