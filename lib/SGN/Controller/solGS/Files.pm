@@ -598,6 +598,7 @@ sub create_file_id {
     my $dataset_id       = $c->stash->{dataset_id};
     my $cluster_type     = $c->stash->{cluster_type};
     my $combo_pops_id    = $c->stash->{combo_pops_id};
+    my $data_type        = $c->stash->{data_type};
 
     my $file_id;
     my $referer = $c->req->referer;
@@ -633,6 +634,7 @@ sub create_file_id {
 	$file_id = "dataset_${dataset_id}";
     } 
 
+    $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $c->stash->{file_id} = $file_id;
     
 }
@@ -673,7 +675,7 @@ sub create_tempfile {
                                DIR => $dir,
         );
     
-    $fh->close; 
+    $fh->close;
     
     return $file;
 
@@ -686,7 +688,9 @@ sub copy_file {
     mkpath($dir, 0, 755);
     
     copy($file, $dir) 
-	or die "could not copy $file to $dir";    
+	or die "could not copy $file to $dir"; 
+
+    return catfile($dir, basename($file));
 }
 
 

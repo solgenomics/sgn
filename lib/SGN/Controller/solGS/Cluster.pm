@@ -134,9 +134,12 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $dataset_id     =  $c->req->param('dataset_id');
     my $data_structure =  $c->req->param('data_structure');
     my $data_type      =  $c->req->param('data_type');
-    
-    my $cluster_type = $c->req->param('cluster_type');
-    $cluster_type = 'k-means' if !$cluster_type;
+
+     my $cluster_type = $c->req->param('cluster_type');
+    #$cluster_type = 'k-means' if !$cluster_type;
+
+    print STDERR "\n data type: $data_type -- cluster type: $cluster_type\n";
+   
        
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -149,7 +152,15 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{data_type}        = $data_type;
 
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
-    $c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    $c->controller('solGS::Files')->create_file_id($c);
+    my $file_id = $c->stash->{file_id};
+
+
+    print STDERR "\n file id: $file_id\n";
+   
+    #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+ 
+    
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -157,24 +168,43 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $ret->{result} = 'Cluster analysis failed.';
 
     if (!$cluster_plot_exists)
-    {	
-	if ($data_type == 'genotype') 
+    {
+	my $no_cluster_data;
+	if ($data_type =~ /genotype/) 
 	{
 	    $self->create_cluster_genotype_data($c);
-	} 
-	elsif ($data_type == 'phenotype')
-	{
-	   $self->create_cluster_phenotype_data($c);  
-	}
+	    print STDERR "\n created genotype data\n";
 
-	my $no_cluster_data;
-	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
-	{	  
-	    $no_cluster_data = 'There is no genotype data. Aborted Cluster analysis.';                
-	}
-	elsif (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
+	    my $geno_files = $c->stash->{genotype_files_list};
+	    my $geno_file = $c->stash->{genotype_file};
+
+	    print STDERR "\n genofiles: $geno_files --  geno_file: $geno_file\n";
+	    
+	    if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
+	    {	  
+		$no_cluster_data = 'There is no genotype data. Aborted Cluster analysis.';                
+	    }
+	} 
+	elsif ($data_type =~ /phenotype/)
 	{
-	     $no_cluster_data = 'There is no phenotype data. Aborted Cluster analysis.';
+	    print STDERR "\n creating phenotype data\n";
+	    $self->create_cluster_phenotype_data($c);
+	    if (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
+	    {
+		$no_cluster_data = 'There is no phenotype data. Aborted Cluster analysis.';
+	    }
+	} 	
+	elsif ($data_type =~ /gebv/)
+	{
+	    print STDERR "\n creating gebvs data\n";
+
+	    $c->cluster_gebvs_file($c);
+	    my $cluster_gebvs_file = $c->stash->{cluster_gebvs_file};
+   	    
+	    if (!$cluster_gebvs_file)
+	    {
+		$no_cluster_data = 'There is no GEBVs data. Aborted Cluster analysis.';
+	    }
 	}
 
 	if ($no_cluster_data)
@@ -228,6 +258,20 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
         
     $c->res->content_type('application/json');
     $c->res->body($ret);         
+}
+
+
+sub cluster_gebvs_file {
+    my ($self, $c) = @_;
+
+     $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
+    my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
+    
+    my $tmp_dir = $c->stash->{cluster_temp_dir};
+    $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
+
+    $c->stash->{cluster_gebvs_file} = $combined_gebvs_file;
+   
 }
 
 
@@ -432,27 +476,25 @@ sub prep_cluster_download_files {
 
   my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'cluster');
   my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
-   
+  
   mkpath ([$base_tmp_dir], 0, 0755);
 
   my $cluster_type = $c->stash->{cluster_type};   
+  
   $self->kcluster_plot_kmeans_file($c);   
   my $plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
-
   $c->controller('solGS::Files')->copy_file($plot_file, $base_tmp_dir);
   $plot_file = catfile($tmp_dir, basename($plot_file));
-
+  
   $self->kcluster_result_file($c);
   my $clusters_file = $c->stash->{"${cluster_type}_result_file"};
-
   $c->controller('solGS::Files')->copy_file($clusters_file, $base_tmp_dir);
-  $clusters_file = catfile($tmp_dir, basename($clusters_file));
-
+  $clusters_file =  catfile($tmp_dir, basename($clusters_file));
+  
   $c->controller('solGS::Files')->analysis_report_file($c);
   my $report_file = $c->stash->{"${cluster_type}_report_file"};
-
   $c->controller('solGS::Files')->copy_file($report_file, $base_tmp_dir);
-  $report_file = catfile($tmp_dir, basename($report_file));
+  $report_file =  catfile($tmp_dir, basename($report_file));
    
   $c->stash->{download_plot}     = $plot_file;
   $c->stash->{download_clusters} = $clusters_file;
@@ -525,19 +567,33 @@ sub cluster_input_files {
           
     my $file_id = $c->stash->{file_id};
     my $tmp_dir = $c->stash->{cluster_temp_dir};
+    my $data_type = $c->stash->{data_type};
     
-    my $name     = "cluster_input_files_${file_id}"; 
+    my $name     = "cluster_input_files_${file_id}_${data_type}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
 
     my $files;
 
-    if ($c->stash->{genotype_files_list}) 
+    if ($data_type =~ /genotype/) 
     {
-	$files = join("\t", @{$c->stash->{genotype_files_list}});			      
+	if ($c->stash->{genotype_files_list}) 
+	{
+	    $files = join("\t", @{$c->stash->{genotype_files_list}});			      
+	}
+	else 
+	{
+	    $files = $c->stash->{genotype_file};
+	}
     }
-    else 
+    elsif ($data_type =~ /phenotype/)
     {
-	$files = $c->stash->{genotype_file};
+	#phenotype data file
+	
+    }
+    elsif ($data_type =~ /gebv/)	
+    {
+	$c->cluster_gebvs_file($c);
+	$files = $c->stash->{cluster_gebvs_file};	
     }
     
     write_file($tempfile, $files);

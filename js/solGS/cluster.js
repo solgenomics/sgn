@@ -158,14 +158,15 @@ solGS.cluster = {
 	
     },
 
-    clusterResult: function(selectId, dataStructureType, clusterType) {
+    clusterResult: function(selectId, dataStructureType, clusterType, dataType) {
 	
 	var popDetails  = solGS.getPopulationDetails();
 
 	if (clusterType === 'undefined') {
 	    clusterType = 'k-means';
 	}
-		
+
+	console.log('clusterResult ' + clusterType + ' ' + dataType)
 	var listName;
 	var listType;
 	var listId;
@@ -173,7 +174,7 @@ solGS.cluster = {
 	var datasetId;
 	var datasetName;
 	var dataStructure = dataStructureType;
-	var dataType;
+
 	
 	if (dataStructureType == 'list') {
 	    var genoList = this.getClusterGenotypesListData(selectId);
@@ -190,7 +191,11 @@ solGS.cluster = {
 	    datasetName = dataset.name;
 	}
 	
-	if (listId || datasetId || popDetails.training_pop_id || popDetails.selection_pop_id || popDetails.combo_pops_id) {
+	if (listId
+	    || datasetId
+	    || popDetails.training_pop_id
+	    || popDetails.selection_pop_id
+	    || popDetails.combo_pops_id) {
 	 
 	    jQuery("#cluster_canvas .multi-spinner-container").show();
 	    jQuery("#cluster_message").html("Running K-means clustering... please wait...");
@@ -300,8 +305,11 @@ solGS.cluster = {
 
     runCluster: function(selectId, dataStructureType) {
 	//	this.setListId(selectId, dataStructureType);
-	var clusterType = this.registerClusterType(selectId, dataStructureType);
-    	this.clusterResult(selectId, dataStructureType, clusterType);
+	var dataType = jQuery('#data_type_select').val();
+	var clusterType = jQuery('#cluster_type_select').val();
+	console.log(dataType + ' ' + clusterType)
+	//var clusterType = this.registerClusterType(selectId, dataStructureType);
+    	this.clusterResult(selectId, dataStructureType, clusterType, dataType);
     },
 
     registerClusterType: function(selectId, dataStructureType) {
