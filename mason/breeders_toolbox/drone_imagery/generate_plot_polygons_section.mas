@@ -71,5 +71,19 @@
     <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Rectangles</button>
 </div>
 
-
+<div class="well well-sm">
+    <form class="form-horizontal">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Previously Used Plot Polygon Templates For This Field Trial: </label>
+                    <div class="col-sm-6">
+                        <div id="plot_polygons_previously_saved_plot_polygon_templates">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </di>
+    </form>
+</div>
 

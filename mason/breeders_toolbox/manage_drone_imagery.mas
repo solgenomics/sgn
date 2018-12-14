@@ -647,6 +647,8 @@ jQuery(document).ready(function() {
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
         drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
 
+        get_select_box('drone_imagery_plot_polygons','plot_polygons_previously_saved_plot_polygon_templates', {'empty':1, 'field_trial_id':trial_id });
+
         plot_polygons_display_points = [];
         plot_polygons_ind_points = [];
         plot_polygons_ind_4_points = [];

@@ -445,6 +445,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
         my $image_original = $image->get_image_url("original");
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons} = $_->{drone_run_band_plot_polygons};
         push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
     }
     #print STDERR Dumper \%unique_drone_runs;
@@ -510,7 +511,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                             $plot_polygon_images = scalar(@{$d->{plot_polygon_images}})." Plot Polygons<br/><span>";
                                             $plot_polygon_images .= join '', @{$d->{plot_polygon_images}};
                                             $plot_polygon_images .= "</span>";
-                                            $plot_polygon_images .= '<br/><br/><button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Calculate Phenotypes</button>';
+                                            $plot_polygon_images .= '<br/><br/>';
+                                            $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Calculate Phenotypes</button>';
                                         } else {
                                             $plot_polygon_images = 'No Plot Polygons Assigned';
                                         }
