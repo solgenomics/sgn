@@ -63,7 +63,12 @@ $locations
                                         <select class="form-control" id="trial_upload_breeding_program" name="trial_upload_breeding_program">
                                             <%perl>
                                             foreach my $program (@$breeding_programs) {
-                                                print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                                if (@$program[3]) {
+                                                    print STDERR "Selected Program is ".@$program[1]."\n";
+                                                    print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+                                                } else {
+                                                    print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                                }
                                             }
                                             </%perl>
                                         </select>
@@ -73,9 +78,14 @@ $locations
                                     <label class="col-sm-3 control-label">Location: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_upload_location" name="trial_upload_location">
-                                            <%perl>foreach my $location (@$locations) { print "
-                                                <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-                                            </%perl>
+                                        <%perl>
+                                        foreach my $location_hashref (@$locations) {
+                                            my $properties = $location_hashref->{'properties'};
+                                            my $program = $properties->{'Program'};
+                                            my $name = $properties->{'Name'};
+                                            print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
+                                        }
+                                        </%perl>
                                         </select>
                                     </div>
                                 </div>
@@ -490,9 +500,19 @@ $locations
 
 <script>
 jQuery(document).ready(function(){
+
+    var selectedProgram = jQuery('#trial_upload_breeding_program').val()
+
+    filter_options(selectedProgram, 'program', 'trial_upload_location');
+
+    jQuery('#trial_upload_breeding_program').change(function() {
+        filter_options(jQuery(this).val(), 'program', 'trial_upload_location');
+    });
+
     jQuery('#guided_help_trial_upload_format_button').click(function(){
         jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
         return false;
     });
+
 })
 </script>
