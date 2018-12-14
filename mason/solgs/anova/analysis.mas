@@ -1,0 +1,55 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/anova/analysis.mas - anova analysis and output section
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trial_id => undef,
+$pop_id   => undef,
+
+</%args>
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/anova.css', '/static/css/solgs/spinner.css'] &>
+
+<& /util/import_javascript.mas, classes => ["solGS.anova"] &>
+
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "ANOVA"
+&>
+
+  <div id="anova_canvas">    
+    
+    <div id="anova_select_a_trait_div" style="float:left; z-index:10; position:absolute; "></div>
+    <input  style="position:absolute;margin-left:300px" id="run_anova" class="button" type="button" value="Run ANOVA" />
+
+    <div id="anova_selected_trait_div" style="display:none">    
+
+      <input type="hidden" id="anova_selected_trait_name" value="" />
+      <input type="hidden" id="anova_selected_trait_id" value="" />
+
+    </div>
+   
+    <div id="anova_message"  style="padding-top: 50px;font-weight:bold;text-align:center;color:#A7C942"></div>
+    <& /solgs/spinner.mas &> 
+    <div id="anova_table"> </div>
+    <input type="hidden" id="trial_id" value="<% $trial_id %>" />
+    
+  </div>
+
+  
+
+</&>
+

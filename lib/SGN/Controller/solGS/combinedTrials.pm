@@ -336,8 +336,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     my $sel_pop_mr_cnt = $c->controller('solGS::solGS')->get_markers_count($c, $mr_cnt_args);
     $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
+    my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c);
     $c->stash->{protocol} = $protocol;
     
     my $identifier    = $model_id . '_' . $selection_pop_id;
@@ -734,8 +733,7 @@ sub combined_pops_summary {
     my $stocks_no   =  $self->count_combined_trials_members($c, $combo_pops_id);
     my $training_pop = "Training population $combo_pops_id";
     
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
+    my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c); 
 
     $c->stash(
 	markers_no   => $markers_no,
@@ -965,9 +963,7 @@ sub combined_trials_desc {
 
     my $training_pop = "Training population $combo_pops_id";
     
-    my $protocol = $c->config->{default_genotyping_protocol};
-    $protocol = 'N/A' if !$protocol;
-
+    my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c); 
     my $stocks_no = $self->count_combined_trials_members($c, $combo_pops_id);
    
     $c->stash(stocks_no    => $stocks_no,

@@ -1,5 +1,5 @@
 <%args>
-@locations => ()
+$locations
 </%args>
 
 <div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
@@ -39,7 +39,7 @@
                             <hr>
 
                             <div class="form-group">
-                                <label class="col-sm-2 control-label">Crossing Experiment: </label>
+                                <label class="col-sm-2 control-label">You can check your crossing experiment here: </label>
                                 <div class="col-sm-10">
                                     <div id="upload_crosses_select_crossingtrial_1" name="upload_crosses_select_crossingtrial_1" >
                                     </div>
@@ -71,8 +71,14 @@
                                         <select class="form-control" id="cross_upload_location" name="cross_upload_location">
                                             <option value="">Select Location</option>
 <%perl>
-    foreach my $location (@locations) {
-        print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    # foreach my $location (@locations) {
+    #     print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    # }
+    foreach my $location_hashref (@$locations) {
+        my $properties = $location_hashref->{'properties'};
+        my $program = $properties->{'Program'};
+        my $name = $properties->{'Name'};
+        print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
     }
 </%perl>
                                         </select>

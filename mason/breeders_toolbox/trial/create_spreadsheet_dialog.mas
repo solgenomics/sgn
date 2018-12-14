@@ -38,6 +38,12 @@ $trial_name => undef
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Include Notes Column </label>
+                    <div class="col-sm-9" >
+                        <input type="checkbox" id="include_notes_column" name="include_notes_column" />
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Spreadsheet Format: </label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="create_spreadsheet_phenotype_file_format" name="create_spreadsheet_phenotype_file_format">
@@ -163,6 +169,7 @@ jQuery(document).ready(function() {
 function create_phenotype_spreadsheet() {
     var list = new CXGN.List();
     var trait_list_id = jQuery('#trait_list_spreadsheet_list_select').val();
+    var include_notes = jQuery('#include_notes_column').is(':checked');
     var trait_list;
     if (! trait_list_id == "") {
         trait_list = JSON.stringify(list.getList(trait_list_id));
@@ -179,6 +186,7 @@ function create_phenotype_spreadsheet() {
         data: {
             'trial_ids': JSON.stringify(trial_ids),
             'trait_list': trait_list,
+            'include_notes': include_notes,
             'data_level': jQuery("#create_spreadsheet_data_level").val(),
             'sample_number': jQuery("#create_spreadsheet_sample_number").val(),
             'format': jQuery('#create_spreadsheet_phenotype_file_format').val()

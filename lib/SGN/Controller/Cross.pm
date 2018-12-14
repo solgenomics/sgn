@@ -30,6 +30,9 @@ use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use SGN::Model::Cvterm;
+use File::Temp;
+use File::Basename qw | basename dirname|;
+use File::Spec::Functions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -581,11 +584,11 @@ sub cross_detail : Path('/cross') Args(1) {
 
     #get cross from stock id
     my $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->search( { stock_id => $id, type_id => $cross_type_id } )->first();
-    
+
     if (!$cross) { #or from project id
         $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
     }
-    
+
     my $cross_id;
 
     if (!$cross) {
@@ -595,10 +598,10 @@ sub cross_detail : Path('/cross') Args(1) {
     } else {
         $cross_id = $cross->stock_id();
     }
-    
+
     #print STDERR "Cross stock_id is $cross_id\n";
-    
-    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
+
+    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'offspring_of'  }, { join =>  'type' } );
 
     my $progeny_count = $progeny->count();
 
@@ -610,5 +613,18 @@ sub cross_detail : Path('/cross') Args(1) {
 
 }
 
+sub cross_wishlist_download : Path('/cross_wishlist/file_download/') Args(1) {
+    my $self  =shift;
+    my $c = shift;
+    my $file_id = shift;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+    $c->res->content_type('Application/xls');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->body($contents);
+}
 
 1;

@@ -175,7 +175,7 @@ CXGN.List.prototype = {
         return html;
     },
 
-    newList: function(name) {
+    newList: function(name, desc) {
         var oldListId = this.existsList(name);
         var newListId = 0;
 
@@ -188,7 +188,7 @@ CXGN.List.prototype = {
             jQuery.ajax( {
                 url: '/list/new',
                 async: false,
-                data: { 'name': name },
+                data: { 'name': name, 'desc': desc },
                 success: function(response) {
                     if (response.error) {
                         alert(response.error);
@@ -323,7 +323,8 @@ CXGN.List.prototype = {
     renderLists: function(div) {
         var lists = this.availableLists();
         var html = '';
-        html = html + '<div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List. Type New List Name Here" /><span class="input-group-btn"><button class="btn btn-primary" type="button" id="add_list_button" value="new list">New List</button></span></div><br/>';
+        html = html + '<div class="well well-sm"><form class="form-horizontal"><div class="form-group form-group-sm"><label class="col-sm-3 control-label">Create New List: </label><div class="col-sm-9"><div class="input-group"><input id="add_list_input" type="text" class="form-control" placeholder="Create New List. Type New List Name Here" /><span class="input-group-btn"><button class="btn btn-primary btn-sm" type="button" id="add_list_button" value="new list">New List</button></span></div></div></div><div class="form-group form-group-sm"><label class="col-sm-3 control-label"></label><div class="col-sm-9">';
+        html = html + '<input id="add_list_input_description" type="text" class="form-control" placeholder="Description For New List" /></div></div></form></div>';
 
         if (lists.length===0) {
             html = html + "None";
@@ -331,9 +332,10 @@ CXGN.List.prototype = {
         }
 
         html += '<div class="well well-sm"><table id="private_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Description</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Delete</th><th>Download</th><th>Share</th><th>Group</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+            html += '<tr><td><a href="javascript:showListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
+            html += '<td>'+lists[i][2]+'</td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
             html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
@@ -361,8 +363,9 @@ CXGN.List.prototype = {
             var lo = new CXGN.List();
 
             var name = jQuery('#add_list_input').val();
+            var description = jQuery('#add_list_input_description').val();
 
-            lo.newList(name);
+            lo.newList(name, description);
             lo.renderLists(div);
         });
 
@@ -400,15 +403,20 @@ CXGN.List.prototype = {
         var html = '';
 
         html += '<table id="public_list_data_table" class="table table-hover table-condensed">';
-        html += '<thead><tr><th>List Name</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th></tr></thead><tbody>';
+        html += '<thead><tr><th>List Name</th><th>Description</th><th>Count</th><th>Type</th><th>Validate</th><th>View</th><th>Download</th><th>Copy To Your Lists</th><th>Owner</th><th>Make Private</th></tr></thead><tbody>';
         for (var i = 0; i < lists.length; i++) {
-            html += '<tr><td><b>'+lists[i][1]+'</b></td>';
+            html += '<tr>';
+            html += '<td><a href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><b>'+lists[i][1]+'</b></a></td>';
+            html += '<td>'+lists[i][2]+'</td>';
             html += '<td>'+lists[i][3]+'</td>';
             html += '<td>'+lists[i][5]+'</td>';
             html += '<td><a onclick="(new CXGN.List()).validate(\''+lists[i][0]+'\',\''+lists[i][5]+'\')"><span class="glyphicon glyphicon-ok"></span></a></td>';
             html += '<td><a title="View" id="view_public_list_'+lists[i][1]+'" href="javascript:showPublicListItems(\'list_item_dialog\','+lists[i][0]+')"><span class="glyphicon glyphicon-th-list"></span></a></td>';
             html += '<td><a target="_blank" title="Download" id="download_public_list_'+lists[i][1]+'" href="/list/download?list_id='+lists[i][0]+'"><span class="glyphicon glyphicon-arrow-down"></span></a></td>';
             html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
+            html += '<td>'+lists[i][6]+'</td>';
+            html += '<td><a title="Make Private" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
+            html += '</tr>';
         }
         html = html + '</tbody></table>';
 
@@ -437,6 +445,7 @@ CXGN.List.prototype = {
     renderItems: function(div, list_id) {
 
         var list_data = this.getListData(list_id);
+        var list_description = list_data.description;
         var items = list_data.elements;
         var list_type = list_data.type_name;
         var list_name = this.listNameById(list_id);
@@ -445,6 +454,8 @@ CXGN.List.prototype = {
         html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
         html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
+        html += '<tr><td>Description:<br/><input type="button" class="btn btn-primary btn-xs" id="updateListDescButton" value="Update" /></td>';
+        html += '<td><input class="form-control" type="text" id="updateListDescField" size="10" value="'+list_description+'" /></td></tr>';
         html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" title="Will determine whther the items in your list are saved in the database as valid entries. The validation depends on the list type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
 
@@ -467,7 +478,7 @@ CXGN.List.prototype = {
         });
 
         if (list_type == 'accessions' || list_type == 'crosses'){
-            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Availible Seedlots</button>');
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
         }
         if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(list_type) >= 0){
             jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')" title="Will display whether the items in your list are synonyms or actual uniquenames.">Find Synonyms</button>');
@@ -475,7 +486,7 @@ CXGN.List.prototype = {
         }
         jQuery(document).on("change", "#type_select", function(){
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
-                jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Availible Seedlots</button>');
+                jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
             } else {
                 jQuery('#availableSeedlotButtonDiv').html('')
             }
@@ -513,7 +524,13 @@ CXGN.List.prototype = {
             var new_name =  jQuery('#updateNameField').val();
             var list_id = jQuery('#list_id_div').html();
             lo.updateName(list_id, new_name);
-            alert("Changed name to "+new_name+" for list id "+list_id);
+        });
+
+        jQuery('#updateListDescButton').click( function() {
+            var lo = new CXGN.List();
+            var new_desc =  jQuery('#updateListDescField').val();
+            var list_id = jQuery('#list_id_div').html();
+            lo.updateDescription(list_id, new_desc);
         });
 
         jQuery('div[name="list_item_toggle_edit"]').click(function() {
@@ -693,6 +710,25 @@ CXGN.List.prototype = {
                 }
                 else {
                     alert("The name of the list was changed to "+new_name);
+                }
+            },
+            error: function(response) { alert("An error occurred."); }
+        });
+        this.renderLists('list_dialog');
+    },
+
+    updateDescription: function(list_id, new_description) {
+        jQuery.ajax({
+            url: '/list/description/update',
+            async: false,
+            data: { 'description' : new_description, 'list_id' : list_id },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                else {
+                    alert("The description of the list was changed to "+new_description);
                 }
             },
             error: function(response) { alert("An error occurred."); }
@@ -986,7 +1022,7 @@ CXGN.List.prototype = {
                 break;
             case "trials":
             case "breeding_programs":
-                new_type = 'projects_2_project_ids'; 
+                new_type = 'projects_2_project_ids';
                 break;
             case "accessions":
                 new_type = 'accessions_2_accession_ids';
@@ -1061,7 +1097,7 @@ function pasteList(div_name) {
 function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
     var types = types.split(",");
-    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh')); 
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh'));
     //console.log("List options refreshed!");
 }
 

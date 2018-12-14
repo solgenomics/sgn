@@ -332,20 +332,20 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($format eq "csv") {
         $plugin = "TrialPhenotypeCSV";
     }
-    
+
     my $temp_file_name;
     my $dir = $c->tempfiles_subdir('download');
     if ($data_level eq 'metadata'){
         $temp_file_name = "metadata" . "XXXX";
     }else{
         $temp_file_name = "phenotype" . "XXXX";
-    }    
+    }
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
     print STDERR "TEMPFILE : $tempfile\n";
-
+    print STDERR "Plugin is $plugin\n";
     #List arguments should be arrayrefs of integer ids
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -441,7 +441,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $dl_token = $c->req->param("metadata_download_token") || "no_token";
     }
     my $format            = $c->req->param("format");
-    if (!$format){ 
+    if (!$format){
         $format            = $c->req->param("metadata_format");
     }
     my $datalevel         = $c->req->param("phenotype_datalevel");
@@ -503,7 +503,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		bcs_schema=>$schema,
     		search_type=>'MetaData',
     		data_level=>$datalevel,
-    		trial_list=>$trial_id_data->{transform},,    		
+    		trial_list=>$trial_id_data->{transform},,
     	);
     	@data = $metadata_search->get_metadata_matrix();
     }
@@ -520,7 +520,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }
-    
+
     if ($format eq "html") { #dump html in browser
         $output = "";
         my @header = @{$data[0]};
@@ -546,7 +546,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     } else {
         # if xls or csv, create tempfile name and place to save it
-        
+
         my $what;
         if ($datalevel eq 'metadata'){$what = "metadata_download";}
         else{$what = "phenotype_download"; }
@@ -682,6 +682,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Collecting download parameters ...  ".localtime()."\n";
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
   my $format = $c->req->param("format") || "list_id";
+  my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
   my $dl_token = $c->req->param("gbs_download_token") || "no_token";
   my $dl_cookie = "download".$dl_token;
 
@@ -733,7 +734,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
       bcs_schema=>$schema,
       accession_list=>\@accession_ids,
       trial_list=>\@trial_ids,
-      protocol_id=>$protocol_id
+      protocol_id_list=>[$protocol_id],
+      genotypeprop_hash_select=>['DS'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
+      protocolprop_top_key_select=>[], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
+      protocolprop_marker_hash_select=>[], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
+      return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
   });
   my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -744,7 +749,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $c->res->body($error);
     return;
   }
-  
+
   # find accession synonyms
   my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
   my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
@@ -758,7 +763,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
           $synonym_string.= (join ", ", @{$synonym_list}).")";
       }
   }
-  
+
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
   print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
@@ -773,7 +778,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
     print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
-    push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
+    push(@accession_genotypes, $genotypes->[$i]->{selected_genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
   print $TEMP "\n";
@@ -808,10 +813,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     for my $i ( 0 .. $#accession_genotypes ) {
       if($i == $#accession_genotypes ) {                              # print last accession genotype value and move onto new line
-        print $TEMP "$accession_genotypes[$i]{$markers[$j]}\n";
+        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\n";
       }
-      elsif (exists($accession_genotypes[$i]{$markers[$j]})) {        # print genotype and tab
-        print $TEMP "$accession_genotypes[$i]{$markers[$j]}\t";
+      elsif (exists($accession_genotypes[$i]->{$markers[$j]}->{'DS'})) {        # print genotype and tab
+        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\t";
       }
     }
   }
@@ -891,7 +896,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
         bcs_schema=>$schema,
         accession_list=>$accession_id_data->{transform},
         trial_list=>$trial_id_data->{transform},
-        protocol_id=>$protocol_id
+        protocol_id_list=>[$protocol_id]
     });
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
     my $data = $genotypes;

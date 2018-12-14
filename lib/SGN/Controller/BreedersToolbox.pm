@@ -20,6 +20,7 @@ use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
+use JSON;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -64,17 +65,37 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
-    my $breeding_programs = $projects->get_breeding_programs();
-
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
+    my $breeding_programs = $projects->get_breeding_programs();
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    #Add true false field to breeding program array indicating whether program is linked to current user
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    $c->stash->{locations} = $projects->get_all_locations();
+    my $locations = decode_json $projects->get_location_geojson();
 
-    $c->stash->{breeding_programs} = $breeding_programs;
+    #print STDERR "Locations are ".Dumper($locations)."\n";
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{breeding_programs} = \@breeding_programs;
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }
@@ -121,7 +142,8 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
-    my $breeding_programs = $person_roles->get_breeding_program_roles();
+    my $ascii_chars = 1;
+    my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 
     $c->stash->{roles} = $breeding_programs;
     $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
@@ -209,9 +231,29 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
-    $c->stash->{locations} = $bp->get_all_locations($c);
 
-    $c->stash->{programs} = $breeding_programs;
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = decode_json $crossingtrial->get_location_geojson();
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    #$c->stash->{locations} = $bp->get_all_locations($c);
+
+    #$c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
 
@@ -308,12 +350,25 @@ sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
     }
     $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
     $c->stash->{odk_crossing_data_service_url} = $c->config->{odk_crossing_data_service_url};
-    $c->stash->{odk_crossing_data_form_name} = $c->config->{odk_crossing_data_form_name};
     $c->stash->{odk_crossing_data_test_form_name} = $c->config->{odk_crossing_data_test_form_name};
     $c->stash->{odk_phenotyping_data_service_name} = $c->config->{odk_phenotyping_data_service_name};
     $c->stash->{odk_phenotyping_data_service_url} = $c->config->{odk_phenotyping_data_service_url};
     $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';
 }
+
+
+sub manage_identifier_generation :Path("/breeders/identifier_generation") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{template} = '/breeders_toolbox/identifier_generation/manage_identifier_generation.mas';
+}
+
 
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
     my $self =shift;
@@ -666,6 +721,15 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
+
+sub manage_markers : Path("/breeders/markers") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
+
+}
+
 
 
 1;

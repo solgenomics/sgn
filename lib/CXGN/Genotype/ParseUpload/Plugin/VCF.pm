@@ -3,7 +3,6 @@ package CXGN::Genotype::ParseUpload::Plugin::VCF;
 use Moose::Role;
 use SGN::Model::Cvterm;
 use Data::Dumper;
-use CXGN::GenotypeIO;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -14,12 +13,41 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     print STDERR "Reading VCF to validate during parse...\n";
-    my $gtio = CXGN::GenotypeIO->new({
-        file => $filename,
-        format => "vcf_new"
-    });
 
-    my $header = $gtio->header;
+    my $F;
+    open($F, "<", $filename) || die "Can't open file $filename\n";
+
+        my @header_info;
+        my @fields;
+        my @observation_unit_names;
+
+        my @markers;
+        while (<$F>) {
+            chomp;
+            #print STDERR Dumper $_;
+
+            if ($_ =~ m/^##/){
+                push @header_info, $_;
+                next;
+            }
+            if ($_ =~ m/^#/){
+                my $header = $_;
+                @fields = split /\t/, $header;
+                @observation_unit_names = @fields[9..$#fields];
+                next;
+            }
+
+            my @values = split /\t/;
+            if ($values[2] eq '.') {
+                push @markers, $values[0]."_".$values[1];
+            } else {
+                push @markers, $values[2];
+            }
+        }
+
+    close($F);
+
+    my $header = \@fields;
     if ($header->[0] ne '#CHROM'){
         push @error_messages, 'Column 1 header must be "#CHROM".';
     }
@@ -48,46 +76,44 @@ sub _validate_with_plugin {
         push @error_messages, 'Column 9 header must be "FORMAT".';
     }
 
-    my $observation_unit_names = $gtio->observation_unit_names();
-    my $number_observation_units = scalar(@$observation_unit_names);
+    my $number_observation_units = scalar(@observation_unit_names);
     print STDERR "Number observation units: $number_observation_units...\n";
 
     my @observation_units_names_trim;
     if ($self->get_igd_numbers_included){
-        foreach (@$observation_unit_names) {
+        foreach (@observation_unit_names) {
             my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_);
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_units_names_trim, $observation_unit_name;
         }
     } else {
-        foreach (@$observation_unit_names) {
+        foreach (@observation_unit_names) {
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
             push @observation_units_names_trim, $observation_unit_name;
         }
     }
-    $observation_unit_names = \@observation_units_names_trim;
+    my $observation_unit_names = \@observation_units_names_trim;
 
     my $organism_id = $self->get_organism_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     my $stock_type = $self->get_observation_unit_type_name;
-    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-    my $stock_rs = $schema->resultset("Stock::Stock")->search({
-        uniquename => {-in => $observation_unit_names},
-        type_id => $stock_type_id,
-        organism_id => $organism_id
-    });
-    my %found_stock_names;
-    while(my $r = $stock_rs->next){
-        $found_stock_names{$r->uniquename}++;
+    my @missing_stocks;
+    my $validator = CXGN::List::Validate->new();
+    if ($stock_type eq 'tissue_sample'){
+        @missing_stocks = @{$validator->validate($schema,'tissue_samples',$observation_unit_names)->{'missing'}};
+    } elsif ($stock_type eq 'accession'){
+        @missing_stocks = @{$validator->validate($schema,'accessions',$observation_unit_names)->{'missing'}};
+    } else {
+        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms)!"
     }
-    my %missing_stocks;
-    foreach (@$observation_unit_names){
-        if (!$found_stock_names{$_}){
-            $missing_stocks{$_}++;
-        }
+
+    my %unique_stocks;
+    foreach (@missing_stocks){
+        $unique_stocks{$_}++;
     }
-    my @missing_stocks = sort keys %missing_stocks;
+
+    @missing_stocks = sort keys %unique_stocks;
     my @missing_stocks_return;
     foreach (@missing_stocks){
         if (!$self->get_create_missing_observation_units_as_accessions){
@@ -126,27 +152,41 @@ sub _parse_with_plugin {
     my $stock_type = $self->get_observation_unit_type_name;
 
     print STDERR "Reading VCF to parse\n";
-    my $gtio = CXGN::GenotypeIO->new({ file => $filename, format => "vcf_new" });
 
     my %protocolprop_info;
     my %genotypeprop_observation_units;
+    my @observation_unit_names;
 
-    my $observation_unit_names = $gtio->observation_unit_names();
-    my $number_observation_units = scalar(@$observation_unit_names);
-    print STDERR "Number observation units: $number_observation_units...\n";
+    my $F;
+    open($F, "<", $filename) || die "Can't open file $filename\n";
 
-    my $header_info_lines = $gtio->header_information_lines();
-    $protocolprop_info{'header_information_lines'} = $header_info_lines;
-    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
+        my @header_info;
+        my @fields;
+        while (<$F>) {
+            chomp;
+            #print STDERR Dumper $_;
 
-    while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
+            if ($_ =~ m/^##/){
+                push @header_info, $_;
+                next;
+            }
+            if ($_ =~ m/^#/){
+                my $header = $_;
+                @fields = split /\t/, $header;
+                @observation_unit_names = @fields[9..$#fields];
+                next;
+            }
 
-        if ($marker_info){
+            @fields = split /\t/;
+
+            my @marker_info = @fields[ 0..8 ];
+            my @values = @fields[ 9..$#fields ];
+
             my $marker_name;
-            my $marker_info_p2 = $marker_info->[2];
-            my $marker_info_p8 = $marker_info->[8];
+            my $marker_info_p2 = $marker_info[2];
+            my $marker_info_p8 = $marker_info[8];
             if ($marker_info_p2 eq '.') {
-                $marker_name = $marker_info->[0]."_".$marker_info->[1];
+                $marker_name = $marker_info[0]."_".$marker_info[1];
             } else {
                 $marker_name = $marker_info_p2;
             }
@@ -154,13 +194,13 @@ sub _parse_with_plugin {
             #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
             my %marker = (
                 name => $marker_name,
-                chrom => $marker_info->[0],
-                pos => $marker_info->[1],
-                ref => $marker_info->[3],
-                alt => $marker_info->[4],
-                qual => $marker_info->[5],
-                filter => $marker_info->[6],
-                info => $marker_info->[7],
+                chrom => $marker_info[0],
+                pos => $marker_info[1],
+                ref => $marker_info[3],
+                alt => $marker_info[4],
+                qual => $marker_info[5],
+                filter => $marker_info[6],
+                info => $marker_info[7],
                 format => $marker_info_p8,
             );
             $protocolprop_info{'markers'}->{$marker_name} = \%marker;
@@ -169,24 +209,29 @@ sub _parse_with_plugin {
 
             my @format =  split /:/,  $marker_info_p8;
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-            for (my $i = 0; $i < $number_observation_units; $i++ ) {
-                my @fvalues = split /:/, $values->[$i];
+            for (my $i = 0; $i < scalar(@observation_unit_names); $i++ ) {
+                my @fvalues = split /:/, $values[$i];
                 my %value;
                 #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
                 #    $value{@format[$fv]} = @fvalues[$fv];
                 #}
                 @value{@format} = @fvalues;
-                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
+                $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
             }
         }
-    }
+
+    close($F);
+
+    $protocolprop_info{'header_information_lines'} = \@header_info;
+    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
+
     #print STDERR Dumper \%protocolprop_info;
     #print STDERR Dumper \%genotypeprop_observation_units;
 
     my %parsed_data = (
         protocol_info => \%protocolprop_info,
         genotypes_info => \%genotypeprop_observation_units,
-        observation_unit_uniquenames => $observation_unit_names
+        observation_unit_uniquenames => \@observation_unit_names
     );
 
     $self->_set_parsed_data(\%parsed_data);

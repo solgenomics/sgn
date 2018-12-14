@@ -59,7 +59,7 @@ sub tissue_sample_field_trials_GET : Args(0) {
             $_->{design},
             $_->{project_planting_date},
             $_->{project_harvest_date},
-            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>Download Layout</a>"
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=field_trial_tissue_samples&selected_columns=$selected_columns_json'>Download Layout</a>"
           ];
     }
     #print STDERR Dumper \@result;
@@ -93,7 +93,10 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
             $folder_string,
             $_->{year},
             $_->{location_name},
-            "<a class='btn btn-sm btn-primary' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
+            $_->{genotyping_facility},
+            $_->{genotyping_plate_format},
+            $_->{genotyping_plate_sample_type},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=plate'>Download Layout</a>"
           ];
     }
     #print STDERR Dumper \@result;

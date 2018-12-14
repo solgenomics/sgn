@@ -1,0 +1,10 @@
+
+<& /page/page_title.mas, title => "SolGWAS Help" &>
+
+<h4>Input options</h4>
+
+<p>SolGWAS is meant to be used in conjunction with datasets. The user should first select the dataset they wish to analyze. The list of phenotypes available will then be filled. The user can then select a phenotype of interest, as well as selecting whether to include principal components or kinship covariates in their model.</p>
+
+<h4>Results</h4>
+
+<p>Once the "Run SolGWAS" button is pressed, several plots will be displayed. These include a histogram of the phenotype chosen, a PCA based on the genotype data avialable, a Manhattan plot, and a QQ plot.</p>

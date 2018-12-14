@@ -1,0 +1,28 @@
+<%args>
+$stock_id
+$map_html => undef
+$direct_genotypes => {}
+</%args>
+
+% print $map_html;
+
+<table class="table table-hover table-bordered">
+    <thead>
+        <tr>
+            <th>Genotyping Data Project Name</th>
+            <th>Genotyping Data Project Description</th>
+            <th>Protocol Name</th>
+            <th>Genotype Description</th>
+            <th>Download</th>
+        </tr>
+    </thead>
+    <tbody>
+
+% foreach (@$direct_genotypes){
+        <tr>
+            <td><a href="/breeders_toolbox/trial/<% $_->{genotypingDataProjectDbId} %>"><% $_->{genotypingDataProjectName} %></a></td><td><% $_->{genotypingDataProjectDescription} %></td><td><% $_->{analysisMethod} %></td><td><% $_->{genotypeDescription} %></td><td><a href="/stock/<% $stock_id %>/genotypes?genotypeprop_id=<% $_->{markerProfileDbId} %>">Download</a></td>
+        </tr>
+% }
+
+    </tbody>
+</table>

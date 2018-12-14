@@ -148,7 +148,7 @@ sub search {
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
     my $order_clause = " ORDER BY trial_name, observationunit_uniquename";
 
     my @where_clause;
@@ -271,7 +271,7 @@ sub search {
     my $calendar_funcs = CXGN::Calendar->new({});
     my %unique_traits;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $notes, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments, $observations, $full_count) = $h->fetchrow_array()) {
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
         my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
@@ -334,6 +334,13 @@ sub search {
             push @return_observations, $o;
         }
 
+        $notes =~ s/\R//g;
+        $trial_description =~ s/\R//g;
+        $breeding_program_description =~ s/\R//g;
+        $folder_description =~ s/\R//g;
+        my $seedlot_transaction_description = $seedlot_transaction->{description};
+        $seedlot_transaction_description =~ s/\R//g;
+
         push @result, {
             observationunit_stock_id => $observationunit_stock_id,
             observationunit_uniquename => $observationunit_uniquename,
@@ -348,6 +355,7 @@ sub search {
             obsunit_col_number => $col_number,
             obsunit_plant_number => $plant_number,
             obsunit_is_a_control => $is_a_control,
+            notes => $notes,
             trial_id => $trial_id,
             trial_name => $trial_name,
             trial_description => $trial_description,
@@ -372,7 +380,7 @@ sub search {
             seedlot_transaction_weight_gram => $seedlot_transaction->{weight_gram},
             seedlot_transaction_timestamp => $seedlot_transaction->{timestamp},
             seedlot_transaction_operator => $seedlot_transaction->{operator},
-            seedlot_transaction_description => $seedlot_transaction->{description},
+            seedlot_transaction_description => $seedlot_transaction_description,
             seedlot_stock_id => $seedlot_stock_id,
             seedlot_uniquename => $seedlot_uniquename,
             seedlot_current_count => $seedlot_current_count,

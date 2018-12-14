@@ -89,10 +89,20 @@ sub germplasm_search {
 
     my %stockprops_values;
     if (scalar(@accession_numbers)>0){
-        $stockprops_values{'accession number'} = \@accession_numbers;
+        foreach (@accession_numbers) {
+            $stockprops_values{'accession number'} = {
+                matchtype => 'contains',
+                value => $_
+            };
+        }
     }
     if (scalar(@germplasm_puis)>0){
-        $stockprops_values{'PUI'} = \@germplasm_puis;
+        foreach (@germplasm_puis) {
+            $stockprops_values{'PUI'} = {
+                matchtype => 'contains',
+                value => $_
+            };
+        }
     }
 
     my $stock_search = CXGN::Stock::Search->new({
@@ -368,7 +378,7 @@ sub germplasm_markerprofiles {
     my $status = $self->status;
     my @marker_profiles;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
         {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},

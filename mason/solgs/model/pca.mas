@@ -38,7 +38,7 @@ my $pop_id = $trial_id if $trial_id;
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Population structure analysis - PCA" 
+  title       => "Population structure analysis - PCA (Using Marker Data)" 
 &> 
 
 <input id="run_pca" class="button" type="button" value="Run PCA" /> 

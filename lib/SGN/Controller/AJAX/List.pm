@@ -48,22 +48,24 @@ sub get_list_data_action :Path('/list/data') Args(0) {
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
     my $public = $list->check_if_public();
     if ($public == 0) {
-	my $error = $self->check_user($c, $list_id);
-	if ($error) {
-	    $c->stash->{rest} = { error => $error };
-	    return;
-	}
+        my $error = $self->check_user($c, $list_id);
+        if ($error) {
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
     }
+    my $description = $list->description;
 
     $list = $self->retrieve_list($c, $list_id);
 
     my $metadata = $self->get_list_metadata($c, $list_id);
 
     $c->stash->{rest} = {
-	list_id     => $list_id,
-	type_id     => $metadata->{type_id},
-	type_name   => $metadata->{list_type},
-	elements    => $list,
+        list_id     => $list_id,
+        type_id     => $metadata->{type_id},
+        type_name   => $metadata->{list_type},
+        elements    => $list,
+        description => $description
     };
 }
 
@@ -123,18 +125,32 @@ sub update_list_name_action :Path('/list/name/update') :Args(0) {
     my $error = $self->check_user($c, $list_id);
 
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    $list->name($name);
 
-    $error = $list->name($name);
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub update_list_description_action :Path('/list/description/update') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param('list_id');
+    my $description = $c->req->param('description');
+
+    my $user_id = $self->get_user($c);
+    my $error = $self->check_user($c, $list_id);
 
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
+
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    $list->description($description);
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -268,8 +284,8 @@ sub available_public_lists : Path('/list/available_public') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-	$c->stash->{rest} = { error => "You must be logged in to use lists.", };
-	return;
+        $c->stash->{rest} = { error => "You must be logged in to use lists." };
+        $c->detach();
     }
 
     my $lists = CXGN::List::available_public_lists($c->dbc->dbh(), $requested_type);
@@ -323,8 +339,8 @@ sub toggle_public_list : Path('/list/public/toggle') Args(0) {
 
     my $error = $self->check_user($c, $list_id);
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        $c->detach();
     }
 
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
@@ -494,7 +510,7 @@ sub insert_element : Private {
 
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
 
-    $list->add_element($element);
+    $list->add_bulk([$element]);
 }
 
 sub delete_list_action :Path('/list/delete') Args(0) {
@@ -868,11 +884,10 @@ sub check_user : Private {
     my $error = "";
 
     if (!$user_id) {
-	$error = "You must be logged in to manipulate this list.";
+        $error = "You must be logged in to manipulate this list.";
     }
-
-    elsif ($self->get_list_owner($c, $list_id) != $user_id) {
-	$error = "You have insufficient privileges to manipulate this list.";
+    elsif ($c->user->get_object->get_user_type() ne 'curator' && $self->get_list_owner($c, $list_id) != $user_id) {
+        $error = "You have insufficient privileges to manipulate this list.";
     }
     return $error;
 }
@@ -890,7 +905,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh;
-    
+
     my $list = CXGN::List->new( { dbh => $dbh, list_id => $list_id } );
     my $flat_list = $list->retrieve_elements_with_ids($list_id);
     my @name_list = map {@{$_}[1]} @{$flat_list};
@@ -902,3 +917,35 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
 
     $c->stash->{rest} = $results;
 }
+
+
+sub available_marker_sets : Path('/marker_sets/available') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        return;
+    }
+
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'markers');
+    my @marker_sets;
+    foreach my $list (@$lists){
+        my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
+#        push @marker_sets, [$name, $item_count, $desc];
+        push @marker_sets, {
+            markerset_name => $name,
+            number_of_markers => $item_count,
+            description => $desc,
+        }
+    }
+
+    $c->stash->{rest} = {data => \@marker_sets};
+}
+
+
+
+#########
+1;
+#########

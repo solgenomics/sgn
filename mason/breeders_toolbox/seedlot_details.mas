@@ -133,7 +133,7 @@ $owners_string => undef
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Box Name: </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_box_name" placeholder="Optional">
+                                                    <input class="form-control" id="transaction_new_seedlot_box_name" placeholder="Required">
                                                 </div>
                                             </div>
 
@@ -475,6 +475,9 @@ $owners_string => undef
             }
             if (to_new_seedlot_location_name == ''){
                 alert("Please provide a location for new seedlot."); return;
+            }
+            if (to_new_seedlot_box_name == ''){
+                alert("Please provide a box name for new seedlot."); return;
             }
             if (to_new_seedlot_amount == '' && to_new_seedlot_weight == ''){
                 alert("Please provide a starting amount OR weight in grams for new seedlot."); return;

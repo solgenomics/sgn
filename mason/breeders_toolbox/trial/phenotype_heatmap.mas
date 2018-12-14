@@ -743,12 +743,18 @@ jQuery(document).ready( function() {
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
-             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=1000&page=0',
+             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
                 var data = response.result.data;
+                console.log(data);
+                var data = data.sort(function(obj1, obj2) {
+	                  // Ascending: first plotNumber less than the previous
+	                return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
+                });
+                console.log(data);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -1238,6 +1244,7 @@ jQuery(document).ready( function() {
       var new_accession = jQuery('#hm_accession').val();
       var old_accession = jQuery('#hm_edit_plot_accession').html();
       var old_plot_id = jQuery('#hm_edit_plot_id').html();
+      var old_plot_name = jQuery('#hm_edit_plot_name').html();
 
       new jQuery.ajax({
         type: 'POST',
@@ -1247,6 +1254,7 @@ jQuery(document).ready( function() {
                 'new_accession': new_accession,
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
+                'old_plot_name': old_plot_name,
         },
 
         success: function (response) {
