@@ -288,12 +288,14 @@ solGS.cluster = {
 	    + report
 	    + ">[Analysis Report]</a>";
 
-	jQuery('#cluster_plot').prepend(plot
-					+ ' <strong>Download '
-					+ resultName + ' </strong>: '
-					+ plotLink + ' | '
-					+ clustersLink + ' | '
-					+ reportLink);
+	var downloadLinks = ' <strong>Download '
+	    + resultName + ' </strong>: '
+	    + plotLink + ' | '
+	    + clustersLink + ' | '
+	    + reportLink;
+	
+	jQuery('#cluster_plot').prepend('<p>' + downloadLinks + '</p>');
+	jQuery('#cluster_plot').prepend(plot);
 	
     },
 
