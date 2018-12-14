@@ -12,7 +12,7 @@ args = commandArgs(trailingOnly = TRUE)
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 colnames(pheno)
 
-geno <- read.table(args[2], sep="\t", row.names = NULL, header = TRUE)
+geno <- read.table(args[2], sep="\t", row.names = 1, header = TRUE)
 study_trait <- args[3]
 study_trait
 figure1_file_name <- args[4]
@@ -56,16 +56,16 @@ geno$row.names[1:5]
 row.names(geno)
 # retain only a single row of genotyped values per each genotype
 # (this is necessary because the input genotype table may contain duplicate stock ids - aka germplasmDbIds)
-geno_trim <- geno[!duplicated(geno$row.names),]
+geno_trim <- geno[!duplicated(row.names(geno)),]
 #map <- read.csv("./map.csv", header = TRUE, row.names = 1)
 #map[1:5,1:3] ### View Map data.
 dim(geno)
 dim(geno_trim)
-geno_trim[1:5,1:5]
-row.names(geno_trim) <- geno_trim$row.names
+#geno_trim[1:5,1:5]
+#row.names(geno_trim) <- geno_trim$row.names
 geno_trim[1:5,1:5]
 dim(geno_trim)
-geno_trim <- geno_trim[,-1]
+#geno_trim <- geno_trim[,-1]
 dim(geno_trim)
 geno_trim[1:5,1:5]
 # genotype data is coded as 0,1,2 - convert this to -1,0,1

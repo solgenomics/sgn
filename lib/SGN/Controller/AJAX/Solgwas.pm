@@ -150,7 +150,56 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    system($clean_cmd);
     print STDERR $figure1file;
     print STDERR $trait_id;
-    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
+    my $geno_filepath2 = "." . $tempfile . "_genotype_edit.txt";
+    my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
+    system($edit_cmd);
+    my $geno_filepath3 = "." . $tempfile . "_genotype_edit_subset.txt";
+#    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
+#    system($trim_cmd);
+
+    open my $filehandle_in,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+    open my $filehandle_in2,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+    open my $filehandle_out, ">", "$geno_filepath3" or die "Could not create $geno_filepath3: $!\n";
+
+    my $marker_total;
+
+    while ( my $line = <$filehandle_in2> ) {
+        my @sample_line = (split /\s+/, $line);
+        $marker_total = scalar(@sample_line);
+    }
+    close $filehandle_in2;
+# Hardcoded number of markers to be selected - make this selectable by user?
+    my $markers_selected = 30;
+#    my @column_selection = (0,2);
+# Initialize column selection so the row.names are selected first
+    my @column_selection = (0);
+    my %columns_seen;
+    for (my $i=0; $i <= $markers_selected; $i++) {
+        my $random_current = int(rand($marker_total));
+        redo if $columns_seen{$random_current}++;
+        push @column_selection, $random_current;
+    }
+    print STDERR Dumper(@column_selection);
+
+
+#    foreach my $item (@column_selection) {
+        while ( my $line = <$filehandle_in> ) {
+            my $curr_line;
+            my @first_item = (split /\s+/, $line);
+            foreach my $item (@column_selection) {
+                $curr_line .= $first_item[$item] . "\t";
+                print STDERR Dumper($item)
+            }
+#            $curr_line .= "\n";
+            print $filehandle_out "$curr_line\n";
+        }
+#    }
+    close $filehandle_in;
+    close $filehandle_out;
+
+    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
+
+#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
     system($cmd);
 
 
