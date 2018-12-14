@@ -1166,6 +1166,55 @@ jQuery(document).ready(function() {
                 return;
             }
             if (plot_polygons_second_plot_follows == 'right') {
+                if (plot_polygons_plot_orientation == 'serpentine') {
+                    var plot_polygon_current_polygon_index = generated_polygon_key_first_plot_number;
+                    var plot_polygon_column_count = 0;
+                    var going_right = 1;
+                    var plot_polygon_row_count = 0;
+                    for (var j=0; j<plot_polygons_plot_numbers.length; j++){
+
+                        if (going_right == 0) {
+                            plot_polygon_current_polygon_index = plot_polygons_number_generated - (plot_polygons_num_border_rows_bottom * plot_polygons_num_cols_generated) - (plot_polygon_row_count * plot_polygons_num_cols_generated) - plot_polygons_num_border_rows_right - plot_polygon_column_count - 1;
+                        }
+                        if (going_right == 1) {
+                            plot_polygon_current_polygon_index = plot_polygons_number_generated - (plot_polygons_num_border_rows_bottom * plot_polygons_num_cols_generated) - (plot_polygon_row_count * plot_polygons_num_cols_generated) - plot_polygons_num_cols_generated + plot_polygons_num_border_rows_left + plot_polygon_column_count;
+                        }
+                        plot_polygon_new_display[plot_polygons_plot_numbers_plot_names[plot_polygons_plot_numbers[plot_polygons_current_plot_number_index]]] =  drone_imagery_plot_polygons_display[plot_polygon_current_polygon_index];
+                        drone_imagery_plot_polygons[plot_polygons_plot_numbers_plot_names[plot_polygons_plot_numbers[plot_polygons_current_plot_number_index]]] = drone_imagery_plot_generated_polygons[plot_polygon_current_polygon_index];
+
+                        plot_polygons_current_plot_number_index = plot_polygons_current_plot_number_index + 1;
+                        plot_polygon_column_count = plot_polygon_column_count + 1;
+
+                        if (plot_polygon_column_count == (plot_polygons_num_cols_generated - plot_polygons_num_border_rows_left - plot_polygons_num_border_rows_right)) {
+                            plot_polygon_column_count = 0;
+                            plot_polygon_row_count = plot_polygon_row_count + 1;
+                            if (going_right == 1) {
+                                going_right = 0;
+                            } else {
+                                going_right = 1;
+                            }
+                        }
+                    }
+                }
+                if (plot_polygons_plot_orientation == 'zigzag') {
+                    var plot_polygon_current_polygon_index = generated_polygon_key_first_plot_number;
+                    var plot_polygon_column_count = 0;
+                    var plot_polygon_row_count = 0;
+                    for (var j=0; j<plot_polygons_plot_numbers.length; j++){
+
+                        plot_polygon_current_polygon_index = plot_polygons_number_generated - (plot_polygons_num_border_rows_bottom * plot_polygons_num_cols_generated) - (plot_polygon_row_count * plot_polygons_num_cols_generated) - plot_polygons_num_cols_generated + plot_polygons_num_border_rows_left + plot_polygon_column_count;
+                        plot_polygon_new_display[plot_polygons_plot_numbers_plot_names[plot_polygons_plot_numbers[plot_polygons_current_plot_number_index]]] =  drone_imagery_plot_polygons_display[plot_polygon_current_polygon_index];
+                        drone_imagery_plot_polygons[plot_polygons_plot_numbers_plot_names[plot_polygons_plot_numbers[plot_polygons_current_plot_number_index]]] = drone_imagery_plot_generated_polygons[plot_polygon_current_polygon_index];
+
+                        plot_polygons_current_plot_number_index = plot_polygons_current_plot_number_index + 1;
+                        plot_polygon_column_count = plot_polygon_column_count + 1;
+
+                        if (plot_polygon_column_count == (plot_polygons_num_cols_generated - plot_polygons_num_border_rows_left - plot_polygons_num_border_rows_right)) {
+                            plot_polygon_column_count = 0;
+                            plot_polygon_row_count = plot_polygon_row_count + 1;
+                        }
+                    }
+                }
             }
             if (plot_polygons_second_plot_follows == 'up') {
                 alert('Up not implemented if your first plot starts in bottom left. Please contact us or try rotating your image differently before assigning plot polygons.');
