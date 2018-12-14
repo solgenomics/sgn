@@ -524,7 +524,7 @@ jQuery(document).ready(function() {
             crop_display_points = [];
         }
         drawPolyline(crop_display_points);
-        drawWaypoints(crop_display_points, undefined);
+        drawWaypoints(crop_display_points, undefined, 0);
     }
 
     var dronecroppingImg = document.getElementById("drone_imagery_crop_original_stitched_div");
@@ -543,11 +543,12 @@ jQuery(document).ready(function() {
         }
     }
 
-    function drawWaypoints(points, label){
+    function drawWaypoints(points, label, random_factor){
+        var plot_polygon_random_number = Math.random() * random_factor;
         if (points.length > 0 && label != undefined) {
             ctx.font = "bold 18px Arial";
             ctx.fillStyle = 'red';
-            ctx.fillText(label, points[0].x + 3, points[0].y + 14 );
+            ctx.fillText(label, points[0].x + 3, points[0].y + 14 + plot_polygon_random_number);
         }
         for(var i=0;i<points.length;i++){
             ctx.beginPath();
@@ -683,7 +684,7 @@ jQuery(document).ready(function() {
 
                 canvas = document.getElementById('drone_imagery_plot_polygons_original_stitched_div');
                 ctx = canvas.getContext('2d');
-                draw_canvas_image(background_image_url);
+                draw_canvas_image(background_image_url, 0);
 
                 plotpolygonsImg = document.getElementById("drone_imagery_plot_polygons_original_stitched_div");
                 //plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
@@ -738,7 +739,7 @@ jQuery(document).ready(function() {
             drone_imagery_plot_polygon_current_background_toggle = 0;
             image_url = jQuery(this).data('image_url');
         }
-        draw_canvas_image(image_url);
+        draw_canvas_image(image_url, plot_polygons_total_height_generated/plot_polygons_num_rows_generated);
 
         return;
     });
@@ -746,6 +747,7 @@ jQuery(document).ready(function() {
     var plot_polygons_num_rows_generated;
     var plot_polygons_num_cols_generated;
     var plot_polygons_number_generated;
+    var plot_polygons_total_height_generated;
 
     jQuery('#drone_imagery_plot_polygons_rectangles_apply').click(function() {
         plot_polygons_display_points = [];
@@ -825,6 +827,7 @@ jQuery(document).ready(function() {
         }
         //console.log(generated_polygons);
 
+        plot_polygons_total_height_generated = row_height * plot_polygons_num_rows_generated;
         plot_polygons_number_generated = generated_polygons.length;
 
         for (var i=0; i<generated_polygons.length; i++) {
@@ -832,7 +835,7 @@ jQuery(document).ready(function() {
             plot_polygons_display_points = plot_polygons_ind_4_points;
             plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
             drawPolyline(plot_polygons_display_points);
-            drawWaypoints(plot_polygons_display_points, i);
+            drawWaypoints(plot_polygons_display_points, i, 0);
             drone_imagery_plot_generated_polygons[i] = plot_polygons_ind_4_points;
             drone_imagery_plot_polygons_display[i] = plot_polygons_display_points;
         }
@@ -852,12 +855,12 @@ jQuery(document).ready(function() {
         drone_imagery_plot_generated_polygons = {};
         drone_imagery_plot_polygons_display = {};
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw_canvas_image(background_image_url);
+        draw_canvas_image(background_image_url, 0);
         jQuery('#drone_imagery_generated_polygons_div').html('');
         droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
     });
 
-    function draw_canvas_image(image_url) {
+    function draw_canvas_image(image_url, random_scaling) {
         var image = new Image();
         image.onload = function () {
             canvas.width = this.naturalWidth;
@@ -867,7 +870,7 @@ jQuery(document).ready(function() {
             for (key in drone_imagery_plot_polygons_display) {
                 var plot_polygons_display_points_again = drone_imagery_plot_polygons_display[key];
                 drawPolyline(plot_polygons_display_points_again);
-                drawWaypoints(plot_polygons_display_points_again, key);
+                drawWaypoints(plot_polygons_display_points_again, key, random_scaling);
             }
             jQuery('#manage_drone_imagery_plot_polygons_load_div').hide();
         };
@@ -904,7 +907,7 @@ jQuery(document).ready(function() {
             plot_polygons_ind_points = [];
         }
         drawPolyline(plot_polygons_display_points);
-        drawWaypoints(plot_polygons_display_points, undefined);
+        drawWaypoints(plot_polygons_display_points, undefined, 0);
     }
 
     function GetCoordinatesPlotPolygonsPoint(e) {
@@ -932,7 +935,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_assign_plot_dialog').on('hide.bs.modal', function (e) {
         drawPolyline(plot_polygons_display_points);
-        drawWaypoints(plot_polygons_display_points, plot_polygon_name);
+        drawWaypoints(plot_polygons_display_points, plot_polygon_name, 0);
         drone_imagery_plot_polygons_display[plot_polygon_name] = plot_polygons_display_points;
         plot_polygons_display_points = [];
     });
@@ -1070,13 +1073,13 @@ jQuery(document).ready(function() {
         droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
 
         drone_imagery_plot_polygons_display = plot_polygon_new_display;
-        draw_canvas_image(background_image_url);
+        draw_canvas_image(background_image_url, plot_polygons_total_height_generated/plot_polygons_num_rows_generated);
     });
 
     function droneImageryRectangleLayoutTable(generated_polygons) {
         var html = '<hr><div class="well well-sm"><h2>Assign Plot Polygons to Field Trial Entities</h2>';
         html = html + '<div class="panel panel-default"><div class="panel-body">';
-        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Left: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_left" name="drone_imagery_plot_polygons_num_border_rows_left" type="number" placeholder="Number of border rows assigned on left" value="0"/></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Right: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_right" name="drone_imagery_plot_polygons_num_border_rows_right" type="number" placeholder="Number of border rows assigned on right" value="0"/></div></div></div>';
+        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Left: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_left" name="drone_imagery_plot_polygons_num_border_rows_left" type="number" placeholder="Number of border rows assigned on left" value="0"/></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Right: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_right" name="drone_imagery_plot_polygons_num_border_rows_right" type="number" placeholder="Number of border rows assigned on right" value="0"/></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Top: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_top" name="drone_imagery_plot_polygons_num_border_rows_top" type="number" placeholder="Number of border rows on top" value="0"/></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Bottom: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_bottom" name="drone_imagery_plot_polygons_num_border_rows_bottom" type="number" placeholder="Number of border rows on bottom" value="0"/></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Location of First Plot (e.g. plot number 1): </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_first_plot_start" name="drone_imagery_plot_polygons_first_plot_start"><option value="top_left">Top Left</option><option value="top_right">Top Right</option><option value="bottom_left">Bottom Left</option><option value="bottom_right">Bottom Right</option></select></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Second Plot Follows First Plot Going: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_second_plot_follows" name="drone_imagery_plot_polygons_second_plot_follows"><option value="right">Right</option><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option></select></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Plot Number Orientation: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_plot_orientation" name="drone_imagery_plot_polygons_plot_orientation"><option value="serpentine">Serpentine</option><option value="zigzag">Zigzag (Not Serpentine)</option></select></div></div></div></div>';
