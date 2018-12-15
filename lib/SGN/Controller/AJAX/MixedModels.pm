@@ -43,9 +43,9 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 	my $html .= "<option id=\"$colname\">$colname</option>";
 	push @select, $html;
     }
-    print STDERR Dumper(\@select);
+    #print STDERR Dumper(\@select);
     my @dependent_items = @select[39..scalar(@select)];
-    print STDERR Dumper(\@dependent_items);
+    #print STDERR Dumper(\@dependent_items);
     my $dependent_html = join("\n", @dependent_items);
 
     my @factors =@select[0..38];
@@ -55,6 +55,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 	dependent_variable => "<select id=\"dependent_variable_select\">$dependent_html</select>",
 	fixed_factors => "<select multiple rows=\"10\" id=\"fixed_factors_select\">$html</select>",
 	random_factors => "<select multiple rows=\"10\" id=\"random_factors_select\">$html</select>",
+	random_factors2 => "<select multiple rows=\"10\" id=\"random_factors_select\">$html</select>",
         tempfile => $tempfile."_phenotype.txt",
     };
 }
@@ -66,9 +67,12 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $tempfile = $c->req->param("tempfile");
     my $dependent_variable = $c->req->param("dependent_variable");
     my $fixed_factors = $c->req->param("fixed_factors");
+    my $fixed_factors_interaction = $c->req->param("fixed_factors_interaction");
     my $random_factors = $c->req->param("random_factors");
-
-    print STDERR "DV: $dependent_variable FF: $fixed_factors - RF: $random_factors TF: $tempfile\n";
+    my $random_factors_random_slope = $c->req->param("random_factors_random_slope");
+    
+    print STDERR "DV: $dependent_variable FF: $fixed_factors - RF: $random_factors TF: $tempfile. FFI: $fixed_factors_interaction RFRS: $random_factors_random_slope\n";
+  
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
     # generate params_file
@@ -80,8 +84,23 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $formatted_fixed_factors = "\"$fixed_factors\"";
 
     print $F "fixed_factors <- c($formatted_fixed_factors)\n";
+
+    if ($fixed_factors_interaction) { 
+	print $F "fixed_factors_interaction = T\n";
+    }
+    if ($random_factors_random_slope) { 
+        print $F "random_factors_random_slope = T\n";
+    }
+
     my @random_factors = split ",", $random_factors;
-    my $formatted_random_factors = join(",", map { "\"(1|$_)\"" } @random_factors);
+    my $formatted_random_factors = "";
+    if ($random_factors_random_slope) { 
+	$formatted_random_factors = "\" (1 + $random_factors[0] | $random_factors[1]) \"";
+
+    }
+    else { 
+	$formatted_random_factors = join(",", map { "\"(1|$_)\"" } @random_factors);	
+    }
     print $F "random_factors <- c($formatted_random_factors)\n";
     close($F);
     
@@ -104,6 +123,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     else { 
 	$lines = read_file($temppath.".results");
     }
+
     my $figure1file_response;
     my $figure2file_response;
     my $figure3file_response;
@@ -123,8 +143,6 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    print STDERR "Grab data...\n";
-
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
     
@@ -143,28 +161,20 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     
     my @keys = split("\t", $header);
     
-#    print STDERR "keys = ( ".(join ",", @keys).")\n";
-
     my @data = ();
 
     while (<$F>) { 
 	chomp;
-#	print STDERR $_;
-#	if (//) { next; }
+
 	my @fields = split "\t";
 	my %line = {};
 	for(my $n=0; $n <@keys; $n++) { 
-#	    print STDERR "$n: $fields[$n]\n";
 	    if (exists($fields[$n]) && defined($fields[$n])) {
-
 		$line{$keys[$n]}=$fields[$n];   
 	    }
-	}
-	
+	}	
 	push @data, \%line;
     }
-
-#    print STDERR "Data: ".Dumper(\@data);
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }

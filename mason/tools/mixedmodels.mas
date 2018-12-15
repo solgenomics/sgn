@@ -124,6 +124,8 @@ Choose random factors
       var dependent_variable = jQuery('#dependent_variable_select').val();
       var fixed_factors = jQuery('#fixed_factors_select').val();
       var random_factors = jQuery('#random_factors_select').val();
+      var fixed_factors_interaction = jQuery('#fixed_factors_interaction').val();
+      var random_factors_random_slope = jQuery('#random_factor_random_slope').val();
       var tempfile = jQuery('#tempfile').html();
 
       // alert('Dependent variable: '+ dependent_variable +' Fixed Factors: '+ fixed_factors +' Random Factors: '+ random_factors +' Tempfile: '+tempfile);
@@ -133,7 +135,9 @@ Choose random factors
         data: { 
           'dependent_variable': dependent_variable, 
           'fixed_factors': fixed_factors.join(","), 
+          'fixed_factors_interaction' : fixed_factors_interaction,
           'random_factors': random_factors.join(","), 
+          'random_factors_random_slope': random_factors_random_slope,
           'tempfile' : tempfile 
         },
         success: function(r) { 
