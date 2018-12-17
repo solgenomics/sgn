@@ -50,7 +50,7 @@ has 'female_parent' => (isa => 'Str',
 
 has 'female_parent_id' => (isa => 'Int',
     is => 'rw',
-    );	   
+    );
 
 has 'male_parent' => (isa => 'Str',
     is => 'rw',
@@ -74,7 +74,7 @@ has 'progenies' => (isa => 'Ref',
 sub BUILD {
     my $self = shift;
     my $args = shift;
-    
+
     my $schema = $args->{schema};
     my $cross_id = $args->{cross_stock_id};
 
@@ -84,28 +84,28 @@ sub BUILD {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
     my $row = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
-    
-    if ($row) { 
+
+    if ($row) {
 	 my $name = $row->uniquename();
-	 
+
 	 $self->cross_name($name);
 	 $self->cross_stock_id($cross_id);
-	 
+
     }
 
     # to do: populate female_parent, male_parent etc.
     my ($female_parent, $male_parent, @progenies) = $self->get_cross_relationships();
     print STDERR Dumper($female_parent);
 
-    if (ref($female_parent)) { 
-	$self->female_parent($female_parent->[0]); 
+    if (ref($female_parent)) {
+	$self->female_parent($female_parent->[0]);
 	$self->female_parent_id($female_parent->[1]);
     }
-    if (ref($male_parent)) { 
+    if (ref($male_parent)) {
 	$self->male_parent($male_parent->[0]);
 	$self->male_parent_id($male_parent->[1]);
     }
-    if (@progenies) { 
+    if (@progenies) {
 	$self->progenies(\@progenies);
     }
 }
@@ -271,7 +271,7 @@ sub get_cross_info_for_progeny {
 
 sub get_progeny_info {
     my $class = shift;
-    
+
     my $schema = shift;
     my $female_parent = shift;
     my $male_parent = shift;
@@ -328,7 +328,7 @@ sub get_progeny_info {
 
 =head2 get_crosses_in_trial
 
-    Class method. 
+    Class method.
     Example:       $crosses_ref = CXGN::Cross->get_crosses_in_trial($schema, $trial_id)
 
 =cut
@@ -376,7 +376,7 @@ sub get_crosses_in_trial {
 =head2 get_cross_properties_trial
 
     Class method.
-    Returns all cross_info in a specific trial. 
+    Returns all cross_info in a specific trial.
     Example: my @cross_info = CXGN::Cross->get_cross_properties_trial($schema, $trial_id);
 
 =cut
@@ -473,19 +473,19 @@ sub delete {
     eval {
 	$dbh->begin_work();
 
-	my $properties = $self->cross_properties();
+	my $properties = $self->progeny_properties();
 
-	my $can_delete = 
-	    ($properties->{trials} == 0) && 
-	    ($properties->{traits} == 0) && 
-	    ($properties->{genotypes} == 0) && 
+	my $can_delete =
+	    ($properties->{trials} == 0) &&
+	    ($properties->{traits} == 0) &&
+	    ($properties->{genotypes} == 0) &&
 	    ($properties->{images} == 0);
 
 	if (! $can_delete) {
 	    print STDERR "Cross has associated data. Cannot delete.\n";
 	    die "Cross has associated data. ($properties->{trials} trials, $properties->{traits} traits and $properties->{genoytpes} genotypes. Cannot delete...\n";
 	}
-	else { 
+	else {
 	    print STDERR "This cross has no associated data that would prevent deletion.";
 	}
 	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
@@ -520,9 +520,9 @@ sub delete {
 	print STDERR "Deleting the progeny...\n";
 	my $q5 = "delete from stock where stock_id =?";
 	my $h5 = $dbh->prepare($q5);
-	foreach my $progeny (@{$properties->{subjects}}) { 
+	foreach my $progeny (@{$properties->{subjects}}) {
 
-	    if ($progeny->[2] eq "offspring_of") { 
+	    if ($progeny->[2] eq "offspring_of") {
 		my $s = CXGN::Stock->new( { schema => $schema, stock_id => $progeny->[0]});
 		$s->hard_delete();
 	    }
@@ -540,16 +540,16 @@ sub delete {
     }
 }
 
-sub cross_properties { 
+sub progeny_properties { 
     my $self = shift;
 
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
-    
+
     print STDERR "sub cross_deletion_possible...\n";
     my $q = "SELECT subject.stock_id, subject.uniquename, cvterm.name from stock join stock_relationship on (stock.stock_id=stock_relationship.object_id) join stock as subject on(stock_relationship.subject_id=subject.stock_id) join cvterm on (stock_relationship.type_id=cvterm.cvterm_id) where stock.stock_id = ? and stock.type_id=?";
 
     my $h = $self->schema->storage->dbh()->prepare($q);
-    
+
     $h->execute($self->cross_stock_id(), $cross_type_id);
 
     my @subjects = ();
@@ -558,38 +558,38 @@ sub cross_properties {
     my $has_genotypes = 0;
     my $has_images;
 
-    while (my($stock_id, $name, $type) = $h->fetchrow_array()) { 
+    while (my($stock_id, $name, $type) = $h->fetchrow_array()) {
 	print STDERR "ID $stock_id NAME $name TYPE $type\n";
 	push @subjects, [$stock_id, $name, $type];
-	
+
 	if ($type eq "offspring_of") { # child
 	    my $s = CXGN::Stock->new( { schema => $self->schema(),  stock_id => $stock_id });
-	    if (my @traits = $s->get_trait_list()) { 
+	    if (my @traits = $s->get_trait_list()) {
 		print STDERR "Associated traits: ".Dumper(\@traits);
 		$has_traits += scalar(@traits);
 	    }
-	    if (my @trials = $s->get_trials()) { 
+	    if (my @trials = $s->get_trials()) {
 		print STDERR "Associated trials: ".Dumper(\@trials);
 		$has_trials += scalar(@trials);
 	    }
-	    if (my $genotypeprop_ids = $s->get_genotypeprop_ids()) { 
+	    if (my $genotypeprop_ids = $s->get_genotypeprop_ids()) {
 		print STDERR "Associated genotypes: ".Dumper($genotypeprop_ids);
 		$has_genotypes += scalar(@$genotypeprop_ids);
 	    }
-	    if (my @image_ids = $s->get_image_ids()) { 
+	    if (my @image_ids = $s->get_image_ids()) {
 		print STDERR "Associated images: ".Dumper(\@image_ids);
 		$has_images += scalar(@image_ids);
 	    }
 	}
     }
-    my $data = { 
+    my $data = {
 	traits => $has_traits,
 	trials => $has_trials,
 	genotypes => $has_genotypes,
 	images => $has_images,
 	subjects => \@subjects,
     };
-    
+
     print STDERR Dumper($data);
     return $data;
 }
