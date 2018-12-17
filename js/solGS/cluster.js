@@ -104,17 +104,23 @@ solGS.cluster = {
 	
     },
 
-    createDataTypeSelect: function() {
-	var dataTypeGroup = '<select class="form-control" id="data_type_select">'
-	    + '<option value="genotype">Genotype</option>'
-	    + '<option value="phenotype">phenotype</option>'
-	    +  '<option value="gebv">GEBV</option>'
-	    +  '</select>';
+    createDataTypeSelect: function(opts) {
+	var dataTypeGroup = '<select class="form-control" id="data_type_select">';
+
+	for (var i=0; i < opts.length; i++) {
+	    console.log(opts[i]);
+	    dataTypeGroup += '<option value="'
+		+ opts[i] + '">'
+		+ opts[i]
+		+ '</option>';
+	}
+
+	console.log(dataTypeGroup)
+	  dataTypeGroup +=  '</select>';
 	
 	return dataTypeGroup;
      },
     
-
     
     selectRow: function(selectId, dataStructureType) {
 
@@ -122,7 +128,20 @@ solGS.cluster = {
 	var rowId = this.selectRowId(selectId);
 
 	var clusterTypeGroup = this.createClusterTypeSelect();
-	var dataTypeGroup =  this.createDataTypeSelect();
+
+	var dataTypeOpts;
+	var url = document.URL;
+
+	console.log('url '  + url)
+
+	if (url.match(/breeders\/trial\/|cluster\/analysis/)) {
+	    dataTypeOpts = ['Genotype', 'Phenotype'];
+
+	} else if (url.match(/solgs\/traits\/all\/population\//)) {
+	    dataTypeOpts = ['Genotype', 'GEBV'];
+	}
+	
+	var dataTypeGroup =  this.createDataTypeSelect(dataTypeOpts);
 		
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
@@ -340,6 +359,79 @@ solGS.cluster = {
     },
 
 
+    listClusterPopulations: function()  {
+	var modelData = getTrainingPopulationData();
+	console.log(modelData.name)
+	var trainingPopIdName = JSON.stringify(modelData);
+	
+	var  popsList =  '<dl id="cluster_selected_population" class="cluster_dropdown">'
+            + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+            + '<dd>'
+            + '<ul>'
+            + '<li>'
+            + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
+            + '</li>';  
+	
+	popsList += '</ul></dd></dl>'; 
+	
+	jQuery("#cluster_select_a_population_div").empty().append(popsList).show();
+	
+	var dbSelPopsList;
+	if (modelData.id.match(/list/) == null) {
+            dbSelPopsList = addSelectionPopulations();
+	}
+
+	if (dbSelPopsList) {
+            jQuery("#cluster_select_a_population_div ul").append(dbSelPopsList); 
+	}
+	
+	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
+	if (userUploadedSelExists == true) {
+	    
+            var userSelPops = listUploadedSelPopulations();
+            if (userSelPops) {
+
+		jQuery("#cluster_select_a_population_div ul").append(userSelPops);  
+            }
+	}
+
+	jQuery(".cluster_dropdown dt a").click(function() {
+            jQuery(".cluster_dropdown dd ul").toggle();
+	});
+        
+	jQuery(".cluster_dropdown dd ul li a").click(function() {
+	    
+            var text = jQuery(this).html();
+            
+            jQuery(".cluster_dropdown dt a span").html(text);
+            jQuery(".cluster_dropdown dd ul").hide();
+            
+            var idPopName = jQuery("#cluster_selected_population").find("dt a span.value").html();
+            idPopName     = JSON.parse(idPopName);
+            modelId       = jQuery("#model_id").val();
+            
+            selectedPopId   = idPopName.id;
+            selectedPopName = idPopName.name;
+            selectedPopType = idPopName.pop_type; 
+	    
+            jQuery("#cluster_selected_population_name").val(selectedPopName);
+            jQuery("#cluster_selected_population_id").val(selectedPopId);
+            jQuery("#cluster_selected_population_type").val(selectedPopType);
+            
+	});
+        
+	jQuery(".cluster_dropdown").bind('click', function(e) {
+            var clicked = jQuery(e.target);
+            
+            if (! clicked.parents().hasClass("cluster_dropdown"))
+		jQuery(".cluster_dropdown dd ul").hide();
+
+            e.preventDefault();
+
+	});           
+    },
+
+   
     plotKCluster: function(plotData){
 
     },
@@ -444,3 +536,17 @@ jQuery(document).ready( function() {
     }); 
   
 });
+
+
+jQuery(document).ready( function() { 
+    var page = document.URL;
+   
+    if (page.match(/solgs\/traits\/all\//) != null || 
+        page.match(/solgs\/models\/combined\/trials\//) != null) {
+	
+	setTimeout(function() {solGS.cluster.listClusterPopulations()}, 5000);
+    }
+                  
+});
+
+
