@@ -489,6 +489,7 @@ sub delete {
 	    print STDERR "This cross has no associated data that would prevent deletion.";
 	}
 	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
 
 	# TO DO: check if this row is actually a cross
 
@@ -496,9 +497,9 @@ sub delete {
 	# delete the nd_experiment entries
 	#
 	print STDERR "Deleting nd_experiment entry for cross...\n";
-	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
+	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?) and nd_experiment.type_id = ?";
 	my $h2 = $dbh->prepare($q2);
-	$h2->execute($self->cross_stock_id(), $cross_type_id);
+	$h2->execute($self->cross_stock_id(), $cross_type_id, $cross_experiment_type_id);
 
 	# delete stock owner entries
 	#
@@ -540,7 +541,7 @@ sub delete {
     }
 }
 
-sub progeny_properties { 
+sub progeny_properties {
     my $self = shift;
 
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
