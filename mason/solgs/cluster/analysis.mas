@@ -26,6 +26,10 @@ $list_id => undef
 $dataset_id => undef
 $data_structure_type => undef
 
+$pop_name => undef
+$pop_type => undef
+
+
 </%args>
 
 <%perl>
@@ -40,6 +44,8 @@ if (!$data_structure_type) {
    }
 }
 
+my $url = $c->req->path;
+
 </%perl>
 
 
@@ -47,10 +53,22 @@ if (!$data_structure_type) {
   collapsible => 1, 
   collapsed   => 0, 
   title       => "K-Means Clustering (Using Marker Data)" 
-&> 
+  &>
 
-  <input id="run_cluster" class="button" type="button" value="Run Cluster" />
+
+% if ($url =~ /solgs\/traits\/all\/population\//) {
+
+  <& /solgs/cluster/gebvs_cluster.mas,
+     pop_name => $pop_name,
+    pop_id => $pop_id,
+    pop_type => $pop_type
+    &>
+
+%} else {
+    <input id="run_cluster" class="button" type="button" value="Run Cluster" />
+%}
   
+
   <& /solgs/cluster/plot.mas,
      pop_id => $pop_id,
     list_id => $list_id,
