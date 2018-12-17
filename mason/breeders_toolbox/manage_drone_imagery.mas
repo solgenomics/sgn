@@ -531,6 +531,9 @@ jQuery(document).ready(function() {
     dronecroppingImg.onmousedown = GetCoordinatesCroppedImage;
 
     function drawPolyline(points){
+        if (points.length == 4) {
+            points.push(points[0]);
+        }
         for(var i=0;i<points.length;i++){
             ctx.beginPath();
             ctx.moveTo(points[0].x,points[0].y);
@@ -743,6 +746,31 @@ jQuery(document).ready(function() {
         }
         draw_canvas_image(image_url, plot_polygons_total_height_generated/plot_polygons_num_rows_generated);
 
+        return;
+    });
+
+    jQuery('#plot_polygons_use_previously_saved_template').click(function() {
+        var plot_polygons_use_previously_saved_template = jQuery('#drone_imagery_plot_polygon_select').val();
+        if (plot_polygons_use_previously_saved_template == '') {
+            alert('Please select a previously saved template before trying to apply it. If there is not a template listed, then you can create one using the templating tool above.');
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/retrieve_plot_polygons_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_template,
+            success: function(response){
+                console.log(response);
+
+                drone_imagery_plot_polygons_display = response.plot_polygons;
+                drone_imagery_plot_polygons = response.plot_polygons;
+
+                draw_canvas_image(background_image_url, 0);
+                droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
+            },
+            error: function(response){
+                alert('Error retrieving plot polygons template!');
+            }
+        });
         return;
     });
 
@@ -1231,7 +1259,6 @@ jQuery(document).ready(function() {
             }
             if (plot_polygons_second_plot_follows == 'left') {
                 if (plot_polygons_plot_orientation == 'zigzag') {
-                    console.log(generated_polygon_key_first_plot_number);
                     var plot_polygon_current_polygon_index = generated_polygon_key_first_plot_number;
                     var plot_polygon_column_count = 0;
                     for (var j=0; j<plot_polygons_plot_numbers.length; j++){

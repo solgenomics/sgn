@@ -83,7 +83,8 @@
                     </div>
                 </div>
             </div>
-        </di>
+        </div>
     </form>
+    <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template">Use Plot Polygon Template</button>
 </div>
 

@@ -721,6 +721,24 @@ sub drone_imagery_get_contours_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
 
+sub drone_imagery_retrieve_plot_polygons_template : Path('/ajax/drone_imagery/retrieve_plot_polygons_template') : ActionClass('REST') { }
+
+sub drone_imagery_retrieve_plot_polygons_template_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $template_projectprop_id = $c->req->param('plot_polygons_template_projectprop_id');
+
+    my $rs = $schema->resultset("Project::Projectprop")->find({projectprop_id => $template_projectprop_id});
+    my $plot_polygons = decode_json $rs->value;
+    #print STDERR Dumper $plot_polygons;
+
+    $c->stash->{rest} = {
+        success => 1,
+        plot_polygons => $plot_polygons
+    };
+}
+
 sub drone_imagery_assign_plot_polygons : Path('/ajax/drone_imagery/assign_plot_polygons') : ActionClass('REST') { }
 
 sub drone_imagery_assign_plot_polygons_POST : Args(0) {
