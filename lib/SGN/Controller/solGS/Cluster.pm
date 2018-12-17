@@ -68,8 +68,10 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     
-    $c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    $c->controller('solGS::Files')->create_file_id($c);
+    #my $file_id = $c->stash->{file_id};
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -159,9 +161,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     print STDERR "\n file id: $file_id\n";
    
     #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
- 
-    
-    
+     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
 
@@ -170,7 +170,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     if (!$cluster_plot_exists)
     {
 	my $no_cluster_data;
-	if ($data_type =~ /genotype/) 
+	if ($data_type =~ /genotype/i) 
 	{
 	    $self->create_cluster_genotype_data($c);
 	    print STDERR "\n created genotype data\n";
@@ -185,7 +185,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 		$no_cluster_data = 'There is no genotype data. Aborted Cluster analysis.';                
 	    }
 	} 
-	elsif ($data_type =~ /phenotype/)
+	elsif ($data_type =~ /phenotype/i)
 	{
 	    print STDERR "\n creating phenotype data\n";
 	    $self->create_cluster_phenotype_data($c);
@@ -194,13 +194,14 @@ sub cluster_result :Path('/cluster/result/') Args() {
 		$no_cluster_data = 'There is no phenotype data. Aborted Cluster analysis.';
 	    }
 	} 	
-	elsif ($data_type =~ /gebv/)
+	elsif ($data_type =~ /gebv/i)
 	{
 	    print STDERR "\n creating gebvs data\n";
 
 	    $c->cluster_gebvs_file($c);
 	    my $cluster_gebvs_file = $c->stash->{cluster_gebvs_file};
-   	    
+
+	    print STDERR "\ngebvs file: $cluster_gebvs_file\n";
 	    if (!$cluster_gebvs_file)
 	    {
 		$no_cluster_data = 'There is no GEBVs data. Aborted Cluster analysis.';
