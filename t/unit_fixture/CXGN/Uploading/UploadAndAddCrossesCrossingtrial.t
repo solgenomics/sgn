@@ -104,7 +104,6 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_uploading_cross_a = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
@@ -144,7 +143,6 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_uploading_relationship_all = $schema->resultset("Stock::StockRelationship")->search({})->count();
@@ -187,7 +185,6 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_uploading_relationship_femaleplant = $schema->resultset("Stock::StockRelationship")->search({type_id => $female_plant_type_id})->count();
@@ -204,7 +201,6 @@ my $UG120002_id = $schema->resultset('Stock::Stock')->find({name =>'UG120002'})-
 
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/crosses_in_trial");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
     [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}]
@@ -214,7 +210,6 @@ is_deeply($response, {'data'=> [
 # test retrieving crossing experimental info
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
     [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, undef, "2018/02/15", undef, "20", "15", "30"]
@@ -243,7 +238,6 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_add_progenies_stock = $schema->resultset("Stock::Stock")->search({})->count();
@@ -274,7 +268,6 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_updating_info_stocks = $schema->resultset("Stock::Stock")->search({})->count();
@@ -288,7 +281,6 @@ is ($after_updating_info_relationship, $before_updating_info_relationship);
 # test retrieving crossing experimental info after updating
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
     [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, "10", "2017/02/02", "10", "50", "15", "30"]
@@ -296,6 +288,12 @@ is_deeply($response, {'data'=> [
 
 
 # test uploading family names
+my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_property")->cvterm_id();
+
+my $before_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
+my $before_family_name_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+my $before_add_family_name = $schema->resultset("Stock::Stockprop")->search({type_id => $family_name_type_id})->count();
+
 $file = $f->config->{basepath}."/t/data/cross/family_name_upload.xls";
 $ua = LWP::UserAgent->new;
 $response = $ua->post(
@@ -309,12 +307,17 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
+my $after_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
+my $after_family_name_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+my $after_add_family_name = $schema->resultset("Stock::Stockprop")->search({type_id => $family_name_type_id})->count();
+
+is ($after_family_name_stocks, $before_family_name_stocks);
+is ($after_family_name_stockprop, $before_family_name_stockprop + 4);
+is ($after_add_family_name, $before_add_family_name + 4);
 
 #test deleting crossing
-
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id})->count();
 my $before_deleting_stocks = $schema->resultset("Stock::Stock")->search({})->count();
@@ -326,7 +329,6 @@ my $before_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdE
 my $deleting_cross_id = $schema->resultset("Stock::Stock")->find({name=>'test_cross_upload1'})->stock_id;
 $mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $deleting_cross_id]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
