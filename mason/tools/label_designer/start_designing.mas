@@ -1,6 +1,6 @@
 <div class="col-md-12"  style="margin-bottom:20px;">
     <div class="col-md-4">
-        <button class="btn btn-primary" type="button" class="btn btn-default" >Create New Design</button>
+        <button class="btn btn-primary" id="create_new_design" type="button" class="btn btn-default" >Create New Design</button>
     </div>
     <div class="col-md-2">
         <p>OR</p>
@@ -12,7 +12,7 @@
     </div>
 </div>
 
-<div class="col-md-12" style="display:none;margin-bottom:20px;" >
+<div id="format_options" class="col-md-12" style="display:none;margin-bottom:20px;" >
     <div class="col-md-2">
         <label>Page Format:</label>
     </div>
@@ -66,3 +66,9 @@
         <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
     </div>
 </div>
+
+<script>
+jQuery("#create_new_design").on( "click", function() {
+  jQuery("#format_options").show()
+});
+</script>

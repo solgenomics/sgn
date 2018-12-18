@@ -14,12 +14,7 @@
      </div>
      <br>
      <div class="col-md-12">
-        <div class="col-md-5" id="data_source">
-        </div>
-        <div class="col-md-2">
-            <p>OR</p>
-        </div>
-        <div class="col-md-5" id="data_source">
+        <div class="col-md-12" id="data_source">
         </div>
         </div>
         <br>
