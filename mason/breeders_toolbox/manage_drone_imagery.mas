@@ -1507,6 +1507,13 @@ jQuery(document).ready(function() {
                         var minimum_x_val = 0;
                         var minimum_x_val_pix = 0;
                         var minimum_y_val = 1000000000000000000000000000;
+
+                        if (removeBackgroundThresholdPeak1pixels > removeBackgroundThresholdPeak2pixels) {
+                            var removeBackgroundThresholdPeak1pixels_original = removeBackgroundThresholdPeak1pixels;
+                            removeBackgroundThresholdPeak1pixels = removeBackgroundThresholdPeak2pixels;
+                            removeBackgroundThresholdPeak2pixels = removeBackgroundThresholdPeak1pixels_original;
+                        }
+
                         for (let i = 0; i < histSize[0]; i++) {
                             var binVal = hist.data32F[i] * hist_height / max;
                             
