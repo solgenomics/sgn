@@ -391,7 +391,8 @@ synonym: "pericarp elongation index" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000039 ! fruit shape index
+relationship: variable_of SP:0000039 ! fruit shape index
+is_a: SP:0000500 ! Variables
 
 [Term]
 id: SP:0000049
@@ -539,7 +540,8 @@ synonym: "dec" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000058 ! fruit shape eccentric
+relationship: variable_of SP:0000058 ! fruit shape eccentric
+is_a: SP:0000500 ! Variables
 
 [Term]
 id: SP:0000064
@@ -549,7 +551,8 @@ synonym: "pec" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000058 ! fruit shape eccentric
+relationship: variable_of SP:0000058 ! fruit shape eccentric
+is_a: SP:0000500 ! Variables
 
 [Term]
 id: SP:0000065
@@ -1413,7 +1416,8 @@ name: fruit shape triangle 5%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000049 ! fruit shape triangle
+relationship: variable_of SP:0000049 ! fruit shape triangle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1423,7 +1427,8 @@ name: fruit shape triangle 10%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000049 ! fruit shape triangle
+relationship: variable_of SP:0000049 ! fruit shape triangle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1433,7 +1438,8 @@ name: fruit shape triangle 20%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000049 ! fruit shape triangle
+relationship: variable_of SP:0000049 ! fruit shape triangle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1443,7 +1449,8 @@ name: fruit shape triangle 30%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000049 ! fruit shape triangle
+relationship: variable_of SP:0000049 ! fruit shape triangle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1491,42 +1498,48 @@ creation_date: 2008-03-17T01:50:00Z
 [Term]
 id: SP:0000155
 name: distal angle micro 2%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000156
 name: distal angle micro 3%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000157
 name: distal angle micro 5%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000158
 name: distal angle macro 10%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000159
 name: distal angle macro 15%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000160
 name: distal angle macro 20%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
@@ -1551,7 +1564,8 @@ creation_date: 2008-03-25T11:17:00Z
 [Term]
 id: SP:0000163
 name: distal angle macro 25%
-is_a: SP:0000073 ! distal fruit end angle
+relationship: variable_of SP:0000073 ! distal fruit end angle
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-25T11:19:00Z
 
@@ -1564,7 +1578,8 @@ synonym: "oel" EXACT []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000058 ! fruit shape eccentric
+relationship: variable_of SP:0000058 ! fruit shape eccentric
+is_a: SP:0000500 ! Variables
 created_by: naama
 creation_date: 2008-03-31T10:09:00Z
 
