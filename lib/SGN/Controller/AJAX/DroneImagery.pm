@@ -613,7 +613,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     $archive_stitched_temp_image .= '.png';
     print STDERR $archive_stitched_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls '.$image_urls_string.' --outfile_path '.$archive_stitched_temp_image);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls \''.$image_urls_string.'\' --outfile_path \''.$archive_stitched_temp_image.'\'');
 
     my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -646,7 +646,9 @@ sub drone_imagery_rotate_image_GET : Args(0) {
     $archive_rotate_temp_image .= '.png';
     print STDERR $archive_rotate_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/Rotate.py --image_path '.$image_fullpath.' --outfile_path '.$archive_rotate_temp_image.' --angle '.$angle_rotation);
+    my $cmd = 'python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/Rotate.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --angle '.$angle_rotation;
+    print STDERR $cmd."\n";
+    my $status = system($cmd);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -707,7 +709,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     $archive_contours_temp_image .= '.png';
     print STDERR $archive_contours_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/GetContours.py --image_url '.$main_production_site.$image_url.' --outfile_path '.$archive_contours_temp_image);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/GetContours.py --image_url \''.$main_production_site.$image_url.'\' --outfile_path \''.$archive_contours_temp_image.'\'');
 
     my @size = imgsize($archive_contours_temp_image);
 
@@ -790,7 +792,7 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
         $archive_plot_polygons_temp_image .= '.png';
         print STDERR $archive_plot_polygons_temp_image."\n";
 
-        my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_plot_polygons_temp_image --polygon_json '$polygons'";
+        my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons'";
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
@@ -857,7 +859,7 @@ sub drone_imagery_fourier_transform_GET : Args(0) {
     $archive_fourier_temp_image .= '.png';
     print STDERR $archive_fourier_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '.$image_fullpath.' --outfile_path '.$archive_fourier_temp_image);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/FourierTransform.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_fourier_temp_image.'\'');
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -890,7 +892,7 @@ sub drone_imagery_denoise_GET : Args(0) {
     $archive_denoise_temp_image .= '.png';
     print STDERR $archive_denoise_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/Denoise.py --image_path '.$image_fullpath.' --outfile_path '.$archive_denoise_temp_image);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/Denoise.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_denoise_temp_image.'\'');
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -931,7 +933,7 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
     $archive_remove_background_temp_image .= '.png';
     print STDERR $archive_remove_background_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path '.$image_fullpath.' --outfile_path '.$archive_remove_background_temp_image.' --threshold '.$threshold);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --threshold '.$threshold);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -973,7 +975,7 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     $archive_remove_background_temp_image .= '.png';
     print STDERR $archive_remove_background_temp_image."\n";
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path '.$image_fullpath.' --outfile_path '.$archive_remove_background_temp_image.' --threshold '.$threshold);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --threshold '.$threshold);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -1188,7 +1190,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path $image_fullpath --outputfile_path $archive_temp_image --polygon_json '$polygons'";
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons'";
     my $status = system($cmd);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
@@ -1256,7 +1258,7 @@ sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/VegetativeIndex/$index_script.py --image_path $image_fullpath --outfile_path $archive_temp_image";
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/VegetativeIndex/$index_script.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image'";
     my $status = system($cmd);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
@@ -1299,7 +1301,7 @@ sub drone_imagery_mask_remove_background_POST : Args(0) {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/MaskRemoveBackground.py --image_path $image_fullpath --mask_image_path $mask_image_fullpath --outfile_path $archive_temp_image";
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/MaskRemoveBackground.py --image_path '$image_fullpath' --mask_image_path '$mask_image_fullpath' --outfile_path '$archive_temp_image'";
     my $status = system($cmd);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
@@ -1432,7 +1434,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
     my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths '.$image_paths_string.' '.$out_paths_string.' --results_outfile_path '.$archive_temp_results);
+    my $status = system('python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\'');
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
