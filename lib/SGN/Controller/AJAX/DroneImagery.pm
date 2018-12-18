@@ -571,6 +571,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
         $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a></div>";
         $drone_run_html .= $drone_run_band_table_html;
+        $drone_run_html .= '<button class="btn btn-primary" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
 
         push @return, [$drone_run_html];
     }
