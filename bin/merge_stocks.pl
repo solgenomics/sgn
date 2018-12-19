@@ -29,7 +29,7 @@ use strict;
 use Getopt::Std;
 use CXGN::DB::InsertDBH;
 use CXGN::DB::Schemas;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 
 our($opt_H, $opt_D, $opt_x);
 getopts('H:D:x');
