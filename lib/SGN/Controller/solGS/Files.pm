@@ -634,7 +634,7 @@ sub create_file_id {
 	$file_id = "dataset_${dataset_id}";
     } 
 
-    $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
+    $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
     $c->stash->{file_id} = $file_id;
     
 }
