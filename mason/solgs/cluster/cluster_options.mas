@@ -1,0 +1,40 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/cluster/cluster_options.mas - cluster analysis options template
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+</%args>
+
+
+<div id="cluster_options"   style="display:none;">
+  <div class="form-group  col-sm-3"
+       id="cluster_type_opts"
+       value="">
+  </div>
+  <div class="form-group  col-sm-3"
+       id="data_type_opts"
+       value="">
+  </div>
+ 
+  <input class="btn btn-success form-group col-sm-2"
+	 type="submit"
+	 value="Run Cluster"
+	 id="run_cluster"/> 
+
+</div>
+
+
+ 
+
+  
