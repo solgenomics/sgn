@@ -109,7 +109,6 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id">$project_name</a> |;
    marker_effects_download_url => $marker_effects_download_url
 &>
 
-
 <& selection_populations.mas, 
    download_prediction     => $download_prediction,
    analyzed_traits         => $analyzed_traits,
