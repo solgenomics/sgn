@@ -383,7 +383,7 @@ sub structure_output_details {
               
     my %output_details = ();
 
-    my $solgs_controller = $c->controller('solGS::solGS');
+   # my $solgs_controller = $c->controller('solGS::solGS');
     my $analysis_page = $analysis_data->{analysis_page};
   
     $analysis_page =~ s/$base//;
@@ -394,7 +394,7 @@ sub structure_output_details {
 	{	    
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
  
-	    $solgs_controller->get_trait_details($c, $trait_id);	    
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);	    
 	    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	 
 	    my $trait_abbr = $c->stash->{trait_abbr};
@@ -467,7 +467,7 @@ sub structure_output_details {
 	    $pheno_file = $c->stash->{phenotype_file_name};
 	    $geno_file  = $c->stash->{genotype_file_name};
 	  
-	    $solgs_controller->get_project_details($c, $pop_id);
+	    $c->controller('solGS::solGS')->get_project_details($c, $pop_id);
 	    $pop_name = $c->stash->{project_name};
 	}
 	    $output_details{'population_id_' . $pop_id} = {
@@ -488,21 +488,22 @@ sub structure_output_details {
 	    push @traits_ids, $c->stash->{trait_id};
 	}
 	else 
-	{ 	
-	    @traits_with_valid_models = @{$solgs_controller->traits_with_valid_models($c)};
-	    foreach  my $trait_abbr (@traits_with_valid_models) {
+	{    
+	    $c->controller('solGS::solGS')->traits_with_valid_models($c);
+	    my $traits_with_valid_models = $c->stash->{traits_with_valid_models};
+	    
+	    foreach  my $trait_abbr (@$traits_with_valid_models) {
 		$c->stash->{trait_abbr} = $trait_abbr;	    
 		$c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);
 		  
 		my $trait_id = $c->stash->{trait_id};
-		push @traits_ids, $trait_id;
-		
+		push @traits_ids, $trait_id;		
 	    }
 	}
 
 	foreach my $trait_id (@traits_ids)
-	{ 
-	     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	{	    
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	    my $trait_id = $c->stash->{trait_id};	    
 	    my $trait_abbr = $c->stash->{trait_abbr};
 	    my $trait_name = $c->stash->{trait_name};
@@ -590,7 +591,7 @@ sub structure_output_details {
 	
 	foreach my $pop_id (@combined_pops_ids) 
 	{	    
-	    $solgs_controller->get_project_details($c, $pop_id);
+	    $c->controller('solGS::solGS')->get_project_details($c, $pop_id);
 	    my $population_name = $c->stash->{project_name};
 	    my $population_page = $base . "solgs/population/$pop_id";
 	    
