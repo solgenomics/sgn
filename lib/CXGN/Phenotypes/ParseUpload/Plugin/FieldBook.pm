@@ -108,7 +108,6 @@ sub parse {
     my %parse_result;
     my @file_lines;
     my $header;
-    my @header_row;
     my $header_column_number = 0;
     my %header_column_info; #column numbers of key info indexed from 0;
     my %plots_seen;
