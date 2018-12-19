@@ -1688,6 +1688,7 @@ jQuery(document).ready(function() {
     //
 
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_id;
+    var manage_drone_imagery_calculate_phenotypes_drone_run_band_type;
 
     jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function() {
         jQuery('#manage_drone_imagery_crop_div').hide();
@@ -1701,6 +1702,7 @@ jQuery(document).ready(function() {
         window.scrollTo(0,0);
 
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
+        manage_drone_imagery_calculate_phenotypes_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_sift').click(function(){
@@ -1711,6 +1713,7 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

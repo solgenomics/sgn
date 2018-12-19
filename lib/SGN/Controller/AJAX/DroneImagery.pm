@@ -512,7 +512,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                             $plot_polygon_images .= join '', @{$d->{plot_polygon_images}};
                                             $plot_polygon_images .= "</span>";
                                             $plot_polygon_images .= '<br/><br/>';
-                                            $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Calculate Phenotypes</button>';
+                                            $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" >Calculate Phenotypes</button>';
                                         } else {
                                             $plot_polygon_images = 'No Plot Polygons Assigned';
                                         }
@@ -540,7 +540,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                             $plot_polygon_images = scalar(@{$d->{plot_polygon_images}})." Plot Polygons<br/><span>";
                                             $plot_polygon_images .= join '', @{$d->{plot_polygon_images}};
                                             $plot_polygon_images .= "</span>";
-                                            $plot_polygon_images .= '<br/><br/><button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Calculate Phenotypes</button>';
+                                            $plot_polygon_images .= '<br/><br/><button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" >Calculate Phenotypes</button>';
                                         } else {
                                             $plot_polygon_images = 'No Plot Polygons Assigned';
                                         }
@@ -1359,6 +1359,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $drone_run_band_project_type = $c->req->param('drone_run_band_project_type');
     my $phenotype_method = $c->req->param('method');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -1450,6 +1451,9 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
             @header_cols = $csv->fields();
         }
 
+        my $line = 0;
+        my %zonal_stat_phenotype_data;
+        my %plots_seen;
         if ($phenotype_method eq 'zonal') {
             if ($header_cols[0] ne 'nonzero_pixel_count' ||
                 $header_cols[1] ne 'total_pixel_sum' ||
@@ -1470,36 +1474,92 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
                 $c->stash->{rest} = { error => "Pheno results must have header: 'nonzero_pixel_count', 'total_pixel_sum', 'mean_pixel_value', 'harmonic_mean_value', 'median_pixel_value', 'variance_pixel_value', 'stdev_pixel_value', 'pstdev_pixel_value', 'min_pixel_value', 'max_pixel_value', 'minority_pixel_value', 'minority_pixel_count', 'majority_pixel_value', 'majority_pixel_count', 'pixel_variety_count'" };
                 return;
             }
-        }
-        my $line = 0;
-        my %zonal_stat_phenotype_data;
-        my %plots_seen;
-        while ( my $row = <$fh> ){
-            my @columns;
-            if ($csv->parse($row)) {
-                @columns = $csv->fields();
+
+            my $non_zero_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Nonzero Pixel Count|G2F:0000014')->cvterm_id;
+            my $total_pixel_sum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Total Pixel Sum|G2F:0000015')->cvterm_id;
+            my $mean_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Mean Pixel Value|G2F:0000016')->cvterm_id;
+            my $harmonic_mean_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Harmonic Mean Pixel Value|G2F:0000017')->cvterm_id;
+            my $median_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Median Pixel Value|G2F:0000018')->cvterm_id;
+            my $pixel_variance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Variance|G2F:0000019')->cvterm_id;
+            my $pixel_standard_dev_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Standard Deviation|G2F:0000020')->cvterm_id;
+            my $pixel_pstandard_dev_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Population Standard Deviation|G2F:0000021')->cvterm_id;
+            my $minimum_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minimum Pixel Value|G2F:0000022')->cvterm_id;
+            my $maximum_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Maximum Pixel Value|G2F:0000023')->cvterm_id;
+            my $minority_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minority Pixel Value|G2F:0000024')->cvterm_id;
+            my $minority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minority Pixel Count|G2F:0000025')->cvterm_id;
+            my $majority_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Value|G2F:0000026')->cvterm_id;
+            my $majority_puxel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Count|G2F:0000027')->cvterm_id;
+            my $pixel_group_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Group Count|G2F:0000028')->cvterm_id;
+
+            my $rgb_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'RGB Color Image|ISOL:0000002')->cvterm_id;
+            my $bw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Black and White Image|ISOL:0000003')->cvterm_id;
+            my $blue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Blue (450-520nm)|ISOL:0000004')->cvterm_id;
+            my $green_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Green (515-600nm)|ISOL:0000005')->cvterm_id;
+            my $red_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red (600-690nm)|ISOL:0000006')->cvterm_id;
+            my $nir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NIR (750-900nm)|ISOL:0000007')->cvterm_id;
+            my $mir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'MIR (1550-1750nm)|ISOL:0000008')->cvterm_id;
+            my $fir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FIR (2080-2350nm)|ISOL:0000009')->cvterm_id;
+            my $thermal_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Thermal IR (10400-12500nm)|ISOL:0000010')->cvterm_id;
+
+            my $non_zero_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$non_zero_pixel_count_cvterm_id]);
+            my $total_pixel_sum_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$total_pixel_sum_cvterm_id]);
+            my $mean_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$mean_pixel_value_cvterm_id]);
+            my $harmonic_mean_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$harmonic_mean_pixel_value_cvterm_id]);
+            my $median_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$median_pixel_value_cvterm_id]);
+            my $pixel_variance_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_variance_cvterm_id]);
+            my $pixel_standard_dev_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_standard_dev_cvterm_id]);
+            my $pixel_pstandard_dev_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_pstandard_dev_cvterm_id]);
+            my $minimum_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minimum_pixel_value_cvterm_id]);
+            my $maximum_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$maximum_pixel_value_cvterm_id]);
+            my $minority_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minority_pixel_value_cvterm_id]);
+            my $minority_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minority_pixel_count_cvterm_id]);
+            my $majority_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$majority_pixel_value_cvterm_id]);
+            my $majority_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$majority_puxel_count_cvterm_id]);
+            my $pixel_group_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_group_count_cvterm_id]);
+
+            my $non_zero_pixel_count_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $non_zero_pixel_count_composed_cvterm_id, 'extended');
+            my $total_pixel_sum_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $total_pixel_sum_composed_cvterm_id, 'extended');
+            my $mean_pixel_value_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $mean_pixel_value_composed_cvterm_id, 'extended');
+            my $harmonic_mean_pixel_value_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $harmonic_mean_pixel_value_composed_cvterm_id, 'extended');
+            my $median_pixel_value_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $median_pixel_value_composed_cvterm_id, 'extended');
+            my $pixel_variance_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $pixel_variance_composed_cvterm_id, 'extended');
+            my $pixel_standard_dev_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $pixel_standard_dev_composed_cvterm_id, 'extended');
+            my $pixel_pstandard_dev_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $pixel_pstandard_dev_composed_cvterm_id, 'extended');
+            my $minimum_pixel_value_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $minimum_pixel_value_composed_cvterm_id, 'extended');
+            my $minimum_pixel_count_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $maximum_pixel_value_composed_cvterm_id, 'extended');
+            my $majority_pixel_value_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $minority_pixel_value_composed_cvterm_id, 'extended');
+            my $majority_pixel_count_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $minority_pixel_count_composed_cvterm_id, 'extended');
+            my $minority_pixel_value_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $majority_pixel_value_composed_cvterm_id, 'extended');
+            my $minority_pixel_count_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $majority_pixel_count_composed_cvterm_id, 'extended');
+            my $pixel_group_count_composed_trait_name = SGN::Model::Cvterm->get_trait_from_cvterm_id($schema, $pixel_group_count_composed_cvterm_id, 'extended');
+
+            while ( my $row = <$fh> ){
+                my @columns;
+                if ($csv->parse($row)) {
+                    @columns = $csv->fields();
+                }
+                #print STDERR Dumper \@columns;
+                $stocks[$line]->{result} = \@columns;
+
+                $plots_seen{$stocks[$line]->{stock_uniquename}} = 1;
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Nonzero Pixel Count|G2F:0000014'} = [$columns[0], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Total Pixel Sum|G2F:0000015'} = [$columns[1], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Mean Pixel Value|G2F:0000016'} = [$columns[2], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Harmonic Mean Pixel Value|G2F:0000017'} = [$columns[3], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Median Pixel Value|G2F:0000018'} = [$columns[4], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Variance|G2F:0000019'} = [$columns[5], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Standard Deviation|G2F:0000020'} = [$columns[6], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Population Standard Deviation|G2F:0000021'} = [$columns[7], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minimum Pixel Value|G2F:0000022'} = [$columns[8], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Maximum Pixel Value|G2F:0000023'} = [$columns[9], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minority Pixel Value|G2F:0000024'} = [$columns[10], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minority Pixel Count|G2F:0000025'} = [$columns[11], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Majority Pixel Value|G2F:0000026'} = [$columns[12], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Majority Pixel Count|G2F:0000027'} = [$columns[13], $timestamp, $user_name, ''];
+                $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Group Count|G2F:0000028'} = [$columns[14], $timestamp, $user_name, ''];
+
+                $line++;
             }
-            #print STDERR Dumper \@columns;
-            $stocks[$line]->{result} = \@columns;
-
-            $plots_seen{$stocks[$line]->{stock_uniquename}} = 1;
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Nonzero Pixel Count|G2F:0000014'} = [$columns[0], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Total Pixel Sum|G2F:0000015'} = [$columns[1], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Mean Pixel Value|G2F:0000016'} = [$columns[2], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Harmonic Mean Pixel Value|G2F:0000017'} = [$columns[3], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Median Pixel Value|G2F:0000018'} = [$columns[4], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Variance|G2F:0000019'} = [$columns[5], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Standard Deviation|G2F:0000020'} = [$columns[6], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Population Standard Deviation|G2F:0000021'} = [$columns[7], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minimum Pixel Value|G2F:0000022'} = [$columns[8], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Maximum Pixel Value|G2F:0000023'} = [$columns[9], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minority Pixel Value|G2F:0000024'} = [$columns[10], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Minority Pixel Count|G2F:0000025'} = [$columns[11], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Majority Pixel Value|G2F:0000026'} = [$columns[12], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Majority Pixel Count|G2F:0000027'} = [$columns[13], $timestamp, $user_name, ''];
-            $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{'Pixel Group Count|G2F:0000028'} = [$columns[14], $timestamp, $user_name, ''];
-
-            $line++;
         }
     
     close $fh;
