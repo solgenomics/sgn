@@ -72,6 +72,23 @@
         <button class="btn btn-primary" id="drone_imagery_crop_stitched_submit">Crop Image To Selected Polygon</button>
     </div>
 
+    <div class="well well-sm">
+        <form class="form-horizontal">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Previously Used Image Cropping For This Field Trial: </label>
+                        <div class="col-sm-6">
+                            <div id="plot_polygons_previously_saved_image_cropping_templates">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <button class="btn btn-primary" id="drone_imagery_cropping_use_previous_cropping">Use Image Cropping</button>
+    </div>
+
     <div id="manage_drone_imagery_crop_load_div">
         <img src="/img/wheel.gif" />
     </div>
@@ -444,6 +461,8 @@ jQuery(document).ready(function() {
         drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         rotated_stitched_image_id = jQuery(this).data('rotated_stitched_image_id');
 
+        get_select_box('drone_imagery_parameter_select','plot_polygons_previously_saved_image_cropping_templates', {'name':'drone_imagery_previously_saved_image_cropping_select', 'id':'drone_imagery_previously_saved_image_cropping_select', 'empty':1, 'field_trial_id':trial_id, 'parameter':'image_cropping' });
+
         crop_points = [];
         crop_display_points = [];
 
@@ -585,6 +604,35 @@ jQuery(document).ready(function() {
 
     });
 
+    jQuery(document).on('click', '#drone_imagery_cropping_use_previous_cropping', function() {
+        var plot_polygons_use_previously_saved_cropping = jQuery('#drone_imagery_previously_saved_image_cropping_select').val();
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/retrieve_parameter_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_cropping,
+            success: function(response){
+                console.log(response);
+                jQuery.ajax({
+                    url : '/ajax/drone_imagery/crop_image?image_id='+rotated_stitched_image_id+'&polygon='+JSON.stringify(response.parameter[0])+'&drone_run_band_project_id='+drone_run_band_project_id,
+                    beforeSend: function() {
+                        jQuery("#working_modal").modal("show");
+                    },
+                    success: function(response){
+                        console.log(response);
+                        jQuery("#working_modal").modal("hide");
+                        location.reload();
+                    },
+                    error: function(response){
+                        jQuery("#working_modal").modal("hide");
+                        alert('Error cropping image!')
+                    }
+                });
+            },
+            error: function(response){
+                alert('Error retrieving saved cropping template!');
+            }
+        });
+        return;
+    });
+
     //
     // Denoising JS
     //
@@ -650,7 +698,7 @@ jQuery(document).ready(function() {
         drone_run_project_id = jQuery(this).data('drone_run_project_id');
         drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
 
-        get_select_box('drone_imagery_plot_polygons','plot_polygons_previously_saved_plot_polygon_templates', {'empty':1, 'field_trial_id':trial_id });
+        get_select_box('drone_imagery_parameter_select','plot_polygons_previously_saved_plot_polygon_templates', {'empty':1, 'field_trial_id':trial_id, 'parameter':'plot_polygons' });
 
         plot_polygons_display_points = [];
         plot_polygons_ind_points = [];
@@ -757,12 +805,12 @@ jQuery(document).ready(function() {
         }
 
         jQuery.ajax({
-            url : '/ajax/drone_imagery/retrieve_plot_polygons_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_template,
+            url : '/ajax/drone_imagery/retrieve_parameter_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_template,
             success: function(response){
                 console.log(response);
 
-                drone_imagery_plot_polygons_display = response.plot_polygons;
-                drone_imagery_plot_polygons = response.plot_polygons;
+                drone_imagery_plot_polygons_display = response.parameter;
+                drone_imagery_plot_polygons = response.parameter;
 
                 draw_canvas_image(background_image_url, 0);
                 droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons);
@@ -1703,6 +1751,7 @@ jQuery(document).ready(function() {
 
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
         manage_drone_imagery_calculate_phenotypes_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
+        console.log(manage_drone_imagery_calculate_phenotypes_drone_run_band_type);
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_sift').click(function(){
@@ -1749,6 +1798,7 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1784,6 +1834,7 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1819,6 +1870,7 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

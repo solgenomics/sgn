@@ -1010,22 +1010,30 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_drone_imagery_plot_polygon_templates_select : Path('/ajax/html/select/drone_imagery_plot_polygons') Args(0) {
+sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_parameter_select') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $project_id = $c->req->param("field_trial_id");
+    my $drone_run_parameter = $c->req->param("parameter");
 
     my $id = $c->req->param("id") || "drone_imagery_plot_polygon_select";
     my $name = $c->req->param("name") || "drone_imagery_plot_polygon_select";
     my $empty = $c->req->param("empty") || "";
 
-    my $plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $parameter_type_id;
+    if ($drone_run_parameter eq 'plot_polygons') {
+        $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    }
+    if ($drone_run_parameter eq 'image_cropping') {
+        $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
+    }
+
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
     my $drone_run_band_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $drone_imagery_plot_polygons_rs = $schema->resultset("Project::Projectprop")->search({
-        'me.type_id' => $plot_polygons_type_id,
+        'me.type_id' => $parameter_type_id,
         'project_relationship_subject_projects.type_id' => $drone_run_band_project_relationship_type_id,
         'project_relationship_subject_projects_2.type_id' => $project_relationship_type_id,
         'object_project_2.project_id' => $project_id
@@ -1037,7 +1045,7 @@ sub get_drone_imagery_plot_polygon_templates_select : Path('/ajax/html/select/dr
     }
 
     if ($empty) {
-        unshift @result, ['', "Select a plot polygon template"];
+        unshift @result, ['', "Select one"];
     }
 
     my $html = simple_selectbox_html(
