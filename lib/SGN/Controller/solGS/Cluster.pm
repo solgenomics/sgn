@@ -95,16 +95,16 @@ sub check_cluster_output_files {
 
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
-
+    print STDERR "\ncheck_cluster_output_files: file_id - $file_id\n";
     my $cluster_type = $c->stash->{cluster_type};
     my $cluster_result_file;
     my $cluster_plot_file;
     
-    if ($cluster_type =~ /k-means/)
+    if ($cluster_type =~ /k-means/i)
     {
 	$self->kcluster_result_file($c);
 	$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
-
+ print STDERR "\ncheck_cluster_output_files: result file $cluster_result_file\n";
 	$self->kcluster_plot_kmeans_file($c);
 	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
     }
@@ -137,10 +137,11 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $data_structure =  $c->req->param('data_structure');
     my $data_type      =  $c->req->param('data_type');
 
-     my $cluster_type = $c->req->param('cluster_type');
-    #$cluster_type = 'k-means' if !$cluster_type;
+    my $cluster_type = $c->req->param('cluster_type');
+    $cluster_type = 'k-means' if !$cluster_type;
+    $data_type = 'Genotype' if !$data_type;
 
-    print STDERR "\n data type: $data_type -- cluster type: $cluster_type\n";
+    print STDERR "\n cluster result data type: $data_type -- cluster type: $cluster_type\n";
    
        
     $c->stash->{training_pop_id}  = $training_pop_id;
@@ -164,12 +165,14 @@ sub cluster_result :Path('/cluster/result/') Args() {
      
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
-
+ print STDERR "\n cluster plot exists : $cluster_plot_exists\n";
     my $ret->{result} = 'Cluster analysis failed.';
 
     if (!$cluster_plot_exists)
     {
 	my $no_cluster_data;
+
+	print STDERR "\n checking data_type : $data_type\n";
 	if ($data_type =~ /genotype/i) 
 	{
 	    $self->create_cluster_genotype_data($c);
@@ -213,18 +216,20 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	    $ret->{result} = $no_cluster_data; 
 	}  
 	else 
-	{	    
+	{
+	    print STDERR "\n call run_cluster\n";
 	    $self->run_cluster($c);
 	    $ret = $self->_jsonize_output($c);
 	}	
     }
     else
-    {   
+    {    print STDERR "\n _jasonize_output\n";	 
 	$ret = $self->_jsonize_output($c);
     }
     
-    $ret = to_json($ret);
-        
+    print STDERR "\n Done _jasonize_output\n $ret->{result} -- $ret->{kcluster_plot}\n"; 
+    my $ret = to_json($ret);
+     print STDERR "\nret: $ret\n";   
     $c->res->content_type('application/json');
     $c->res->body($ret); 
 
@@ -265,7 +270,7 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 sub cluster_gebvs_file {
     my ($self, $c) = @_;
 
-     $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
+    $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
     
     my $tmp_dir = $c->stash->{cluster_temp_dir};
@@ -278,8 +283,6 @@ sub cluster_gebvs_file {
 
 sub _jsonize_output {
     my ($self, $c) = @_;
-
-    my $ret;
     
     $self->prep_cluster_download_files($c);
     my $cluster_plot_file = $c->stash->{download_plot};
@@ -287,8 +290,10 @@ sub _jsonize_output {
     my $report            = $c->stash->{download_cluster_report};
 
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
+
+    print STDERR "\noutput link: $output_link\n$cluster_plot_file\n$clusters_file\n$report\n";
     
-    $ret->{kcluster_plot} = $cluster_plot_file;
+    my $ret->{kcluster_plot} = $cluster_plot_file;
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;
     $ret->{result} = 'success';  
@@ -297,9 +302,10 @@ sub _jsonize_output {
     $ret->{list_id}       = $c->stash->{list_id};
     $ret->{cluster_type}  = $c->stash->{cluster_type};
     $ret->{dataset_id}    = $c->stash->{dataset_id};
-    #$ret->{trials_names} = $c->stash->{trials_names};
-    $ret->{output_link}  = $output_link;
+    $ret->{trials_names}  = $c->stash->{trials_names};
+    $ret->{output_link}   = $output_link;
 
+    print STDERR "\nret result: $ret->{result}\n";
     return $ret;
     
 }
@@ -382,7 +388,7 @@ sub combined_cluster_trials_data_file {
     my $file_name;
     my $tmp_dir = $c->stash->{cluster_temp_dir};
     
-    if ($cluster_type =~ /k-means/)
+    if ($cluster_type =~ /k-means/i)
     {
 	$file_name = "combined_${cluster_type}_data_file_${file_id}";
 	
@@ -481,6 +487,8 @@ sub prep_cluster_download_files {
   mkpath ([$base_tmp_dir], 0, 0755);
 
   my $cluster_type = $c->stash->{cluster_type};   
+
+  print STDERR "\nprep dld cluster type: $cluster_type\n";
   
   $self->kcluster_plot_kmeans_file($c);   
   my $plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
@@ -496,7 +504,8 @@ sub prep_cluster_download_files {
   my $report_file = $c->stash->{"${cluster_type}_report_file"};
   $c->controller('solGS::Files')->copy_file($report_file, $base_tmp_dir);
   $report_file =  catfile($tmp_dir, basename($report_file));
-   
+ 
+print STDERR "\n $plot_file \n$clusters_file\n$report_file\n";  
   $c->stash->{download_plot}     = $plot_file;
   $c->stash->{download_clusters} = $clusters_file;
   $c->stash->{download_cluster_report}= $report_file;
@@ -514,7 +523,7 @@ sub cluster_output_files {
     my $plot_pam_file;
     my $plot_kmeans_file;
 
-    if ($cluster_type =~ 'k-means')	
+    if ($cluster_type =~/k-means/i)	
     {
 	$self->kcluster_result_file($c);
 	$result_file = $c->stash->{"${cluster_type}_result_file"};
@@ -575,7 +584,7 @@ sub cluster_input_files {
 
     my $files;
 
-    if ($data_type =~ /genotype/) 
+    if ($data_type =~ /genotype/i) 
     {
 	if ($c->stash->{genotype_files_list}) 
 	{
@@ -586,12 +595,12 @@ sub cluster_input_files {
 	    $files = $c->stash->{genotype_file};
 	}
     }
-    elsif ($data_type =~ /phenotype/)
+    elsif ($data_type =~ /phenotype/i)
     {
 	#phenotype data file
 	
     }
-    elsif ($data_type =~ /gebv/)	
+    elsif ($data_type =~ /gebv/i)	
     {
 	$c->cluster_gebvs_file($c);
 	$files = $c->stash->{cluster_gebvs_file};	
@@ -620,8 +629,9 @@ sub run_cluster {
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
 
-    if ($cluster_type =~ /k-means/)
+    if ($cluster_type =~ /k-means/i)
     {
+	print STDERR "\n stash k-means r_script\n";
 	$c->stash->{r_script}     = 'R/solGS/kCluster.r';
     }
     else
@@ -631,6 +641,7 @@ sub run_cluster {
     
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
     $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";
+    	print STDERR "\n calling_r_script\n";
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }
