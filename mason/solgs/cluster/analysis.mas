@@ -64,16 +64,19 @@ my $url = $c->req->path;
     pop_type => $pop_type
     &>
 
+%} elsif ($url =~ /breeders\/trial\//) {
+ <& /solgs/cluster/trial_cluster.mas &>
+    
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
   
 
-  <& /solgs/cluster/plot.mas,
-     pop_id => $pop_id,
-    list_id => $list_id,
-    dataset_id => $dataset_id,
-    data_structure_type => $data_structure_type,
-    &>
+<& /solgs/cluster/plot.mas,
+   pop_id => $pop_id,
+  list_id => $list_id,
+  dataset_id => $dataset_id,
+  data_structure_type => $data_structure_type,
+  &>
 
 </&>
