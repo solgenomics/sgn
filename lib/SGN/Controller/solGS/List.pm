@@ -89,7 +89,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     my ($self, $c) = @_;
  
     my $args = $c->req->param('arguments');
-
+    
     my $json = JSON->new();
     $args = $json->decode($args);
     
@@ -117,7 +117,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
-    $self->genotypes_list_genotype_file($c);
+    $self->genotypes_list_genotype_file($c, $selection_pop_id);
     my $genotype_file = $c->stash->{genotypes_list_genotype_file};
 
     $self->create_list_population_metadata_file($c, $selection_pop_id);
@@ -557,7 +557,7 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     $self->plots_list_phenotype_file($c); 
     my $pheno_file = $c->stash->{plots_list_phenotype_file};
     
-    $self->genotypes_list_genotype_file($c); 
+    $self->genotypes_list_genotype_file($c, $model_id); 
     my $geno_file  = $c->stash->{genotypes_list_genotype_file};
 
     $self->create_list_population_metadata_file($c, $model_id);
@@ -596,7 +596,8 @@ sub genotypes_list_genotype_file {
 
     my $list_id = $c->stash->{list_id};
     my $dataset_id = $c->stash->{dataset_id};
-
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+   
     $pop_id = $c->stash->{pop_id} || $c->stash->{model_id} if !$pop_id;
 
     if ($list_id)
