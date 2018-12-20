@@ -15,9 +15,9 @@ jQuery(document).ready( function () {
 
 
 jQuery("#rank_genotypes").live("click", function() {        
-    var modelId        = jQuery("#model_id").val();
-    var selectionPopId = jQuery("#selected_population_id").val();
-    var popType        = jQuery("#selected_population_type").val();
+    var modelId        = jQuery("#si_canvas #model_id").val();
+    var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
+    var popType        = jQuery("#si_canvas #selected_population_type").val();
    
     selectionIndex(modelId, selectionPopId);        
 });
@@ -38,7 +38,7 @@ function listSelectionIndexPopulations ()  {
  
     popsList += '</ul></dd></dl>'; 
    
-    jQuery("#select_a_population_div").empty().append(popsList).show();
+    jQuery("#si_canvas #select_a_population_div").empty().append(popsList).show();
      
     var dbSelPopsList;
     if( modelData.id.match(/list/) == null) {
@@ -46,7 +46,7 @@ function listSelectionIndexPopulations ()  {
     }
 
     if (dbSelPopsList) {
-            jQuery("#select_a_population_div ul").append(dbSelPopsList); 
+            jQuery("#si_canvas #select_a_population_div ul").append(dbSelPopsList); 
     }
       
     var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
@@ -54,7 +54,7 @@ function listSelectionIndexPopulations ()  {
         var userSelPops = listUploadedSelPopulations();
         if (userSelPops) {
 
-            jQuery("#select_a_population_div ul").append(userSelPops);  
+            jQuery("#si_canvas #select_a_population_div ul").append(userSelPops);  
         }
     }
 
@@ -72,7 +72,7 @@ function listSelectionIndexPopulations ()  {
         jQuery(".si_dropdown dt a span").html(text);
         jQuery(".si_dropdown dd ul").hide();
                 
-        var idPopName = jQuery("#selected_population").find("dt a span.value").html();
+        var idPopName = jQuery("#si_canvas #selected_population").find("dt a span.value").html();
         idPopName     = JSON.parse(idPopName);
         modelId = jQuery("#model_id").val();
                    
@@ -80,9 +80,9 @@ function listSelectionIndexPopulations ()  {
         selectedPopName = idPopName.name;
         selectedPopType = idPopName.pop_type;
       
-        jQuery("#selected_population_name").val(selectedPopName);
-        jQuery("#selected_population_id").val(selectedPopId);
-        jQuery("#selected_population_type").val(selectedPopType);        
+        jQuery("#si_canvas #selected_population_name").val(selectedPopName);
+        jQuery("#si_canvas #selected_population_id").val(selectedPopId);
+        jQuery("#si_canvas #selected_population_type").val(selectedPopType);        
             
         getSelectionPopTraits(modelId, selectedPopId);
                                          
@@ -151,11 +151,11 @@ function getSelectionPopTraits (modelId, selectedPopId) {
                     table  = selectionIndexForm(traits);
                 } else {
                     var msg = 'There is only one trait with valid GEBV predictions.';
-                    jQuery("#select_a_population_div").empty(); 
-                    jQuery("#select_a_population_div_text").empty().append(msg);      
+                    jQuery("#si_canvas #select_a_population_div").empty(); 
+                    jQuery("#si_canvas #select_a_population_div_text").empty().append(msg);      
                 }
     
-                jQuery('#selection_index_form').empty().append(table);
+                jQuery('#si_canvas #selection_index_form').empty().append(table);
      
             }                                               
         }
@@ -164,39 +164,24 @@ function getSelectionPopTraits (modelId, selectedPopId) {
 
 
 function  selectionIndexForm(predictedTraits) {   
-    var cnt = 1;
-    var row = '';
-    var totalCount = 1;
-   
+  
+    var trait = '</br>';
     for (var i=0; i < predictedTraits.length; i++) { 
-        var tdCell  = '<td>' + predictedTraits[i]  + ':</td>';
-        var rowTag  = '';
-                  
-        if ( cnt === 3 ) {
-            rowTag = '</tr><tr>';
-        }
-               
-        row += tdCell 
-            + '<td><input type="text" name=' +  predictedTraits[i]
-            + ' size = 5px '
-            + '></td>'  
-            + rowTag;
-                                                           
-        if (cnt === 3 ) { cnt=0;}
-        cnt++;
-        totalCount++;                          
+	trait += '<div class="form-inline">'
+	+ '<div class="form-group col-sm-4">'
+	    + '<label for="' + predictedTraits[i] + '">' + predictedTraits[i] + '</label>'
+	    + '<input class="form-control"  name="' + predictedTraits[i] + '" id="' + predictedTraits[i] + '" type="text" />'
+	    + '</div>'
+	+ '</div>';       
     }
-   
-    var rankButton =  '<tr><td>'
-        +  '<input style="position:relative;" " class="button" type="submit" value="Calculate" name= "rank" id="rank_genotypes"'     
-        +  '</td></tr>';
-
-    var table = '<br /> <table id="selection_index_table" style="align:left;width:90%"><tbody><tr>' 
-        +  row + '</tr>' 
-        + rankButton 
-        + '</tbody></table>';
+    
+    trait += '<div class="row">'
+	+ '<div class="form-group col-sm-2">'
+	+ '<input class="btn btn-success" type="submit" value="Calculate" name= "rank" id="rank_genotypes"/>'
+	+'</div>'
+	+'</div>';
         
-    return table;
+    return trait;
 }
 
 
@@ -254,8 +239,8 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                     table = res.status + ' Ranking the genotypes failed..Please report the problem.';
                 }
                         
-                jQuery('#top_genotypes').append(table).show(); 
-                jQuery('#selected_pop').val('');
+                jQuery('#si_canvas #top_genotypes').append(table).show(); 
+                jQuery('#si_canvas #selected_pop').val('');
                               
                 var popId;
                 var type;
@@ -269,7 +254,7 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
 
                 formatGenCorInputData(popId, type, indexFile);
                 
-                jQuery("#si_correlation_message")
+                jQuery("#si_canvas #si_correlation_message")
                     .css({"padding-left": '0px'})
                     .html("Running correlation analysis..."); 
                 
@@ -323,7 +308,7 @@ function sumElements (elements) {
 function selectionIndex ( trainingPopId, predictionPopId ) {    
        
     if (!predictionPopId) {
-        predictionPopId = jQuery("#default_selected_population_id").val();
+        predictionPopId = jQuery("#si_canvas #default_selected_population_id").val();
     }
    
     var legendValues = legendParams();
@@ -333,34 +318,35 @@ function selectionIndex ( trainingPopId, predictionPopId ) {
     var validate = legendValues.validate;
   
     if (params && validate) {
-        applySelectionIndex(legendValues.params, legendValues.legend, trainingPopId, predictionPopId);
+        applySelectionIndex(params, legend, trainingPopId, predictionPopId);
     }
 }
 
 
 function legendParams () {
     
-    var predPopName   = jQuery("#selected_population_name").val();
+    var predPopName   = jQuery("#si_canvas #selected_population_name").val();
    
     if (!predPopName) {
-        predPopName = jQuery("#default_selected_population_name").val();
+        predPopName = jQuery("#si_canvas #default_selected_population_name").val();
     }
 
     var rel_form = document.getElementById('selection_index_form');
     var all = rel_form.getElementsByTagName('input');
+
     var params, validate;
     var allValues = [];
     
-    var legend =  "<div id=\"si_legend_" 
+    var legend =  '<div id="si_legend_"' 
                     + predPopName.replace(/\s/g, "") 
-                    + "\">";
+                    + '">';
 
     legend += '<b>Relative weights</b>:';
 
      for (var i = 0; i < all.length; i++) {         
          var nm = all[i].name;
          var val = all[i].value;
-
+	 console.log('nm: ' + nm + ' val: ' + val)
          if (val != 'Calculate')  {
              if (nm != 'prediction_pop_name') {
                  
@@ -435,9 +421,9 @@ function listUploadedSelPopulations ()  {
 
 function getTrainingPopulationData () {
 
-    var modelId   = jQuery("#model_id").val();
-    var modelName = jQuery("#model_name").val();
-    var popType   = jQuery("#default_selected_population_type").val();
+    var modelId   = jQuery("#si_canvas #model_id").val();
+    var modelName = jQuery("#si_canvas #model_name").val();
+    var popType   = jQuery("#si_canvas #default_selected_population_type").val();
 
     return {'id' : modelId, 'name' : modelName, 'pop_type': popType};        
 }
