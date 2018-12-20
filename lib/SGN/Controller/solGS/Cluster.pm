@@ -228,7 +228,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     }
     
     print STDERR "\n Done _jasonize_output\n $ret->{result} -- $ret->{kcluster_plot}\n"; 
-    my $ret = to_json($ret);
+    $ret = to_json($ret);
      print STDERR "\nret: $ret\n";   
     $c->res->content_type('application/json');
     $c->res->body($ret); 
