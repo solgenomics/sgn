@@ -187,7 +187,15 @@ solGS.cluster = {
     clusterResult: function(selectId, dataStructureType, clusterType, dataType) {
 	console.log('clusterResult ' + clusterType + ' ' + dataType)
 	//alert('cluter result select id: ' + selectId + ' dt str ' + dataStructureType)
+
 	var popDetails  = solGS.getPopulationDetails();
+
+	if(document.URL.match(/solgs\/traits\/all\/population/)) {
+	    var popId   = jQuery("#cluster_selected_population_id").val();
+	    var popType = jQuery("#cluster_selected_population_type").val();
+	    popDetails['training_pop_id'] = popId;
+	    
+	}
 
 	if (clusterType === 'undefined') {
 	    clusterType = 'k-means';
