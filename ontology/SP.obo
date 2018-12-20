@@ -3249,7 +3249,8 @@ creation_date: 2010-07-15T03:52:29Z
 id: SP:0000350
 name: fruit color uniformity cross section percent red
 def: "Percentage of surface area with hue angle between 0-50 on a 0-360 scale." [SGN:DF]
-is_a: SP:0000348 ! internal color uniformity cross section
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000348 ! internal color uniformity cross section
 created_by: Naama
 creation_date: 2010-07-15T04:00:40Z
 
@@ -3257,7 +3258,8 @@ creation_date: 2010-07-15T04:00:40Z
 id: SP:0000351
 name: fruit color uniformity cross section percent yellow
 def: "Percentage of surface area with hue angle between 70-100 on a 0-360 scale." [SGN:DF]
-is_a: SP:0000348 ! internal color uniformity cross section
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000348 ! internal color uniformity cross section
 created_by: Naama
 creation_date: 2010-07-15T04:00:40Z
 
@@ -3333,7 +3335,8 @@ creation_date: 2010-07-15T04:17:20Z
 id: SP:0000360
 name: Cross section average luminosity
 def: "A measure of brightness. Average luminosity of all the pixels in the cross section. Luminosity = (maxCol + minCol) * 240/(2* 255) where maxCol is the highest of the RGB values, and minCol is the lowest value per pixel." [JASHS:(2008) 133(4)\:579-586]
-is_a: SP:0000353 ! endocarp cross section color
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000353 ! endocarp cross section color
 created_by: Naama
 creation_date: 2010-07-15T04:20:01Z
 
@@ -3341,7 +3344,8 @@ creation_date: 2010-07-15T04:20:01Z
 id: SP:0000361
 name: Cross section average hue
 def: "Hue is a measure of color in CIELab colorspace. For 'a' values > 0, hue is 180/pi * cos[a / chroma]. For 'a' values < 0 , hues is 360 - {180/pi * acos[a / chroma] }." [JASHS:(2008) 133(4)\:579-586]
-is_a: SP:0000353 ! endocarp cross section color
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000353 ! endocarp cross section color
 created_by: Naama
 creation_date: 2010-07-15T04:23:43Z
 
@@ -3349,7 +3353,8 @@ creation_date: 2010-07-15T04:23:43Z
 id: SP:0000362
 name: Cross section average chroma
 def: "Chroma is a measure of saturation in CIELab colorspace. Chroma is the square root of (a^2 + b^2)." [JASHS:(2008) 133(4)\:579-586]
-is_a: SP:0000353 ! endocarp cross section color
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000353 ! endocarp cross section color
 created_by: Naama
 creation_date: 2010-07-15T04:27:15Z
 
