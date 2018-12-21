@@ -56,7 +56,7 @@ $project_name
     <div id="select_a_population_div" style="float:left; z-index:10; position:absolute;"></div>
     <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"> And assign relative weights to traits.</p></div> 
 
-    <div id="selection_index_form" style="clear:both"> </div>
+    <div id="selection_index_form"> </div>
     <div id="si_correlation_section" style="display:none">  
 
       <& /solgs/model/top_genotypes.mas &> 

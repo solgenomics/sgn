@@ -14,7 +14,7 @@ jQuery(document).ready( function () {
 });
 
 
-jQuery("#rank_genotypes").live("click", function() {        
+jQuery("#calculate_si").live("click", function() {        
     var modelId        = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
     var popType        = jQuery("#si_canvas #selected_population_type").val();
@@ -140,13 +140,13 @@ function getSelectionPopTraits (modelId, selectedPopId) {
         type: 'POST',
         dataType: "json",
         url: '/solgs/selection/index/form',
-        data: {'pred_pop_id': selectedPopId, 'training_pop_id': modelId},
+        data: {'selection_pop_id': selectedPopId, 'training_pop_id': modelId},
         success: function(res) {
                 
             if (res.status == 'success') {
                 var table;
                 var traits = res.traits;
-                
+		
                 if (traits.length > 1) {
                     table  = selectionIndexForm(traits);
                 } else {
@@ -165,27 +165,29 @@ function getSelectionPopTraits (modelId, selectedPopId) {
 
 function  selectionIndexForm(predictedTraits) {   
   
-    var trait = '</br>';
+    var trait = '</br><div>';
     for (var i=0; i < predictedTraits.length; i++) { 
-	trait += '<div class="form-inline">'
-	+ '<div class="form-group col-sm-4">'
+	trait += '<div class="form-group  class="col-sm-3">'
+	    + '<div  class="col-sm-1">'
 	    + '<label for="' + predictedTraits[i] + '">' + predictedTraits[i] + '</label>'
+	    + '</div>'
+	    + '<div  class="col-sm-2">'
 	    + '<input class="form-control"  name="' + predictedTraits[i] + '" id="' + predictedTraits[i] + '" type="text" />'
 	    + '</div>'
-	+ '</div>';       
+	    + '</div>';       
     }
     
-    trait += '<div class="row">'
-	+ '<div class="form-group col-sm-2">'
-	+ '<input class="btn btn-success" type="submit" value="Calculate" name= "rank" id="rank_genotypes"/>'
-	+'</div>'
-	+'</div>';
+    trait += '<div class="col-sm-12">'
+	+ '<input class="btn btn-success" type="submit" value="Calculate" name= "rank" id="calculate_si"/>'
+	+ '</div>';
+    
+    trait += '</div>'
         
     return trait;
 }
 
 
-function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
+function applySelectionIndex(params, legend, trainingPopId, selectionPopId) {
    
     if (params) {                      
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
@@ -193,17 +195,20 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
             
         var action;
            
-        if (!predictionPopId) {     
-            predictionPopId = 'undef';      
+        if (!selectionPopId) {     
+            selectionPopId = undef;      
         }
         
-        var action = '/solgs/calculate/selection/index/' + trainingPopId +  '/' + predictionPopId;
+        var action = '/solgs/calculate/selection/index/';
           
         jQuery.ajax({
             type: 'POST',
             dataType: "json",
+	    data: { 'training_pop_id': trainingPopId,
+		    'selection_pop_id': selectionPopId,
+		    'rel_wts': params
+		  },
             url: action,
-            data: params,
             success: function(res){                       
                 var suc = res.status;
                 var table;
@@ -244,8 +249,8 @@ function applySelectionIndex(params, legend, trainingPopId, predictionPopId) {
                               
                 var popId;
                 var type;
-                if (predictionPopId && predictionPopId !== trainingPopId) {
-                    popId = predictionPopId;
+                if (selectionPopId && selectionPopId !== trainingPopId) {
+                    popId = selectionPopId;
                     type  = 'selection';                    
                 } else {                    
                     popId = trainingPopId;
@@ -334,7 +339,8 @@ function legendParams () {
     var rel_form = document.getElementById('selection_index_form');
     var all = rel_form.getElementsByTagName('input');
 
-    var params, validate;
+    var params = {};
+    var validate;
     var allValues = [];
     
     var legend =  '<div id="si_legend_"' 
@@ -354,30 +360,28 @@ function legendParams () {
                  validate = validateRelativeWts(nm, val);
               
                  if (validate) {
-                     if (i == 0) { 
-                         params = nm+'='+val; 
-                     } else {
-                         params = params +'&'+ nm + '=' + val;
-                     }                               
+		     params[nm] = val;
                      legend += '<b> ' + nm + '</b>' + ': '+ val;
                  }
              }
          }            
-     } 
-  
-     var sum = sumElements(allValues);
-     validate = validateRelativeWts('all', sum);
-        
-     for (var i=0;  i<allValues.length; i++)  {
-	// (isNaN(allValues[i]) || allValues[i] < 0) 
-         if (isNaN(allValues[i])) { 
-             params = undefined;
-         }
      }
+
+    params = JSON.stringify(params);
+    console.log('params ' + params)
+    var sum = sumElements(allValues);
+    validate = validateRelativeWts('all', sum);
         
-     if (predPopName) {
-         legend += '<br/><b>Name</b>: ' + predPopName + '<br/></div';
-     }      
+    for (var i=0;  i<allValues.length; i++)  {
+	// (isNaN(allValues[i]) || allValues[i] < 0) 
+        if (isNaN(allValues[i])) { 
+            params = undefined;
+        }
+    }
+        
+    if (predPopName) {
+        legend += '<br/><b>Name</b>: ' + predPopName + '<br/></div';
+    }      
 
     return {'legend' : legend, 
             'params': params, 
