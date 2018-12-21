@@ -148,8 +148,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $trait_id =~ tr/\//./;
 #    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
 #    system($clean_cmd);
-    print STDERR $figure1file;
-    print STDERR $trait_id;
     my $geno_filepath2 = "." . $tempfile . "_genotype_edit.txt";
     my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
     system($edit_cmd);
@@ -169,7 +167,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     }
     close $filehandle_in2;
 # Hardcoded number of markers to be selected - make this selectable by user?
-    my $markers_selected = 30;
+    my $markers_selected = 500;
 #    my @column_selection = (0,2);
 # Initialize column selection so the row.names are selected first
     my @column_selection = (0);
@@ -179,8 +177,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         redo if $columns_seen{$random_current}++;
         push @column_selection, $random_current;
     }
-    print STDERR Dumper(@column_selection);
-
 
 #    foreach my $item (@column_selection) {
         while ( my $line = <$filehandle_in> ) {
@@ -200,7 +196,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 
 #    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
-    system($cmd);
+#    system($cmd);
 
 
 #    my $traits = $ds->retrieve_traits();
