@@ -493,16 +493,13 @@ function edit_genotyping_trial_details(){
     //save dialog body html for resetting on close
     var edit_details_body_html = document.getElementById('genotyping_trial_details_edit_body').innerHTML;
 
-    //populate breeding_programs, locations, years, and types dropdowns, and save defaults
+    //populate breeding_program dropdown and save default
     var default_bp = document.getElementById("edit_genotyping_trial_breeding_program").getAttribute("value");
     get_select_box('breeding_programs', 'edit_genotyping_trial_breeding_program', { 'default' : default_bp });
     jQuery('#edit_trial_breeding_program').data("originalValue", default_bp);
 
-    var default_link = document.getElementById("edit_genotyping_raw_data_link").getAttribute("value");
-    jQuery('#edit_genotyping_raw_data_link').data("originalValue", default_link);
-
     jQuery('#edit_genotyping_trial_details_cancel_button').click(function(){
-        reset_dialog_body('genotyping_', edit_details_body_html);
+        reset_dialog_body('genotyping_trial_details_edit_body', edit_details_body_html);
     });
 
     jQuery('#save_genotyping_trial_details').click(function(){
