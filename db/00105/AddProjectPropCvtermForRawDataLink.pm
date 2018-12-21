@@ -3,7 +3,7 @@
 
 =head1 NAME
 
- AddProjectPropCvtermForRawDataFile.pm
+ AddProjectPropCvtermForRawDataLink.pm
 
 =head1 SYNOPSIS
 
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddProjectPropCvtermForRawDataFile;
+package AddProjectPropCvtermForRawDataLink;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -63,7 +63,7 @@ sub patch {
 
     my $terms = {
 		'project_property' => [
-			'raw_data_file',
+			'raw_data_link',
 		],
 	};
 
