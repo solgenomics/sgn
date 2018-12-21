@@ -10,7 +10,7 @@ Display for managing genotyping plates
 =head1 AUTHOR
 
 Jeremy D. Edwards <jde22@cornell.edu>
-Lukas Mueller <lam87@cornell.edu> 
+Lukas Mueller <lam87@cornell.edu>
 
 =cut
 
@@ -184,7 +184,7 @@ jQuery(document).ready(function ($) {
 
             alert("Sending genotyping experiment entry to genotyping facility...");
 
-            $.ajax( { 
+            $.ajax( {
                 url: auth_data.host+'/brapi/v2/plate-register',
                 method: 'POST',
                 data: {
@@ -333,7 +333,7 @@ jQuery(document).ready(function ($) {
             url: '/ajax/breeders/genotyping_credentials',
             async: false,
             success: function(response) {
-                auth_data =  { 
+                auth_data =  {
                     host : response.host,
                     username : response.username,
                     password : response.password,
@@ -393,21 +393,21 @@ jQuery(document).ready(function ($) {
             });
         }
     });
-    
+
     jQuery('#generate_genotyping_trial_barcode_link').click(function () {
         jQuery('#generate_genotyping_trial_barcode_button_dialog').modal("show");
     });
-    
+
     jQuery('#geno_trial_accession_barcode').click(function () {
         $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
         $('#generate_genotrial_barcode_dialog').modal("show");
     });
-    
+
     jQuery('#trial_tissue_sample_barcode').click(function () {
         $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
         $('#generate_genotrial_barcode_dialog').modal("show");
     });
-    
+
     jQuery('#trial_plateID_barcode').click(function () {
         $('#generate_genotyping_trial_barcode_button_dialog').modal("hide");
         $('#genotrial_barcode_dialog').modal("show");
@@ -482,3 +482,81 @@ jQuery(document).ready(function ($) {
     });
 
 });
+
+function edit_genotyping_trial_details(){
+
+    jQuery('[id^="edit_genotyping_"]').change(function (){
+        var this_element = jQuery(this);
+        highlight_changed_details(this_element);
+    });
+
+    //save dialog body html for resetting on close
+    var edit_details_body_html = document.getElementById('genotyping_trial_details_edit_body').innerHTML;
+
+    //populate breeding_programs, locations, years, and types dropdowns, and save defaults
+    var default_bp = document.getElementById("edit_genotyping_trial_breeding_program").getAttribute("value");
+    get_select_box('breeding_programs', 'edit_genotyping_trial_breeding_program', { 'default' : default_bp });
+    jQuery('#edit_trial_breeding_program').data("originalValue", default_bp);
+
+    var default_link = document.getElementById("edit_genotyping_raw_data_link").getAttribute("value");
+    jQuery('#edit_genotyping_raw_data_link').data("originalValue", default_link);
+
+    jQuery('#edit_genotyping_trial_details_cancel_button').click(function(){
+        reset_dialog_body('genotyping_', edit_details_body_html);
+    });
+
+    jQuery('#save_genotyping_trial_details').click(function(){
+        var changed_elements = document.getElementsByName("changed");
+        var categories = [];
+        var new_details = {};
+        var success_message = '';
+        for(var i=0; i<changed_elements.length; i++){
+            var id = changed_elements[i].id;
+            var type = changed_elements[i].title;
+            var new_value = changed_elements[i].value;
+            categories.push(type);
+            new_details[type] = new_value;
+            if(jQuery('#'+id).is("select")){
+                new_value = changed_elements[i].options[changed_elements[i].selectedIndex].text
+            }
+            success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_value+"</b></li>";
+        }
+
+        save_genotyping_trial_details(categories, new_details, success_message);
+
+    });
+
+    jQuery('#genotyping_trial_details_error_close_button').click( function() {
+        document.getElementById('trial_details_error_message').innerHTML = "";
+    });
+
+    jQuery('#genotyping_trial_details_saved_close_button').click( function() {
+        location.reload();
+    });
+
+}
+
+function save_genotyping_trial_details (categories, details, success_message) {
+  var trial_id = get_trial_id();
+  jQuery.ajax( {
+    url: '/ajax/breeders/trial/'+trial_id+'/details/',
+    type: 'POST',
+    data: { 'categories' : categories, 'details' : details },
+
+    success: function(response) {
+      if (response.success) {
+        document.getElementById('genotyping_trial_details_saved_message').innerHTML = success_message;
+        jQuery('#genotyping_trial_details_saved_dialog').modal("show");
+        return;
+      }
+      else {
+        document.getElementById('genotyping_trial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+response.error+"</li>";
+        jQuery('#genotyping_trial_details_error_dialog').modal("show");
+      }
+    },
+    error: function(response) {
+      document.getElementById('genotyping_trial_details_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'> Trial detail update AJAX request failed. Update not completed.</li>";
+      jQuery('#genotyping_trial_details_error_dialog').modal("show");
+    },
+  });
+}

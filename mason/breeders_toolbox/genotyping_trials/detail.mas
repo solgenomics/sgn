@@ -45,9 +45,15 @@ $raw_data_link => undef
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
                     <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
                     <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
-                    <tr><td><b>Raw Data Link</b></td><td><a href="<% $raw_data_link %>"><\a></td></tr>
+                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr>
                     </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <button class="btn btn-primary btn-sm" id="edit_genotyping_trial_details" style="margin:3px">Edit Plate Details</button>
                 </div>
             </div>
 
@@ -226,12 +232,27 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </&>
 
+<& /breeders_toolbox/genotyping_trials/edit_genotyping_trial_details_dialog.mas,
+trial_name => $trial_name,
+breeding_program => $breeding_program_id,
+genotyping_facility => $genotyping_facility,
+genotyping_facility_status => $genotyping_facility_status,
+genotyping_facility_submitted => $genotyping_facility_submitted,
+genotyping_plate_format => $genotyping_plate_format,
+genotyping_plate_sample_type => $genotyping_plate_sample_type,
+genotyping_raw_data_link => $raw_data_link
+&>
 
 <script>
 
     jQuery(document).ready(function(){
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
+    });
+
+    jQuery('#edit_genotyping_trial_details').click(function(){
+        jQuery('#edit_genotyping_trial_details_dialog').modal("show");
+        edit_genotyping_trial_details();
     });
 
     jQuery('#genotyping_custom_barcode').click(function () {
