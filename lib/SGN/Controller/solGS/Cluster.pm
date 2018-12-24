@@ -53,11 +53,14 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
 
-    my $dataset_id  =  $c->req->param('dataset_id');
+    my $dataset_id     =  $c->req->param('dataset_id');
     my $data_structure =  $c->req->param('data_structure');
-    
-    my $cluster_type = $c->req->param('cluster_type');
-    $cluster_type = 'k-means' if !$cluster_type;
+    my $k_number       =  $c->req->param('k_number'); 
+    my $cluster_type   = $c->req->param('cluster_type');
+    $cluster_type      = 'k-means' if !$cluster_type;
+    my $data_type      =  $c->req->param('data_type');
+    $data_type         = 'Genotype' if !$data_type;
+
   
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -67,6 +70,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{dataset_id}       = $dataset_id;
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
+    $c->stash->{k_number}         = $k_number;
     
     #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
@@ -135,13 +139,13 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     my $dataset_id     =  $c->req->param('dataset_id');
     my $data_structure =  $c->req->param('data_structure');
+    my $k_number       =  $c->req->param('k_number'); 
+    my $cluster_type   = $c->req->param('cluster_type');
+    $cluster_type      = 'k-means' if !$cluster_type;
     my $data_type      =  $c->req->param('data_type');
+    $data_type         = 'Genotype' if !$data_type;
 
-    my $cluster_type = $c->req->param('cluster_type');
-    $cluster_type = 'k-means' if !$cluster_type;
-    $data_type = 'Genotype' if !$data_type;
-
-    print STDERR "\n cluster result data type: $data_type -- cluster type: $cluster_type\n";
+    print STDERR "\n cluster result data type: $data_type -- cluster type: $cluster_type -- k_number: $k_number\n";
    
        
     $c->stash->{training_pop_id}  = $training_pop_id;
@@ -153,12 +157,15 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
+    $c->stash->{k_number}         = $k_number;
 
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
 
 
+    
+    
     print STDERR "\n file id: $file_id\n";
    
     #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
@@ -218,6 +225,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	else 
 	{
 	    print STDERR "\n call run_cluster\n";
+	    $self->save_cluster_opts($c);
 	    $self->run_cluster($c);
 	    $ret = $self->_jsonize_output($c);
 	}	
@@ -475,6 +483,26 @@ sub hierarchical_result_file {
 }
 
 
+sub cluster_options_file {
+    my ($self, $c) = @_;
+
+    my $data_type = $c->stash->{data_type};
+    my $k_number  = $c->stash->{k_number};
+    my $file_id   = $c->stash->{file_id};
+ 
+    my $cluster_type = $c->stash->{cluster_type};
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+
+     my $cache_data = {key      => "${cluster_type}_options_${file_id}",
+                      file      => "${cluster_type}_options_${file_id}.txt",
+                      stash_key => "${cluster_type}_options_file"
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+    
+}
+
+
 sub prep_cluster_download_files {
   my ($self, $c) = @_; 
 
@@ -541,7 +569,7 @@ sub cluster_output_files {
     }
 
     $c->stash->{analysis_type} = $cluster_type;
-    $c->stash->{pop_id} = $file_id;
+    ###$c->stash->{pop_id} = $file_id;
 
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
     $c->controller('solGS::Files')->analysis_report_file($c);
@@ -605,11 +633,39 @@ sub cluster_input_files {
 	$c->cluster_gebvs_file($c);
 	$files = $c->stash->{cluster_gebvs_file};	
     }
+
+    $self->cluster_options_file($c);
+    my $cluster_opts_file = $c->stash->{cluster_options_file};
+
+    $files .= "\t" . $cluster_opts_file;
     
     write_file($tempfile, $files);
     
     $c->stash->{cluster_input_files} = $tempfile;
 
+}
+
+
+sub save_cluster_opts {
+    my ($self, $c) = @_;
+
+    my $cluster_type = $c->stash->{cluster_type};
+    $self->cluster_options_file($c);
+    my $opts_file = $c->stash->{"${cluster_type}_options_file"};
+
+    my $data_type = $c->stash->{data_type};
+    my $k_number  = $c->stash->{k_number};
+
+    my $opts_data = 'data type:' . "\t" . $data_type . "\n";
+    $opts_data   .= 'k numbers:' . "\t" . $k_number  . "\n";
+    $opts_data   .= 'cluster type:' . "\t" . $cluster_type  . "\n";
+
+    print STDERR "\nopts_data: \n$opts_data\n";
+
+    print STDERR "\n opts_file: $opts_file\n";
+    
+    write_file($opts_file, $opts_data);
+    
 }
 
 
