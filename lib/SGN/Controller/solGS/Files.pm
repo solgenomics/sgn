@@ -599,6 +599,7 @@ sub create_file_id {
     my $cluster_type     = $c->stash->{cluster_type};
     my $combo_pops_id    = $c->stash->{combo_pops_id};
     my $data_type        = $c->stash->{data_type};
+    my $k_number         = $c->stash->{k_number};
 
     my $file_id;
     my $referer = $c->req->referer;
@@ -635,6 +636,7 @@ sub create_file_id {
     } 
 
     $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
+    $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
     $c->stash->{file_id} = $file_id;
     
 }
