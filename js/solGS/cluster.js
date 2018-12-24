@@ -16,9 +16,7 @@ solGS.cluster = {
 	var clusterOpts = solGS.cluster.clusteringOptions('cluster_options');
 	var clusterType = clusterOpts.cluster_type;
 	var dataType = clusterOpts.data_type;
-
-	//alert('checkclres ' + clusterType + ' dt type  ' + dataType)
-	//var clusterType = 'k-means';
+	
 	var popDetails = solGS. getPopulationDetails();
 	
 	var comboPopsId = jQuery('#combo_pops_id').val();
@@ -149,19 +147,25 @@ solGS.cluster = {
 	}
 	
 	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
-		
+
+	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
+	
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
-            + '<a href="#"  onclick="solGS.cluster.runCluster(' + selectId + ",'" + dataStructureType + "'" + '); return false;">' 
+            + '<a href="#"  onclick="solGS.cluster.runCluster('
+	    + selectId + ",'" + dataStructureType + "'" + '); return false;">' 
             + selectName + '</a>'
             + '</td>'
 	    + '<td>' + dataStructureType + '</td>'
 	    + '<td>' + clusterTypeOpts + '</td>'
 	    + '<td>' + dataTypeOpts + '</td>'
+	    + '<td>' + kNum + '</td>'
             + '<td id="list_cluster_page_' + selectId +  '">'
-            + '<a href="#" onclick="solGS.cluster.runCluster(' + selectId + ",'" + dataStructureType + "'" + ');return false;">' 
+            + '<a href="#" onclick="solGS.cluster.runCluster('
+	    + selectId + ",'" + dataStructureType + "'" + ');return false;">' 
             + '[ Run Cluster ] </a>'                                     
-            + '</td><tr>';
+            + '</td>'
+	    + '<tr>';
 	
 	return row;
     },
@@ -176,6 +180,7 @@ solGS.cluster = {
             + '<th>Data Structure</th>'
             + '<th>Cluster type</th>'
 	    + '<th>Data type</th>'
+	    + '<th>No. of  Clusters</th>'
 	    + '<th>Run</th>'
             + '</tr>'
             + '</thead></table>';
@@ -184,9 +189,15 @@ solGS.cluster = {
 	
     },
 
-    clusterResult: function(selectId, dataStructureType, clusterType, dataType) {
-	console.log('clusterResult ' + clusterType + ' ' + dataType)
-	//alert('cluter result select id: ' + selectId + ' dt str ' + dataStructureType)
+    clusterResult: function(clusterArgs) {
+
+	var clusterType = clusterArgs.cluster_type;
+	var kNumber     = clusterArgs.k_number;
+	var dataType    = clusterArgs.data_type;
+	var selectId     = clusterArgs.select_id;
+	var dataStructureType = clusterArgs.data_structure_type;
+	
+	console.log('clusterResult ' + clusterType + ' ' + dataType +  ' k_num ' + kNumber)
 
 	var popDetails  = solGS.getPopulationDetails();
 
@@ -197,15 +208,9 @@ solGS.cluster = {
 	    
 	}
 
-	if (clusterType === 'undefined') {
-	    clusterType = 'k-means';
-	}
-
-	//alert('clusterResult ' + clusterType + 'dt type ' + dataType)
 	var listName;
 	var listType;
 	var listId;
-
 	var datasetId;
 	var datasetName;
 	var dataStructure = dataStructureType;
@@ -250,11 +255,11 @@ solGS.cluster = {
 		   'data_structure': dataStructure,
 		   'dataset_id': datasetId,
 		   'dataset_name': datasetName,
-		   'data_type': dataType
+		   'data_type': dataType,
+		   'k_number' : kNumber
 		  },
             url: '/cluster/result',
             success: function(res) {
-		alert('success ' + res.result)
 		if (res.result === 'success') {
 
 		    jQuery("#cluster_canvas .multi-spinner-container").hide();
@@ -345,13 +350,22 @@ solGS.cluster = {
 
     runCluster: function(selectId, dataStructureType) {
 	
-	var analysisRowId = this.selectRowId(selectId);
-	var dataType      = jQuery('#'+analysisRowId + ' #data_type_select').val();
-	var clusterType   = jQuery('#'+analysisRowId + ' #cluster_type_select').val();
+	var clusterOpts = solGS.cluster.clusteringOptions(selectId);
+	var clusterType = clusterOpts.cluster_type;
+	var kNumber     = clusterOpts.k_number;
+	var dataType    = clusterOpts.data_type;
+	
+	console.log(dataType + ' ' + clusterType + ' k= ' + kNumber)
 
-	console.log(dataType + ' ' + clusterType)
+	var clusterArgs = { 'select_id': selectId,
+			    'data_structure_type':  dataStructureType,
+			    'cluster_type':  clusterType,
+			    'data_type': dataType,
+			    'k_number':  kNumber	    
+	}
 
-    	this.clusterResult(selectId, dataStructureType, clusterType, dataType);
+	
+    	this.clusterResult(clusterArgs);
     },
 
     registerClusterType: function(selectId, dataStructureType) {
@@ -367,12 +381,13 @@ solGS.cluster = {
 	    selectId = this.selectRowId(selectId);
 	}
 	
-	var dataType      = jQuery('#'+selectId + ' #data_type_select').val();
-	var clusterType   = jQuery('#'+selectId + ' #cluster_type_select').val();
-
+	var dataType    = jQuery('#'+selectId + ' #data_type_select').val();
+	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
+	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
 
 	return {'data_type' : dataType,
-		'cluster_type': clusterType
+		'cluster_type': clusterType,
+		'k_number': kNumber
 	       };
 	
     },
@@ -570,12 +585,21 @@ jQuery(document).ready( function() {
 	var clusterOptsId = 'cluster_options';
 	var clusterOpts = solGS.cluster.clusteringOptions(clusterOptsId);
 	var clusterType = clusterOpts.cluster_type;
-	// jQuery('#cluster_options #cluster_type_select').val();
-	var dataType    =  clusterOpts.data_type;//jQuery('#cluster_options #data_type_select').val();
+	var kNumber     = clusterOpts.k_number;
+	var dataType    =  clusterOpts.data_type;
+	
 	console.log('multi models page: ' + clusterType + ' dt type ' + dataType)
 	console.log('select id: ' + selectId + ' dt str ' + dataStructureType)
+
+	var clusterArgs = { 'select_id': clusterOptsId,
+			    'data_structure_type':  dataStructureType,
+			    'cluster_type':  clusterType,
+			    'data_type': dataType,
+			    'k_number':  kNumber
+			  };
+
 	
-        solGS.cluster.clusterResult(selectId, dataStructureType, clusterType, dataType);
+        solGS.cluster.clusterResult(clusterArgs);
 
     }); 
   
