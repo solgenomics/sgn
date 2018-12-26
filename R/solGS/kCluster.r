@@ -16,6 +16,7 @@ library(dplyr)
 library(fpc)
 library(cluster)
 library(ggfortify)
+library(tibble)
 #library(factoextra)
 
 
@@ -39,6 +40,15 @@ plotKmeansFile   <- grep("plot_kmeans", outputFiles, value = TRUE)
 
 message("k means result file: ", kResultFile)
 message("k means plot file: ", plotKmeansFile)
+optionsFile <- grep("options", inputFiles,  value = TRUE)
+message("clusterinf options file: ", optionsFile)
+
+clusterOptions <- read.table(optionsFile, header=TRUE, sep="\t")
+clusterOptions <- column_to_rownames(clusterOptions, var="Params")
+print(clusterOptions)
+
+userKNumbers <- clusterOptions["k numbers", 1]
+message('userKNumbers ', userKNumbers)
 
 
 if (is.null(kResultFile))
@@ -97,6 +107,7 @@ if (is.null(filteredGenoFile) == TRUE) {
         genoData <- na.roughfix(genoData)
     }
 }
+
 
 genoData <- data.frame(genoData)
 

@@ -606,6 +606,7 @@ sub cluster_input_files {
     my $file_id = $c->stash->{file_id};
     my $tmp_dir = $c->stash->{cluster_temp_dir};
     my $data_type = $c->stash->{data_type};
+    my $cluster_type = $c->stash->{cluster_type};
     
     my $name     = "cluster_input_files_${file_id}_${data_type}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
@@ -635,7 +636,7 @@ sub cluster_input_files {
     }
 
     $self->cluster_options_file($c);
-    my $cluster_opts_file = $c->stash->{cluster_options_file};
+    my $cluster_opts_file = $c->stash->{"${cluster_type}_options_file"};
 
     $files .= "\t" . $cluster_opts_file;
     
@@ -656,9 +657,10 @@ sub save_cluster_opts {
     my $data_type = $c->stash->{data_type};
     my $k_number  = $c->stash->{k_number};
 
-    my $opts_data = 'data type:' . "\t" . $data_type . "\n";
-    $opts_data   .= 'k numbers:' . "\t" . $k_number  . "\n";
-    $opts_data   .= 'cluster type:' . "\t" . $cluster_type  . "\n";
+    my $opts_data = 'Params' . "\t" . 'Value' . "\n";
+    $opts_data   .= 'data type' . "\t" . $data_type . "\n";
+    $opts_data   .= 'k numbers' . "\t" . $k_number  . "\n";
+    $opts_data   .= 'cluster type' . "\t" . $cluster_type  . "\n";
 
     print STDERR "\nopts_data: \n$opts_data\n";
 
