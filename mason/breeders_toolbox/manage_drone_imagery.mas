@@ -237,6 +237,51 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_merge_channels_dialog" name="drone_imagery_merge_channels_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryMergeChannelsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryMergeChannelsDialog">Merge Drone Run Bands Into Single 3-channel image</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal" id="drone_imagery_merge_bands_form">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">First Band:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_merge_bands_band1_select"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Second Band:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_merge_bands_band2_select"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Third Band:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_merge_bands_band3_select"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <ul>
+            <li>TGI = {GREEN band2} - 0.39*{RED band3} - 0.61*{BLUE band1}</li>
+            <li>NDVI = (NIR - RED) / (NIR + RED)</li>
+        </ul>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_merge_bands_submit">Merge Bands</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
 
@@ -2025,6 +2070,58 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 alert('Error removing background using mask of TGI vegetative index!')
+            }
+        });
+    });
+
+    //
+    // Merge bands into single image
+    //
+
+    var drone_imagery_merge_channels_drone_run_project_id;
+    var drone_imagery_merge_channels_drone_run_project_name;
+    jQuery(document).on('click', 'button[name="project_drone_imagery_merge_channels"]', function() {
+        drone_imagery_merge_channels_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        drone_imagery_merge_channels_drone_run_project_name = jQuery(this).data('drone_run_project_name');
+
+        jQuery('#drone_imagery_merge_channels_dialog').modal('show');
+
+        get_select_box('drone_imagery_drone_run_band','drone_imagery_merge_bands_band1_select', {'id':'drone_run_merge_band_select_1', 'name':'drone_run_merge_band_select_1', 'empty':1, 'drone_run_project_id':drone_imagery_merge_channels_drone_run_project_id });
+        get_select_box('drone_imagery_drone_run_band','drone_imagery_merge_bands_band2_select', {'id':'drone_run_merge_band_select_2', 'name':'drone_run_merge_band_select_2', 'empty':1, 'drone_run_project_id':drone_imagery_merge_channels_drone_run_project_id });
+        get_select_box('drone_imagery_drone_run_band','drone_imagery_merge_bands_band3_select', {'id':'drone_run_merge_band_select_3', 'name':'drone_run_merge_band_select_3', 'empty':1, 'drone_run_project_id':drone_imagery_merge_channels_drone_run_project_id });
+    });
+
+    jQuery('#drone_imagery_merge_bands_submit').click(function(){
+        var band_1_drone_run_band_project_id = jQuery('#drone_run_merge_band_select_1').val();
+        var band_2_drone_run_band_project_id = jQuery('#drone_run_merge_band_select_2').val();
+        var band_3_drone_run_band_project_id = jQuery('#drone_run_merge_band_select_3').val();
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/merge_bands',
+            dataType: "json",
+            data: {
+                'band_1_drone_run_band_project_id': band_1_drone_run_band_project_id,
+                'band_2_drone_run_band_project_id': band_2_drone_run_band_project_id,
+                'band_3_drone_run_band_project_id': band_3_drone_run_band_project_id,
+                'drone_run_project_id': drone_imagery_merge_channels_drone_run_project_id,
+                'drone_run_project_name': drone_imagery_merge_channels_drone_run_project_name
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error merging bands!')
             }
         });
     });

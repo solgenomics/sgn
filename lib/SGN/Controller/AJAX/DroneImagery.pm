@@ -571,7 +571,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
         $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a></div>";
         $drone_run_html .= $drone_run_band_table_html;
-        $drone_run_html .= '<button class="btn btn-primary" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
+        $drone_run_html .= '<button class="btn btn-primary" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
 
         push @return, [$drone_run_html];
     }
@@ -1348,6 +1348,83 @@ sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     }
 
     $c->stash->{rest} = { image_urls => \@image_urls };
+}
+
+sub drone_imagery_merge_bands : Path('/ajax/drone_imagery/merge_bands') : ActionClass('REST') { }
+
+sub drone_imagery_merge_bands_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    print STDERR Dumper $c->req->params();
+
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $drone_run_project_name = $c->req->param('drone_run_project_name');
+    my $band_1_drone_run_band_project_id = $c->req->param('band_1_drone_run_band_project_id');
+    my $band_2_drone_run_band_project_id = $c->req->param('band_2_drone_run_band_project_id');
+    my $band_3_drone_run_band_project_id = $c->req->param('band_3_drone_run_band_project_id');
+    if (!$band_1_drone_run_band_project_id || !$band_2_drone_run_band_project_id || !$band_3_drone_run_band_project_id) {
+        $c->stash->{rest} = { error => 'Please select 3 drone run bands' };
+        $c->detach();
+    }
+    my @drone_run_bands = ($band_1_drone_run_band_project_id, $band_2_drone_run_band_project_id, $band_3_drone_run_band_project_id);
+
+    my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$project_image_type_id,
+        drone_run_band_project_id_list=>\@drone_run_bands,
+    });
+    my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+
+    my %drone_run_bands_images;
+    foreach (@$result) {
+        $drone_run_bands_images{$_->{drone_run_band_project_id}} = $_->{image_id};
+    }
+    print STDERR Dumper \%drone_run_bands_images;
+    
+    my @image_filesnames;
+    foreach (@drone_run_bands) {
+        my $image = SGN::Image->new( $schema->storage->dbh, $drone_run_bands_images{$_}, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        print STDERR Dumper $image_url;
+        print STDERR Dumper $image_fullpath;
+        push @image_filesnames, $image_fullpath;
+    }
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_merge_bands');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_merge_bands/imageXXXX');
+    $archive_temp_image .= '.png';
+    print STDERR $archive_temp_image."\n";
+
+    my $cmd = "python /home/nmorales/cxgn/DroneImageScripts/ImageProcess/MergeChannels.py --image_path_band_1 '".$image_filesnames[0]."' --image_path_band_2 '".$image_filesnames[1]."' --image_path_band_3 '".$image_filesnames[2]."' --outfile_path '$archive_temp_image'";
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+
+    my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
+    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+
+    my $project_rs = $schema->resultset("Project::Project")->create({
+        name => "$drone_run_project_name Merged:$band_1_drone_run_band_project_id,$band_2_drone_run_band_project_id,$band_3_drone_run_band_project_id",
+        description => "Merged $band_1_drone_run_band_project_id,$band_2_drone_run_band_project_id,$band_3_drone_run_band_project_id",
+        projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => 'Merged 3 Bands'}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
+        project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $drone_run_project_id}]
+    });
+    my $merged_drone_run_band_id = $project_rs->project_id();
+
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archive_temp_image, 'project', $merged_drone_run_band_id, $linking_table_type_id);
+    my $merged_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $merged_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { merged_image_url => $merged_image_url, merged_image_fullpath => $merged_image_fullpath };
 }
 
 sub drone_imagery_calculate_phenotypes : Path('/ajax/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }

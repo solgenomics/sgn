@@ -1056,6 +1056,39 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_drone_run_band') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_drone_run_band_select";
+    my $name = $c->req->param("name") || "drone_imagery_drone_run_band_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $drone_run_band_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $drone_imagery_drone_run_bands_rs = $schema->resultset("Project::Project")->search({
+        'project_relationship_subject_projects.type_id' => $drone_run_band_project_relationship_type_id,
+        'object_project.project_id' => $drone_run_project_id
+    },{join => {'project_relationship_subject_projects' => 'object_project' }});
+
+    my @result;
+    while (my $r = $drone_imagery_drone_run_bands_rs->next) {
+        push @result, [$r->project_id, $r->name];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select a drone run band"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 sub _clean_inputs {
 	no warnings 'uninitialized';
