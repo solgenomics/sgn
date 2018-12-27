@@ -690,7 +690,7 @@ sub run_cluster {
     if ($cluster_type =~ /k-means/i)
     {
 	print STDERR "\n stash k-means r_script\n";
-	$c->stash->{r_script}     = 'R/solGS/kCluster.r';
+	$c->stash->{r_script}     = 'R/solGS/cluster.r';
     }
     else
     {
