@@ -14,6 +14,7 @@ use CXGN::Dataset::File;
 #use CXGN::Trial::Download;
 #use CXGN::Phenotypes::PhenotypeMatrix;
 #use CXGN::BreederSearch;
+use CXGN::Tools::Run;
 use Cwd qw(cwd);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -184,7 +185,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             my @first_item = (split /\s+/, $line);
             foreach my $item (@column_selection) {
                 $curr_line .= $first_item[$item] . "\t";
-                print STDERR Dumper($item)
             }
 #            $curr_line .= "\n";
             print $filehandle_out "$curr_line\n";
@@ -193,11 +193,31 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     close $filehandle_in;
     close $filehandle_out;
 
-    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
-
-#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
+#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
-
+    my $cmd = CXGN::Tools::Run->new(
+        {
+            backend => $c->config->{backend},
+            temp_base => $c->config->{basepath} . "/" . $c->tempfiles_subdir("solgwas_files"),
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+    $cmd->run_cluster(
+            "Rscript ",
+            $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+            $pheno_filepath,
+            $geno_filepath3,
+            $trait_id,
+            $figure1file,
+            $figure2file,
+            $figure3file,
+            $figure4file,
+            $pc_check,
+            $kinship_check,
+    );
 
 #    my $traits = $ds->retrieve_traits();
 #    my $phenotypes = $ds->retrieve_phenotypes();
@@ -213,10 +233,12 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure2file_response = $figure2file;
     my $figure3file_response = $figure3file;
     my $figure4file_response = $figure4file;
+    print STDERR Dumper($figure2file_response);
     $figure1file_response =~ s/\.\/static//;
     $figure2file_response =~ s/\.\/static//;
     $figure3file_response =~ s/\.\/static//;
     $figure4file_response =~ s/\.\/static//;
+    print STDERR Dumper($figure2file_response);
     $c->stash->{rest} = {
         figure1 => $figure1file_response,
         figure2 => $figure2file_response,

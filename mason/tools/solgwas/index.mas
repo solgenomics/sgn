@@ -178,11 +178,13 @@ jQuery(document).ready(function() {
             var fig4_response = response.figure4;
 	    //alert("Response ID: "+temp_response);
     	    //alert("Response ID: "+fig1_response);
-//	          $('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
-	          }
+	        //$('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
+            setTimeout(function() {
+	        $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
+	        $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
+	        $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
+            }, 6000);
+	        }
 
 
         },
