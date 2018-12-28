@@ -71,23 +71,18 @@ genoData    <- c()
 
 extractGenotype <- function(inputFiles) {
 
-     genoFiles <- grep("genotype_data", inputFiles,  value = TRUE)
-
+    genoFiles <- grep("genotype_data", inputFiles,  value = TRUE)
     genoMetaData <- c()
-
     filteredGenoFile <- c()
 
     if (length(genoFiles) > 1 ) {   
-                                    
         message('allGenoFiles: ', genoFiles)
         genoData <- combineGenoData(genoFiles)
         
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
-        
     } else {
         genoFile <- genoFiles
-
         message('geno file: ', genoFile)
         genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-", "."))
         genoData <- unique(genoData, by='V1')
@@ -109,11 +104,9 @@ extractGenotype <- function(inputFiles) {
         q("no", 1, FALSE)
     }
 
-
     genoDataMissing <- c()
     if (is.null(filteredGenoFile) == TRUE) {
         ##genoDataFilter::filterGenoData
-        
         genoData <- filterGenoData(genoData, maf=0.01)
         genoData <- column_to_rownames(genoData, 'rn')
 
@@ -123,7 +116,6 @@ extractGenotype <- function(inputFiles) {
             genoData <- na.roughfix(genoData)
         }
     }
-
 
     genoData <- data.frame(genoData)
     
@@ -136,7 +128,6 @@ if (dataType == 'Genotype') {
 print(clusterData[1:3, 1:5])
 
 set.seed(235)
-
 
 pca    <- prcomp(clusterData, retx=TRUE)
 pca    <- summary(pca)

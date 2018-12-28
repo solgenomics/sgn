@@ -146,7 +146,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $data_type         = 'Genotype' if !$data_type;
 
     print STDERR "\n cluster result data type: $data_type -- cluster type: $cluster_type -- k_number: $k_number\n";
-   
        
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -162,33 +161,22 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
-
-
-    
-    
-    print STDERR "\n file id: $file_id\n";
    
-    #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
-     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
- print STDERR "\n cluster plot exists : $cluster_plot_exists\n";
+ 
     my $ret->{result} = 'Cluster analysis failed.';
 
     if (!$cluster_plot_exists)
     {
 	my $no_cluster_data;
 
-	print STDERR "\n checking data_type : $data_type\n";
 	if ($data_type =~ /genotype/i) 
 	{
 	    $self->create_cluster_genotype_data($c);
-	    print STDERR "\n created genotype data\n";
-
+	 
 	    my $geno_files = $c->stash->{genotype_files_list};
 	    my $geno_file = $c->stash->{genotype_file};
-
-	    print STDERR "\n genofiles: $geno_files --  geno_file: $geno_file\n";
 	    
 	    if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	    {	  
@@ -197,7 +185,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	} 
 	elsif ($data_type =~ /phenotype/i)
 	{
-	    print STDERR "\n creating phenotype data\n";
 	    $self->create_cluster_phenotype_data($c);
 	    if (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
 	    {
@@ -206,12 +193,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	} 	
 	elsif ($data_type =~ /gebv/i)
 	{
-	    print STDERR "\n creating gebvs data\n";
-
 	    $c->cluster_gebvs_file($c);
 	    my $cluster_gebvs_file = $c->stash->{cluster_gebvs_file};
 
-	    print STDERR "\ngebvs file: $cluster_gebvs_file\n";
 	    if (!$cluster_gebvs_file)
 	    {
 		$no_cluster_data = 'There is no GEBVs data. Aborted Cluster analysis.';
@@ -224,20 +208,18 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	}  
 	else 
 	{
-	    print STDERR "\n call run_cluster\n";
 	    $self->save_cluster_opts($c);
 	    $self->run_cluster($c);
 	    $ret = $self->_jsonize_output($c);
 	}	
     }
     else
-    {    print STDERR "\n _jasonize_output\n";	 
+    {    
 	$ret = $self->_jsonize_output($c);
     }
     
-    print STDERR "\n Done _jasonize_output\n $ret->{result} -- $ret->{kcluster_plot}\n"; 
-    $ret = to_json($ret);
-     print STDERR "\nret: $ret\n";   
+   
+    $ret = to_json($ret); 
     $c->res->content_type('application/json');
     $c->res->body($ret); 
 
@@ -661,10 +643,6 @@ sub save_cluster_opts {
     $opts_data   .= 'data type' . "\t" . $data_type . "\n";
     $opts_data   .= 'k numbers' . "\t" . $k_number  . "\n";
     $opts_data   .= 'cluster type' . "\t" . $cluster_type  . "\n";
-
-    print STDERR "\nopts_data: \n$opts_data\n";
-
-    print STDERR "\n opts_file: $opts_file\n";
     
     write_file($opts_file, $opts_data);
     
@@ -686,20 +664,11 @@ sub run_cluster {
    
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
-
-    if ($cluster_type =~ /k-means/i)
-    {
-	print STDERR "\n stash k-means r_script\n";
-	$c->stash->{r_script}     = 'R/solGS/cluster.r';
-    }
-    else
-    {
-	$c->stash->{r_script}     = 'R/solGS/hierarchical.r';	
-    }
-    
+       
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
     $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";
-    	print STDERR "\n calling_r_script\n";
+    
+    $c->stash->{r_script}     = 'R/solGS/cluster.r';
     $c->controller("solGS::solGS")->run_r_script($c);
     
 }
