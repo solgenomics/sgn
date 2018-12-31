@@ -49,6 +49,11 @@
   <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
   <br>
   <br>
+  <div id="trait_preview">
+    <button class="btn btn-primary" id="trait_histogram_btn" type="submit" name="trait_histogram_btn" value="trait_histogram_btn">Select trait</button>
+  </div>
+  <br>
+  <br>
   <div class="form-group form-inline">
     <input type="checkbox" id="princomp" />
     <label>Include principal components in model &nbsp; </label>
@@ -114,7 +119,11 @@ jQuery(document).ready(function() {
   }
   else {
     alert('You must be logged in to use SolGWAS');
-    }
+  }
+  $('#pheno_select').attr("disabled",true).html('');
+  jQuery('#dataset_select').click(function() {
+    $('#pheno_select').attr("disabled",true).html('');
+  });
   jQuery('#selectDataset').click(function() {
     var dataset_id = jQuery('#available_datasets').val();
 //    alert("Dataset ID: "+dataset_id);
@@ -143,6 +152,46 @@ jQuery(document).ready(function() {
       }
     });
   });
+
+  jQuery('#trait_histogram').on('click', function() {
+    alert("click!");
+    var tempfile = jQuery('#tempfile').html();
+    var trait = jQuery('#dependent_variable_select').val();
+    jQuery.ajax( {
+        url: '/ajax/mixedmodels/grabdata',
+        data: { 'file' : tempfile },
+        success: function(r)  {
+        //alert("data grabbed "+JSON.stringify(r.data));
+        var v = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+            "width": 200,
+            "height": 100,
+            "padding": 5,
+            "data": { 'values': r.data },
+            "mark": "bar",
+            "encoding": {
+            "x": {
+              "bin": true,
+              "field": trait,
+              "type": "quantitative"
+            },
+            "y": {
+              "aggregate": "count",
+              "type": "quantitative"
+            }
+           }
+          };
+
+ //alert("embedding"+ JSON.stringify(v));
+    //      vegaEmbed("#trait_histogram", v);
+          //alert("done");
+        },
+
+
+      error: function(e) { alert('error!'); }
+    });
+  });
+
   jQuery('#runGWA').click( function () {
     $('#Solgwas_output').empty();
     if ($('#pheno_select').val() != ""){
@@ -167,7 +216,7 @@ jQuery(document).ready(function() {
           jQuery("#working_modal").modal("show");
 	      },
         success: function(response) {
-	        jQuery("#working_modal").modal("hide");
+          jQuery("#working_modal").modal("hide");
           if (response.error) {
             $('#dataset_select').val('ERROR');
           }
@@ -180,13 +229,11 @@ jQuery(document).ready(function() {
     	    //alert("Response ID: "+fig1_response);
 	        //$('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
             setTimeout(function() {
-	        $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
-	        $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
-	        $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
+	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
             }, 6000);
-	        }
-
-
+	      }
         },
         error: function(response) {
           alert("An error occurred, the service may temporarily be unavailable");
