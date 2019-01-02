@@ -129,32 +129,36 @@ print(clusterData[1:3, 1:5])
 
 set.seed(235)
 
-pca    <- prcomp(clusterData, retx=TRUE)
-pca    <- summary(pca)
+if (dataType == 'Genotype') {
+    pca    <- prcomp(clusterData, retx=TRUE)
+    pca    <- summary(pca)
 
-variances <- data.frame(pca$importance)
+    variances <- data.frame(pca$importance)
 
-varProp        <- variances[3, ]
-varProp        <- data.frame(t(varProp))
-names(varProp) <- c('cumVar')
+    varProp        <- variances[3, ]
+    varProp        <- data.frame(t(varProp))
+    names(varProp) <- c('cumVar')
 
-selectPcs <- varProp %>% filter(cumVar <= 0.9) 
-pcsCnt    <- nrow(selectPcs)
+    selectPcs <- varProp %>% filter(cumVar <= 0.9) 
+    pcsCnt    <- nrow(selectPcs)
 
-pcsNote <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ')
-pcsNote <- paste0(pcsNote, 'Based on the PCA, ', pcsCnt, ' PCs are used to cluster this dataset. ')
-pcsNote <- paste0(pcsNote, 'They explain 90% of the variance in the original dataset.')
-cat(pcsNote, file=reportFile, sep="\n", append=TRUE)
+    pcsNote <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ')
+    pcsNote <- paste0(pcsNote, 'Based on the PCA, ', pcsCnt, ' PCs are used to cluster this dataset. ')
+    pcsNote <- paste0(pcsNote, 'They explain 90% of the variance in the original dataset.')
+    cat(pcsNote, file=reportFile, sep="\n", append=TRUE)
 
-scores   <- data.frame(pca$x)
-scores   <- scores[, 1:pcsCnt]
-scores   <- round(scores, 3)
+    scores   <- data.frame(pca$x)
+    scores   <- scores[, 1:pcsCnt]
+    scores   <- round(scores, 3)
 
-variances <- variances[2, 1:pcsCnt]
-variances <- round(variances, 4) * 100
-variances <- data.frame(t(variances))
+    variances <- variances[2, 1:pcsCnt]
+    variances <- round(variances, 4) * 100
+    variances <- data.frame(t(variances))
 
-kMeansOut <- kmeansruns(scores, runs=10)
+    clusterData <- scores
+}
+
+kMeansOut <- kmeansruns(clusterData, runs=10)
 recK <- paste0('Recommended number of clusters (k) for this data set is: ', kMeansOut$bestk)
 cat(recK, file=reportFile, sep="\n", append=TRUE)
 
