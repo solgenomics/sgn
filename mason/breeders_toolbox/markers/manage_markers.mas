@@ -1,12 +1,22 @@
+<%doc>
 
-<%args>
+=head1 NAME
 
+/breeders_toolbox/markers/manage_markers.mas - a mason component to display marker set info, add new marker sets and add filtering parameters in marker sets
 
-</%args>
+=head1 AUTHOR
+
+Titima Tantikanjana
+
+=cut
+
+</%doc>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables','CXGN.BreedersToolbox.MarkerSet'] &>
 
 <& /page/page_title.mas, title=>'Manage Marker Sets' &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Sets</h4>", info_section_subtitle => 'View your marker set info', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
 
 <&| /page/info_section.mas, title=>'Add new marker set'&>
@@ -106,7 +116,7 @@
 </div>
 
 </&>
-
+<!--
 <&| /page/info_section.mas, title=>'Add filtering parameters based on VCF fields in marker set', collapsible=>1, collapsed=>0 &>
 
 <div class="row">
@@ -203,14 +213,4 @@
 </div>
 
 </&>
-
-
-
-<&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0&>
-
-    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-
-    <table id="marker_sets" width="100%" class="table table-hover table-striped">
-
-    </table>
-</&>
+-->
