@@ -49,7 +49,7 @@ sub combine_gebvs_of_traits {
 
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
         my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
-   print STDERR "\n combo gebvs file: $combined_gebvs_file\n";
+  
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
@@ -111,8 +111,6 @@ sub get_gebv_files_of_traits {
             $valid_gebv_files .= $tr_file;
             $valid_gebv_files .= "\t" unless ($analyzed_valid_traits_files[-1] eq $tr_file);
         }
-
-
     }
    
     my $pred_file_suffix;

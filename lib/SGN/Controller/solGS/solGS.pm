@@ -2456,7 +2456,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) 
       
     if (@values) 
     {
-        $self->get_gebv_files_of_traits($c);
+        $c->controller('solGS::TraitsGebvs')->get_gebv_files_of_traits($c);
       
         my $params = $c->req->params;
         $self->gebv_rel_weights($c, $params, $pred_pop_id);
