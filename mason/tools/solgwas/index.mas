@@ -73,6 +73,7 @@
     </div>
 
         <div style="text-align: center">
+          <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">Trait Histogram</button>
           <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
         </div>
         <br />
@@ -153,10 +154,10 @@ jQuery(document).ready(function() {
     });
   });
 
-  jQuery('#trait_histogram').on('click', function() {
+  jQuery('#trait_histogram_btn').on('click', function() {
     alert("click!");
     var tempfile = jQuery('#tempfile').html();
-    var trait = jQuery('#dependent_variable_select').val();
+    var trait_hist = jQuery('#pheno_select').val();
     jQuery.ajax( {
         url: '/ajax/mixedmodels/grabdata',
         data: { 'file' : tempfile },
@@ -191,6 +192,46 @@ jQuery(document).ready(function() {
       error: function(e) { alert('error!'); }
     });
   });
+
+  jQuery('#preview_trait_histogram_btn').on('click', function() {
+    alert("Inside trait preview");
+    var tempfile = 'solgwas_download_1sXU7_phenotype.txt';
+    var trait = jQuery('#pheno_select').val();
+    jQuery.ajax( {
+        url: '/ajax/solgwas/extract_trait_data',
+        data: { 'file' : tempfile },
+        success: function(r)  {
+        alert("data grabbed "+JSON.stringify(r.trait));
+        var v = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+            "width": 200,
+            "height": 100,
+            "padding": 5,
+            "data": { 'values': r.data },
+            "mark": "bar",
+            "encoding": {
+            "x": {
+              "bin": true,
+              "field": trait,
+              "type": "quantitative"
+            },
+            "y": {
+              "aggregate": "count",
+              "type": "quantitative"
+            }
+           }
+          };
+
+ //alert("embedding"+ JSON.stringify(v));
+    //      vegaEmbed("#trait_histogram", v);
+          //alert("done");
+        },
+
+
+      error: function(e) { alert('error!'); }
+    });
+  });
+
 
   jQuery('#runGWA').click( function () {
     $('#Solgwas_output').empty();

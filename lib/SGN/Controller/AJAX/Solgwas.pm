@@ -6,6 +6,8 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
+use File::Spec qw | catfile|;
+use File::Basename qw | basename |;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 #use SGN::Model::Cvterm;
@@ -103,6 +105,48 @@ sub get_shared_phenotypes {
 #        list_trial_count=> scalar(@trials),
 #        common_trait_count => scalar(@{$results_ref->{results}}),
 #    };
+}
+
+sub extract_trait_data: Path('/ajax/solgwas/extract_trait_data') : {
+    my $self = shift;
+    my $c = shift;
+
+    my $file = $c->req->param("file");
+    my $trait = $c->req->param("trait");
+
+    $file = basename($file);
+
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas/".$file);
+    print STDERR Dumper($temppath);
+
+    my $F;
+    if (! open($F, "<", $temppath)) {
+	$c->stash->{rest} = { error => "Can't find data." };
+	return;
+    }
+
+    my $header = <$F>;
+    chomp($header);
+    print STDERR Dumper($header);
+    my @keys = split("\t", $header);
+    print STDERR Dumper($keys[1]);
+    my @data = ();
+
+    while (<$F>) {
+	chomp;
+
+	my @fields = split "\t";
+	my %line = {};
+	for(my $n=0; $n <@keys; $n++) {
+	    if (exists($fields[$n]) && defined($fields[$n])) {
+		$line{$keys[$n]}=$fields[$n];
+	    }
+	}
+    print STDERR Dumper(\%line);
+	push @data, \%line;
+    }
+
+    $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
 sub generate_results: Path('/ajax/solgwas/generate_results') : {
