@@ -18,51 +18,7 @@ Titima Tantikanjana
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Sets</h4>", info_section_subtitle => 'View your marker set info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Marker Set</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers in Marker Set</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
-
-<&| /page/info_section.mas, title=>'Add new marker set'&>
-
-<div class="row">
-    <div class="col-sm-1">
-    </div>
-    <div class="col-sm-12 well">
-        <div class="row">
-            <div class="col-sm-11">
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Set Name:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Genotyping protocol:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <select class="form-control" id="selected_protocol">
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Description:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="marker_set_desc" placeholder="Enter description">
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-info" id="save_marker_set" name="save_marker_set"> Add new marker set </button>
-                                        </div>
-                                </div>
-                            </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-</&>
+<!--
 
 <&| /page/info_section.mas, title=>'Add markers and allele dosages in marker set', collapsible=>1, collapsed=>0 &>
 
@@ -116,6 +72,7 @@ Titima Tantikanjana
 </div>
 
 </&>
+-->
 <!--
 <&| /page/info_section.mas, title=>'Add filtering parameters based on VCF fields in marker set', collapsible=>1, collapsed=>0 &>
 
@@ -214,3 +171,70 @@ Titima Tantikanjana
 
 </&>
 -->
+
+<div class="modal fade" id="add_markerset_dialog" name="add_markerset_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerSetDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addMarkerSetDialog">Add New Marker Set</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-1">
+                        </div>
+                        <div class="col-sm-12 well">
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <div class="form-horizontal">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Marker Set Name:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Genotyping protocol:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="selected_protocol">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Description:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="marker_set_desc" placeholder="Enter description">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="save_marker_set" id="save_marker_set">Add Marker Set</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("#add_new_markerset_button").click(function(){
+        jQuery("#add_markerset_dialog").modal("show");
+    });
+});
+
+</script>
