@@ -978,21 +978,24 @@ creation_date: 2008-02-22T10:26:00Z
 [Term]
 id: SP:0000104
 name: seed weight
+def: "Average seed weight in grams" [SGN:EVDK]
 xref: PATO:0000125
 xref: PO:0001170
 xref: PO:0009010
-is_a: SP:0000100 ! seed
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000100 ! seed
 created_by: naama
 creation_date: 2008-02-22T10:27:00Z
 
 [Term]
 id: SP:0000105
-name: seed number
+name: seed number per fruit
 def: "Average number of seeds per fruit." [SGN:EVDK]
 xref: PATO:0000053
 xref: PO:0001170
 xref: PO:0009010
-is_a: SP:0000100 ! seed
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000100 ! seed
 created_by: naama
 creation_date: 2008-02-22T10:27:00Z
 
@@ -1012,7 +1015,8 @@ id: SP:0000107
 name: Percent of fruits with less than 10 seeds
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000106 ! fruit number
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000106 ! fruit number
 created_by: naama
 creation_date: 2008-02-22T10:29:00Z
 
@@ -1113,22 +1117,26 @@ creation_date: 2008-02-22T10:47:00Z
 
 [Term]
 id: SP:0000118
-name: fruit glossiness
+name: fruit glossiness estimation
+def: "Visual estimation of fruit glossiness 0-3 scale." [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009085
-is_a: SP:0000097 ! epicarp color
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000097 ! epicarp color
 created_by: naama
 creation_date: 2008-02-22T10:47:00Z
 
 [Term]
 id: SP:0000119
-name: fruit firmness
+name: fruit firmness estimation
+def: "Visual estimation of fruit firmness 0-4 scale." [SGN:EVDK]
 xref: PATO:0000037
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000013 ! fruit ripening
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000013 ! fruit ripening
 created_by: naama
 creation_date: 2008-02-22T10:47:00Z
 
@@ -1188,21 +1196,24 @@ is_a: SP:0000447 ! fruit color phenotypic values
 [Term]
 id: SP:0000126
 name: days to first flowering
-def: "Opening of third inflorescence after transplanting." [SGN:EVDK]
+def: "Number of days to opening of third inflorescence after transplanting." [SGN:EVDK]
 xref: PATO:0000081
 xref: PO:0007016
 xref: PO:0009046
-is_a: SP:0000061 ! flowering timing
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000061 ! flowering timing
 created_by: naama
 creation_date: 2008-02-22T03:31:00Z
 
 [Term]
 id: SP:0000127
 name: radial fruit cracking
+def: "Estimation of radial fruit cracking 0-5 scale" [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009085
-is_a: SP:0000124 ! epicarp texture
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000124 ! epicarp texture
 created_by: naama
 creation_date: 2008-02-22T10:47:00Z
 
@@ -1217,12 +1228,13 @@ creation_date: 2008-02-22T10:47:00Z
 
 [Term]
 id: SP:0000129
-name: fruits per flower
-def: "A measure of how many flowers develop into fruit." [SGN:EVDK]
+name: fruits per flowers
+def: "A measure of how many flowers develop into fruit. Counting." [SGN:EVDK]
 xref: PATO:0000053
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000106 ! fruit number
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000106 ! fruit number
 created_by: naama
 creation_date: 2008-02-22T03:36:00Z
 
@@ -4221,7 +4233,7 @@ creation_date: 2018-03-29T14:49:24Z
 [Term]
 id: SP:0000465
 name: vascular bundle content
-def: "Scored in mature green fruit. Vascular bundles network for water transportation. It begins in the stem\nscar and runs to the locules through the placenta while also extending to the\nouter pericarp. Visual score 0-7 (0:absent, 3:slight, 5:intermediate, 7:severe)." [SGN:MJD]
+def: "Scored in mature green fruit. Vascular bundles network for water transportation. It begins in the stem scar and runs to the locules through the placenta while also extending to the outer pericarp. Visual score 0-7 (0:absent, 3:slight, 5:intermediate, 7:severe)." [SGN:MJD]
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000464 ! vascular bundle
 relationship: variable_of SP:0000466 ! mature green fruit
@@ -4263,7 +4275,7 @@ creation_date: 2018-03-29T15:13:29Z
 [Term]
 id: SP:0000470
 name: plant growth habit, visual observation nominal scale
-def: "0-Determinate,\n1-Semi-determinate,\n2-Indeterminate." [SGN:MJD]
+def: "0-Determinate, 1-Semi-determinate, 2-Indeterminate." [SGN:MJD]
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000128 ! plant habit index
 created_by: naama
@@ -4280,7 +4292,7 @@ creation_date: 2018-03-29T15:17:03Z
 [Term]
 id: SP:0000472
 name: green leaf color, visual observation 3-7 scale
-def: "3:Light green, 5:medium green, 7\n:dark green." [SGN:MJD]
+def: "3:Light green, 5:medium green, 7:dark green." [SGN:MJD]
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000005 ! leaf color
 created_by: naama
