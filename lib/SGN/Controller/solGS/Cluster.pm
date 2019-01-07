@@ -193,7 +193,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	} 	
 	elsif ($data_type =~ /gebv/i)
 	{
-	    $c->cluster_gebvs_file($c);
+	    $self->cluster_gebvs_file($c);
 	    my $cluster_gebvs_file = $c->stash->{cluster_gebvs_file};
 
 	    if (!$cluster_gebvs_file)
@@ -590,7 +590,7 @@ sub cluster_input_files {
     my $data_type = $c->stash->{data_type};
     my $cluster_type = $c->stash->{cluster_type};
     
-    my $name     = "cluster_input_files_${file_id}_${data_type}"; 
+    my $name     = "cluster_input_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
 
     my $files;
@@ -613,8 +613,9 @@ sub cluster_input_files {
     }
     elsif ($data_type =~ /gebv/i)	
     {
-	$c->cluster_gebvs_file($c);
-	$files = $c->stash->{cluster_gebvs_file};	
+	$self->cluster_gebvs_file($c);
+	$files = $c->stash->{cluster_gebvs_file};
+	print STDERR "\n gebvs file: $files\n";
     }
 
     $self->cluster_options_file($c);
