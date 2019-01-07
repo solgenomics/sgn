@@ -18,6 +18,8 @@ Titima Tantikanjana
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Sets</h4>", info_section_subtitle => 'View your marker set info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Marker Set</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers in Marker Set</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Using marker set to search for accessions with specific genotypes.", button_id => "accession_search_link" &>
+
 
 <div class="modal fade" id="add_markerset_dialog" name="add_markerset_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerSetDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -258,6 +260,10 @@ jQuery(document).ready(function(){
 
     jQuery("#add_marker_dosage_button").click(function(){
         jQuery("#add_marker_dosage_dialog").modal("show");
+    });
+
+    jQuery('#accession_search_link').click(function () {
+        location.href = '/search/stocks_using_genotypes';
     });
 
 });
