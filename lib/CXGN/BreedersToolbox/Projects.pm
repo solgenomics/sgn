@@ -278,7 +278,7 @@ ORDER BY 2";
 	    $d = Encode::encode_utf8($d);
 	}
 	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = @location_data;
- 
+
         my $lat = $latitude ? $latitude + 0 : undef;
         my $long = $longitude ? $longitude + 0 : undef;
         my $alt = $altitude ? $altitude + 0 : undef;
@@ -295,7 +295,7 @@ ORDER BY 2";
                 Latitude => $lat,
                 Longitude => $long,
                 Altitude => $alt,
-                Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+                Trials => '<a href="/search/trials?location_id='.$id.'">'.$trial_count.' trials</a>'
             },
             geometry => {
                 type => "Point",
