@@ -17,6 +17,7 @@ library(fpc)
 library(cluster)
 library(ggfortify)
 library(tibble)
+library(stringi)
 #library(factoextra)
 
 
@@ -67,7 +68,7 @@ if (is.null(kResultFile))
 
 clusterData <- c()
 genoData    <- c()
-
+genoFiles   <- c()
 
 extractGenotype <- function(inputFiles) {
 
@@ -121,15 +122,25 @@ extractGenotype <- function(inputFiles) {
     
 } 
 
-if (dataType == 'Genotype') {
+if (length(grep('genotype', dataType, ignore.case=TRUE)) > 0) {
     clusterData <- extractGenotype(inputFiles)   
 }
 
-print(clusterData[1:3, 1:5])
+if (length(grep('gebv', dataType, ignore.case=TRUE)) > 0) {
+     gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
+     message('gebvs file: ', gebvsFile)
+     gebvsData <- data.frame(fread(gebvsFile))
+     print(head(gebvsData))
+     clusterNa  <- gebvsData %>% filter_all(any_vars(is.na(.)))
+     print(clusterNa)
+     clusterData <- column_to_rownames(gebvsData, 'V1')    
+ }
+
+clusterNa <- c()
 
 set.seed(235)
 
-if (dataType == 'Genotype') {
+if (length(grep('genotype', dataType, ignore.case=TRUE)) > 0) {
     pca    <- prcomp(clusterData, retx=TRUE)
     pca    <- summary(pca)
 
@@ -158,31 +169,33 @@ if (dataType == 'Genotype') {
     clusterData <- scores
 }
 
-kMeansOut <- kmeansruns(clusterData, runs=10)
-recK <- paste0('Recommended number of clusters (k) for this data set is: ', kMeansOut$bestk)
-cat(recK, file=reportFile, sep="\n", append=TRUE)
+clusterData <- na.omit(clusterData)
+kMeansOut   <- kmeansruns(clusterData, runs=10)
 
 kCenters <- kMeansOut$bestk
+recK <- paste0('Recommended number of clusters (k) for this data set is: ', kCenters)
+cat(recK, file=reportFile, sep="\n", append=TRUE)
+
 
 if (!is.na(userKNumbers)) {
 
     if (userKNumbers != 0) {
         kCenters <- as.integer(userKNumbers)
         userK <- paste0('However, Clustering was based on ', userKNumbers)
+        message('userK: ', userK)
         cat(userK, file=reportFile, sep="\n", append=TRUE)
     }
 }
 
-print(scores[1:3, 1:5])
-
-kMeansOut        <- kmeans(scores, centers=kCenters, nstart=10)
+kMeansOut        <- kmeans(clusterData, centers=kCenters, nstart=10)
 kClusters        <- data.frame(kMeansOut$cluster)
 kClusters        <- rownames_to_column(kClusters)
 names(kClusters) <- c('Genotypes', 'Cluster')
 kClusters        <- kClusters %>% arrange(Cluster)
 
+print(kClusters)
 png(plotKmeansFile)
-autoplot(kMeansOut, data=scores, frame = TRUE,  x=1, y=2)
+autoplot(kMeansOut, data=clusterData, frame = TRUE,  x=1, y=2)
 dev.off()
 
 #png(plotPamFile)
@@ -200,7 +213,7 @@ if (length(genoFiles) > 1) {
 
 }
 
-if (!is.null(kResultFile)) {
+if (length(kResultFile) != 0 ) {
     fwrite(kClusters,
        file      = kResultFile,
        sep       = "\t",

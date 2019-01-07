@@ -138,7 +138,7 @@ solGS.cluster = {
 	var url = document.URL;
 
 	console.log('url '  + url)
-
+	console.log('selectRow: ' + url)
 	if (url.match(/breeders\/trial\/|cluster\/analysis/)) {
 	    dataTypeOpts = ['Genotype', 'Phenotype'];
 
@@ -147,7 +147,7 @@ solGS.cluster = {
 	}
 	
 	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
-
+	console.log('selectRow: ' + dataTypeOpts)
 	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
 	
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
@@ -166,7 +166,7 @@ solGS.cluster = {
             + '[ Run Cluster ] </a>'                                     
             + '</td>'
 	    + '<tr>';
-	
+	console.log('selectRow: ' + row)
 	return row;
     },
 
@@ -441,7 +441,6 @@ solGS.cluster = {
 	    
             var userSelPops = listUploadedSelPopulations();
             if (userSelPops) {
-
 		jQuery("#cluster_select_a_population_div ul").append(userSelPops);  
             }
 	}
@@ -500,7 +499,7 @@ jQuery.fn.doesExist = function(){
 jQuery(document).ready( function() {
     
     var url = window.location.pathname;
-    console.log('url: ' + url)
+    console.log('502 url: ' + url)
     if (url.match(/cluster\/analysis/)) {
     
         var list = new CXGN.List();
@@ -608,9 +607,8 @@ jQuery(document).ready( function() {
 
 jQuery(document).ready( function() { 
     var page = document.URL;
-   
-    if (page.match(/solgs\/traits\/all\//) != null || 
-        page.match(/solgs\/models\/combined\/trials\//) != null) {
+    alert(page)
+    if (page.match(/solgs\/traits\/all\//) != null) {
 	
 	setTimeout(function() {solGS.cluster.listClusterPopulations()}, 5000);
 
