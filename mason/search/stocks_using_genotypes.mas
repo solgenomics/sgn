@@ -6,7 +6,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Accessions with Specific Genotypes' &>
+<& /page/page_title.mas, title=>'Search Accessions with Specific Genotype' &>
 
 <&| /page/info_section.mas, title=>''&>
 
@@ -18,7 +18,7 @@
             <div class="col-sm-11">
                 <div class="form-horizontal">
                     <div class="form-group">
-                        <label class="control-label col-sm-4">Dataset:</label>
+                        <label class="control-label col-sm-4">Select a set of accessions (data set):</label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="selected_dataset">
@@ -28,7 +28,7 @@
                             </div>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-sm-4">Marker set:</label>
+                        <label class="control-label col-sm-4">Select a set of markers (marker set):</label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="selected_markerset">

@@ -16,9 +16,9 @@ Titima Tantikanjana
 
 <& /page/page_title.mas, title=>'Manage Marker Sets' &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Sets</h4>", info_section_subtitle => 'View your marker set info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Marker Set</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers in Marker Set</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Sets</h4>", info_section_subtitle => 'View your marker set info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Marker Set</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers to Marker Set</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
-<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Using marker set to search for accessions with specific genotypes.", button_id => "accession_search_link" &>
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Using marker set to search for accessions with specific genotype.", button_id => "accession_search_link" &>
 
 
 <div class="modal fade" id="add_markerset_dialog" name="add_markerset_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerSetDialog">
@@ -82,7 +82,7 @@ Titima Tantikanjana
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addMarkerDosageDialog">Add Markers in Marker Set</h4>
+                <h4 class="modal-title" id="addMarkerDosageDialog">Add Markers to Marker Set</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
