@@ -1816,6 +1816,7 @@ jQuery(document).ready(function() {
 
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_id;
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_type;
+    var manage_drone_imagery_calculate_phenotypes_plot_polygons_type;
 
     jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function() {
         jQuery('#manage_drone_imagery_crop_div').hide();
@@ -1830,7 +1831,7 @@ jQuery(document).ready(function() {
 
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
         manage_drone_imagery_calculate_phenotypes_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
-        console.log(manage_drone_imagery_calculate_phenotypes_drone_run_band_type);
+        manage_drone_imagery_calculate_phenotypes_plot_polygons_type = jQuery(this).data('plot_polygons_type');
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_sift').click(function(){
@@ -1841,7 +1842,8 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
-                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
+                'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1877,7 +1879,8 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
-                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
+                'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1913,7 +1916,8 @@ jQuery(document).ready(function() {
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
-                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type
+                'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
+                'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1949,7 +1953,7 @@ jQuery(document).ready(function() {
 
         var manage_drone_imagery_calculate_phenotypes_zonal_channel = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select_input').val();
         
-        if ( (manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'RGB Color Image') && (manage_drone_imagery_calculate_phenotypes_zonal_channel == '1' || manage_drone_imagery_calculate_phenotypes_zonal_channel == '2') ) {
+        if ( ( (manage_drone_imagery_calculate_phenotypes_plot_polygons_type == 'tgi') || (manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'RGB Color Image') ) && (manage_drone_imagery_calculate_phenotypes_zonal_channel == '1' || manage_drone_imagery_calculate_phenotypes_zonal_channel == '2') ) {
             alert('The current image is composed of only a single channel, and so only channel 1 can be selected here!');
             return;
         }
@@ -1962,13 +1966,16 @@ jQuery(document).ready(function() {
                 data: {
                     'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
                     'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
-                    'image_band': manage_drone_imagery_calculate_phenotypes_zonal_channel
+                    'image_band': manage_drone_imagery_calculate_phenotypes_zonal_channel,
+                    'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type
                 },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
                 success: function(response){
                     console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
                     if(response.error) {
                         alert(response.error);
                         return;
@@ -1989,7 +1996,6 @@ jQuery(document).ready(function() {
                     jQuery('#manage_drone_imagery_calculate_phenotypes_show_zonal_stats').html(html);
                     jQuery('#manage_drone_imagery_zonal_stats_table').DataTable();
 
-                    jQuery("#working_modal").modal("hide");
                     jQuery('#drone_imagery_calc_phenotypes_zonal_channel_dialog').modal('hide');
                 },
                 error: function(response){
