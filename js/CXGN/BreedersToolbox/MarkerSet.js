@@ -134,15 +134,45 @@ jQuery(document).ready(function (){
     });
 
     show_table();
+
 });
 
 function show_table() {
     var markersets_table = jQuery('#marker_sets').DataTable({
+        'destroy': true,
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
             {title: "Marker Set Name", "data": "markerset_name"},
             {title: "Number of Items", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
-        ]
+            {title: "Delete", "data": "null", "render": function (data, type, row) {return "<a onclick = 'removeMarkerSet("+row.markerset_id+")'>X</a>";}},
+        ],
     });
+}
+
+function removeMarkerSet (markerset_id){
+    if (confirm("Are you sure you want to delete this marker set?")){
+        jQuery.ajax({
+            url: '/list/delete',
+            async: false,
+            data: {'list_id': markerset_id},
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The marker set has been deleted.");
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred deleting marker set');
+            }
+        });
+    }
 }
