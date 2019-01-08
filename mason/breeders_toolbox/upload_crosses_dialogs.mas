@@ -75,7 +75,7 @@ $locations
     #     print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
     # }
     foreach my $location_hashref (@$locations) {
-        my $properties = $location_hashref->{'properties'};
+        my $properties = exists($location_hashref->{'properties'}) ? $location_hashref->{properties} : "";
         my $program = $properties->{'Program'};
         my $name = $properties->{'Name'};
         print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
