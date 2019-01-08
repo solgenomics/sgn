@@ -758,18 +758,23 @@ sub cache_combined_pops_data {
     if ($trait_abbr)
     {
 	my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
-				 file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
-				 stash_key => 'trait_combined_pheno_file'
+				 file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined.txt",
+				 stash_key => 'trait_combined_pheno_file',
+				 cache_dir => $c->stash->{solgs_cache_dir}
 	};
 	
-	my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
-				file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
-				stash_key => 'trait_combined_geno_file'
-	};
-	
+
 	$c->controller('solGS::Files')->cache_file($c, $cache_pheno_data);
-	$c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
     }
+
+   
+    my  $cache_geno_data = {key       => "genotype_data_${combo_pops_id}_combined",
+			    file      => "genotype_data_${combo_pops_id}_combined.txt",
+			    stash_key => 'trait_combined_geno_file',
+			    cache_dir => $c->stash->{solgs_cache_dir} 
+    };
+	
+    $c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
 
 }
 

@@ -56,7 +56,7 @@ my $url = $c->req->path;
   &>
 
 
-% if ($url =~ /solgs\/traits\/all\/population\//) {
+% if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
   <& /solgs/cluster/gebvs_cluster.mas,
      pop_name => $pop_name,

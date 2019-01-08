@@ -305,7 +305,7 @@ sub create_cluster_genotype_data {
     my ($self, $c) = @_;
    
     my $data_structure = $c->stash->{data_structure};
-
+    
     if ($data_structure =~ /list/) 
     {
 	$self->cluster_list_genotype_data($c);	
@@ -316,7 +316,15 @@ sub create_cluster_genotype_data {
     }
     else 
     {
-	$c->controller('solGS::List')->process_trials_list_details($c);
+	if ($c->stash->{combo_pops_id})
+	{
+	    $c-> controller('solGS::combinedTrials')->cache_combined_pops_data($c);
+	    $c->stash->{genotype_file} = $c->stash->{trait_combined_geno_file};
+	}
+	else
+	{
+	    $c->controller('solGS::List')->process_trials_list_details($c);
+	}
     }
 
 }

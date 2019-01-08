@@ -142,7 +142,7 @@ solGS.cluster = {
 	if (url.match(/breeders\/trial\/|cluster\/analysis/)) {
 	    dataTypeOpts = ['Genotype', 'Phenotype'];
 
-	} else if (url.match(/solgs\/traits\/all\/population\//)) {
+	} else if (url.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
 	    dataTypeOpts = ['Genotype', 'GEBV'];
 	}
 	
@@ -201,10 +201,17 @@ solGS.cluster = {
 
 	var popDetails  = solGS.getPopulationDetails();
 
-	if(document.URL.match(/solgs\/traits\/all\/population/)) {
+	if (document.URL.match(/solgs\/traits\/all\/population\//)) {
 	    var popId   = jQuery("#cluster_selected_population_id").val();
 	    var popType = jQuery("#cluster_selected_population_type").val();
 	    popDetails['training_pop_id'] = popId;
+	    
+	}
+
+	if (document.URL.match(/solgs\/models\/combined\/trials\//)) {
+	    var popId   = jQuery("#cluster_selected_population_id").val();
+	    var popType = jQuery("#cluster_selected_population_type").val();
+	    popDetails['combo_pops_id'] = popId;
 	    
 	}
 
@@ -267,7 +274,7 @@ solGS.cluster = {
 		    solGS.cluster.plotClusterOutput(res, resultName);
 				    
 		    jQuery("#cluster_message").empty();
-		    if (document.URL.match(/solgs\/traits\/all\/population\//)) {
+		    if (document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
 			 jQuery("#run_cluster").show();
 		    } else {
 			jQuery("#run_cluster").hide();
@@ -280,7 +287,6 @@ solGS.cluster = {
 		}
 	    },
             error: function(res) {
-		alert('res ' + res.responseText)
 		jQuery("#cluster_message").html('Error occured running the clustering.');
 		jQuery("#cluster_canvas .multi-spinner-container").hide();
 		jQuery("#run_cluster").show();
@@ -607,8 +613,8 @@ jQuery(document).ready( function() {
 
 jQuery(document).ready( function() { 
     var page = document.URL;
-    alert(page)
-    if (page.match(/solgs\/traits\/all\//) != null) {
+  
+    if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
 	
 	setTimeout(function() {solGS.cluster.listClusterPopulations()}, 5000);
 
