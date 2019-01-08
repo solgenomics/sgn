@@ -20,7 +20,7 @@ $data => 'Default'
     </ul>
     </p>
 </div>
-<div id= "header" class="container-fluid">
+<!--<div id= "header" class="container-fluid">
     <div id="tabs"> 
     <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="active"><a href="#upload" aria-controls="upload" role="tab" data-toggle="tab">1. Upload QC data</a></li>
@@ -30,7 +30,7 @@ $data => 'Default'
   </div>
 </div> 
       <br/>
-    <div>  
+    <div>  -->
 <ul>
       <p>
       <li><font size="2" color="green"> Upload QC assay</font> </li>
