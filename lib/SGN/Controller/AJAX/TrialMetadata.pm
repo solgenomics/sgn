@@ -235,6 +235,13 @@ sub trial_details_POST  {
       if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
     };
 
+    if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
+    if ($details->{plate_sample_type}) { $trial->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
+    if ($details->{facility}) { $trial->set_genotyping_facility($details->{facility}); }
+    if ($details->{facility_submitted}) { $trial->set_genotyping_facility_submitted($details->{facility_submitted}); }
+    if ($details->{facility_status}) { $trial->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
+    if ($details->{raw_data_link}) { $trial->set_raw_data_link($details->{raw_data_link}); }
+
     if ($@) {
 	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
     }
@@ -1555,7 +1562,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
      }
 
   print "Calling Replace Function...............\n";
-  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(); 
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;

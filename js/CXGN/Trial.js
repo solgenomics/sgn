@@ -542,7 +542,8 @@ function highlight_changed_details(element) { // compare changed value to defaul
   var id = element.attr('id');
   var current_value = element.val();
   var default_value = document.getElementById(id).defaultValue;
-  if (element.attr('title').match(/date/)) { default_value = moment(document.getElementById(id).defaultValue, 'YYYY-MMMM-DD').format('MM/DD/YYYY');}
+  var title = element.attr('title');
+  if (title && title.match(/date/)) { default_value = moment(document.getElementById(id).defaultValue, 'YYYY-MMMM-DD').format('MM/DD/YYYY');}
   if (!default_value) { default_value = element.data("originalValue");}
   if ((current_value || default_value) && current_value !== default_value) {
     element.parent().siblings('#change_indicator').remove();
