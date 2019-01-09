@@ -933,7 +933,6 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my @marker_sets;
     foreach my $list (@$lists){
         my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
-#        push @marker_sets, [$name, $item_count, $desc];
         push @marker_sets, {
             markerset_id => $id,
             markerset_name => $name,
@@ -943,6 +942,30 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     }
 
     $c->stash->{rest} = {data => \@marker_sets};
+}
+
+
+sub delete_markerset : Path('/markerset/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $markerset_id = $c->req->param("markerset_id");
+
+    my $error = $self->check_user($c, $markerset_id);
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    $error = CXGN::List::delete_list($c->dbc->dbh(), $markerset_id);
+
+    if (!$error){
+        $c->stash->{rest} = { success => 1 };
+    }
+    else {
+        $c->stash->{rest} = { error => $error };
+    }
+
 }
 
 

@@ -151,11 +151,10 @@ function show_table() {
 }
 
 function removeMarkerSet (markerset_id){
-    if (confirm("Are you sure you want to delete this marker set?")){
+    if (confirm("Are you sure you want to delete this marker set? This cannot be undone")){
         jQuery.ajax({
-            url: '/list/delete',
-            async: false,
-            data: {'list_id': markerset_id},
+            url: '/markerset/delete',
+            data: {'markerset_id': markerset_id},
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
