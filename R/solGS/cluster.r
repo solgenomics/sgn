@@ -120,27 +120,14 @@ extractGenotype <- function(inputFiles) {
 
     genoData <- data.frame(genoData)
     
-} 
-
-if (length(grep('genotype', dataType, ignore.case=TRUE)) > 0) {
-    clusterData <- extractGenotype(inputFiles)   
 }
 
-if (length(grep('gebv', dataType, ignore.case=TRUE)) > 0) {
-     gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
-     message('gebvs file: ', gebvsFile)
-     gebvsData <- data.frame(fread(gebvsFile))
-     print(head(gebvsData))
-     clusterNa  <- gebvsData %>% filter_all(any_vars(is.na(.)))
-     print(clusterNa)
-     clusterData <- column_to_rownames(gebvsData, 'V1')    
- }
-
+set.seed(235)
 clusterNa <- c()
 
-set.seed(235)
+if (grepl('genotype', dataType, ignore.case=TRUE)) {
+    clusterData <- extractGenotype(inputFiles)   
 
-if (length(grep('genotype', dataType, ignore.case=TRUE)) > 0) {
     pca    <- prcomp(clusterData, retx=TRUE)
     pca    <- summary(pca)
 
@@ -167,9 +154,25 @@ if (length(grep('genotype', dataType, ignore.case=TRUE)) > 0) {
     variances <- data.frame(t(variances))
 
     clusterData <- scores
+} else {
+
+    if (grepl('gebv', dataType, ignore.case=TRUE)) {
+        gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
+        message('gebvs file: ', gebvsFile)
+        gebvsData <- data.frame(fread(gebvsFile))
+        print(head(gebvsData))
+        clusterNa  <- gebvsData %>% filter_all(any_vars(is.na(.)))
+        print(clusterNa)
+        clusterData <- column_to_rownames(gebvsData, 'V1')    
+    }
+
+    #clusterData <- data.frame(clusterData)
+    clusterData <- na.omit(clusterData) 
+    clusterData <- scale(clusterData, center=TRUE, scale=TRUE)
+    scaleNote   <- paste0('Note: Data was standardized before clustering.')
+    cat(scaleNote, file=reportFile, sep="\n", append=TRUE)
 }
 
-clusterData <- na.omit(clusterData)
 kMeansOut   <- kmeansruns(clusterData, runs=10)
 
 kCenters <- kMeansOut$bestk
@@ -193,7 +196,7 @@ kClusters        <- rownames_to_column(kClusters)
 names(kClusters) <- c('Genotypes', 'Cluster')
 kClusters        <- kClusters %>% arrange(Cluster)
 
-print(kClusters)
+
 png(plotKmeansFile)
 autoplot(kMeansOut, data=clusterData, frame = TRUE,  x=1, y=2)
 dev.off()
