@@ -175,6 +175,12 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
     print STDERR Dumper($header);
     my @keys = split("\t", $header);
     print STDERR Dumper($keys[1]);
+# add this for loop to remove the crop ontology codes from the keys (and the preceding pipes)
+    for(my $n=0; $n <@keys; $n++) {
+        if ($keys[$n] =~ /\|CO\_/) {
+        $keys[$n] =~ s/\|CO\_.*//;
+        }
+    }
     my @data = ();
 
     while (<$F>) {

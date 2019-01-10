@@ -54,8 +54,8 @@
   <div id="trait_preview">
     <button class="btn btn-primary" id="trait_histogram_btn" type="submit" name="trait_histogram_btn" value="trait_histogram_btn">Select trait</button>
   </div>
+  <br>
   <div id="trait_histogram_plot">
-  [Histogram]
   </div>
   <br>
   <br>
@@ -184,15 +184,15 @@ jQuery(document).ready(function() {
   });
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
-    alert("Inside trait preview");
+    //alert("Inside trait preview");
     var tempfile = jQuery('#tempfile').html();
-    alert(tempfile);
     var trait = jQuery('#pheno_select').val();
+    //alert(trait);
     jQuery.ajax( {
         url: '/ajax/solgwas/getdata',
         data: { 'file' : tempfile },
         success: function(r)  {
-        alert("data grabbed "+JSON.stringify(r.data));
+        //alert("data grabbed "+JSON.stringify(r.data));
         var v = {
             "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
             "width": 200,
