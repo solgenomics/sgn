@@ -51,9 +51,6 @@
   <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
   <br>
   <br>
-  <div id="trait_preview">
-    <button class="btn btn-primary" id="trait_histogram_btn" type="submit" name="trait_histogram_btn" value="trait_histogram_btn">Select trait</button>
-  </div>
   <br>
   <div id="trait_histogram_plot">
   </div>
@@ -150,6 +147,7 @@ jQuery(document).ready(function() {
 	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
 	  }
 	  $('#pheno_select').attr("disabled",false).html(option_html);
+      jQuery('#tempfile').html(response.tempfile);
 
 
 	}
@@ -157,28 +155,6 @@ jQuery(document).ready(function() {
       },
       error: function(response) {
         alert("An error occurred, the service may temporarily be unavailable");
-      }
-    });
-  });
-
-  jQuery('#trait_histogram_btn').on('click', function() {
-    var dataset_id=jQuery('#available_datasets').val();
-    jQuery.ajax({
-      url: '/ajax/solgwas/prepare',
-      data: { 'dataset_id' : dataset_id },
-      success: function(r) {
-        if (r.error) {
-          alert(r.error);
-        }
-        else {
-//          jQuery('#dependent_variable').html(r.dependent_variable);
-//          jQuery('#fixed_factors').html(r.fixed_factors);
-//          jQuery('#random_factors').html(r.random_factors);
-          jQuery('#tempfile').html(r.tempfile);
-        }
-      },
-      error: function(r) {
-        alert("ERROR!!!!!");
       }
     });
   });

@@ -41,57 +41,23 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 	my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
 	push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
-    my $phenotypes = $ds->retrieve_phenotypes();
-    my $trials_ref = $ds->retrieve_trials();
-    print STDERR Dumper(@trait_info);
-    my @trials = @$trials_ref;
-
-    my @co_pheno;
-    $c->stash->{rest} = {
-        options => \@trait_info,
-    };
-}
-
-sub prepare: Path('/ajax/solgwas/prepare') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $dataset_id = $c->req->param('dataset_id');
-
-#    if (! $c->user()) {
-#        $c->stash->{rest} = {error=>'You must be logged in first!'};
-#        $c->detach;
-#    }
-
     $c->tempfiles_subdir("solgwas_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/trait_XXXXX");
     #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
+    my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
-#    print STDERR Dumper($temppath);
-#    print STDERR Dumper($phenotype_data_ref->[0]);
+#    my $phenotypes = $ds->retrieve_phenotypes();
+#    my $trials_ref = $ds->retrieve_trials();
+    print STDERR Dumper(@trait_info);
+#    my @trials = @$trials_ref;
 
-#    my @select = ();
-#    foreach my $colname (@{$phenotype_data_ref->[0]}) {
-#	    my $html .= "<option id=\"$colname\">$colname</option>";
-#	    push @select, $html;
-#    }
-    #print STDERR Dumper(\@select);
-#    my @dependent_items = @select[39..scalar(@select)];
-    #print STDERR Dumper(\@dependent_items);
-#    my $dependent_html = join("\n", @dependent_items);
-
-#    my @factors =@select[0..38];
-#    my $html = join("\n", @factors);
-
+#    my @co_pheno;
     $c->stash->{rest} = {
-#        dependent_variable => "<select id=\"dependent_variable_select\">$dependent_html</select>",
-#	    fixed_factors => "<select multiple rows=\"10\" id=\"fixed_factors_select\">$html</select>",
-#	    random_factors => "<select multiple rows=\"10\" id=\"random_factors_select\">$html</select>",
-#	    random_factors2 => "<select multiple rows=\"10\" id=\"random_factors_select\">$html</select>",
+        options => \@trait_info,
         tempfile => $tempfile."_phenotype.txt",
     };
 }
