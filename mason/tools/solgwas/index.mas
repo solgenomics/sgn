@@ -21,15 +21,13 @@
 
 <& /page/page_title.mas, title=>"SolGWAS" &>
 
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Dataset", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
 
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label>
-    <div id="dataset_select"></div>
+    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div><button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
     <br>
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
 
 
     <br>
@@ -37,54 +35,50 @@
     </div>
 
 
+      <div class="form-group form-inline">
+        <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
+      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">Trait Histogram</button>
+      <br>
+      <br>
+      <br>
+      <div id="trait_histogram_plot">
+      </div>
+      <br>
+      <br>
+      <div class="form-group form-inline">
+        <input type="checkbox" id="princomp" />
+        <label>Include principal components in model &nbsp; </label><button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA</button>
+
+        <br>
+        <input type="checkbox" id="kinshipmat" />
+        <label>Include kinship matrix in model &nbsp; </label>
+      </div>
 
 
-</&>
-
-
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Select Input Data", collapsible=>1, collapsed=>0 &>
-  <input type="hidden" name="outformat" value="0" />
-
-
-  <div class="form-group form-inline">
-    <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
-  <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-  <br>
-  <br>
-  <br>
-  <div id="trait_histogram_plot">
-  </div>
-  <br>
-  <br>
-  <div class="form-group form-inline">
-    <input type="checkbox" id="princomp" />
-    <label>Include principal components in model &nbsp; </label>
-    <br>
-    <input type="checkbox" id="kinshipmat" />
-    <label>Include kinship matrix in model &nbsp; </label>
-  </div>
-
-
-<br>
-
-
-<!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-    <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
     <br>
 
-    </div>
 
-        <div style="text-align: center">
-          <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">Trait Histogram</button>
-          <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
+        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
+        <br>
+
         </div>
-        <br />
 
-<div id="tempfile" style="display:none" >
-</div>
+            <div style="text-align: center">
+              <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+            </div>
+            <br />
+
+    <div id="tempfile" style="display:none" >
+    </div>
+
+
+
 
 
 </&>
+
 
 
 
