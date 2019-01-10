@@ -15,9 +15,11 @@
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
 <& /page/page_title.mas, title=>"SolGWAS" &>
-
-
 
 <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Dataset", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
@@ -52,6 +54,9 @@
   <div id="trait_preview">
     <button class="btn btn-primary" id="trait_histogram_btn" type="submit" name="trait_histogram_btn" value="trait_histogram_btn">Select trait</button>
   </div>
+  <div id="trait_histogram_plot">
+  [Histogram]
+  </div>
   <br>
   <br>
   <div class="form-group form-inline">
@@ -78,6 +83,8 @@
         </div>
         <br />
 
+<div id="tempfile" style="display:none" >
+</div>
 
 
 </&>
@@ -155,53 +162,37 @@ jQuery(document).ready(function() {
   });
 
   jQuery('#trait_histogram_btn').on('click', function() {
-    alert("click!");
-    var tempfile = jQuery('#tempfile').html();
-    var trait_hist = jQuery('#pheno_select').val();
-    jQuery.ajax( {
-        url: '/ajax/mixedmodels/grabdata',
-        data: { 'file' : tempfile },
-        success: function(r)  {
-        //alert("data grabbed "+JSON.stringify(r.data));
-        var v = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-            "width": 200,
-            "height": 100,
-            "padding": 5,
-            "data": { 'values': r.data },
-            "mark": "bar",
-            "encoding": {
-            "x": {
-              "bin": true,
-              "field": trait,
-              "type": "quantitative"
-            },
-            "y": {
-              "aggregate": "count",
-              "type": "quantitative"
-            }
-           }
-          };
-
- //alert("embedding"+ JSON.stringify(v));
-    //      vegaEmbed("#trait_histogram", v);
-          //alert("done");
-        },
-
-
-      error: function(e) { alert('error!'); }
+    var dataset_id=jQuery('#available_datasets').val();
+    jQuery.ajax({
+      url: '/ajax/solgwas/prepare',
+      data: { 'dataset_id' : dataset_id },
+      success: function(r) {
+        if (r.error) {
+          alert(r.error);
+        }
+        else {
+//          jQuery('#dependent_variable').html(r.dependent_variable);
+//          jQuery('#fixed_factors').html(r.fixed_factors);
+//          jQuery('#random_factors').html(r.random_factors);
+          jQuery('#tempfile').html(r.tempfile);
+        }
+      },
+      error: function(r) {
+        alert("ERROR!!!!!");
+      }
     });
   });
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     alert("Inside trait preview");
-    var tempfile = 'solgwas_download_1sXU7_phenotype.txt';
+    var tempfile = jQuery('#tempfile').html();
+    alert(tempfile);
     var trait = jQuery('#pheno_select').val();
     jQuery.ajax( {
-        url: '/ajax/solgwas/extract_trait_data',
+        url: '/ajax/solgwas/getdata',
         data: { 'file' : tempfile },
         success: function(r)  {
-        alert("data grabbed "+JSON.stringify(r.trait));
+        alert("data grabbed "+JSON.stringify(r.data));
         var v = {
             "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
             "width": 200,
@@ -223,7 +214,7 @@ jQuery(document).ready(function() {
           };
 
  //alert("embedding"+ JSON.stringify(v));
-    //      vegaEmbed("#trait_histogram", v);
+          vegaEmbed("#trait_histogram_plot", v);
           //alert("done");
         },
 
