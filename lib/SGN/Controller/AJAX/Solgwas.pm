@@ -40,72 +40,18 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     foreach my $t (@$traits) {
 	my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
 	push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
-#	push @trait_info, [$tobj->name()];
     }
     my $phenotypes = $ds->retrieve_phenotypes();
     my $trials_ref = $ds->retrieve_trials();
     print STDERR Dumper(@trait_info);
     my @trials = @$trials_ref;
-#    my @pheno_vals = @$phenotypes[0];
-#    print STDERR Dumper($traits);
-    #print STDERR Dumper($trials_ref);
-    #print STDERR Dumper($trials[2]);
-#    print STDERR Dumper(@pheno_vals);
-#    print STDERR Dumper($pheno_vals[5]);
+
     my @co_pheno;
-#    for my $i (0..19) {
-#	if (index($pheno_vals[0][$i], "CO_") != -1) {
-#            print STDERR Dumper($pheno_vals[0][$i]);
-#	    push @co_pheno, $pheno_vals[0][$i];
-
- #       }
-#
-
-  #  }
-
-   # print STDERR Dumper(@co_pheno);
-
-    #print STDERR Dumper($phenotypes);
-#    $self->get_shared_phenotypes($c, @pheno_vals);
     $c->stash->{rest} = {
         options => \@trait_info,
     };
 }
 
-
-sub get_shared_phenotypes {
-    my $self = shift;
-    my $c = shift;
-    #    my @trials = @_;
-    my @phenotype_header = @_;
-#    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-#    print STDERR '@trials: '.Dumper(@trials);
-#    my $trials_string = "\'".join( "\',\'",@trials)."\'";
-#    print STDERR '$trials_string: '.Dumper($trials_string);
-#    my @criteria = ['trials','traits'];
-#    my %dataref;
-#    my %queryref;
-#    $dataref{traits}->{trials} = $trials_string;
-    # The following is not the correct line to use, since returns any traits phenotyped for any trial
-#    $queryref{traits}->{trials} = 0;
-    # The following is the correct line that is needed, but current returns empty when using test set
-    #$queryref{traits}->{trials} = 1;
-#    print STDERR 'data: '.Dumper(\%dataref);
-#    print STDERR 'query: '.Dumper(\%queryref);
-#    my $breedersearch =  CXGN::BreederSearch->new({"dbh"=>$c->dbc->dbh});
-#    my $results_ref = $breedersearch->metadata_query(@criteria, \%dataref, \%queryref);
-#    print STDERR "Results: \n";
-#    print STDERR Dumper($results_ref);
-    for my $i (@phenotype_header) {
-        print STDERR Dumper($phenotype_header[$i]);
-#        print $i."\n";
-    }
-#    $c->stash->{rest} = {
-#        options => $results_ref->{results},
-#        list_trial_count=> scalar(@trials),
-#        common_trait_count => scalar(@{$results_ref->{results}}),
-#    };
-}
 sub prepare: Path('/ajax/solgwas/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
