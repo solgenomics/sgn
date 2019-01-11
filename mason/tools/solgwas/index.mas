@@ -208,53 +208,57 @@ jQuery(document).ready(function() {
 
 
   jQuery('#runGWA').click( function () {
-    $('#Solgwas_output').empty();
-    if ($('#pheno_select').val() != ""){
-      var dataset_id = $('#available_datasets').val();
-      var trait_id = $('#pheno_select').val();
-      var pc_check = 0;
-      var kinship_check = 0;
-      if ($('#princomp').is(':checked')) {
-        var pc_check = 1;
-      }
-      if ($('#kinshipmat').is(':checked')) {
-        var kinship_check = 1;
-      }
-      //alert(pc_check);
-      //alert(kinship_check);
-      //alert("Dataset ID: "+dataset_id);
-      //alert("Pheno ID: "+trait_id);
-      $.ajax({
-        url: '/ajax/solgwas/generate_results',
-        data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
-	      beforeSend: function() {
-          jQuery("#working_modal").modal("show");
-	      },
-        success: function(response) {
-          jQuery("#working_modal").modal("hide");
-          if (response.error) {
-            $('#dataset_select').val('ERROR');
-          }
-          else {
-            var fig1_response = response.figure1;
-            var fig2_response = response.figure2;
-            var fig3_response = response.figure3;
-            var fig4_response = response.figure4;
-	    //alert("Response ID: "+temp_response);
-    	    //alert("Response ID: "+fig1_response);
-	        //$('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
-            setTimeout(function() {
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
-            }, 6000);
-	      }
-        },
-        error: function(response) {
-          alert("An error occurred, the service may temporarily be unavailable");
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      $('#Solgwas_output').empty();
+      if ($('#pheno_select').val() != ""){
+        var dataset_id = $('#available_datasets').val();
+        var trait_id = $('#pheno_select').val();
+        var pc_check = 0;
+        var kinship_check = 0;
+        if ($('#princomp').is(':checked')) {
+          var pc_check = 1;
         }
-      });
-    }
+        if ($('#kinshipmat').is(':checked')) {
+          var kinship_check = 1;
+        }
+        //alert(pc_check);
+        //alert(kinship_check);
+        //alert("Dataset ID: "+dataset_id);
+        //alert("Pheno ID: "+trait_id);
+        $.ajax({
+          url: '/ajax/solgwas/generate_results',
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
+  	      beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+  	      },
+          success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+              $('#dataset_select').val('ERROR');
+            }
+            else {
+              var fig1_response = response.figure1;
+              var fig2_response = response.figure2;
+              var fig3_response = response.figure3;
+              var fig4_response = response.figure4;
+  	    //alert("Response ID: "+temp_response);
+      	    //alert("Response ID: "+fig1_response);
+  	        //$('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
+              setTimeout(function() {
+  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
+  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
+  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
+              }, 6000);
+  	      }
+          },
+          error: function(response) {
+            alert("An error occurred, the service may temporarily be unavailable");
+          }
+        });
+      }
+    };
   });
 
 
