@@ -50,6 +50,7 @@ use CXGN::DB::Connection;
 use CXGN::Tag;
 use CXGN::Metadata::Metadbdata;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 use CatalystX::GlobalContext '$c';
 
