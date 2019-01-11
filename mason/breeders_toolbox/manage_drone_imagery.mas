@@ -132,26 +132,46 @@
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Remove Background" &>
     
-    <div class="well well-sm">
-        <h5>The background can be removed by placing a threshold on pixel values</h5>
-        <ul>
-            <li><b>1.</b> Click on the two right-most, highest peaks in the histogram. The right most peak represents the pixels we are interested in, while the peak immediately to the left of that peak represents the soil background.</li>
-            <li><b>2.</b> Click on the "Find Minimum" button.</li>
-            <li><b>3.</b> If the image looks good with the applied threshold, click Save. Otherwise, you can start over.</li>
-        </ul>
+    <div class="well">
+        <&| /page/info_section.mas, title => 'Remove Background Using Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="well well-sm">
+                        <h5>The background can be removed by placing a threshold on pixel values</h5>
+                        <ul>
+                            <li><b>1.</b> Click on the two right-most, highest peaks in the histogram. The right most peak represents the pixels we are interested in, while the peak immediately to the left of that peak represents the soil background.</li>
+                            <li><b>2.</b> Click on the "Find Minimum" button.</li>
+                            <li><b>3.</b> If the image looks good with the applied threshold, click Save. Otherwise, you can start over.</li>
+                        </ul>
+                    </div>
+
+                    <div class="well well-sm">
+                        <div id="drone_imagery_remove_background_threshold_current"></div>
+                        <div id="drone_imagery_remove_background_threshold"></div>
+                    </div>
+
+                    <canvas id="drone_imagery_remove_background_histogram_div"></canvas>
+                    <hr>
+                    <button class="btn btn-primary" id="drone_imagery_remove_background_find_minimum">Find Minimum</button>
+                    <button class="btn btn-default" id="drone_imagery_remove_background_start_over">Start Over</button>
+                    <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Save</button>
+                    <hr>
+                </div>
+            </div>
+        </&>
+    </div>
+    <div class="well">
+        <&| /page/info_section.mas, title => 'Remove Background Using Vegetative Index Mask', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a vegetative index mask, either TGI, VARI, or NDVI' &>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                </div>
+            </div>
+        </&>
     </div>
 
-    <div class="well well-sm">
-        <div id="drone_imagery_remove_background_threshold_current"></div>
-        <div id="drone_imagery_remove_background_threshold"></div>
-    </div>
-
-    <canvas id="drone_imagery_remove_background_histogram_div"></canvas>
     <hr>
-    <button class="btn btn-primary" id="drone_imagery_remove_background_find_minimum">Find Minimum</button>
-    <button class="btn btn-default" id="drone_imagery_remove_background_start_over">Start Over</button>
-    <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Save</button>
-    <hr>
+    <h2>Image (Will update to show background removed result, allowing inspection before saving)</h2>
 
     <div id="manage_drone_imagery_remove_background_load_div">
         <img src="/img/wheel.gif" />
