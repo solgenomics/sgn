@@ -684,7 +684,9 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     $archive_stitched_temp_image .= '.png';
     print STDERR $archive_stitched_temp_image."\n";
 
-    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls \''.$image_urls_string.'\' --outfile_path \''.$archive_stitched_temp_image.'\'');
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls \''.$image_urls_string.'\' --outfile_path \''.$archive_stitched_temp_image.'\'';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
 
     my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
