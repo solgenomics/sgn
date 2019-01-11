@@ -26,10 +26,11 @@
 
 
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div><button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
     <br>
 
-
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <br>
     <br>
 
     </div>
@@ -38,21 +39,29 @@
       <div class="form-group form-inline">
         <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">Trait Histogram</button>
+      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
       <br>
       <br>
       <br>
       <div id="trait_histogram_plot">
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
       </div>
       <br>
       <br>
       <div class="form-group form-inline">
-        <input type="checkbox" id="princomp" />
-        <label>Include principal components in model &nbsp; </label><button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA</button>
-
+      <input type="checkbox" id="kinshipmat" />
+      <label>Include kinship matrix in model &nbsp; </label>
         <br>
-        <input type="checkbox" id="kinshipmat" />
-        <label>Include kinship matrix in model &nbsp; </label>
+        <input type="checkbox" id="princomp" />
+        <label>Include principal components in model &nbsp; </label>
+        <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA Plot</button>
       </div>
 
 
@@ -154,43 +163,47 @@ jQuery(document).ready(function() {
   });
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
-    //alert("Inside trait preview");
-    var tempfile = jQuery('#tempfile').html();
-    var trait = jQuery('#pheno_select').val();
-    //alert(trait);
-    jQuery.ajax( {
-        url: '/ajax/solgwas/getdata',
-        data: { 'file' : tempfile },
-        success: function(r)  {
-        //alert("data grabbed "+JSON.stringify(r.data));
-        var v = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-            "width": 200,
-            "height": 100,
-            "padding": 5,
-            "data": { 'values': r.data },
-            "mark": "bar",
-            "encoding": {
-            "x": {
-              "bin": true,
-              "field": trait,
-              "type": "quantitative"
-            },
-            "y": {
-              "aggregate": "count",
-              "type": "quantitative"
-            }
-           }
-          };
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      //alert("Inside trait preview");
+      var tempfile = jQuery('#tempfile').html();
+      var trait = jQuery('#pheno_select').val();
+      //alert(trait);
+      jQuery.ajax( {
+          url: '/ajax/solgwas/getdata',
+          data: { 'file' : tempfile },
+          success: function(r)  {
+          //alert("data grabbed "+JSON.stringify(r.data));
+          var v = {
+              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+              "width": 200,
+              "height": 100,
+              "padding": 5,
+              "data": { 'values': r.data },
+              "mark": "bar",
+              "encoding": {
+              "x": {
+                "bin": true,
+                "field": trait,
+                "type": "quantitative"
+              },
+              "y": {
+                "aggregate": "count",
+                "type": "quantitative"
+              }
+             }
+            };
 
- //alert("embedding"+ JSON.stringify(v));
-          vegaEmbed("#trait_histogram_plot", v);
-          //alert("done");
-        },
+   //alert("embedding"+ JSON.stringify(v));
+            vegaEmbed("#trait_histogram_plot", v);
+            //alert("done");
+          },
 
 
-      error: function(e) { alert('error!'); }
-    });
+        error: function(e) { alert('error!'); }
+      });
+    };
   });
 
 
