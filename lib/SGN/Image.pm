@@ -378,6 +378,7 @@ sub upload_drone_imagery_zipfile {
     }
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+    print STDERR Dumper scalar(@$file_members);
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
         #print STDERR Dumper $_;
