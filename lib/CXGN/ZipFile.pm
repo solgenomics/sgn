@@ -28,7 +28,7 @@ sub BUILD {
 		print STDERR "cannot read given zipfile\n";
         return;
 	}
-	$self->archived_zip($archived_zip);
+	$self->archived_zip(Archive::Zip->new($self->archived_zipfile_path()));
 }
 
 
