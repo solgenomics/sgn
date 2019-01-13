@@ -192,6 +192,9 @@ function showMarkersetDetail (markerset_id){
                 var markerset_detail_table = jQuery('#markerset_detail_table').DataTable({
                     'destroy': true,
                     'data': response.data,
+                    'columns': [
+                        {title: "Item", "data": "item_name"},
+                    ],
                 });
             } else {
                 alert(response.error);

@@ -984,7 +984,16 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
     my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
     my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
 
-    $c->stash->{rest} = {success => 1, data => $markerset_items_ref};
+    my @items;
+    foreach my $markerset_item (@$markerset_items_ref){
+        my ($id, $name) = @$markerset_item;
+        push @items, {
+            item_id => $id,
+            item_name => $name,
+        }
+    }
+
+    $c->stash->{rest} = {success => 1, data => \@items};
 
 }
 
