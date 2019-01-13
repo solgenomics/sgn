@@ -969,6 +969,25 @@ sub delete_markerset : Path('/markerset/delete') Args(0) {
 }
 
 
+sub get_markerset_items :Path('/markerset/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $markerset_id = $c->req->param("markerset_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+    	$c->stash->{rest} = { error => 'You must be logged in to use marker sets.', };
+    	return;
+    }
+
+    my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
+    my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
+
+    $c->stash->{rest} = {success => 1, data => $markerset_items_ref};
+
+}
+
 
 #########
 1;

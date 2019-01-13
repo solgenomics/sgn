@@ -145,7 +145,8 @@ function show_table() {
             {title: "Marker Set Name", "data": "markerset_name"},
             {title: "Number of Items", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
-            {title: "Delete", "data": "null", "render": function (data, type, row) {return "<a onclick = 'removeMarkerSet("+row.markerset_id+")'>X</a>";}},
+            {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},
+            {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'removeMarkerSet("+row.markerset_id+")'>Delete</a>" ;}},
         ],
     });
 }
@@ -174,4 +175,31 @@ function removeMarkerSet (markerset_id){
             }
         });
     }
+}
+
+
+function showMarkersetDetail (markerset_id){
+    jQuery.ajax({
+        url: '/markerset/items',
+        data: {'markerset_id': markerset_id},
+        beforeSend: function(){
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+            jQuery('#working_modal').modal('hide');
+            if (response.success == 1) {
+                jQuery('#markerset_detail_dialog').modal('show');
+                var markerset_detail_table = jQuery('#markerset_detail_table').DataTable({
+                    'destroy': true,
+                    'data': response.data,
+                });
+            } else {
+                alert(response.error);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred getting marker set detail');
+        }
+    });
 }
