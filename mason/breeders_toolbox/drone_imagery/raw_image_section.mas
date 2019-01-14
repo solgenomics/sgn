@@ -9,6 +9,36 @@
     </thead>
 </table>
 
+<div class="modal fade" id="drone_imagery_upload_stitched_image_dialog" name="drone_imagery_upload_stitched_image_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryUploadStitchedImageDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryUploadStitchedImageDialog">Upload Stitched Ortho Image</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_stitched_image_form" name="upload_drone_imagery_stitched_image_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Ortho Image: (.jpeg, .png)</label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="drone_imagery_upload_stitched_ortho" name="drone_imagery_upload_stitched_ortho" encoding="multipart/form-data" />
+                    </div>
+                </div>
+                <input type="hidden" id="drone_imagery_upload_stitched_ortho_drone_run_project_id" name="drone_imagery_upload_stitched_ortho_drone_run_project_id" />
+                <input type="hidden" id="drone_imagery_upload_stitched_ortho_drone_run_band_project_id" name="drone_imagery_upload_stitched_ortho_drone_run_band_project_id" />
+            </form>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="drone_imagery_upload_stitched_image_submit">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 jQuery(document).ready(function(){
 
@@ -34,6 +64,40 @@ jQuery(document).ready(function(){
                 alert('Error stitching drone images!')
             }
         });
+    });
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_upload_stitched"]', function(){
+        console.log(jQuery(this).data('drone_run_project_id'));
+        console.log(jQuery(this).data('drone_run_band_project_id'));
+        jQuery('#drone_imagery_upload_stitched_ortho_drone_run_project_id').val(jQuery(this).data('drone_run_project_id'));
+        jQuery('#drone_imagery_upload_stitched_ortho_drone_run_band_project_id').val(jQuery(this).data('drone_run_band_project_id'));
+        jQuery('#drone_imagery_upload_stitched_image_dialog').modal('show');
+    });
+
+    jQuery(document).on('click', 'button[name="drone_imagery_upload_stitched_image_submit"]', function(){
+        drone_imagery_upload_stitched_image_form();
+    });
+
+    function drone_imagery_upload_stitched_image_form() {
+        jQuery('#upload_drone_imagery_stitched_image_form').attr("action", "/ajax/drone_imagery/upload_drone_imagery_stitch");
+        jQuery("#upload_drone_imagery_stitched_image_form").submit();
+    }
+
+    jQuery('#upload_drone_imagery_stitched_image_form').iframePostForm({
+        json: true,
+        post: function () {
+            jQuery('#working_modal').modal("show");
+        },
+        complete: function (response) {
+            console.log(response);
+
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            location.reload();
+        }
     });
 
     jQuery(document).on('click', 'span[name="drone_image_remove"]', function(){

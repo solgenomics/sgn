@@ -512,7 +512,12 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
             $drone_run_band_table_html .= '<tr><td><b>Name</b>: '.$d->{drone_run_band_project_name}.'<br/><b>Description</b>: '.$d->{drone_run_band_project_description}.'<br/><b>Type</b>: '.$d->{drone_run_band_project_type}.'</td><td>';
 
+            $drone_run_band_table_html .= '<div class="panel-group" id="drone_run_band_accordion_'.$drone_run_band_project_id.'"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_'.$drone_run_band_project_id.'" href="#drone_run_band_accordion_one_'.$drone_run_band_project_id.'">View Images</a></h4></div><div id="drone_run_band_accordion_one_'.$drone_run_band_project_id.'" class="panel-collapse collapse"><div class="panel-body">';
+
+            $drone_run_band_table_html .= '<div class="panel-group" id="drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'" href="#drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'">View Raw Drone Run Images</a></h4></div><div id="drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'" class="panel-collapse collapse"><div class="panel-body">';
+
             $drone_run_band_table_html .= '<div class="well well-sm">';
+
             if ($d->{images}) {
                 $drone_run_band_table_html .= '<b>'.scalar(@{$d->{images}})." Raw Unstitched Images</b>:<br/><span>";
                 $drone_run_band_table_html .= join '', @{$d->{images}};
@@ -528,6 +533,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                 $drone_run_band_table_html .= '<b>No Raw Unstitched Images</b>';
             }
             $drone_run_band_table_html .= '</div>';
+
+            $drone_run_band_table_html .= '</div></div></div></div>';
 
             if ($d->{stitched_image}) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Stitched Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{stitched_image_username}.'<br/><b>Date</b>: '.$d->{stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{stitched_image}.'</div></div></div>';
@@ -630,8 +637,11 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_rotate_image" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Rotate Stitched Image</button><br/><br/>';
                 }
             } else {
-                $drone_run_band_table_html .= '<button class="btn btn-primary" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Stitch Uploaded Images</button>';
+                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Stitch Uploaded Images Into Ortho Image Now</button><br/><br/>';
+                $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_upload_stitched" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Upload Previously Stitched Ortho Image</button>';
             }
+            
+            $drone_run_band_table_html .= '</div></div></div></div>';
             $drone_run_band_table_html .= '</td></tr>';
 
         }
@@ -641,7 +651,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
         $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a></div>";
         $drone_run_html .= $drone_run_band_table_html;
-        $drone_run_html .= '<button class="btn btn-primary" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
+        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
 
         push @return, [$drone_run_html];
     }
@@ -694,6 +704,51 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $ret = $image->process_image($archive_stitched_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
 
     $c->stash->{rest} = { data => \@image_urls };
+}
+
+sub upload_drone_imagery_stitch : Path('/ajax/drone_imagery/upload_drone_imagery_stitch') : ActionClass('REST') { }
+
+sub upload_drone_imagery_stitch_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    print STDERR Dumper $c->req->params;
+    my $drone_run_band_project_id = $c->req->param('drone_imagery_upload_stitched_ortho_drone_run_band_project_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $upload_file = $c->req->upload('drone_imagery_upload_stitched_ortho');
+
+    my $upload_original_name = $upload_file->filename();
+    my $upload_tempfile = $upload_file->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => "drone_imagery_upload_ortho",
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    print STDERR "Archived Ortho Drone Image File: $archived_filename_with_path\n";
+
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $ret = $image->process_image($archived_filename_with_path, 'project', $drone_run_band_project_id, $linking_table_type_id);
+    my $uploaded_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $uploaded_image_url = $image->get_image_url('original');
+
+    $c->stash->{rest} = { success => 1, uploaded_image_url => $uploaded_image_url, uploaded_image_fullpath => $uploaded_image_fullpath };
 }
 
 sub drone_imagery_rotate_image : Path('/ajax/drone_imagery/rotate_image') : ActionClass('REST') { }
