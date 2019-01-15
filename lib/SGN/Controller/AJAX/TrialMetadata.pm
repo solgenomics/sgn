@@ -1618,13 +1618,13 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
     }
 
     if (my $error = $self->privileges_denied($c)) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
-    if (!$plants_per_plot || $plants_per_plot > 50) {
-	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 50." };
-	return;
+    if (!$plants_per_plot || $plants_per_plot > 500) {
+        $c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 500." };
+        return;
     }
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
