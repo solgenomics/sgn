@@ -373,6 +373,7 @@ jQuery(document).ready(function ($) {
 
         var plot_width = $('#add_project_plot_width').val();
         var plot_length = $('#add_project_plot_length').val();
+        var num_plant_per_plot= $('add_project_has_plant_entries').val();
         var field_size = $('#new_trial_field_size').val();
 
         var seedlot_hash_combined = {};
@@ -485,6 +486,7 @@ jQuery(document).ready(function ($) {
                 'field_size': field_size,
                 'plot_width': plot_width,
                 'plot_length': plot_length,
+                'num_plant_per_plot': num_plant_per_plot,
                 'use_same_layout' : use_same_layout
             },
             success: function (response) {
@@ -1241,6 +1243,7 @@ jQuery(document).ready(function ($) {
 
         var plot_width = $('#add_project_plot_width').val();
         var plot_length = $('#add_project_plot_length').val();
+        var num_plant_per_plot =$('#num_plant_per_plot').val();
         var field_size = $('#new_trial_field_size').val();
         var field_trial_is_planned_to_be_genotyped = $('#add_project_trial_will_be_genotyped').val();
         var field_trial_is_planned_to_cross = $('#add_project_trial_will_be_crossed').val();
@@ -1297,6 +1300,7 @@ jQuery(document).ready(function ($) {
                 'field_size': field_size,
                 'plot_width': plot_width,
                 'plot_length': plot_length,
+                'num_plant_per_plot': num_plant_per_plot,
                 'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
                 'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross,
                 'add_project_trial_source': selectedTrials,

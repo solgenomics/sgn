@@ -497,6 +497,7 @@ sub save_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
+    my $plant_number = $c->req->param('plant_number');
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped') || 'No';
     my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross') || 'No';
     my @add_project_trial_source = $c->req->param('add_project_trial_source[]');
@@ -604,7 +605,9 @@ sub save_experimental_design_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
-
+        if ($plant_number){
+            $trial_info_hash{trial_has_plant_entries} = $plant_number;
+        }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
         if ($trial_create->trial_name_already_exists()) {
@@ -789,6 +792,7 @@ sub upload_trial_file_POST : Args(0) {
     my $field_size = $c->req->param('trial_upload_field_size');
     my $plot_width = $c->req->param('trial_upload_plot_width');
     my $plot_length = $c->req->param('trial_upload_plot_length');
+    my $plant_number = $c->req->param('trial_upload_has_plant_entries');
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('upload_trial_trial_will_be_genotyped');
     my $field_trial_is_planned_to_cross = $c->req->param('upload_trial_trial_will_be_crossed');
     my @add_project_trial_source = $c->req->param('upload_trial_trial_source_select');
@@ -923,6 +927,9 @@ sub upload_trial_file_POST : Args(0) {
         }
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
+        }
+        if ($plant_number){
+            $trial_info_hash{trial_has_plant_entries} = $plant_number;
         }
 
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);

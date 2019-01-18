@@ -247,6 +247,26 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Number of plants per plot: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_project_has_plant_entries" name="add_project_has_plant_entries">
+                                            <option value="">NA</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                            <option value="11">11</option>
+                                            <option value="12">12</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Field Size (ha): </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="new_trial_field_size" name="new_trial_field_size" type="text" />
