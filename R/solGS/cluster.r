@@ -18,9 +18,7 @@ library(cluster)
 library(ggfortify)
 library(tibble)
 library(stringi)
-#library(factoextra)
-
-
+library(phenoAnalysis)
 
 allArgs <- commandArgs()
 
@@ -61,7 +59,7 @@ message('data type ', dataType)
 
 if (is.null(kResultFile))
 {
-  stop("Scores output file is missing.")
+  stop("Clustering output file is missing.")
   q("no", 1, FALSE) 
 }
 
@@ -69,6 +67,8 @@ if (is.null(kResultFile))
 clusterData <- c()
 genoData    <- c()
 genoFiles   <- c()
+reportNotes <- c()
+genoDataMissing <- c()
 
 extractGenotype <- function(inputFiles) {
 
@@ -77,14 +77,12 @@ extractGenotype <- function(inputFiles) {
     filteredGenoFile <- c()
 
     if (length(genoFiles) > 1 ) {   
-        message('allGenoFiles: ', genoFiles)
         genoData <- combineGenoData(genoFiles)
         
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
     } else {
         genoFile <- genoFiles
-        message('geno file: ', genoFile)
         genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-", "."))
         genoData <- unique(genoData, by='V1')
         
@@ -105,7 +103,7 @@ extractGenotype <- function(inputFiles) {
         q("no", 1, FALSE)
     }
 
-    genoDataMissing <- c()
+   
     if (is.null(filteredGenoFile) == TRUE) {
         ##genoDataFilter::filterGenoData
         genoData <- filterGenoData(genoData, maf=0.01)
@@ -125,6 +123,7 @@ extractGenotype <- function(inputFiles) {
 set.seed(235)
 clusterNa <- c()
 
+
 if (grepl('genotype', dataType, ignore.case=TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
 
@@ -140,10 +139,9 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
     selectPcs <- varProp %>% filter(cumVar <= 0.9) 
     pcsCnt    <- nrow(selectPcs)
 
-    pcsNote <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ')
-    pcsNote <- paste0(pcsNote, 'Based on the PCA, ', pcsCnt, ' PCs are used to cluster this dataset. ')
-    pcsNote <- paste0(pcsNote, 'They explain 90% of the variance in the original dataset.')
-    cat(pcsNote, file=reportFile, sep="\n", append=TRUE)
+    reportNotes <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ', "\n")
+    reportNotes <- paste0(reportNotes, 'Based on the PCA, ', pcsCnt, ' PCs are used to cluster this dataset. ', "\n")
+    reportNotes <- paste0(reportNotes, 'They explain 90% of the variance in the original dataset.', "\n")
 
     scores   <- data.frame(pca$x)
     scores   <- scores[, 1:pcsCnt]
@@ -158,35 +156,45 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
 
     if (grepl('gebv', dataType, ignore.case=TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
-        message('gebvs file: ', gebvsFile)
         gebvsData <- data.frame(fread(gebvsFile))
-        print(head(gebvsData))
-        clusterNa  <- gebvsData %>% filter_all(any_vars(is.na(.)))
-        print(clusterNa)
+       
+        clusterNa   <- gebvsData %>% filter_all(any_vars(is.na(.)))
         clusterData <- column_to_rownames(gebvsData, 'V1')    
+    } else if (grepl('phenotype', dataType, ignore.case=TRUE)) {
+
+        metaFile <- grep("meta", inputFiles,  value = TRUE)
+       # phenoData <- data.frame(fread(phenoFile))
+        
+        phenoFile <- grep("phenotype_data", inputFiles,  value = TRUE)
+        pheno <- data.frame(fread(phenoFile))
+       
+        phenoData <- cleanMetaCols(metaDataFile=metaFile,
+                                   phenoData=pheno,
+                                   keepMetaCols=c('germplasmName'))
+                
+        phenoData <- summarizeTraits(phenoData)
+       
+        clusterNa   <- phenoData %>% filter_all(any_vars(is.na(.)))
+        clusterData <- column_to_rownames(phenoData, 'germplasmName')
+               
     }
 
-    #clusterData <- data.frame(clusterData)
-    clusterData <- na.omit(clusterData) 
+    clusterData <- na.omit(clusterData)
+    print(clusterData)
     clusterData <- scale(clusterData, center=TRUE, scale=TRUE)
-    scaleNote   <- paste0('Note: Data was standardized before clustering.')
-    cat(scaleNote, file=reportFile, sep="\n", append=TRUE)
+    reportNotes   <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
 }
 
 kMeansOut   <- kmeansruns(clusterData, runs=10)
 
 kCenters <- kMeansOut$bestk
-recK <- paste0('Recommended number of clusters (k) for this data set is: ', kCenters)
-cat(recK, file=reportFile, sep="\n", append=TRUE)
-
+reportNotes <- paste0(reportNotes, 'Recommended number of clusters (k) for this data set is: ', kCenters, "\n")
 
 if (!is.na(userKNumbers)) {
 
     if (userKNumbers != 0) {
         kCenters <- as.integer(userKNumbers)
-        userK <- paste0('However, Clustering was based on ', userKNumbers)
-        message('userK: ', userK)
-        cat(userK, file=reportFile, sep="\n", append=TRUE)
+        reportNotes <- paste0(reportNotes, 'However, Clustering was based on ', userKNumbers, "\n")
     }
 }
 
@@ -205,6 +213,7 @@ dev.off()
 #autoplot(pam(genoData, 3), frame = TRUE, frame.type = 'norm', x=1, y=2)
 #dev.off()
 
+cat(reportNotes, file=reportFile, sep="\n", append=TRUE)
 
 if (length(genoFiles) > 1) {
     fwrite(genoData,
