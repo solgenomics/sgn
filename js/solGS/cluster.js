@@ -54,8 +54,10 @@ solGS.cluster = {
     getSelectName: function(selectId, dataStructureType) {
 	var selectName;
  	if (dataStructureType == 'list') {
+	    console.log(' list id ',dataStructureType)
 	    var genoList = this.getClusterGenotypesListData(selectId);
 	    var selectName = genoList.name;
+	    console.log('selectName ', selectName) 
 	    //	dataStructureType = genoList.listType + ' list';
 	} else if (dataStructureType == 'dataset') {
 	    var dataset = solGS.getDatasetData(selectId);
@@ -401,7 +403,7 @@ solGS.cluster = {
     getClusterGenotypesListData: function(listId) {   
 	
 	var list = new CXGN.List();
-
+	console.log('listData listId', listId)
 	if (listId) {
 	   
 	    var listName = list.listNameById(listId);
@@ -510,7 +512,7 @@ jQuery(document).ready( function() {
     
         var list = new CXGN.List();
         
-        var listMenu = list.listSelect("cluster_genotypes", ['accessions', 'trials']);
+        var listMenu = list.listSelect("cluster_genotypes", ['accessions','plots', 'trials']);
 
 	var dType = ['accessions', 'trials'];
 	var dMenu = solGS.getDatasetsMenu(dType);
