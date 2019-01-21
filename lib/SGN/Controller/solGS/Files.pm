@@ -33,7 +33,7 @@ sub marker_effects_file {
         my $combo_identifier = $c->stash->{combo_pops_id}; 
        
         $cache_data = {key       => 'marker_effects_combined_pops_'.  $trait . '_' . $combo_identifier,
-                       file      => 'marker_effects_'. $trait . '_' . $combo_identifier . '_combined_pops',
+                       file      => 'marker_effects_'. $trait . '_' . $combo_identifier . '_combined_pops' . '.txt',
                        stash_key => 'marker_effects_file'
         };
     }
@@ -41,7 +41,7 @@ sub marker_effects_file {
     {
     
        $cache_data = {key       => 'marker_effects' . $pop_id . '_'.  $trait,
-                      file      => 'marker_effects_' . $trait . '_' . $pop_id,
+                      file      => 'marker_effects_' . $trait . '_' . $pop_id . '.txt',
                       stash_key => 'marker_effects_file'
        };
     }
@@ -275,7 +275,7 @@ sub rrblup_training_gebvs_file {
     {
     
         $cache_data = {key       => 'rrblup_training_gebvs_' . $pop_id . '_'.  $trait,
-                       file      => 'rrblup_training_gebvs_' . $trait . '_' . $pop_id,
+                       file      => 'rrblup_training_gebvs_' . $trait . '_' . $pop_id . '.txt',
                        stash_key => 'rrblup_training_gebvs_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
         };
@@ -309,7 +309,7 @@ sub relationship_matrix_file {
     {
     
         $cache_data = {key       => 'relationship_matrix_' . $pop_id,
-                       file      => 'relationship_matrix_' . $pop_id,
+                       file      => 'relationship_matrix_' . $pop_id . '.txt',
                        stash_key => 'relationship_matrix_file'
         };
     }
@@ -351,7 +351,7 @@ sub validation_file {
     {
 
         $cache_data = {key       => 'cross_validation_' . $pop_id . '_' . $trait, 
-                       file      => 'cross_validation_' . $trait . '_' . $pop_id,
+                       file      => 'cross_validation_' . $trait . '_' . $pop_id . '.txt',
                        stash_key => 'validation_file'
         };
     }
@@ -411,7 +411,7 @@ sub all_traits_file {
     #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'all_traits_pop' . $pop_id,
-                      file      => 'all_traits_pop_' . $pop_id,
+                      file      => 'all_traits_pop_' . $pop_id . '.txt',
                       stash_key => 'all_traits_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -428,7 +428,7 @@ sub traits_list_file {
    # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_list_pop' . $pop_id,
-                      file      => 'traits_list_pop_' . $pop_id,
+                      file      => 'traits_list_pop_' . $pop_id . '.txt',
                       stash_key => 'traits_list_file'
     };
 
@@ -441,7 +441,7 @@ sub phenotype_metadata_file {
     my ($self, $c) = @_;
 
     my $cache_data = {key       => 'phenotype_metadata',
-                      file      => 'phenotype_metadata',
+                      file      => 'phenotype_metadata' . '.txt',
                       stash_key => 'phenotype_metadata_file'
     };
 
@@ -454,7 +454,7 @@ sub rrblup_selection_gebvs_file {
     my ($self, $c, $identifier, $trait_id) = @_;
 
     my $cache_data = {key       => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id, 
-                      file      => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id,
+                      file      => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id . '.txt',
                       stash_key => 'rrblup_selection_gebvs_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
@@ -484,7 +484,7 @@ sub list_of_prediction_pops_file {
     my ($self, $c, $training_pop_id)= @_;
 
     my $cache_data = {key       => 'list_of_prediction_pops' . $training_pop_id,
-                      file      => 'list_of_prediction_pops_' . $training_pop_id,
+                      file      => 'list_of_prediction_pops_' . $training_pop_id . '.txt',
                       stash_key => 'list_of_prediction_pops_file'
     };
 
@@ -540,7 +540,7 @@ sub traits_acronym_file {
     #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_acronym_pop' . $pop_id,
-                      file      => 'traits_acronym_pop_' . $pop_id,
+                      file      => 'traits_acronym_pop_' . $pop_id . '.txt',
                       stash_key => 'traits_acronym_file'
     };
 
