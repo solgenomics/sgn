@@ -60,7 +60,6 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $cluster_type      = 'k-means' if !$cluster_type;
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
-
   
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -72,7 +71,6 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{k_number}         = $k_number;
     
-    #$c->stash->{file_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
     #my $file_id = $c->stash->{file_id};
@@ -330,6 +328,35 @@ sub create_cluster_genotype_data {
 }
 
 
+sub create_cluster_phenotype_data {    
+    my ($self, $c) = @_;
+   
+    my $data_structure = $c->stash->{data_structure};
+    
+    if ($data_structure =~ /list/) 
+    {
+	$self->cluster_list_phenotype_data($c);	
+    }
+    elsif ($data_structure =~ /dataset/) 
+    {
+	$c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);	
+    }
+    else 
+    {
+	if ($c->stash->{combo_pops_id})
+	{
+	    $c-> controller('solGS::combinedTrials')->cache_combined_pops_data($c);
+	    $c->stash->{genotype_file} = $c->stash->{trait_combined_pheno_file};
+	}
+	else
+	{
+	    $c->controller('solGS::List')->process_trials_list_details($c);
+	}
+    }
+
+}
+
+
 sub cluster_list_genotype_data {
     my ($self, $c) = @_;
     
@@ -338,7 +365,7 @@ sub cluster_list_genotype_data {
     my $pop_id        = $c->stash->{pop_id};
     my $data_structure = $c->stash->{data_structure};
     my $data_set_type  = $c->stash->{data_set_type};
-    my $referer       = $c->req->referer;
+    my $referer        = $c->req->referer;
     my $geno_file;
     
     if ($referer =~ /solgs\/trait\/\d+\/population\//) 
@@ -362,6 +389,48 @@ sub cluster_list_genotype_data {
 	if ($list_type eq 'accessions')
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
+	} 
+	elsif ( $list_type eq 'trials') 
+	{
+	    $c->controller('solGS::List')->get_trials_list_ids($c);
+	    my $trials_ids = $c->stash->{trials_ids};
+	  
+	    $c->stash->{pops_ids_list} = $trials_ids;
+	    $c->controller('solGS::List')->process_trials_list_details($c);
+	}
+    }
+
+}
+
+
+sub cluster_list_phenotype_data {
+    my ($self, $c) = @_;
+    
+    my $list_id       = $c->stash->{list_id};
+    my $list_type     = $c->stash->{list_type};
+    my $pop_id        = $c->stash->{pop_id};
+    my $data_structure = $c->stash->{data_structure};
+    my $data_set_type  = $c->stash->{data_set_type};
+    my $referer        = $c->req->referer;
+    my $geno_file;
+    
+    if ($referer =~ /solgs\/trait\/\d+\/population\//) 
+    {
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	$c->stash->{genotype_file} = $c->stash->{phenotype_file_name}; 
+    }
+    elsif ($referer =~ /cluster\/analysis\// && $data_set_type =~ 'combined_populations')
+    {
+    	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $c->stash->{combo_pops_id});
+        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->controller('solGS::List')->process_trials_list_details($c);
+    }	   
+    else
+    {
+	if ($list_type eq 'plots')
+	{
+	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
+	    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
@@ -615,9 +684,20 @@ sub cluster_input_files {
 	}
     }
     elsif ($data_type =~ /phenotype/i)
-    {
-	#phenotype data file
-	
+    {	 
+	if ($c->stash->{genotype_files_list}) 
+	{
+	    $files = join("\t", @{$c->stash->{phenotype_files_list}});			      
+	}
+	else 
+	{
+	    $files = $c->stash->{phenotype_file};
+	    print STRDERR "\npheno file: $files\n";
+	}
+
+	$c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+	$c->controller('solGS::Files')->phenotype_metadata_file($c);
+	$files .= "\t" . $c->stash->{phenotype_metadata_file};
     }
     elsif ($data_type =~ /gebv/i)	
     {
