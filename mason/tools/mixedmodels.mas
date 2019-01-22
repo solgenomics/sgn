@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.drag-drop.js' ] &>
 
 <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
@@ -29,35 +29,47 @@ Choose dependent variable:<br />
 [Histogram]
 </div>
 
-<br />
-Choose fixed factors:
-<br />
-<div id="fixed_factors">
-</div>
-<input type="checkbox" id="fixed_factors_interaction">Interaction</input>
-<br />
-Choose random factors
-<br />
-<div id="random_factors">
+
+
+<div class="wrapper" style="position:absolute;width:100%">
+  Available factors
+  
+  <div id="factors" style="position:absolute;text-align:left;width:300px;z-index:3"> <!-- class="ui-widget-content" -->
+    Available factors
+  </div>
+  
+  <div style="position:absolute;left:320px;top:0px;height:200px;width:600px;border-style:dotted;border-width:1px" id="fixed_factors">
+    Fixed factors
+  </div>
+
+  <div id="fixed_factors_collection" style="position:absolute;top:220px;left:320px;width:600px;height:200px;border-style:dotted;border-width:2px">
+    <div id="fixed_factors_interaction" style="position:relative;width:500px;height:140px;border-style:dotted;margin:30px;border-width:1px">
+      Fixed factors with interaction
+    </div>
+    <button style="position:relative" id="add_interaction_factor_button">+</button>
+  </div>
+
+  <div id="random_factors" style="position:absolute;left:320px;width:600px;top:400px;height:200px;border-style:dotted;border-width:1px">
+    Random factors
+  </div>
 
 </div>
-<input type="checkbox" id="random_factors_random_slope">Random slope</input>
+
 
 <br />
 <div id="tempfile" style="display:none" >
 </div>
 
-<button id="run_mixed_model_button" class="btn btn-main">Go!</button>
+<button style="position:relative;top:700px;" id="run_mixed_model_button" class="btn btn-main">Go!</button>
 
 <div id="mixed_models_results_div">
 </div>
 
-
 <script>
-
+  
   jQuery(document).ready(function() { 
 
-     get_select_box("datasets", "mixed_model_dataset_select", {});
+  get_select_box("datasets", "mixed_model_dataset_select", {});
   
      jQuery('#mixed_model_analysis_prepare_button').click( function() { 
        var dataset_id=jQuery('#available_datasets').val();
@@ -70,16 +82,105 @@ Choose random factors
            }
            else { 
              jQuery('#dependent_variable').html(r.dependent_variable);
-             jQuery('#fixed_factors').html(r.fixed_factors);
-             jQuery('#random_factors').html(r.random_factors);
+             var html = "";
+             alert(JSON.stringify(r.factors));
+             for (var n=0; n<r.factors.length; n++) { 
+                html += "<div style=\"border-style:solid;border-radius:8px;width:200px;height:20;border-color:blue;margin:4px;text-align:left\" id=\"factor_"+n+"\" class=\"container\">"+r.factors[n]+"</div>";
+             }
+             jQuery('#factors').html(html);
+             alert(html);
+	     for (var n=0; n<r.factors.length; n++) { 
+	       jQuery('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
+             }
+
              jQuery('#tempfile').html(r.tempfile);
            }
+	   jQuery('#fixed_factors').droppable( {drop: function( event, ui ) {
+					       $( this )
+					       .addClass( "ui-state-highlight" )
+					       .find( "p" )
+					       .html( "Dropped!" );
+					       var droppable = $(this);
+					       var draggable = ui.draggable;
+					       // Move draggable into droppable
+					       var clone = draggable.clone();
+                                               clone.draggable({ revert: "invalid", helper:"clone" });
+					       clone.css("z-index",3);
+                                               if (!isCloned(clone)) { 
+					          setClonedTagProperties(clone);
+                                               }
+                                              
+					       clone.appendTo(droppable);
+
+                                               }});
+
+ 	   jQuery('#fixed_factors_interaction').droppable( {drop: function( event, ui ) {
+					       $( this )
+					       .addClass( "ui-state-highlight" )
+					       .find( "p" )
+					       .html( "Dropped!" );
+                                               var droppable = $(this);
+					       var draggable = ui.draggable;
+					       // Move draggable into droppable
+					       var clone = draggable.clone();
+                                               clone.draggable({ revert: "invalid", helper:"clone" });
+					       clone.css("z-index",3);
+                                               if (!isCloned(clone)) { 
+					          setClonedTagProperties(clone);
+                                               }
+					       
+					       clone.appendTo(droppable);
+                   			       }});
+
+	   jQuery('#random_factors').droppable( {drop: function( event, ui ) {
+					       $( this )
+					       .addClass( "ui-state-highlight" )
+					       .find( "p" )
+					       .html( "Dropped!" );
+					       var droppable = $(this);
+					       var draggable = ui.draggable;
+					       // Move draggable into droppable
+					       var clone = draggable.clone();
+                                               clone.draggable({ revert: "invalid", helper:"clone" });
+					       clone.css("z-index",3);
+                                               if (!isCloned(clone)) { 
+					          setClonedTagProperties(clone);
+                                               }
+                                   
+					       clone.appendTo(droppable);
+                                               					       }});
+
         },
         error: function(r) { 
           alert("ERROR!!!!!");
         }
      });
    });
+
+
+   jQuery('#add_interaction_factor_button').click( function(e) { 
+      alert("HELLO!");
+      var div = '<div id="blabla" style="width:300;height:200">Interaction</div>';					       
+      jQuery('#add_interaction_factor_button').before(div);
+   });
+
+   function isCloned(e) { 
+     if (e.text().includes('X')) { 
+        alert(e.text()+' isCloned!');
+	return true;
+     }
+     alert(e.text()+ " Is not cloned!");
+      return false;
+   }
+
+   function setClonedTagProperties(e) { 
+					       alert("Bla!");
+     e.id = e.html()+'C';
+     e.html('<span id="'+e.id+'_remove" onclick="this.parentNode.parentNode.removeChild(this.parentNode); return false;">X</a></span> '+e.html());
+     jQuery('#'+e.id+'_remove').click( function(e) { alert('removing'+e.id); jQuery('#'+e.id).remove(); });
+     alert("Current ID = "+e.id);
+   }
+
 
    jQuery('#dependent_variable').on('change', '#dependent_variable_select', function() { 
       // alert("click!");
@@ -155,7 +256,12 @@ Choose random factors
 
   });
 
+
+
+
+
 </script>
+
 
 
 

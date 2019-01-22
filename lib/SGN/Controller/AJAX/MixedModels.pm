@@ -40,23 +40,21 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     
     my @select = ();
     foreach my $colname (@{$phenotype_data_ref->[0]}) { 
-	my $html .= "<option id=\"$colname\">$colname</option>";
+	my $html .= "<option>$colname</option>\n";
 	push @select, $html;
     }
-    #print STDERR Dumper(\@select);
+    print STDERR Dumper(\@select);
     my @dependent_items = @select[39..scalar(@select)];
-    #print STDERR Dumper(\@dependent_items);
+    print STDERR Dumper(\@dependent_items);
     my $dependent_html = join("\n", @dependent_items);
 
-    my @factors =@select[0..38];
+    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber germplasmName|;       #@select[0..38];
     my $html = join("\n", @factors);
-    
+
     $c->stash->{rest} = { 
 	dependent_variable => "<select id=\"dependent_variable_select\">$dependent_html</select>",
-	fixed_factors => "<select multiple rows=\"10\" id=\"fixed_factors_select\">$html</select>",
-	random_factors => "<select multiple rows=\"10\" id=\"random_factors_select\">$html</select>",
-	random_factors2 => "<select multiple rows=\"10\" id=\"random_factors_select\">$html</select>",
-        tempfile => $tempfile."_phenotype.txt",
+	factors => \@factors,
+	tempfile => $tempfile."_phenotype.txt",
     };
 }
 
