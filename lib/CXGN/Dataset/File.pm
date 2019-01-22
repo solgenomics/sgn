@@ -19,8 +19,6 @@ override('retrieve_genotypes',
 	     my $protocol_id = shift;
 	     my $file = shift || $self->file_name()."_genotype.txt";
 	     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id);
-
-
 	     my $genotype_string = "";
 	     my $genotype_example = $genotypes->[0];
 	     foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
