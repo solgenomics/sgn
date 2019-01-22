@@ -164,6 +164,39 @@
 
 <hr>
 
+<h3>2 Column Detail Page Section</h3>
+<p>This section is used from trial detail page and stock detail page, but ideally it would be used on all detail pages. The info_section_id specifies what to show in the main section. Buttons can be passed into the buttons_html.</p>
+<p>Source:</p>
+<pre>
+&lt;& /page/detail_page_2_col_section.mas,
+info_section_title =&gt; "&lt;h4 style='display:inline'&gt;My Info Section&lt;/h4&gt;",
+info_section_subtitle =&gt; 'View my info.',
+icon_class =&gt; "glyphicon glyphicon-equalizer",
+info_section_id =&gt; "",
+buttons_html =&gt; "&lt;button class='btn btn-sm btn-primary' style='margin:3px' id='my_example_button'&gt;Example Button&lt;/button&gt;"
+&&gt;
+</pre>
+
+<p>Creates:</p>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>My Info Section</h4>", info_section_subtitle => 'View my info.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "", buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='my_example_button'>Example Button</button>" &>
+
+<hr>
+
+<h3>3 Column Detail Page Section</h3>
+<p>Source:</p>
+<pre>
+&lt;& /page/detail_page_3_col_section.mas,
+icon_class =&gt; "glyphicon glyphicon-qrcode",
+title =&gt; "Example title.",
+button_id =&gt; "example_button_link"
+&&gt;
+</pre>
+
+<p>Creates:</p>
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => "Example title.", button_id => "example_button_link" &>
+
+<hr>
+
 <h3>An Example Workflow Explaining Workflows</h3>
 
 <&| /util/workflow.mas , id=> "my_workflow"&>

@@ -19,6 +19,7 @@ $genotyping_facility_status => undef
 $genotyping_facility_submitted => undef
 $genotyping_plate_format => '96'
 $genotyping_plate_sample_type => undef
+$raw_data_link => undef
 </%args>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
@@ -44,8 +45,15 @@ $genotyping_plate_sample_type => undef
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
                     <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
                     <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
+                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr>
                     </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <button class="btn btn-primary btn-sm" id="edit_genotyping_trial_details" style="margin:3px">Edit Plate Details</button>
                 </div>
             </div>
 
@@ -78,128 +86,145 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
 <center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
 -->
 
-<&| /page/info_section.mas, title=>"Navigator",  collapsible => 1 &>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-qrcode"></span>
-                    </div>
-                    <div class="col-sm-7">
-                        <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
-                    </div>
-                    <div class="col-sm-2"> 
-                        <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-3">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-qrcode"></span>
+                </div>
+                <div class="col-sm-7">
+                    <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
+                </div>
+                <div class="col-sm-2">
+                    <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
 
-                        <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm">Go</button>
-                    </div>
+                    <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm">Go</button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!--
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-list-alt"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Plate Design Info</h4>
+<!--
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-list-alt"></span>
+                </div>
+                <div class="col-sm-11">
 
-                        <&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a>"  &>
+                    <&| /page/info_section.mas, title=>"<h4 style='display:inline'>Plate Design Info</h4>", collapsible=>1, collapsed=>0, subtitle=>"Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a>"  &>
 
-                            <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
-                                <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
-                            </&>
-
-                            <&| /page/info_section.mas, id => "trial_tissue_sources", title=>"Tissue Sources", is_subsection => 1, collapsible=>1, collapsed=>1 &>
-                                <& /breeders_toolbox/trial/trial_tissue_sources.mas, trial_id => $trial_id &>
-                            </&>
-
-                            <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
-                                <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
-                            </&>
+                        <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+                            <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
                         </&>
-                    </div>
+
+                        <&| /page/info_section.mas, id => "trial_tissue_sources", title=>"Tissue Sources", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+                            <& /breeders_toolbox/trial/trial_tissue_sources.mas, trial_id => $trial_id &>
+                        </&>
+
+                        <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Samples",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+                            <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
+                        </&>
+                    </&>
                 </div>
             </div>
         </div>
     </div>
-    -->
+</div>
+-->
 
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-th"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Plate Layout</h4>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-th"></span>
+                </div>
+                <div class="col-sm-11">
 
 % my $plate_view_link = '/breeders_toolbox/trial/'.$trial_id.'?format=as_table';
-                        <&| /page/info_section.mas, title=>"Plate layout", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a><a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
+                    <&| /page/info_section.mas, title=>"<h4 style='display:inline'>Plate Layout</h4>", id=>"trial_plate_layout", collapsible=>1, collapsed=>0, is_subsection=>1,subtitle=> qq{ Download layout <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls&dataLevel=plate\">XLS</a> <a class='btn btn-sm btn-default' style='margin:3px' id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv&dataLevel=plate\">CSV</a><a class='btn btn-sm btn-default' style='margin:3px' href=$plate_view_link>Plate View</a> } &>
 
-                            <div class="well well-sm">
-                                <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
-                                <br/>
+                        <div class="well well-sm">
+                            <& /breeders_toolbox/genotyping_trials/format/as_table.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, genotyping_plate_format => $genotyping_plate_format, table_only=>1 &>
+                            <br/>
 
-                                <div class="panel panel-default">
-                                    <div class="panel-body">
-                                        <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id, genotyping_plate_format => $genotyping_plate_format &>
-                                    </div>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <& /breeders_toolbox/genotyping_trials/layout.mas, trial_id => $trial_id, genotyping_plate_format => $genotyping_plate_format &>
                                 </div>
                             </div>
+                        </div>
 
-                        </&>
-                    </div>
+                    </&>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-link"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Trial Linkage</h4>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-cloud-upload"></span>
+                </div>
+                <div class="col-sm-11">
 
-                        <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
-                            <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'genotyping_trial' &>
-                        </&>
-                    </div>
+                    <&| /page/info_section.mas, title => "<h4 style='display:inline'>Additional Files</h4>", subtitle=> "Upload and view any additional files for   this plate", id => 'genotyping_trial_additional_files_section', collapsible => 1, collapsed => 1 &>
+
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <& /breeders_toolbox/genotyping_trials/files_section.mas, trial_id => $trial_id &>
+                            </div>
+                        </div>
+                    </&>
+
                 </div>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <span style="font-size:3.5em;" class="glyphicon glyphicon-trash"></span>
-                    </div>
-                    <div class="col-sm-11">
-                        <h4>Trial Deletion</h4>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-link"></span>
+                </div>
+                <div class="col-sm-11">
 
-                        <&| /page/info_section.mas, title=>"Delete", collapsible=>1, collapsed=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
-                            <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
-                            <br /><br />
-                            <button class="btn btn-default" id="delete_layout_data_by_trial_id">Delete this genotyping experiment</button>
-                        </&>
-                    </div>
+                    <&| /page/info_section.mas, title => "<h4 style='display:inline'>Plate Linkage</h4>", subtitle => 'View any field trial to genotyping plate linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                        <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'genotyping_trial' &>
+                    </&>
                 </div>
             </div>
         </div>
     </div>
-</&>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-trash"></span>
+                </div>
+                <div class="col-sm-11">
+
+                    <&| /page/info_section.mas, title=>"<h4 style='display:inline'>Trial Deletion</h4>", collapsible=>1, collapsed=>1, subtitle=>"<font color=\"red\">Deletion cannot be undone</font>" &>
+                        <div class="boxbgcolor5">Note: Do not delete a genotype layout for an experiment that has already been submitted to the sequencing facility.</div>
+                        <br /><br />
+                        <button class="btn btn-default" id="delete_layout_data_by_trial_id">Delete this genotyping experiment</button>
+                    </&>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <&| /page/info_section.mas, id=>"genotyping_trial_check_layout_section", title=>"Check Plate Design", collapsible=>1, collapsed=>1 &>
     <div id="genotyping_trial_check_layout_section_div">
@@ -207,6 +232,16 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </&>
 
+<& /breeders_toolbox/genotyping_trials/edit_genotyping_trial_details_dialog.mas,
+trial_name => $trial_name,
+breeding_program => $breeding_program_id,
+genotyping_facility => $genotyping_facility,
+genotyping_facility_status => $genotyping_facility_status,
+genotyping_facility_submitted => $genotyping_facility_submitted,
+genotyping_plate_format => $genotyping_plate_format,
+genotyping_plate_sample_type => $genotyping_plate_sample_type,
+genotyping_raw_data_link => $raw_data_link
+&>
 
 <script>
 
@@ -214,7 +249,12 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
     });
-    
+
+    jQuery('#edit_genotyping_trial_details').click(function(){
+        jQuery('#edit_genotyping_trial_details_dialog').modal("show");
+        edit_genotyping_trial_details();
+    });
+
     jQuery('#genotyping_custom_barcode').click(function () {
         location.href = '/tools/label_designer';
     });

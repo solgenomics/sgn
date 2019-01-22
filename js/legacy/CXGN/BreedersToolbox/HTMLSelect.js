@@ -24,3 +24,23 @@ function get_select_box(type, div_id, options) {
 	}
     });
 }
+
+function filter_options(filter, filterType, targetSelect) {
+
+    if (filter) { // If filter is defined, then show only options that are associated with it's value
+        jQuery('#'+targetSelect+' option').each(function(){
+            if(this.getAttribute('data-'+filterType) == filter) {
+                jQuery(this).show();
+            }
+            else {
+                jQuery(this).hide();
+            }
+        });
+    }
+    else { // Otherwise display all options
+        jQuery('#'+targetSelect+' option').each(function(){
+            jQuery(this).show();
+        });
+    }
+
+}

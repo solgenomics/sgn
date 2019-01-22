@@ -152,8 +152,7 @@ function runAnovaAnalysis(traits) {
 		    } else {
 			var anovaTable = response.anova_html_table;			
 		   	if (anovaTable) {
-			    jQuery("#anova_table").append('<div style="margin-top: 20px">' + anovaTable + '</div>').show();
-			    
+			   // jQuery("#anova_table").prepend('<div style="margin-top: 20px">' + anovaTable + '</div>').show();			    
 			    var anovaFile = response.anova_table_file;
 			    var modelFile = response.anova_model_file;
 			    var meansFile = response.adj_means_file;
@@ -172,7 +171,8 @@ function runAnovaAnalysis(traits) {
 				+  "\" download=" + fileNameDiagnostics + ">[Model Diagnostics]</a>";
 			    
 			    jQuery("#anova_table")
-				.append('<br /> <strong>Download:</strong> '
+				.prepend('<div style="margin-top: 20px">' + anovaTable + '</div>'
+					+ '<br /> <strong>Download:</strong> '
 					+ anovaFile + ' | '
 					+ modelFile + ' | '
 					+ meansFile + ' | '

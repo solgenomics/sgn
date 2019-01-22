@@ -88,6 +88,8 @@ sub get_group_and_member {
     my $ stock_id = $self->stock_id;
     my $ schema = $self->dbic_schema();
     my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
+
     my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN stock
              ON (stock_relationship.object_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
              WHERE stock_relationship.subject_id = ? and stock_relationship.type_id = ?
@@ -98,10 +100,16 @@ sub get_group_and_member {
              ON (stock_relationship.subject_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
              WHERE stock_relationship.object_id = ? and stock_relationship.type_id = ?
 
+             UNION ALL
+
+             SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN stock
+             ON (stock_relationship.object_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+             WHERE stock_relationship.subject_id = ? and stock_relationship.type_id = ?
+
              ";
 
     my $h = $schema->storage->dbh->prepare($q);
-    $h->execute($stock_id, $member_of_type_id, $stock_id, $member_of_type_id);
+    $h->execute($stock_id, $member_of_type_id, $stock_id, $member_of_type_id, $stock_id, $offspring_of_type_id);
 
     my @group =();
         while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
