@@ -1054,7 +1054,7 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
     my $threshold = $c->req->param('threshold');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    if (!$threshold) {
+    if (!$threshold && !defined($threshold)) {
         $c->stash->{rest} = {error => 'Please give a threshold'};
         $c->detach();
     }
