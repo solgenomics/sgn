@@ -1706,6 +1706,11 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_remove_background_start_over').click(function(){
+        removeBackgroundThresholdPeak1;
+        removeBackgroundThresholdPeak2;
+        removeBackgroundThresholdPeak1pixels;
+        removeBackgroundThresholdPeak2pixels;
+
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
             beforeSend: function() {
