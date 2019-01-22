@@ -1705,6 +1705,69 @@ jQuery(document).ready(function() {
         }
     });
 
+    jQuery('#drone_imagery_remove_background_start_over').click(function(){
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var canvas = document.getElementById('drone_imagery_remove_background_original');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+
+                    var src = cv.imread('drone_imagery_remove_background_original');
+                    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                    var srcVec = new cv.MatVector();
+                    srcVec.push_back(src);
+                    var accumulate = false;
+                    var channels = [0];
+                    var histSize = [256];
+                    var ranges = [0, 255];
+                    var hist = new cv.Mat();
+                    var mask = new cv.Mat();
+                    var color = new cv.Scalar(255, 255, 255);
+                    var scale = 3;
+                    var hist_height = src.rows/2;
+
+                    cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+                    var result = cv.minMaxLoc(hist, mask);
+                    var max = result.maxVal;
+                    var dst = new cv.Mat.zeros(hist_height, histSize[0] * scale, cv.CV_8UC3);
+                    // draw histogram
+                    for (let i = 0; i < histSize[0]; i++) {
+                        var binVal = hist.data32F[i] * hist_height / max;
+                        var point1 = new cv.Point(i * scale, hist_height - 1);
+                        var point2 = new cv.Point((i + 1) * scale - 1, hist_height - binVal);
+                        cv.rectangle(dst, point1, point2, color, cv.FILLED);
+                    }
+                    cv.imshow('drone_imagery_remove_background_histogram_div', dst);
+                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+
+                    removeBackgroundHistogramImg = document.getElementById("drone_imagery_remove_background_histogram_div");
+                    removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
+                    removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
+
+                    jQuery('#manage_drone_imagery_remove_background_load_div').hide();
+
+                };
+                image.src = response.image_url;
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving image!')
+            }
+        });
+    });
+
     function removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, position, image_height, color) {
         var ctx = removeBackgroundHistogramImg.getContext("2d");
         ctx.beginPath();
