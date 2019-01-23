@@ -483,7 +483,8 @@ synonym: "eccenticity" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
 id: SP:0000059
