@@ -250,8 +250,8 @@ sub validate_design {
             }
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
-                $seen_accession_names{$stock_name}++;
-            }
+                $seen_accession_names{lc($stock_name)}++;
+	    }
             if ($property eq 'seedlot_name') {
                 my $stock_name = $design{$stock}->{$property};
                 if ($stock_name){
@@ -280,6 +280,7 @@ sub validate_design {
     my @stock_names = keys %seen_stock_names;
     my @source_names = keys %seen_source_names;
     my @accession_names = keys %seen_accession_names;
+    
     if(scalar(@stock_names)<1){
         $error .= "You cannot create a trial with less than one plot.";
     }
@@ -317,11 +318,12 @@ sub validate_design {
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
         'type_id' => {-in=>\@source_stock_types},
-        'uniquename' => {-in=>\@accession_names}
+        'LOWER(uniquename)' => {-in=>\@accession_names}
     });
     my %found_data;
     while (my $s = $rs->next()) {
-        $found_data{$s->uniquename} = 1;
+	my $lc_uniquename = lc($s->uniquename);
+        $found_data{$lc_uniquename} = 1;
     }
     foreach (@accession_names){
         if (!$found_data{$_}){
