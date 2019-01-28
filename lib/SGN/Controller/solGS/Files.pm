@@ -68,14 +68,14 @@ sub variance_components_file {
         my $combo_identifier = $c->stash->{combo_pops_id}; 
 
         $cache_data = {key       => 'variance_components_combined_pops_'.  $trait . "_". $combo_identifier,
-                       file      => 'variance_components_'. $trait . '_' . $combo_identifier. '_combined_pops',
+                       file      => 'variance_components_'. $trait . '_' . $combo_identifier. '_combined_pops.txt',
                        stash_key => 'variance_components_file'
         };
     }
     else 
     {
         $cache_data = {key       => 'variance_components_' . $pop_id . '_'.  $trait,
-                       file      => 'variance_components_' . $trait . '_' . $pop_id,
+                       file      => 'variance_components_' . $trait . '_' . $pop_id . '.txt',
                        stash_key => 'variance_components_file'
         };
     }
@@ -101,14 +101,14 @@ sub trait_phenodata_file {
 	{
 	    my $combo_identifier = $c->stash->{combo_pops_id}; 
 	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
-			   file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops',
+			   file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops.txt',
 			   stash_key => 'trait_phenodata_file'
 	    };
 	}
 	else 
 	{
 	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-			   file      => 'phenotype_trait_' . $trait . '_' . $pop_id,
+			   file      => 'phenotype_trait_' . $trait . '_' . $pop_id . '.txt',
 			   stash_key => 'trait_phenodata_file'
 	    };
 	}
@@ -154,7 +154,7 @@ sub formatted_phenotype_file {
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id, 
-                       file      => 'formatted_phenotype_data_' . $pop_id,
+                       file      => 'formatted_phenotype_data_' . $pop_id . '.txt',
                        stash_key => 'formatted_phenotype_file'
     };
     
@@ -265,7 +265,7 @@ sub rrblup_training_gebvs_file {
     {
         my $combo_identifier = $c->stash->{combo_pops_id};
         $cache_data = {key       => 'rrblup_training_gebvs_combined_pops_'.  $combo_identifier . "_" . $trait,
-                       file      => 'rrblup_training_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops',
+                       file      => 'rrblup_training_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops.txt',
                        stash_key => 'rrblup_training_gebvs_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
 
@@ -300,7 +300,7 @@ sub relationship_matrix_file {
     {
         my $combo_identifier = $c->stash->{combo_pops_id};
         $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
-                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier,
+                       file      => 'relationship_matrix_combined_pops_' . $combo_identifier . '.txt',
                        stash_key => 'relationship_matrix_file'
 
         };
@@ -343,7 +343,7 @@ sub validation_file {
     {
         my $combo_identifier = $c->stash->{combo_pops_id};
         $cache_data = {key       => 'cross_validation_combined_pops_'.  $trait . "_${combo_identifier}",
-                       file      => 'cross_validation_'. $trait . '_' . $combo_identifier . '_combined_pops' ,
+                       file      => 'cross_validation_'. $trait . '_' . $combo_identifier . '_combined_pops.txt' ,
                        stash_key => 'validation_file'
         };
     }
@@ -366,7 +366,7 @@ sub combined_gebvs_file {
     my $pop_id = $c->stash->{pop_id};
      
     my $cache_data = {key       => 'selected_traits_gebv_' . $pop_id . '_' . $identifier, 
-                      file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier,
+                      file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier . '.txt',
                       stash_key => 'selected_traits_gebv_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };

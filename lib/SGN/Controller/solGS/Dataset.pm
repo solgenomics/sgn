@@ -33,10 +33,7 @@ sub get_dataset_genotypes_list {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    
-    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
-					      });
+    my $model = $self->get_model();
     
     my $genotypes_ids = $model->get_genotypes_from_dataset($dataset_id);
 
@@ -48,6 +45,61 @@ sub get_dataset_genotypes_list {
     
 }
 
+
+sub get_dataset_phenotype_data {
+    my ($self, $c) = @_;
+    
+    my $dataset_id = $c->stash->{dataset_id};
+
+    $self->get_dataset_plots_list($c);
+
+    my $model = $self->get_model();
+
+    my $data = $model->get_dataset_data($dataset_id);
+
+    if (@{$data->{categories}->{plots}})	
+    {
+	$c->stash->{plots_names} = $data->{categories}->{plots};
+	$c->controller('solGS::List')->plots_list_phenotype_file($c);
+	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};	
+    } 
+    elsif (@{$data->{categories}->{trials}})
+    {
+	$c->stash->{pops_ids_list} = $data->{categories}->{trials};
+	my $trials_ids =  $data->{categories}->{trials};
+	$c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
+	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
+	my @pheno_files = split("\t", $c->stash->{multi_pops_pheno_files});
+	$c->stash->{phenotype_files_list} = \@pheno_files;
+	
+    }    
+}
+
+
+sub get_dataset_plots_list {
+    my ($self, $c) = @_;
+
+    my $dataset_id = $c->stash->{dataset_id};
+ 
+    my $model = $self->get_model();
+    
+    my $plots = $model->get_dataset_plots_list($dataset_id);
+
+    $c->stash->{plots_names} = $plots;
+    $c->controller('solGS::List')->get_plots_list_elements_ids($c);
+    
+}
+
+
+sub get_model {
+    my $self = shift;
+
+    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
+					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
+					      });
+
+    return $model;
+}
 
 
 sub begin : Private {

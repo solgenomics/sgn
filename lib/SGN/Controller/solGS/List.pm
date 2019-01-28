@@ -495,9 +495,16 @@ sub get_plots_list_elements_ids {
     my ($self, $c) = @_;
 
     my $list = $c->stash->{list_id};
-
-    $self->get_list_elements_names($c);
-    my $plots = $c->stash->{list_elements_names};
+    my $plots;
+    if ($c->stash->{plots_names}) 
+    {
+	$plots = $c->stash->{plots_names};
+    }
+    else
+    {
+	$self->get_list_elements_names($c);
+	$plots = $c->stash->{list_elements_names};
+    }
 	
     my $transform = CXGN::List::Transform->new();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -613,11 +620,8 @@ sub genotypes_list_genotype_file {
    
     my $data_dir  = $c->stash->{solgs_lists_dir};
 
-    print STDERR "\ncreating temp geno file.. $pop_id \n";
     my $files = $self->create_list_pop_data_files($c, $data_dir, $pop_id);
     my $geno_file = $files->{geno_file};
-    
-    print STDERR "\ncreated temp geno file.. $geno_file \n";
     
     my $args = {
 	'list_pop_id'    => $pop_id,
@@ -626,7 +630,6 @@ sub genotypes_list_genotype_file {
 	'list_data_dir'  => $data_dir,
 	'genotype_file'  => $geno_file,
     };
-
     
     $self->submit_list_genotype_data_query($c, $args);
     
@@ -689,14 +692,22 @@ sub plots_list_phenotype_file {
     my $model_id = $c->stash->{model_id};
     my $list     = $c->stash->{list}; 
     my $list_id  = $c->stash->{list_id};
-    
-    $self->get_list_elements_names($c);
-    my $plots_names = $c->stash->{list_elements_names};
-  
-    $self->get_plots_list_elements_ids($c);
-    my $plots_ids = $c->stash->{list_elements_ids};
+ 
+    my $dataset_id  = $c->stash->{dataset_id};
+    my $plots_names = $c->stash->{plots_list};
+    my $plots_ids   = $c->stash->{plots_ids};
 
-    $c->stash->{pop_id} = 'list_' . $list_id;
+    if (!$plots_ids)
+    {
+	#$self->get_list_elements_names($c);
+	#$plots_names = $c->stash->{list_elements_names};
+	
+	$self->get_plots_list_elements_ids($c);
+	$plots_ids = $c->stash->{list_elements_ids};
+    }
+    
+    $c->stash->{pop_id} = $dataset_id ? 'dataset_' . $dataset_id : 'list_' . $list_id;
+    my $file_id = $c->stash->{pop_id};
     $c->controller('solGS::Files')->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
   
@@ -711,7 +722,7 @@ sub plots_list_phenotype_file {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $list_id);
+    my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $file_id);
     my $pheno_file = $temp_data_files->{pheno_file};
     $c->stash->{plots_list_phenotype_file} = $pheno_file;
 
@@ -722,7 +733,7 @@ sub plots_list_phenotype_file {
 
      my $args = {
 	'list_id'        => $list_id,
-	'plots_names'    => $plots_names,
+	#'plots_names'    => $plots_names,
 	'plots_ids'      => $plots_ids,
 	'traits_file'    => $traits_file,
 	'list_data_dir'  => $data_dir,
@@ -757,6 +768,7 @@ sub plots_list_phenotype_file {
     };
     
     $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
+    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
 
 }
 

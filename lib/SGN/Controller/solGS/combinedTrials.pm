@@ -492,25 +492,23 @@ sub multi_pops_pheno_files {
     my ($self, $c, $pop_ids) = @_;
  
     my $trait_id = $c->stash->{trait_id};
-    my $dir = $c->stash->{solgs_cache_dir};
     my $files;
    
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
         foreach my $pop_id (@$pop_ids) 
         {
-	    my $exp = 'phenotype_data_' . $pop_id . '.txt';
-            $files .= catfile($dir, $exp);
+	    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	    $files .= $c->stash->{phenotype_file_name};
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id); 		
         }
 
         $c->stash->{multi_pops_pheno_files} = $files;
-
     }
     else 
     {
-        my $exp = 'phenotype_data_' . ${pop_ids} . '.txt';
-        $files = catfile($dir, $exp);
+	  $c->controller('solGS::Files')->phenotype_file_name($c, $pop_ids);
+	  $files = $c->stash->{phenotype_file_name};
     }
 
     if ($trait_id)
@@ -528,23 +526,23 @@ sub multi_pops_geno_files {
     my ($self, $c, $pop_ids) = @_;
  
     my $trait_id = $c->stash->{trait_id};
-    my $dir = $c->stash->{solgs_cache_dir};
     my $files;
     
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
         foreach my $pop_id (@$pop_ids) 
         {
-            my $exp = 'genotype_data_' . $pop_id . '.txt';
-            $files .= catfile($dir, $exp);        
+	    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+	    $files .= $c->stash->{genotype_file_name};     
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
         }
+	
         $c->stash->{multi_pops_geno_files} = $files;
     }
     else 
     {
-        my $exp = 'genotype_data_' . ${pop_ids} . '.txt';
-        $files = catfile($dir, $exp);
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_ids);
+	$files = $c->stash->{genotype_file_name};   
     }
 
     if ($trait_id)
@@ -1019,7 +1017,6 @@ sub count_combined_trials_members {
 	}
 	
 	$genos_cnt = scalar(uniq(@genotypes));
-	 print STDERR "\ncount: $genos_cnt\n";	
     }
   
     return $genos_cnt;

@@ -123,7 +123,6 @@ extractGenotype <- function(inputFiles) {
 set.seed(235)
 clusterNa <- c()
 
-
 if (grepl('genotype', dataType, ignore.case=TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
 
@@ -163,26 +162,23 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
     } else if (grepl('phenotype', dataType, ignore.case=TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
-       # phenoData <- data.frame(fread(phenoFile))
-        
-        phenoFile <- grep("phenotype_data", inputFiles,  value = TRUE)
-        pheno <- data.frame(fread(phenoFile))
-       
+      
+        pheno <-  extractPhenotype(inputFiles, metaFile)
+
         phenoData <- cleanMetaCols(metaDataFile=metaFile,
                                    phenoData=pheno,
                                    keepMetaCols=c('germplasmName'))
                 
         phenoData <- summarizeTraits(phenoData)
-       
+
         clusterNa   <- phenoData %>% filter_all(any_vars(is.na(.)))
         clusterData <- column_to_rownames(phenoData, 'germplasmName')
-               
+           
     }
 
     clusterData <- na.omit(clusterData)
-    print(clusterData)
     clusterData <- scale(clusterData, center=TRUE, scale=TRUE)
-    reportNotes   <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
+    reportNotes <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
 }
 
 kMeansOut   <- kmeansruns(clusterData, runs=10)

@@ -2497,9 +2497,10 @@ sub get_model_accuracy_value {
     readdir($dh);  
  
     closedir $dh; 
-        
+    
+    print STDERR "\nvalidation: $validation_file -- $model_id - $trait_abbr\n";
     $validation_file = catfile($dir, $validation_file);
-       
+     print STDERR "\nvalidation: $validation_file\n";   
     my ($row) = grep {/Average/} read_file($validation_file);
     my ($text, $accuracy_value) = split(/\t/,  $row);
  
@@ -3022,13 +3023,16 @@ sub analyzed_traits {
     my @analyzed_traits_files;
 
     foreach my $trait_file  (@traits_files) 
-    {  
+    {
+
+	print STDERR "\ntrait file: $trait_file\n";
         if (-s $trait_file) 
         { 
             my $trait = basename($trait_file);	   
             $trait =~ s/rrblup_training_gebvs_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
+	    $trait =~ s/\.txt//;
 
 	    my $trait_id;
 
