@@ -57,6 +57,8 @@ jQuery(document).ready(function (){
         }
 
         var dosage = $('#allele_dosage').val();
+        var allele1 = $('#allele_1').val();
+        var allele2 = $('#allele_2').val();
 
         var markerDosage = {};
 
@@ -66,13 +68,22 @@ jQuery(document).ready(function (){
             markerDosage.allele_dosage = dosage;
         }
 
+        if (allele1){
+            markerDosage.allele1 = allele1;
+        }
+
+        if (allele2){
+            markerDosage.allele2 = allele2;
+        }
+
         var markerDosageString = JSON.stringify(markerDosage);
 
         var markerAdded = lo.addToList(markerSetName, markerDosageString);
         if (markerAdded){
             alert("Added "+markerDosageString);
         }
-        location.reload()
+
+        location.reload();
         return markerSetName;
 
     });
