@@ -37,7 +37,6 @@ export function init(main_div){
   </div>`;
   
   var bp = $(main_div);
-  console.log("A",bp.find(".boxplotter-result").get());
   var boxplot = BrAPIBoxPlotter(bp.find(".boxplotter-result").get(0));
   
   
@@ -48,13 +47,13 @@ export function init(main_div){
     console.log(d);
     bp.find(".boxplotter-variable-select-div, .boxplotter-group-list, .boxplotter-result").hide();
     $.ajax({
-      url : '/ajax/tools/boxplotter/get_constraints',
+      url : document.location.origin+'/ajax/tools/boxplotter/get_constraints',
       type : 'GET',
       data : d,
       dataType:'json',
       success : function(data) {    
         console.log(data);
-        var obsUnits = BrAPI("/brapi/v1").phenotypes_search({
+        var obsUnits = BrAPI(document.location.origin+"/brapi/v1").phenotypes_search({
           "germplasmDbIds" : data["categories"]["accessions"],
           "observationVariableDbIds" : data["categories"]["traits"],
           "studyDbIds" : data["categories"]["trials"],
@@ -133,6 +132,7 @@ export function init(main_div){
   
   return {
     'loadDatasetObsUnits':loadDatasetObsUnits,
-    'boxplot':boxplot
+    'boxplot':boxplot,
+    'element':main_div
   }
 }
