@@ -665,16 +665,9 @@ function onEachFeature(feature, layer) {
     }
 
    function edit_location(id) {
+
         var table = jQuery('#location_table').DataTable();
-        var index = table.rows().eq( 0 ).filter( function (rowIdx) {
-            return table.cell( rowIdx, 0 ).data() === id ? true : false;
-        } );
-       var data = table.rows(index).data();
-       var all_rows = [];
-       for (var i=0; i < data.length ;i++){
-           all_rows.push(data[i]);
-       }
-       var loc_data = all_rows.shift();
+        var loc_data = table.row('#'+id).data();
         //console.log("Data for location to edit: "+JSON.stringify(loc_data));
         //console.log("Program for location to edit is "+loc_data.properties.Program);
         $('#location_id').val(loc_data.properties.Id);
