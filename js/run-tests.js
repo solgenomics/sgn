@@ -8,6 +8,7 @@ const del = require('del');
 const path = require('path');
 const glob = require("glob");
 const nock = require('nock');
+const fetch = require('node-fetch');
 
 const { JSAN_to_src_path } = require("./webpack_util/utils.js");
 
@@ -78,6 +79,7 @@ function runTests(mapping){
     // Add window.nock function to JSDOM window which allows for us to spoof AJAX calls
     // also clean up current mocked responses from previous tests
     dom.window.nock = nock;
+    dom.window.fetch = fetch;
     nock.cleanAll();
     // Add script tags to JSDOM, these excute upon insertion (thereby running
     // the contained tests).
