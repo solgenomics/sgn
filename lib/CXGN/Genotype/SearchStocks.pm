@@ -107,4 +107,76 @@ sub get_selected_accessions {
 }
 
 
+sub get_accessions_using_snps {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $accession_list = $self->stock_list;
+    my $filtering_parameters = $self->filtering_parameters;
+    my @accessions = @{$accession_list};
+    my @parameters = @{$filtering_parameters};
+
+    my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+
+    my @selected_accessions = ();
+    my %vcf_params;
+    my $protocol_id;
+    my $marker_name;
+    my $allele1;
+    my $allele2;
+
+    foreach my $param (@parameters){
+        my $param_ref = decode_json$param;
+        my %params = %{$param_ref};
+        $marker_name = $params{marker_name};
+        $allele1 = $params{allele1};
+        $allele2 = $params{allele2};
+        my $genotyping_protocol_id = $params{genotyping_protocol_id};
+
+        if ($genotyping_protocol_id){
+            $protocol_id = $genotyping_protocol_id
+        }
+
+        print STDERR "MARKER_NAME=" .Dumper($marker_name). "\n";
+        print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
+        print STDERR "ALLELE 1=" .Dumper($allele1). "\n";
+        print STDERR "ALLELE 2=" .Dumper($allele2). "\n";
+
+        my @marker_ref_alt;
+        my $q = "SELECT value->'markers'->?->>'ref', value->'markers'->?->>'alt' FROM nd_protocolprop WHERE nd_protocol_id=?";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($marker_name, $marker_name, $protocol_id);
+
+        while (my ($ref, $alt) = $h->fetchrow_array()){
+            push @marker_ref_alt, [$ref, $alt]
+        }
+
+        print STDERR "SNPS=" .Dumper(\@marker_ref_alt). "\n";
+    }
+
+    my $vcf_params_string = encode_json \%vcf_params;
+
+#    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
+#    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+        JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+        WHERE genotypeprop.value @> ?
+        AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $vcf_params_string, @accessions);
+
+    while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
+        push @selected_accessions, [$selected_id, $selected_uniquename, $vcf_params_string]
+    }
+
+    return \@selected_accessions;
+
+}
+
+
+
 1;
