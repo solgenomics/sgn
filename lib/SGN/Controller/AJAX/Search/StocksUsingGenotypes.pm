@@ -19,13 +19,11 @@ __PACKAGE__->config(
     );
 
 
-sub get_selected_accessions :Path('/ajax/search/get_selected_accessions') :Args(0){
+sub get_accessions_using_dosages :Path('/ajax/search/accessions_using_dosages') :Args(0){
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param("dataset_id");
     my $markerset_id = $c->req->param("markerset_id");
-    my $marker_name = $c->req->param("marker_name");
-    my $allele_dosage = $c->req->param("allele_dosage");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
     my $dataset = CXGN::Dataset->new(
