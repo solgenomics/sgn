@@ -122,6 +122,7 @@ extractGenotype <- function(inputFiles) {
 
 set.seed(235)
 clusterNa <- c()
+clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case=TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
@@ -176,8 +177,9 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
            
     }
 
-    clusterData <- na.omit(clusterData)
-    clusterData <- scale(clusterData, center=TRUE, scale=TRUE)
+    clusterDataNotScaled <- na.omit(clusterData)
+    
+    clusterData <- scale( clusterDataNotScaled, center=TRUE, scale=TRUE)
     reportNotes <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
 }
 
@@ -197,8 +199,12 @@ if (!is.na(userKNumbers)) {
 kMeansOut        <- kmeans(clusterData, centers=kCenters, nstart=10)
 kClusters        <- data.frame(kMeansOut$cluster)
 kClusters        <- rownames_to_column(kClusters)
-names(kClusters) <- c('Genotypes', 'Cluster')
-kClusters        <- kClusters %>% arrange(Cluster)
+names(kClusters) <- c('germplasmName', 'Cluster')
+
+clusteredData <- bind_cols(kClusters, clusterDataNotScaled)
+clusteredData <- clusteredData %>%
+                 mutate_if(is.numeric, funs(round(., 2))) %>%
+                 arrange(Cluster)
 
 
 png(plotKmeansFile)
@@ -211,6 +217,7 @@ dev.off()
 
 cat(reportNotes, file=reportFile, sep="\n", append=TRUE)
 
+
 if (length(genoFiles) > 1) {
     fwrite(genoData,
        file      = combinedDataFile,
@@ -222,7 +229,7 @@ if (length(genoFiles) > 1) {
 }
 
 if (length(kResultFile) != 0 ) {
-    fwrite(kClusters,
+    fwrite(clusteredData,
        file      = kResultFile,
        sep       = "\t",
        row.names = FALSE,
