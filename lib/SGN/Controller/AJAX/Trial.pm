@@ -489,7 +489,7 @@ sub save_experimental_design_POST : Args(0) {
 
     my @locations;
     my $multi_location;
-    #print STDERR Dumper $c->req->params();
+print STDERR Dumper $c->req->params();
     my $locations = $c->req->param('trial_location');
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
@@ -497,7 +497,7 @@ sub save_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
-    my $plant_number = $c->req->param('plant_number');
+    my $plant_number = $c->req->param('num_plants_per_plot');
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped') || 'No';
     my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross') || 'No';
     my @add_project_trial_source = $c->req->param('add_project_trial_source[]');
@@ -608,6 +608,7 @@ sub save_experimental_design_POST : Args(0) {
         if ($plant_number){
             $trial_info_hash{trial_has_plant_entries} = $plant_number;
         }
+        #print STDERR Dumper\%trial_info_hash;
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
         if ($trial_create->trial_name_already_exists()) {
