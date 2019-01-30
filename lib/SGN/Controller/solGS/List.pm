@@ -844,8 +844,34 @@ sub get_trials_list_ids {
 	    push @trials_ids, $trial_id;
 	}
 
-	 $c->stash->{trials_ids} = \@trials_ids;
+	$c->stash->{trials_ids} = \@trials_ids;
+	$c->stash->{pops_ids_list} = \@trials_ids;
     }   
+    
+}
+
+sub get_trials_list_pheno_data {
+    my ($self, $c) = @_;
+
+    my $trials_ids = $c->stash->{pops_ids_list};
+
+    $c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
+    $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
+    my @pheno_files = split("\t", $c->stash->{multi_pops_pheno_files});
+    $c->stash->{phenotype_files_list} = \@pheno_files;
+    
+}
+
+
+sub get_trials_list_geno_data {
+    my ($self, $c) = @_;
+
+    my $trials_ids = $c->stash->{pops_ids_list};
+
+    $c->controller('solGS::combinedTrials')->multi_pops_genotype_data($c, $trials_ids);
+    $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
+    my @geno_files = split("\t", $c->stash->{multi_pops_geno_files});
+    $c->stash->{genotype_files_list} = \@geno_files;
     
 }
 
@@ -855,14 +881,14 @@ sub process_trials_list_details {
 
     my $pops_ids = $c->stash->{pops_ids_list} || [$c->stash->{pop_id}];
 
-    my @genotype_files;
+    #my @genotype_files;
     my %pops_names = ();
 
     foreach my $p_id (@$pops_ids)
     {
 	$c->stash->{pop_id} = $p_id; 
-	$self->get_trial_genotype_data($c);
-	push @genotype_files, $c->stash->{genotype_file};
+	#$self->get_trial_genotype_data($c);
+	#push @genotype_files, $c->stash->{genotype_file};
 
 	if ($p_id =~ /list/) 
 	{
@@ -883,7 +909,7 @@ sub process_trials_list_details {
 	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
     }
 
-    $c->stash->{genotype_files_list} = \@genotype_files;
+    #$c->stash->{genotype_files_list} = \@genotype_files;
     $c->stash->{trials_names} = \%pops_names;
   
 }

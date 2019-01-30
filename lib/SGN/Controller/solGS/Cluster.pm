@@ -298,6 +298,7 @@ sub create_cluster_genotype_data {
     my ($self, $c) = @_;
    
     my $data_structure = $c->stash->{data_structure};
+    my $referer = $c->req->referer;
     
     if ($data_structure =~ /list/) 
     {
@@ -306,6 +307,10 @@ sub create_cluster_genotype_data {
     elsif ($data_structure =~ /dataset/) 
     {
 	$c->controller('solGS::Dataset')->get_dataset_genotypes_genotype_data($c);	
+    }
+    elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
+    {
+	$c->controller('solGS::solGS')->genotype_file($c);
     }
     else 
     {
@@ -316,6 +321,7 @@ sub create_cluster_genotype_data {
 	}
 	else
 	{
+	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
 	    $c->controller('solGS::List')->process_trials_list_details($c);
 	}
     }
@@ -327,6 +333,7 @@ sub create_cluster_phenotype_data {
     my ($self, $c) = @_;
    
     my $data_structure = $c->stash->{data_structure};
+    my $referer = $c->req->referer;
     
     if ($data_structure =~ /list/) 
     {
@@ -336,16 +343,21 @@ sub create_cluster_phenotype_data {
     {
 	$c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);	
     }
+    elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
+    {
+	$c->controller('solGS::solGS')->phenotype_file($c);
+    }
     else 
     {
 	if ($c->stash->{combo_pops_id})
 	{
 	    $c-> controller('solGS::combinedTrials')->cache_combined_pops_data($c);
-	    $c->stash->{genotype_file} = $c->stash->{trait_combined_pheno_file};
+	    $c->stash->{phenotype_file} = $c->stash->{trait_combined_pheno_file};
 	}
 	else
 	{
-	    $c->controller('solGS::List')->process_trials_list_details($c);
+	    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
+	    #$c->controller('solGS::solGS')->phenotype_file($c);
 	}
     }
 
@@ -371,12 +383,14 @@ sub cluster_list_genotype_data {
     elsif ($referer =~ /solgs\/selection\//) 
     {
 	$c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
+	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
 	$c->controller('solGS::List')->process_trials_list_details($c);
     }
     elsif ($referer =~ /cluster\/analysis\// && $data_set_type =~ 'combined_populations')
     {
     	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $c->stash->{combo_pops_id});
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->controller('solGS::List')->get_trials_list_geno_data($c);
 	$c->controller('solGS::List')->process_trials_list_details($c);
     }	   
     else
@@ -388,9 +402,9 @@ sub cluster_list_genotype_data {
 	elsif ( $list_type eq 'trials') 
 	{
 	    $c->controller('solGS::List')->get_trials_list_ids($c);
-	    my $trials_ids = $c->stash->{trials_ids};
-	  
-	    $c->stash->{pops_ids_list} = $trials_ids;
+	    $c->stash->{pops_ids_list} =  $c->stash->{trials_ids};
+	    
+	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
 	    $c->controller('solGS::List')->process_trials_list_details($c);
 	}
     }
@@ -408,17 +422,17 @@ sub cluster_list_phenotype_data {
     my $data_set_type  = $c->stash->{data_set_type};
     my $referer        = $c->req->referer;
     my $geno_file;
-    
+  
     if ($referer =~ /solgs\/trait\/\d+\/population\//) 
     {
 	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
-	$c->stash->{genotype_file} = $c->stash->{phenotype_file_name}; 
+	$c->stash->{phenotype_file} = $c->stash->{phenotype_file_name}; 
     }
     elsif ($referer =~ /cluster\/analysis\// && $data_set_type =~ 'combined_populations')
     {
     	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $c->stash->{combo_pops_id});
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	$c->controller('solGS::List')->process_trials_list_details($c);
+	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
     }	   
     else
     {
@@ -429,15 +443,13 @@ sub cluster_list_phenotype_data {
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);
-	    my $trials_ids = $c->stash->{trials_ids};
-	  
-	    $c->stash->{pops_ids_list} = $trials_ids;
-	    $c->controller('solGS::List')->process_trials_list_details($c);
+	    $c->controller('solGS::List')->get_trials_list_ids($c);	    
+	    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
 	}
     }
     
 }
+
 
 
 sub combined_cluster_trials_data_file {
@@ -731,7 +743,6 @@ sub save_cluster_opts {
 sub run_cluster {
     my ($self, $c) = @_;
     
-    my $pop_id  = $c->stash->{pop_id};
     my $file_id = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
    

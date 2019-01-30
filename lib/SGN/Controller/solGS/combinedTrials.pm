@@ -490,6 +490,8 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
 
 sub multi_pops_pheno_files {
     my ($self, $c, $pop_ids) = @_;
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
  
     my $trait_id = $c->stash->{trait_id};
     my $files;
@@ -524,6 +526,8 @@ sub multi_pops_pheno_files {
 
 sub multi_pops_geno_files {
     my ($self, $c, $pop_ids) = @_;
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
  
     my $trait_id = $c->stash->{trait_id};
     my $files;
@@ -558,6 +562,8 @@ sub multi_pops_geno_files {
 
 sub multi_pops_phenotype_data {
     my ($self, $c, $pop_ids) = @_;
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
    
     no warnings 'uninitialized';
     my @job_ids;
@@ -585,7 +591,9 @@ sub multi_pops_phenotype_data {
 
 sub multi_pops_genotype_data {
     my ($self, $c, $pop_ids) = @_;
-   
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
+
     no warnings 'uninitialized';
     my @job_ids;
     if (@$pop_ids)

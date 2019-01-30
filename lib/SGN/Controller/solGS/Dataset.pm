@@ -66,12 +66,7 @@ sub get_dataset_phenotype_data {
     elsif (@{$data->{categories}->{trials}})
     {
 	$c->stash->{pops_ids_list} = $data->{categories}->{trials};
-	my $trials_ids =  $data->{categories}->{trials};
-	$c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
-	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
-	my @pheno_files = split("\t", $c->stash->{multi_pops_pheno_files});
-	$c->stash->{phenotype_files_list} = \@pheno_files;
-	
+	$c->controller('solGS::List')->get_trials_list_pheno_data($c);	
     }    
 }
 

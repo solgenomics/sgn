@@ -179,7 +179,7 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
 
     clusterDataNotScaled <- na.omit(clusterData)
     
-    clusterData <- scale( clusterDataNotScaled, center=TRUE, scale=TRUE)
+    clusterData <- scale(clusterDataNotScaled, center=TRUE, scale=TRUE)
     reportNotes <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
 }
 
