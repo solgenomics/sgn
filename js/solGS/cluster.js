@@ -38,6 +38,7 @@ solGS.cluster = {
 		    solGS.cluster.plotClusterOutput(res);
 				    
 		    jQuery("#cluster_message").empty();
+		    
 		    jQuery("#run_cluster").hide();
 		   
 		} else {
@@ -145,7 +146,7 @@ solGS.cluster = {
 	    dataTypeOpts = ['Genotype', 'Phenotype'];
 
 	} else if (url.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
-	    dataTypeOpts = ['Genotype', 'GEBV'];
+	    dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
 	}
 	
 	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
@@ -276,11 +277,16 @@ solGS.cluster = {
 		    solGS.cluster.plotClusterOutput(res, resultName);
 				    
 		    jQuery("#cluster_message").empty();
-		    if (document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
+		    
+		    var pages = '/solgs\/traits\/all\/population\/'
+			+ '|solgs\/models\/combined\/trials\/'
+			+ '|\/breeders\/trial\/';
+		    
+		    if (document.URL.match(pages)) {
 			 jQuery("#run_cluster").show();
-		    } else {
-			jQuery("#run_cluster").hide();
-		    }
+		    }// else {
+			//jQuery("#run_cluster").hide();
+		    //}
 
 		} else {                
 		    jQuery("#cluster_message").html(res.result);
@@ -620,7 +626,7 @@ jQuery(document).ready( function() {
 	
 	setTimeout(function() {solGS.cluster.listClusterPopulations()}, 5000);
 
-	var dataTypeOpts = ['Genotype', 'GEBV'];	
+	var dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];	
 	dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);
 	console.log(dataTypeOpts)
 	var clusterTypeOpts =   solGS.cluster.createClusterTypeSelect();
