@@ -120,38 +120,59 @@ sub get_accessions_using_snps {
     my @selected_accessions = ();
     my %vcf_params;
     my $protocol_id;
-    my $marker_name;
-    my $allele1;
-    my $allele2;
+
 
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
-        $marker_name = $params{marker_name};
-        $allele1 = $params{allele1};
-        $allele2 = $params{allele2};
+        my $marker_name = $params{marker_name};
+        my $allele_1 = $params{allele1};
+        my $allele_2 = $params{allele2};
         my $genotyping_protocol_id = $params{genotyping_protocol_id};
 
         if ($genotyping_protocol_id){
             $protocol_id = $genotyping_protocol_id
         }
 
-        print STDERR "MARKER_NAME=" .Dumper($marker_name). "\n";
-        print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
-        print STDERR "ALLELE 1=" .Dumper($allele1). "\n";
-        print STDERR "ALLELE 2=" .Dumper($allele2). "\n";
+        if ($marker_name){
+            my $marker = $marker_name;
 
-        my @marker_ref_alt;
-        my $q = "SELECT value->'markers'->?->>'ref', value->'markers'->?->>'alt' FROM nd_protocolprop WHERE nd_protocol_id=?";
+            my $q = "SELECT value->'markers'->?->>'ref', value->'markers'->?->>'alt' FROM nd_protocolprop WHERE nd_protocol_id=?";
 
-        my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($marker_name, $marker_name, $protocol_id);
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($marker, $marker, $protocol_id);
+            my($ref, $alt) = $h->fetchrow_array();
 
-        while (my ($ref, $alt) = $h->fetchrow_array()){
-            push @marker_ref_alt, [$ref, $alt]
+            print STDERR "REF=" .Dumper($ref). "\n";
+            print STDERR "ALT=" .Dumper($alt). "\n";
+            my @requested_alleles = ($allele_1, $allele_2);
+
+            print STDERR "REQUESTED ALLELES=" .Dumper(\@requested_alleles). "\n";
+
+            my $ref_count = grep (/$ref/, @requested_alleles);
+            my $alt_count = grep (/$alt/, @requested_alleles);
+
+            print STDERR "REF COUNT=" .Dumper($ref_count). "\n";
+            print STDERR "ALT_COUNT=" .Dumper($alt_count). "\n";
+
+            my $genotype;
+
+            if ($ref_count == 2){
+                $genotype = "0/0"
+            } elsif ($alt_count == 2){
+                $genotype = "1/1"
+            } elsif ($ref_count == 1 && $alt_count == 1){
+                $genotype = "0/1"
+            } else {
+                $genotype = ""
+            }
+
+            print STDERR "GENOTYPE=" .Dumper($genotype). "\n";
+
         }
 
-        print STDERR "SNPS=" .Dumper(\@marker_ref_alt). "\n";
+
+
     }
 
     my $vcf_params_string = encode_json \%vcf_params;
