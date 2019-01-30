@@ -621,7 +621,8 @@ sub combined_pops_catalogue_file {
 
     my $cache_data = {key       => 'combined_pops_catalogue_file',
                       file      => 'combined_pops_catalogue_file',
-                      stash_key => 'combined_pops_catalogue_file'
+                      stash_key => 'combined_pops_catalogue_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -658,10 +659,14 @@ sub catalogue_combined_pops {
 
 sub get_combined_pops_list {
     my ($self, $c, $id) = @_;
+ print STDERR "\n id - $id \n";
+    $id = $c->stash->{combo_pops_id} if !$id;
 
+    print STDERR "\n id - $id \n";
+    
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
-    
+      print STDERR "\n file : $combo_pops_catalogue_file \n";
     my @combos = uniq(read_file($combo_pops_catalogue_file));
     
     foreach my $entry (@combos)
@@ -672,7 +677,7 @@ sub get_combined_pops_list {
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
 
 	    if ($id == $combo_pops_id)
-	    {
+	    {  print STDERR "\n pops: $pops \n";
 		my @pops_list = split(',', $pops);
 		$c->stash->{combined_pops_list} = \@pops_list;
 		$c->stash->{trait_combo_pops} = \@pops_list;

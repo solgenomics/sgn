@@ -299,6 +299,7 @@ sub create_cluster_genotype_data {
    
     my $data_structure = $c->stash->{data_structure};
     my $referer = $c->req->referer;
+    my $combo_pops_id = $c->stash->{combo_pops_id};
     
     if ($data_structure =~ /list/) 
     {
@@ -312,18 +313,12 @@ sub create_cluster_genotype_data {
     {
 	$c->controller('solGS::solGS')->genotype_file($c);
     }
-    else 
+    elsif ($combo_pops_id)
     {
-	if ($c->stash->{combo_pops_id})
-	{
-	    $c-> controller('solGS::combinedTrials')->cache_combined_pops_data($c);
-	    $c->stash->{genotype_file} = $c->stash->{trait_combined_geno_file};
-	}
-	else
-	{
-	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
-	    $c->controller('solGS::List')->process_trials_list_details($c);
-	}
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->controller('solGS::List')->get_trials_list_geno_data($c);
+
     }
 
 }
@@ -334,6 +329,7 @@ sub create_cluster_phenotype_data {
    
     my $data_structure = $c->stash->{data_structure};
     my $referer = $c->req->referer;
+    my $combo_pops_id = $c->stash->{combo_pops_id};
     
     if ($data_structure =~ /list/) 
     {
@@ -347,18 +343,11 @@ sub create_cluster_phenotype_data {
     {
 	$c->controller('solGS::solGS')->phenotype_file($c);
     }
-    else 
+    elsif ($combo_pops_id) 
     {
-	if ($c->stash->{combo_pops_id})
-	{
-	    $c-> controller('solGS::combinedTrials')->cache_combined_pops_data($c);
-	    $c->stash->{phenotype_file} = $c->stash->{trait_combined_pheno_file};
-	}
-	else
-	{
-	    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-	    #$c->controller('solGS::solGS')->phenotype_file($c);
-	}
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
     }
 
 }

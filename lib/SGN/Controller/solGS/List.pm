@@ -850,6 +850,7 @@ sub get_trials_list_ids {
     
 }
 
+
 sub get_trials_list_pheno_data {
     my ($self, $c) = @_;
 
