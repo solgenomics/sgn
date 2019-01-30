@@ -882,15 +882,10 @@ sub process_trials_list_details {
 
     my $pops_ids = $c->stash->{pops_ids_list} || [$c->stash->{pop_id}];
 
-    #my @genotype_files;
     my %pops_names = ();
 
     foreach my $p_id (@$pops_ids)
     {
-	$c->stash->{pop_id} = $p_id; 
-	#$self->get_trial_genotype_data($c);
-	#push @genotype_files, $c->stash->{genotype_file};
-
 	if ($p_id =~ /list/) 
 	{
 	    $c->controller('solGS::List')->list_population_summary($c, $p_id);
@@ -907,10 +902,8 @@ sub process_trials_list_details {
     {
 	$c->stash->{pops_ids_list} = $pops_ids;
 	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	$c->stash->{pop_id} =  $c->stash->{combo_pops_id};
     }
 
-    #$c->stash->{genotype_files_list} = \@genotype_files;
     $c->stash->{trials_names} = \%pops_names;
   
 }
