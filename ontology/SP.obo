@@ -391,8 +391,8 @@ synonym: "pericarp elongation index" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000039 ! fruit shape index
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000039 ! fruit shape index
 
 [Term]
 id: SP:0000049
@@ -541,8 +541,8 @@ synonym: "dec" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000058 ! fruit shape eccentric
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
 id: SP:0000064
@@ -552,8 +552,8 @@ synonym: "pec" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000058 ! fruit shape eccentric
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
 id: SP:0000065
@@ -1429,8 +1429,8 @@ name: fruit shape triangle 5%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1440,8 +1440,8 @@ name: fruit shape triangle 10%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1451,8 +1451,8 @@ name: fruit shape triangle 20%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1462,8 +1462,8 @@ name: fruit shape triangle 30%
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000049 ! fruit shape triangle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000049 ! fruit shape triangle
 created_by: naama
 creation_date: 2008-03-12T01:27:00Z
 
@@ -1511,48 +1511,48 @@ creation_date: 2008-03-17T01:50:00Z
 [Term]
 id: SP:0000155
 name: distal angle micro 2%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000156
 name: distal angle micro 3%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000157
 name: distal angle micro 5%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000158
 name: distal angle macro 10%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000159
 name: distal angle macro 15%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
 [Term]
 id: SP:0000160
 name: distal angle macro 20%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:13:00Z
 
@@ -1577,8 +1577,8 @@ creation_date: 2008-03-25T11:17:00Z
 [Term]
 id: SP:0000163
 name: distal angle macro 25%
-relationship: variable_of SP:0000073 ! distal fruit end angle
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000073 ! distal fruit end angle
 created_by: naama
 creation_date: 2008-03-25T11:19:00Z
 
@@ -1591,8 +1591,8 @@ synonym: "oel" EXACT []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: variable_of SP:0000058 ! fruit shape eccentric
 is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 created_by: naama
 creation_date: 2008-03-31T10:09:00Z
 
@@ -4407,6 +4407,34 @@ xref: PO:0007616
 xref: PO:0009046
 is_a: SP:0000141 ! partial sterility
 is_a: SP:0000142 ! full sterility
+
+[Term]
+id: SP:0000711
+name: anthocyanin coloration of hypocotyl. Boolean observation 0=absent 1=present
+def: "Boolean observation of  hypocotyl anthocyanin coloration 0=absent, 1=present." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000344 ! hypocotyl anthocyanin content
+
+[Term]
+id: SP:0000712
+name: compound inflorescence observation. Nominal scale 1=simple 2=intermediate 3=compound.
+def: "compound inflorescence observation. Nominal scale 1=simple 2=intermediate 3=compound" [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000071 ! inflorescence structure
+
+[Term]
+id: SP:0000713
+name: flower fasciation. Observation 0=absent 1=present
+def: "Flower fasciation of the 1st inflorescence. Observation 0=absent 1=present." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000363 ! flower fasciation
+
+[Term]
+id: SP:0000714
+name: abscission layer. Boolean observation 0=absent 1=present
+def: "abscission layer. Boolean observation 0=absent 1=present." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000364 ! peduncle
 
 [Term]
 id: SP:0001000
