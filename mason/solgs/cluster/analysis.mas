@@ -52,10 +52,11 @@ my $url = $c->req->path;
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "K-Means Clustering (Using Marker Data)" 
+  title       => "Clustering" 
   &>
 
-
+<div id="cluster_canvas">
+    
 % if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
   <& /solgs/cluster/gebvs_cluster.mas,
@@ -64,7 +65,7 @@ my $url = $c->req->path;
     pop_type => $pop_type
     &>
 
-%} elsif ($url =~ /breeders\/trial\//) {
+%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//) {
  <& /solgs/cluster/trial_cluster.mas &>
     
 %} else {
@@ -80,3 +81,6 @@ my $url = $c->req->path;
   &>
 
 </&>
+
+</div>
+
