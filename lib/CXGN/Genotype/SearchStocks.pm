@@ -106,7 +106,6 @@ sub get_selected_accessions {
 
 }
 
-
 sub get_accessions_using_snps {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -120,7 +119,7 @@ sub get_accessions_using_snps {
     my @selected_accessions = ();
     my %vcf_params;
     my $protocol_id;
-
+    my @het_params;
 
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
@@ -135,19 +134,16 @@ sub get_accessions_using_snps {
         }
 
         if ($marker_name){
-            my $marker = $marker_name;
 
             my $q = "SELECT value->'markers'->?->>'ref', value->'markers'->?->>'alt' FROM nd_protocolprop WHERE nd_protocol_id=?";
 
             my $h = $schema->storage->dbh()->prepare($q);
-            $h->execute($marker, $marker, $protocol_id);
+            $h->execute($marker_name, $marker_name, $protocol_id);
             my($ref, $alt) = $h->fetchrow_array();
 
             print STDERR "REF=" .Dumper($ref). "\n";
             print STDERR "ALT=" .Dumper($alt). "\n";
             my @requested_alleles = ($allele_1, $allele_2);
-
-            print STDERR "REQUESTED ALLELES=" .Dumper(\@requested_alleles). "\n";
 
             my $ref_count = grep (/$ref/, @requested_alleles);
             my $alt_count = grep (/$alt/, @requested_alleles);
@@ -162,18 +158,24 @@ sub get_accessions_using_snps {
             } elsif ($alt_count == 2){
                 $genotype = "1/1"
             } elsif ($ref_count == 1 && $alt_count == 1){
-                $genotype = "0/1"
+                my %gt_pair1;
+                my %gt_pair2;
+                $gt_pair1{$marker_name} = {'GT' => "0/1"};
+                $gt_pair2{$marker_name} = {'GT' => "1/0"};
+                my $gt_pair1_string = encode_json \%gt_pair1;
+                my $gt_pair2_string = encode_json \%gt_pair2;
+                my @gt_pair = ($gt_pair1_string, $gt_pair2_string);
+                push (@het_params, [@gt_pair]);
             } else {
                 $genotype = ""
             }
-
             print STDERR "GENOTYPE=" .Dumper($genotype). "\n";
 
+            $vcf_params{$marker_name} = {'GT' => $genotype};
         }
-
-
-
     }
+
+    print STDERR "HET PARAMS=" .Dumper(\@het_params). "\n";
 
     my $vcf_params_string = encode_json \%vcf_params;
 
@@ -190,11 +192,22 @@ sub get_accessions_using_snps {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $vcf_params_string, @accessions);
 
-    while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename, $vcf_params_string]
+#    while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
+#        push @selected_accessions, [$selected_id, $selected_uniquename, $vcf_params_string]
+#    }
+
+#    print STDERR "SELECTED ACCESSIONS=" .Dumper(\@selected_accessions). "\n";
+
+#    return \@selected_accessions;
+
+    my @first_round_accessions;
+    while (my @row = $h->fetchrow_array()){
+        push @first_round_accessions, $row[0]
     }
 
-    return \@selected_accessions;
+        print STDERR "FIRST ROUND ACCESSIONS=" .Dumper(\@first_round_accessions). "\n";
+
+
 
 }
 
