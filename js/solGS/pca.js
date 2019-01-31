@@ -49,7 +49,7 @@ function checkPcaResult () {
     var popDetails = solGS.getPopulationDetails();
     
     var comboPopsId = jQuery('#combo_pops_id').val();
-    
+    console.log('combo pop id: ' + comboPopsId)    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -169,7 +169,7 @@ function pcaResult () {
 	listType = genoList.listType;
     }
     
-    if (listId || popDetails.training_pop_id || popDetails.selection_pop_id) {
+    if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
 	jQuery("#pca_message").html("Running PCA... please wait...");
 	jQuery("#run_pca").hide();
     }  
