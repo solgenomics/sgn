@@ -272,6 +272,9 @@ project_md_image	observation_unit_polygon_imagery	Cropped image for an observati
 project_md_image	observation_unit_polygon_tgi_imagery	Cropped image for an observation unit polygon from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_vari_imagery	Cropped image for an observation unit polygon from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_ndvi_imagery	Cropped image for an observation unit polygon from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_background_removed_tgi_imagery	Cropped image for an observation unit polygon from threshold background removed TGI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_background_removed_vari_imagery	Cropped image for an observation unit polygon from threshold background removed VARI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_background_removed_ndvi_imagery	Cropped image for an observation unit polygon from threshold background removed NDVI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_zonal_stats_drone_imagery	Calculate zonal stats phenotypes on observation unit	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_zonal_stats_drone_imagery_tgi	Calculate zonal stats phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_zonal_stats_drone_imagery_vari	Calculate zonal stats phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103

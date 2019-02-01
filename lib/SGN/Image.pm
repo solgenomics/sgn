@@ -349,6 +349,7 @@ sub upload_fieldbook_zipfile {
         my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
         #print STDERR "Count: $md_image\n";
         if ($md_image > 0) {
+            print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
             $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);
@@ -391,6 +392,7 @@ sub upload_drone_imagery_zipfile {
         my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
         #print STDERR "Count: $md_image\n";
         if ($md_image > 0) {
+            print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
             #$error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);

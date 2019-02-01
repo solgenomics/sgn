@@ -68,7 +68,7 @@
             </div>
         </div>
     </form>
-    <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Rectangles</button>
+    <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Rectangles (Does not save)</button>
 </div>
 
 <div class="well well-sm">
@@ -85,6 +85,6 @@
             </div>
         </div>
     </form>
-    <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template">Use Plot Polygon Template</button>
+    <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template">Draw Plot Polygon Template (Does not save)</button>
 </div>
 
