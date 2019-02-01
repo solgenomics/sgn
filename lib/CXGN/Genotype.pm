@@ -71,6 +71,18 @@ sub BUILD {
 	print STDERR "Done!\n";
     }
 }
+
+=head2 from_json
+
+ Usage:        $gt->from_json($json_string)
+ Desc:         Use json string to populate the object. Format is identical to 
+               jsonb storage format in the database.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 	
 sub from_json { 
     my $self = shift;
@@ -87,6 +99,18 @@ sub from_json {
     
 }
 
+=head2 to_json
+
+ Usage:        my $json = $gt->to_json()
+ Desc:         convert the data in this object to json notation
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+
 sub to_json { 
     my $self = shift;
     
@@ -96,6 +120,17 @@ sub to_json {
 }
 
     
+=head2 calculate_consensus_scores
+
+ Usage:        my $score = $gt->calculate_consensus_scores($other_gt);
+ Desc:         calculate a consensus score with another genotype
+               returns a hashref containing markers with consensi.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub calculate_consensus_scores { 
     my $self = shift;
@@ -115,6 +150,17 @@ sub calculate_consensus_scores {
     return $consensus_scores;
 }
 
+=head2 calculate_distance
+
+ Usage:        my $distance = $gt->calculate_distance($another_genotype)
+ Desc:         Calculate the distance to another genotype 
+ Ret:          A value between 0 and 1, 0 being infinite distance, 1 being
+               identical genotypes.
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub calculate_distance { 
     my $self = shift;
@@ -167,6 +213,20 @@ sub good_call {
     return 1;
 }
 
+=head2 percent_good_calls
+
+ Usage:        my $good_calls = $gt->percent_good_calls();
+ Desc:         The number of good calls in this genotype
+               Good call is defined as a numeric value
+               Bad calls are undefined or alphanumeric values
+               (so works only with dosage values for now).
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub percent_good_calls { 
     my $self = shift;
     
@@ -213,6 +273,21 @@ sub scores_are_equal {
     return 0;
 }
     
+=head2 check_parental _genotype_concordance
+
+ Usage:        $concordance = $gt->
+                 check_parental_genotype_concordance($female_parent, $male_parent);
+ Desc:         the concordance of the parental genotypes with this genotype
+ Ret:          a concordance score, between 0 and 1. 
+               0 = zero concordance
+               1 = complete concordance
+               only observations on informative markers are returned
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub check_parental_genotype_concordance {
    my $self = shift;
    my $female_parent_genotype = shift;
