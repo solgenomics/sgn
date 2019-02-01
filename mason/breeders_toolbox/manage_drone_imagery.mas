@@ -2132,6 +2132,11 @@ jQuery(document).ready(function() {
         getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1);
     });
 
+    jQuery('#drone_imagery_vegetative_index_VARI').click(function(){
+        manage_drone_imagery_vi_selected_index = 'VARI';
+        getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1);
+    });
+
     jQuery('#drone_imagery_vegetative_index_submit').click(function(){
         getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 0);
     });
