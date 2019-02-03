@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.BreedersToolbox.HTMLSelect', 'jquery.drag-drop.js' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
@@ -14,6 +14,7 @@
 
 
 <div id="mixedmodel_tool">
+loading...
 </div>
 
 
