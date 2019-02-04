@@ -315,7 +315,6 @@ solGS.cluster = {
     plotClusterOutput: function(res, resultName) {
 	
 	var plot = '<img  src= "' + res.kcluster_plot + '">';
-	console.log(plot)
 	var filePlot  = res.kcluster_plot.split('/').pop();
 
 	var popDetails = solGS.getPopulationDetails();
@@ -378,14 +377,12 @@ solGS.cluster = {
 	var kNumber     = clusterOpts.k_number;
 	var dataType    = clusterOpts.data_type;
 	
-	console.log(dataType + ' ' + clusterType + ' k= ' + kNumber)
-
 	var clusterArgs = { 'select_id': selectId,
 			    'data_structure_type':  dataStructureType,
 			    'cluster_type':  clusterType,
 			    'data_type': dataType,
 			    'k_number':  kNumber	    
-	}
+			  }
 
 	
     	this.clusterResult(clusterArgs);
@@ -418,7 +415,7 @@ solGS.cluster = {
     getClusterGenotypesListData: function(listId) {   
 	
 	var list = new CXGN.List();
-	console.log('listData listId', listId)
+
 	if (listId) {
 	   
 	    var listName = list.listNameById(listId);
@@ -435,7 +432,7 @@ solGS.cluster = {
 
     listClusterPopulations: function()  {
 	var modelData = getTrainingPopulationData();
-	console.log(modelData.name)
+	
 	var trainingPopIdName = JSON.stringify(modelData);
 	
 	var  popsList =  '<dl id="cluster_selected_population" class="cluster_dropdown">'
@@ -522,7 +519,7 @@ jQuery.fn.doesExist = function(){
 jQuery(document).ready( function() {
     
     var url = window.location.pathname;
-    console.log('url: ' + url)
+    
     if (url.match(/cluster\/analysis/)) {
     
         var list = new CXGN.List();
@@ -610,19 +607,14 @@ jQuery(document).ready( function() {
 	var kNumber     = clusterOpts.k_number;
 	var dataType    =  clusterOpts.data_type;
 	
-	console.log('multi models page: ' + clusterType + ' dt type ' + dataType)
-	console.log('select id: ' + selectId + ' dt str ' + dataStructureType)
-
 	var clusterArgs = { 'select_id': clusterOptsId,
 			    'data_structure_type':  dataStructureType,
 			    'cluster_type':  clusterType,
 			    'data_type': dataType,
 			    'k_number':  kNumber
 			  };
-
 	
         solGS.cluster.clusterResult(clusterArgs);
-
     }); 
   
 });
@@ -637,7 +629,7 @@ jQuery(document).ready( function() {
 
 	var dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];	
 	dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);
-	console.log(dataTypeOpts)
+
 	var clusterTypeOpts =   solGS.cluster.createClusterTypeSelect();
 
 	jQuery(document).ready(checkClusterPop);
@@ -656,15 +648,13 @@ jQuery(document).ready( function() {
 
 	var dataTypeOpts = ['Genotype', 'Phenotype'];
 	dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);
-	console.log(' page ' + dataTypeOpts)
 	var clusterTypeOpts =   solGS.cluster.createClusterTypeSelect();
-	console.log(' page ' + clusterTypeOpts)
+	
 	jQuery('#cluster_canvas #cluster_options #data_type_opts').html(dataTypeOpts);
 	jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
 	jQuery("#cluster_canvas #cluster_options").show();
 	
     }
-    	console.log(' page ' + page)
 });
 
 

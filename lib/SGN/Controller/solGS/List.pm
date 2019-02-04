@@ -824,7 +824,7 @@ sub get_trials_list_ids {
 
     my $list_id = $c->stash->{list_id};
     my $list_type = $c->stash->{list_type};
-
+  
     if ($list_type =~ /trials/)
     {
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
@@ -880,7 +880,7 @@ sub get_trials_list_geno_data {
 sub process_trials_list_details {
     my ($self, $c) = @_;
 
-    my $pops_ids = $c->stash->{pops_ids_list} || [$c->stash->{pop_id}];
+    my $pops_ids = $c->stash->{pops_ids_list} || $c->stash->{trials_ids} ||  [$c->stash->{pop_id}];
 
     my %pops_names = ();
 
@@ -895,7 +895,8 @@ sub process_trials_list_details {
 	{
 	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
 	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}      
+	}  
+	my $name = $c->stash->{project_name};
     }    
 
     if (scalar(@$pops_ids) > 1 )

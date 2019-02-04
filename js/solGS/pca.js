@@ -31,22 +31,24 @@ jQuery(document).ready( function() {
                
 });
 
-jQuery(document).ready( function() { 
-   
-    var url = window.location.pathname;
-
-    if (url.match(/solgs\/trait|breeders_toolbox\/trial|breeders\/trial\/|solgs\/selection\//)) {
-       checkPcaResult();  
-    } 
- 
-});
-
 
 function checkPcaResult () {
 
     var listId = jQuery('#list_id').val();
   
     var popDetails = solGS.getPopulationDetails();
+    var url =  window.location.pathname;
+    var pcaShareId;
+     if (url.match(/pca\/analysis\//)) {
+	// console.log('checkresult pca analyis id extract ', url)
+	pcaShareId = url.replace(/\/pca\/analysis\//g, '');
+	 console.log('checkresult pca analyis id ' + pcaShareId)
+
+	 if (pcaShareId.match(/list/)) {
+	     listId = pcaShareId;
+	     setListId(pcaShareId);
+	 }
+     }
     
     var comboPopsId = jQuery('#combo_pops_id').val();
     console.log('combo pop id: ' + comboPopsId)    
@@ -55,16 +57,30 @@ function checkPcaResult () {
         dataType: 'json',
 	data: {'list_id': listId,
 	       'combo_pops_id' : comboPopsId,
+	       'pca_share_id'  : pcaShareId,
 	       'training_pop_id' : popDetails.training_pop_id,
 	       'selection_pop_id': popDetails.selection_pop_id},
         url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
-		
-		if (response.list_id) {		    
-		    setListId(response.list_id);
+		 setListId(response.list_id);
+	//	console.log('response.result ' + response.pca_scores)
+		 var url =  window.location.pathname;
+		if (url.match(/pca\/analysis/)) {		    		   
+
+		    var plotData = { 'scores': response.pca_scores, 
+				     'variances': response.pca_variances, 
+				     'pop_id': response.pop_id, 
+				     'list_id': response.list_id,
+				     'list_name': response.list_name,
+				     'trials_names': response.trials_names,
+				     'output_link' : response.output_link
+				   };
+		    
+		    plotPca(plotData);  
+		} else {
+		    pcaRun();
 		}
-		pcaResult();
 	    } else { 
 		jQuery("#run_pca").show();	
             }
@@ -78,7 +94,7 @@ function checkPcaResult () {
 jQuery(document).ready( function() { 
 
     jQuery("#run_pca").click(function() {
-	pcaResult();
+	pcaRun();
     }); 
   
 });
@@ -88,7 +104,7 @@ jQuery(document).ready( function() {
      
     var url = window.location.pathname;
     
-    if (url.match(/pca\/analysis/) != null) {  
+    if (url.match(/pca\/analysis/)) {  
         var listId;
         
         jQuery("<option>", {value: '', selected: true}).prependTo("#pca_genotypes_list_select");
@@ -102,10 +118,12 @@ jQuery(document).ready( function() {
                 });
             }
         });
+    } 
 
-
-	checkPcaResult();
-    }      
+    //if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
+	checkPcaResult();  
+    // }
+    
 });
 
 
@@ -129,12 +147,12 @@ function loadPcaGenotypesList(listId) {
         }
         else {
             var addRow = '<tr><td>'
-                + '<a href="#"  onclick="javascript:setListId(' + listId + ');javascript:pcaResult(); return false;">' 
+                + '<a href="#"  onclick="setListId(' + listId + ');pcaRun(); return false;">' 
                 + listName + '</a>'
                 + '</td>'
 		+ '<td>' + listType + '</td>'
                 + '<td id="list_pca_page_' + listId +  '">'
-                + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
+                + '<a href="#" onclick="setListId(' + listId + ');pcaRun();return false;">' 
                 + '[ Run PCA ]' + '</a>'          
                 + '</td><tr>';
 
@@ -151,7 +169,7 @@ function loadPcaGenotypesList(listId) {
 }
 
 
-function pcaResult () {
+function pcaRun () {
 
     var popDetails  = solGS.getPopulationDetails();
     var listId = getListId();
@@ -170,6 +188,7 @@ function pcaResult () {
     }
     
     if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
+	jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));					 
 	jQuery("#pca_message").html("Running PCA... please wait...");
 	jQuery("#run_pca").hide();
     }  
@@ -184,14 +203,12 @@ function pcaResult () {
 	       'list_name': listName, 
 	       'list_type': listType,
 	      },
-        url: '/pca/result',
+        url: '/pca/run',
         success: function(response) {
-            if (response.status === 'success') {
+	    
+            if (response.pca_scores) {	
+		var popId = response.pop_id;
 		
-		if (response.pop_id) {
-		    var popId = response.pop_id;
-		}
-
 		var plotData = { 'scores': response.pca_scores, 
 				 'variances': response.pca_variances, 
 				 'pop_id': popId, 
@@ -232,12 +249,12 @@ function getPcaPopsList (listId) {
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
-                                + '<a href="#"  onclick="setListId('+ listId +');pcaResult(); return false;">' 
+                                + '<a href="#"  onclick="setListId('+ listId +');pcaRun(); return false;">' 
                                 + listName + '</a>'
                                 + '</td>'
     	                        + '<td>' + listType + '</td>'
                                 + '<td id="list_pca_page_' + listId +  '">'
-                                + '<a href="#" onclick="setListId(' + listId + ');pcaResult();return false;">' 
+                                + '<a href="#" onclick="setListId(' + listId + ');pcaRun();return false;">' 
                                 + '[ Run PCA ]'+ '</a>'
                                 + '</td></tr></table>';
 
@@ -316,7 +333,7 @@ function plotPca(plotData){
     var totalW = width + pad.left + pad.right + 400;
    
     var svg = d3.select("#pca_canvas")
-        .append("svg")
+        .insert("svg", ":first-child")
         .attr("width", totalW)
         .attr("height", totalH);
 
