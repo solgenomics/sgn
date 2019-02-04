@@ -155,7 +155,6 @@ sub get_accessions_using_snps {
             print STDERR "ALT_COUNT=" .Dumper($alt_count). "\n";
 
             my $genotype;
-
             if ($ref_count == 2){
                 $genotype = "0/0"
             } elsif ($alt_count == 2){
@@ -170,21 +169,24 @@ sub get_accessions_using_snps {
                 @gt_pair = ($gt_pair1_string, $gt_pair2_string);
                 push (@het_params, [@gt_pair]);
             } else {
-                $genotype = undef
-           }
+                $genotype = undef;
+            }
 
             if ($genotype ne undef){
-            $vcf_params{$marker_name} = {'GT' => $genotype};
+                $vcf_params{$marker_name} = {'GT' => $genotype};
             }
         }
     }
 
-    my $vcf_params_string = encode_json \%vcf_params;
+    my $vcf_params_string;
+        if (%vcf_params){
+        $vcf_params_string = encode_json \%vcf_params;
+    }
 
     print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
     print STDERR "HET PARAMS=" .Dumper(\@het_params). "\n";
 
-        if ($vcf_params_string){
+    if ($vcf_params_string){
         my @first_round_accessions;
         my $first_q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
@@ -206,7 +208,7 @@ sub get_accessions_using_snps {
         print STDERR "HOMOZYGOUS TEST=" .Dumper(\@first_round_accessions). "\n";
     }
 
-        if (@het_params){
+    if (@het_params){
         my @each_pair;
         my $pair = \@each_pair;
         foreach my $pair(@het_params){
