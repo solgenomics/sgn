@@ -377,17 +377,18 @@ sub combined_gebvs_file {
 
 
 sub selection_index_file {
-    my ($self, $c, $pred_pop_id) = @_;
+    my ($self, $c) = @_;
 
-    my $pop_id      = $c->stash->{pop_id};
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
    
     my $pred_file_suffix;
-    $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
+    $pred_file_suffix = '_' . $selection_pop_id  if $selection_pop_id;
 
-    my $name = "selection_index_${pop_id}${pred_file_suffix}";
+    my $name = "selection_index_only_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $self->create_tempfile($temp_dir, $name);
-    $c->stash->{selection_index_file} = $file;
+    $c->stash->{selection_index_only_file} = $file;
    
 }
 
@@ -464,18 +465,19 @@ sub rrblup_selection_gebvs_file {
 }
 
 
-sub ranked_genotypes_file {
-    my ($self, $c, $pred_pop_id) = @_;
+sub gebvs_selection_index_file {
+    my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
- 
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    
     my $pred_file_suffix;
-    $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
+    $pred_file_suffix = '_' . $selection_pop_id  if $selection_pop_id;
   
-    my $name = "ranked_genotypes_${pop_id}${pred_file_suffix}";
+    my $name = "gebvs_selection_index_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $self->create_tempfile($temp_dir, $name);
-    $c->stash->{ranked_genotypes_file} = $file;
+    $c->stash->{gebvs_selection_index_file} = $file;
    
 }
 
