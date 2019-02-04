@@ -36,7 +36,7 @@ interplot_spacing
 
 =back
 
-Note: plants_per_plot is the number of plants per plot for trials that don't have plant-level phenotyping activated. If there are plant entries in the database, the number of plants is stored in project_has_plant_entries.
+Note: plants_per_plot is a field metadata for trials that have or don't have plant-level phenotyping activated. If there are plant entries in the database, the configuration parameter project_has_plant_entries is treated as a flag.
 
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 

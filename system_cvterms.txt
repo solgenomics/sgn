@@ -109,6 +109,10 @@ project_property	genotyping_facility_status	For genotyping plate to indicate the
 project_property	genotyping_plate_format	For genotyping plate to indicate if 96 well or other	2/16/2017	nm529	00091
 project_property	genotyping_plate_sample_type	For genotyping plate to indicate the type of sample in plate e.g. DNA	2/16/2017	nm529	00091
 project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
+project_property    plants_per_plot     plants_per_plot is a field metadata for trials that have or don't have plant-level phenotyping activated.   2/04/19 lam87   00106 
+project_property    plant_spacing       field metadata specifying the metric distance between two plant within a plot.      2/04/19 lam87   00106 
+project_property    inter_row_spacing   field metadata specifying the metric distance between two field rows.       2/04/19 lam87   00106 
+project_property    interplot_spacing       field metadata specifying the metric distance between two consecutive plots within the same row    2/04/19 lam87   00106 
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -243,3 +247,4 @@ composable_cvs	unit_ontology		05/01/2017		00073
 composable_cvs	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
 phenotype_property  phenotype_outlier   suppressed phenotype measurement    01/04/2018  aco46   00089
+
