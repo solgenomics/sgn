@@ -6,10 +6,6 @@
 */
 
 
-JSAN.use("CXGN.List");
-JSAN.use("jquery.blockUI");
-JSAN.use('solGS.solGS')
-
 jQuery(document).ready( function() {
     
     var url = window.location.pathname;
@@ -29,6 +25,42 @@ jQuery(document).ready( function() {
         }
     }
                
+});
+
+
+jQuery(document).ready( function() { 
+
+    jQuery("#run_pca").click(function() {
+	pcaRun();
+    }); 
+  
+});
+
+
+jQuery(document).ready( function() { 
+     
+    var url = window.location.pathname;
+    
+    if (url.match(/pca\/analysis/)) {  
+        var listId;
+        
+        jQuery("<option>", {value: '', selected: true}).prependTo("#pca_genotypes_list_select");
+        
+        jQuery("#pca_genotypes_list_select").change(function() {        
+            listId = jQuery(this).find("option:selected").val();              
+                                
+            if (listId) {                
+                jQuery("#pca_go_btn").click(function() {
+                    loadPcaGenotypesList(listId);
+                });
+            }
+        });
+    } 
+
+    //if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
+	checkPcaResult();  
+    // }
+    
 });
 
 
@@ -87,42 +119,6 @@ function checkPcaResult () {
     });
     
 }
-
-
-jQuery(document).ready( function() { 
-
-    jQuery("#run_pca").click(function() {
-	pcaRun();
-    }); 
-  
-});
-
-
-jQuery(document).ready( function() { 
-     
-    var url = window.location.pathname;
-    
-    if (url.match(/pca\/analysis/)) {  
-        var listId;
-        
-        jQuery("<option>", {value: '', selected: true}).prependTo("#pca_genotypes_list_select");
-        
-        jQuery("#pca_genotypes_list_select").change(function() {        
-            listId = jQuery(this).find("option:selected").val();              
-                                
-            if (listId) {                
-                jQuery("#pca_go_btn").click(function() {
-                    loadPcaGenotypesList(listId);
-                });
-            }
-        });
-    } 
-
-    //if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
-	checkPcaResult();  
-    // }
-    
-});
 
 
 function loadPcaGenotypesList(listId) {     
