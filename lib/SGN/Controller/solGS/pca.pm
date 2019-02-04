@@ -99,8 +99,9 @@ sub check_result :Path('/pca/check/result/') Args() {
 	$c->stash->{pop_id} = $training_pop_id;
 	$file_id = $training_pop_id;	
     }
-    
-    $c->stash->{file_id} = $pca_share_id || $file_id ;
+
+    $file_id = $pca_share_id if !$file_id;
+    $c->stash->{file_id} = $file_id ;
     my $ret->{result} = 0;
     
     if ($self->check_pca_output($c))
@@ -108,7 +109,7 @@ sub check_result :Path('/pca/check/result/') Args() {
 	$ret = $c->stash->{formatted_pca_output};
 	$ret->{result} = 1;
 	$ret->{list_id} = $list_id;
-	$ret->{pop_id} = $file_id;
+	$ret->{pop_id}  = $file_id;
 	$ret->{list_name} = $c->stash->{list_name};
 	$ret->{trials_names} = $c->stash->{trials_names};
 	$ret->{combo_pops_id} = $combo_pops_id; 

@@ -39,19 +39,17 @@ function checkPcaResult () {
     var popDetails = solGS.getPopulationDetails();
     var url =  window.location.pathname;
     var pcaShareId;
-     if (url.match(/pca\/analysis\//)) {
-	// console.log('checkresult pca analyis id extract ', url)
-	pcaShareId = url.replace(/\/pca\/analysis\//g, '');
-	 console.log('checkresult pca analyis id ' + pcaShareId)
+     if (url.match(/pca\/analysis\//)) {	
+	 pcaShareId = url.replace(/\/pca\/analysis\//g, '');
 
 	 if (pcaShareId.match(/list/)) {
 	     listId = pcaShareId;
 	     setListId(pcaShareId);
-	 }
+	 } 
      }
     
     var comboPopsId = jQuery('#combo_pops_id').val();
-    console.log('combo pop id: ' + comboPopsId)    
+    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -64,7 +62,7 @@ function checkPcaResult () {
         success: function(response) {
             if (response.result) {
 		 setListId(response.list_id);
-	//	console.log('response.result ' + response.pca_scores)
+		console.log('response.pop_id ' + response.pop_id)
 		 var url =  window.location.pathname;
 		if (url.match(/pca\/analysis/)) {		    		   
 
@@ -86,7 +84,7 @@ function checkPcaResult () {
             }
 	},
 	
-	});
+    });
     
 }
 
@@ -208,7 +206,7 @@ function pcaRun () {
 	    
             if (response.pca_scores) {	
 		var popId = response.pop_id;
-		
+		console.log('popid ' + popId)
 		var plotData = { 'scores': response.pca_scores, 
 				 'variances': response.pca_variances, 
 				 'pop_id': popId, 
@@ -513,7 +511,7 @@ function plotPca(plotData){
     if (id)  {
 	pcaDownload = "/download/pca/scores/population/" + id;
     }
-
+    console.log('dld: ' + pcaDownload)
      pcaPlot.append("a")
 	.attr("xlink:href", pcaDownload)
 	.append("text")
