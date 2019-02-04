@@ -101,7 +101,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $model_id    = $c->req->param('model_id');
     
     my $index_file  = $c->req->param('index_file');
-   $c->stash->{selection_index_file} = $index_file;   
+    $c->stash->{selection_index_only_file} = $index_file;   
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
 

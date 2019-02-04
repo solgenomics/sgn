@@ -1023,7 +1023,7 @@ sub download_urls {
     }
     
     my $trait_id          = $c->stash->{trait_id};
-    my $ranked_genos_file = $c->stash->{selection_index_file};
+    my $ranked_genos_file = $c->stash->{selection_index_only_file};
 
     if ($ranked_genos_file) 
     {
@@ -1532,35 +1532,6 @@ sub get_trait_details {
 }
 
 
-sub gebv_rel_weights {
-    my ($self, $c, $params, $pred_pop_id) = @_;
-    
-    my $pop_id      = $c->stash->{pop_id};
-  
-    my $rel_wts = "trait" . "\t" . 'relative_weight' . "\n";
-    foreach my $tr (keys %$params)
-    {      
-        my $wt = $params->{$tr};
-        unless ($tr eq 'rank')
-        {
-            $rel_wts .= $tr . "\t" . $wt;
-            $rel_wts .= "\n";
-        }
-    }
-  
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
-    
-    my $name = "rel_weights_${pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-    write_file($file, $rel_wts);
-    
-    $c->stash->{rel_weights_file} = $file;
-    
-}
-
-
 sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args(2) {
     my ($self, $c, $pop_id, $genotypes_file) = @_;   
  
@@ -1576,60 +1547,6 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @ranks);
     } 
 
-}
-
-
-sub rank_genotypes : Private {
-    my ($self, $c, $pred_pop_id) = @_;
-
-    my $pop_id      = $c->stash->{pop_id};
-    $c->stash->{prediction_pop_id} = $pred_pop_id;
-
-    my $input_files = join("\t", 
-                           $c->stash->{rel_weights_file},
-                           $c->stash->{gebv_files_of_traits}
-        );
-   
-    $c->controller('solGS::Files')->ranked_genotypes_file($c, $pred_pop_id);
-    $c->controller('solGS::Files')->selection_index_file($c, $pred_pop_id);
-
-    my $output_files = join("\t",
-                            $c->stash->{ranked_genotypes_file},
-                            $c->stash->{selection_index_file}
-        );
-    
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
-    
-    my $name = "output_rank_genotypes_${pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $output_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-    write_file($output_file, $output_files);
-       
-    $name = "input_rank_genotypes_${pop_id}${pred_file_suffix}";
-    my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-    write_file($input_file, $input_files);
-    
-    $c->stash->{output_files} = $output_file;
-    $c->stash->{input_files}  = $input_file;   
-    $c->stash->{r_temp_file}  = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";  
-    $c->stash->{r_script}     = 'R/solGS/selection_index.r';
-    
-    $self->run_r_script($c);
-    $self->download_urls($c);
-    $self->get_top_10_selection_indices($c);
-}
-
-
-sub get_top_10_selection_indices {
-    my ($self, $c) = @_;
-    
-    my $si_file = $c->stash->{selection_index_file};
-  
-    my $si_data = $self->convert_to_arrayref_of_arrays($c, $si_file);
-    my @top_genotypes = @$si_data[0..9];
-    
-    $c->stash->{top_10_selection_indices} = \@top_genotypes;
 }
 
 
@@ -2363,36 +2280,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
 }
 
 
-sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
-    my ($self, $c) = @_;
-    
-    my $pred_pop_id = $c->req->param('pred_pop_id');
-    my $training_pop_id = $c->req->param('training_pop_id');
-   
-    $c->stash->{model_id} = $training_pop_id;
-    $c->stash->{prediction_pop_id} = $pred_pop_id;
-   
-    my @traits;
-    if (!$pred_pop_id) 
-    {    
-        $self->analyzed_traits($c);
-        @traits = @{ $c->stash->{selection_index_traits} }; 
-    }
-    else  
-    {
-        $self->prediction_pop_analyzed_traits($c, $training_pop_id, $pred_pop_id);
-        @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
-    }
 
-    my $ret->{status} = 'success';
-    $ret->{traits} = \@traits;
-     
-    $ret = to_json($ret);
-        
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-    
-}
 
 
 sub traits_with_valid_models {
@@ -2427,63 +2315,6 @@ sub traits_with_valid_models {
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
     $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
 
-}
-
-
-sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args(2) {
-    my ($self, $c, $model_id, $pred_pop_id) = @_;
-    
-    $c->stash->{pop_id} = $model_id;
-
-    if ($pred_pop_id =~ /\d+/ && $model_id != $pred_pop_id)
-    {
-        $c->stash->{prediction_pop_id} = $pred_pop_id;       
-    }
-    else
-    {
-        $pred_pop_id = undef;
-        $c->stash->{prediction_pop_id} = $pred_pop_id;
-    }
-
-    my @traits = $c->req->param; 
-    @traits    = grep {$_ ne 'rank'} @traits;
-   
-    my @values;
-    foreach (@traits)
-    {
-        push @values, $c->req->param($_);
-    }
-      
-    if (@values) 
-    {
-        $c->controller('solGS::TraitsGebvs')->get_gebv_files_of_traits($c);
-      
-        my $params = $c->req->params;
-        $self->gebv_rel_weights($c, $params, $pred_pop_id);
-         
-        $c->forward('rank_genotypes', [$pred_pop_id]);
-         
-        my $geno = $self->tohtml_genotypes($c);
-        
-        my $link         = $c->stash->{ranked_genotypes_download_url};             
-        my $ranked_genos = $c->stash->{top_10_selection_indices};
-        my $index_file   = $c->stash->{selection_index_file};
-       
-        my $ret->{status} = 'No GEBV values to rank.';
-
-        if (@$ranked_genos) 
-        {
-            $ret->{status}     = 'success';
-            $ret->{genotypes}  = $geno;
-            $ret->{link}       = $link;
-            $ret->{index_file} = $index_file;
-        }
-               
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);
-    }     
 }
 
 

@@ -126,7 +126,7 @@ function getListTypeSelectionPopDetail(listId) {
             listData      = list.getListData(listId);
 	    listType      = list.getListType(listId);
 	    listName      = list.listNameById(listId);
-	   // listElements  = listData.elements;
+	    elemCount     = listData.elements;
 
 	    //listElementsNames = getSelectionListElementsNames(listElements);
 	}
@@ -134,6 +134,7 @@ function getListTypeSelectionPopDetail(listId) {
 	return {'name'          : listName,
 		'list_id'       : listId,
 		'type'          : listType,
+		'elements_count' : elemCount
                };
     }
 }
@@ -207,7 +208,8 @@ function getGenotypesList(listId) {
 function loadGenotypesListTypeSelectionPop(args) {     
   
     //var args  = createSelectionReqArgs(listId);
-    var len   = args.list.length;
+    var listDetail = getListTypeSelectionPopDetail(args.list_id);
+    var len   = listDetail.elements_count;
     //var popId = args.selection_pop_id;
    
     if (window.Prototype) {

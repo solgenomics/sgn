@@ -386,7 +386,7 @@ sub cluster_list_genotype_data {
     {
 	if ($list_type eq 'accessions')
 	{
-	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
+	    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $list_id);
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
