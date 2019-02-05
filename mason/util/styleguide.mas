@@ -535,7 +535,7 @@ var styleguide_trial_table = jQuery('#styleguide_trial_search_results').DataTabl
     <td><span class="glyphicon glyphicon-equalizer"></span></td>
     <td>
       <ul>
-        <li>Stored Phenotypes[Trial Detail]</li>
+        <li>Phenotypes Summary Statistics[Trial Detail]</li>
         <li>Traits assayed[Stock Detail]</li>
       </ul>
     </td>
