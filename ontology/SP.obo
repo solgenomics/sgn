@@ -3414,9 +3414,10 @@ creation_date: 2010-07-19T11:30:20Z
 
 [Term]
 id: SP:0000368
-name: distal fruit end scar size
+name: distal fruit end scar size in mm
 synonym: "blossom scar size" EXACT []
-is_a: SP:0000367 ! distal fruit end scar
+is_a: SP:0000500 ! Variables
+relationship: variable_of SP:0000367 ! distal fruit end scar
 created_by: Naama
 creation_date: 2010-07-19T11:31:07Z
 
