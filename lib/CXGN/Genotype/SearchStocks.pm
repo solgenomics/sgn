@@ -121,7 +121,8 @@ sub get_accessions_using_snps {
     my $protocol_id;
     my @het_params;
     my @gt_pair;
-
+    my $gt_pair1_string;
+    my $gt_pair2_string;
     print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
 
     foreach my $param (@parameters){
@@ -164,8 +165,8 @@ sub get_accessions_using_snps {
                 my %gt_pair2;
                 $gt_pair1{$marker_name} = {'GT' => "0/1"};
                 $gt_pair2{$marker_name} = {'GT' => "1/0"};
-                my $gt_pair1_string = encode_json \%gt_pair1;
-                my $gt_pair2_string = encode_json \%gt_pair2;
+                $gt_pair1_string = encode_json \%gt_pair1;
+                $gt_pair2_string = encode_json \%gt_pair2;
                 @gt_pair = ($gt_pair1_string, $gt_pair2_string);
                 push (@het_params, [@gt_pair]);
             } else {
@@ -179,7 +180,7 @@ sub get_accessions_using_snps {
     }
 
     my $vcf_params_string;
-        if (%vcf_params){
+    if (%vcf_params){
         $vcf_params_string = encode_json \%vcf_params;
     }
 
@@ -201,17 +202,14 @@ sub get_accessions_using_snps {
         while (my @row = $h->fetchrow_array()){
             push @first_round_accessions, $row[0]
         }
-#        foreach (@first_round_accessions) {
-#           $_ = "$_";
-#      }
 
         print STDERR "HOMOZYGOUS TEST=" .Dumper(\@first_round_accessions). "\n";
     }
 
     if (@het_params){
-        my @each_pair;
-        my $pair = \@each_pair;
-        foreach my $pair(@het_params){
+        my @pair;
+        my $pair_ref = \@pair;
+        foreach my $pair_ref(@het_params){
             my $next_q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -220,18 +218,17 @@ sub get_accessions_using_snps {
                 AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
 
             my $h = $schema->storage->dbh()->prepare($next_q);
-            $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $each_pair[0], $each_pair[1], @accessions);
+            $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $pair_ref->[0], $pair_ref->[1], @accessions);
             while (my @row = $h->fetchrow_array()){
-                push @selected_accessions, $row[0];
-
-                print STDERR "HETEROZYGOUS TEST=" .Dumper(\@selected_accessions). "\n";
+                push @selected_accessions, [$row[0]];
 
             }
         }
+        print STDERR "HETEROZYGOUS TEST=" .Dumper(\@selected_accessions). "\n";
 
     }
 
-return \@selected_accessions;
+    return \@selected_accessions;
 
 
 }
