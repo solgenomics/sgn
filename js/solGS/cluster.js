@@ -288,14 +288,12 @@ solGS.cluster = {
 		    var pages = '/solgs/traits/all/population/'
 			+ '|solgs/models/combined/trials/'
 			+ '|/breeders/trial\/'
-			+ '|solgs/trait/\d+/population/'
+			+ '|solgs/trait/\\d+/population/'
 			+ '|solgs/model/combined/populations/';
 		    
 		    if (document.URL.match(pages)) {
 			 jQuery("#run_cluster").show();
-		    }// else {
-			//jQuery("#run_cluster").hide();
-		    //}
+		    }
 
 		} else {                
 		    jQuery("#cluster_message").html(res.result);
