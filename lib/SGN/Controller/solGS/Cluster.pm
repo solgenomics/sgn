@@ -82,7 +82,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
       
     if ($cluster_plot_exists)
     {
-	$ret = $self->_jsonize_output($c);
+	$ret = $self->_prepare_response($c);
     }
 
     $ret = to_json($ret);        
@@ -206,12 +206,12 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	{
 	    $self->save_cluster_opts($c);
 	    $self->run_cluster($c);
-	    $ret = $self->_jsonize_output($c);
+	    $ret = $self->_prepare_response($c);
 	}	
     }
     else
     {    
-	$ret = $self->_jsonize_output($c);
+	$ret = $self->_prepare_response($c);
     }
     
    
@@ -267,7 +267,7 @@ sub cluster_gebvs_file {
 }
 
 
-sub _jsonize_output {
+sub _prepare_response {
     my ($self, $c) = @_;
     
     $self->prep_cluster_download_files($c);
