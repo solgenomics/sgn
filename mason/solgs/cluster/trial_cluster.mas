@@ -12,8 +12,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 =cut
 
 </%doc>
+
 <%args>
 </%args>
+
 <div class="row">
   <& /solgs/cluster/cluster_options.mas &>
 </div>

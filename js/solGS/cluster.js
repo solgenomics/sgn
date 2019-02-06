@@ -105,7 +105,8 @@ solGS.cluster = {
 
 	var clusterTypeGroup  = '<select class="form-control" id="cluster_type_select">'
 	    + '<option value="k-means">K-Means</option>'
-	    + '<option value="heirarchical">Heirarchical</option>'	   
+	    // + '<option value="heirarchical">Heirarchical</option>'
+	
 	    +  '</select>';
 
 	return clusterTypeGroup;

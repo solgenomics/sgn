@@ -80,7 +80,8 @@ my $url = $c->req->path;
   data_structure_type => $data_structure_type,
   &>
 
-</&>
+
 
 </div>
 
+</&>
