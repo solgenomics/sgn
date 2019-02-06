@@ -196,7 +196,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     close $filehandle_in;
     close $filehandle_out;
 
-#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
+#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_genoPCA_script.R " . $geno_filepath3 . " " . $figure2file;
 #    system($cmd);
     my $cmd = CXGN::Tools::Run->new(
         {
@@ -314,7 +314,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     close $filehandle_in;
     close $filehandle_out;
 
-#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
+#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
     my $cmd = CXGN::Tools::Run->new(
         {
@@ -338,15 +338,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $kinship_check,
     );
 
-#    my $traits = $ds->retrieve_traits();
-#    my $phenotypes = $ds->retrieve_phenotypes();
-#    my $trials_ref = $ds->retrieve_trials();
-#    print STDERR $dataset_id;
-#    my @trials = @$trials_ref;
-
-#    my $download = CXGN::Trial::Download->new({
-#	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	trial_list => \
 
     my $figure3file_response = $figure3file;
     my $figure4file_response = $figure4file;
