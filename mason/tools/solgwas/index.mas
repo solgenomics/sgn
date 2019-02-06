@@ -37,13 +37,14 @@
 
 
       <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
+        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
       <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
       <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
       <br>
       <br>
       <br>
-      <div id="trait_histogram_plot">
+      <center>
+        <div id="trait_histogram_plot">
         <br>
         <br>
         <br>
@@ -53,6 +54,7 @@
         <br>
         <br>
       </div>
+      </center>
       <br>
       <br>
       <div class="form-group form-inline">
@@ -63,6 +65,12 @@
         <label>Include principal components in model &nbsp; </label>
         <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA Plot</button>
       </div>
+      <br>
+      <br>
+      <br>
+      <center>
+        <div id="pca_output"></div>
+      </center>
 
 
     <br>
@@ -91,7 +99,7 @@
 
 
 
-<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
 
 
@@ -207,6 +215,41 @@ jQuery(document).ready(function() {
   });
 
 
+  jQuery('#preview_pca').click( function () {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      $('#pca_output').empty();
+      if ($('#pheno_select').val() != ""){
+        var dataset_id = $('#available_datasets').val();
+        var trait_id = $('#pheno_select').val();
+        $.ajax({
+          url: '/ajax/solgwas/generate_pca',
+          async: true,
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+  	      beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+  	      },
+          success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+              $('#dataset_select').val('ERROR');
+            }
+            else {
+              var fig2_response = response.figure2;
+              setTimeout(function() {
+  	            $('#pca_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
+              }, 6000);
+  	      }
+          },
+          error: function(response) {
+            alert("An error occurred, the service may temporarily be unavailable");
+          }
+        });
+      }
+    };
+  });
+
   jQuery('#runGWA').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
@@ -239,15 +282,11 @@ jQuery(document).ready(function() {
               $('#dataset_select').val('ERROR');
             }
             else {
-              var fig1_response = response.figure1;
-              var fig2_response = response.figure2;
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
   	    //alert("Response ID: "+temp_response);
       	    //alert("Response ID: "+fig1_response);
-  	        //$('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
               setTimeout(function() {
-  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
               }, 6000);

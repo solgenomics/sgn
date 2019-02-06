@@ -112,6 +112,120 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
+sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->param('dataset_id');
+    my $trait_id = $c->req->param('trait_id');
+    $c->tempfiles_subdir("solgwas_files");
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
+    #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $temppath = $c->config->{basepath}."/".$tempfile;
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
+    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+#    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
+#    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
+#    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
+    #    $ds2 -> file_name => $temppath2;
+    my $protocol_name = $c->config->{default_genotyping_protocol};
+    my $protocol_id;
+    my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
+    if (defined($row)) {
+	      $protocol_id = $row->nd_protocol_id();
+    }
+
+    $ds -> retrieve_genotypes($protocol_id);
+#    $ds-> @$trials_ref = retrieve_genotypes();
+    my $newtrait = $trait_id;
+    $newtrait =~ s/\s/\_/g;
+    $newtrait =~ s/\//\_/g;
+    print STDERR $newtrait . "\n";
+    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
+    my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
+    my $figure3file = "." . $tempfile . "_" . $newtrait . "_figure3.png";
+    my $figure4file = "." . $tempfile . "_" . $newtrait . "_figure4.png";
+    my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
+    my $geno_filepath = "." . $tempfile . "_genotype.txt";
+    $trait_id =~ tr/ /./;
+    $trait_id =~ tr/\//./;
+#    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
+#    system($clean_cmd);
+    my $geno_filepath2 = "." . $tempfile . "_genotype_edit.txt";
+    my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
+    system($edit_cmd);
+    my $geno_filepath3 = "." . $tempfile . "_genotype_edit_subset.txt";
+#    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
+#    system($trim_cmd);
+
+    open my $filehandle_in,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+    open my $filehandle_in2,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+    open my $filehandle_out, ">", "$geno_filepath3" or die "Could not create $geno_filepath3: $!\n";
+
+    my $marker_total;
+
+    while ( my $line = <$filehandle_in2> ) {
+        my @sample_line = (split /\s+/, $line);
+        $marker_total = scalar(@sample_line);
+    }
+    close $filehandle_in2;
+# Hardcoded number of markers to be selected - make this selectable by user?
+    my $markers_selected = 500;
+#    my @column_selection = (0,2);
+# Initialize column selection so the row.names are selected first
+    my @column_selection = (0);
+    my %columns_seen;
+    for (my $i=0; $i <= $markers_selected; $i++) {
+        my $random_current = int(rand($marker_total));
+        redo if $columns_seen{$random_current}++;
+        push @column_selection, $random_current;
+    }
+
+#    foreach my $item (@column_selection) {
+        while ( my $line = <$filehandle_in> ) {
+            my $curr_line;
+            my @first_item = (split /\s+/, $line);
+            foreach my $item (@column_selection) {
+                $curr_line .= $first_item[$item] . "\t";
+            }
+#            $curr_line .= "\n";
+            print $filehandle_out "$curr_line\n";
+        }
+#    }
+    close $filehandle_in;
+    close $filehandle_out;
+
+#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure1file . " " . $figure2file . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
+#    system($cmd);
+    my $cmd = CXGN::Tools::Run->new(
+        {
+            backend => $c->config->{backend},
+            temp_base => $c->config->{basepath} . "/" . $c->tempfiles_subdir("solgwas_files"),
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+    $cmd->run_cluster(
+            "Rscript ",
+            $c->config->{basepath} . "/R/solgwas/solgwas_genoPCA_script.R",
+            $geno_filepath3,
+            $figure2file,
+    );
+
+
+    my $figure2file_response = $figure2file;
+    $figure2file_response =~ s/\.\/static//;
+    $c->stash->{rest} = {
+        figure2 => $figure2file_response,
+        dummy_response => $dataset_id,
+        dummy_response2 => $trait_id,
+    };
+}
+
+
 sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $self = shift;
     my $c = shift;
@@ -218,8 +332,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $pheno_filepath,
             $geno_filepath3,
             $trait_id,
-            $figure1file,
-            $figure2file,
             $figure3file,
             $figure4file,
             $pc_check,
@@ -236,19 +348,11 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 #	trial_list => \
 
-    my $figure1file_response = $figure1file;
-    my $figure2file_response = $figure2file;
     my $figure3file_response = $figure3file;
     my $figure4file_response = $figure4file;
-    print STDERR Dumper($figure2file_response);
-    $figure1file_response =~ s/\.\/static//;
-    $figure2file_response =~ s/\.\/static//;
     $figure3file_response =~ s/\.\/static//;
     $figure4file_response =~ s/\.\/static//;
-    print STDERR Dumper($figure2file_response);
     $c->stash->{rest} = {
-        figure1 => $figure1file_response,
-        figure2 => $figure2file_response,
         figure3 => $figure3file_response,
         figure4 => $figure4file_response,
         dummy_response => $dataset_id,
