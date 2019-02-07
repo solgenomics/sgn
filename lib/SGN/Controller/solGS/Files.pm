@@ -88,28 +88,30 @@ sub trait_phenodata_file {
     my ($self, $c) = @_;
    
     my $pop_id        = $c->stash->{pop_id};
-    my $trait         = $c->stash->{trait_abbr};    
+    my $trait_abbr    = $c->stash->{trait_abbr};    
     my $data_set_type = $c->stash->{data_set_type};
    
     my $cache_data;
     
-    if ($trait)
+    if ($trait_abbr)
     {
 	no warnings 'uninitialized';
 
 	if ($data_set_type =~ /combined populations/)
 	{
 	    my $combo_identifier = $c->stash->{combo_pops_id}; 
-	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait . "_". $combo_identifier,
-			   file      => 'phenotype_trait_'. $trait . '_' . $combo_identifier. '_combined_pops.txt',
-			   stash_key => 'trait_phenodata_file'
+	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait_abbr . "_". $combo_identifier,
+			   file      => 'phenotype_data_'. $combo_identifier. '_' . $trait_abbr . '_combined.txt',
+			   stash_key => 'trait_phenodata_file',
+			   cache_dir => $c->stash->{solgs_cache_dir}
 	    };
 	}
 	else 
 	{
-	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait,
-			   file      => 'phenotype_trait_' . $trait . '_' . $pop_id . '.txt',
-			   stash_key => 'trait_phenodata_file'
+	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait_abbr,
+			   file      => 'phenotype_data_' . $pop_id . '_' . $trait_abbr . '.txt',
+			   stash_key => 'trait_phenodata_file',
+			   cache_dir => $c->stash->{solgs_cache_dir}
 	    };
 	}
 
@@ -397,7 +399,7 @@ sub trait_phenotype_file {
     my ($self, $c, $pop_id, $trait) = @_;
 
     my $dir = $c->stash->{solgs_cache_dir};
-    my $exp = "phenotype_trait_${trait}_${pop_id}";
+    my $exp = "phenotype_data_${trait}_${pop_id}";
     my $file = $self->grep_file($dir, $exp);
    
     $c->stash->{trait_phenotype_file} = $file;
@@ -622,10 +624,9 @@ sub create_file_id {
 	$file_id = $combo_pops_id;
 	$c->stash->{data_set_type} = 'combined_populations';
     } 
-    else 
+    elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
     {
-	#$c->stash->{pop_id} = $training_pop_id;
-	$file_id = $training_pop_id;
+	$file_id =  $selection_pop_id ? $training_pop_id . '_' . $selection_pop_id : $training_pop_id;
     }
 
     if ($data_structure =~ /list/) 
