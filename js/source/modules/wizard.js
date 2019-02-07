@@ -90,14 +90,12 @@ const wizardColumn = `
 
 const unselectedRow = `
   <div class="btn-group wizard-list-item">
-    <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button>
-    <div class="btn btn-xs btn-default wizard-list-name"></div>
+    <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button><div class="btn btn-xs btn-default wizard-list-name"></div>
   </div>`;
   
 const selectedRow = `
   <div class="btn-group wizard-list-item">
-    <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button>
-    <div class="btn btn-xs btn-default wizard-list-name"></div>
+    <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button><div class="btn btn-xs btn-default wizard-list-name"></div>
   </div>`;
   
 
@@ -194,19 +192,24 @@ export function Wizard(main_id,col_number){
       var loading_sentinel = {"n": Math.random()};
       col.loading_sentinel = loading_sentinel;
       if(col_objects.slice(0,col.index).some(c=>c.loading)) return Promise.resolve(false);
-      return new Promise((resolve,reject)=>{
-        if (col.fromList!==undefined){
-          var info = load_list(col.fromList);
-          preselected = info.items;
+      var pre;
+      if (col.fromList!==undefined) {
+        pre = Promise.resolve(load_list(col.fromList))
+        .then(info=>{
+          preselected = info.items.map(i=>i.name!==undefined?i.name:""+i);
           set_type(col.index,info.type);
           redraw_types();
           col.fromList = undefined;
-        }
+        })
+      } else{
+        pre = Promise.resolve(true)
+      }
+      return pre.then(()=>{
         if(col.type==""||col.type==null){
-          resolve([])
+          return []
         }
         else if(col.index==0){
-          resolve(load_initial(col.type));
+          return load_initial(col.type);
         }
         else {
           var prev = col_objects.slice(0,col.index);
@@ -216,12 +219,12 @@ export function Wizard(main_id,col_number){
           prev.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
           prev.forEach(c=>operations[c.type]=c.intersect);
           
-          resolve(load_selection(
+          return load_selection(
             col.type,
             catagories,
             selections,
             operations
-          ));
+          );
         }
       }).then(new_items=>{
         if(col.loading_sentinel!=loading_sentinel){
@@ -244,7 +247,7 @@ export function Wizard(main_id,col_number){
             else{
               fresh[name] = existing[name]
             }
-            if(preselected.indexOf(i)!=-1) fresh[name].selected = true;
+            if(preselected.indexOf(name)!=-1) fresh[name].selected = true;
             freshList.push(fresh[name]);
           }
         });
@@ -360,7 +363,7 @@ export function Wizard(main_id,col_number){
     if(!from) from = 0;
     if(from>=col_objects.length) return;
     
-    console.log("reflow from",from,dont_reload,dont_propagate);
+    // console.log("reflow from",from,dont_reload,dont_propagate);
     
     
     allCols.filter(d=>(d.index==from&&!dont_reload)||(!dont_propagate&&d.index>from))
@@ -369,6 +372,7 @@ export function Wizard(main_id,col_number){
       .style("display",null);
     
     var reflowCol = allCols.filter(d=>d.index==from);
+    if(allCols.empty()) return;
     var col = reflowCol.datum();
     
     var load = dont_reload===true?Promise.resolve(true):col.reload();
@@ -495,7 +499,7 @@ export function Wizard(main_id,col_number){
       var type_options = i!=0 ?
         list.filter(o=>used.indexOf(o.id)==-1)
         : list.filter(o=>initial_types.indexOf(o.id)!=-1);
-      console.log(i,type_options);
+      // console.log(i,type_options);
       var opts = d3.select(this).selectAll("option")
         .data(type_options,o=>o.id);
       opts.enter().append("option").merge(opts)

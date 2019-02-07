@@ -1,0 +1,45 @@
+ul.wizard-list,
+.wizard-list-item,
+ul.wizard-list li{
+  margin:0;
+  padding: 0;
+  text-indent: 0;
+  list-style-type: none;
+  min-width:100%;
+  position:relative;
+}
+
+.btn-group.wizard-list-item {
+  white-space: nowrap;
+  
+}
+
+.btn-group.wizard-list-item .btn {
+  float: none;
+  display: inline-block;
+}
+
+ul.wizard-list{
+  height:10em;
+  overflow-y: auto;
+  padding: 4px;
+  margin-bottom: 6px;
+}
+button.wizard-list-add{
+  width:2.45em;
+  z-index:100;
+}
+button.wizard-list-rem{
+  width:2.45em;
+  z-index:100;
+}
+div.wizard-list-name{
+  pointer-events: none;
+  width:calc(100% - 2.45em);
+}
+div.wizard-panel{
+  min-width: 140px;
+}
+div.wizard-panel .panel-body{
+  padding:6px;
+}
