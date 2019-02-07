@@ -71,10 +71,10 @@ sub combine_gebvs_of_traits {
 sub get_gebv_files_of_traits {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
     $c->stash->{model_id} = $pop_id;
-    my $pred_pop_id = $c->stash->{prediction_pop_id};
-   
+    my $pred_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    
     my $dir = $c->stash->{solgs_cache_dir};
     
     my $gebv_files;
