@@ -4415,6 +4415,7 @@ name: anthocyanin coloration of hypocotyl. Boolean observation 0=absent 1=presen
 def: "Boolean observation of  hypocotyl anthocyanin coloration 0=absent, 1=present." [SGN:NM]
 is_a: SP:0000500 ! Variables
 relationship: variable_of SP:0000344 ! hypocotyl anthocyanin content
+namespace: solanaceae_phenotype
 
 [Term]
 id: SP:0000712
