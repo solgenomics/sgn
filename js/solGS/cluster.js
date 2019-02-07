@@ -55,10 +55,10 @@ solGS.cluster = {
     getSelectName: function(selectId, dataStructureType) {
 	var selectName;
  	if (dataStructureType == 'list') {
-	    console.log(' list id ',dataStructureType)
+	    
 	    var genoList = this.getClusterGenotypesListData(selectId);
 	    var selectName = genoList.name;
-	    console.log('selectName ', selectName) 
+	   
 	    //	dataStructureType = genoList.listType + ' list';
 	} else if (dataStructureType == 'dataset') {
 	    var dataset = solGS.getDatasetData(selectId);
@@ -102,11 +102,9 @@ solGS.cluster = {
     },
 
     createClusterTypeSelect: function() {
-
+	// + '<option value="heirarchical">Heirarchical</option>'
 	var clusterTypeGroup  = '<select class="form-control" id="cluster_type_select">'
-	    + '<option value="k-means">K-Means</option>'
-	    // + '<option value="heirarchical">Heirarchical</option>'
-	
+	    + '<option value="k-means">K-Means</option>'	    	
 	    +  '</select>';
 
 	return clusterTypeGroup;
@@ -117,14 +115,12 @@ solGS.cluster = {
 	var dataTypeGroup = '<select class="form-control" id="data_type_select">';
 
 	for (var i=0; i < opts.length; i++) {
-	    console.log(opts[i]);
+	    
 	    dataTypeGroup += '<option value="'
 		+ opts[i] + '">'
 		+ opts[i]
 		+ '</option>';
 	}
-
-	console.log(dataTypeGroup)
 	  dataTypeGroup +=  '</select>';
 	
 	return dataTypeGroup;
@@ -145,9 +141,6 @@ solGS.cluster = {
 	    + '|solgs/trait/\d+/population\/' 
 	    + '|solgs/model/combined/populations/';
 
-	console.log('url '  + url + ' pagesTr ' + pagesTr)
-	console.log('selectRow: ' + url)
-
 	var pagesMultiModels = '/solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials\/';
 	
@@ -158,7 +151,7 @@ solGS.cluster = {
 	}
 	
 	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
-	console.log('selectRow: ' + dataTypeOpts)
+	
 	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
 	
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
@@ -177,7 +170,7 @@ solGS.cluster = {
             + '[ Run Cluster ] </a>'                                     
             + '</td>'
 	    + '<tr>';
-	console.log('selectRow: ' + row)
+	
 	return row;
     },
 
@@ -208,21 +201,37 @@ solGS.cluster = {
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
 	
-	console.log('clusterResult ' + clusterType + ' ' + dataType +  ' k_num ' + kNumber)
-
 	var popDetails  = solGS.getPopulationDetails();
 
 	if (document.URL.match(/solgs\/traits\/all\/population\//)) {
 	    var popId   = jQuery("#cluster_selected_population_id").val();
 	    var popType = jQuery("#cluster_selected_population_type").val();
-	    popDetails['training_pop_id'] = popId;
-	    
+	    if (popType.match(/training/)) {
+		popDetails['training_pop_id'] = popId;
+		popDetails['cluster_pop_id'] = popId;
+	    } else if (popType.match(/selection/)) {
+		popDetails['selection_pop_id'] = popId;
+		popDetails['cluster_pop_id'] = popId;
+		//popDetails['training_pop_id'] = null;
+	    }
 	}
 
 	if (document.URL.match(/solgs\/models\/combined\/trials\//)) {
 	    var popId   = jQuery("#cluster_selected_population_id").val();
 	    var popType = jQuery("#cluster_selected_population_type").val();
-	    popDetails['combo_pops_id'] = popId;
+
+	    if (popType.match(/training/)) {
+		popDetails['combo_pops_id'] = popId;
+		popDetails['cluster_pop_id'] = popId;
+	    } else if (popType.match(/selection/)) {
+		popDetails['selection_pop_id'] = popId;
+		popDetails['cluster_pop_id'] = popId;
+	//	popDetails['training_pop_id'] = null;
+	//	popDetails['combo_pops_id'] = null;
+	    }
+	   // popDetails['combo_pops_id'] = popId;
+
+	    
 	    
 	}
 
@@ -240,10 +249,12 @@ solGS.cluster = {
 	    listId   = selectId;
 	   
 	    popDetails['training_pop_id'] = 'list_' + listId;
+	    popDetails['cluster_pop_id'] = 'list_' + listId;;
 	
 	} else if (dataStructureType == 'dataset') {
 	    datasetId = selectId;
 	    popDetails['training_pop_id'] = 'dataset_' + datasetId;
+	     popDetails['training_pop_id'] = 'dataset_' + datasetId;
 	    var dataset = solGS.getDatasetData(selectId);
 	    datasetName = dataset.name;
 	}
@@ -266,6 +277,7 @@ solGS.cluster = {
             data: {'training_pop_id': popDetails.training_pop_id,
 		   'selection_pop_id': popDetails.selection_pop_id,
 		   'combo_pops_id': popDetails.combo_pops_id,
+		   'cluster_pop_id': popDetails.cluster_pop_id,
 		   'list_id': listId, 
 		   'list_name': listName,
 		   'list_type': listType,
@@ -501,9 +513,9 @@ solGS.cluster = {
     },
 
    
-    plotKCluster: function(plotData){
+    // plotKCluster: function(plotData){
 
-    },
+    // },
 
 }
 

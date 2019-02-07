@@ -130,6 +130,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
+    my $cluster_pop_id   = $c->req->param('cluster_pop_id');
 
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
@@ -145,6 +146,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
      
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
+    $c->stash->{cluster_pop_id}   = $cluster_pop_id;
     $c->stash->{data_structure}   = $data_structure;
     $c->stash->{list_id}          = $list_id;
     $c->stash->{list_type}        = $list_type;
@@ -154,10 +156,10 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{data_type}        = $data_type;
     $c->stash->{k_number}         = $k_number;
 
-    $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    $c->stash->{pop_id} = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
-   
+  
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
  
@@ -169,6 +171,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
 	if ($data_type =~ /genotype/i) 
 	{
+	    $c->stash->{pop_id} = $cluster_pop_id;
 	    $self->create_cluster_genotype_data($c);
 	 
 	    my $geno_files = $c->stash->{genotype_files_list};
@@ -181,7 +184,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	} 
 	elsif ($data_type =~ /phenotype/i)
 	{
+	    $c->stash->{pop_id} = $cluster_pop_id;
 	    $self->create_cluster_phenotype_data($c);
+	    
 	    if (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
 	    {
 		$no_cluster_data = 'There is no phenotype data. Aborted Cluster analysis.';
@@ -255,7 +260,7 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 
 sub cluster_gebvs_file {
     my ($self, $c) = @_;
-
+ 
     $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
     
@@ -281,7 +286,7 @@ sub _prepare_response {
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;
     $ret->{result} = 'success';  
-    $ret->{pop_id} = $c->stash->{pop_id};# if $list_type eq 'trials';
+    $ret->{cluster_pop_id} = $c->stash->{cluster_pop_id};
     $ret->{combo_pops_id} = $c->stash->{combo_pops_id};
     $ret->{list_id}       = $c->stash->{list_id};
     $ret->{cluster_type}  = $c->stash->{cluster_type};
