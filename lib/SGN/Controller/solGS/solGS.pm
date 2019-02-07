@@ -2855,8 +2855,6 @@ sub analyzed_traits {
 
     foreach my $trait_file  (@traits_files) 
     {
-
-	print STDERR "\ntrait file: $trait_file\n";
         if (-s $trait_file) 
         { 
             my $trait = basename($trait_file);	   
@@ -2864,7 +2862,7 @@ sub analyzed_traits {
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
 	    $trait =~ s/\.txt//;
-
+      
 	    my $trait_id;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
