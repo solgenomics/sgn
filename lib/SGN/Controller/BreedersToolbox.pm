@@ -642,6 +642,13 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
 
 }
 
+sub new_breeder_search : Path('/breeders/new_search/') :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{dataset_id} = $c->req->param('dataset_id');
+    $c->stash->{template} = '/breeders_toolbox/new_breeder_search_page.mas';
+
+}
+
 sub get_phenotyping_data : Private {
     my $self = shift;
     my $c = shift;

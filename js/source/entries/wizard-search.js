@@ -1,50 +1,57 @@
-import "../../legacy/CXGN/BreederSearch.js";
+import "../../legacy/CXGN/List.js";
 import {Wizard} from "../modules/wizard.js";
-export default function WizardSetup(main_id){
-  Wizard(main_id,4)
+
+const initialtypes = [
+  "accessions",
+  "breeding_programs",
+  "genotyping_protocols",
+  "locations",
+  "seedlots",
+  "trait_components",
+  "traits",
+  "trials",
+  "trial_designs",
+  "trial_types",
+  "years"
+];
+
+const types = { 
+  "accessions":"Accessions",
+  "breeding_programs":"Breeding Programs",
+  "genotyping_protocols":"Genotyping Protocols",
+  "locations":"Locations",
+  "plots":"Plots",
+  "plants":"Plants",
+  "seedlots":"Seedlots",
+  "trait_components":"Trait Components",
+  "traits":"Traits",
+  "trials":"Trials",
+  "trial_designs":"Trial Designs",
+  "trial_types":"Trial Types",
+  "years":"Years"
+};
+
+export function WizardSetup(main_id){
+  var list = new CXGN.List();
+  var wiz = Wizard(main_id,4)
     // Dictionary of {typeId:typeName}
-    .types({ 
-      "accessions":"Accessions",
-      "breeding_programs":"Breeding Programs",
-      "genotyping_protocols":"Genotyping Protocols",
-      "locations":"Locations",
-      "plots":"Plots",
-      "plants":"Plants",
-      "seedlots":"Seedlots",
-      "trait_components":"Trait Components",
-      "traits":"Traits",
-      "trials":"Trials",
-      "trial_designs":"Trial Designs",
-      "trial_types":"Trial Types",
-      "years":"Years"
-    })
+    .types(types)
     // List of types to show in first column
-    .initial_types([
-      "accessions",
-      "breeding_programs",
-      "genotyping_protocols",
-      "locations",
-      "seedlots",
-      "trait_components",
-      "traits",
-      "trials",
-      "trial_designs",
-      "trial_types",
-      "years"
-    ])
+    .initial_types(initialtypes)
     // Function which returns the first column contents for a given target type
     // Returns list of of unique names or objects with a "name" key 
     // ["name","name",...]|[{"name":"example"},...]
     .load_initial((target)=>{
-      return fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        redirect: "follow", // manual, *follow, error
-        referrer: "no-referrer", // no-referrer, *client
-        body: JSON.stringify({'categories': [categories], 'data': data, 'querytypes': get_querytypes(this_section)}), // body data type must match "Content-Type" header
-      })
+      var formData = new FormData();
+      formData.append('categories[]', target);
+      formData.append('data', '');
+      return fetch(window.location.origin+"/ajax/breeder/search",{
+        method:"POST",
+        body:formData
+      }).then(resp=>resp.json())
+        .then(json=>{
+          return json.list.map(d=>({id:d[0],name:d[1]}))
+        })
     })
     // Function which returns column contents for a given target type
     // and list of constraints spedified by catagories order (["type",...])
@@ -53,57 +60,66 @@ export default function WizardSetup(main_id){
     // Returns list of of unique names or objects with a "name" key 
     // ["name","name",...]|["name","name",...]|[{"name":"example"},...]
     .load_selection((target,catagories,selections,operations)=>{
-      return new Promise(function(resolve, reject){
-        setTimeout(function(){resolve(true)},Math.random()*4000)
-      }).then(()=>{
-        console.log(target,catagories,selections,operations);
-        var results = [];
-        catagories.forEach((catagory,c_i)=>{
-          var cat_results = [];
-          selections[catagory].forEach((item,i_i)=>{
-            var item_results = [];
-            var n = parseInt(item.split("_").pop());
-            for (var f = 1; f <= 10; f++) {
-              item_results.push(target+"_"+(n*f))
-            }
-            if(!operations[catagory]){
-              cat_results = cat_results.concat(item_results.filter(d=>cat_results.indexOf(d)==-1));
-            }
-            else if (i_i==0){
-              cat_results = item_results;
-            }
-            else {
-              cat_results = item_results.filter(d=>cat_results.indexOf(d)!=-1)
-            }
-          })
-          if (c_i==0){
-            results = cat_results;
-          } else {
-            results = cat_results.filter(d=>results.indexOf(d)!=-1);
-          }
-          console.log("crex",cat_results,results)
+      if(catagories.some(c=>selections[c].length<1)) return []
+      var formData = new FormData();
+      catagories.forEach((c,i)=>{
+        formData.append('categories[]', c);
+        formData.append('querytypes[]', operations[c]?1:0);
+        (selections[c]||[]).forEach(s=>{
+          formData.append(`data[${i}][]`, s.id);
         })
-        console.log("rex",results)
-        return results
-      })
+      });
+      formData.append('categories[]', target);
+      return fetch(window.location.origin+"/ajax/breeder/search",{
+        method:"POST",
+        body:formData
+      }).then(resp=>resp.json())
+        .then(json=>{
+          return json.list.map(d=>({id:d[0],name:d[1]}))
+        })
     })
     // Function which returns the list contents for a given listID
     // // Returns type and list of of unique names or objects with a "name" key 
     // {"type":"typeID","items":["name","name",...]|[{"name":"example"},...]}
     .load_list((listID)=>{
-      return {
-        items:initiallist.slice(2,4).map(n=>"accessions_"+n),
-        type:"accessions"
-      }
-    })
-    // Dictionary of {"listID":"listName"} pairs, sets or resets lists show in dropdowns
-    .lists({123:"A123",142:"B142"})
-    // Function which adds items to a list
-    .add_to_list((listID,items)=>{
+      return fetch(window.location.origin+`/list/desynonymize?list_id=${listID}`)
+        .then(resp=>resp.json())
+        .then(list_data=>{
+        var l = {
+          type:list_data.list_type,
+          items:list_data.list||[]
+        };
+        console.log(l)
+        return l 
+      })
+    });
+    
+    var load_lists = ()=>(new Promise((resolve,reject)=>{
+      var private_lists = list.availableLists(initialtypes);
+      var public_lists = list.availableLists(initialtypes);
+      if(public_lists.error) public_lists = [];
+      if(private_lists.error) private_lists = [];
+      resolve(private_lists.concat(public_lists))
+    })).then(lists=>lists.reduce((acc,cur)=>{
+        acc[cur[0]] = cur[1];
+        return acc;
+      },{}
+    )).then(listdict=>{
+      // Dictionary of {"listID":"listName"} pairs, sets or resets lists show in dropdowns
+      wiz.lists(listdict)
+    });
+    
+    load_lists();
+    
+    wiz.add_to_list((listID,items)=>{
       alert(["add",listID,items])
     })
     // Function which creates a new list from items
     .create_list((listName,items)=>{
       alert(["create",listName,items])
     });
+    return {
+      wizard:wiz,
+      reload_lists: load_lists
+    };
 }
