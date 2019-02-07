@@ -247,17 +247,18 @@ sub get_location_geojson {
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
-	my $q = "SELECT geo.nd_geolocation_id,
-	geo.description,
-	abbreviation.value,
-    country_name.value,
-	country_code.value,
-	breeding_program.name,
-	location_type.value,
-	latitude,
-    longitude,
-	altitude,
-    count(distinct(projectprop.project_id))
+	my $q = "SELECT A,B,C,D,E,string_agg(F, ', '),G,H,I,J,K FROM
+(SELECT geo.nd_geolocation_id as A,
+ geo.description AS B,
+ abbreviation.value AS C,
+    country_name.value AS D,
+ country_code.value AS E,
+ breeding_program.name AS F,
+ location_type.value AS G,
+ latitude AS H,
+    longitude AS I,
+ altitude AS J,
+    count(distinct(projectprop.project_id)) AS K
 FROM nd_geolocation AS geo
 LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
 LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
@@ -267,7 +268,7 @@ LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = 
 LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
 LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
 GROUP BY 1,2,3,4,5,6,7
-ORDER BY 2";
+ORDER BY 2) AS T1 group by 1,2,3,4,5,7,8,9,10,11";
 
 
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
