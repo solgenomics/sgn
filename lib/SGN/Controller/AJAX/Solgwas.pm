@@ -214,6 +214,9 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
             $geno_filepath3,
             $figure2file,
     );
+    $cmd->alive;
+    $cmd->is_cluster(1);
+    $cmd->wait;
 
 
     my $figure2file_response = $figure2file;
@@ -337,7 +340,9 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $pc_check,
             $kinship_check,
     );
-
+    $cmd->alive;
+    $cmd->is_cluster(1);
+    $cmd->wait;
 
     my $figure3file_response = $figure3file;
     my $figure4file_response = $figure4file;
