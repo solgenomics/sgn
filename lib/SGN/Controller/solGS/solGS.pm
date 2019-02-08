@@ -2329,9 +2329,8 @@ sub get_model_accuracy_value {
  
     closedir $dh; 
     
-    print STDERR "\nvalidation: $validation_file -- $model_id - $trait_abbr\n";
     $validation_file = catfile($dir, $validation_file);
-     print STDERR "\nvalidation: $validation_file\n";   
+    
     my ($row) = grep {/Average/} read_file($validation_file);
     my ($text, $accuracy_value) = split(/\t/,  $row);
  
