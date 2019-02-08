@@ -253,7 +253,7 @@ rect.bordered {
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Number of plants per plot: </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_has_plant_entries" name="add_project_has_plant_entries">
+                                        <select class="form-control" id="num_plants_per_plot" name="num_plants_per_plot">
                                             <option value="">NA</option>
                                             <option value="1">1</option>
                                             <option value="2">2</option>
