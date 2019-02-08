@@ -101,7 +101,7 @@ sub trait_phenodata_file {
 	{
 	    my $combo_identifier = $c->stash->{combo_pops_id}; 
 	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait_abbr . "_". $combo_identifier,
-			   file      => 'phenotype_data_'. $combo_identifier. '_' . $trait_abbr . '_combined.txt',
+			   file      => 'phenotype_data_' . $trait_abbr . '_'. $combo_identifier. '_combined.txt',
 			   stash_key => 'trait_phenodata_file',
 			   cache_dir => $c->stash->{solgs_cache_dir}
 	    };
@@ -109,7 +109,7 @@ sub trait_phenodata_file {
 	else 
 	{
 	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait_abbr,
-			   file      => 'phenotype_data_' . $pop_id . '_' . $trait_abbr . '.txt',
+			   file      => 'phenotype_data_' . $trait_abbr .'_' . $pop_id . '.txt',
 			   stash_key => 'trait_phenodata_file',
 			   cache_dir => $c->stash->{solgs_cache_dir}
 	    };
