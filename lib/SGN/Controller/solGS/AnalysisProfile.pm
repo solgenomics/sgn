@@ -375,10 +375,15 @@ sub structure_output_details {
     my $base    = $c->req->base;   
  
     if ($base !~ /localhost/)
-    {
-	$referer =~ s/$base//;
-	$base =~ s/:\d+//;
-	$referer = $base . $referer;
+    {   
+	#$referer =~ s/$base//;
+	
+	#$base =~ s/:\d+//;
+	#print STDERR "\n$base - $referer\n";
+
+	#$referer = $base . $referer;
+	#print STDERR "\n$base - $referer\n";
+	$referer = $c->req->referer;
     } 
               
     my %output_details = ();
