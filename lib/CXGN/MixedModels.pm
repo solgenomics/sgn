@@ -35,7 +35,7 @@ sub BUILD {
     $self->phenotype_file($phenotype_file);
    
 }
-    
+
 sub generate_model {
     my $self = shift;
 
@@ -47,29 +47,27 @@ sub generate_model {
     my $random_factors_random_slope = $self->random_factors_random_slope();
     
     print STDERR "DV: $dependent_variable FF: $fixed_factors - RF: $random_factors TF: $tempfile. FFI: $fixed_factors_interaction RFRS: $random_factors_random_slope\n";
-        
+
+    print STDERR Dumper($fixed_factors);
     my $model = "";
     $model .= "dependent_variable = \"$dependent_variable\"\n";
-    #my @fixed_factors = split ",", $fixed_factors;
-    my $formatted_fixed_factors = "\"$fixed_factors\"";
+    my $formatted_fixed_factors = join(",", map { "\"$_\"" } @$fixed_factors);
 
     $model .= "fixed_factors <- c($formatted_fixed_factors)\n";
 
-    if ($fixed_factors_interaction) { 
-	$model.= "fixed_factors_interaction = T\n";
-    }
     if ($random_factors_random_slope) { 
         $model.= "random_factors_random_slope = T\n";
     }
 
-    my @random_factors = split ",", $random_factors;
+    my $formatted_fixed_factors_interaction = 
+    
     my $formatted_random_factors = "";
     if ($random_factors_random_slope) { 
-	$formatted_random_factors = "\" (1 + $random_factors[0] | $random_factors[1]) \"";
+	$formatted_random_factors = "\" (1 + $random_factors->[0] | $random_factors->[1]) \"";
 
     }
     else { 
-	$formatted_random_factors = join(",", map { "\"(1|$_)\"" } @random_factors);	
+	$formatted_random_factors = join(",", map { "\"(1|$_)\"" } @$random_factors);	
     }
     $model .= "random_factors <- c($formatted_random_factors)\n";
     
