@@ -8,6 +8,7 @@ use File::Slurp;
 use File::Spec qw | catfile |;
 use File::Basename qw | basename |;
 use CXGN::Dataset::File;
+use CXGN::Phenotypes::File;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -28,34 +29,48 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     }
     
     $c->tempfiles_subdir("mixedmodels");
+
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"mixedmodels/mm_XXXXX");
-    #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-    my $phenotype_data_ref = $ds->retrieve_phenotypes();
-
-    print STDERR Dumper($phenotype_data_ref->[0]);
     
-    my @select = ();
-    foreach my $colname (@{$phenotype_data_ref->[0]}) { 
-	my $html .= "<option>$colname</option>\n";
-	push @select, $html;
-    }
-    print STDERR Dumper(\@select);
-    my @dependent_items = @select[39..scalar(@select)];
-    print STDERR Dumper(\@dependent_items);
-    my $dependent_html = join("\n", @dependent_items);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
+    $ds->retrieve_phenotypes();
+    
+    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
-    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber germplasmName|;       #@select[0..38];
-    my $html = join("\n", @factors);
+    my @factor_select;
+    
+    # only use if factor has multiple levels, start from appropriate hardcoded list
+    #
+    my @factors = qw | studyYear programName studyName studyDesign plantingDate locationName replicate rowNumber colNumber germplasmName|;    
+    foreach my $factor (@factors) {
+	if ($pf->distinct_levels_for_factor($factor) > 1) {
+	    push @factor_select, $factor;
+	}
+    }
+    
+    my @traits_select = ();
+    my $traits = $pf->traits();
+    foreach my $trait (@$traits) {
+	my $html .= "<option>$trait</option>\n";
+	push @traits_select, $html;
+    }
+    
+    my $traits_html = join("\n", @traits_select);
+
 
     $c->stash->{rest} = { 
-	dependent_variable => "<select id=\"dependent_variable_select\">$dependent_html</select>",
-	factors => \@factors,
+	dependent_variable => "<select id=\"dependent_variable_select\">$traits_html</select>",
+	factors => \@factor_select,
 	tempfile => $tempfile."_phenotype.txt",
     };
+
+    if (!@factor_select) {
+	$c->stash->{rest}->{error} = "There are no factors with multiple levels in this dataset.";
+    }
 }
 
 sub run: Path('/ajax/mixedmodels/run') Args(0) { 
