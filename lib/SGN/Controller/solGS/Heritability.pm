@@ -14,14 +14,16 @@ BEGIN { extends 'Catalyst::Controller' }
 
 sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $pop_id   = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
-
-    my $solgs_controller = $c->controller('solGS::solGS');
 
     my $trait_id = $c->req->param('trait_id');
-    $solgs_controller->get_trait_details($c, $trait_id);
+    my $pop_id   = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id');
+    
+    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{pop_id} = $pop_id;
+
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     
     $self->get_regression_data_files($c);
 
@@ -49,13 +51,13 @@ sub get_regression_data_files {
     my $pop_id     = $c->stash->{pop_id};
     my $trait_abbr = $c->stash->{trait_abbr}; 
     my $cache_dir  = $c->stash->{solgs_cache_dir};
- 
-    my $phenotype_file = "phenotype_trait_${trait_abbr}_${pop_id}";
-    $phenotype_file    = $c->controller('solGS::Files')->grep_file($cache_dir, $phenotype_file);
-       
-    my $gebv_file = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";
-    $gebv_file    = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
-   
+
+    $c->controller('solGS::Files')->trait_phenodata_file($c);
+    my $phenotype_file = $c->stash->{trait_phenodata_file};
+    
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
+
     $c->stash->{regression_gebv_file} = $gebv_file;
     $c->stash->{regression_pheno_file} = $phenotype_file;  
 
@@ -82,13 +84,16 @@ sub get_heritability {
 
 sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $pop_id   = $c->req->param('population_id');
+
+    my $trait_id      = $c->req->param('trait_id');
+    my $pop_id        = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id');
     $c->stash->{pop_id} = $pop_id;
 
-    my $trait_id = $c->req->param('trait_id');
-    my $solgs_controller = $c->controller('solGS::solGS');
-    $solgs_controller->get_trait_details($c, $trait_id);
+    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 
