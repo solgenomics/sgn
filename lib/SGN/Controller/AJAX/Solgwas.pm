@@ -251,11 +251,9 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
+    my ($fh, $tempfiletest) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
     my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
     mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
-##    my $prepdir = "mkdir " . $solgwas_tmp_output . " if ! -d " . $solgwas_tmp_output;
-##    system($prepdir);
     my ($tmp_fh, $tempfile) = tempfile(
       "solgwas_download_XXXXX",
       DIR=> $solgwas_tmp_output,
@@ -382,13 +380,17 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
-    my $figure3file_response = $figure3file;
-    my $figure4file_response = $figure4file;
-    my $figure3basename = $figure3file_response;
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+    copy($figure3file,$figure_path);
+    copy($figure4file,$figure_path);
+#    my $figure3basename = $figure3file;
 
-    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
+#    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
+    my $figure3basename = basename($figure3file);
+    my $figure3file_response = "/documents/tempfiles/solgwas_files/" . $figure3basename;
+    my $figure4basename = basename($figure4file);
+    my $figure4file_response = "/documents/tempfiles/solgwas_files/" . $figure4basename;
 #    $figure4file_response =~ s/\.\/static//;
-    print STDERR $figure3basename . "\n";
     $c->stash->{rest} = {
         figure3 => $figure3file_response,
         figure4 => $figure4file_response,
