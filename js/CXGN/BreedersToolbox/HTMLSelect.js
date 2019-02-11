@@ -18,6 +18,9 @@ function get_select_box(type, div_id, options) {
             select.data('selectpicker').$button.focus();
             select.data('selectpicker').$button.attr("style","background-color:#fff");
         }
+        if (options.multiple) {
+            var select = jQuery("#"+options.id).prop('multiple', 'multiple');
+        }
 	},
 	error: function(response) {
 	    alert("An error occurred");

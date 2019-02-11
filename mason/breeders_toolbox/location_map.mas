@@ -342,7 +342,14 @@ jQuery(document).ready(function() {
       $('#add_location_dialog').modal("show");
    });
 
-   get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
+   // get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
+   get_select_box('breeding_programs', 'breeding_program',
+       {
+           empty: 1,
+           id: 'breeding_program_select',
+           default: 'please select',
+           multiple: 1,
+       });
 
    $('#store_location_submit').click( function(event) {
        event.preventDefault();
@@ -674,11 +681,23 @@ function onEachFeature(feature, layer) {
         $('#location_name').val(loc_data.properties.Name);
         $('#location_abbreviation').val(loc_data.properties.Abbreviation);
         $('#location_country').val(loc_data.properties.Code);
-        $('#breeding_program_select option:first').text('');
-        $('#breeding_program_select option:first').prop('selected', true);
-        $("#breeding_program_select option").filter(function() {
-            return this.text == loc_data.properties.Program;
-        }).attr('selected', true);
+
+        $('#breeding_program_select option:selected').prop('selected', false);
+
+        var programs = loc_data.properties.Program;
+        var program_array = programs.split(" & ");
+
+        if (program_array.length > 0) {
+            program_array.forEach(function(program) {
+                $("#breeding_program_select option").filter(function() {
+                    return this.text == program
+                }).attr('selected', true);
+            });
+        } else {
+            $('#breeding_program_select option:first').text('');
+            $('#breeding_program_select option:first').prop('selected', true);
+        }
+
         $('#location_type').val(loc_data.properties.Type);
         $('#location_latitude').val(loc_data.properties.Latitude);
         $('#location_longitude').val(loc_data.properties.Longitude);

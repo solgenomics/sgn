@@ -247,7 +247,7 @@ sub get_location_geojson {
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
-	my $q = "SELECT A,B,C,D,E,string_agg(F, ', '),G,H,I,J,K FROM
+	my $q = "SELECT A,B,C,D,E,string_agg(F, ' & '),G,H,I,J,K FROM
 (SELECT geo.nd_geolocation_id as A,
  geo.description AS B,
  abbreviation.value AS C,
