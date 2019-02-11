@@ -11,10 +11,9 @@ ul.wizard-list li{
 
 .btn-group.wizard-list-item {
   white-space: nowrap;
-  
 }
 
-.btn-group.wizard-list-item .btn {
+.wizard-col .btn-group .btn {
   float: none;
   display: inline-block;
 }
@@ -23,7 +22,10 @@ ul.wizard-list{
   height:10em;
   overflow-y: auto;
   padding: 4px;
-  margin-bottom: 6px;
+  margin-top: 6px;
+}
+.wizard-panel .wizard-union-toggle{
+  margin-top: 6px;
 }
 button.wizard-list-add{
   width:2.45em;
@@ -39,7 +41,12 @@ div.wizard-list-name{
 }
 div.wizard-panel{
   min-width: 140px;
+  overflow: hidden;
 }
 div.wizard-panel .panel-body{
   padding:6px;
+}
+
+.btn.wizard-btn-tag{
+  pointer-events: none;
 }

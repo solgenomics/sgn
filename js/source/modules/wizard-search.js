@@ -1,31 +1,8 @@
+import "../../legacy/d3/d3v4Min.js";
+
 const wizardWrapper = `
   <div class="wizard-cont"></div>
-  <div class="clearfix col-xs-12"></div>
-  <div class="wizard-dataset">
-    <div class="col-xs-6">
-      <div class="panel panel-default wizard-panel">
-      <div class="panel-heading">
-        <div class="input-group">
-          <select class="form-control input-sm wizard-dataset-select">
-            <option selected value="" disabled>Load Dataset</option>
-            <optgroup class="wizard-dataset-group" label="--------------------"></optgroup>
-          </select>
-          <span class="input-group-btn">
-            <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary">Load</button></span>
-          </span>
-        </div>
-      </div>
-        <div class="panel-footer" style="margin-top:-1px;">
-          <div class="input-group">
-            <input type="text" placeholder="Create New Dataset" class="form-control input-sm"/>
-            <span class="input-group-btn">
-              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary">Create</button></span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  <div class="clearfix col-xs-12"></div>`;
 
 const wizardColumn = `
   <div class="panel panel-default wizard-panel">
@@ -45,29 +22,20 @@ const wizardColumn = `
       </div>
     </div>
     <div class="panel-body">
+    <div style="text-align:center; white-space:nowrap;">
+      <div class="btn-group" style="display:inline-block;"> 
+        <button class="btn btn-default btn-xs wizard-select-all">Select All</button><button class="btn btn-primary btn-xs wizard-btn-tag"><span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span></button><button class="btn btn-default btn-xs wizard-select-clear">Clear</button>
+      </div>
+    </div>
       <ul class="well wizard-list wizard-list-unselected">
       </ul>
       <ul class="well wizard-list wizard-list-isselected">
       </ul>
-      <div style="text-align:center;">
+      <div class="wizard-union-toggle" style="text-align:center; white-space:nowrap;">
         <div class="btn-group" style="display:inline-block;"> 
-          <button class="btn btn-default btn-xs wizard-select-all">Select All</button>
-          <button class="btn btn-default btn-xs wizard-select-clear">Clear</button>
+          <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button><button class="btn btn-xs btn-primary active">ANY</button><button class="btn btn-default btn-xs">ALL</button>
         </div>
       </div>
-    </div>
-    <div class="panel-footer">
-      <span style="float:left; width:auto;">
-        <span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span>
-        <!-- selected -->
-      </span>
-      <span class="wizard-union-toggle" style="float:right;">Match
-        <div class="btn-group"> 
-          <button class="btn btn-xs btn-primary active">ANY</button>
-          <button class="btn btn-default btn-xs">ALL</button>
-        </div>
-      </span>
-      <div style="height:0; clear:both; display: table;"></div>
     </div>
     <div class="panel-footer wizard-save-to-list">
       <div class="input-group">
@@ -102,13 +70,13 @@ const selectedRow = `
 const list_prefix = "__LIST__";
 
 /**
- * Wizard - Creates a new Wizard object which manages a wizard
+ * Wizard - Creates a new Wizard object.
  *
  * @class
- * @classdesc This is a description of the MyClass class.
- * @param  {type} main_id    description 
- * @param  {type} col_number description 
- * @returns {type}            description 
+ * @classdesc Manages a wizard and performs searches
+ * @param  {type} main_id div to draw within 
+ * @param  {type} col_number number of wizard columns to create 
+ * @returns {Object} 
  */ 
 export function Wizard(main_id,col_number){
   
@@ -163,6 +131,15 @@ export function Wizard(main_id,col_number){
   var create_list = (listName,items)=>{};
   
   /**
+   * Callback for wizard changes
+   * @callback Wizard~on_changeCallback
+   * @param {Array.<Wizard~columnItem>} catagories Array of column types in order
+   * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are catagories and values are arrays of items selected in those catagories
+   * @param {Object.<string,boolean>} operations Object where keys are catagories and values are booleans (true if interect, false if union)
+   */
+  var on_change_cbs = [];
+  
+  /**
    * Adds items to existing list from wizard selection
    * @callback Wizard~add_to_listCallback
    * @param {string} listID listID selected by user
@@ -182,81 +159,137 @@ export function Wizard(main_id,col_number){
     col_objects[i].items = [];
     col_objects[i].intersect = false;
     col_objects[i].loading = false;
-    if(i==0) col_objects[i].fromList = undefined;
+    col_objects[i].load_promise = Promise.resolve(true);
+    col_objects[i].reflowing = false;
   }
   
   col_objects.forEach((col)=>{
     col.reload = ()=>{
-      var preselected = [];
-      col.loading = true;
-      var loading_sentinel = {"n": Math.random()};
-      col.loading_sentinel = loading_sentinel;
-      if(col_objects.slice(0,col.index).some(c=>c.loading)) return Promise.resolve(false);
-      var pre;
-      if (col.fromList!==undefined) {
-        pre = Promise.resolve(load_list(col.fromList))
-        .then(info=>{
-          preselected = info.items.map(i=>i.name!==undefined?i.name:""+i);
-          set_type(col.index,info.type);
-          redraw_types();
-          col.fromList = undefined;
-        })
-      } else{
-        pre = Promise.resolve(true)
-      }
-      return pre.then(()=>{
-        if(col.type==""||col.type==null){
-          return []
-        }
-        else if(col.index==0){
-          return load_initial(col.type);
-        }
-        else {
-          var prev = col_objects.slice(0,col.index);
-          var catagories = prev.map(c=>c.type);
-          var selections = {};
-          var operations = {};
-          prev.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
-          prev.forEach(c=>operations[c.type]=c.intersect);
-          
-          return load_selection(
-            col.type,
-            catagories,
-            selections,
-            operations
-          );
-        }
-      }).then(new_items=>{
-        if(col.loading_sentinel!=loading_sentinel){
-          return false;
-        }
-        var existing = {};
-        var fresh = {};
-        var freshList = [];
-        col.items.forEach(i=>existing[i.name]=i);
-        col.items = new_items.forEach(i=>{
-          var name = i.name!==undefined?i.name:""+i;
-          if(!fresh[name]){
-            if(!existing[name]){
-              fresh[name] = {
-                name:name,
-                selected:false,
-                value:i
-              }
-            }
-            else{
-              fresh[name] = existing[name]
-            }
-            if(preselected.indexOf(name)!=-1) fresh[name].selected = true;
-            freshList.push(fresh[name]);
+      
+      col.loading = true;      
+      var load_promise;
+      var load_outdated = new Error("Load outdated.");
+      
+      load_promise = Promise.all(
+          col_objects.slice(0,col.index).map(c=>c.load_promise) // Wait for previous cols to load.
+        ).then(()=>{
+          // Don't bother loading if the reload is no longer the most recent.
+          if (col.load_promise != load_promise){
+            throw load_outdated;
           }
-        });
-        col.items = freshList;
-        col.loading = false;
-        return true;
-      });
+          else if(col.type==""||col.type==null){
+            return []
+          }
+          else if(col.index==0){
+            return load_initial(col.type);
+          }
+          else {
+            var prev = col_objects.slice(0,col.index);
+            var catagories = prev.map(c=>c.type);
+            var selections = {};
+            var operations = {};
+            prev.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
+            prev.forEach(c=>operations[c.type]=c.intersect);
+            
+            return load_selection(
+              col.type,
+              catagories,
+              selections,
+              operations
+            );
+          }
+        }).then(
+          new_items=>{
+            // Dont update the items if the reload is no longer the most recent.
+            if (col.load_promise != load_promise){
+              throw load_outdated;
+            }
+            var existing = {};
+            var fresh = {};
+            var freshList = [];
+            col.items.forEach(i=>existing[i.name]=i);
+            new_items.forEach(i=>{
+              var name = itemName(i);
+              if(!fresh[name]){
+                if(!existing[name]){
+                  fresh[name] = {
+                    name:name,
+                    selected:false,
+                    value:i
+                  }
+                }
+                else{
+                  fresh[name] = existing[name]
+                }            
+                freshList.push(fresh[name]);
+              }
+            });
+            col.items = freshList;
+            col.loading = false;
+            return true;
+          },
+          reason=>{throw reason}
+        ).then(
+          load_ok=>load_ok,
+          reason=>{
+            if (reason==load_outdated){
+              return col.load_promise.then(()=>false);
+            }
+            else {
+              throw reason;
+            }
+          }
+        );
+        
+      col.load_promise = load_promise;
+      return load_promise;
     };
   });
+  
+  function itemName(i){return i.name!==undefined?i.name:""+i};
+  
+  function getColumns(){
+    return col_objects;
+  }
+  
+  function setColumn(index, new_type, intersect, selector){
+    var col = col_objects[index];
+    
+    if(new_type==col.type && intersect==undefined && selector==undefined){
+      return;
+    }
+    
+    col.type = new_type;
+    
+    // Prevents call loop with .wizard-type-select callback
+    var select = allCols.filter(d=>d.index==index).select(".wizard-type-select");
+    var selVal = select.property("value");
+    if (selVal!=new_type){
+      select.property("value",new_type);
+    }
+    redraw_types();
+    
+    col.intersect = intersect!=undefined ? intersect : col.intersect;
+    
+    selector = selector || (()=>null);
+    col.reload().then(()=>{
+      if(col.type==new_type){
+        col.items.forEach(i=>{
+          var select = selector(i.value);
+          if(select!==null) i.selected = !!select;
+        })
+      }
+      reflow(col.index,true);
+    })
+  }
+  
+  function setColumnFromList(index,listID){
+    load_list(listID).then(list_details=>{ 
+      setColumn(index,list_details.type||"",null,(i)=>{
+        return list_details.items.indexOf(itemName(i))!=-1
+      });
+    })
+  }
   
   //Init Columns
   var cols = main.select(".wizard-cont").selectAll(".wizard-col")
@@ -267,27 +300,22 @@ export function Wizard(main_id,col_number){
   allCols.select('.wizard-type-select').on("change",function(d){
     var val = d3.select(this).node().value;
     if (val.slice(0,list_prefix.length)==list_prefix){
-      d.fromList = val.slice(list_prefix.length);
-      allCols.filter(d2=>d2.index==d.index)
-        .select(".wizard-lists-select")
-        .property("value",val);
-      d.type = null;
+      setColumnFromList(d.index,val.slice(list_prefix.length))
     }
     else {
-      d.type = val;
+      setColumn(d.index, val);
     }
-    redraw_types();
     reflow(d.index);
   }).filter(d=>d.index>0).select(".wizard-lists-group").remove();
-  allCols.select('.wizard-union-toggle').on("click",function(d) {
+  allCols.select('.wizard-union-toggle .btn-group').on("click",function(d) {
     d.intersect = !d.intersect;
-    d3.select(this).selectAll('.btn').each(function(){
+    d3.select(this).selectAll('.btn:not(.disabled)').each(function(){
       d3.select(this).classed("active",!d3.select(this).classed("active"));
       d3.select(this).classed("btn-primary",!d3.select(this).classed("btn-primary"));
       d3.select(this).classed("btn-default",!d3.select(this).classed("btn-default"));
     })
     reflow(d.index, true);
-  }).style("visibility",null).filter((d,i,nodes)=>i==nodes.length-1).style("visibility","hidden");
+  });
   allCols.select(".wizard-select-all").on("click",function(d){
     d.items.forEach(i=>{i.selected=true});
     reflow(d.index,true);
@@ -357,15 +385,12 @@ export function Wizard(main_id,col_number){
   })
   
   // Initial draw
-  reflow(0);
+  reflow();
   
   function reflow(from, dont_reload, dont_propagate){
     if(!from) from = 0;
-    if(from>=col_objects.length) return;
-    
-    // console.log("reflow from",from,dont_reload,dont_propagate);
-    
-    
+    if(from>=col_objects.length) return true;
+        
     allCols.filter(d=>(d.index==from&&!dont_reload)||(!dont_propagate&&d.index>from))
       .style("opacity","0.5")
       .select(".wizard-loading")
@@ -375,29 +400,40 @@ export function Wizard(main_id,col_number){
     if(allCols.empty()) return;
     var col = reflowCol.datum();
     
+    col.reflowing = true;
+    
     var load = dont_reload===true?Promise.resolve(true):col.reload();
     
-    load.then((reload_ok)=>{
-      if(!reload_ok) return;
-      
-      if(!dont_reload){
-        reflowCol.style("opacity",null)
-          .select(".wizard-loading")
-          .style("display","none");
+    return load.then(()=>{
+      if(col.reflowing){
+        if(!dont_reload){
+          reflowCol.style("opacity",null)
+            .select(".wizard-loading")
+            .style("display","none");
+        }
+        
+        col.unselectedList.set(col.items.filter(d=>!d.selected&&col.filter(d)));
+        col.selectedList.set(col.items.filter(d=>d.selected&&col.filter(d)));
+        
+        reflowCol.select(".wizard-union-toggle").style("display",(d,i,n)=>{
+          return d.items.filter(i=>i.selected).length>0&&d.index<col_objects.length-1?null:"none";
+        })
+        reflowCol.select(".wizard-count-selected").text(d=>d.items.filter(i=>i.selected).length);
+        reflowCol.select(".wizard-count-all").text(d=>d.items.length);
+        
+        reflowCol.select(".wizard-save-to-list")
+          .style("display","none")
+          .filter(d=>d.items.filter(i=>i.selected).length>0)
+          .style("display",null);
+        
+        if(!dont_propagate) return reflow(from+1);
+        col.reflowing = false;
+        on_change();
+        return true
       }
-      
-      col.unselectedList.set(col.items.filter(d=>!d.selected&&col.filter(d)));
-      col.selectedList.set(col.items.filter(d=>d.selected&&col.filter(d)));
-      
-      reflowCol.select(".wizard-count-selected").text(d=>d.items.filter(i=>i.selected).length);
-      reflowCol.select(".wizard-count-all").text(d=>d.items.length);
-      
-      reflowCol.select(".wizard-save-to-list")
-        .style("display","none")
-        .filter(d=>d.items.filter(i=>i.selected).length>0)
-        .style("display",null);
-      
-      if(!dont_propagate) reflow(from+1);
+      else {
+        return false;
+      }
     });
   }
   
@@ -463,11 +499,19 @@ export function Wizard(main_id,col_number){
     return vlist;
   }
   
-  function set_type(index,type){
-    allCols.filter(d=>d.index==index)
-      .select(".wizard-type-select")
-      .property("value",type)
-      .each(d=>{ d.type=type });
+  function on_change(){
+    var filled_cols = col_objects.filter(c=>c.items.filter(i=>i.selected).length>0);
+    var catagories = filled_cols.map(c=>c.type);
+    var selections = {};
+    var operations = {};
+    filled_cols.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
+    filled_cols.forEach(c=>operations[c.type]=c.intersect);
+    
+    on_change_cbs.forEach(cb=>cb(
+      catagories,
+      selections,
+      operations
+    ))
   }
   
   function set_lists(list_dict){
@@ -506,7 +550,7 @@ export function Wizard(main_id,col_number){
         .attr("value",d=>d.id)
         .text(d=>d.name);
       if (used.indexOf(selected)!=-1){
-         set_type(i,"");
+         setColumn(i,"");
       }
       else if (selected!="") used.push(selected);
       opts.exit().remove();
@@ -514,6 +558,9 @@ export function Wizard(main_id,col_number){
   }
   
   var wizard = {
+    
+    setColumn: setColumn,
+    getColumns: getColumns,
     
     /**    
      * load_initial    
@@ -554,6 +601,22 @@ export function Wizard(main_id,col_number){
      * @returns {this}     
      */
     create_list: function(f){ create_list = f; return wizard},
+    
+    /**    
+     * on_change    
+     * @memberof Wizard.prototype     
+     * @param  {Wizard~on_changeCallback} f     
+     * @returns {this}     
+     */
+    on_change: function(f){
+      if(f===null){
+        on_change_cbs = []
+      }
+      else{
+        on_change_cbs.push(f)
+      }
+      return wizard
+    },
     
     /**    
      * lists - sets or resets the availible lists to show in the wizard
