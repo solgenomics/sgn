@@ -3,13 +3,13 @@
 $dataset_id => undef
 </%args>
 
-<& /util/import_javascript.mas, entries => ["wizard-search"] &>
-<& /util/import_css.mas, paths => ['wizard-search.css'] &>
+<& /util/import_javascript.mas, entries => ["wizard"] &>
+<& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <div id="wizard-main"></div>
 
 <script type="text/javascript">
-  jsMod['wizard-search'].WizardSetup("#wizard-main")
+  jsMod['wizard'].WizardSetup("#wizard-main")
 </script>

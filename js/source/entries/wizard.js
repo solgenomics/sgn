@@ -1,9 +1,11 @@
 import "../../legacy/CXGN/List.js";
-import {Wizard} from "../modules/wizard.js";
+import {Wizard} from "../modules/wizard-search.js";
+import {WizardDatasets} from "../modules/wizard-datasets.js";
+import {WizardDownloads} from "../modules/wizard-downloads.js";
 
 const initialtypes = [
   "accessions",
-  "breeding_programs",
+  "breeding_programs", 
   "genotyping_protocols",
   "locations",
   "seedlots",
@@ -33,7 +35,8 @@ const types = {
 
 export function WizardSetup(main_id){
   var list = new CXGN.List();
-  var wiz = Wizard(main_id,4)
+  var wiz_div = d3.select(main_id).append("div");
+  var wiz = new Wizard(wiz_div.node(),4)
     // Dictionary of {typeId:typeName}
     .types(types)
     // List of types to show in first column
@@ -118,6 +121,13 @@ export function WizardSetup(main_id){
     .create_list((listName,items)=>{
       alert(["create",listName,items])
     });
+    
+    var extras_div = d3.select(main_id).append("div").classed("row",true);
+    var dataset_span = d3.select(main_id).append("span");
+    var dat = new WizardDatasets(dataset_span.node(),wiz);
+    var download_span = d3.select(main_id).append("span");
+    var down = new WizardDownloads(download_span.node(),wiz);
+    
     return {
       wizard:wiz,
       reload_lists: load_lists
