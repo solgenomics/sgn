@@ -259,15 +259,16 @@ sub format_pca_output {
 	    my $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
 	    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
 
-	    my $host = $c->req->base;
-
-	    if ( $host !~ /localhost/)
-	    {
-		$host =~ s/:\d+//; 
-		$host =~ s/http\w?/https/;
-	    }
-	    
-	    my $output_link = $host . 'pca/analysis/' . $file_id;
+	    #my $host = $c->req->base;
+	   # print STDERR "\n\n host: $host\n\n";
+	    #if ( $host !~ /localhost/)
+	    #{
+	#	$host =~ s/:\d+//; 
+	#	$host =~ s/http\w?/https/;
+	 #   }
+	  #  print STDERR "\n\n host: $host\n\n";
+	  #  my $output_link = $host . '/pca/analysis/' . $file_id;
+	    my $output_link =  '/pca/analysis/' . $file_id;
 	    #$c->controller('solGS::List')->process_trials_list_details($c);
 	    if ($pca_scores)
 	    {
