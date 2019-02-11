@@ -98,6 +98,14 @@ sub BUILD {
         $self->location( $self->location || $location );
         $self->nd_geolocation_id( $self->nd_geolocation_id || $location->nd_geolocation_id );
         $self->name( $self->name || $location->description );
+        $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property'));
+        $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property'));
+        $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property'));
+        $self->breeding_program( $self->breeding_program || $self->_get_ndgeolocationprop('breeding_program', 'project_property'));
+        $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property'));
+        $self->latitude( $self->latitude || $location->latitude);
+        $self->longitude( $self->longitude || $location->longitude);
+        $self->altitude( $self->altitude || $location->altitude);
     }
 
     return $self;
@@ -137,7 +145,7 @@ sub store_location {
     if ($country_name && $country_name =~ m/[0-9]/) {
        return { error => "Country name $country_name is not a valid ISO standard country name." };
     }
-    
+
     if ($country_code && (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 ))) {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }

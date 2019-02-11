@@ -68,7 +68,7 @@ $acronym
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
-
+<& /solgs/cluster/analysis.mas&>
 <& /solgs/population/acronym.mas,
    acronym => $acronym,
 &>

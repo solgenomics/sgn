@@ -152,7 +152,10 @@ function formatGenCorInputData (popId, type, indexFile) {
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type, 'index_file': indexFile},
+        data: {'model_id': modelDetail.population_id,
+	       'corr_population_id': popId,
+	       'type' : type,
+	       'index_file': indexFile},
         url: '/correlation/genetic/data/',
         success: function(response) {
 
@@ -177,14 +180,14 @@ function formatGenCorInputData (popId, type, indexFile) {
                 runGenCorrelationAnalysis(args);
 
             } else {
-                jQuery("#correlation_message")
+                jQuery(divPlace +" #correlation_message")
                     .css({"padding-left": '0px'})
                     .html("This population has no valid traits to correlate.");
 		
             }
         },
         error: function(response) {
-            jQuery("#correlation_message")
+            jQuery(divPlace +"#correlation_message")
                 .css({"padding-left": '0px'})
                 .html("Error occured preparing the additive genetic data for correlation analysis.");
 	         
@@ -331,7 +334,7 @@ function runGenCorrelationAnalysis (args) {
                 }                        
                
             } else {
-                jQuery("#correlation_message")
+                jQuery(divPlace + " #correlation_message")
                     .css({"padding-left": '0px'})
                     .html("There is no genetic correlation output for this dataset.");               
             }
@@ -339,7 +342,7 @@ function runGenCorrelationAnalysis (args) {
             jQuery.unblockUI();
         },
         error: function(response) {                          
-            jQuery("#correlation_message")
+            jQuery(divPlace +" #correlation_message")
                 .css({"padding-left": '0px'})
                 .html("Error occured running the genetic correlation analysis.");
              

@@ -6,29 +6,35 @@
 */
 
 
-jQuery(document).ready( function() { 
+jQuery(document).ready( function() {
+
+    var popDetails  = solGS.getPopulationDetails();
+    var traitId     = jQuery("#trait_id").val();
+    
+    var args = {
+	'trait_id'       : traitId,
+	'training_pop_id': popDetails.training_pop_id,
+	'combo_pops_id'  : popDetails.combo_pops_id
+    };
    
-    checkDataExists();   
+    checkDataExists(args);   
  
 });
 
 
-function checkDataExists () {
-    var dataDetails  = getDataDetails();
-    var traitId      = dataDetails.trait_id;
-    var populationId = dataDetails.population_id;
-
+function checkDataExists (args) {
+    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'population_id': populationId, 'trait_id': traitId},
+        data: args,
         url: '/heritability/check/data/',
         success: function(response) {
             if(response.exists === 'yes') {
-                getRegressionData();
+                getRegressionData(args);
 
             } else {                
-                calculateVarianceComponents();
+                calculateVarianceComponents(args);
             }
         },
         error: function(response) {                    
@@ -39,33 +45,10 @@ function checkDataExists () {
 }
 
 
-function getDataDetails () {
-
-    var populationId   = jQuery("#population_id").val();
-    var traitId        = jQuery("#trait_id").val();
+function calculateVarianceComponents (args) {
+ 
+    var gebvUrl = window.location.pathname; //'/solgs/trait/' + traitId  + '/population/' + populationId;
    
-    if (!populationId) {       
-        populationId = jQuery("#model_id").val();
-    }
-
-    if (!populationId) {
-        populationId = jQuery("#combo_pops_id").val();
-    }
-
-    return {'population_id' : populationId, 
-            'trait_id' : traitId
-            };
-        
-}
-
-
-function calculateVarianceComponents () {
-    var dataDetails  = getDataDetails();
-    var traitId      = dataDetails.trait_id;
-    var populationId = dataDetails.population_id;
-    
-    var gebvUrl = '/solgs/trait/' + traitId  + '/population/' + populationId;
-    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -73,7 +56,7 @@ function calculateVarianceComponents () {
         url: gebvUrl,
         success: function(response) {
             if(response.status === 'success') {
-                getRegressionData();
+                getRegressionData(args);
             } else {
               jQuery("#heritability_message").html('Error occured estimating breeding values for this trait.');   
             }
@@ -85,15 +68,12 @@ function calculateVarianceComponents () {
 }
 
 
-function getRegressionData () { 
-    var dataDetails  = getDataDetails();
-    var traitId      = dataDetails.trait_id;
-    var populationId = dataDetails.population_id;
-    
+function getRegressionData (args) { 
+       
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'population_id': populationId, 'trait_id': traitId},
+        data: args,
         url: '/heritability/regression/data/',
         success: function(response) {
             if(response.status === 'success') {

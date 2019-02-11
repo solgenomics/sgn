@@ -273,7 +273,12 @@ ORDER BY 2";
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
 	$h->execute($project_location_type_id);
     my @locations;
-    while (my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+    while (my @location_data = $h->fetchrow_array()) {
+	foreach my $d (@location_data) {
+	    $d = Encode::encode_utf8($d);
+	}
+	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = @location_data;
+ 
         my $lat = $latitude ? $latitude + 0 : undef;
         my $long = $longitude ? $longitude + 0 : undef;
         my $alt = $altitude ? $altitude + 0 : undef;

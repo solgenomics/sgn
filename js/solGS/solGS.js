@@ -26,7 +26,11 @@ solGS.waitPage = function (page, args) {
   		    
     if (page.match(matchItems)) {
 
-	checkCachedResult(page, args);
+	if (page.match(/list_/)) {
+	    askUser(page, args)
+	} else {
+	    checkCachedResult(page, args);
+	}
 
     }
     else {
