@@ -409,13 +409,13 @@ sub check_combined_trials_training_data {
     my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-     $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
   
     my $cached_pheno = -s $c->stash->{trait_combined_pheno_file};
     my $cached_geno  = -s $c->stash->{trait_combined_geno_file};
-  
+
     if ($cached_pheno && $cached_geno)
     {
 	return  1;

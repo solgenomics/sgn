@@ -108,9 +108,12 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
    # $c->controller('solGS::Files')->selection_index_file($c);
-    $self->combine_gebvs_of_traits($c);   
+    $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
-
+    
+    my $tmp_dir = $c->stash->{correlation_temp_dir};
+    $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
+    
     my $ret->{status} = undef;
 
     if ( -s $combined_gebvs_file )
@@ -133,51 +136,6 @@ sub trait_acronyms {
 
     $c->controller('solGS::solGS')->get_acronym_pairs($c);
     
-}
-
-
-sub combine_gebvs_of_traits {
-    my ($self, $c) = @_;
-
-    $c->controller('solGS::solGS')->get_gebv_files_of_traits($c);  
-    my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
-
-    if (!-s $gebvs_files) 
-    {
-	$gebvs_files = $c->stash->{gebv_files_of_traits};
-    }
-   
-    my $index_file  = $c->stash->{selection_index_only_file};
-
-    my @files_no = map { split(/\t/) } read_file($gebvs_files);
-
-    if (scalar(@files_no) > 1 ) 
-    {    
-        if ($index_file) 
-        {
-            write_file($gebvs_files, {append => 1}, "\t". $index_file )   
-        }
-
-        my $pred_pop_id = $c->stash->{prediction_pop_id};
-        my $model_id    = $c->stash->{model_id};
-        my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
-
-	my $tmp_dir = $c->stash->{correlation_temp_dir};
-        my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
-  
-        $c->stash->{input_files}  = $gebvs_files;
-        $c->stash->{output_files} = $combined_gebvs_file;
-        $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
-        $c->stash->{r_script}     = 'R/solGS/combine_gebvs_files.r';
-	$c->stash->{analysis_tempfiles_dir} = $tmp_dir;
-	
-        $c->controller("solGS::solGS")->run_r_script($c);
-	$c->stash->{combined_gebvs_file} = $combined_gebvs_file;
-    }
-    else 
-    {
-        $c->stash->{combined_gebvs_files} = 0;           
-    }
 }
 
 

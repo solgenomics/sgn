@@ -1322,13 +1322,13 @@ sub prediction_pop_analyzed_traits {
 	    my @copy_files = @files;
    
 	    @trait_ids = map { s/rrblup_selection_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
-
+	    @trait_ids = map { s/\.txt|\s+// ? $_ : 0 } @trait_ids;
+	    
 	    my @traits = ();
 	    if(@trait_ids) 
 	    {
 		foreach my $trait_id (@trait_ids)
-		{ 
-		    $trait_id =~ s/s+//g;
+		{
 		    $self->get_trait_details($c, $trait_id);
 		    push @traits, $c->stash->{trait_abbr};
 		}
@@ -1528,75 +1528,6 @@ sub get_trait_details {
     $c->stash->{trait_name} = $trait_name;
     $c->stash->{trait_def}  = $trait_def;
     $c->stash->{trait_abbr} = $abbr;
-
-}
-
-#creates and writes a list of GEBV files of 
-#traits selected for ranking genotypes.
-sub get_gebv_files_of_traits {
-    my ($self, $c) = @_;
-    
-    my $pop_id = $c->stash->{pop_id};
-    $c->stash->{model_id} = $pop_id;
-    my $pred_pop_id = $c->stash->{prediction_pop_id};
-   
-    my $dir = $c->stash->{solgs_cache_dir};
-    
-    my $gebv_files;
-    my $valid_gebv_files;
-    my $pred_gebv_files;
-   
-    if ($pred_pop_id && $pred_pop_id != $pop_id) 
-    {
-        $self->prediction_pop_analyzed_traits($c, $pop_id, $pred_pop_id);
-        $pred_gebv_files = $c->stash->{prediction_pop_analyzed_traits_files};
-        
-        foreach (@$pred_gebv_files)
-        {
-	    my$gebv_file = catfile($dir, $_);
-	    $gebv_files .= $gebv_file;
-            $gebv_files .= "\t" unless (@$pred_gebv_files[-1] eq $_);
-        }     
-    } 
-    else
-    {
-        $self->analyzed_traits($c);
-        my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
-
-        foreach my $tr_file (@analyzed_traits_files) 
-        {
-            $gebv_files .= $tr_file;
-            $gebv_files .= "\t" unless ($analyzed_traits_files[-1] eq $tr_file);
-        }
-        
-        my @analyzed_valid_traits_files = @{$c->stash->{analyzed_valid_traits_files}};
-
-        foreach my $tr_file (@analyzed_valid_traits_files) 
-        {
-            $valid_gebv_files .= $tr_file;
-            $valid_gebv_files .= "\t" unless ($analyzed_valid_traits_files[-1] eq $tr_file);
-        }
-
-
-    }
-   
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
-    
-    my $name = "gebv_files_of_traits_${pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-   
-    write_file($file, $gebv_files);
-   
-    $c->stash->{gebv_files_of_traits} = $file;
-
-    my $name2 = "gebv_files_of_valid_traits_${pop_id}${pred_file_suffix}";
-    my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name2);
-   
-    write_file($file2, $valid_gebv_files);
-   
-    $c->stash->{gebv_files_of_valid_traits} = $file2;
 
 }
 
@@ -2387,9 +2318,6 @@ sub traits_with_valid_models {
 }
 
 
-
-
-
 sub get_model_accuracy_value {
     my ($self, $c, $model_id, $trait_abbr) = @_;
  
@@ -2400,9 +2328,9 @@ sub get_model_accuracy_value {
     readdir($dh);  
  
     closedir $dh; 
-        
+    
     $validation_file = catfile($dir, $validation_file);
-       
+    
     my ($row) = grep {/Average/} read_file($validation_file);
     my ($text, $accuracy_value) = split(/\t/,  $row);
  
@@ -2925,14 +2853,15 @@ sub analyzed_traits {
     my @analyzed_traits_files;
 
     foreach my $trait_file  (@traits_files) 
-    {  
+    {
         if (-s $trait_file) 
         { 
             my $trait = basename($trait_file);	   
             $trait =~ s/rrblup_training_gebvs_//;	   
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
-
+	    $trait =~ s/\.txt//;
+      
 	    my $trait_id;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   

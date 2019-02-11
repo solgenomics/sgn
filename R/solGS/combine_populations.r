@@ -50,7 +50,6 @@ combinedPhenoFile <- grep("phenotype_data",
 inFiles <- scan(inFile,
                 what = "character"
                 )
-print(inFiles)
 
 traitFile <- grep("trait_",
                   inFiles,
@@ -129,19 +128,15 @@ combinedPhenoPops <- as.data.frame(combinedPhenoPops)
 
 message("combined total number of stocks in phenotype dataset (before averaging): ", length(rownames(combinedPhenoPops)))
 
-combinedPhenoPops$Average<-round(apply(combinedPhenoPops,
-                                        1,
-                                        function(x)
-                                        { mean(x) }
-                                        ),
-                                  digits = 2
-                                  )
+combinedPhenoPops$Average<-round(apply(combinedPhenoPops, 1, function(x) { mean(x) }), digits = 2)
 
-combinedGenoPops       <- combineGenoData(allGenoFiles)
-combinedGenoPops$trial <- NULL
-combinedGenoPops       <- combinedGenoPops[order(rownames(combinedGenoPops)), ]
+combinedGenoPops <- c()
 
-
+if (file.size(combinedGenoFile) < 100 ) {
+    combinedGenoPops       <- combineGenoData(allGenoFiles)
+    combinedGenoPops$trial <- NULL
+    combinedGenoPops       <- combinedGenoPops[order(rownames(combinedGenoPops)), ]
+}
 
 message("writing data to files...")
 #if(length(combinedPhenoFile) != 0 )
@@ -154,14 +149,13 @@ message("writing data to files...")
                   )
 #  }
 
-#if(length(combinedGenoFile) != 0 )
-#  {
-      fwrite(combinedGenoPops,
-                  file = combinedGenoFile,
-                  sep = "\t",
-                  quote = FALSE,
-                   row.names = TRUE,
-                  )
-#  }
+if(!is.null(combinedGenoPops)) {
+    fwrite(combinedGenoPops,
+           file = combinedGenoFile,
+           sep = "\t",
+           quote = FALSE,
+           row.names = TRUE,
+           )
+ }
 
 q(save = "no", runLast = FALSE)

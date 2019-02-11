@@ -17,24 +17,23 @@ BEGIN { extends 'Catalyst::Controller' }
 sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
     
-    my $pop_id   = $c->req->param('training_pop_id');
-    my $trait_id = $c->req->param('trait_id');
-    my $referer  = $c->req->referer;
+    my $pop_id        = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id'); 
+    my $trait_id      = $c->req->param('trait_id');
+    my $referer       = $c->req->referer;
   
     if ($referer =~ /combined/) 
     {    
 	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{combo_pops_id} = $pop_id;
+	$c->stash->{combo_pops_id} = $combo_pops_id;
     }
 
     $c->stash->{pop_id} = $pop_id;
-
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
     
     $c->controller('solGS::Files')->trait_phenodata_file($c);    
     my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
-
 
     $c->stash->{histogram_trait_file} = $c->stash->{trait_phenodata_file};
 
