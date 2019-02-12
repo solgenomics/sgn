@@ -2028,11 +2028,11 @@ sub build_multiple_traits_models {
 	    $self->traits_with_valid_models($c);
 	    @selected_traits = @ {$c->stash->{traits_with_valid_models}};
 	}
-	else 
-	{
-	    $c->res->redirect("/solgs/population/$pop_id");
-	    $c->detach(); 
-	}
+	# else 
+	# {
+	#     $c->res->redirect("/solgs/population/$pop_id");
+	#     $c->detach(); 
+	# }
     }
     else 
     {  
@@ -2174,7 +2174,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
      my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
      
      my $req = $c->req->param('source');
-     
+
      if (!$training_pop_id) 
      {
         $c->stash->{message} = "No valid training population provided.";
