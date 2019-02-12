@@ -33,6 +33,36 @@ const types = {
   "years":"Years"
 };
 
+function makeURL(target,id){
+  switch (target) {
+    case "accessions":
+    case "plants":
+    case "plots":
+    case "seedlots":
+      return document.location.origin+`/stock/${id}/view`;
+      break;
+    case "breeding_programs":
+      return document.location.origin+`/breeders/manage_programs`;
+      break;
+    case "locations":
+      return document.location.origin+`/breeders/locations`;
+      break;
+    case "traits":
+    case "trait_components":
+      return document.location.origin+`/cvterm/${id}/view`;
+      break;
+    case "trials":
+      return document.location.origin+`/breeders/trial/${id}`;
+      break;
+    case "genotyping_protocols":
+    case "trial_designs":
+    case "trial_types":
+    case "years":
+    default:
+      return null;
+  }
+}
+
 export function WizardSetup(main_id){
   var list = new CXGN.List();
   var wiz_div = d3.select(main_id).append("div");
@@ -53,7 +83,7 @@ export function WizardSetup(main_id){
         body:formData
       }).then(resp=>resp.json())
         .then(json=>{
-          return json.list.map(d=>({id:d[0],name:d[1]}))
+          return json.list.map(d=>({id:d[0],name:d[1],url:makeURL(target,d[0])}))
         })
     })
     // Function which returns column contents for a given target type
@@ -78,7 +108,7 @@ export function WizardSetup(main_id){
         body:formData
       }).then(resp=>resp.json())
         .then(json=>{
-          return json.list.map(d=>({id:d[0],name:d[1]}))
+          return json.list.map(d=>({id:d[0],name:d[1],url:makeURL(target,d[0])}))
         })
     })
     // Function which returns the list contents for a given listID
@@ -115,11 +145,16 @@ export function WizardSetup(main_id){
     load_lists();
     
     wiz.add_to_list((listID,items)=>{
-      alert(["add",listID,items])
+      var count = list.addBulk(listID,items.map(i=>i.name));
+      if(count) alert(`${count} items added to list.`);
     })
     // Function which creates a new list from items
     .create_list((listName,items)=>{
-      alert(["create",listName,items])
+      var newID = list.newList(listName,"");
+      if(newID){
+        var count = list.addBulk(newID,items.map(i=>i.name));
+        if(count) alert(`${count} items added to list ${listName}.`);
+      } 
     });
     
     var extras_div = d3.select(main_id).append("div").classed("row",true);

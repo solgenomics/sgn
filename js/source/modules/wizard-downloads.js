@@ -1,5 +1,4 @@
 import "../../legacy/d3/d3v4Min.js";
-import "../../legacy/CXGN/Dataset.js";
 
 const main_html = `
   <div class="wizard-download">

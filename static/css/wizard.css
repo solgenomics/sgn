@@ -35,8 +35,7 @@ button.wizard-list-rem{
   width:2.45em;
   z-index:100;
 }
-div.wizard-list-name{
-  pointer-events: none;
+.wizard-list-name{
   width:calc(100% - 2.45em);
 }
 div.wizard-panel{
