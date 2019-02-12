@@ -39,8 +39,8 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-	my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
-	push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
+	      my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+        push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
     # my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
@@ -53,10 +53,18 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     $c->tempfiles_subdir("solgwas_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/trait_XXXXX");
     #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
+#    my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
+#    mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
+#    my ($tmp_fh, $tempfile) = tempfile(
+#      "solgwas_download_XXXXX",
+#      DIR=> $solgwas_tmp_output,
+#    );
+#    my $pheno_filepath = $tempfile . "_phenotype.txt";
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
-#    my $temppath = $solgwas_tmp_output."/".$tempfile;
+#    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
@@ -65,10 +73,17 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     print STDERR Dumper(@trait_info);
 #    my @trials = @$trials_ref;
 
+#    my $values_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+#    copy($pheno_filepath,$values_path);
+
+#    my $file_basename = basename($pheno_filepath);
+#    my $file_response = "./documents/tempfiles/solgwas_files/" . $file_basename;
+#    print STDERR $file_response . "\n";
 #    my @co_pheno;
     $c->stash->{rest} = {
         options => \@trait_info,
         tempfile => $tempfile."_phenotype.txt",
+#        tempfile => $file_response,
     };
 }
 
@@ -82,8 +97,8 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 
     $file = basename($file);
 
-#    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas_files/".$file);
-    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, "static/documents/tempfiles/solgwas_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas_files/".$file);
+#    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, "static/documents/tempfiles/solgwas_files/".$file);
 #    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas_files/solgwas_download_0bDQ5_phenotype.txt");
     print STDERR Dumper($temppath);
 
@@ -129,14 +144,23 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
     $c->tempfiles_subdir("solgwas_files");
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
+#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
+    my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
+    mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
+    my ($tmp_fh, $tempfile) = tempfile(
+      "solgwas_download_XXXXX",
+      DIR=> $solgwas_tmp_output,
+    );
+#    my $pheno_filepath = $tempfile . "_phenotype.txt";
+    my $geno_filepath = $tempfile . "_genotype.txt";
     #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 #    my $temppath = $c->config->{basepath}."/".$tempfile;
-    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
+#    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
+    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+#    my $phenotype_data_ref = $ds->retrieve_phenotypes();
 #    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
@@ -148,26 +172,24 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 	      $protocol_id = $row->nd_protocol_id();
     }
 
-    $ds -> retrieve_genotypes($protocol_id);
+    $ds -> retrieve_genotypes($protocol_id, $geno_filepath);
 #    $ds-> @$trials_ref = retrieve_genotypes();
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
     $newtrait =~ s/\//\_/g;
     print STDERR $newtrait . "\n";
-    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
-    my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
-    my $figure3file = "." . $tempfile . "_" . $newtrait . "_figure3.png";
-    my $figure4file = "." . $tempfile . "_" . $newtrait . "_figure4.png";
-    my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
-    my $geno_filepath = "." . $tempfile . "_genotype.txt";
+    my $figure1file = $tempfile . "_" . $newtrait . "_figure1.png";
+    my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
+    my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
+    my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 #    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
 #    system($clean_cmd);
-    my $geno_filepath2 = "." . $tempfile . "_genotype_edit.txt";
+    my $geno_filepath2 = $tempfile . "_genotype_edit.txt";
     my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
     system($edit_cmd);
-    my $geno_filepath3 = "." . $tempfile . "_genotype_edit_subset.txt";
+    my $geno_filepath3 = $tempfile . "_genotype_edit_subset.txt";
 #    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
 #    system($trim_cmd);
 
@@ -213,7 +235,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $cmd = CXGN::Tools::Run->new(
         {
             backend => $c->config->{backend},
-            temp_base => $c->config->{basepath} . "/" . $c->tempfiles_subdir("solgwas_files"),
+            temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
@@ -230,9 +252,12 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+    copy($figure2file,$figure_path);
 
-    my $figure2file_response = $figure2file;
-    $figure2file_response =~ s/\.\/static//;
+    my $figure2basename = basename($figure2file);
+    my $figure2file_response = "/documents/tempfiles/solgwas_files/" . $figure2basename;
+
     $c->stash->{rest} = {
         figure2 => $figure2file_response,
         dummy_response => $dataset_id,
@@ -251,7 +276,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
-    my ($fh, $tempfiletest) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
+#    my ($fh, $tempfiletest) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
     my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
     mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
