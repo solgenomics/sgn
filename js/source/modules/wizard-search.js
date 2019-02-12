@@ -58,12 +58,12 @@ const wizardColumn = `
 
 const unselectedRow = `
   <div class="btn-group wizard-list-item">
-    <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button><div class="btn btn-xs btn-default wizard-list-name"></div>
+    <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button><a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
   </div>`;
   
 const selectedRow = `
   <div class="btn-group wizard-list-item">
-    <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button><div class="btn btn-xs btn-default wizard-list-name"></div>
+    <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button><a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
   </div>`;
   
 
@@ -83,6 +83,7 @@ export function Wizard(main_id,col_number){
   /**
    * @typedef {Object} Wizard~objectWithName
    * @property {string} name Name of object
+   * @property {string} [url] Link for object
   */
   /**
    * @typedef {(string|Wizard~objectWithName)} Wizard~columnItem
@@ -215,6 +216,7 @@ export function Wizard(main_id,col_number){
                   fresh[name] = {
                     name:name,
                     selected:false,
+                    url: i&&i.url?i.url:null,
                     value:i
                   }
                 }
@@ -327,19 +329,27 @@ export function Wizard(main_id,col_number){
   allCols.select(".wizard-create-list").on("click",function(d){
     var listName = d3.select(".wizard-create-list-name").property("value");
     if(listName!=""){
-      create_list(
+      d3.select(this).attr("disabled",true);
+      d3.select(".wizard-create-list-name").property("value","");
+      Promise.resolve(create_list(
         listName,
         d.selectedList.get().map(i=>i.value)
-      );
+      )).then(()=>{
+        d3.select(this).attr("disabled",null);
+      });
     }
   });
   allCols.select(".wizard-add-to-list").on("click",function(d){
-    var listID = d3.select(".wizard-add-to-list-id").property("value");
+    var listID = d3.select(".wizard-add-to-list-id").property("value").slice(list_prefix.length);
     if(listID!=""){
-      add_to_list(
+      d3.select(this).attr("disabled",true);
+      d3.select(".wizard-add-to-list-id").property("value","");
+      Promise.resolve(add_to_list(
         listID,
         d.selectedList.get().map(i=>i.value)
-      );
+      )).then(()=>{
+        d3.select(this).attr("disabled",null);
+      });
     }
   });
   allCols.select(".wizard-search input").on("input",function(d){
@@ -369,14 +379,20 @@ export function Wizard(main_id,col_number){
       selectedRow,23,4
     );
     coldat.unselectedList.afterDraw((li)=>{
-      li.select(".wizard-list-name").text(d=>d.name);
+      li.select(".wizard-list-name")
+        .text(d=>d.name)
+        .style("pointer-events",d=>d.url?null:"none")
+        .attr("href",d=>d.url);
       li.select(".wizard-list-add").on("click",function(d){
         d.selected = true;
         reflow(coldat.index,true);
       });
     });
     coldat.selectedList.afterDraw((li)=>{
-      li.select(".wizard-list-name").text(d=>d.name);
+      li.select(".wizard-list-name")
+        .text(d=>d.name)
+        .style("pointer-events",d=>d.url?null:"none")
+        .attr("href",d=>d.url);
       li.select(".wizard-list-rem").on("click",function(d){
         d.selected = false;
         reflow(coldat.index,true);
@@ -417,7 +433,7 @@ export function Wizard(main_id,col_number){
         
         reflowCol.select(".wizard-union-toggle").style("display",(d,i,n)=>{
           return d.items.filter(i=>i.selected).length>0&&d.index<col_objects.length-1?null:"none";
-        })
+        }) 
         reflowCol.select(".wizard-count-selected").text(d=>d.items.filter(i=>i.selected).length);
         reflowCol.select(".wizard-count-all").text(d=>d.items.length);
         
