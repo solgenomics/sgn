@@ -22,7 +22,7 @@ solGS.waitPage = function (page, args) {
 	+ '|solgs/model/\\w+_\\d+/prediction/'
 	+ '|solgs/model/\\d+/prediction/'
 	+ '|solgs/models/combined/trials/'
-     	+ '|solgs/analyze/traits/';
+     	+ '|solgs/traits/all/population/';
   		    
     if (page.match(matchItems)) {
 
@@ -244,7 +244,7 @@ solGS.waitPage = function (page, args) {
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/';
 	
-	var multiTraitsUrls = 'solgs/analyze/traits/population/'
+	var multiTraitsUrls = 'solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials/';
 
 	if (page.match(matchItems)) {
@@ -256,7 +256,7 @@ solGS.waitPage = function (page, args) {
 
 	   // submitTraitSelections(page, args);
 		    
-	    if (page.match('solgs/analyze/traits/population/')) {
+	    if (page.match('solgs/traits/all/population/')) {
 		var popId  = jQuery('#population_id').val();
 		var traitIds = args.trait_id;
 	
@@ -264,7 +264,7 @@ solGS.waitPage = function (page, args) {
 		    dataType: 'json',
 		    type    : 'POST',
  		    data    : {'trait_id': traitIds, 'source': 'AJAX'},
-		    url     : '/solgs/analyze/traits/population/' + popId,
+		    url     : '/solgs/traits/all/population/' + popId,
 		    success : function (res){
 			if (res.status) {
 			    window.location = '/solgs/traits/all/population/' + popId;
@@ -343,7 +343,7 @@ solGS.waitPage = function (page, args) {
 	}
 
 	if ( referer.match(/solgs\/population\//) ) {
-	    action = ' action="/solgs/analyze/traits/population/' + popId + '"';
+	    action = ' action="/solgs/traits/all/population/' + popId + '"';
 	}
 	
 	var method = ' method="POST"';
@@ -732,7 +732,7 @@ jQuery(document).ready(function (){
 		 } else {
 		     
 		     page = hostName 
-			 + '/solgs/analyze/traits/population/' 
+			 + '/solgs/traits/all/population/' 
 			 + popId;
 		 }	    
 	     }
