@@ -18,6 +18,40 @@ ul.wizard-list li{
   display: inline-block;
 }
 
+.wizard-loading {
+  -webkit-transform-origin: 50% 47%;
+  transform-origin:50% 47%;
+  -ms-transform-origin:50% 47%;
+  -webkit-animation: wizard-loading 2s infinite linear;
+  -moz-animation: wizard-loading 2s infinite linear;
+  -o-animation: wizard-loading 2s infinite linear;
+  animation: wizard-loading 2s infinite linear;
+}
+@-moz-keyframes wizard-loading {
+  from {
+    -moz-transform: rotate(0deg);
+  }
+  to {
+    -moz-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes wizard-loading {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes wizard-loading {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 ul.wizard-list{
   height:10em;
   overflow-y: auto;

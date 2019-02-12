@@ -158,10 +158,10 @@ export function WizardSetup(main_id){
     });
     
     var extras_div = d3.select(main_id).append("div").classed("row",true);
-    var dataset_span = d3.select(main_id).append("span");
-    var dat = new WizardDatasets(dataset_span.node(),wiz);
     var download_span = d3.select(main_id).append("span");
     var down = new WizardDownloads(download_span.node(),wiz);
+    var dataset_span = d3.select(main_id).append("span");
+    var dat = new WizardDatasets(dataset_span.node(),wiz);
     
     return {
       wizard:wiz,
