@@ -45,31 +45,37 @@ sub generate_model {
     my $fixed_factors_interaction = $self->fixed_factors_interaction();
     my $random_factors = $self->random_factors();
     my $random_factors_random_slope = $self->random_factors_random_slope();
+
+    my $error;
     
     print STDERR "DV: $dependent_variable FF: $fixed_factors - RF: $random_factors TF: $tempfile. FFI: $fixed_factors_interaction RFRS: $random_factors_random_slope\n";
 
     print STDERR Dumper($fixed_factors);
     my $model = "";
+
     $model .= "dependent_variable = \"$dependent_variable\"\n";
-    my $formatted_fixed_factors = join(",", map { "\"$_\"" } @$fixed_factors);
+    my $formatted_fixed_factors = join(" + ", @$fixed_factors);
 
-    $model .= "fixed_factors <- c($formatted_fixed_factors)\n";
-
-    if ($random_factors_random_slope) { 
-        $model.= "random_factors_random_slope = T\n";
+    my $formatted_fixed_factors_interaction = "";
+    foreach my $interaction (@$fixed_factors_interaction) {
+	if (exists($interaction->[0]) && exists($interaction->[1])) { 
+	    my $term = " (1+$interaction->[0] \| $interaction->[1]) ";
+	    $formatted_fixed_factors_interaction .= $term;
+	}
+	else {
+	    $error = "Interaction terms are not correctly defined.";
+	}
     }
-
-    my $formatted_fixed_factors_interaction = 
     
     my $formatted_random_factors = "";
     if ($random_factors_random_slope) { 
-	$formatted_random_factors = "\" (1 + $random_factors->[0] | $random_factors->[1]) \"";
+	$formatted_random_factors = " (1 + $random_factors->[0] | $random_factors->[1]) ";
 
     }
-    else { 
-	$formatted_random_factors = join(",", map { "\"(1|$_)\"" } @$random_factors);	
+    else {
+	$formatted_random_factors = join(" + ",  map { "(1|$_)" } @$random_factors);	
     }
-    $model .= "random_factors <- c($formatted_random_factors)\n";
+    $model .= join(" + ", ($formatted_fixed_factors, $formatted_fixed_factors_interaction, $formatted_random_factors));
     
     return $model;
 }

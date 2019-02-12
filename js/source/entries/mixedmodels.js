@@ -28,22 +28,28 @@ export function init(main_div){
 	<div class="container">
 	  <div class="row">
 
-             <div id="factors" class="col-md-3" style="border-style:dotted;border-width:1px;">
+             <div id="factors" class="col-md-3" style="border-style:dotted;border-width:0px;">
 	       Available factors
              </div>
 
               <div class="col-md-7">
-                <div style="border-width:1px;border-style:dotted;height:100px;" id="fixed_factors">
-	          Fixed factors
+                <div  id="fixed_factors_panel" style="border-width:1px;border-style:dotted;height:100px;" class="panel panel-default">
+	           <div class="panel-header">Fixed factors</div>
+	           <div id="fixed_factors" class="panel-body"></div>
            
                 </div>
-	        <div id="fixed_factors_collection" style="border-style:dotted;border-width:1px;margin-top:20px;height:auto;z-index:1" >
-	        
-	           <button  id="add_interaction_factor_button">+</button>
+	        <div id="fixed_factors_collection_panel" class="panel panel-default" style="border-style:dotted;border-width:1px;margin-top:20px;height:auto;z-index:1" >
+	           <div class="panel-header">
+	             Fixed factors with interaction
+	           <button  id="add_interaction_factor_button">add new interaction</button>
+	            <div id="fixed_factors_collection" class="panel-body">
+	            </div>
 	        </div>
  
-                <div id="random_factors" style="border-style:dotted;border-width:1px;margin-top:20px;height:100px;">
-	           Random factors
+                <div id="random_factors_panel" style="border-style:dotted;border-width:1px;margin-top:20px;height:100px;">
+          	<div class="panel-header">Random factors</div>
+	           <div id="random_factors" class="panel-body">          
+                   </div>
                 </div>
 
            </div>
@@ -65,9 +71,9 @@ export function init(main_div){
     
     get_select_box("datasets", "mixed_model_dataset_select", {});
   
-     jQuery('#mixed_model_analysis_prepare_button').click( function() { 
-       var dataset_id=jQuery('#available_datasets').val();
-       jQuery.ajax({
+     $('#mixed_model_analysis_prepare_button').click( function() { 
+       var dataset_id=$('#available_datasets').val();
+       $.ajax({
          url: '/ajax/mixedmodels/prepare',
          data: { 'dataset_id' : dataset_id },
          success: function(r) { 
@@ -75,21 +81,21 @@ export function init(main_div){
              alert(r.error);
            }
            else { 
-             jQuery('#dependent_variable').html(r.dependent_variable);
+             $('#dependent_variable').html(r.dependent_variable);
              var html = "";
 
              for (var n=0; n<r.factors.length; n++) { 
                 html += "<div style=\"z-index:4;border-style:solid;border-radius:8px;width:200px;height:100;border-color:blue;margin:4px;text-align:left\" id=\"factor_"+n+"\" class=\"container\">"+r.factors[n]+"</div>";
              }
-             jQuery('#factors').html(html);
+             $('#factors').html(html);
 
 	     for (var n=0; n<r.factors.length; n++) { 
-	       jQuery('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
+	       $('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
              }
 
-             jQuery('#tempfile').html(r.tempfile);
+             $('#tempfile').html(r.tempfile);
            }
-	   jQuery('#fixed_factors').droppable( {drop: function( event, ui ) {
+	   $('#fixed_factors').droppable( {drop: function( event, ui ) {
 					       $( this )
 					       .addClass( "ui-state-highlight" )
 					       .find( "p" )
@@ -109,7 +115,7 @@ export function init(main_div){
                                                }});
 
 
-	   jQuery('#random_factors').droppable( {drop: function( event, ui ) {
+	   $('#random_factors').droppable( {drop: function( event, ui ) {
 					       $( this )
 					       .addClass( "ui-state-highlight" )
 					       .find( "p" )
@@ -124,7 +130,8 @@ export function init(main_div){
 					          setClonedTagProperties(clone);
                                                }
                                    
-					       clone.appendTo(droppable);
+	       clone.appendTo(droppable);
+	       extract_model_parameters();
                                                					       }});
 
         },
@@ -135,7 +142,7 @@ export function init(main_div){
    });
 
 
-   jQuery('#add_interaction_factor_button').click( function(e) { 
+   $('#add_interaction_factor_button').click( function(e) { 
 
       add_interaction_div();	       
    });
@@ -159,12 +166,12 @@ export function init(main_div){
 
 	var div_name = "interaction_"+get_divnr();
 
-	var div = '<div id="'+div_name+'" style="border-style:dotted;border-width:2px;height:100px;margin:20px">Factors with interaction</div>';
+	var div = '<div id="'+div_name+'" style="border-style:dotted;border-width:2px;height:100px;margin:20px"></div>';
 
-	jQuery('#fixed_factors_collection').append(div);
+	$('#fixed_factors_collection').append(div);
 
 
-	jQuery('#'+div_name).droppable( {
+	$('#'+div_name).droppable( {
 	    drop: function( event, ui ) {
 		$( this )
 		    .addClass( "ui-state-highlight" )
@@ -196,14 +203,14 @@ export function init(main_div){
    function setClonedTagProperties(e) { 
      e.id = e.html()+'C';
      e.html('<span id="'+e.id+'_remove" onclick="this.parentNode.parentNode.removeChild(this.parentNode); return false;">X</a></span> '+e.html());
-     jQuery('#'+e.id+'_remove').click( function(e) { alert('removing'+e.id); jQuery('#'+e.id).remove(); });
+     $('#'+e.id+'_remove').click( function(e) { alert('removing'+e.id); $('#'+e.id).remove(); });
    }
 
 
-   jQuery('#dependent_variable').on('change', '#dependent_variable_select', function() { 
-      var tempfile = jQuery('#tempfile').html();
-      var trait = jQuery('#dependent_variable_select').val();
-      jQuery.ajax( {
+   $('#dependent_variable').on('change', '#dependent_variable_select', function() { 
+      var tempfile = $('#tempfile').html();
+      var trait = $('#dependent_variable_select').val();
+      $.ajax( {
          url: '/ajax/mixedmodels/grabdata',
          data: { 'file' : tempfile },
          success: function(r)  { 
@@ -237,17 +244,17 @@ export function init(main_div){
      });
    });
 
-   jQuery('#run_mixed_model_button').click( function() { 
-      var dependent_variable = jQuery('#dependent_variable_select').val();
-      var fixed_factors = jQuery('#fixed_factors_select').val();
-      var random_factors = jQuery('#random_factors_select').val();
-      var fixed_factors_interaction = jQuery('#fixed_factors_interaction').val();
-      var random_factors_random_slope = jQuery('#random_factor_random_slope').val();
-      var tempfile = jQuery('#tempfile').html();
+   $('#run_mixed_model_button').click( function() { 
+      var dependent_variable = $('#dependent_variable_select').val();
+      var fixed_factors = $('#fixed_factors_select').val();
+      var random_factors = $('#random_factors_select').val();
+      var fixed_factors_interaction = $('#fixed_factors_interaction').val();
+      var random_factors_random_slope = $('#random_factor_random_slope').val();
+      var tempfile = $('#tempfile').html();
 
       // alert('Dependent variable: '+ dependent_variable +' Fixed Factors: '+ fixed_factors +' Random Factors: '+ random_factors +' Tempfile: '+tempfile);
       // alert(JSON.stringify(fixed_factors));
-      jQuery.ajax( {
+      $.ajax( {
         url: '/ajax/mixedmodels/run',
         data: { 
           'dependent_variable': dependent_variable, 
@@ -261,7 +268,7 @@ export function init(main_div){
           if (r.error) { alert(r.error);}
           else{ 
             // alert('success...');
-            jQuery('#mixed_models_results_div').html('<pre>' + r.html + '</pre>');
+            $('#mixed_models_results_div').html('<pre>' + r.html + '</pre>');
           }
         },
         error: function(r) { 
@@ -270,6 +277,35 @@ export function init(main_div){
       });      
    });
 
+
+    function extract_model_parameters() {
+	alert("extracting model parameters...");
+	var fixed_factors = $('#fixed_factors').text();
+	fixed_factors = fixed_factors.replace(/X /g, ",");
+	fixed_factors = fixed_factors.substr(1);
+	
+	var fixed_factors_interaction = "";
+	$('#fixed_factors_interaction').each( function() {
+	    alert(JSON.stringify(this));
+	});		
+
+        var random_factors = $('#random_factors').text();
+        random_factors = random_factors.replace(/X /g, ",");
+        random_factors = random_factors.substr(1);
+
+        var json =  {
+	  'fixed_factors' : [ fixed_factors ],
+	  'fixed_factors_interaction' : [ fixed_factors_interaction ],
+	  'random_factors' : [ random_factors ] };
+        alert(JSON.stringify(json));
+        return json;
+    }
+
+    
+    
+    function get_model_string() {
+    }
+    
 };
 
 

@@ -6,6 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Slurp;
 use File::Spec qw | catfile |;
+use JSON::Any;
 use File::Basename qw | basename |;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
@@ -17,6 +18,24 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
+
+
+sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $json_string = $c->param("json_data");
+    my $json = JSON::Any->decode($json_string); 
+    
+    my $mm = CXGN::MixedModels->new();
+    $mm->fixed_factors( $json->{fixed_factors} );
+    $mm->fixed_factors_interaction( $json->{fixed_factors_interaction} );
+    $mm->random_factors( $json->{random_factors} );
+
+    my ($model, $error) =  $mm->generate_model();
+
+    $c->stash->{rest} = { error => $error, model => $model };
+}
 
 sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $self = shift;
