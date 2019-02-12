@@ -360,12 +360,13 @@ jQuery(document).ready(function() {
        var country_code = $('#location_country').val();
        var country_text = $('#location_country option:selected').text();
        var country_name = country_text.replace(/^[^\s]+(.*)/, '$1').trim();
-       var program = $('#breeding_program_select option:selected').text();
+    //    var program = $('#breeding_program_select option:selected').text();
+       var programs = $('#breeding_program_select').val().join(",");
        var type = $('#location_type').val();
        var latitude = $('#location_latitude').val();
        var longitude = $('#location_longitude').val();
        var altitude = $('#location_altitude').val();
-       //console.log("Location program to store is "+program);
+       console.log("Location programs to store are "+JSON.stringify(programs));
        //console.log("Location name to store is "+name);
        //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
@@ -374,7 +375,7 @@ jQuery(document).ready(function() {
        $.ajax({
          type: 'POST',
          url: '/ajax/location/store',
-         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'program': program, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
+         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'programs': programs, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
          success: function(response) {
                   if (response.error) { alert(response.error); }
                   else {

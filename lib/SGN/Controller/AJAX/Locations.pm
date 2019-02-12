@@ -46,10 +46,10 @@ __PACKAGE__->config(
        my $params = $c->request->parameters();
        my $id = $params->{id} || undef;
        my $name = $params->{name};
-       my $abbreviation =  $params->{abbreviation}; 
+       my $abbreviation =  $params->{abbreviation};
        my $country_name =  $params->{country_name};
        my $country_code =  $params->{country_code};
-       my $program =  $params->{program};
+       my $programs =  $params->{programs};
        my $type =  $params->{type};
        my $latitude    = $params->{latitude} || undef;
        my $longitude   = $params->{longitude} || undef;
@@ -74,7 +74,7 @@ __PACKAGE__->config(
            abbreviation => $abbreviation,
            country_name => $country_name,
            country_code => $country_code,
-           breeding_program => $program,
+           breeding_programs => $programs,
            location_type => $type,
            latitude => $latitude,
            longitude => $longitude,

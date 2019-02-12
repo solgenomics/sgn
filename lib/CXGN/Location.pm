@@ -60,7 +60,7 @@ has 'country_code' => (
 	is => 'rw',
 );
 
-has 'breeding_program' => (
+has 'breeding_programs' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
 );
@@ -101,12 +101,14 @@ sub BUILD {
         $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property'));
         $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property'));
         $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property'));
-        $self->breeding_program( $self->breeding_program || $self->_get_ndgeolocationprop('breeding_program', 'project_property'));
+        $self->breeding_programs( $self->breeding_programs || $self->_get_ndgeolocationprop('breeding_program', 'project_property'));
         $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property'));
         $self->latitude( $self->latitude || $location->latitude);
         $self->longitude( $self->longitude || $location->longitude);
         $self->altitude( $self->altitude || $location->altitude);
     }
+
+    print STDERR "Breeding programs are: ".$self->breeding_programs()."\n";
 
     return $self;
 }
@@ -122,8 +124,7 @@ sub store_location {
     my $abbreviation = $self->abbreviation();
     my $country_name = $self->country_name();
     my $country_code = $self->country_code();
-    my $breeding_program = $self->breeding_program();
-    my $breeding_program_id;
+    my $breeding_programs = $self->breeding_programs();
     my $location_type = $self->location_type();
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
@@ -150,10 +151,10 @@ sub store_location {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }
 
-    if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
-	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
-    } elsif ($breeding_program) {
-        $breeding_program_id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
+    foreach my $breeding_program (split (",", $breeding_programs)) {
+        if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
+    	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
+        }
     }
 
     if ($location_type && !$self->_is_valid_type($location_type)) {
@@ -198,8 +199,8 @@ sub store_location {
             if ($country_code){
                 $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
-            if ($breeding_program_id){
-                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
+            if ($breeding_programs){
+                $self->_store_breeding_programs($breeding_programs);
             }
             if ($location_type){
                 $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
@@ -232,7 +233,7 @@ sub store_location {
             $self->_update_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
             $self->_update_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             $self->_update_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
-            $self->_update_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
+            $self->_store_breeding_programs($breeding_programs);
         }
         catch {
             $error =  $_;
@@ -294,6 +295,22 @@ sub _update_ndgeolocationprop {
         $self->_store_ndgeolocationprop($type, $cv, $value);
     } elsif ($existing_prop) {
         $self->_remove_ndgeolocationprop($type, $cv, $existing_prop);
+    }
+}
+
+sub _store_breeding_programs {
+    my $self = shift;
+    my $new_programs = shift;
+    my @new_programs = split (",", $new_programs);
+    #print STDERR "New programs are @new_programs\n";
+    my $existing_programs = $self->_get_ndgeolocationprop('breeding_program', 'project_property');
+    my @existing_programs = split (",", $existing_programs);
+
+    foreach my $existing_program (@existing_programs) {
+        $self->_remove_ndgeolocationprop('breeding_program', 'project_property', $existing_program)
+    }
+    foreach my $new_program (@new_programs) {
+        $self->location->create_geolocationprops({ 'breeding_program' => $new_program}, {cv_name => 'project_property' });
     }
 }
 
@@ -369,7 +386,7 @@ sub _is_valid_program {
     my $existing_program_count = $schema->resultset('Project::Project')->search(
         {
             'type.name'=> 'breeding_program',
-            'me.name' => $program
+            'me.project_id' => $program
         },
         {
             join => {
