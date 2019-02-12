@@ -11,6 +11,7 @@ use Try::Tiny;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
+use URI;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -370,30 +371,14 @@ sub structure_output_details {
     my $combo_pops_id = $c->stash->{combo_pops_id};
    
     my $referer = $c->req->referer;
-    $referer=~ s/\/$//;
-
-    my $base    = $c->req->base;   
- 
-    if ($base !~ /localhost/)
-    {   
-	#$referer =~ s/$base//;
-	
-	#$base =~ s/:\d+//;
-	#print STDERR "\n$base - $referer\n";
-
-	#$referer = $base . $referer;
-	#print STDERR "\n$base - $referer\n";
-	$referer = $c->req->referer;
-    } 
-              
+    my $base = $c->req->base; 
+    $base =~ s/:\d+//;
+       
     my %output_details = ();
-
-   # my $solgs_controller = $c->controller('solGS::solGS');
-    my $analysis_page = $analysis_data->{analysis_page};
-  
-    $analysis_page =~ s/$base//;
-
-    if ($analysis_page =~ m/(solgs\/analyze\/traits\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/models\/combined\/trials\/)/) 
+   
+    my $analysis_page = $analysis_data->{analysis_page};  
+    #$analysis_page =~ s/$base//;
+    if ($analysis_page =~ m/solgs\/traits\/all\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/models\/combined\/trials\//) 
     {	
 	foreach my $trait_id (@traits_ids)
 	{	    
@@ -408,10 +393,9 @@ sub structure_output_details {
 	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
-		
-		if ($analysis_page =~ m/solgs\/analyze\/traits\//) 
+		if ($analysis_page =~ m/solgs\/traits\/all\/population\//) 
 		{		    
-		   $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
+		    $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
 		} 
 	    }
 	    
@@ -653,7 +637,7 @@ sub run_analysis {
  
     eval
     {
-	if ($analysis_page =~ /solgs\/analyze\/traits\//) 
+	if ($analysis_page =~ /solgs\/traits\/all\/population\//) 
 	{  
 	    $c->controller('solGS::solGS')->build_multiple_traits_models($c);	
 	} 
