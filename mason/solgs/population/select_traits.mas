@@ -48,15 +48,10 @@ ROW
 
 }
 
-my $message;
-
-
 </%perl>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
- <% $message %>
 
 % if ($trait_rows) {
  <div id="traits_selection_div">

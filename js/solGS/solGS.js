@@ -323,7 +323,6 @@ solGS.waitPage = function (page, args) {
 	if (args == 'undefined') {
 	    document.getElementById('traits_selection_form').submit(); 
 	    document.getElementById('traits_selection_form').reset(); 
-	    console.log('No traits selected')
 	} else {  
 	    jQuery('#traits_selection_form').ajaxSubmit();
 	    jQuery('#traits_selection_form').resetForm();
