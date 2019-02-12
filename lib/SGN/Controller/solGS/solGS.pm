@@ -431,11 +431,11 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 } 
 
 
-sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
-    my ($self, $c) = @_;
+sub population : Path('/solgs/population') Args(1) {
+    my ($self, $c, $pop_id) = @_;
   
-    my ($pop_id, $action) = @{$c->req->captures};
-   
+    #my ($pop_id, $action) = @{$c->req->captures};
+    print STDERR "\n population: pop id - $pop_id\n";
     my $list_reference = $c->req->param('list_reference');
     $c->stash->{list_reference} = $list_reference;
 
@@ -464,12 +464,12 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
  
         $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
       
-        if ($action && $action =~ /selecttraits/ ) {
-            $c->stash->{no_traits_selected} = 'none';
-        }
-        else {
-            $c->stash->{no_traits_selected} = 'some';
-        }
+     #   if ($action && $action =~ /selecttraits/ ) {
+     #       $c->stash->{no_traits_selected} = 'none';
+     #   }
+     #   else {
+     #       $c->stash->{no_traits_selected} = 'some';
+     #   }
 
         my $acronym = $self->get_acronym_pairs($c);
         $c->stash->{acronym} = $acronym;
