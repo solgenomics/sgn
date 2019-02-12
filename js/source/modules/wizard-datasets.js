@@ -6,7 +6,7 @@ const main_html = `
     <div class="col-sm-12 col-md-6">
       <div class="panel panel-default wizard-panel">
       <div class="panel-heading">
-        Load/Save <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button> Columns as Dataset
+        Load/Create Dataset using <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button> Columns
       </div>
       <div class="panel-body">
         <div class="input-group">

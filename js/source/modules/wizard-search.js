@@ -419,7 +419,6 @@ export function Wizard(main_id,col_number){
     col.reflowing = true;
     
     var load = dont_reload===true?Promise.resolve(true):col.reload();
-    
     return load.then(()=>{
       if(col.reflowing){
         if(!dont_reload){
@@ -442,9 +441,9 @@ export function Wizard(main_id,col_number){
           .filter(d=>d.items.filter(i=>i.selected).length>0)
           .style("display",null);
         
-        if(!dont_propagate) return reflow(from+1);
         col.reflowing = false;
         on_change();
+        if(!dont_propagate) return reflow(from+1);
         return true
       }
       else {
