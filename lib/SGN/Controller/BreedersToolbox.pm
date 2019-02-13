@@ -21,6 +21,7 @@ use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -64,17 +65,37 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
-    my $breeding_programs = $projects->get_breeding_programs();
-
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
+    my $breeding_programs = $projects->get_breeding_programs();
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    #Add true false field to breeding program array indicating whether program is linked to current user
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    $c->stash->{locations} = $projects->get_all_locations();
+    my $locations = decode_json($projects->get_location_geojson());
 
-    $c->stash->{breeding_programs} = $breeding_programs;
+    #print STDERR "Locations are ".Dumper($locations)."\n";
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{breeding_programs} = \@breeding_programs;
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }
@@ -210,9 +231,29 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
-    $c->stash->{locations} = $bp->get_all_locations($c);
 
-    $c->stash->{programs} = $breeding_programs;
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
+
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $locations = decode_json $crossingtrial->get_location_geojson();
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    #$c->stash->{locations} = $bp->get_all_locations($c);
+
+    #$c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
 
@@ -256,6 +297,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
+    $c->stash->{geojson_locations} = decode_json($projects->get_location_geojson());
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;

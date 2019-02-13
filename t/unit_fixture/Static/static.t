@@ -109,7 +109,6 @@ $mech->get_ok($_) for
         /js/CXGN/BreedersToolbox/AddTrial.js
         /js/CXGN/BreedersToolbox/UploadTrial.js
         /js/CXGN/BreedersToolbox/Trial.js
-        /js/CXGN/BreedersToolbox/AddMultipleTrial.js
         /js/CXGN/Trial.js
         /js/CXGN/TrialTreeFolders.js
     );
@@ -291,7 +290,7 @@ $mech->get_ok($_) for
         /js/tools/vigs.js
     );
 
-    
+
 #SITE SPECIFICS
 
 
