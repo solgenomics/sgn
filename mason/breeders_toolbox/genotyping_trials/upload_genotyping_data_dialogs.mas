@@ -440,20 +440,48 @@
                     <b>This is for uploading Intertek genotype data.</b>
                     <br/>
                     <b>Please use CSV formatted files</b>
-                    <p>
-                    <br />
-                    <b>Header:</b>
+                    <br/>
+                    <br/>
+                    <b>For Intertek SNP Result Grid File:</b>
                     <br>
+                    <p>The header must be:</p>
+                    <br/>
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>COLUMN1</td>
-                                <td>COLUMN2</td>
+                                <td>IntertekSNPID</td>
+                                <td>CustomerSNPID</td>
+                                <td>Reference</td>
+                                <td>Alternate</td>
+                                <td>Chromosome</td>
+                                <td>Position</td>
+                                <td>Quality</td>
+                                <td>Filter</td>
+                                <td>Info</td>
+                                <td>Format</td>
                             </tr>
                         </tbody>
                     </table>
+
+                    <b>For Intertek SNP Information File:</b>
+                    <br>
+                    <p>The header must be:</p>
+                    <br/>
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>SampleName.LabID</td>
+                                <td>All Marker Names In Separate Columns (e.g. marker name = S12_7926132)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <br/>
+                    <p>The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already</p>
 
                 </div>
             </div>
