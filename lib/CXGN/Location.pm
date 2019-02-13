@@ -255,7 +255,6 @@ sub store_location {
 
 sub delete_location {
     my $self = shift;
-
     my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id=> $self->nd_geolocation_id() });
     my $name = $row->description();
     my @experiments = $row->nd_experiments;
@@ -263,12 +262,17 @@ sub delete_location {
 
     if (@experiments) {
         my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
-	    print STDERR $error;
+        print STDERR $error;
         return { error => $error };
-	}
+    }
 	else {
 	    $row->delete();
-	    return { success => "Location $name was successfully deleted.\n" };
+        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location', 'project_property')->cvterm_id();
+        my $projectprop_rows = $self->bcs_schema->resultset("Project::Projectprop")->search({ value=> $self->nd_geolocation_id(), type_id=> $location_type_id });
+        while (my $r = $projectprop_rows->next()){ # remove any links to deleted location in projectprop
+            $r->delete();
+        }
+        return { success => "Location $name was successfully deleted.\n" };
 	}
 }
 
