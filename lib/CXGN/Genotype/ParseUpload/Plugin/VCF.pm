@@ -15,13 +15,11 @@ sub _validate_with_plugin {
     print STDERR "Reading VCF to validate during parse...\n";
 
     my $F;
+    my @header;
+    my @header_info;
+    my @fields;
+    my @observation_unit_names;
     open($F, "<", $filename) || die "Can't open file $filename\n";
-
-        my @header_info;
-        my @fields;
-        my @observation_unit_names;
-
-        my @markers;
         while (<$F>) {
             chomp;
             #print STDERR Dumper $_;
@@ -33,46 +31,88 @@ sub _validate_with_plugin {
             if ($_ =~ m/^#/){
                 my $header = $_;
                 @fields = split /\t/, $header;
+                @header = @fields[0 .. 8];
                 @observation_unit_names = @fields[9..$#fields];
                 next;
             }
+            last;
+        }
+    close($F);
 
-            my @values = split /\t/;
-            if ($values[2] eq '.') {
-                push @markers, $values[0]."_".$values[1];
-            } else {
-                push @markers, $values[2];
+    open($F, "<", $filename) || die "Can't open file $filename\n";
+
+        my @markers;
+        my $line_count = 1;
+        while (<$F>) {
+            chomp;
+            #print STDERR Dumper $_;
+
+            if ($_ =~ m/^##/){
+                next;
             }
+            if ($_ =~ m/^#/){
+                next;
+            }
+
+            @fields = split /\t/;
+
+            my @marker_info = @fields[ 0..8 ];
+
+            my $marker_name;
+            my $marker_info_p2 = $marker_info[2];
+            if ($marker_info_p2 eq '.') {
+                $marker_name = $marker_info[0]."_".$marker_info[1];
+            } else {
+                $marker_name = $marker_info_p2;
+            }
+            push @markers, $marker_name;
+
+            if (!$marker_name) {
+                push @error_messages, "No marker name given on line $line_count";
+            }
+            if (!$marker_info[3]) {
+                push @error_messages, "No reference 'ref' allele given for marker $marker_name";
+            }
+            if (!$marker_info[4]) {
+                push @error_messages, "No alternate 'alt' allele given for marker $marker_name";
+            }
+            if (!$marker_info[8]) {
+                push @error_messages, "No format 'format' given for marker $marker_name";
+            }
+            $line_count++;
         }
 
     close($F);
 
-    my $header = \@fields;
-    if ($header->[0] ne '#CHROM'){
+    if (scalar(@markers) < 1) {
+        push @error_messages, "Less than one marker is in your file!";
+    }
+
+    if ($header[0] ne '#CHROM'){
         push @error_messages, 'Column 1 header must be "#CHROM".';
     }
-    if ($header->[1] ne 'POS'){
+    if ($header[1] ne 'POS'){
         push @error_messages, 'Column 2 header must be "POS".';
     }
-    if ($header->[2] ne 'ID'){
+    if ($header[2] ne 'ID'){
         push @error_messages, 'Column 3 header must be "ID".';
     }
-    if ($header->[3] ne 'REF'){
+    if ($header[3] ne 'REF'){
         push @error_messages, 'Column 4 header must be "REF".';
     }
-    if ($header->[4] ne 'ALT'){
+    if ($header[4] ne 'ALT'){
         push @error_messages, 'Column 5 header must be "ALT".';
     }
-    if ($header->[5] ne 'QUAL'){
+    if ($header[5] ne 'QUAL'){
         push @error_messages, 'Column 6 header must be "QUAL".';
     }
-    if ($header->[6] ne 'FILTER'){
+    if ($header[6] ne 'FILTER'){
         push @error_messages, 'Column 7 header must be "FILTER".';
     }
-    if ($header->[7] ne 'INFO'){
+    if ($header[7] ne 'INFO'){
         push @error_messages, 'Column 8 header must be "INFO".';
     }
-    if ($header->[8] ne 'FORMAT'){
+    if ($header[8] ne 'FORMAT'){
         push @error_messages, 'Column 9 header must be "FORMAT".';
     }
 
@@ -207,6 +247,8 @@ sub _parse_with_plugin {
             push @{$protocolprop_info{'marker_names'}}, $marker_name;
             push @{$protocolprop_info{'markers_array'}}, \%marker;
 
+            my @separated_alts = split ',', $marker_info[4];
+
             my @format =  split /:/,  $marker_info_p8;
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
             for (my $i = 0; $i < scalar(@observation_unit_names); $i++ ) {
@@ -216,6 +258,27 @@ sub _parse_with_plugin {
                 #    $value{@format[$fv]} = @fvalues[$fv];
                 #}
                 @value{@format} = @fvalues;
+                if (exists($value{'GT'})) {
+                    my @nucleotide_genotype;
+                    my $gt = $value{'GT'};
+                    my $separator = '/';
+                    my @alleles = split (/\//, $gt);
+                    if (scalar(@alleles) < 1){
+                        @alleles = split (/\|/, $gt);
+                        if (scalar(@alleles) > 0) {
+                            $separator = '|';
+                        }
+                    }
+                    foreach (@alleles) {
+                        my $index = $_ + 0;
+                        if ($index == 0) {
+                            push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
+                        } else {
+                            push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+                        }
+                    }
+                    $value{'GT'} = join $separator, @nucleotide_genotype;
+                }
                 $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
             }
         }

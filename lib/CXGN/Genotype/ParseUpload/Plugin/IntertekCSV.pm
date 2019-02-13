@@ -284,12 +284,13 @@ sub _parse_with_plugin {
 
                     my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
                     foreach my $a (@alleles){
-                        if ($a eq $ref) {
-                            push @vcf_genotype, '0';
-                        }
-                        if ($a eq $alt) {
-                            push @vcf_genotype, '1';
-                        }
+                        # if ($a eq $ref) {
+                        #     push @vcf_genotype, '0';
+                        # }
+                        # if ($a eq $alt) {
+                        #     push @vcf_genotype, '1';
+                        # }
+                        push @vcf_genotype, $a;
                     }
 
                     my $vcf_genotype_string = join '/', @vcf_genotype;

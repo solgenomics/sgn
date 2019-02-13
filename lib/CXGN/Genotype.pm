@@ -35,9 +35,9 @@ has 'markerscores' => ( isa => 'HashRef',
 			is  => 'rw',
     );
 
-#has 'rawscores' => (isa => 'HashRef',
-#		    is => 'rw',
-#    );
+has 'rawscores' => (isa => 'HashRef',
+		    is => 'rw',
+    );
 
 has 'markers' => (isa => 'ArrayRef',
 		  is => 'rw',
