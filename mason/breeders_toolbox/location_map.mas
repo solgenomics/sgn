@@ -361,7 +361,12 @@ jQuery(document).ready(function() {
        var country_text = $('#location_country option:selected').text();
        var country_name = country_text.replace(/^[^\s]+(.*)/, '$1').trim();
     //    var program = $('#breeding_program_select option:selected').text();
-       var programs = $('#breeding_program_select').val().join(",");
+        var programs = [];
+        $('#breeding_program_select option:selected').each( function() {
+            programs.push($(this).text());
+        });
+
+       programs = programs.join("&");
        var type = $('#location_type').val();
        var latitude = $('#location_latitude').val();
        var longitude = $('#location_longitude').val();
@@ -686,7 +691,8 @@ function onEachFeature(feature, layer) {
         $('#breeding_program_select option:selected').prop('selected', false);
 
         var programs = loc_data.properties.Program;
-        var program_array = programs.split(" & ");
+        var program_array = [];
+        if (programs) { program_array = programs.split(" & ") };
 
         if (program_array.length > 0) {
             program_array.forEach(function(program) {

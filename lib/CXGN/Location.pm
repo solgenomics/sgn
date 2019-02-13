@@ -119,8 +119,7 @@ sub store_location {
     my $error;
 
     my $nd_geolocation_id = $self->nd_geolocation_id();
-    my $name = $self->name();
-    $name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+    my $name = _trim($self->name());
     my $abbreviation = $self->abbreviation();
     my $country_name = $self->country_name();
     my $country_code = $self->country_code();
@@ -151,11 +150,16 @@ sub store_location {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }
 
-    foreach my $breeding_program (split (",", $breeding_programs)) {
+    my @breeding_program_ids;
+    foreach my $breeding_program (split ("&", $breeding_programs)) {
+        $breeding_program = _trim($breeding_program);
         if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
     	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
+        } else {
+            push @breeding_program_ids, $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
         }
     }
+    my $breeding_program_ids = join '&', @breeding_program_ids;
 
     if ($location_type && !$self->_is_valid_type($location_type)) {
         return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
@@ -200,7 +204,7 @@ sub store_location {
                 $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
             if ($breeding_programs){
-                $self->_store_breeding_programs($breeding_programs);
+                $self->_store_breeding_programs($breeding_program_ids);
             }
             if ($location_type){
                 $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
@@ -233,7 +237,7 @@ sub store_location {
             $self->_update_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
             $self->_update_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             $self->_update_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
-            $self->_store_breeding_programs($breeding_programs);
+            $self->_store_breeding_programs($breeding_program_ids);
         }
         catch {
             $error =  $_;
@@ -280,7 +284,7 @@ sub _get_ndgeolocationprop {
     while (my $r = $rs->next()){
         push @results, $r->value;
     }
-    my $res = join ',', @results;
+    my $res = join '&', @results;
     return $res;
 }
 
@@ -301,15 +305,18 @@ sub _update_ndgeolocationprop {
 sub _store_breeding_programs {
     my $self = shift;
     my $new_programs = shift;
-    my @new_programs = split (",", $new_programs);
-    #print STDERR "New programs are @new_programs\n";
+    my @new_programs = split ("&", $new_programs);
     my $existing_programs = $self->_get_ndgeolocationprop('breeding_program', 'project_property');
-    my @existing_programs = split (",", $existing_programs);
+    my @existing_programs = split ("&", $existing_programs);
 
     foreach my $existing_program (@existing_programs) {
+        # print STDERR "Removing existing program $existing_program\n";
+        $existing_program = _trim($existing_program);
         $self->_remove_ndgeolocationprop('breeding_program', 'project_property', $existing_program)
     }
     foreach my $new_program (@new_programs) {
+        # print STDERR "Storing new program $new_program\n";
+        $new_program = _trim($new_program);
         $self->location->create_geolocationprops({ 'breeding_program' => $new_program}, {cv_name => 'project_property' });
     }
 }
@@ -386,7 +393,7 @@ sub _is_valid_program {
     my $existing_program_count = $schema->resultset('Project::Project')->search(
         {
             'type.name'=> 'breeding_program',
-            'me.project_id' => $program
+            'me.name' => $program
         },
         {
             join => {
@@ -421,6 +428,12 @@ sub _is_valid_type {
     else {
         return 1;
     }
+}
+
+sub _trim { #trim whitespace from both ends of a string
+    my $s = shift;
+    $s =~ s/^\s+|\s+$//g;
+    return $s;
 }
 
 1;

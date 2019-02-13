@@ -194,7 +194,7 @@ __PACKAGE__->config(
              abbreviation => $data[1],
              country_code => $data[2],
              country_name => $data[3],
-             breeding_program => $data[4],
+             breeding_programs => $data[4],
              location_type => $data[5],
              latitude => $data[6],
              longitude => $data[7],
