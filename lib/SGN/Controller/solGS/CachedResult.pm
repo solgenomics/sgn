@@ -100,7 +100,7 @@ sub _check_cached_output {
 	    $self->_check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);    
 	}
     }  
-    elsif ($req_page =~ /solgs\/analyze\/traits\/population\//)
+    elsif ($req_page =~ /solgs\/traits\/all\/population\//)
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
