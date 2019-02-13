@@ -7,15 +7,13 @@ use File::Slurp qw| slurp |;
 use CXGN::Tools::Run;
 use CXGN::Phenotypes::File;
 
-has 'dependent_variable' => (is => 'rw', isa => 'Str');
+has 'dependent_variable' => (is => 'rw', isa => 'Str|Undef');
 
-has 'fixed_factors' => (is => 'rw', isa => 'Ref');
+has 'fixed_factors' => (is => 'rw', isa => 'Ref|Undef');
 
-has 'fixed_factors_interaction' => (is => 'rw', isa => 'Ref');
+has 'fixed_factors_interaction' => (is => 'rw', isa => 'Ref|Undef');
 
-has 'random_factors' => (is => 'rw', isa => 'Ref');
-
-has 'phenotyping_data' => (is => 'rw', isa => 'Ref');
+has 'random_factors' => (is => 'rw', isa => 'Ref|Undef');
 
 has 'random_factors_random_slope' => (is => 'rw', isa => 'Bool');
 
@@ -23,15 +21,18 @@ has 'traits' => (is => 'rw', isa => 'Ref');
 
 has 'levels' => (is => 'rw', isa => 'HashRef' );
 
-has 'phenotype_file' => (is => 'rw', isa => 'CXGN::Phenotypes::File');
+has 'phenotype_file' => (is => 'rw', isa => 'CXGN::Phenotypes::File|Undef');
 
-has 'tempfile' => (is => 'rw', isa => 'Str');
+has 'tempfile' => (is => 'rw', isa => 'Str|Undef');
 
 sub BUILD {
     my $self = shift;
 
-    my $phenotype_file = CXGN::Phenotypes::File->new( { file => $self->tempfile() } );
-
+    my $phenotype_file;
+    
+    if ($self->tempfile()) { 
+	$phenotype_file = CXGN::Phenotypes::File->new( { file => $self->tempfile() } );
+    }
     $self->phenotype_file($phenotype_file);
    
 }
@@ -54,7 +55,11 @@ sub generate_model {
     my $model = "";
 
     $model .= "dependent_variable = \"$dependent_variable\"\n";
-    my $formatted_fixed_factors = join(" + ", @$fixed_factors);
+
+    my $formatted_fixed_factors = "";
+    if ($fixed_factors) { 
+	$formatted_fixed_factors = join(" + ", @$fixed_factors);
+    }
 
     my $formatted_fixed_factors_interaction = "";
     foreach my $interaction (@$fixed_factors_interaction) {

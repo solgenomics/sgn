@@ -24,6 +24,8 @@ export function init(main_div){
 	<div id="trait_histogram">
 	  [Histogram]
         </div>
+
+        <div id="model_string">[model]</div>
 	
 	<div class="container">
 	  <div class="row">
@@ -110,7 +112,8 @@ export function init(main_div){
 					          setClonedTagProperties(clone);
                                                }
                                               
-					       clone.appendTo(droppable);
+	                                       clone.appendTo(droppable);
+	                                       get_model_string();
 
                                                }});
 
@@ -131,7 +134,7 @@ export function init(main_div){
                                                }
                                    
 	       clone.appendTo(droppable);
-	       extract_model_parameters();
+	       get_model_string();
                                                					       }});
 
         },
@@ -188,6 +191,7 @@ export function init(main_div){
                 }
 		
 		clone.appendTo(droppable);
+		get_model_string();
             }});
 
    }
@@ -281,22 +285,47 @@ export function init(main_div){
     function extract_model_parameters() {
 	alert("extracting model parameters...");
 	var fixed_factors = $('#fixed_factors').text();
-	fixed_factors = fixed_factors.replace(/X /g, ",");
-	fixed_factors = fixed_factors.substr(1);
+	fixed_factors = fixed_factors.replace(/X /g, '","');
+	fixed_factors = fixed_factors.substr(3);
+	fixed_factors = '["'+fixed_factors+'"]';
+	alert("FIXED FACTORS: "+fixed_factors);
+	var fixed_factors_json = JSON.parse(fixed_factors);
+	alert("fixed_factors (again) "+JSON.stringify(fixed_factors_json));
 	
-	var fixed_factors_interaction = "";
-	$('#fixed_factors_interaction').each( function() {
-	    alert(JSON.stringify(this));
-	});		
+	var fixed_factors_interactions = new Array();
+	$('#fixed_factors_collection').children().each( function() {
+	    var fixed_factors_interaction = $(this).text();
+	    fixed_factors_interaction = fixed_factors_interaction.replace(/X /g, ',');
+	    alert(fixed_factors_interaction);
+	    fixed_factors_interaction = fixed_factors_interaction.substr(1);
+	    alert(fixed_factors_interaction);
+	    fixed_factors_interaction = fixed_factors_interaction.replace(/,/g, '\',\'');
+	    alert(fixed_factors_interaction);
+	    fixed_factors_interaction = '\''+fixed_factors_interaction+'\'';
+	    alert(fixed_factors_interaction);
+	    fixed_factors_interactions.push(fixed_factors_interaction);
+	    
+	});
+	var fixed_factors_interaction = fixed_factors_interactions.join('],[');
+	alert(fixed_factors_interaction);
+	fixed_factors_interaction = '[['+fixed_factors_interaction+']]';
+	alert(fixed_factors_interaction);
+	var fixed_factors_interaction_json =   eval(fixed_factors_interaction) ;
+	alert(fixed_factors_interaction);
 
+	
         var random_factors = $('#random_factors').text();
-        random_factors = random_factors.replace(/X /g, ",");
-        random_factors = random_factors.substr(1);
-
+        random_factors = random_factors.replace(/X /g, '","');
+	random_factors = random_factors.replace(/\s/g, "");
+        random_factors = random_factors.substr(3);
+	var random_factors_json;
+	if (random_factors) {
+	    random_factors_json = JSON.parse(random_factors);
+	}
         var json =  {
-	  'fixed_factors' : [ fixed_factors ],
-	  'fixed_factors_interaction' : [ fixed_factors_interaction ],
-	  'random_factors' : [ random_factors ] };
+	    'fixed_factors' : fixed_factors_json,
+          'fixed_factors_interaction' : fixed_factors_interaction_json,
+	    'random_factors' : random_factors_json };
         alert(JSON.stringify(json));
         return json;
     }
@@ -304,8 +333,25 @@ export function init(main_div){
     
     
     function get_model_string() {
+	var params = extract_model_parameters();
+	$.ajax( {
+	    url  : '/ajax/mixedmodels/modelstring',
+	    method: 'POST',
+	    data : params,
+	    error: function(e) {
+		alert("An error occurred"+e);
+	    },
+	    success: function(r) {
+		if (r.error) {
+		    alert(error);
+		}
+		else { 
+		    alert(r.model);
+		    jQuery('#model_string').html(r.model);
+		}
+	    }
+	});
     }
-    
 };
 
 

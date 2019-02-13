@@ -10,6 +10,7 @@ use JSON::Any;
 use File::Basename qw | basename |;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
+use CXGN::MixedModels;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -24,16 +25,27 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $json_string = $c->param("json_data");
-    my $json = JSON::Any->decode($json_string); 
+    my $params = $c->req->params();
+    
+    print STDERR Dumper($params);
+    
+    my $fixed_factors = $c->req->param("fixed_factors");
+    
+    print STDERR "JSON received: $fixed_factors\n";
+
+    my $fixed_factors_interaction = $params->{fixed_factors_interaction};
+    my $random_factors = $params->{random_factors};
+
     
     my $mm = CXGN::MixedModels->new();
-    $mm->fixed_factors( $json->{fixed_factors} );
-    $mm->fixed_factors_interaction( $json->{fixed_factors_interaction} );
-    $mm->random_factors( $json->{random_factors} );
+    $mm->fixed_factors( $fixed_factors );
+    $mm->fixed_factors_interaction( $fixed_factors_interaction );
+    $mm->random_factors( $random_factors );
 
     my ($model, $error) =  $mm->generate_model();
 
+    print STDERR "MODEL: $model\n";
+    
     $c->stash->{rest} = { error => $error, model => $model };
 }
 
