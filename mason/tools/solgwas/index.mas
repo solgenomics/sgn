@@ -45,15 +45,7 @@
       <br>
       <center>
         <div id="trait_histogram_plot">
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-      </div>
+        </div>
       </center>
       <br>
       <br>
@@ -139,6 +131,11 @@ jQuery(document).ready(function() {
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
     $('#pheno_select').attr("disabled",true).html('');
+    $('#trait_histogram_plot').html('');
+    $('#pca_output').empty();
+    $('#Solgwas_output').empty();
+    $('#princomp').attr('checked', false);
+    $('#kinshipmat').attr('checked', false);
   });
   jQuery('#selectDataset').click(function() {
     var dataset_id = jQuery('#available_datasets').val();
@@ -169,6 +166,7 @@ jQuery(document).ready(function() {
       }
     });
   });
+
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
@@ -251,6 +249,7 @@ jQuery(document).ready(function() {
   jQuery('#runGWA').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
+      $('#Solgwas_output').empty();
     } else {
       $('#Solgwas_output').empty();
       if ($('#pheno_select').val() != ""){
