@@ -1,5 +1,5 @@
 import * as Boxplotter from '../source/entries/boxplotter.js';
-import data from './boxplotter.data.js';
+import data from './boxplotter.test.data.js';
 
 test('Boxplot', t=>{
     
