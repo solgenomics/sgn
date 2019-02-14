@@ -13,12 +13,31 @@ ul.wizard-list li{
   white-space: nowrap;
 }
 
-.wizard-col .btn-group .btn {
+.wizard-btn-center{
+  text-align:center; 
+  white-space:nowrap;
+}
+.wizard-btn-center *{
+  white-space:nowrap;
+}
+.wizard-btn-center .btn-group{
+  display:inline-block;
+}
+.wizard-btn-center .btn-group .btn{
   float: none;
-  display: inline-block;
+  margin: 0px;
+  display:inline-block;
 }
 
-.wizard-loading {
+.wizard-loader {
+  position: absolute;
+  z-index: 100;
+  top: 6em;
+  left: 0;
+  font-size: 2em;
+  text-align: center;
+  width: 100%;
+  display: block;
   -webkit-transform-origin: 50% 47%;
   transform-origin:50% 47%;
   -ms-transform-origin:50% 47%;
@@ -27,6 +46,7 @@ ul.wizard-list li{
   -o-animation: wizard-loading 2s infinite linear;
   animation: wizard-loading 2s infinite linear;
 }
+
 @-moz-keyframes wizard-loading {
   from {
     -moz-transform: rotate(0deg);
