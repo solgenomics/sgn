@@ -41,8 +41,7 @@ $acronym
 <& /solgs/model/model_summary.mas, 
      model_data => $model_data
 &>
-
-
+    
 <& selection_populations.mas,
    download_prediction            => $download_prediction,
    analyzed_traits                => $analyzed_traits,
@@ -73,6 +72,7 @@ $acronym
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
+ <& /solgs/cluster/analysis.mas &>  
 
 <& acronym.mas,
    acronym => $acronym,

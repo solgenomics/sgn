@@ -12,10 +12,12 @@ jQuery(document).ready(function () {
     var traitId      = jQuery("#trait_id").val();    
     var population   = solGS.getPopulationDetails();
     var populationId = population.training_pop_id;
-
+    var comboPopsId  = population.combo_pops_id;
+   
     var params = { 
 	'trait_id'     : traitId,
-	'training_pop_id': populationId
+	'training_pop_id': populationId,
+	'combo_pops_id'  : comboPopsId
     };
 
     solGS.histogram(params);
@@ -31,11 +33,12 @@ solGS.histogram = function (params) {
 	
 	var traitId      = params.trait_id;
 	var populationId = params.training_pop_id;
+	var comboPopsId  = params.combo_pops_id;
 
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'training_pop_id': populationId, 'trait_id' : traitId  },
+            data: {'training_pop_id': populationId, 'combo_pops_id': comboPopsId, 'trait_id' : traitId  },
             url: '/histogram/phenotype/data/',
             success: function(response) {
 		if (response.status == 'success') {
