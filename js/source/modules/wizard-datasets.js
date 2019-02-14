@@ -1,37 +1,6 @@
 import "../../legacy/d3/d3v4Min.js";
 import "../../legacy/CXGN/Dataset.js";
 
-const main_html = `
-  <div class="wizard-dataset">
-    <div class="col-sm-12 col-md-6">
-      <div class="panel panel-default wizard-panel">
-      <div class="panel-heading">
-        Load/Create Dataset using <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button> Columns
-      </div>
-      <div class="panel-body">
-        <div class="input-group">
-          <select class="form-control input-sm wizard-dataset-select">
-            <option selected value="" disabled>Load Dataset</option>
-            <optgroup class="wizard-dataset-group" label="--------------------"></optgroup>
-          </select>
-          <span class="input-group-btn">
-            <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-load">Load</button></span>
-          </span>
-        </div>
-      </div>
-        <div class="panel-body" style="margin-top:-1px;">
-          <div class="input-group">
-            <input type="text" placeholder="Create New Dataset" class="form-control input-sm wizard-dataset-name"/>
-            <span class="input-group-btn">
-              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-create">Create</button></span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
-
 /**
  * WizardDatasets - Creates a new WizardDatasets object.
  *
@@ -44,9 +13,7 @@ const main_html = `
 export function WizardDatasets(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
-  
-  main.html(main_html);
-  
+    
   var catagories = [];
   var selections = {};
   var operations = {};

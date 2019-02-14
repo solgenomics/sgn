@@ -1,64 +1,6 @@
 import "../../legacy/d3/d3v4Min.js";
 import "../../legacy/CXGN/Dataset.js";
 
-const main_html = `
-  <div class="wizard-download">
-    <div class="col-sm-12 col-md-6">
-      <div class="panel panel-default wizard-panel">
-      <div class="panel-heading">
-        Download Related Data
-      </div>
-      <ul class="list-group">
-        <li class="list-group-item wizard-download-genotypes">
-          <h5 class="list-group-item-heading">Genotypes</h5>
-          <div class="input-group">
-            <input class="form-control input-sm" type="text" disabled></input>
-            <span class="input-group-btn">
-              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span> Genotypes
-              </button></span>
-            </span>
-          </div>
-        </li>
-        <li class="list-group-item wizard-download-trial_data">
-          <h5 class="list-group-item-heading">Trial Data</h5>
-          <div class="input-group">
-            <input class="form-control input-sm" type="text" disabled value="No Trials Selected"></input>
-            <span class="input-group-btn">
-              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary wizard-download-trial_data-metadata">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span> Metadata
-              </button></span>
-            </span>
-          </div>
-          <div class="input-group">
-            <div class="input-sm" style="padding:0;position:relative;margin-top:6px;">
-              <select class="form-control input-sm wizard-dataset-select" style="width:50%">
-                <option selected value="" disabled>Format</option>
-                <optgroup label="--------------------">
-                  <option value="csv">CSV</option>
-                  <option value="xls">XLS</option>
-                </optgroup>
-              </select>
-              <select class="form-control input-sm " style="width: calc(50% - 4px);margin-left:4px;">
-                <option selected value="" disabled>Unit</option>
-                <optgroup label="--------------------">
-                  <option value="plot">Plots</option>
-                  <option value="plant">Plants</option>
-                </optgroup>
-              </select>
-            </div>
-            <span class="input-group-btn">
-              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary wizard-download-trial_data-phenotypes">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span> Phenotypes
-              </button></span>
-            </span>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-`;
-
 /**
  * WizardDownloads - Creates a new WizardDownloads object.
  *
@@ -71,8 +13,6 @@ const main_html = `
 export function WizardDownloads(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
-  
-  main.html(main_html);
   
   var catagories = [];
   var selections = {};

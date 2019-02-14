@@ -1,70 +1,4 @@
 import "../../legacy/d3/d3v4Min.js";
-
-const wizardWrapper = `
-  <div class="wizard-cont"></div>
-  <div class="clearfix col-xs-12"></div>`;
-
-const wizardColumn = `
-  <div class="panel panel-default wizard-panel">
-    <div class="panel-heading">
-      <select class="form-control input-sm form-inline wizard-type-select">
-        <option value="" disabled selected>Select Column Type</option>
-        <optgroup class="wizard-types-group" label="--------------------"></optgroup>
-        <optgroup class="wizard-lists-group" label="Load Selection from List:"></optgroup>
-      </select>
-      <span class="glyphicon glyphicon-refresh wizard-loading" 
-        style="    position: absolute;z-index: 100;top: 6em;left: 0;font-size: 2em;text-align: center;width: 100%;display: block;" 
-        aria-hidden="true"></span>
-    </div>
-    <div class="panel-heading">
-      <div class="wizard-search">
-        <input type="text" class="form-control input-sm" placeholder="Search">
-      </div>
-    </div>
-    <div class="panel-body">
-    <div style="text-align:center; white-space:nowrap;">
-      <div class="btn-group" style="display:inline-block;"> 
-        <button class="btn btn-default btn-xs wizard-select-all">Select All</button><button class="btn btn-primary btn-xs wizard-btn-tag"><span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span></button><button class="btn btn-default btn-xs wizard-select-clear">Clear</button>
-      </div>
-    </div>
-      <ul class="well wizard-list wizard-list-unselected">
-      </ul>
-      <ul class="well wizard-list wizard-list-isselected">
-      </ul>
-      <div class="wizard-union-toggle" style="text-align:center; white-space:nowrap;">
-        <div class="btn-group" style="display:inline-block;"> 
-          <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button><button class="btn btn-xs btn-primary active">ANY</button><button class="btn btn-default btn-xs">ALL</button>
-        </div>
-      </div>
-    </div>
-    <div class="panel-footer wizard-save-to-list">
-      <div class="input-group">
-        <select class="form-control input-sm wizard-add-to-list-id">
-          <option selected value="" disabled>Add to List...</option>
-          <optgroup class="wizard-lists-group" label="--------------------"></optgroup>
-        </select>
-        <span class="input-group-btn">
-          <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-add-to-list">Add</button></span>
-        </span>
-      </div>
-      <div class="input-group" style="margin-top:4px;">
-        <input class="form-control input-sm wizard-create-list-name" type="text" placeholder="Create New List..."></input>
-        <span class="input-group-btn">
-          <span><button style="width:5em;margin-left:4px;" class="btn btn-primary btn-sm wizard-create-list">Create</button></span>
-        </span>
-      </div>
-    </div>
-  </div>`;
-
-const unselectedRow = `
-  <div class="btn-group wizard-list-item">
-    <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button><a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
-  </div>`;
-  
-const selectedRow = `
-  <div class="btn-group wizard-list-item">
-    <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button><a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
-  </div>`;
   
 
 const list_prefix = "__LIST__";
@@ -74,7 +8,7 @@ const list_prefix = "__LIST__";
  *
  * @class
  * @classdesc Manages a wizard and performs searches
- * @param  {type} main_id div to draw within 
+ * @param  {type} main_id div containing Wizard divs and templates (see Wizard.basicTemplate)
  * @param  {type} col_number number of wizard columns to create 
  * @returns {Object} 
  */ 
@@ -152,7 +86,11 @@ export function Wizard(main_id,col_number){
   var type_dict = {};
   var initial_types = [];
   
-  var main = d3.select(main_id).html(wizardWrapper);
+  var main = d3.select(main_id);
+  
+  var unselectedHTML = main.select(".templates .wizard-unselected").html();
+  var selectedHTML = main.select(".templates .wizard-selected").html();
+  var columnHTML = main.select(".templates .wizard-column").html();
     
   var col_objects = [];
   for (var i = 0; i < col_number; i++) {
@@ -294,11 +232,12 @@ export function Wizard(main_id,col_number){
   }
   
   //Init Columns
-  var cols = main.select(".wizard-cont").selectAll(".wizard-col")
+  console.log(main);
+  var cols = main.select(".wizard-columns").selectAll(".wizard-column")
     .data(col_objects,d=>d.id);
   var allCols = cols.enter().append("div")
-    .classed("wizard-col",true).classed("col-xs-3",true)
-    .html(wizardColumn);
+    .classed("wizard-column",true).classed("col-xs-3",true)
+    .html(columnHTML);
   allCols.select('.wizard-type-select').on("change",function(d){
     var val = d3.select(this).node().value;
     if (val.slice(0,list_prefix.length)==list_prefix){
@@ -309,7 +248,7 @@ export function Wizard(main_id,col_number){
     }
     reflow(d.index);
   }).filter(d=>d.index>0).select(".wizard-lists-group").remove();
-  allCols.select('.wizard-union-toggle .btn-group').on("click",function(d) {
+  allCols.select('.wizard-union-toggle').on("click",function(d) {
     d.intersect = !d.intersect;
     d3.select(this).selectAll('.btn:not(.disabled)').each(function(){
       d3.select(this).classed("active",!d3.select(this).classed("active"));
@@ -352,7 +291,7 @@ export function Wizard(main_id,col_number){
       });
     }
   });
-  allCols.select(".wizard-search input").on("input",function(d){
+  allCols.select(".wizard-search").on("input",function(d){
     var search_txt = d3.select(this).property("value").replace(/\s+/g, "")
       .toLowerCase();
     d.filter = (item)=>{
@@ -372,11 +311,11 @@ export function Wizard(main_id,col_number){
     var col = d3.select(this);
     coldat.unselectedList = virtualList(
       col.select(".wizard-list-unselected"),
-      unselectedRow,23,4
+      unselectedHTML,23,4
     );
     coldat.selectedList = virtualList(
-      col.select(".wizard-list-isselected"),
-      selectedRow,23,4
+      col.select(".wizard-list-selected"),
+      selectedHTML,23,4
     );
     coldat.unselectedList.afterDraw((li)=>{
       li.select(".wizard-list-name")
@@ -409,7 +348,7 @@ export function Wizard(main_id,col_number){
         
     allCols.filter(d=>(d.index==from&&!dont_reload)||(!dont_propagate&&d.index>from))
       .style("opacity","0.5")
-      .select(".wizard-loading")
+      .select(".wizard-loader")
       .style("display",null);
     
     var reflowCol = allCols.filter(d=>d.index==from);
@@ -423,7 +362,7 @@ export function Wizard(main_id,col_number){
       if(col.reflowing){
         if(!dont_reload){
           reflowCol.style("opacity",null)
-            .select(".wizard-loading")
+            .select(".wizard-loader")
             .style("display","none");
         }
         
@@ -659,3 +598,44 @@ export function Wizard(main_id,col_number){
   };
   return wizard
 }
+
+Wizard.basicTemplate = `
+<span class="wizard-main">
+  <span class="wizard-columns"></span>
+  <div class="templates">
+    <div class="wizard-unselected">
+      <button type="button" class="wizard-list-add">&#x2b;</button>
+      <a class="wizard-list-name"></a>
+    </div>
+    <div class="wizard-selected">
+      <button type="button" class="wizard-list-rem">&#10005;</button>
+      <a class="wizard-list-name"></a>
+    </div>
+    <div class="wizard-column">
+      <span class="wizard-loader"></span>
+      <select class="wizard-type-select">
+      <option selected value="" disabled></option>
+        <optgroup class="wizard-types-group" label=""></optgroup>
+        <optgroup class="wizard-lists-group" label=""></optgroup>
+      </select>
+      <input type="text" class="wizard-search" placeholder="Search">
+      <button class="wizard-select-all">Select All</button>
+      <span>
+        <span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span>
+      </span>
+      <button class="wizard-select-clear">Clear</button>
+      <ul class="wizard-list-unselected"></ul>
+      <ul class="wizard-list-selected"></ul>
+      <div class="wizard-union-toggle">Toggle</div>
+      <div class="wizard-save-to-list">
+        <select class="wizard-add-to-list-id">
+          <option selected value="" disabled></option>
+          <optgroup class="wizard-lists-group" label=""></optgroup>
+        </select>
+        <button class="wizard-add-to-list">Add</button>
+        <input class="wizard-create-list-name" type="text"></input>
+        <button class="wizard-create-list">Create</button>
+      </div>    
+    </div>
+  </div>
+</span>`;

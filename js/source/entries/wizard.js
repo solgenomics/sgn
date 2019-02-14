@@ -65,12 +65,9 @@ function makeURL(target,id){
 
 export function WizardSetup(main_id){
   var list = new CXGN.List();
-  var wiz_div = d3.select(main_id).append("div");
-  var wiz = new Wizard(wiz_div.node(),4)
-    // Dictionary of {typeId:typeName}
+  var wiz = new Wizard(d3.select(main_id).select(".wizard-main").node(),4)
     .types(types)
-    // List of types to show in first column
-    .initial_types(initialtypes)
+    .initial_types(initialtypes) 
     // Function which returns the first column contents for a given target type
     // Returns list of of unique names or objects with a "name" key 
     // ["name","name",...]|[{"name":"example"},...]
@@ -157,10 +154,7 @@ export function WizardSetup(main_id){
       } 
     });
     
-    var extras_div = d3.select(main_id).append("div").classed("row",true);
-    var download_span = d3.select(main_id).append("span");
-    var down = new WizardDownloads(download_span.node(),wiz);
-    var dataset_span = d3.select(main_id).append("span");
+    var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
     var dat = new WizardDatasets(dataset_span.node(),wiz);
     
     return {
