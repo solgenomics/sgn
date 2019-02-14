@@ -1,5 +1,8 @@
 'use strict';
 
+const process = require('process');
+process.chdir( __dirname );
+
 const webpack = require('webpack');
 const JSDOM = require("jsdom").JSDOM;
 const test = require('tape');
