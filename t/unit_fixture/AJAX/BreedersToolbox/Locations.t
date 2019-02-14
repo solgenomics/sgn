@@ -48,14 +48,24 @@ is_deeply($response->{'success'}, $expected_response, 'store a new location');
 ok($response->{'nd_geolocation_id'});
 my $new_geolocation_id = $response->{'nd_geolocation_id'};
 
-#test location edit
+# add new breeding program
+$mech->post_ok('http://localhost:3010/breeders/program/new', [
+    "name"=> 'test2',
+    "desc"=> "added for Locations.t",
+]);
+$response = decode_json $mech->content;
+# print STDERR Dumper $response->{'success'};
+$expected_response = "The new breeding program test2 was created.";
+is_deeply($response->{'success'}, $expected_response, 'adding a breeding program');
+
+#test location edit, including associating multiple programs
 $mech->post_ok('http://localhost:3010/ajax/location/store', [
     "id"=> $new_geolocation_id,
     "name"=> "Boyce Thompson Institute",
     "abbreviation"=> "BOY",
     "country_code"=> "USA",
     "country_name"=> "United States",
-    "programs"=> "test",
+    "programs"=> "test&test2",
     "type"=> "Storage",
     "latitude"=> 42.5,
     "longitude"=> -76,
