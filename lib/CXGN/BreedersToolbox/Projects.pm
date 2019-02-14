@@ -371,9 +371,10 @@ sub new_breeding_program {
 	    name => $name,
 	});
     if ($rs->count() > 0) {
-	return "A breeding program with name '$name' already exists.";
-    }
+	return { error => "A breeding program with name '$name' already exists." };
 
+    }
+    my $project_id;
     eval {
 
 		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
@@ -389,6 +390,7 @@ sub new_breeding_program {
 	    });
 
 	$row->insert();
+    $project_id = $row->project_id();
 
 	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
 	    {
@@ -399,8 +401,14 @@ sub new_breeding_program {
 	$prop_row->insert();
 
     };
+
+
+
     if ($@) {
-	return "An error occurred while generating a new breeding program. ($@)";
+        return { error => "An error occurred while generating a new breeding program. ($@)" };
+    } else {
+        print STDERR "The new breeding program $name was created with id $project_id\n";
+        return { success => "The new breeding program $name was created.", id => $project_id };
     }
 
 }

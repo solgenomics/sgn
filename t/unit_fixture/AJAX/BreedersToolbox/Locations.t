@@ -54,9 +54,10 @@ $mech->post_ok('http://localhost:3010/breeders/program/new', [
     "desc"=> "added for Locations.t",
 ]);
 $response = decode_json $mech->content;
-# print STDERR Dumper $response->{'success'};
+#print STDERR Dumper $response;
 $expected_response = "The new breeding program test2 was created.";
 is_deeply($response->{'success'}, $expected_response, 'adding a breeding program');
+my $new_program_id = $response->{'id'};
 
 #test location edit, including associating multiple programs
 $mech->post_ok('http://localhost:3010/ajax/location/store', [
@@ -91,5 +92,12 @@ $response = decode_json $mech->content;
 #print STDERR Dumper $response->{'success'};
 $expected_response = "Location Boyce Thompson Institute was successfully deleted.\n";
 is_deeply($response->{'success'}, $expected_response, 'test delete of unused location');
+
+# delete added breeding program
+$mech->post_ok('http://localhost:3010/breeders/program/delete/'.$new_program_id);
+$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+$expected_response = [ 1 ];
+is_deeply($response, $expected_response, 'delete added breeding program');
 
 done_testing();
