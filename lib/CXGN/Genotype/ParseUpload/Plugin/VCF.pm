@@ -3,6 +3,7 @@ package CXGN::Genotype::ParseUpload::Plugin::VCF;
 use Moose::Role;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -270,11 +271,15 @@ sub _parse_with_plugin {
                         }
                     }
                     foreach (@alleles) {
-                        my $index = $_ + 0;
-                        if ($index == 0) {
-                            push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
+                        if (looks_like_number($_)) {
+                            my $index = $_ + 0;
+                            if ($index == 0) {
+                                push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
+                            } else {
+                                push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+                            }
                         } else {
-                            push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+                            push @nucleotide_genotype, $_;
                         }
                     }
                     $value{'GT'} = join $separator, @nucleotide_genotype;

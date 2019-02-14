@@ -6,6 +6,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
+use Encode;
 
 has 'schema' => (
 		 is       => 'rw',
