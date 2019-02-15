@@ -152,7 +152,10 @@ function formatGenCorInputData (popId, type, indexFile) {
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'model_id': modelDetail.population_id, 'corr_population_id': popId, 'type' : type, 'index_file': indexFile},
+        data: {'model_id': modelDetail.population_id,
+	       'corr_population_id': popId,
+	       'type' : type,
+	       'index_file': indexFile},
         url: '/correlation/genetic/data/',
         success: function(response) {
 

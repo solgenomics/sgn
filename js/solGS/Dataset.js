@@ -55,11 +55,9 @@ solGS.getDatasetsMenu = function (dType) {
 		if (!dsIds.includes(id)) {
 		    dsIds.push(id);
 		    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
-		}
-	
+		}	
     	    }
-    	}
-	
+    	}	
     }
 
     return dMenu;

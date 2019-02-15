@@ -34,7 +34,8 @@ jQuery(document).ready( function() {
     jQuery("#list_type_training_pops_list_select")
 	.change(function() { 
         
-	    var listId = jQuery(this).find("option:selected").val();                             
+	    var listId = jQuery(this).find("option:selected").val();
+          
             if (listId) {  
 		var listDetail = getListTypeTrainingPopDetail(listId);
 		jQuery("#list_type_training_pop_load").click(function() {
@@ -43,7 +44,7 @@ jQuery(document).ready( function() {
 			askTrainingJobQueueing(listId);
 		    } else {
 			var trialsList = listDetail.list;
-			var trialsNames = listDetail.elementsNames;
+			var trialsNames = listDetail.list_elements_names;
 			
 			loadTrialListTypeTrainingPop(trialsNames);		    
 		    }
@@ -92,15 +93,17 @@ function getListTypeTrainingPopDetail(listId) {
         listData      = list.getListData(listId);
 	listType      = list.getListType(listId);
 	listName      = list.listNameById(listId);
-	//listElements  = listData.elements;
+	listElements  = listData.elements;
 
-	//listElementsNames = getTrainingListElementsNames(listElements);
-	//listElementsIds   = getTrainingListElementsIds(listElements);
+	listElementsNames = getTrainingListElementsNames(listElements);
+	listElementsIds   = getTrainingListElementsIds(listElements);
     }
   
     return {'name'          : listName,	    
 	    'type'          : listType,
-	    'list_id'       : listId
+	    'list_id'       : listId,
+	    'list_elements_names' : listElementsNames,
+	    'list_elements_ids' : listElementsIds,
            };
     
 }
@@ -113,7 +116,7 @@ function loadTrialListTypeTrainingPop (trialsNames) {
         url: '/solgs/get/trial/id/',
         dataType: 'json',
         data: { 'trials_names': trialsNames},
-        success: function (res) { 
+        success: function (res) {
             getCombinedPopsId(res.trials_ids);
         },
         error: function(response) {
