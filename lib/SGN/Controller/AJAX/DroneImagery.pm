@@ -290,6 +290,14 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my ($vegetative_index_tgi_result, $vegetative_index_tgi_total_count) = $vegetative_index_tgi_images_search->search();
     #print STDERR Dumper $vegetative_index_tgi_result;
 
+    my $vegetative_index_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
+    my $vegetative_index_vari_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$vegetative_index_vari_drone_images_cvterm_id
+    });
+    my ($vegetative_index_vari_result, $vegetative_index_vari_total_count) = $vegetative_index_vari_images_search->search();
+    #print STDERR Dumper $vegetative_index_vari_result;
+
     my $background_removed_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -305,6 +313,14 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     });
     my ($background_removed_tgi_result, $background_removed_tgi_total_count) = $background_removed_tgi_images_search->search();
     #print STDERR Dumper $background_removed_tgi_result;
+
+    my $background_removed_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $background_removed_vari_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$background_removed_vari_drone_images_cvterm_id
+    });
+    my ($background_removed_vari_result, $background_removed_vari_total_count) = $background_removed_vari_images_search->search();
+    #print STDERR Dumper $background_removed_vari_result;
 
     # my $ft_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'fourier_transform_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     # my $ft_stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -455,6 +471,17 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_original} = $image_original;
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_id} = $image_id;
     }
+    foreach (@$vegetative_index_vari_result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
+        my $image_original = $image->get_image_url("original");
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_username} = $_->{username};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_modified_date} = $_->{image_modified_date};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_original} = $image_original;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_id} = $image_id;
+    }
     foreach (@$background_removed_tgi_result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -466,6 +493,18 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_tgi_stitched_image_original} = $image_original;
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_tgi_stitched_image_id} = $image_id;
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_tgi_stitched_image_threshold} = $_->{drone_run_band_removed_background_tgi_threshold};
+    }
+    foreach (@$background_removed_vari_result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
+        my $image_original = $image->get_image_url("original");
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_vari_stitched_image_username} = $_->{username};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_vari_stitched_image_modified_date} = $_->{image_modified_date};
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_vari_stitched_image_original} = $image_original;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_vari_stitched_image_id} = $image_id;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{background_removed_vari_stitched_image_threshold} = $_->{drone_run_band_removed_background_vari_threshold};
     }
     foreach (@$background_removed_result) {
         my $image_id = $_->{image_id};
@@ -664,12 +703,79 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                         
                                         $drone_run_band_table_html .= '</div></div></div>';
                                     } else {
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_tgi_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-vegetative_index_tgi_image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-background_removed_tgi_stitched_image_id="'.$d->{background_removed_tgi_stitched_image_id}.'" >Remove Background From Original Denoised Image</button><br/><br/>';
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_tgi_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-vegetative_index_tgi_image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-background_removed_tgi_stitched_image_id="'.$d->{background_removed_tgi_stitched_image_id}.'" >Remove Background From Original Denoised Image via TGI Mask</button><br/><br/>';
                                     }
                                 } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-remove_background_current_image_type="TGI" >TGI Vegetative Index Remove Background</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-remove_background_current_image_type="TGI" >TGI Vegetative Index Remove Background via Threshold</button><br/><br/>';
                                 }
-                            } else {
+                            }
+                            if ($d->{vegetative_index_vari_stitched_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>VARI Vegetative Index Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{vegetative_index_vari_image_id}.'"></span></h5><b>By</b>: '.$d->{vegetative_index_tgi_username}.'</br><b>Date</b>: '.$d->{vegetative_index_vari_modified_date}.'</div><div class="col-sm-3">'.$d->{vegetative_index_vari_stitched_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{vegetative_index_vari_image_id}.'" data-assign_plot_polygons_type="vari">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_vari_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_vari_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_vari_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="vari" data-plot_polygons_preprocess_type="denoised_original_vari" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
+
+                                if ($d->{background_removed_vari_stitched_image}) {
+                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed VARI Vegetative Index Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{background_removed_vari_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{background_removed_vari_stitched_image_username}.'</br><b>Date</b>: '.$d->{background_removed_vari_stitched_image_modified_date}.'<br/><b>Background Removed Threshold</b>: '.$d->{background_removed_vari_stitched_image_threshold}.'</div><div class="col-sm-3">'.$d->{background_removed_vari_stitched_image}.'</div><div class="col-sm-6">';
+
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{background_removed_vari_stitched_image_id}.'" data-assign_plot_polygons_type="background_removed_vari">Create/View Plot Polygons</button>';
+
+                                    $drone_run_band_table_html .= '<hr>';
+                                    my $plot_polygon_images = '';
+                                    if ($d->{plot_polygon_background_removed_vari_images}) {
+                                        $plot_polygon_images = scalar(@{$d->{plot_polygon_background_removed_vari_images}})." Plot Polygons<br/><span>";
+                                        $plot_polygon_images .= join '', @{$d->{plot_polygon_background_removed_vari_images}};
+                                        $plot_polygon_images .= "</span>";
+                                        $plot_polygon_images .= '<br/><br/>';
+                                        $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="vari" data-plot_polygons_preprocess_type="background_removed_vari" >Calculate Phenotypes</button>';
+                                    } else {
+                                        $plot_polygon_images = 'No Plot Polygons Assigned';
+                                    }
+                                    $drone_run_band_table_html .= $plot_polygon_images;
+
+                                    $drone_run_band_table_html .= '</div></div></div>';
+
+                                    # if ($d->{background_removed_stitched_image}) {
+                                    #     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed TGI Vegetative Index Mask on Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{background_removed_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{background_removed_stitched_image_username}.'</br><b>Date</b>: '.$d->{background_removed_stitched_image_modified_date}.'</div><div class="col-sm-3">'.$d->{background_removed_stitched_image}.'</div><div class="col-sm-6">';
+                                    # 
+                                    #     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{background_removed_stitched_image_id}.'" data-assign_plot_polygons_type="original">Create/View Plot Polygons</button>';
+                                    # 
+                                    #     $drone_run_band_table_html .= '<hr>';
+                                    #     my $plot_polygon_images = '';
+                                    #     if ($d->{plot_polygon_images}) {
+                                    #         $plot_polygon_images = scalar(@{$d->{plot_polygon_images}})." Plot Polygons<br/><span>";
+                                    #         $plot_polygon_images .= join '', @{$d->{plot_polygon_images}};
+                                    #         $plot_polygon_images .= "</span>";
+                                    #         $plot_polygon_images .= '<br/><br/>';
+                                    #         $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="original" data-plot_polygons_preprocess_type="denoised_background_removed_thresholded_tgi_mask_original" >Calculate Phenotypes</button>';
+                                    #     } else {
+                                    #         $plot_polygon_images = 'No Plot Polygons Assigned';
+                                    #     }
+                                    #     $drone_run_band_table_html .= $plot_polygon_images;
+                                    # 
+                                    #     $drone_run_band_table_html .= '</div></div></div>';
+                                    # } else {
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_vari_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-vegetative_index_vari_image_id="'.$d->{vegetative_index_vari_image_id}.'" data-background_removed_vari_stitched_image_id="'.$d->{background_removed_vari_stitched_image_id}.'" >Remove Background From Original Denoised Image via VARI Mask</button><br/><br/>';
+                                    # }
+                                } else {
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{vegetative_index_vari_image_id}.'" data-remove_background_current_image_type="VARI" >VARI Vegetative Index Remove Background via Threshold</button><br/><br/>';
+                                }
+                            }
+                            if (!$d->{vegetative_index_tgi_stitched_image} && !$d->{vegetative_index_vari_stitched_image}) {
 
                                 if ($d->{background_removed_stitched_image}) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{background_removed_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{background_removed_stitched_image_username}.'</br><b>Date</b>: '.$d->{background_removed_stitched_image_modified_date}.'<br/><b>Background Removed Threshold</b>: '.$d->{background_removed_stitched_image_threshold}.'</div><div class="col-sm-3">'.$d->{background_removed_stitched_image}.'</div><div class="col-sm-6">';
@@ -690,7 +796,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
                                     $drone_run_band_table_html .= '</div></div></div>';
                                 } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{denoised_stitched_image_id}.'" data-remove_background_current_image_type="Single Band" >Remove Background From Original Denoised Image</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{denoised_stitched_image_id}.'" data-remove_background_current_image_type="Single Band" >Remove Background From Original Denoised Image via Threshold</button><br/><br/>';
                                 }
 
                             }
@@ -1179,11 +1285,16 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     my $image_id = $c->req->param('image_id');
     my $image_type = $c->req->param('image_type');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
-    my $threshold = $c->req->param('threshold');
+    my $lower_threshold = $c->req->param('lower_threshold');
+    my $upper_threshold = $c->req->param('upper_threshold') || '255';
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    if (!$threshold) {
-        $c->stash->{rest} = {error => 'Please give a threshold'};
+    if (!$lower_threshold) {
+        $c->stash->{rest} = {error => 'Please give a lower threshold'};
+        $c->detach();
+    }
+    if (!$upper_threshold) {
+        $c->stash->{rest} = {error => 'Please give an upper threshold'};
         $c->detach();
     }
 
@@ -1200,7 +1311,7 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     $archive_remove_background_temp_image .= '.png';
     print STDERR $archive_remove_background_temp_image."\n";
 
-    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --threshold '.$threshold);
+    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_threshold '.$lower_threshold.' --upper_threshold '.$upper_threshold);
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -1210,6 +1321,9 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     if ($image_type eq 'TGI') {
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_tgi_threshold', 'project_property')->cvterm_id();
+    } elsif ($image_type eq 'VARI') {
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_vari_threshold', 'project_property')->cvterm_id();
     } else {
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_threshold', 'project_property')->cvterm_id();
@@ -1222,7 +1336,7 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
         type_id=>$drone_run_band_remove_background_threshold_type_id,
         project_id=>$drone_run_band_project_id,
         rank=>0,
-        value=>$threshold
+        value=>"Lower Threshold:$lower_threshold. Upper Threshold:$upper_threshold"
     },
     {
         key=>'projectprop_c1'
@@ -1492,7 +1606,7 @@ sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_temp_image);
     my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum});
-    if ($md_image->count() > 0) {
+    if ($view_only == 1 && $md_image->count() > 0) {
         print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
         $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
         $index_image_fullpath = $image->get_filename('original_converted', 'full');

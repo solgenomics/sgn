@@ -131,9 +131,9 @@
 <div id="manage_drone_imagery_remove_background_div" style="display:none">
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Remove Background" &>
-    
+
     <div class="well">
-        <&| /page/info_section.mas, title => 'Remove Background Using Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
+        <&| /page/info_section.mas, title => 'Remove Background Using Graphical Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
 
             <div class="panel panel-default">
                 <div class="panel-body">
@@ -157,6 +157,33 @@
                     <button class="btn btn-default" id="drone_imagery_remove_background_start_over">Start Over</button>
                     <button class="btn btn-primary" id="drone_imagery_remove_background_submit">Save</button>
                     <hr>
+                </div>
+            </div>
+        </&>
+    </div>
+    <div class="well">
+        <&| /page/info_section.mas, title => 'Remove Background Using User Defined Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Starting Position: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_remove_background_lower_threshold" name="drone_imagery_remove_background_lower_threshold" type="number" max="255" min="0" placeholder="e.g. 10 (Min 0)" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Ending Position: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_remove_background_upper_threshold" name="drone_imagery_remove_background_upper_threshold" type="number" max="255" min="0" placeholder="e.g. 200 (Max 255)"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="drone_imagery_remove_background_defined_submit" class="btn btn-primary">Apply Threshold</button>
                 </div>
             </div>
         </&>
@@ -1877,7 +1904,41 @@ jQuery(document).ready(function() {
                 'image_id': remove_background_current_image_id,
                 'image_type': remove_background_current_image_type,
                 'drone_run_band_project_id': remove_background_drone_run_band_project_id,
-                'threshold': removeBackgroundThresholdValue,
+                'lower_threshold': removeBackgroundThresholdValue,
+                'upper_threshold': '255'
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                jQuery("#working_modal").modal("hide");
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error saving removed background image!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_remove_background_defined_submit').click(function(){
+        var remove_background_drone_run_band_lower_threshold = jQuery('#drone_imagery_remove_background_lower_threshold').val();
+        var remove_background_drone_run_band_upper_threshold = jQuery('#drone_imagery_remove_background_upper_threshold').val();
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/remove_background_save',
+            dataType: "json",
+            data: {
+                'image_id': remove_background_current_image_id,
+                'image_type': remove_background_current_image_type,
+                'drone_run_band_project_id': remove_background_drone_run_band_project_id,
+                'lower_threshold': remove_background_drone_run_band_lower_threshold,
+                'upper_threshold': remove_background_drone_run_band_upper_threshold,
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
