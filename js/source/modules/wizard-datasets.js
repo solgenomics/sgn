@@ -23,26 +23,29 @@ export function WizardDatasets(main_id,wizard){
     operations = o;
   });
   
-  main.select(".wizard-dataset-load").on("click",()=>{
+  main.select(".wizard-dataset-load").on("click",function(){
     var val = main.select(".wizard-dataset-select").node().value;
     if(val!=""){
-      ;(new Promise((resolve,reject)=>{
-        resolve(datasets.getDataset(val));
-      })).then(dataset_data=>{
-        console.log(dataset_data);
-        dataset_data.category_order.forEach((c,i)=>{
-          var items = (dataset_data.categories[c]||[]).map(d=>d+"");
-          wizard.setColumn(i,c,null,(d)=>{
-            return items.indexOf(d.id+"")!=-1;
+        d3.select(this).attr("disabled",true);
+        setTimeout(()=>(new Promise((resolve,reject)=>{
+          resolve(datasets.getDataset(val));
+          d3.select(this).attr("disabled",null);
+        })).then(dataset_data=>{
+          console.log(dataset_data);
+          dataset_data.category_order.forEach((c,i)=>{
+            var items = (dataset_data.categories[c]||[]).map(d=>d+"");
+            wizard.setColumn(i,c,null,(d)=>{
+              return items.indexOf(d.id+"")!=-1;
+            })
           })
-        })
-      })
+        }),1);
     }
   });
   
-  main.select(".wizard-dataset-create").on("click",()=>{
+  main.select(".wizard-dataset-create").on("click",function(){
     var name = main.select(".wizard-dataset-name").node().value;
     if(name!=""){
+      d3.select(this).attr("disabled",true);
       var cols = wizard.getColumns();
       var last_relevant = cols.findIndex(c=>{
         return !c.type || c.items.filter(d=>d.selected).length<1
@@ -58,6 +61,8 @@ export function WizardDatasets(main_id,wizard){
       console.log(document.location.origin+'/ajax/dataset/save'+params);
       fetch(document.location.origin+'/ajax/dataset/save'+params,{
         method:'post'
+      }).then(()=>{
+        d3.select(this).attr("disabled",null);
       })
     }
   });

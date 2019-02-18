@@ -155,10 +155,57 @@ export function WizardSetup(main_id){
     });
     
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
-    var dat = new WizardDatasets(dataset_span.node(),wiz);
+    var dat = new WizardDatasets(d3.select(main_id).select(".wizard-datasets").node(),wiz);
     
     return {
       wizard:wiz,
       reload_lists: load_lists
     };
+}
+
+export function updateStatus(element) {
+  return fetch(
+    document.location.origin+'/ajax/breeder/check_status',
+    {method: 'POST'}
+  ).then(resp=>resp.json())
+   .then(json=>{
+      var innerhtml = "";
+      if (json.refreshing) {
+        innerhtml = json.refreshing;
+      } else if (json.timestamp) {
+        innerhtml = json.timestamp;
+      } else {
+        throw new Error(json.error);
+      }
+      d3.select(element).html(innerhtml);
+      return !!json.refreshing;
+   })
+   .catch(err=>{
+     d3.select(element).html(`<font color="red">${err.message} - If this problem persists, please <a href="../../contact/form">contact developers</a></font>`);
+     return false;
+   })
+}
+
+// "fullview" for refreshing materialized phenoview, genoview, traits, and stockprop
+// "stockprop" for refreshing materialized stockprop
+export function refreshMatviews(matview_select, button){
+  d3.select(button).attr("disabled",true);
+  fetch(
+    document.location.origin+`/ajax/breeder/refresh?matviews=${matview_select}`,
+    {method: 'POST'}
+  ).then(resp=>resp.json())
+   .then(json=>{
+      if (json.error) {
+        throw new Error(json.error);
+      } else {
+        d3.select("#update_wizard_error")
+        .style("display",null)
+        .html('<font color="green">'+json.message+'</font></div>');
+      }
+   })
+   .catch(err=>{
+     d3.select("#update_wizard_error")
+     .style("display",null)
+     .html('<font color="red">'+err.message+'</font>');
+   });
 }

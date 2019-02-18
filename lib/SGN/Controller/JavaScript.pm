@@ -136,8 +136,8 @@ sub get_js_module_dependencies :Private {
         legacy => []
     };
     
-    print Dumper $names;
-    print Dumper $js_module_dependencies;
+    # print Dumper $names;
+    # print Dumper $js_module_dependencies;
     
     for my $n (@$names) {
         if (exists $js_module_dependencies->{$n}){
@@ -146,7 +146,7 @@ sub get_js_module_dependencies :Private {
         }
     }
     
-    print Dumper $result;
+    # print Dumper $result;
     
     return $result;
 }
