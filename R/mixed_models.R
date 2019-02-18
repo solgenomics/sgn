@@ -19,7 +19,7 @@ if(length(args)==0){
 workdir = dirname(datafile);
 setwd(workdir);
 
-library(lmerTest)
+library(lme4)
 
 pd = read.csv(datafile, sep="\t")
 source(paramfile)  # should give us dependent_variable, fixed_factors, and random_factors

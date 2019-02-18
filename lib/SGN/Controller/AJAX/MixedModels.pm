@@ -25,28 +25,41 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $params = $c->req->params();
-    
+    my $params = $c->req->body_data();
+        
     print STDERR Dumper($params);
     
-    my $fixed_factors = $c->req->param("fixed_factors");
+    my $fixed_factors = $params->{"fixed_factors"};
     
     print STDERR "JSON received: $fixed_factors\n";
 
     my $fixed_factors_interaction = $params->{fixed_factors_interaction};
     my $random_factors = $params->{random_factors};
-
+    my $dependent_variable = $params->{dependent_variable};
     
     my $mm = CXGN::MixedModels->new();
-    $mm->fixed_factors( $fixed_factors );
-    $mm->fixed_factors_interaction( $fixed_factors_interaction );
-    $mm->random_factors( $random_factors );
+    if ($dependent_variable) {
+	$mm->dependent_variable($dependent_variable);
+    }
+    if ($fixed_factors) { 
+	$mm->fixed_factors( $fixed_factors ); 
+    } 
+    if ($fixed_factors_interaction) { 
+	$mm->fixed_factors_interaction( $fixed_factors_interaction );
+    }
+    if ($random_factors) { 
+	$mm->random_factors( $random_factors );
+    }
 
     my ($model, $error) =  $mm->generate_model();
 
     print STDERR "MODEL: $model\n";
     
-    $c->stash->{rest} = { error => $error, model => $model };
+    $c->stash->{rest} = { 
+	error => $error, 
+	model => $model,
+	dependent_variable => $dependent_variable,
+    };
 }
 
 sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
@@ -108,14 +121,15 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $tempfile = $c->req->param("tempfile");
-    my $dependent_variable = $c->req->param("dependent_variable");
-    my $fixed_factors = $c->req->param("fixed_factors");
-    my $fixed_factors_interaction = $c->req->param("fixed_factors_interaction");
-    my $random_factors = $c->req->param("random_factors");
-    my $random_factors_random_slope = $c->req->param("random_factors_random_slope");
+    my $params = $c->req->body_data();
+
+    print STDERR Dumper($params);
     
-    print STDERR "DV: $dependent_variable FF: $fixed_factors - RF: $random_factors TF: $tempfile. FFI: $fixed_factors_interaction RFRS: $random_factors_random_slope\n";
+    my $tempfile = $params->{tempfile};
+    my $dependent_variable = $params->{dependent_variable};
+    my $model  = $params->{model};
+    
+    print STDERR "DV: $dependent_variable Model: $model TF: $tempfile.\n";
   
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
@@ -124,28 +138,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $param_file = $temppath.".params";
     open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
     print $F "dependent_variable = \"$dependent_variable\"\n";
-    #my @fixed_factors = split ",", $fixed_factors;
-    my $formatted_fixed_factors = "\"$fixed_factors\"";
 
-    print $F "fixed_factors <- c($formatted_fixed_factors)\n";
-
-    if ($fixed_factors_interaction) { 
-	print $F "fixed_factors_interaction = T\n";
-    }
-    if ($random_factors_random_slope) { 
-        print $F "random_factors_random_slope = T\n";
-    }
-
-    my @random_factors = split ",", $random_factors;
-    my $formatted_random_factors = "";
-    if ($random_factors_random_slope) { 
-	$formatted_random_factors = "\" (1 + $random_factors[0] | $random_factors[1]) \"";
-
-    }
-    else { 
-	$formatted_random_factors = join(",", map { "\"(1|$_)\"" } @random_factors);	
-    }
-    print $F "random_factors <- c($formatted_random_factors)\n";
+    print $F "model <- \"$model\"\n";
     close($F);
     
     # run r script to create model

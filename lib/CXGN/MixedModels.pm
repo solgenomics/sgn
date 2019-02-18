@@ -1,4 +1,5 @@
 
+
 package CXGN::MixedModels;
 
 use Moose;
@@ -9,11 +10,11 @@ use CXGN::Phenotypes::File;
 
 has 'dependent_variable' => (is => 'rw', isa => 'Str|Undef');
 
-has 'fixed_factors' => (is => 'rw', isa => 'Ref|Undef');
+has 'fixed_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
-has 'fixed_factors_interaction' => (is => 'rw', isa => 'Ref|Undef');
+has 'fixed_factors_interaction' => (is => 'rw', isa => 'Ref', default => sub{[]});
 
-has 'random_factors' => (is => 'rw', isa => 'Ref|Undef');
+has 'random_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
 has 'random_factors_random_slope' => (is => 'rw', isa => 'Bool');
 
@@ -48,17 +49,22 @@ sub generate_model {
     my $random_factors_random_slope = $self->random_factors_random_slope();
 
     my $error;
+
+    my @addends = ();
     
-    print STDERR "DV: $dependent_variable FF: $fixed_factors - RF: $random_factors TF: $tempfile. FFI: $fixed_factors_interaction RFRS: $random_factors_random_slope\n";
+    print STDERR join("\n", ("DV", $dependent_variable, "FF", Dumper($fixed_factors), "RF", Dumper($random_factors), "TF", $tempfile, "FFI", Dumper($fixed_factors_interaction)));
 
     print STDERR Dumper($fixed_factors);
     my $model = "";
 
-    $model .= "dependent_variable = \"$dependent_variable\"\n";
+    if (! $dependent_variable) {
+	die "Need a dependent variable set in CXGN::MixedModels... Ciao!";
+    }
 
     my $formatted_fixed_factors = "";
-    if ($fixed_factors) { 
+    if (@$fixed_factors) { 
 	$formatted_fixed_factors = join(" + ", @$fixed_factors);
+	push @addends, $formatted_fixed_factors;
     }
 
     my $formatted_fixed_factors_interaction = "";
@@ -66,6 +72,7 @@ sub generate_model {
 	if (exists($interaction->[0]) && exists($interaction->[1])) { 
 	    my $term = " (1+$interaction->[0] \| $interaction->[1]) ";
 	    $formatted_fixed_factors_interaction .= $term;
+	    push @addends, $formatted_fixed_factors_interaction;
 	}
 	else {
 	    $error = "Interaction terms are not correctly defined.";
@@ -73,14 +80,18 @@ sub generate_model {
     }
     
     my $formatted_random_factors = "";
-    if ($random_factors_random_slope) { 
-	$formatted_random_factors = " (1 + $random_factors->[0] | $random_factors->[1]) ";
+#    if ($random_factors_random_slope) { 
+#	$formatted_random_factors = " (1 + $random_factors->[0] | $random_factors->[1]) ";
+#
+#    }
+ #   else {
+	if (@$random_factors) { 
+	    $formatted_random_factors = join(" + ",  map { "(1|$_)" } @$random_factors);
+	    push @addends, $formatted_random_factors;
+	}
 
-    }
-    else {
-	$formatted_random_factors = join(" + ",  map { "(1|$_)" } @$random_factors);	
-    }
-    $model .= join(" + ", ($formatted_fixed_factors, $formatted_fixed_factors_interaction, $formatted_random_factors));
+    #}
+    $model .= join(" + ", @addends);
     
     return $model;
 }

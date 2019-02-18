@@ -29,47 +29,48 @@ export function init(main_div){
 	
 	<div class="container">
 	  <div class="row">
-
-             <div id="factors" class="col-md-3" style="border-style:dotted;border-width:0px;">
+        <div id="left-margin" class="col-md-2"></div>
+	<div class="col-md-4">
+	<div class="panel panel-default" style="border-width:0px">
+	<div class="panel panel-header" style="border-width:0px">Available Factors</div>
+             <div id="factors" class="panel panel-body" style="border-style:dotted;border-width:0px;">
 	       Available factors
              </div>
-
-              <div class="col-md-7">
-                <div  id="fixed_factors_panel" style="border-width:1px;border-style:dotted;height:100px;" class="panel panel-default">
+        </div>
+	</div>
+              <div class="col-md-4">
+                <div  id="fixed_factors_panel" style="border-width:0;" class="panel panel-default">
 	           <div class="panel-header">Fixed factors</div>
-	           <div id="fixed_factors" class="panel-body"></div>
+	           <div id="fixed_factors" class="panel-body" style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey"></div>
            
                 </div>
-	        <div id="fixed_factors_collection_panel" class="panel panel-default" style="border-style:dotted;border-width:1px;margin-top:20px;height:auto;z-index:1" >
+	        <div id="fixed_factors_collection_panel" class="panel panel-default" style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" >
 	           <div class="panel-header">
 	             Fixed factors with interaction
-	           <button  id="add_interaction_factor_button">add new interaction</button>
+	           <button  id="add_interaction_factor_button">add new interaction</button>         </div>
 	            <div id="fixed_factors_collection" class="panel-body">
 	            </div>
 	        </div>
- 
-                <div id="random_factors_panel" style="border-style:dotted;border-width:1px;margin-top:20px;height:100px;">
-          	<div class="panel-header">Random factors</div>
-	           <div id="random_factors" class="panel-body">          
+	<div style="height:30">&nbsp;</div>
+                <div id="random_factors_panel" class="panel panel-default" style="border-width:0px">
+          	   <div class="panel-header">Random factors</div>
+	           <div id="random_factors" class="panel-body" style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey">          
                    </div>
                 </div>
-
-           </div>
+	       
           </div>
 	</div>
-      
+        <br />
+        <div id="tempfile" style="display:none" >
+        </div>
 
-<br />
-<div id="tempfile" style="display:none" >
-</div>
+        <button style="position:relative;" id="run_mixed_model_button" class="btn btn-main">Go!</button>
 
-<button style="position:relative;" id="run_mixed_model_button" class="btn btn-main">Go!</button>
-
-<div id="mixed_models_results_div">
+        <div id="mixed_models_results_div">
 	</div>`
 
+	
     var mm = $(main_div);
-
     
     get_select_box("datasets", "mixed_model_dataset_select", {});
   
@@ -87,7 +88,7 @@ export function init(main_div){
              var html = "";
 
              for (var n=0; n<r.factors.length; n++) { 
-                html += "<div style=\"z-index:4;border-style:solid;border-radius:8px;width:200px;height:100;border-color:blue;margin:4px;text-align:left\" id=\"factor_"+n+"\" class=\"container\">"+r.factors[n]+"</div>";
+                html += "<div style=\"z-index:4;border-style:solid;border-radius:8px;width:200px;height:100;border-color:#337ab7;background-color:#337ab7;color:white;margin:4px;text-align:center\" id=\"factor_"+n+"\" class=\"container\">"+r.factors[n]+"</div>";
              }
              $('#factors').html(html);
 
@@ -99,7 +100,7 @@ export function init(main_div){
            }
 	   $('#fixed_factors').droppable( {drop: function( event, ui ) {
 					       $( this )
-					       .addClass( "ui-state-highlight" )
+		   //.addClass( "ui-state-highlight" )
 					       .find( "p" )
 					       .html( "Dropped!" );
 					       var droppable = $(this);
@@ -114,13 +115,11 @@ export function init(main_div){
                                               
 	                                       clone.appendTo(droppable);
 	                                       get_model_string();
-
                                                }});
-
 
 	   $('#random_factors').droppable( {drop: function( event, ui ) {
 					       $( this )
-					       .addClass( "ui-state-highlight" )
+					       //.addClass( "ui-state-highlight" )
 					       .find( "p" )
 					       .html( "Dropped!" );
 					       var droppable = $(this);
@@ -156,30 +155,17 @@ export function init(main_div){
       
 	if (divnr === undefined) { divnr=0;}
 	
-       function increment_divnr() {
-	   divnr++;
-       }
+	var previous_div = divnr;
+	divnr++;
 
-       function get_divnr() {
-	   return divnr;
-       }
+	var div_name = "interaction_"+divnr;
 
-	var previous_div = get_divnr();
-	increment_divnr();
-
-	var div_name = "interaction_"+get_divnr();
-
-	var div = '<div id="'+div_name+'" style="border-style:dotted;border-width:2px;height:100px;margin:20px"></div>';
+	var div = '<div id="'+div_name+'_panel" class="panel panel-default" style="border-width:0px"><div id="'+div_name+'_header" class="panel panel-header"></div><div id="'+div_name+'" class="panel panel-body" style="min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey;background-color:lightyellow;"></div></div>';
 
 	$('#fixed_factors_collection').append(div);
 
-
 	$('#'+div_name).droppable( {
 	    drop: function( event, ui ) {
-		$( this )
-		    .addClass( "ui-state-highlight" )
-		    .find( "p" )
-		    .html( "Dropped!" );
                 var droppable = $(this);
 		var draggable = ui.draggable;
 		// Move draggable into droppable
@@ -203,13 +189,13 @@ export function init(main_div){
   
      return false;
    }
-
+//onclick="this.parentNode.parentNode.removeChild(this.parentNode); return false;">
    function setClonedTagProperties(e) { 
-     e.id = e.html()+'C';
-     e.html('<span id="'+e.id+'_remove" onclick="this.parentNode.parentNode.removeChild(this.parentNode); return false;">X</a></span> '+e.html());
-     $('#'+e.id+'_remove').click( function(e) { alert('removing'+e.id); $('#'+e.id).remove(); });
+       e.id = e.html()+'C';
+       var html = '<span id="'+e.id+'_remove" class="remove">X</a></span> '+e.html();
+       e.html(html);
+       $(document).on("click", "span.remove", function(e) { this.parentNode.remove(); get_model_string()});
    }
-
 
    $('#dependent_variable').on('change', '#dependent_variable_select', function() { 
       var tempfile = $('#tempfile').html();
@@ -238,9 +224,7 @@ export function init(main_div){
             }
            }; 
            
-  //alert("embedding"+ JSON.stringify(v));
            vegaEmbed("#trait_histogram", v);
-           //alert("done");
          },
        
        
@@ -249,84 +233,74 @@ export function init(main_div){
    });
 
    $('#run_mixed_model_button').click( function() { 
-      var dependent_variable = $('#dependent_variable_select').val();
-      var fixed_factors = $('#fixed_factors_select').val();
-      var random_factors = $('#random_factors_select').val();
-      var fixed_factors_interaction = $('#fixed_factors_interaction').val();
-      var random_factors_random_slope = $('#random_factor_random_slope').val();
-      var tempfile = $('#tempfile').html();
-
-      // alert('Dependent variable: '+ dependent_variable +' Fixed Factors: '+ fixed_factors +' Random Factors: '+ random_factors +' Tempfile: '+tempfile);
-      // alert(JSON.stringify(fixed_factors));
-      $.ajax( {
-        url: '/ajax/mixedmodels/run',
-        data: { 
-          'dependent_variable': dependent_variable, 
-          'fixed_factors': fixed_factors.join(","), 
-          'fixed_factors_interaction' : fixed_factors_interaction,
-          'random_factors': random_factors.join(","), 
-          'random_factors_random_slope': random_factors_random_slope,
-          'tempfile' : tempfile 
-        },
-        success: function(r) { 
-          if (r.error) { alert(r.error);}
-          else{ 
-            // alert('success...');
-            $('#mixed_models_results_div').html('<pre>' + r.html + '</pre>');
-          }
-        },
-        error: function(r) { 
-          alert(r);
-        }
-      });      
+       var model = get_model_string();
+       var tempfile = $('#tempfile').html();
+       var dependent_variable = $('#dependent_variable_select').val();
+       $.ajax( {
+           "url": '/ajax/mixedmodels/run',
+           "data": { "model" : model, "tempfile" : tempfile, "dependent_variable": dependent_variable },
+           "success": function(r) { 
+               if (r.error) { alert(r.error);}
+               else{ 
+		   $('#mixed_models_results_div').html('<pre>' + r.html + '</pre>');
+               }
+           },
+           "error": function(r) { 
+               alert(r);
+           }
+       });      
    });
-
+    
 
     function extract_model_parameters() {
-	alert("extracting model parameters...");
 	var fixed_factors = $('#fixed_factors').text();
 	fixed_factors = fixed_factors.replace(/X /g, '","');
 	fixed_factors = fixed_factors.substr(3);
-	fixed_factors = '["'+fixed_factors+'"]';
-	alert("FIXED FACTORS: "+fixed_factors);
-	var fixed_factors_json = JSON.parse(fixed_factors);
-	alert("fixed_factors (again) "+JSON.stringify(fixed_factors_json));
+	var fixed_factors_json;
+	if (fixed_factors) {
+	    fixed_factors = '["'+fixed_factors+'"]';
+	    fixed_factors_json = JSON.parse(fixed_factors);
+	}
+
 	
 	var fixed_factors_interactions = new Array();
 	$('#fixed_factors_collection').children().each( function() {
 	    var fixed_factors_interaction = $(this).text();
 	    fixed_factors_interaction = fixed_factors_interaction.replace(/X /g, ',');
-	    alert(fixed_factors_interaction);
 	    fixed_factors_interaction = fixed_factors_interaction.substr(1);
-	    alert(fixed_factors_interaction);
-	    fixed_factors_interaction = fixed_factors_interaction.replace(/,/g, '\',\'');
-	    alert(fixed_factors_interaction);
-	    fixed_factors_interaction = '\''+fixed_factors_interaction+'\'';
-	    alert(fixed_factors_interaction);
+	    fixed_factors_interaction = fixed_factors_interaction.replace(/,/g, '","');
 	    fixed_factors_interactions.push(fixed_factors_interaction);
 	    
 	});
-	var fixed_factors_interaction = fixed_factors_interactions.join('],[');
-	alert(fixed_factors_interaction);
-	fixed_factors_interaction = '[['+fixed_factors_interaction+']]';
-	alert(fixed_factors_interaction);
-	var fixed_factors_interaction_json =   eval(fixed_factors_interaction) ;
-	alert(fixed_factors_interaction);
-
+	var fixed_factors_interaction = fixed_factors_interactions.join('"],["');
+	var fixed_factors_interaction_json;
+	if (fixed_factors_interaction) {
+	    fixed_factors_interaction = '[["'+fixed_factors_interaction+'"]]';
+	    fixed_factors_interaction_json =   JSON.parse(fixed_factors_interaction) ;
+	}
 	
         var random_factors = $('#random_factors').text();
         random_factors = random_factors.replace(/X /g, '","');
-	random_factors = random_factors.replace(/\s/g, "");
+	random_factors = random_factors.replace(/\s/g, '');
         random_factors = random_factors.substr(3);
+	if (random_factors) {
+	    random_factors = '["'+random_factors+'"]';
+	}
 	var random_factors_json;
 	if (random_factors) {
 	    random_factors_json = JSON.parse(random_factors);
 	}
+
+	var dependent_variable = $('#dependent_variable_select').val();
+
+	
         var json =  {
 	    'fixed_factors' : fixed_factors_json,
-          'fixed_factors_interaction' : fixed_factors_interaction_json,
-	    'random_factors' : random_factors_json };
-        alert(JSON.stringify(json));
+            'fixed_factors_interaction' : fixed_factors_interaction_json,
+	    'random_factors' : random_factors_json,
+	    'dependent_variable' : dependent_variable
+	    
+	};
         return json;
     }
 
@@ -347,7 +321,7 @@ export function init(main_div){
 		}
 		else { 
 		    alert(r.model);
-		    jQuery('#model_string').html(r.model);
+		    jQuery('#model_string').html(JSON.stringify(r.model));
 		}
 	    }
 	});
