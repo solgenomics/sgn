@@ -734,7 +734,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                     $plot_polygon_tgi_images .= join '', @{$d->{plot_polygon_tgi_images}};
                                     $plot_polygon_tgi_images .= "</span>";
                                     $plot_polygon_tgi_images .= '<br/><br/>';
-                                    $plot_polygon_tgi_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="tgi" data-plot_polygons_preprocess_type="denoised_original_tgi" >Calculate Phenotypes</button>';
+                                    $plot_polygon_tgi_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_tgi_imagery" >Calculate Phenotypes</button>';
                                 } else {
                                     $plot_polygon_tgi_images = 'No Plot Polygons Assigned';
                                 }
@@ -754,7 +754,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                         $plot_polygon_background_removed_tgi_images .= join '', @{$d->{plot_polygon_background_removed_tgi_images}};
                                         $plot_polygon_background_removed_tgi_images .= "</span>";
                                         $plot_polygon_background_removed_tgi_images .= '<br/><br/>';
-                                        $plot_polygon_background_removed_tgi_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="tgi" data-plot_polygons_preprocess_type="background_removed_tgi" >Calculate Phenotypes</button>';
+                                        $plot_polygon_background_removed_tgi_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_background_removed_tgi_imagery" >Calculate Phenotypes</button>';
                                     } else {
                                         $plot_polygon_background_removed_tgi_images = 'No Plot Polygons Assigned';
                                     }
@@ -774,7 +774,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= join '', @{$d->{plot_polygon_original_background_removed_thresholded_tgi_mask_images}};
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= "</span>";
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= '<br/><br/>';
-                                            $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="original" data-plot_polygons_preprocess_type="denoised_background_removed_thresholded_tgi_mask_original" >Calculate Phenotypes</button>';
+                                            $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_original_background_removed_tgi_mask_imagery" >Calculate Phenotypes</button>';
                                         } else {
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images = 'No Plot Polygons Assigned';
                                         }
@@ -800,7 +800,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                     $plot_polygon_vari_images .= join '', @{$d->{plot_polygon_vari_images}};
                                     $plot_polygon_vari_images .= "</span>";
                                     $plot_polygon_vari_images .= '<br/><br/>';
-                                    $plot_polygon_vari_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="vari" data-plot_polygons_preprocess_type="denoised_original_vari" >Calculate Phenotypes</button>';
+                                    $plot_polygon_vari_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_vari_imagery" >Calculate Phenotypes</button>';
                                 } else {
                                     $plot_polygon_vari_images = 'No Plot Polygons Assigned';
                                 }
@@ -820,7 +820,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                         $plot_polygon_background_removed_vari_images .= join '', @{$d->{plot_polygon_background_removed_vari_images}};
                                         $plot_polygon_background_removed_vari_images .= "</span>";
                                         $plot_polygon_background_removed_vari_images .= '<br/><br/>';
-                                        $plot_polygon_background_removed_vari_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="vari" data-plot_polygons_preprocess_type="background_removed_vari" >Calculate Phenotypes</button>';
+                                        $plot_polygon_background_removed_vari_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_background_removed_vari_imagery" >Calculate Phenotypes</button>';
                                     } else {
                                         $plot_polygon_background_removed_vari_images = 'No Plot Polygons Assigned';
                                     }
@@ -831,7 +831,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                     if ($d->{denoised_background_removed_thresholded_vari_mask_original_image}) {
                                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed VARI Vegetative Index Mask on Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{denoised_background_removed_thresholded_vari_mask_original_image_id}.'"></span></h5><b>By</b>: '.$d->{denoised_background_removed_thresholded_vari_mask_original_image_username}.'</br><b>Date</b>: '.$d->{denoised_background_removed_thresholded_vari_mask_original_image_modified_date}.'</div><div class="col-sm-3">'.$d->{denoised_background_removed_thresholded_vari_mask_original_image}.'</div><div class="col-sm-6">';
 
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{denoised_background_removed_thresholded_vari_mask_original_image_id}.'" data-assign_plot_polygons_type="original">Create/View Plot Polygons</button>';
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{denoised_background_removed_thresholded_vari_mask_original_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery" >Create/View Plot Polygons</button>';
 
                                         $drone_run_band_table_html .= '<hr>';
                                         my $plot_polygon_original_background_removed_thresholded_vari_mask_images = '';
@@ -840,7 +840,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                             $plot_polygon_original_background_removed_thresholded_vari_mask_images .= join '', @{$d->{plot_polygon_original_background_removed_thresholded_vari_mask_images}};
                                             $plot_polygon_original_background_removed_thresholded_vari_mask_images .= "</span>";
                                             $plot_polygon_original_background_removed_thresholded_vari_mask_images .= '<br/><br/>';
-                                            $plot_polygon_original_background_removed_thresholded_vari_mask_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="original" data-plot_polygons_preprocess_type="denoised_background_removed_thresholded_tgi_mask_original" >Calculate Phenotypes</button>';
+                                            $plot_polygon_original_background_removed_thresholded_vari_mask_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery" >Calculate Phenotypes</button>';
                                         } else {
                                             $plot_polygon_original_background_removed_thresholded_vari_mask_images = 'No Plot Polygons Assigned';
                                         }
@@ -867,7 +867,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                         $plot_polygon_original_background_removed_threshold_images = scalar(@{$d->{observation_unit_polygon_original_background_removed_threshold_images}})." Plot Polygons<br/><span>";
                                         $plot_polygon_original_background_removed_threshold_images .= join '', @{$d->{observation_unit_polygon_original_background_removed_threshold_images}};
                                         $plot_polygon_original_background_removed_threshold_images .= "</span>";
-                                        $plot_polygon_original_background_removed_threshold_images .= '<br/><br/><button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="original" data-plot_polygons_preprocess_type="denoised_background_removed_threshold_original" >Calculate Phenotypes</button>';
+                                        $plot_polygon_original_background_removed_threshold_images .= '<br/><br/><button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_original_background_removed_threshold_imagery" >Calculate Phenotypes</button>';
                                     } else {
                                         $plot_polygon_original_background_removed_threshold_images = 'No Plot Polygons Assigned';
                                     }
@@ -938,7 +938,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
         my $image_url = $image->get_image_url("original");
         push @image_urls, $main_production_site.$image_url;
     }
-    print STDERR Dumper \@image_urls;
+    #print STDERR Dumper \@image_urls;
     my $image_urls_string = join ',', @image_urls;
 
     my $dir = $c->tempfiles_subdir('/stitched_drone_imagery');
@@ -1072,6 +1072,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -1093,12 +1094,24 @@ sub drone_imagery_get_contours_GET : Args(0) {
 
     my @size = imgsize($archive_contours_temp_image);
 
+    my $contours_image_fullpath;
+    my $contours_image_url;
+
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $ret = $image->process_image($archive_contours_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
-    my $contours_image_fullpath = $image->get_filename('original_converted', 'full');
-    my $contours_image_url = $image->get_image_url('original');
+    my $md5checksum = $image->calculate_md5sum($archive_contours_temp_image);
+    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
+    if ($md_image->count() > 0) {
+        print STDERR Dumper "Image $archive_contours_temp_image has already been added to the database and will not be added again.";
+        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $contours_image_fullpath = $image->get_filename('original_converted', 'full');
+        $contours_image_url = $image->get_image_url('original');
+    } else {
+        $image->set_sp_person_id($user_id);
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        my $ret = $image->process_image($archive_contours_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        $contours_image_fullpath = $image->get_filename('original_converted', 'full');
+        $contours_image_url = $image->get_image_url('original');
+    }
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
@@ -1163,36 +1176,7 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
 
-    my $linking_table_type_id;
-    if ($assign_plot_polygons_type eq 'observation_unit_polygon_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_original_background_removed_threshold_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_vari_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_ndvi_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_tgi_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_background_removed_vari_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_vari_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndvi_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'original_background_removed_tgi_mask') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'original_background_removed_vari_mask') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'original_background_removed_ndvi_mask') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'original_background_removed_thresholded_tgi_mask') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'original_background_removed_thresholded_vari_mask') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($assign_plot_polygons_type eq 'original_background_removed_thresholded_ndvi_mask') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
-    }
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();;
 
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
@@ -1214,7 +1198,7 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
         my $plot_polygon_image_url;
         $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         my $md5checksum = $image->calculate_md5sum($archive_plot_polygons_temp_image);
-        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum});
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
         if ($md_image->count() > 0) {
             print STDERR Dumper "Image $archive_plot_polygons_temp_image has already been added to the database and will not be added again.";
             $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
@@ -1379,6 +1363,7 @@ sub drone_imagery_remove_background_save : Path('/ajax/drone_imagery/remove_back
 sub drone_imagery_remove_background_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
     my $image_type = $c->req->param('image_type');
@@ -1387,11 +1372,11 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     my $upper_threshold = $c->req->param('upper_threshold') || '255';
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    if (!$lower_threshold) {
+    if (!$lower_threshold && !defined($lower_threshold)) {
         $c->stash->{rest} = {error => 'Please give a lower threshold'};
         $c->detach();
     }
-    if (!$upper_threshold) {
+    if (!$upper_threshold && !defined($upper_threshold)) {
         $c->stash->{rest} = {error => 'Please give an upper threshold'};
         $c->detach();
     }
@@ -1707,7 +1692,7 @@ sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
     my $index_image_url;
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum});
+    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
     if ($view_only == 1 && $md_image->count() > 0) {
         print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
         $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
@@ -1760,20 +1745,7 @@ sub drone_imagery_mask_remove_background_POST : Args(0) {
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
 
-    my $linking_table_type_id;
-    if ($mask_type eq 'denoised_background_removed_tgi_mask_original') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_tgi_mask_original', 'project_md_image')->cvterm_id();
-    } elsif ($mask_type eq 'denoised_background_removed_vari_mask_original') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_vari_mask_original', 'project_md_image')->cvterm_id();
-    } elsif ($mask_type eq 'denoised_background_removed_ndvi_mask_original') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndvi_mask_original', 'project_md_image')->cvterm_id();
-    } elsif ($mask_type eq 'denoised_background_removed_thresholded_tgi_mask_original') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original', 'project_md_image')->cvterm_id();
-    } elsif ($mask_type eq 'denoised_background_removed_thresholded_vari_mask_original') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original', 'project_md_image')->cvterm_id();
-    } elsif ($mask_type eq 'denoised_background_removed_thresholded_ndvi_mask_original') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original', 'project_md_image')->cvterm_id();
-    }
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $mask_type, 'project_md_image')->cvterm_id();;
 
     my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $masked_image_fullpath = $image->get_filename('original_converted', 'full');
@@ -1789,11 +1761,12 @@ sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $plot_polygons_type = $c->req->param('plot_polygons_type');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
 
-    my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_band_project_id_list=>[$drone_run_band_project_id],
@@ -1910,22 +1883,12 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $phenotype_method = $c->req->param('method');
     my $image_band_selected = $c->req->param('image_band');
     my $plot_polygons_type = $c->req->param('plot_polygons_type');
-    my $plot_polygons_preprocess_type = $c->req->param('plot_polygons_preprocess_type');
     #print STDERR Dumper $c->req->params();
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $main_production_site = $c->config->{main_production_site_url};
 
-    my $plot_polygons_images_cvterm_id;
-    if ($plot_polygons_type eq 'tgi') {
-        $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($plot_polygons_type eq 'vari') {
-        $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id();
-    } elsif ($plot_polygons_type eq 'ndvi') {
-        $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id();
-    } else {
-        $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
-    }
+    my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_band_project_id_list=>[$drone_run_band_project_id],
@@ -2142,136 +2105,132 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
             }
 
             my $drone_run_band_plot_polygons_preprocess_cvterm_id;
-            print STDERR Dumper $plot_polygons_preprocess_type;
+            print STDERR Dumper $plot_polygons_type;
 
-            if ($plot_polygons_type eq 'tgi' || $plot_polygons_type eq 'vari' || $plot_polygons_type eq 'ndvi') {
-                if ($plot_polygons_preprocess_type eq 'denoised_original_tgi') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-                        die "On TGI there is only the first channel!\n";
-                    }
+            if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_original_vari') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $vari_from_denoised_original_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-                        die "On VARI there is only the first channel!\n";
-                    }
-                }
-                if ($plot_polygons_preprocess_type eq 'denoised_original_ndvi') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndvi_from_denoised_original_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-                        die "On NDVI there is only the first channel!\n";
-                    }
-                }
-
-                if ($plot_polygons_preprocess_type eq 'background_removed_tgi') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_tgi_from_denoised_original_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-                        die "On TGI there is only the first channel!\n";
-                    }
-                }
-                if ($plot_polygons_preprocess_type eq 'background_removed_vari') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_vari_from_denoised_original_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-                        die "On VARI there is only the first channel!\n";
-                    }
-                }
-                if ($plot_polygons_preprocess_type eq 'background_removed_ndvi') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_ndvi_from_denoised_original_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-                        die "On NDVI there is only the first channel!\n";
-                    }
+                if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                    die "On TGI there is only the first channel!\n";
                 }
             }
-            elsif ($plot_polygons_type eq 'original') {
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_tgi_mask_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id;
-                    }
+            if ($plot_polygons_type eq 'observation_unit_polygon_vari_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $vari_from_denoised_original_cvterm_id;
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_vari_mask_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id;
-                    }
+                if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                    die "On VARI there is only the first channel!\n";
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_ndvi_mask_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
-                    }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_ndvi_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndvi_from_denoised_original_cvterm_id;
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_thresholded_tgi_mask_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
-                    }
+                if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                    die "On NDVI there is only the first channel!\n";
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_thresholded_vari_mask_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
-                    }
+            }
+
+            if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_tgi_from_denoised_original_cvterm_id;
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_thresholded_ndvi_mask_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
-                    }
+                if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                    die "On TGI there is only the first channel!\n";
                 }
-                if ($plot_polygons_preprocess_type eq 'denoised_background_removed_threshold_original') {
-                    if ($image_band_selected eq '0') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_threshold_cvterm_id;
-                    }
-                    if ($image_band_selected eq '1') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_threshold_cvterm_id;
-                    }
-                    if ($image_band_selected eq '2') {
-                        $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_threshold_cvterm_id;
-                    }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_vari_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_vari_from_denoised_original_cvterm_id;
+                }
+                if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                    die "On VARI there is only the first channel!\n";
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_ndvi_from_denoised_original_cvterm_id;
+                }
+                if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                    die "On NDVI there is only the first channel!\n";
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_tgi_mask_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_vari_mask_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id;
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+                }
+            }
+            if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_threshold_imagery') {
+                if ($image_band_selected eq '0') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_threshold_cvterm_id;
+                }
+                if ($image_band_selected eq '1') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_threshold_cvterm_id;
+                }
+                if ($image_band_selected eq '2') {
+                    $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_threshold_cvterm_id;
                 }
             }
 
@@ -2387,22 +2346,77 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     foreach (@out_paths) {
         my $stock = $stocks[$count];
 
-        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        $image->set_sp_person_id($user_id);
-        my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
-        $ret = $image->associate_stock($stock->{stock_id});
-        my $image_fullpath = $image->get_filename('original_converted', 'full');
-        my $image_url = $image->get_image_url('original');
+        my $image_fullpath;
+        my $image_url;
+        my $image_source_tag_small;
+        my $image_id;
 
-        my $image_source_tag_small = $image->get_img_src_tag("tiny");
+        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        my $md5checksum = $image->calculate_md5sum($_);
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
+        if ($md_image->count() > 0) {
+            print STDERR Dumper "Image $_ has already been added to the database and will not be added again.";
+            $image_id = $md_image->first->image_id;
+            $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+            $image_fullpath = $image->get_filename('original_converted', 'full');
+            $image_url = $image->get_image_url('original');
+            $image_source_tag_small = $image->get_img_src_tag("tiny");
+        } else {
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
+            $ret = $image->associate_stock($stock->{stock_id});
+            $image_fullpath = $image->get_filename('original_converted', 'full');
+            $image_url = $image->get_image_url('original');
+            $image_source_tag_small = $image->get_img_src_tag("tiny");
+            $image_id = $image->get_image_id;
+        }
         
-        $stocks[$count]->{image} = '<a href="/image/view/'.$image->get_image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+        $stocks[$count]->{image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
         $stocks[$count]->{image_path} = $image_fullpath;
         $stocks[$count]->{image_url} = $image_url;
         $count++;
     }
 
     $c->stash->{rest} = { result_header => \@header_cols, results => \@stocks };
+}
+
+sub drone_imagery_train_keras_model : Path('/ajax/drone_imagery/train_keras_model') : ActionClass('REST') { }
+
+sub drone_imagery_train_keras_model_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my $trait_id = $c->req->param('trait_id');
+    my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $observation_unit_polygon_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_tgi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_vari_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_ndvi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_tgi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_background_removed_vari_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_vari_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndvi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>$drone_run_ids,
+        project_image_type_id_list=>[$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id]
+    });
+    my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+    print STDERR Dumper $total_count;
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub _check_user_login {

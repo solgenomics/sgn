@@ -70,6 +70,7 @@ sub patch {
             'fourier_transform_stitched_drone_imagery',
             'contours_stitched_drone_imagery',
             'observation_unit_polygon_imagery',
+            'observation_unit_polygon_original_background_removed_threshold_imagery',
             'observation_unit_polygon_tgi_imagery',
             'observation_unit_polygon_vari_imagery',
             'observation_unit_polygon_ndvi_imagery',

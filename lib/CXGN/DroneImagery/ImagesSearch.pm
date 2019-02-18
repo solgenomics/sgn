@@ -9,6 +9,7 @@ CXGN::DroneImagery::ImagesSearch - an object to handle searching for raw drone i
 my $images_search = CXGN::DroneImagery::ImagesSearch->new({
     bcs_schema=>$schema,
     project_image_type_id=>$project_image_type_id,
+    project_image_type_id_list=>$project_image_type_id_list,
     drone_run_project_id_list=>\@drone_run_project_ids,
     drone_run_band_project_id_list=>\@drone_run_band_project_ids,
     location_list=>\@locations,
@@ -44,6 +45,11 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 
 has 'project_image_type_id' => (
     isa => 'Int|Undef',
+    is => 'rw',
+);
+
+has 'project_image_type_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -169,6 +175,7 @@ sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $project_image_type_id = $self->project_image_type_id();
+    my $project_image_type_id_list = $self->project_image_type_id_list;
     my $drone_run_project_id_list = $self->drone_run_project_id_list;
     my $drone_run_band_project_id_list = $self->drone_run_band_project_id_list;
     my $program_list = $self->program_list;
@@ -256,6 +263,11 @@ sub search {
 
     if ($project_image_type_id){
         push @where_clause, "project_image.type_id = $project_image_type_id";
+    }
+
+    if ($project_image_type_id_list && scalar(@$project_image_type_id_list)>0) {
+        my $sql = join ("," , @$project_image_type_id_list);
+        push @where_clause, "project_image.type_id in ($sql)";
     }
 
     if ($program_id_list && scalar(@$program_id_list)>0) {

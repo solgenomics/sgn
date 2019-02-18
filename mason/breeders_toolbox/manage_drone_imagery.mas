@@ -18,7 +18,7 @@
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
 
 </div>
 
@@ -168,7 +168,7 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <div class="form-group form-group-sm">
-                                <label class="col-sm-6 control-label">Starting Position: </label>
+                                <label class="col-sm-6 control-label">Discard Pixels with Value Lower Than: </label>
                                 <div class="col-sm-6">
                                     <input class="form-control" id="drone_imagery_remove_background_lower_threshold" name="drone_imagery_remove_background_lower_threshold" type="number" max="255" min="0" placeholder="e.g. 10 (Min 0)" />
                                 </div>
@@ -176,7 +176,7 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group form-group-sm">
-                                <label class="col-sm-6 control-label">Ending Position: </label>
+                                <label class="col-sm-6 control-label">Discard Pixels with Value Higher Than: </label>
                                 <div class="col-sm-6">
                                     <input class="form-control" id="drone_imagery_remove_background_upper_threshold" name="drone_imagery_remove_background_upper_threshold" type="number" max="255" min="0" placeholder="e.g. 200 (Max 255)"/>
                                 </div>
@@ -184,6 +184,33 @@
                         </div>
                     </div>
                     <button id="drone_imagery_remove_background_defined_submit" class="btn btn-primary">Apply Threshold</button>
+                </div>
+            </div>
+        </&>
+    </div>
+    <div class="well">
+        <&| /page/info_section.mas, title => 'Remove Background Using Percentage Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background by specifying percentage threshold value' &>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Discard Lowest Percent of Pixel Values: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_remove_background_lower_threshold_percentage" name="drone_imagery_remove_background_lower_threshold_percentage" type="number" max="99" min="0" placeholder="e.g. 10% of lowest pixel values (Min 0, Max 100)" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Discard Highest Percent of Pixel Values: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_remove_background_upper_threshold_percentage" name="drone_imagery_remove_background_upper_threshold_percentage" type="number" max="99" min="0" placeholder="e.g. 10% of highest pixel values (Min 0, Max 100)"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="drone_imagery_remove_background_defined_percentage_submit" class="btn btn-primary">Apply Threshold</button>
                 </div>
             </div>
         </&>
@@ -317,7 +344,8 @@
 
         <ul>
             <li>TGI = {GREEN band2} - 0.39*{RED band3} - 0.61*{BLUE band1}</li>
-            <li>NDVI = (NIR - RED) / (NIR + RED)</li>
+            <li>VARI = ( {GREEN band2} - {RED band3} ) / ( {GREEN band2} + {RED band3} - {BLUE band1} )</li>
+            <li>NDVI = ( {NIR band1} - {RED band 2} ) / ( {NIR band1} + {RED band2} )</li>
         </ul>
 
       </div>
@@ -359,12 +387,178 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryTrainKerasCNNDialog">Select a dataset to train Keras CNN</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_train_keras_model_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through training a keras model using images and phenotypes in the database" &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
+                    <br/><br/>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Field Trial: </label>
+                        <div class="col-sm-9" >
+                            <div id="drone_imagery_train_keras_cnn_trial_select_div"></div>
+                        </div>
+                    </div>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
+                    <& /page/page_title.mas, title=>"Select the trait you are interested in predicting" &>
+                    <br/><br/>
+                    <div class="form-group">
+                        <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial: </label>
+                        <div class="col-sm-7" >
+                            <div id="drone_imagery_train_keras_cnn_trait_select_div"></div>
+                        </div>
+                    </div>
+                    <br/><br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_trait_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Images Selection" &>
+                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in using in the model" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_train_keras_drone_runs_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Type</th>
+                                <th>Drone Run Description</th>
+                                <th>Drone Run Date</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_drone_run_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Confirm" &>
+                    <& /page/page_title.mas, title=>"Train the model!" &>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Submit</button>
+                    </center>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
 
 <script>
 
 jQuery(document).ready(function() {
+
+    //
+    // Keras CNN Training JS
+    //
+
+    var manage_drone_imagery_train_keras_drone_run_ids = [];
+    var manage_drone_imagery_train_keras_field_trial_id;
+    var manage_drone_imagery_train_keras_trait_id;
+
+    jQuery('#keras_cnn_drone_imagery_link').click(function(){
+        get_select_box('trials', 'drone_imagery_train_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_train_keras_cnn_field_trial_id', 'id' : 'drone_imagery_train_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
+        jQuery('#drone_imagery_train_keras_cnn_dialog').modal('show');
+
+        manage_drone_imagery_train_keras_drone_run_ids = [];
+        manage_drone_imagery_train_keras_field_trial_id = undefined;
+        manage_drone_imagery_train_keras_trait_id = undefined;
+    });
+
+    jQuery('#drone_imagery_train_keras_model_field_trial_select_step').click(function(){
+        manage_drone_imagery_train_keras_field_trial_id = jQuery('#drone_imagery_train_keras_cnn_field_trial_id').val();
+        if (manage_drone_imagery_train_keras_field_trial_id == '') {
+            alert('Please select a field trial first!');
+        } else {
+            Workflow.complete("#drone_imagery_train_keras_model_field_trial_select_step");
+
+            get_select_box('traits', 'drone_imagery_train_keras_cnn_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_trait_id', 'id' : 'drone_imagery_train_keras_cnn_trait_id', 'empty':1, 'multiple':0, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id, 'stock_type':'plot' });
+
+            jQuery('#drone_image_train_keras_drone_runs_table').DataTable({
+                destroy : true,
+                ajax : '/ajax/drone_imagery/drone_runs?select_checkbox_name=train_keras_drone_imagery_drone_run_select&field_trial_id='+manage_drone_imagery_train_keras_field_trial_id
+            });
+
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_train_keras_model_trait_select_step').click(function(){
+        manage_drone_imagery_train_keras_trait_id = jQuery('#drone_imagery_train_keras_cnn_trait_id').val();
+        console.log(manage_drone_imagery_train_keras_trait_id);
+        if (manage_drone_imagery_train_keras_trait_id == undefined || manage_drone_imagery_train_keras_trait_id == 'null' || manage_drone_imagery_train_keras_trait_id == '') {
+            alert('Please select a phenotyped trait first!');
+        } else {
+            Workflow.complete("#drone_imagery_train_keras_model_trait_select_step");
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 3);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_train_keras_model_drone_run_select_step').click(function(){
+        jQuery('input[name="train_keras_drone_imagery_drone_run_select"]:checked').each(function() {
+            manage_drone_imagery_train_keras_drone_run_ids.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_train_keras_drone_run_ids.length < 1){
+            alert('Please select at least one drone run!');
+        } else {
+            Workflow.complete("#drone_imagery_train_keras_model_drone_run_select_step");
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 4);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_train_keras_model_confirm_step').click(function(){
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/train_keras_model?field_trial_id='+manage_drone_imagery_train_keras_field_trial_id+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error training keras model!')
+            }
+        });
+    });
 
     //
     // Image Rotating JS
@@ -1906,6 +2100,49 @@ jQuery(document).ready(function() {
         manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, remove_background_drone_run_band_lower_threshold, remove_background_drone_run_band_upper_threshold);
     });
 
+    jQuery('#drone_imagery_remove_background_defined_percentage_submit').click(function(){
+        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_remove_background_lower_threshold_percentage').val())/100;
+        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_remove_background_upper_threshold_percentage').val())/100;
+    
+        var src = cv.imread('drone_imagery_remove_background_original');
+        cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+        var srcVec = new cv.MatVector();
+        srcVec.push_back(src);
+        var total_pixels = src.cols * src.rows;
+        var accumulate = false;
+        var channels = [0];
+        var histSize = [256];
+        var ranges = [0, 255];
+        var hist = new cv.Mat();
+        var mask = new cv.Mat();
+
+        cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+        var summing = 0;
+        var drone_imagery_remove_background_lower_percentage_threshold;
+        var drone_imagery_remove_background_upper_percentage_threshold;
+        for (let i = 0; i < histSize[0]; i++) {
+            var binVal = hist.data32F[i];
+            summing = summing + binVal;
+            var percentage = summing / total_pixels;
+            if (percentage >= drone_imagery_remove_background_lower_percentage) {
+                drone_imagery_remove_background_lower_percentage_threshold = i;
+                break;
+            }
+        }
+        summing = 0;
+        for (let i = 0; i < histSize[0]; i++) {
+            var binVal = hist.data32F[i];
+            summing = summing + binVal;
+            var percentage = summing / total_pixels;
+            if (percentage >= 1-drone_imagery_remove_background_upper_percentage) {
+                drone_imagery_remove_background_upper_percentage_threshold = i;
+                break;
+            }
+        }
+
+        manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, drone_imagery_remove_background_lower_percentage_threshold, drone_imagery_remove_background_upper_percentage_threshold);
+    });
+
     function manage_drone_imagery_remove_background_threshold_save(image_id, image_type, drone_run_band_project_id, lower_threshold, upper_threshold){
         jQuery.ajax({
             type: 'POST',
@@ -1944,7 +2181,6 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_id;
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_type;
     var manage_drone_imagery_calculate_phenotypes_plot_polygons_type;
-    var manage_drone_imagery_calculate_phenotypes_plot_polygons_preprocess_type;
 
     jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function() {
         jQuery('#manage_drone_imagery_crop_div').hide();
@@ -1960,7 +2196,6 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
         manage_drone_imagery_calculate_phenotypes_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
         manage_drone_imagery_calculate_phenotypes_plot_polygons_type = jQuery(this).data('plot_polygons_type');
-        manage_drone_imagery_calculate_phenotypes_plot_polygons_preprocess_type = jQuery(this).data('plot_polygons_preprocess_type');
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_sift').click(function(){
@@ -2097,7 +2332,6 @@ jQuery(document).ready(function() {
                     'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
                     'image_band': manage_drone_imagery_calculate_phenotypes_zonal_channel,
                     'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type,
-                    'plot_polygons_preprocess_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_preprocess_type
                 },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
