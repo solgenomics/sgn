@@ -1817,7 +1817,8 @@ jQuery(document).ready(function() {
             data: {
                 'image_id': remove_background_current_image_id,
                 'drone_run_band_project_id': remove_background_drone_run_band_project_id,
-                'threshold': removeBackgroundThresholdValue,
+                'lower_threshold': removeBackgroundThresholdValue,
+                'upper_threshold': '255',
             },
             success: function(response){
                 console.log(response);
@@ -1896,49 +1897,26 @@ jQuery(document).ready(function() {
     }
 
     jQuery('#drone_imagery_remove_background_submit').click(function(){
-        jQuery.ajax({
-            type: 'POST',
-            url: '/ajax/drone_imagery/remove_background_save',
-            dataType: "json",
-            data: {
-                'image_id': remove_background_current_image_id,
-                'image_type': remove_background_current_image_type,
-                'drone_run_band_project_id': remove_background_drone_run_band_project_id,
-                'lower_threshold': removeBackgroundThresholdValue,
-                'upper_threshold': '255'
-            },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                console.log(response);
-                if(response.error) {
-                    alert(response.error);
-                }
-
-                jQuery("#working_modal").modal("hide");
-                location.reload();
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert('Error saving removed background image!')
-            }
-        });
+        manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, removeBackgroundThresholdValue, '255');
     });
 
     jQuery('#drone_imagery_remove_background_defined_submit').click(function(){
         var remove_background_drone_run_band_lower_threshold = jQuery('#drone_imagery_remove_background_lower_threshold').val();
         var remove_background_drone_run_band_upper_threshold = jQuery('#drone_imagery_remove_background_upper_threshold').val();
+        manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, remove_background_drone_run_band_lower_threshold, remove_background_drone_run_band_upper_threshold);
+    });
+
+    function manage_drone_imagery_remove_background_threshold_save(image_id, image_type, drone_run_band_project_id, lower_threshold, upper_threshold){
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/drone_imagery/remove_background_save',
             dataType: "json",
             data: {
-                'image_id': remove_background_current_image_id,
-                'image_type': remove_background_current_image_type,
-                'drone_run_band_project_id': remove_background_drone_run_band_project_id,
-                'lower_threshold': remove_background_drone_run_band_lower_threshold,
-                'upper_threshold': remove_background_drone_run_band_upper_threshold,
+                'image_id': image_id,
+                'image_type': image_type,
+                'drone_run_band_project_id': drone_run_band_project_id,
+                'lower_threshold': lower_threshold,
+                'upper_threshold': upper_threshold
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -1957,7 +1935,7 @@ jQuery(document).ready(function() {
                 alert('Error saving removed background image!')
             }
         });
-    });
+    }
 
     //
     //Calculate Phenotypes JS
@@ -2266,6 +2244,7 @@ jQuery(document).ready(function() {
                 'image_id': mask_remove_background_denoised_image_id,
                 'mask_image_id': mask_remove_background_tgi_image_id,
                 'drone_run_band_project_id': mask_remove_background_drone_run_project_id,
+                'mask_type': 'denoised_background_removed_thresholded_tgi_mask_original'
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -2282,6 +2261,44 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 alert('Error removing background using mask of TGI vegetative index!')
+            }
+        });
+    });
+
+    //
+    // Apply Mask From Background Removed VARI Vegetative Index to Denoised Image
+    //
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_apply_vari_removed_background_mask_to_denoised_image"]', function(){
+        var mask_remove_background_denoised_image_id = jQuery(this).data('denoised_stitched_image_id');
+        var mask_remove_background_tgi_image_id = jQuery(this).data('background_removed_vari_stitched_image_id');
+        var mask_remove_background_drone_run_project_id = jQuery(this).data('drone_run_band_project_id');
+
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/mask_remove_background',
+            dataType: "json",
+            data: {
+                'image_id': mask_remove_background_denoised_image_id,
+                'mask_image_id': mask_remove_background_tgi_image_id,
+                'drone_run_band_project_id': mask_remove_background_drone_run_project_id,
+                'mask_type': 'denoised_background_removed_thresholded_vari_mask_original'
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                location.reload();
+            },
+            error: function(response){
+                alert('Error removing background using mask of VARI vegetative index!')
             }
         });
     });
