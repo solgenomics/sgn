@@ -26,6 +26,7 @@ use CXGN::Calendar;
 use Image::Size;
 use Text::CSV;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Phenotypes::PhenotypeMatrix;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -856,7 +857,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                             }
                             if (!$d->{vegetative_index_tgi_stitched_image} && !$d->{vegetative_index_vari_stitched_image}) {
 
-                                if ($d->{threshold_background_removed_stitched_drone_imagery}) {
+                                if ($d->{threshold_background_removed_stitched_image}) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{threshold_background_removed_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{threshold_background_removed_stitched_image_username}.'</br><b>Date</b>: '.$d->{threshold_background_removed_stitched_image_modified_date}.'<br/><b>Background Removed Threshold</b>: '.$d->{threshold_background_removed_stitched_image_threshold}.'</div><div class="col-sm-3">'.$d->{threshold_background_removed_stitched_image}.'</div><div class="col-sm-6">';
                                     
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{threshold_background_removed_stitched_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_original_background_removed_threshold_imagery">Create/View Plot Polygons</button>';
@@ -2410,11 +2411,60 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_project_id_list=>$drone_run_ids,
+        #project_image_type_id_list=>[$observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id]
         project_image_type_id_list=>[$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id]
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
     print STDERR Dumper $total_count;
+
+    my %data_hash;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+        bcs_schema=>$schema,
+        search_type=>'MaterializedViewTable',
+        data_level=>'plot',
+        trait_list=>[$trait_id],
+        trial_list=>[$field_trial_id],
+        include_timestamp=>0,
+        exclude_phenotype_outlier=>0,
+    );
+    my @data = $phenotypes_search->get_phenotype_matrix();
+
+    my $phenotype_header = shift @data;
+    foreach (@data) {
+        $data_hash{$_->[21]}->{trait_value} = $_->[39];
+    }
+    #print STDERR Dumper \%data_hash;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_dir');
+    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
+    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
+
+    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        foreach my $data (values %data_hash){
+            my $image_fullpaths = $data->{image_fullpaths};
+            my $value = $data->{trait_value};
+            if ($value) {
+                foreach (@$image_fullpaths) {
+                    print $F '"'.$_.'",';
+                    print $F '"'.$value.'"';
+                    print $F "\n";
+                }
+            }
+        }
+    close($F);
+
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/BasicCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\'';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
 
     $c->stash->{rest} = { success => 1 };
 }

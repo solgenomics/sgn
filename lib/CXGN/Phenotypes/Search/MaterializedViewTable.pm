@@ -339,7 +339,9 @@ sub search {
         $breeding_program_description =~ s/\R//g;
         $folder_description =~ s/\R//g;
         my $seedlot_transaction_description = $seedlot_transaction->{description};
-        $seedlot_transaction_description =~ s/\R//g;
+        if ($seedlot_transaction_description) {
+            $seedlot_transaction_description =~ s/\R//g;
+        }
 
         push @result, {
             observationunit_stock_id => $observationunit_stock_id,
