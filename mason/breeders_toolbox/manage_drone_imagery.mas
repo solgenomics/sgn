@@ -434,7 +434,7 @@
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_trait_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Images Selection" &>
+                <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
                     <& /page/page_title.mas, title=>"Select the drone runs you are interested in using in the model" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_train_keras_drone_runs_table">
@@ -454,6 +454,28 @@
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_drone_run_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Images Selection" &>
+                    <& /page/page_title.mas, title=>"Select the types of images you are interested in using in the model" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_train_keras_plot_polygon_image_type_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Field Trial</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Band Name</th>
+                                <th>Drone Run Band Type</th>
+                                <th>Plot Polygon Type</th>
+                                <th>Number of Images</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_plot_polygon_type_select_step">Go to Next Step</button>
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Confirm" &>
@@ -490,6 +512,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_train_keras_drone_run_ids = [];
     var manage_drone_imagery_train_keras_field_trial_id;
     var manage_drone_imagery_train_keras_trait_id;
+    var manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
 
     jQuery('#keras_cnn_drone_imagery_link').click(function(){
         get_select_box('trials', 'drone_imagery_train_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_train_keras_cnn_field_trial_id', 'id' : 'drone_imagery_train_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
@@ -498,6 +521,7 @@ jQuery(document).ready(function() {
         manage_drone_imagery_train_keras_drone_run_ids = [];
         manage_drone_imagery_train_keras_field_trial_id = undefined;
         manage_drone_imagery_train_keras_trait_id = undefined;
+        manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
     });
 
     jQuery('#drone_imagery_train_keras_model_field_trial_select_step').click(function(){
@@ -538,15 +562,35 @@ jQuery(document).ready(function() {
         if (manage_drone_imagery_train_keras_drone_run_ids.length < 1){
             alert('Please select at least one drone run!');
         } else {
+        
+            jQuery('#drone_image_train_keras_plot_polygon_image_type_table').DataTable({
+                destroy : true,
+                paging : false,
+                ajax : '/ajax/drone_imagery/plot_polygon_types?select_checkbox_name=train_keras_drone_imagery_plot_polygon_type_select&field_trial_id='+manage_drone_imagery_train_keras_field_trial_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)
+            });
+
             Workflow.complete("#drone_imagery_train_keras_model_drone_run_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 4);
         }
         return false;
     });
 
+    jQuery('#drone_imagery_train_keras_model_plot_polygon_type_select_step').click(function(){
+        jQuery('input[name="train_keras_drone_imagery_plot_polygon_type_select"]:checked').each(function() {
+            manage_drone_imagery_train_keras_plot_polygon_type_ids.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_train_keras_plot_polygon_type_ids.length < 1){
+            alert('Please select at least one plot polygon type!');
+        } else {
+            Workflow.complete("#drone_imagery_train_keras_model_plot_polygon_type_select_step");
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
+        }
+        return false;
+    });
+
     jQuery('#drone_imagery_train_keras_model_confirm_step').click(function(){
         jQuery.ajax({
-            url : '/ajax/drone_imagery/train_keras_model?field_trial_id='+manage_drone_imagery_train_keras_field_trial_id+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids),
+            url : '/ajax/drone_imagery/train_keras_model?field_trial_id='+manage_drone_imagery_train_keras_field_trial_id+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
