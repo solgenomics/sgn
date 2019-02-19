@@ -8,29 +8,38 @@ export function init(main_div){
   }  
 
     main_div.innerHTML = `
-	<div style="width:300px">
+	<div class="container">
+	<div class="row">
+	<div class="col-md-6">
+	
 	Choose a dataset: 
 	<span style="width:240px" id="mixed_model_dataset_select">
 	</span>
 	<button class="btn btn-main" id="mixed_model_analysis_prepare_button">Go!</button>
-	</div>
+	
 	
 	<br />
 	<br />
 	Choose dependent variable:<br />
 	<div id="dependent_variable">
 	</div>
-	
+
+    </div> <!-- row -->
+
+    <div class="col-md-6">
 	<div id="trait_histogram">
 	  [Histogram]
         </div>
-
-        <div id="model_string">[model]</div>
+	</div>
+	</div> <!-- container -->
+	
+        
 	
 	<div class="container">
 	  <div class="row">
         <div id="left-margin" class="col-md-2"></div>
 	<div class="col-md-4">
+	<div id="model_string">[model]</div>
 	<div class="panel panel-default" style="border-width:0px">
 	<div class="panel panel-header" style="border-width:0px">Available Factors</div>
              <div id="factors" class="panel panel-body" style="border-style:dotted;border-width:0px;">
