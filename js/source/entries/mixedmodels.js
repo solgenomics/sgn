@@ -169,7 +169,7 @@ export function init(main_div){
 
 	var div_name = "interaction_"+divnr;
 
-	var div = '<div id="'+div_name+'_panel" class="panel panel-default" style="border-width:0px"><div id="'+div_name+'_header" class="panel panel-header"></div><div id="'+div_name+'" class="panel panel-body" style="min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey;background-color:lightyellow;"></div></div>';
+	var div = '<div id="'+div_name+'_panel" class="panel panel-default" style="border-width:0px"><div id="'+div_name+'_header" class="panel-header"><span id="close_interaction_div_'+divnr+'" class="remove">X</span> Interaction Term '+divnr+'</div><div id="'+div_name+'" class="panel-body" style="min-height:100px;height:auto;margin-top:0px;border-style:dotted;border-width:5px;color:grey;background-color:lightyellow;"></div></div>';
 
 	$('#fixed_factors_collection').append(div);
 
@@ -188,6 +188,13 @@ export function init(main_div){
 		clone.appendTo(droppable);
 		get_model_string();
             }});
+
+        $(document).on("click", "span.remove", function(e) {
+	    alert("BOO2!");
+	    this.parentNode.parentNode.remove(); get_model_string();
+	});
+
+	
 
    }
     
@@ -242,9 +249,10 @@ export function init(main_div){
    });
 
    $('#run_mixed_model_button').click( function() { 
-       var model = get_model_string();
-       var tempfile = $('#tempfile').html();
+       var model = $('#model_string').text();
+       var tempfile = $('#tempfile').text();
        var dependent_variable = $('#dependent_variable_select').val();
+       alert(model + tempfile+ dependent_variable);
        $.ajax( {
            "url": '/ajax/mixedmodels/run',
            "data": { "model" : model, "tempfile" : tempfile, "dependent_variable": dependent_variable },
@@ -274,11 +282,17 @@ export function init(main_div){
 	
 	var fixed_factors_interactions = new Array();
 	$('#fixed_factors_collection').children().each( function() {
-	    var fixed_factors_interaction = $(this).text();
-	    fixed_factors_interaction = fixed_factors_interaction.replace(/X /g, ',');
-	    fixed_factors_interaction = fixed_factors_interaction.substr(1);
-	    fixed_factors_interaction = fixed_factors_interaction.replace(/,/g, '","');
-	    fixed_factors_interactions.push(fixed_factors_interaction);
+	    if ($(this).children().size()>0) { 
+		var interactions = this.childNodes;
+		alert(JSON.stringify(interactions));
+		var panel_div = interactions.childNodes;
+		var fixed_factors_interaction = panel_div[1];
+		var fixed_factors_interaction = fixed_factors_interaction_div.text();
+		fixed_factors_interaction = fixed_factors_interaction.replace(/X /g, ',');
+		fixed_factors_interaction = fixed_factors_interaction.substr(1);
+		fixed_factors_interaction = fixed_factors_interaction.replace(/,/g, '","');
+		fixed_factors_interactions.push(fixed_factors_interaction);
+	    }
 	    
 	});
 	var fixed_factors_interaction = fixed_factors_interactions.join('"],["');
