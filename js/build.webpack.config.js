@@ -37,7 +37,10 @@ module.exports = {
                 use: [{
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env']
+                        sourceType: "unambiguous",
+                        presets: [['@babel/preset-env',{
+                          useBuiltIns: 'usage'
+                        }]]
                     }
                 },{
                     loader: path.resolve(__dirname,"./webpack_util/jsan-preprocess-loader.js"),

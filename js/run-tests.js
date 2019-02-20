@@ -71,7 +71,7 @@ function runTests(mapping){
   }).forEach(scrptList=>{
     // Run a JSDOM Virtual instance with all scripts and deps for each test file
     const dom = new JSDOM(empty_html, {
-      url:"https://cassavabase.org/index.html",
+      url:"https://cassavabase.org/test.html",
       contentType: "text/html",
       includeNodeLocations: true,
       runScripts: "dangerously"
