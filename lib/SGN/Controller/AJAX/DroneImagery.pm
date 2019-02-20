@@ -2632,83 +2632,129 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
-    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        drone_run_project_id_list=>$drone_run_ids,
-        project_image_type_id_list=>$plot_polygon_type_ids
-        #project_image_type_id_list=>[$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id]
-    });
-    my ($result, $total_count) = $images_search->search();
-    #print STDERR Dumper $result;
-    print STDERR Dumper $total_count;
 
-    my %data_hash;
-    foreach (@$result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_url = $image->get_image_url("original");
-        my $image_fullpath = $image->get_filename('original_converted', 'full');
-        push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
-    }
-
-    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-        bcs_schema=>$schema,
-        search_type=>'MaterializedViewTable',
-        data_level=>'plot',
-        trait_list=>[$trait_id],
-        trial_list=>[$field_trial_id],
-        include_timestamp=>0,
-        exclude_phenotype_outlier=>0,
+    my @polygon_type_combos = (
+        # [$observation_unit_polygon_imagery_cvterm_id],
+        # [$observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id],
+        # [$observation_unit_polygon_tgi_imagery_cvterm_id],
+        # [$observation_unit_polygon_vari_imagery_cvterm_id],
+        # [$observation_unit_polygon_ndvi_imagery_cvterm_id],
+        # [$observation_unit_polygon_background_removed_tgi_imagery_cvterm_id],
+        # [$observation_unit_polygon_background_removed_vari_imagery_cvterm_id],
+        # [$observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id],
+        # [$observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id]
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id],
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id],
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        # [$observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        [$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id],
+        
     );
-    my @data = $phenotypes_search->get_phenotype_matrix();
-
-    my $phenotype_header = shift @data;
-    foreach (@data) {
-        $data_hash{$_->[21]}->{trait_value} = $_->[39];
-    }
-    #print STDERR Dumper \%data_hash;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_dir');
-    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
-    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
-    my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
-
-    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        foreach my $data (values %data_hash){
-            my $image_fullpaths = $data->{image_fullpaths};
-            my $value = $data->{trait_value};
-            if ($value) {
-                foreach (@$image_fullpaths) {
-                    print $F '"'.$_.'",';
-                    print $F '"'.$value.'"';
-                    print $F "\n";
-                }
-            }
-        }
-    close($F);
-
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/BasicCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\'';
-    print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $archive_temp_result_agg_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/resultaggXXXX');
 
     my @result_agg;
-    my @header_cols;
-    my $csv = Text::CSV->new({ sep_char => ',' });
-    open(my $fh, '<', $archive_temp_output_file)
-        or die "Could not open file '$archive_temp_output_file' $!";
-    
-        my $header = <$fh>;
-        if ($csv->parse($header)) {
-            @header_cols = $csv->fields();
-        }
-        while ( my $row = <$fh> ){
-            my @columns;
-            if ($csv->parse($row)) {
-                @columns = $csv->fields();
+    foreach my $combo (@polygon_type_combos){
+        foreach (1..1) {
+            my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+                bcs_schema=>$schema,
+                drone_run_project_id_list=>$drone_run_ids,
+                project_image_type_id_list=>$combo
+                #project_image_type_id_list=>$plot_polygon_type_ids
+                #project_image_type_id_list=>[$observation_unit_polygon_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tgi_imagery_cvterm_id, $observation_unit_polygon_vari_imagery_cvterm_id, $observation_unit_polygon_ndvi_imagery_cvterm_id, $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id, $observation_unit_polygon_background_removed_vari_imagery_cvterm_id, $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id, $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id]
+            });
+            my ($result, $total_count) = $images_search->search();
+            #print STDERR Dumper $result;
+            print STDERR Dumper $total_count;
+            my $combo_string = join ',', @$combo;
+            push @result_agg, [$combo_string, $_, $total_count];
+
+            my %data_hash;
+            foreach (@$result) {
+                my $image_id = $_->{image_id};
+                my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+                my $image_url = $image->get_image_url("original");
+                my $image_fullpath = $image->get_filename('original_converted', 'full');
+                push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
             }
-            push @result_agg, \@columns;
+
+            my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+                bcs_schema=>$schema,
+                search_type=>'MaterializedViewTable',
+                data_level=>'plot',
+                trait_list=>[$trait_id],
+                trial_list=>[$field_trial_id],
+                include_timestamp=>0,
+                exclude_phenotype_outlier=>0,
+            );
+            my @data = $phenotypes_search->get_phenotype_matrix();
+
+            my $phenotype_header = shift @data;
+            foreach (@data) {
+                $data_hash{$_->[21]}->{trait_value} = $_->[39];
+            }
+            #print STDERR Dumper \%data_hash;
+
+            my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
+            my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
+            my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
+
+            open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+                foreach my $data (values %data_hash){
+                    my $image_fullpaths = $data->{image_fullpaths};
+                    my $value = $data->{trait_value};
+                    if ($value) {
+                        foreach (@$image_fullpaths) {
+                            print $F '"'.$_.'",';
+                            print $F '"'.$value.'"';
+                            print $F "\n";
+                        }
+                    }
+                }
+            close($F);
+
+            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\'';
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            my @header_cols;
+            my $csv = Text::CSV->new({ sep_char => ',' });
+            open(my $fh, '<', $archive_temp_output_file)
+                or die "Could not open file '$archive_temp_output_file' $!";
+            
+                my $header = <$fh>;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+                while ( my $row = <$fh> ){
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    push @result_agg, \@columns;
+                }
+            close($fh);
         }
-    close($fh);
+    }
+    #print STDERR Dumper \@result_agg;
+
+    print STDERR Dumper $archive_temp_result_agg_file;
+    open(my $F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
+        foreach my $data (@result_agg){
+            print $F join ',', @$data;
+            print $F "\n";
+        }
+    close($F);
 
     $c->stash->{rest} = { success => 1, results => \@result_agg };
 }

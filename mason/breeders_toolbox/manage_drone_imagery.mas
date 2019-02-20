@@ -545,7 +545,6 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_train_keras_model_trait_select_step').click(function(){
         manage_drone_imagery_train_keras_trait_id = jQuery('#drone_imagery_train_keras_cnn_trait_id').val();
-        console.log(manage_drone_imagery_train_keras_trait_id);
         if (manage_drone_imagery_train_keras_trait_id == undefined || manage_drone_imagery_train_keras_trait_id == 'null' || manage_drone_imagery_train_keras_trait_id == '') {
             alert('Please select a phenotyped trait first!');
         } else {
