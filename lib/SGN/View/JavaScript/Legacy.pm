@@ -5,7 +5,7 @@ use warnings;
 use parent 'Catalyst::View::JavaScript::Minifier::XS';
 
 __PACKAGE__->config(
-    js_dir => SGN->path_to('js/legacy'),
+    js_dir => SGN->path_to('js/source/legacy'),
 );
 
 1;

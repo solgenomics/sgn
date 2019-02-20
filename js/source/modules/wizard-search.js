@@ -1,4 +1,4 @@
-import "../../legacy/d3/d3v4Min.js";
+import "../legacy/d3/d3v4Min.js";
   
 
 const list_prefix = "__LIST__";

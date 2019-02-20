@@ -28,7 +28,7 @@ __PACKAGE__->config(
     namespace       => 'js',
     js_path => SGN->path_to('js/build'),
     dependency_json_path => SGN->path_to('js/build/mapping.json'),
-    js_legacy_path => SGN->path_to('js/legacy')
+    js_legacy_path => SGN->path_to('js/source/legacy')
    );
 
 {

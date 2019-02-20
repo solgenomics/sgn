@@ -1,4 +1,4 @@
-import "../../legacy/CXGN/List.js";
+import "../legacy/CXGN/List.js";
 import {Wizard} from "../modules/wizard-search.js";
 import {WizardDatasets} from "../modules/wizard-datasets.js";
 import {WizardDownloads} from "../modules/wizard-downloads.js";

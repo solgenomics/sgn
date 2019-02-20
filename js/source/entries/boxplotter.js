@@ -1,7 +1,7 @@
 import BrAPIBoxPlotter from 'BrAPI-BoxPlotter';
-import '../../legacy/d3/d3v4Min.js';
-import '../../legacy/jquery.js';
-import '../../legacy/brapi/BrAPI.js';
+import '../legacy/d3/d3v4Min.js';
+import '../legacy/jquery.js';
+import '../legacy/brapi/BrAPI.js';
 
 export function init(main_div){
   if (!(main_div instanceof HTMLElement)){

@@ -1,5 +1,5 @@
-import "../../legacy/d3/d3v4Min.js";
-import "../../legacy/CXGN/Dataset.js";
+import "../legacy/d3/d3v4Min.js";
+import "../legacy/CXGN/Dataset.js";
 
 /**
  * WizardDownloads - Creates a new WizardDownloads object.

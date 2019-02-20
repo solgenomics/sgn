@@ -5,7 +5,7 @@ const UglifyWebpackPlugin = require("uglifyjs-webpack-plugin");
 
 const sourcePath = path.resolve(__dirname, "source");
 const entryPath = path.resolve(sourcePath, "entries");
-const legacyPath = path.resolve(__dirname, "legacy");
+const legacyPath = path.resolve(sourcePath, "legacy");
 
 module.exports = {
     mode: "production",
