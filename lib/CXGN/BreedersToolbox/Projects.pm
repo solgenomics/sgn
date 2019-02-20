@@ -242,6 +242,39 @@ sub get_all_locations {
  }
 
 
+ sub get_all_locations_by_breeding_program {
+     my $self = shift;
+
+    my $q = "SELECT geo.description,
+    breeding_program.name
+    FROM nd_geolocation AS geo
+    LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+    LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
+    GROUP BY 1,2 ORDER BY 1";
+
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute();
+    my @locations;
+
+    while (my @location_data = $h->fetchrow_array()) {
+        foreach my $d (@location_data) {
+            $d = Encode::encode_utf8($d);
+        }
+     	my ($name, $prog) = @location_data;
+         push(@locations, {
+             properties => {
+                 Name => $name,
+                 Program => $prog
+             }
+         });
+     }
+     
+     my $json = JSON->new();
+     $json->canonical(); # output sorted JSON
+     return $json->encode(\@locations);
+}
+
+
 sub get_location_geojson {
     my $self = shift;
 
