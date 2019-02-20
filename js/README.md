@@ -1,18 +1,95 @@
 # Javascript in SGN
 
-## Modern JS
-Modern (modularized) code is in the `source` folder. The code here uses import/export statements to keep the global scope clean. Modules in the `$REPO/js/entry` folder can be imported into a mason component, but cannot be tree shaken. Modules in the `$REPO/js/modules` folder can be tree shaken but not imported into a mason competent directly. Node modules can also be included from the node_modules folder using typical JS import syntax. Authors should prefer `import` over `require`, however, `require` is available (but not future-proof). Modules in the entry folder can be included into mason components using `<& /import_javascript, entries => ["myEntryName"] &>` where the array contains the relative path to the entry file from `$REPO/js/entry` without the `js` file extension. Once imported into a mason competent, Modern JS module exports are available within the window-scope variable`jsMod` as `jsMod[name]` where `name` is the same string used to import the entry module. (i.e. `jsMod["myEntryName"]`).
+The new JavaScript system in SGN relies on Webpack, Node, and NPM. The new system allows for the use of node modules and for ES6 module imports to be resolved and bundled into an efficient number of javascript files.
 
-## Legacy JS
+To install Node.js and NPM run `./install_node.sh` as root.
 
-Legacy (no-module) code is in the `legacy` folder. **Legacy code is executed in the global scope, and adding to it should be avoided.** To include legacy JS on a page, one should use the mason `<& /util/import_javascript, legacy => ["CXGN.Effects", "CXGN.Phenome.Locus", "MochiKit.DOM"] &>` Where a file is specified by the relative path to a js file from the `$REPO/js/legacy` folder with slashes replaced by periods and no file extension (e.g. "$REPO/js/legacy/CXGN/Phenome/Locus.js" -> "CXGN.Phenome.Locus").
+In order to hook into Catalyst, Mason, and the rest of the SGN infrastructure, Webpack has been configured in a slightly atypical manner. In a typical Webpack setup, there is a JavaScript file for each page. However, with the way our legacy code is structured, this paradigm would require a large amount of refactoring. So, instead, Webpack is configured such that modern JavaScript is transpiled into separate (independently loadable) namespaces within a multi-part library call 'jsMod'.
 
-## Combining Legacy and Modern JS.
+The following three sections will enumerate the different locations one can use JavaScript on the site, and how they behave.
 
-Legacy JS cannot import or depend on Modern JS and is always executed first. Modern JS can import legacy code for global effects (aka side-effects) by specifying the relative path to the file. `import "../../legacy/CXGN/Phenome/Locus.js";`. JSAN dependencies declared in legacy code _will_ be resolved. 
+## On-Page JavaScript
+The most obvious JavaScript on the site is directly within a `<script>` tag in a Mason file. Code here is NOT touched by any JavaScript transpilers, minifiers, or by webpack. Any JavaScript written directly into the page will be transmitted to the user as-is. This means that the author of said code MUST be careful to use only ES2015 JavaScript functionality. Some things which are inappropriate for On-Page JavaScript include arrow functions (`()=>{}`) and ES6 classes (`class ClassName{}`).
 
-`/util/import_javascript` can import legacy code and entry modules in one statement. `<& /import_javascript, entries => [], legacy => [] &>`
+## Legacy JavaScript
+### `legacy`
+Legacy JavaScript is, for our purposes, all JavaScript files which are managed by the `JSAN.use("")` dependency system. This means all JavaScript files previously stored in the `js/` directory. Because of important global side-effects cause by the common use of global scope definitions in these files, it is very difficult (likely impossible) to automatically convert them to a state such that Webpack is able to properly handle their interdependence (and the On-Page JavaScript which depends on their globally defined variables). As such, legacy code has been "quarantined" in the `js/source/legacy` folder. Any code in this folder continues to behave exactly as it would have before the addition of the Webpack system. As such, **legacy code is executed in the global scope, and adding to it should be avoided.** Legacy JavaScript is minified using a  _legacy minifier_ and like On-Page JavaScript, is not transpiled, this means that the author of said code MUST be careful to use only ES2015 JavaScript functionality. Failing to do so may break the minification step, or lead to incompatibilities with users' browsers. To include legacy JS on a page, one should use the following pattern:
 
-## Testing
+| File Paths | Mason Pattern | 
+| --------- | ------------- |
+| `js/source/legacy/CXGN/Effects.js`, `js/source/legacy/CXGN.Phenome/Locus.js`, `js/source/legacy/MochiKit/DOM.js` | `<& /util/import_javascript, legacy => [ "CXGN.Effects", "CXGN.Phenome.Locus", "MochiKit.DOM" ] &>` |
 
-Testing is a work in progress.
+
+## Modern JavaScript
+Modern JavaScript is defined in this documentation as source for the webpack pre-comiler. Modern JavaScript is transpiled and polyfilled to allow for the use of newer JavaScript features without worrying as much about reverse compatibility. Having added a transpilation step, we can take advantage of this existing overhead by also using Webpack to resolve and bundle dependencies. This allows us to use ES6 module imports and exports. Because webpack relies on an "Entry" model, we have two main folders of Modern JavaScript files. 
+
+### `entries`
+
+The first folder is `js/source/entries`. This contains a JS module which describes a namespace of the `jsMod` global object.
+
+For example:
+```js
+// js/source/entries/example.js
+var someVariableName = "someValue";
+export someVariableName;
+```
+```html
+<!-- mason/**/example.mas -->
+<& /import_javascript, entries => ["example.js"]&>
+<script type="text/javascript">
+  // Writes to console:
+  console.log(someVariableName===undefined);
+  // -> true
+  console.log(jsMod['example'].someVariableName);
+  // -> "someValue"
+</script>
+
+```
+
+### `modules`
+
+The next is `js/source/modules`. This contains a JS module which is not exposed via jsMod, but whose code can be imported by multiple `entries`. `modules` differ from `entires` in that, if a `entries` file imports another `entries` file, the included entry will be sent to the user as a separate file. If a `entries` file imports a `modules` file, however, that module will be bundled into the same file as the entry when being sent to the user. Further, if some set of `modules` files are commonly imported by multiple `entries`, they will be bundled together as a file such that they might be cached for later use by the user's browser. [Click here for more information on that process.](https://webpack.js.org/guides/code-splitting/) Remember, `modules` files are not exposed via the `jsMod` object.  
+
+For example:
+```js
+// js/source/modules/example0.js
+var myVar = "aValue";
+export myVar;
+```
+```js
+// js/source/entries/example1.js
+import {myVar} from '../modules/example0.js';
+var yetAnother = "someValue";
+export yetAnother;
+export var someVar = myVar;
+```
+```html
+<!-- mason/**/example.mas -->
+<& /import_javascript, entries => ["example1.js"]&>
+<script type="text/javascript">
+  // Writes to console:
+  console.log(myVar===undefined);
+  // -> true
+  console.log(yetAnother===undefined);
+  // -> true
+  console.log(jsMod['example0']===undefined);
+  // -> true
+  console.log(jsMod['example1'].yetAnother);
+  // -> "someValue"
+  console.log(jsMod['example1'].myVar===undefined);
+  // -> true
+  console.log(jsMod['example1'].someVar);
+  // -> "aValue"
+</script>
+
+```
+
+## Combining Legacy and Modern JS
+
+Legacy JS cannot import or depend on Modern JS and is always executed first. Modern JS can import legacy code for global effects (aka side-effects) by specifying the relative path to the file (e.g. `import "../legacy/CXGN/Phenome/Locus.js";`). JSAN dependencies declared in legacy code _will_ be resolved. 
+
+`/util/import_javascript` can also import legacy code and entry modules in one statement. `<& /import_javascript, entries => [], legacy => [] &>`
+
+## JavaScript Testing
+
+Doc. coming soon.
