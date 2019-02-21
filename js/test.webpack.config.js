@@ -5,7 +5,7 @@ const path = require('path');
 const glob = require("glob");
 
 const testPath = path.resolve(__dirname, "test");
-const testBuildPath = path.resolve(__dirname, "build_test/");
+const testBuildPath = path.resolve(__dirname, "test_build/");
 
 // Use the same config as the main build but change the settings below
 module.exports = merge(rootConfig,{
@@ -19,6 +19,10 @@ module.exports = merge(rootConfig,{
   })(),
   output: {
     path: testBuildPath
+  },
+  externals: {
+    tape: 'tape',
+    nock: 'nock'
   }
 },{
 	isMergeableObject: isPlainObject

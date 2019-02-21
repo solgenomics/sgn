@@ -39,4 +39,4 @@ export/*
 temp_images/*
 js/node_modules
 js/build
-js/build_test
+js/test_build

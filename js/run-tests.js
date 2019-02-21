@@ -6,6 +6,7 @@ process.chdir( __dirname );
 const webpack = require('webpack');
 const JSDOM = require("jsdom").JSDOM;
 const test = require('tape');
+const { Console } = require('console');
 var fs = require('fs');
 const del = require('del');
 const path = require('path');
@@ -16,8 +17,8 @@ const fetch = require('node-fetch');
 const { JSAN_to_src_path } = require("./webpack_util/utils.js");
 
 const webpackConfig = require('./test.webpack.config');
-const buildPath = path.resolve(__dirname, "./build_test/");
-const legacyPath = path.resolve(__dirname, "./legacy/");
+const buildPath = webpackConfig.output.path;
+const legacyPath = path.resolve(__dirname, "./source/legacy/");
 
 // Default DOM contents within which a test script is excecuted in.
 const empty_html = `
@@ -55,7 +56,7 @@ test('Webpack Build '+Object.keys(webpackConfig.entry).join(", "), function (t) 
       if(st.errors) t.fail(st);
       t.pass(st);
       // Once the scripts build, we can run the rest of the tests.
-      runTests(JSON.parse(fs.readFileSync('./build_test/mapping.json')));
+      runTests(JSON.parse(fs.readFileSync(path.resolve(buildPath,'./mapping.json'))));
     }
   });
 });
@@ -79,11 +80,16 @@ function runTests(mapping){
     // Add window.test function to JSDOM window which hooks to the instance of
     // tape that is running in Node.js
     dom.window.test = test;
+    dom.window.tape = test;
     // Add window.nock function to JSDOM window which allows for us to spoof AJAX calls
     // also clean up current mocked responses from previous tests
     dom.window.nock = nock;
     dom.window.fetch = fetch;
     nock.cleanAll();
+    nock.disableNetConnect();
+    // Ensure console.log/info/debug statements inside virtual DOM print to stderr
+    // This ensures "pure" tap stdout
+    dom.window.console = new Console({ stdout: process.stderr, stderr: process.stderr });
     // Add script tags to JSDOM, these excute upon insertion (thereby running
     // the contained tests).
     scrptList.forEach(file=>{
