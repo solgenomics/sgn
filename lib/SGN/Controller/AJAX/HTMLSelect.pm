@@ -34,6 +34,7 @@ use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
 use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -637,6 +638,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $cvprop_type_names = $c->req->param("cvprop_type_name") ? decode_json $c->req->param("cvprop_type_name") : ['trait_ontology'];
 
     my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -652,7 +654,7 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
         $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
     }
 
-    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces});
+    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces, cvprop_type_names => $cvprop_type_names});
     #print STDERR Dumper $result;
 
     my @ontos;
