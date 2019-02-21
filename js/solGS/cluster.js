@@ -70,7 +70,7 @@ solGS.cluster = {
 
 
     loadClusterGenotypesList: function(selectId, dataStructureType) {     
-		
+
 	if ( selectId.length === 0) {       
             alert('The list is empty. Please select a list with content.' );
 	} else {
@@ -78,13 +78,12 @@ solGS.cluster = {
             var tableId = "list_cluster_populations_table";
             var clusterTable = jQuery('#' + tableId).doesExist();
             
-            if (clusterTable == false) {	
-		clusterTable = this.getClusterPopsTable(tableId);	
+            if (clusterTable == false) {
+		clusterTable = this.getClusterPopsTable(tableId);
 		jQuery("#list_cluster_populations").append(clusterTable).show();		
             }
 	    
 	    var addRow = this.selectRow(selectId, dataStructureType);
-
 	    var tdId = '#list_cluster_page_' + selectId;
 	    var addedRow = jQuery(tdId).doesExist();
 	    
@@ -137,7 +136,7 @@ solGS.cluster = {
 	var dataTypeOpts;
 	var url = document.URL;
 	var pagesTr = '/breeders/trial/'
-	    + '|cluster/analysis/'
+	    + '|cluster/analysis'
 	    + '|solgs/trait/\d+/population\/' 
 	    + '|solgs/model/combined/populations/';
 
@@ -569,7 +568,8 @@ jQuery(document).ready( function() {
 	    }
 	    
             if (selectId) {                
-                jQuery("#cluster_go_btn").click(function() {		    
+                jQuery("#cluster_go_btn").click(function() {
+		   
 		    solGS.cluster.loadClusterGenotypesList(selectId, dataStructureType);
                 });
             }

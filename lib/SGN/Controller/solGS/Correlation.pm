@@ -107,13 +107,13 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
-   # $c->controller('solGS::Files')->selection_index_file($c);
+   #$c->controller('solGS::Files')->selection_index_file($c);
     $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
-    
+    	print STDERR "\n  combo file: $combined_gebvs_file\n";
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
-    
+    	print STDERR "\n  combo file: $combined_gebvs_file\n";
     my $ret->{status} = undef;
 
     if ( -s $combined_gebvs_file )
@@ -121,6 +121,8 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
 	$ret->{index_file} = $index_file;
+
+	print STDERR "\n status: $ret->{status} -- index file - $index_file -- combo file: $combined_gebvs_file\n";
     }
 
     $ret = to_json($ret);

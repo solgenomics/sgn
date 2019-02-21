@@ -2344,7 +2344,7 @@ sub get_model_accuracy_value {
     closedir $dh; 
     
     $validation_file = catfile($dir, $validation_file);
-    
+    print STDERR "\n validation_file: $validation_file\n";
     my ($row) = grep {/Average/} read_file($validation_file);
     my ($text, $accuracy_value) = split(/\t/,  $row);
  
@@ -2847,7 +2847,7 @@ sub analyzed_traits {
     my ($self, $c) = @_;
     
     my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id}; 
-
+    print STDERR "\nanalyzed_traits:  tr pop id - $training_pop_id\n";
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
@@ -2868,6 +2868,7 @@ sub analyzed_traits {
 
     foreach my $trait_file  (@traits_files) 
     {
+	print STDERR "\nanalyzed_traits: trait_file - $trait_file\n";
         if (-s $trait_file) 
         { 
             my $trait = basename($trait_file);	   
@@ -2893,10 +2894,10 @@ sub analyzed_traits {
                     }
                 }
             }
-
+	    print STDERR "\n calling get_model_accuracy\n";
             $self->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
-
+print STDERR "\n calling get_model_accuracy: ave - $av\n";
             if ($av && $av =~ m/\d+/ && $av > 0) 
             { 
               push @si_traits, $trait;

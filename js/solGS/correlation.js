@@ -148,7 +148,7 @@ function listGenCorPopulations ()  {
 
 function formatGenCorInputData (popId, type, indexFile) {
     var modelDetail = getPopulationDetails();
-
+	alert(' format orre pop id ' + modelDetail.population_id)
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -176,7 +176,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-          
+		alert(' run corre pop id ' + modelDetail.population_id)
                 runGenCorrelationAnalysis(args);
 
             } else {
