@@ -82,14 +82,20 @@ $trait_cv_name
         </div>
     </&>
 
+<& /breeders_toolbox/add_new_trait_dialogs.mas &>
+
     <&| /page/info_section.mas, title => 'Help', collapsible=>1, collapsed=>0 &>
         <div class="well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <h2>Is the trait you are looking for not here?</h2>
 
-                    <p>Please submit your new trait <a href="http://submit.rtbbase.org/">using the trait submission form</a>.</p>
-                    <p>To speed up addition of your trait into the database please contact us using the <a href="/contact/form">Contact Form</a>.</p>
+%  if ($c->config->{allow_observation_variable_submission_interface}) {
+                        <button class="btn btn-primary" name="add_new_observation_variable_button">Add A New Observation Variable To the Database</button>
+%  } else {
+                        <p>Please submit your new trait <a href="http://submit.rtbbase.org/">using the trait submission form</a>.</p>
+                        <p>To speed up addition of your trait into the database please contact us using the <a href="/contact/form">Contact Form</a>.</p>
+%  }
                 </div>
             </div>
         </div>
