@@ -126,7 +126,7 @@ The test harness used is [tape](https://github.com/substack/tape). It was chosen
   ```
 
 #### [nock](https://github.com/nock/nock)
-[nock](https://github.com/nock/nock) provides server mocking for testing JS with we requests. By default, test scripts cannot make we requests. You have two options to fix this. 
+[nock](https://github.com/nock/nock) provides server mocking for testing JS with web requests. By default, test scripts cannot make web requests. You have two options to fix this. 
 - Create a [nock interceptor](https://github.com/nock/nock#read-this---about-interceptors) like so:
   ```js
   var scope = nock(document.location.origin);
@@ -142,9 +142,9 @@ The test harness used is [tape](https://github.com/substack/tape). It was chosen
   ```
 - [Enable external web requests](https://github.com/nock/nock#enabling-requests) for your test file like so:
   ```js
-  nock.enableNetConnect('cassavabase.org')
   test("Test Web Request", t=>{
       t.plan(1);
+      nock.enableNetConnect('cassavabase.org')
       fetch('https://cassavabase.org/realurl')
         .then(resp=>resp.json())
         .then(data=>{
