@@ -34,7 +34,7 @@ sub combine_gebvs_of_traits {
    
     my $index_file  = $c->stash->{selection_index_file};
 
-    print STDERR "\ngebvs_files:  @$gebvs_files\n";
+    print STDERR "\ngebvs_files:  $gebvs_files\n";
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
 
     if (scalar(@files_no) > 1 ) 
