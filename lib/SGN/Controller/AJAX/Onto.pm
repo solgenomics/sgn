@@ -80,6 +80,73 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
 
 }
 
+=head2 store_trait_method_scale_observation_variable
+
+Creates a new term in the designated observation variable cv and links it to component trait, method, and scale terms through cvterm_relationship. will create trait, method, and scale terms in their own ontologies if they need to be.
+
+=cut
+
+sub store_trait_method_scale_observation_variable: Path('/ajax/onto/store_trait_method_scale_observation_variable') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+
+    my $selected_observation_variable_db_id = $c->req->param("selected_observation_variable_db_id");
+    my $new_observation_variable_name = $c->req->param("new_observation_variable_name");
+    my $new_observation_variable_definition = $c->req->param("new_observation_variable_definition");
+    my $selected_trait_db_id = $c->req->param("selected_trait_db_id");
+    my $selected_trait_cvterm_id = $c->req->param("selected_trait_cvterm_id");
+    my $new_trait_name = $c->req->param("new_trait_name");
+    my $new_trait_definition = $c->req->param("new_trait_definition");
+    my $selected_method_db_id = $c->req->param("selected_method_db_id");
+    my $selected_method_cvterm_id = $c->req->param("selected_method_cvterm_id");
+    my $new_method_name = $c->req->param("new_method_name");
+    my $new_method_definition = $c->req->param("new_method_definition");
+    my $selected_scale_db_id = $c->req->param("selected_scale_db_id");
+    my $selected_scale_cvterm_id = $c->req->param("selected_scale_cvterm_id");
+    my $new_scale_name = $c->req->param("new_scale_name");
+    my $new_scale_definition = $c->req->param("new_scale_definition");
+    my $new_scale_format = $c->req->param("new_scale_format");
+    my $new_scale_minumum = $c->req->param("new_scale_minimum");
+    my $new_scale_maximum = $c->req->param("new_scale_maximum");
+    my $new_scale_default = $c->req->param("new_scale_default");
+    my $new_scale_categories = $c->req->param("new_scale_categories");
+
+    my $new_term;
+    eval {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        $new_term = $onto->store_observation_variable_trait_method_scale(
+            $selected_observation_variable_db_id,
+            $new_observation_variable_name,
+            $new_observation_variable_definition,
+            $selected_trait_db_id,
+            $selected_trait_cvterm_id,
+            $new_trait_name,
+            $new_trait_definition,
+            $selected_method_db_id,
+            $selected_method_cvterm_id,
+            $new_method_name,
+            $new_method_definition,
+            $selected_scale_db_id,
+            $selected_scale_cvterm_id,
+            $new_scale_name,
+            $new_scale_definition,
+            $new_scale_format,
+            $new_scale_minumum,
+            $new_scale_maximum,
+            $new_scale_default,
+            $new_scale_categories
+        );
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred saving the new observation variable: trait, method, and scale details: $@" };
+    }
+    else {
+        my $message = 'Saved new observation variable <a href="/cvterm/'.$new_term->[0].'/view">'.$new_term->[1].'</a><br>';
+        $c->stash->{rest} = { success => $message, names => [$new_term->[1]] };
+    }
+}
+
 =head2 get_trait_from_exact_components
 
 searches for and returns (if found) a composed trait that contains the exact components supplied
