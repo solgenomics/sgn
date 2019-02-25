@@ -70,6 +70,25 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Existing Traits in Selected Ontology: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_existing_trait_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Existing Traits in Selected Sub Ontology: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_existing_sub_trait_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="well">
+                                    <h3></h3>
+                                </div>
+
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">New Trait Name: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_new_trait_name" name="add_new_trait_name" type="text" placeholder="e.g. harvested fruit mass per plant"/>
@@ -147,7 +166,7 @@
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_new_trait_scale_format" name="add_new_trait_scale_format" >
                                             <option value="qualitative">qualitative</option>
-                                            <option value="quantitative"></option>
+                                            <option value="quantitative">quantitative</option>
                                         </select>
                                     </div>
                                 </div>
@@ -207,10 +226,10 @@ jQuery(document).ready(function() {
     jQuery('button[name="add_new_observation_variable_button"]').click(function(){
         jQuery('#add_new_observation_variable_dialog').modal('show');
 
-        get_select_box('trait_variable_ontologies', 'add_new_observation_variable_ontology_select_div', { 'name':'add_new_observation_variable_ontology_select',    'id':'add_new_observation_variable_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']) });
-        get_select_box('trait_variable_ontologies', 'add_new_trait_ontology_select_div', { 'name':'add_new_trait_ontology_select', 'id':'add_new_trait_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']) });
-        get_select_box('trait_variable_ontologies', 'add_new_trait_method_ontology_select_div', { 'name':'add_new_trait_method_ontology_select', 'id':'add_new_trait_method_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['method_ontology']) });
-        get_select_box('trait_variable_ontologies', 'add_new_trait_scale_ontology_select_div', { 'name':'add_new_trait_scale_ontology_select', 'id':'add_new_trait_scale_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['unit_ontology']) });
+        get_select_box('trait_variable_ontologies', 'add_new_observation_variable_ontology_select_div', { 'name':'add_new_observation_variable_ontology_select',    'id':'add_new_observation_variable_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']), 'use_full_trait_name':1 });
+        get_select_box('trait_variable_ontologies', 'add_new_trait_ontology_select_div', { 'name':'add_new_trait_ontology_select', 'id':'add_new_trait_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']), 'use_full_trait_name':1 });
+        get_select_box('trait_variable_ontologies', 'add_new_trait_method_ontology_select_div', { 'name':'add_new_trait_method_ontology_select', 'id':'add_new_trait_method_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['method_ontology']), 'use_full_trait_name':1 });
+        get_select_box('trait_variable_ontologies', 'add_new_trait_scale_ontology_select_div', { 'name':'add_new_trait_scale_ontology_select', 'id':'add_new_trait_scale_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['unit_ontology']), 'use_full_trait_name':1 });
         
     });
 
@@ -241,7 +260,13 @@ jQuery(document).ready(function() {
         });
         if (selected.length > 1) {
             alert('Only select one trait ontology!');
+        } else {
+            get_select_box('ontology_children', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'parent_node_cvterm':selected[0], 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'value_format':'names' });
         }
+    });
+
+    jQuery(document).on('change', 'select[name="add_new_trait_existing_trait_select"]', function() {
+        get_select_box('ontology_children', 'add_new_trait_existing_sub_trait_select_div', { 'selectbox_name':'add_new_trait_existing_sub_trait_select',    'selectbox_id':'add_new_trait_existing_sub_trait_select', 'empty':1, 'parent_node_cvterm':jQuery(this).val(), 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'value_format':'names' });
     });
 
     jQuery('#add_new_trait_trait_step').click(function() {
