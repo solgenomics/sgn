@@ -244,124 +244,43 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+    my $stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $cropped_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $rotated_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $denoised_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $vegetative_index_tgi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_drone_imagery', 'project_md_image')->cvterm_id();
+    my $vegetative_index_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
+    my $vegetative_index_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_drone_imagery', 'project_md_image')->cvterm_id();
+    my $threshold_background_removed_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $threshold_background_removed_tgi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $threshold_background_removed_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $threshold_background_removed_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $denoised_background_removed_thresholded_tgi_mask_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original', 'project_md_image')->cvterm_id();
+    my $denoised_background_removed_thresholded_vari_mask_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original', 'project_md_image')->cvterm_id();
+    my $denoised_background_removed_thresholded_ndvi_mask_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original', 'project_md_image')->cvterm_id();
+
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
-        project_image_type_id=>$raw_drone_images_cvterm_id
+        project_image_type_id_list=>[
+            $raw_drone_images_cvterm_id,
+            $stitched_drone_images_cvterm_id,
+            $cropped_stitched_drone_images_cvterm_id,
+            $rotated_stitched_drone_images_cvterm_id,
+            $denoised_stitched_drone_images_cvterm_id,
+            $vegetative_index_tgi_drone_images_cvterm_id,
+            $vegetative_index_vari_drone_images_cvterm_id,
+            $vegetative_index_ndvi_drone_images_cvterm_id,
+            $threshold_background_removed_drone_images_cvterm_id,
+            $threshold_background_removed_tgi_drone_images_cvterm_id,
+            $threshold_background_removed_vari_drone_images_cvterm_id,
+            $threshold_background_removed_ndvi_drone_images_cvterm_id,
+            $denoised_background_removed_thresholded_tgi_mask_original_cvterm_id,
+            $denoised_background_removed_thresholded_vari_mask_original_cvterm_id,
+            $denoised_background_removed_thresholded_ndvi_mask_original_cvterm_id
+        ]
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
-
-    my $stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$stitched_drone_images_cvterm_id
-    });
-    my ($stitched_result, $stitched_total_count) = $stitched_images_search->search();
-    #print STDERR Dumper $stitched_result;
-
-    my $cropped_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $cropped_stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$cropped_stitched_drone_images_cvterm_id
-    });
-    my ($cropped_stitched_result, $cropped_stitched_total_count) = $cropped_stitched_images_search->search();
-    #print STDERR Dumper $cropped_stitched_result;
-
-    my $rotated_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $rotated_stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$rotated_stitched_drone_images_cvterm_id
-    });
-    my ($rotated_stitched_result, $rotated_stitched_total_count) = $rotated_stitched_images_search->search();
-    #print STDERR Dumper $rotated_stitched_result;
-
-    my $denoised_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $denoised_stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$denoised_stitched_drone_images_cvterm_id
-    });
-    my ($denoised_stitched_result, $denoised_stitched_total_count) = $denoised_stitched_images_search->search();
-    #print STDERR Dumper $denoised_stitched_result;
-
-    my $vegetative_index_tgi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_drone_imagery', 'project_md_image')->cvterm_id();
-    my $vegetative_index_tgi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$vegetative_index_tgi_drone_images_cvterm_id
-    });
-    my ($vegetative_index_tgi_result, $vegetative_index_tgi_total_count) = $vegetative_index_tgi_images_search->search();
-    #print STDERR Dumper $vegetative_index_tgi_result;
-
-    my $vegetative_index_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
-    my $vegetative_index_vari_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$vegetative_index_vari_drone_images_cvterm_id
-    });
-    my ($vegetative_index_vari_result, $vegetative_index_vari_total_count) = $vegetative_index_vari_images_search->search();
-    #print STDERR Dumper $vegetative_index_vari_result;
-
-    my $vegetative_index_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_drone_imagery', 'project_md_image')->cvterm_id();
-    my $vegetative_index_ndvi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$vegetative_index_ndvi_drone_images_cvterm_id
-    });
-    my ($vegetative_index_ndvi_result, $vegetative_index_ndvi_total_count) = $vegetative_index_ndvi_images_search->search();
-    #print STDERR Dumper $vegetative_index_ndvi_result;
-
-    my $threshold_background_removed_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $threshold_background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$threshold_background_removed_drone_images_cvterm_id
-    });
-    my ($threshold_background_removed_result, $threshold_background_removed_total_count) = $threshold_background_removed_images_search->search();
-    #print STDERR Dumper $threshold_background_removed_result;
-
-    my $threshold_background_removed_tgi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $threshold_background_removed_tgi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$threshold_background_removed_tgi_drone_images_cvterm_id
-    });
-    my ($threshold_background_removed_tgi_result, $threshold_background_removed_tgi_total_count) = $threshold_background_removed_tgi_images_search->search();
-    #print STDERR Dumper $threshold_background_removed_tgi_result;
-
-    my $threshold_background_removed_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $threshold_background_removed_vari_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$threshold_background_removed_vari_drone_images_cvterm_id
-    });
-    my ($threshold_background_removed_vari_result, $threshold_background_removed_vari_total_count) = $threshold_background_removed_vari_images_search->search();
-    #print STDERR Dumper $threshold_background_removed_vari_result;
-
-    my $threshold_background_removed_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $threshold_background_removed_ndvi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$threshold_background_removed_ndvi_drone_images_cvterm_id
-    });
-    my ($threshold_background_removed_ndvi_result, $threshold_background_removed_ndvi_total_count) = $threshold_background_removed_ndvi_images_search->search();
-    #print STDERR Dumper $threshold_background_removed_ndvi_result;
-
-    my $denoised_background_removed_thresholded_tgi_mask_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original', 'project_md_image')->cvterm_id();
-    my $denoised_background_removed_thresholded_tgi_mask_original_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$denoised_background_removed_thresholded_tgi_mask_original_cvterm_id
-    });
-    my ($denoised_background_removed_thresholded_tgi_mask_original_result, $denoised_background_removed_thresholded_tgi_mask_original_total_count) = $denoised_background_removed_thresholded_tgi_mask_original_search->search();
-    #print STDERR Dumper $denoised_background_removed_thresholded_tgi_mask_original_result;
-
-    my $denoised_background_removed_thresholded_vari_mask_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original', 'project_md_image')->cvterm_id();
-    my $denoised_background_removed_thresholded_vari_mask_original_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$denoised_background_removed_thresholded_vari_mask_original_cvterm_id
-    });
-    my ($denoised_background_removed_thresholded_vari_mask_original_result, $denoised_background_removed_thresholded_vari_mask_original_total_count) = $denoised_background_removed_thresholded_vari_mask_original_search->search();
-    #print STDERR Dumper $denoised_background_removed_thresholded_vari_mask_original_result;
-
-    my $denoised_background_removed_thresholded_ndvi_mask_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original', 'project_md_image')->cvterm_id();
-    my $denoised_background_removed_thresholded_ndvi_mask_original_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$denoised_background_removed_thresholded_ndvi_mask_original_cvterm_id
-    });
-    my ($denoised_background_removed_thresholded_ndvi_mask_original_result, $denoised_background_removed_thresholded_ndvi_mask_original_total_count) = $denoised_background_removed_thresholded_ndvi_mask_original_search->search();
-    #print STDERR Dumper $denoised_background_removed_thresholded_ndvi_mask_original_result;
 
     # my $ft_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'fourier_transform_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     # my $ft_stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -380,6 +299,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_mir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+
     my $observation_unit_polygon_original_background_removed_threshold_imagery_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         project_image_type_id_list=>[$observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id]
@@ -388,76 +308,31 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     #print STDERR Dumper $observation_unit_polygon_original_background_removed_threshold_imagery_result;
 
     my $plot_polygon_tgi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_tgi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_tgi_stitched_drone_images_cvterm_id
-    });
-    my ($plot_polygons_tgi_result, $plot_polygons_tgi_total_count) = $plot_polygons_tgi_images_search->search();
-    #print STDERR Dumper $plot_polygons_tgi_result;
-
     my $plot_polygon_vari_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_vari_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_vari_stitched_drone_images_cvterm_id
-    });
-    my ($plot_polygons_vari_result, $plot_polygons_vari_total_count) = $plot_polygons_vari_images_search->search();
-    #print STDERR Dumper $plot_polygons_vari_result;
-
     my $plot_polygon_ndvi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_ndvi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_ndvi_stitched_drone_images_cvterm_id
-    });
-    my ($plot_polygons_ndvi_result, $plot_polygons_ndvi_total_count) = $plot_polygons_ndvi_images_search->search();
-    #print STDERR Dumper $plot_polygons_ndvi_result;
-
     my $plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_tgi_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_background_removed_tgi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id
-    });
-    my ($plot_polygons_background_removed_tgi_result, $plot_polygons_background_removed_tgi_total_count) = $plot_polygons_background_removed_tgi_images_search->search();
-    #print STDERR Dumper $plot_polygons_background_removed_tgi_result;
-
     my $plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_vari_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_background_removed_vari_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id
-    });
-    my ($plot_polygons_background_removed_vari_result, $plot_polygons_background_removed_vari_total_count) = $plot_polygons_background_removed_vari_images_search->search();
-    #print STDERR Dumper $plot_polygons_background_removed_vari_result;
-
     my $plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndvi_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_background_removed_ndvi_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id
-    });
-    my ($plot_polygons_background_removed_ndvi_result, $plot_polygons_background_removed_ndvi_total_count) = $plot_polygons_background_removed_ndvi_images_search->search();
-    #print STDERR Dumper $plot_polygons_background_removed_ndvi_result;
-
     my $plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_original_background_removed_thresholded_tgi_mask_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id
-    });
-    my ($plot_polygons_original_background_removed_thresholded_tgi_mask_result, $plot_polygons_original_background_removed_thresholded_tgi_mask_total_count) = $plot_polygons_original_background_removed_thresholded_tgi_mask_images_search->search();
-    #print STDERR Dumper $plot_polygons_original_background_removed_thresholded_tgi_mask_result;
-
     my $plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_original_background_removed_thresholded_vari_mask_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id
-    });
-    my ($plot_polygons_original_background_removed_thresholded_vari_mask_result, $plot_polygons_original_background_removed_thresholded_vari_mask_total_count) = $plot_polygons_original_background_removed_thresholded_vari_mask_images_search->search();
-    #print STDERR Dumper $plot_polygons_original_background_removed_thresholded_vari_mask_result;
-
     my $plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygons_original_background_removed_thresholded_ndvi_mask_images_search = CXGN::DroneImagery::ImagesSearch->new({
+    
+    my $plot_polygons_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
-        project_image_type_id=>$plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id
+        project_image_type_id_list=>[
+            $plot_polygon_tgi_stitched_drone_images_cvterm_id,
+            $plot_polygon_vari_stitched_drone_images_cvterm_id,
+            $plot_polygon_ndvi_stitched_drone_images_cvterm_id,
+            $plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id,
+            $plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id,
+            $plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id,
+            $plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id,
+            $plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id,
+            $plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id
+        ]
     });
-    my ($plot_polygons_original_background_removed_thresholded_ndvi_mask_result, $plot_polygons_original_background_removed_thresholded_ndvi_mask_total_count) = $plot_polygons_original_background_removed_thresholded_ndvi_mask_images_search->search();
-    #print STDERR Dumper $plot_polygons_original_background_removed_thresholded_ndvi_mask_result;
+    my ($plot_polygons_result, $plot_polygons_total_count) = $plot_polygons_images_search->search();
+    #print STDERR Dumper $plot_polygons_result;
 
     my @return;
     my %unique_drone_runs;
@@ -465,199 +340,186 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
-    }
-    foreach (@$stitched_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
         my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
-    }
-    foreach (@$rotated_stitched_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_angle} = $_->{drone_run_band_rotate_angle};
-    }
-    foreach (@$cropped_stitched_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_polygon} = $_->{drone_run_band_cropped_polygon};
-    }
-    foreach (@$denoised_stitched_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_id} = $image_id;
-    }
-    foreach (@$vegetative_index_tgi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_id} = $image_id;
-    }
-    foreach (@$vegetative_index_vari_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_id} = $image_id;
-    }
-    foreach (@$vegetative_index_ndvi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_image_id} = $image_id;
-    }
-    foreach (@$threshold_background_removed_tgi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_threshold} = $_->{drone_run_band_removed_background_tgi_threshold};
-    }
-    foreach (@$threshold_background_removed_vari_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_threshold} = $_->{drone_run_band_removed_background_vari_threshold};
-    }
-    foreach (@$threshold_background_removed_ndvi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_threshold} = $_->{drone_run_band_removed_background_ndvi_threshold};
-    }
-    foreach (@$threshold_background_removed_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_id} = $image_id;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_threshold} = $_->{drone_run_band_removed_background_threshold};
-    }
-    foreach (@$denoised_background_removed_thresholded_tgi_mask_original_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_id} = $image_id;
-    }
-    foreach (@$denoised_background_removed_thresholded_vari_mask_original_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_id} = $image_id;
-    }
-    foreach (@$denoised_background_removed_thresholded_ndvi_mask_original_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_username} = $_->{username};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_modified_date} = $_->{image_modified_date};
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_original} = $image_original;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_id} = $image_id;
+        if ($_->{project_image_type_name} eq 'raw_drone_imagery') {
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
+        }
+        elsif ($_->{project_image_type_name} eq 'stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
+        }
+        elsif ($_->{project_image_type_name} eq 'cropped_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_polygon} = $_->{drone_run_band_cropped_polygon};
+        }
+        elsif ($_->{project_image_type_name} eq 'rotated_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_angle} = $_->{drone_run_band_rotate_angle};
+        }
+        elsif ($_->{project_image_type_name} eq 'denoised_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_tgi_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_vari_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_ndvi_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_threshold} = $_->{drone_run_band_removed_background_threshold};
+        }
+        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_threshold} = $_->{drone_run_band_removed_background_tgi_threshold};
+        }
+        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_vari_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_threshold} = $_->{drone_run_band_removed_background_vari_threshold};
+        }
+        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_id} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_threshold} = $_->{drone_run_band_removed_background_ndvi_threshold};
+        }
+        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_tgi_mask_original') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_vari_mask_original') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_ndvi_mask_original') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_id} = $image_id;
+        }
+        else {
+            print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 1!\n";
+        }
     }
 
-    # foreach (@$ft_stitched_result) {
-    #     my $image_id = $_->{image_id};
-    #     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-    #     my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-    #     my $image_original = $image->get_image_url("original");
-    #     $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{ft_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-    #     $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{ft_stitched_image_username} = $_->{username};
-    #     $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{ft_stitched_image_original} = $image_original;
-    #     $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{ft_stitched_image_id} = $image_id;
-    # }
+    foreach (@$plot_polygons_result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
+        my $image_original = $image->get_image_url("original");
+        if ($_->{project_image_type_name} eq 'observation_unit_polygon_tgi_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_tgi} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_tgi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_vari_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_vari} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_vari_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_ndvi_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_ndvi} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_ndvi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_tgi_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_tgi} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_tgi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_vari_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_vari} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_vari_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_ndvi} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_ndvi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_tgi_mask} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_tgi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_vari_mask} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_vari_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_ndvi_mask} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_ndvi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        else {
+            print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 2!\n";
+        }
+    }
+
     foreach (@$observation_unit_polygon_original_background_removed_threshold_imagery_result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -666,78 +528,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons} = $_->{drone_run_band_plot_polygons};
         push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{observation_unit_polygon_original_background_removed_threshold_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
     }
-    foreach (@$plot_polygons_tgi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_tgi} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_tgi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_vari_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_vari} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_vari_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_ndvi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_ndvi} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_ndvi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_background_removed_tgi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_tgi} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_tgi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_background_removed_vari_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_vari} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_vari_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_background_removed_ndvi_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_ndvi} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_ndvi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_original_background_removed_thresholded_tgi_mask_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_tgi_mask} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_tgi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_original_background_removed_thresholded_vari_mask_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_vari_mask} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_vari_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
-    foreach (@$plot_polygons_original_background_removed_thresholded_ndvi_mask_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_ndvi_mask} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_ndvi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
+
     #print STDERR Dumper \%unique_drone_runs;
 
     my $calendar_funcs = CXGN::Calendar->new({});
@@ -956,7 +747,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                                 }
                             }
                             if ($d->{vegetative_index_ndvi_stitched_image}) {
-                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>VARI Vegetative Index Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{vegetative_index_ndvi_image_id}.'"></span></h5><b>By</b>: '.$d->{vegetative_index_ndvi_username}.'</br><b>Date</b>: '.$d->{vegetative_index_ndvi_modified_date}.'</div><div class="col-sm-3">'.$d->{vegetative_index_ndvi_stitched_image}.'</div><div class="col-sm-6">';
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>NDVI Vegetative Index Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{vegetative_index_ndvi_image_id}.'"></span></h5><b>By</b>: '.$d->{vegetative_index_ndvi_username}.'</br><b>Date</b>: '.$d->{vegetative_index_ndvi_modified_date}.'</div><div class="col-sm-3">'.$d->{vegetative_index_ndvi_stitched_image}.'</div><div class="col-sm-6">';
 
                                 $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{vegetative_index_ndvi_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_ndvi_imagery">Create/View Plot Polygons</button>';
 
