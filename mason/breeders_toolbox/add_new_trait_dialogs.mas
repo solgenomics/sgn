@@ -1,0 +1,349 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="add_new_observation_variable_dialog" name="add_new_observation_variable_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewObservationVariableDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewObservationVariableDialog">Add New Observation Variable</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_new_trait_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Need a new observation variable?" &>
+                            <ul>
+                                <li>Please be sure the observation variable does not currently exist in the database using the trait search.</li>
+                                <li>Having many observation variables that are in fact recording the same thing is dangerous and can cause the database data to become fragmented.</li>
+                                <li>An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.</li>
+                                <li>Having descriptive observation variables is critical for downstream analysis.</li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Observation Variable" &>
+                            <& /page/page_title.mas, title=>"Define your observation variable" &>
+
+                            <p>An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.</p>
+                            <hr>
+
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Observation Variable Ontology Name: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_observation_variable_ontology_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Observation Variable Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_name" name="add_new_observation_variable_name" type="text" placeholder="e.g. total mass of fruit harvest from a plant using MachineX in kilograms"/>
+                                    </div>
+                                </div>
+                            </form>
+                            <br/>
+
+                            <center>
+                                <button class="btn btn-primary" id="add_new_trait_observation_variable_step">Go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Trait" &>
+                            <& /page/page_title.mas, title=>"Define your trait" &>
+
+                            <p>A trait defines the attribute being measured. It is one component of an observation variable; the others are a method and a scale.</p>
+                            <hr>
+
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait Ontology Name: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_ontology_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Existing Traits in Selected Ontology: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_existing_trait_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="well">
+                                    <h3>If the trait does not exist in the ontology you selected above, you can add a new trait into the ontology here.</h3>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Trait Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_name" name="add_new_trait_name" type="text" placeholder="e.g. harvested fruit mass per plant"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Trait Definition: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_definition" name="add_new_trait_definition" type="text" placeholder="e.g. the total mass of fruit harvested from a plant"/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <center>
+                                <button class="btn btn-primary" id="add_new_trait_trait_step">Go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Method" &>
+                            <p>A method defines the how it was measured measured. It is one component of an observation variable; the others are a trait and a scale.</p>
+                            <hr>
+
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Method Ontology Name: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_method_ontology_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Method Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_method_name" name="add_new_trait_method_name" type="text" placeholder="e.g. BrandA Mass Balance 0.001g Accuracy"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Method Definition: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_method_definition" name="add_new_trait_method_definition" type="text" placeholder="e.g. BrandA MachineX Mass Balance 0.001g Accuracy"/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <center>
+                                <button type="button" class="btn btn-primary" id="add_new_trait_method_step">Go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Scale" &>
+                            <& /page/page_title.mas, title=>"Define your scale" &>
+
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Scale Ontology Name: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_scale_ontology_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_scale_name" name="add_new_trait_scale_name" type="text" placeholder="e.g. mass in kilograms"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Definition: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_scale_definition" name="add_new_trait_scale_definition" type="text" placeholder="e.g. the mass in kilograms"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Format: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_new_trait_scale_format" name="add_new_trait_scale_format" >
+                                            <option value="qualitative">qualitative</option>
+                                            <option value="quantitative">quantitative</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Minimum: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_scale_minimum" name="add_new_trait_scale_minimum" type="text" placeholder="e.g. 1"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Maximum: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_scale_maximum" name="add_new_trait_scale_maximum" type="text" placeholder="e.g. 10000"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Categories ('/' separated): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_scale_categories" name="add_new_trait_scale_categories" type="text" placeholder="e.g. 1/3/5/7"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Scale Default Value: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_trait_scale_default" name="add_new_trait_scale_default" type="text" placeholder="e.g. 5"/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <center>
+                                <button type="button" class="btn btn-primary" id="add_new_trait_scale_step">Go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Confirm" &>
+                            <& /page/page_title.mas, title=>"Confirm you are creating this observation variable in the database" &>
+                            
+                            <button class="btn btn-primary" id="add_new_trait_submit_button">Submit</button>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your observation variable is now in the database" &>
+                        </&>
+
+                    </&><!-- End of workflow -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    jQuery('button[name="add_new_observation_variable_button"]').click(function(){
+        jQuery('#add_new_observation_variable_dialog').modal('show');
+
+        get_select_box('trait_variable_ontologies', 'add_new_observation_variable_ontology_select_div', { 'name':'add_new_observation_variable_ontology_select',    'id':'add_new_observation_variable_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']) });
+        get_select_box('trait_variable_ontologies', 'add_new_trait_ontology_select_div', { 'name':'add_new_trait_ontology_select', 'id':'add_new_trait_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']) });
+        get_select_box('trait_variable_ontologies', 'add_new_trait_method_ontology_select_div', { 'name':'add_new_trait_method_ontology_select', 'id':'add_new_trait_method_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['method_ontology']) });
+        get_select_box('trait_variable_ontologies', 'add_new_trait_scale_ontology_select_div', { 'name':'add_new_trait_scale_ontology_select', 'id':'add_new_trait_scale_ontology_select', 'empty':1, 'cvprop_type_name':JSON.stringify(['unit_ontology']) });
+        
+    });
+
+    jQuery('#add_new_trait_observation_variable_step').click(function() {
+        if (jQuery('#add_new_observation_variable_name').val() == '') {
+            alert('Please give a new observation variable name!');
+            return false;
+        }
+        var selected = [];
+        jQuery('input[name="add_new_observation_variable_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length < 1) {
+            alert('Please select one observation variable ontology!');
+        } else if (selected.length > 1) {
+            alert('Only select one observation variable ontology!');
+        } else {
+            Workflow.complete('#add_new_trait_observation_variable_step');
+            Workflow.focus('#add_new_trait_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery(document).on('change', 'input[name="add_new_trait_ontology_select"]', function(){
+        var selected = [];
+        jQuery('input[name="add_new_trait_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1) {
+            alert('Only select one trait ontology!');
+        } else {
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'cv_id':selected[0] });
+        }
+    });
+
+    jQuery('#add_new_trait_trait_step').click(function() {
+        if (jQuery('#add_new_trait_name').val() == ''){
+            alert('Please give a new trait name!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_definition').val() == ''){
+            alert('Please give a new trait definition!');
+            return false;
+        }
+        var selected = [];
+        jQuery('input[name="add_new_trait_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length < 1) {
+            alert('Please select one trait ontology!');
+        } else if (selected.length > 1) {
+            alert('Only select one trait ontology!');
+        } else {
+            Workflow.complete('#add_new_trait_trait_step');
+            Workflow.focus('#add_new_trait_workflow', 3);
+        }
+        return false;
+    });
+
+    jQuery('#add_new_trait_method_step').click(function(){
+        if (jQuery('#add_new_trait_method_name').val() == ''){
+            alert('Please give a new method name!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_method_definition').val() == ''){
+            alert('Please give a new method definition!');
+            return false;
+        }
+        var selected = [];
+        jQuery('input[name="add_new_trait_method_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length < 1) {
+            alert('Please select one method ontology!');
+        } else if (selected.length > 1) {
+            alert('Only select one method ontology!');
+        } else {
+            Workflow.complete('#add_new_trait_method_step');
+            Workflow.focus('#add_new_trait_workflow', 4);
+        }
+        return false;
+    });
+
+    jQuery('#add_new_trait_scale_step').click(function(){
+        if (jQuery('#add_new_trait_scale_name').val() == ''){
+            alert('Please give a new scale name!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_scale_definition').val() == ''){
+            alert('Please give a new scale definition!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_scale_format').val() == ''){
+            alert('Please give a new scale format!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_scale_minimum').val() == ''){
+            alert('Please give a new scale minimum!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_scale_maximum').val() == ''){
+            alert('Please give a new scale maximum!');
+            return false;
+        }
+        if (jQuery('#add_new_trait_scale_default').val() == ''){
+            alert('Please give a new scale default value!');
+            return false;
+        }
+        var selected = [];
+        jQuery('input[name="add_new_trait_scale_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length < 1) {
+            alert('Please select one scale ontology!');
+        } else if (selected.length > 1) {
+            alert('Only select one scale ontology!');
+        } else {
+            Workflow.complete('#add_new_trait_scale_step');
+            Workflow.focus('#add_new_trait_workflow', 5);
+        }
+        return false;
+    });
+});
+</script>
