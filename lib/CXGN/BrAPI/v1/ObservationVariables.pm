@@ -117,12 +117,13 @@ sub observation_variable_ontologies {
 			}
 			push @available, {
                 ontologyDbId=>qq|$db_id|,
-                ontologyName=>$db_name." (".$cv_name.")",
+                ontologyName=>$db_name,
                 description=>$cvterm_name,
                 authors=>$info->{authors} ? $info->{authors} : '',
                 version=>$dbxref_version,
                 copyright=>$info->{copyright} ? $info->{copyright} : '',
-                licence=>$info->{licence} ? $info->{licence} : ''
+                licence=>$info->{licence} ? $info->{licence} : '',
+                ontologyDbxrefAccession=>$dbxref_accession,
 			};
 		}
 	}
