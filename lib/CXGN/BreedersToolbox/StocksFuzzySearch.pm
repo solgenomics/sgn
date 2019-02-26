@@ -79,8 +79,9 @@ sub get_matches {
     print STDERR "FuzzySearch 2".localtime()."\n";
 
     foreach my $stock_name (@stock_list) {
-
-        if (exists($uniquename_hash{$stock_name})){
+	### case-insensitive matches #### 
+	my $lc_name = lc($stock_name);
+        if (exists($lowercase_name_lookup{$lc_name})){
             push @found_stocks, {matched_string => $stock_name, unique_name => $stock_name};
             next;
         }
@@ -108,7 +109,8 @@ sub get_matches {
             }
         }
 
-        my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@search_stock_names, $max_distance)};
+       #####case-seisitive matches are exact_match
+        my @stock_matches = @{$fuzzy_string_search->get_matches($stock_name, \@search_stock_names, $max_distance)};
 
         if (scalar(@stock_matches) == 0) {
             push (@absent_stocks, $stock_name);
