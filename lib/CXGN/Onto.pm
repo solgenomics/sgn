@@ -189,7 +189,41 @@ sub store_observation_variable_trait_method_scale {
     my $dbh = $schema->storage->dbh;
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 
-     my $coderef = sub {
+    my $new_observation_variable_cvterm_check = $schema->resultset("Cv::Cvterm")->search({
+        name => $new_observation_variable_name,
+    });
+    if ($new_observation_variable_cvterm_check->count() > 0) {
+        return { error => "The observation variable $new_observation_variable_name already exists in the database!" };
+    }
+
+    if (!$selected_trait_cvterm_id) {
+        my $new_trait_cvterm_check = $schema->resultset("Cv::Cvterm")->search({
+            name => $new_trait_name,
+        });
+        if ($new_trait_cvterm_check->count() > 0) {
+            return { error => "The trait $new_trait_name already exists in the database!" };
+        }
+    }
+
+    if (!$selected_method_cvterm_id) {
+        my $new_method_cvterm_check = $schema->resultset("Cv::Cvterm")->search({
+            name => $new_method_name,
+        });
+        if ($new_method_cvterm_check->count() > 0) {
+            return { error => "The method $new_method_name already exists in the database!" };
+        }
+    }
+
+    if (!$selected_scale_cvterm_id) {
+        my $new_scale_cvterm_check = $schema->resultset("Cv::Cvterm")->search({
+            name => $new_scale_name,
+        });
+        if ($new_scale_cvterm_check->count() > 0) {
+            return { error => "The scale $new_scale_name already exists in the database!" };
+        }
+    }
+
+    my $coderef = sub {
         my $observation_variable_db_q = "SELECT db.name, dbxref.accession, cv.name, cv.cv_id FROM dbxref JOIN db USING(db_id) JOIN cvterm USING(dbxref_id) JOIN cv USING(cv_id) WHERE db_id=$selected_observation_variable_db_id AND dbxref.accession ~ '$numeric_regex' ORDER BY dbxref.accession::int DESC LIMIT 1;";
         my $observation_variable_db_sth = $dbh->prepare($observation_variable_db_q);
         $observation_variable_db_sth->execute();
@@ -224,6 +258,7 @@ sub store_observation_variable_trait_method_scale {
         });
 
         if (!$selected_trait_cvterm_id) {
+
             my $trait_db_q = "SELECT db.name, dbxref.accession, cv.name, cv.cv_id FROM dbxref JOIN db USING(db_id) JOIN cvterm USING(dbxref_id) JOIN cv USING(cv_id) WHERE db_id=$selected_trait_db_id AND dbxref.accession ~ '$numeric_regex' ORDER BY dbxref.accession::int DESC LIMIT 1;";
             my $trait_db_sth = $dbh->prepare($trait_db_q);
             $trait_db_sth->execute();
@@ -322,18 +357,29 @@ sub store_observation_variable_trait_method_scale {
             my $scale_maximum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trait_maximum', 'trait_property')->cvterm_id();
             my $scale_minimum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trait_minimum', 'trait_property')->cvterm_id();
 
+            my @cvtermprops;
+            if ($new_scale_format) {
+                push @cvtermprops, {type_id => $scale_format_cvterm_id, value => $new_scale_format};
+            }
+            if ($new_scale_minumum) {
+                push @cvtermprops, {type_id => $scale_minimum_cvterm_id, value => $new_scale_minumum};
+            }
+            if ($new_scale_maximum) {
+                push @cvtermprops, {type_id => $scale_maximum_cvterm_id, value => $new_scale_maximum};
+            }
+            if ($new_scale_default) {
+                push @cvtermprops, {type_id => $scale_default_cvterm_id, value => $new_scale_default};
+            }
+            if ($new_scale_categories) {
+                push @cvtermprops, {type_id => $scale_categories_cvterm_id, value => $new_scale_categories};
+            }
+
             my $new_scale_cvterm = $schema->resultset("Cv::Cvterm")->create({
                 cv_id => $scale_cv_id,
                 name => $new_scale_name,
                 definition => $new_scale_definition,
                 dbxref_id => $new_term_scale_dbxref->dbxref_id(),
-                cvtermprops => [
-                    {type_id => $scale_format_cvterm_id, value => $new_scale_format},
-                    {type_id => $scale_minimum_cvterm_id, value => $new_scale_minumum},
-                    {type_id => $scale_maximum_cvterm_id, value => $new_scale_maximum},
-                    {type_id => $scale_default_cvterm_id, value => $new_scale_default},
-                    {type_id => $scale_categories_cvterm_id, value => $new_scale_categories}
-                ]
+                cvtermprops => \@cvtermprops
             });
             $selected_scale_cvterm_id = $new_scale_cvterm->cvterm_id();
 
@@ -355,7 +401,7 @@ sub store_observation_variable_trait_method_scale {
             new_term => [$new_observation_variable_cvterm->cvterm_id(), $new_observation_variable_cvterm->name()]
         };
     };
-
+    
     try {
         $schema->txn_do($coderef);
     } catch {
