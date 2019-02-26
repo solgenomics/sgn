@@ -112,39 +112,38 @@ sub store_trait_method_scale_observation_variable: Path('/ajax/onto/store_trait_
     my $new_scale_default = $c->req->param("new_scale_default");
     my $new_scale_categories = $c->req->param("new_scale_categories");
 
-    my $new_term;
-    eval {
-        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-        $new_term = $onto->store_observation_variable_trait_method_scale(
-            $selected_observation_variable_db_id,
-            $new_observation_variable_name,
-            $new_observation_variable_definition,
-            $selected_trait_db_id,
-            $selected_trait_cvterm_id,
-            $new_trait_name,
-            $new_trait_definition,
-            $selected_method_db_id,
-            $selected_method_cvterm_id,
-            $new_method_name,
-            $new_method_definition,
-            $selected_scale_db_id,
-            $selected_scale_cvterm_id,
-            $new_scale_name,
-            $new_scale_definition,
-            $new_scale_format,
-            $new_scale_minumum,
-            $new_scale_maximum,
-            $new_scale_default,
-            $new_scale_categories
-        );
-    };
-    if ($@) {
-        $c->stash->{rest} = { error => "An error occurred saving the new observation variable: trait, method, and scale details: $@" };
+    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+    my $return = $onto->store_observation_variable_trait_method_scale(
+        $selected_observation_variable_db_id,
+        $new_observation_variable_name,
+        $new_observation_variable_definition,
+        $selected_trait_db_id,
+        $selected_trait_cvterm_id,
+        $new_trait_name,
+        $new_trait_definition,
+        $selected_method_db_id,
+        $selected_method_cvterm_id,
+        $new_method_name,
+        $new_method_definition,
+        $selected_scale_db_id,
+        $selected_scale_cvterm_id,
+        $new_scale_name,
+        $new_scale_definition,
+        $new_scale_format,
+        $new_scale_minumum,
+        $new_scale_maximum,
+        $new_scale_default,
+        $new_scale_categories
+    );
+    my %finish;
+    if ($return->{error}) {
+        $finish{error} = $return->{error};
+    } elsif ($return->{success}) {
+        $finish{success} = 'Saved new observation variable <a href="/cvterm/'.$return->{new_term}->[0].'/view">'.$return->{new_term}->[1].'</a><br>';
+    } else {
+        $finish{error} = 'Something went wrong!';
     }
-    else {
-        my $message = 'Saved new observation variable <a href="/cvterm/'.$new_term->[0].'/view">'.$new_term->[1].'</a><br>';
-        $c->stash->{rest} = { success => $message, names => [$new_term->[1]] };
-    }
+    $c->stash->{rest} = \%finish;
 }
 
 =head2 get_trait_from_exact_components

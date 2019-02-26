@@ -194,6 +194,7 @@
                                     <label class="col-sm-3 control-label">New Scale Format: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_new_trait_scale_format" name="add_new_trait_scale_format" >
+                                            <option value="">Select One</option>
                                             <option value="qualitative">qualitative</option>
                                             <option value="quantitative">quantitative</option>
                                         </select>
@@ -239,6 +240,9 @@
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your observation variable is now in the database" &>
+
+                            <div id="add_new_trait_added_observation_variable_div">
+                            </div>
                         </&>
 
                     </&><!-- End of workflow -->
@@ -476,9 +480,6 @@ jQuery(document).ready(function() {
                 else if (jQuery('#add_new_trait_scale_maximum').val() == ''){
                     alert('Please give a new scale maximum!');
                 }
-                else if (jQuery('#add_new_trait_scale_default').val() == ''){
-                    alert('Please give a new scale default value!');
-                }
                 else {
                     add_new_trait_new_scale_name = jQuery('#add_new_trait_scale_name').val();
                     add_new_trait_new_scale_definition = jQuery('#add_new_trait_scale_definition').val();
@@ -501,7 +502,7 @@ jQuery(document).ready(function() {
 
     jQuery('#add_new_trait_submit_button').click(function(){
         jQuery.ajax ({
-            url: '/ajax/onto/store_trait_method_scale_observation_variable,
+            url: '/ajax/onto/store_trait_method_scale_observation_variable',
             type: 'POST',
             data: {
                 'selected_observation_variable_db_id':add_new_trait_new_observation_variable_db_id,
@@ -531,11 +532,18 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-                if (response.error){
+                //if (response.message){
+                //    jQuery('#add_new_trait_added_observation_variable_div').html(response.message);
+                //    Workflow.complete('#add_new_trait_submit_button');
+                //    Workflow.focus("#add_new_trait_workflow", -1); //go to success page
+                //}
+                if (response.success) {
+                    alert(response.success);
+                }
+                if (response.error) {
                     alert(response.error);
                 }
-                if (response.success){
-                }
+                location.reload();
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
