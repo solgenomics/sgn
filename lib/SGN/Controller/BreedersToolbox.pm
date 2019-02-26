@@ -20,8 +20,8 @@ use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
+use CXGN::Genotype::Search;
 use JSON;
-
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -723,12 +723,41 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
 
+sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$schema,
+        accession_list=>[45642, 45636],
+        # tissue_sample_list=>$tissue_sample_list,
+        # trial_list=>$trial_list,
+        # protocol_id_list=>$protocol_id_list,
+        # marker_name_list=>['S80_265728', 'S80_265723']
+        # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
+        # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
+    });
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    #print STDERR Dumper $genotypes;
+
+    $c->stash->{data} = 'my data';
+    $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
+}
+
+
 sub manage_markers : Path("/breeders/markers") Args(0) {
     my $self = shift;
     my $c = shift;
 
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
-
 }
 
 

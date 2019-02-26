@@ -845,37 +845,6 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protocols') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $id = $c->req->param("id") || "gtp_select";
-    my $name = $c->req->param("name") || "genotyping_protocol_select";
-    my $empty = $c->req->param("empty") || "";
-    my $default_gtp;
-    my %gtps;
-
-    my $gt_protocols = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_gt_protocols();
-
-    if (@$gt_protocols) {
-	$default_gtp = $c->config->{default_genotyping_protocol};
-	%gtps = map { @$_[1] => @$_[0] } @$gt_protocols;
-
-	if(!exists($gtps{$default_gtp}) && !($default_gtp =~ /^none$/)) {
-	    die "The conf variable default_genotyping_protocol: \"$default_gtp\" does not match any protocols in the database. Set it in sgn_local.conf using a protocol name from the nd_protocol table, or set it to 'none' to silence this error.";
-	}
-    } else {
-	$gt_protocols = ["No genotyping protocols found"];
-    }
-    my $html = simple_selectbox_html(
-      name => $name,
-      id => $id,
-      choices => $gt_protocols,
-      selected => $gtps{$default_gtp}
-    );
-    $c->stash->{rest} = { select => $html };
-}
-
 sub get_genotyping_protocol_select : Path('/ajax/html/select/genotyping_protocol') Args(0) {
     my $self = shift;
     my $c = shift;
