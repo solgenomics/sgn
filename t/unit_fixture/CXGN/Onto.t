@@ -353,14 +353,24 @@ is_deeply(\@check_names, [
             'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
         ], 'check that duplicate traits are separated from new_traits');
 
+
+## Test adding observation variables, traits, methods, scales
+
+my $response;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
 my $q = "Select db_id FROM db where name = 'CO_334';";
 my $sth = $schema->storage->dbh->prepare($q);
 $sth->execute();
 my ($db_id) = $sth->fetchrow_array();
 
-my $response;
 $mech->post_ok('http://localhost:3010/ajax/onto/store_trait_method_scale_observation_variable',
     [
+        "sgn_session_id"=>$sgn_session_id,
         "selected_observation_variable_db_id"=> $db_id,
         "new_observation_variable_name"=> "new observation variable name",
         "new_observation_variable_definition"=> "new observation variable definition",

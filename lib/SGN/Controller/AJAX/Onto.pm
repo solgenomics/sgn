@@ -91,6 +91,37 @@ sub store_trait_method_scale_observation_variable: Path('/ajax/onto/store_trait_
     my $c = shift;
     #print STDERR Dumper $c->req->params();
 
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to create observation variables!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to create observation variables!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add observation variables." };
+        $c->detach();
+    }
+
     my $selected_observation_variable_db_id = $c->req->param("selected_observation_variable_db_id");
     my $new_observation_variable_name = $c->req->param("new_observation_variable_name");
     my $new_observation_variable_definition = $c->req->param("new_observation_variable_definition");
