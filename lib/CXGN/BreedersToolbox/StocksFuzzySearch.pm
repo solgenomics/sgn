@@ -82,10 +82,10 @@ sub get_matches {
 	### case-insensitive matches #### 
 	my $lc_name = lc($stock_name);
         if (exists($lowercase_name_lookup{$lc_name})){
-            push @found_stocks, {matched_string => $stock_name, unique_name => $stock_name};
-            next;
+	    my $uniquename = $lowercase_name_lookup{$lc_name};
+            push @found_stocks, {matched_string => $stock_name, unique_name => $uniquename}; 
+	    next;
         }
-
         if (exists($synonym_uniquename_lookup{$stock_name})){
             my %match_info;
             if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
@@ -109,11 +109,11 @@ sub get_matches {
             }
         }
 
-       #####case-seisitive matches are exact_match
-        my @stock_matches = @{$fuzzy_string_search->get_matches($stock_name, \@search_stock_names, $max_distance)};
+       #####case-sensitive matches are exact_match
+        my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@search_stock_names, $max_distance)};
 
         if (scalar(@stock_matches) == 0) {
-            push (@absent_stocks, $stock_name);
+	    push (@absent_stocks, $stock_name);
         } else {
             my @matches;
             foreach (@stock_matches){
