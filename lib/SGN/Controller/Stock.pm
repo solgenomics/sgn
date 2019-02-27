@@ -354,6 +354,8 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my $protocol_full = $g->{selected_protocol_hash};
             my $project_name = $g->{genotypingDataProjectName};
             my $marker_info = $protocol_full->{markers};
+            print STDERR Dumper $protocol_full;
+            print STDERR Dumper $marker_info;
             my $stock_name = $g->{stock_name};
             my $stock_type_name = $g->{stock_type_name};
             my $synonym_string = join ',', @{$g->{synonyms}};
