@@ -33,8 +33,7 @@ sub combine_gebvs_of_traits {
     }
    
     my $index_file  = $c->stash->{selection_index_file};
-
-    print STDERR "\ngebvs_files:  $gebvs_files\n";
+    
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
 
     if (scalar(@files_no) > 1 ) 
@@ -59,7 +58,6 @@ sub combine_gebvs_of_traits {
 	
         $c->controller("solGS::solGS")->run_r_script($c);
 	$c->stash->{combined_gebvs_file} = $combined_gebvs_file;
-	 print STDERR "\ncombine gebvs combined gebvs file:  $combined_gebvs_file\n";
     }
     else 
     {
@@ -99,10 +97,9 @@ sub get_gebv_files_of_traits {
     } 
     else
     {
-	print STDERR "\ncalling analyzed traits : $pop_id\n";
         $c->controller('solGS::solGS')->analyzed_traits($c);
         my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
-	print STDERR "\nanalyzed files: @analyzed_traits_files\n";
+	
         foreach my $tr_file (@analyzed_traits_files) 
         {
             $gebv_files .= $tr_file;
