@@ -124,7 +124,6 @@ jQuery(document).ready(function(){
 });
 
 function manageDroneImageryDroneRunBandDisplay(project_drone_run_band_id){
-    alert('X');
     jQuery.ajax({
         url : '/ajax/drone_imagery/raw_drone_imagery_drone_run_band?drone_run_band_project_id='+project_drone_run_band_id,
         beforeSend: function() {
