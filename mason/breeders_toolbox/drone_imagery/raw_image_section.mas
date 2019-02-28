@@ -122,4 +122,24 @@ jQuery(document).ready(function(){
     });
 
 });
+
+function manageDroneImageryDroneRunBandDisplay(project_drone_run_band_id){
+    alert('X');
+    jQuery.ajax({
+        url : '/ajax/drone_imagery/raw_drone_imagery_drone_run_band?drone_run_band_project_id='+project_drone_run_band_id,
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery('#drone_run_band_accordian_drone_run_band_div_'+project_drone_run_band_id).html(response.data[0]);
+            jQuery("#working_modal").modal("hide");
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert('Error getting drone run band summary images!')
+        }
+    });
+}
+
 </script>
