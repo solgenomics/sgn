@@ -997,18 +997,122 @@ sub drone_imagery_analysis_query_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $observation_unit_polygon_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_mir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_tgi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_vari_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_ndvi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_tgi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_background_removed_vari_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_vari_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndvi_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
+
+    my $drone_run_band_project_id_list = $c->req->param('drone_run_band_project_id_list') ? decode_json $c->req->param('drone_run_band_project_id_list') : [];
+    my $trait_id_list = $c->req->param('trait_id_list') ? decode_json $c->req->param('trait_id_list') : [];
+    my $return_format = $c->req->param('format') || 'csv';
+    my $trial_name_list = $c->req->param('trial_name_list');
+    my $trial_id_list = $c->req->param('trial_id_list') ? decode_json $c->req->param('trial_id_list') : [];
+    my $project_image_type_id_list = $c->req->param('project_image_type_id_list') ? decode_json $c->req->param('project_image_type_id_list') : [$observation_unit_polygon_imagery_cvterm_id,
+    $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id,
+    $observation_unit_polygon_tgi_imagery_cvterm_id,
+    $observation_unit_polygon_vari_imagery_cvterm_id,
+    $observation_unit_polygon_ndvi_imagery_cvterm_id,
+    $observation_unit_polygon_background_removed_tgi_imagery_cvterm_id,
+    $observation_unit_polygon_background_removed_vari_imagery_cvterm_id,
+    $observation_unit_polygon_background_removed_ndvi_imagery_cvterm_id,
+    $observation_unit_polygon_original_background_removed_tgi_mask_imagery_cvterm_id,
+    $observation_unit_polygon_original_background_removed_vari_mask_imagery_cvterm_id,
+    $observation_unit_polygon_original_background_removed_ndvi_mask_imagery_cvterm_id,
+    $observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_cvterm_id,
+    $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id,
+    $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id];
+
     my %return;
 
     my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
-        drone_run_band_project_id_list=>[$drone_run_band_project_id],
-        project_image_type_id=>$raw_drone_images_cvterm_id
+        drone_run_band_project_id_list=>$drone_run_band_project_id_list,
+        project_image_type_id_list=>$project_image_type_id_list
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
+
+    my %image_data_hash;
+    my %project_image_type_names;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        push @{$image_data_hash{$_->{stock_id}}->{$_->{project_image_type_name}}}, $main_production_site.$image_url;
+        $project_image_type_names{$_->{project_image_type_name}}++;
+    }
+    my @project_image_names_list = sort keys %project_image_type_names;
+
+    if ($trial_name_list) {
+        my @trial_names = split ',', $trial_name_list;
+        my $trial_search = CXGN::Trial::Search->new({
+            bcs_schema=>$schema,
+            trial_name_list=>\@trial_names
+        });
+        my ($result, $total_count) = $trial_search->search();
+        foreach (@$result) {
+            push @$trial_id_list, $_->{trial_id};
+        }
+    }
+
+    my %data_hash;
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+        bcs_schema=>$schema,
+        search_type=>'MaterializedViewTable',
+        data_level=>'plot',
+        trait_list=>$trait_id_list,
+        trial_list=>$trial_id_list,
+        include_timestamp=>0,
+        exclude_phenotype_outlier=>0,
+    );
+    my @data = $phenotypes_search->get_phenotype_matrix();
+
+    my $phenotype_header = shift @data;
+    my @total_phenotype_header = (@$phenotype_header, @project_image_names_list);
+    foreach (@data) {
+        $data_hash{$_->[21]} = $_;
+    }
+
+    while (my($stock_id, $image_info_hash) = each %image_data_hash) {
+        foreach (@project_image_names_list) {
+            push @{$data_hash{$stock_id}}, $image_info_hash->{$_};
+        }
+    }
+    #print STDERR Dumper \%data_hash;
+
+    
+    $return{data} = \%data_hash;
 
     $c->stash->{rest} = \%return;
 }
@@ -2770,7 +2874,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     #print STDERR Dumper \@result_agg;
 
     print STDERR Dumper $archive_temp_result_agg_file;
-    open(my $F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
+    open($F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
         foreach my $data (@result_agg){
             print $F join ',', @$data;
             print $F "\n";
