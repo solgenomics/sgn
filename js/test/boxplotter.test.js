@@ -1,3 +1,5 @@
+import test from 'tape';
+import nock from 'nock';
 import * as Boxplotter from '../source/entries/boxplotter.js';
 import data from './boxplotter.test.data.js';
 

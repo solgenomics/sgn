@@ -1,3 +1,4 @@
+import test from 'tape';
 import {Wizard} from "../source/modules/wizard-search.js";
 
 test('Wizard', t=>{

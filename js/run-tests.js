@@ -12,7 +12,7 @@ const del = require('del');
 const path = require('path');
 const glob = require("glob");
 const nock = require('nock');
-const fetch = require('node-fetch');
+const node_fetch = require('node-fetch');
 
 const { JSAN_to_src_path } = require("./webpack_util/utils.js");
 
@@ -77,17 +77,17 @@ function runTests(mapping){
       includeNodeLocations: true,
       runScripts: "dangerously"
     });
-    // Add window.test function to JSDOM window which hooks to the instance of
-    // tape that is running in Node.js
-    dom.window.test = test;
-    dom.window.tape = test;
-    // Add window.nock function to JSDOM window which allows for us to spoof AJAX calls
+    // Reference tape from the JSDOM window, by name defined in test.webpack.config
+    dom.window[webpackConfig.externals.tape] = test;
+    // Reference nock from the JSDOM window, by name defined in test.webpack.config
     // also clean up current mocked responses from previous tests
-    dom.window.nock = nock;
-    dom.window.fetch = fetch;
+    dom.window[webpackConfig.externals.nock] = nock;
     nock.cleanAll();
     nock.disableNetConnect();
+    // Polyfill JSDOM fetch using node-fetch
+    dom.window.fetch = node_fetch;
     // Ensure console.log/info/debug statements inside virtual DOM print to stderr
+    // by replacing the default console with one which routes to stderr
     // This ensures "pure" tap stdout
     dom.window.console = new Console({ stdout: process.stderr, stderr: process.stderr });
     // Add script tags to JSDOM, these excute upon insertion (thereby running
