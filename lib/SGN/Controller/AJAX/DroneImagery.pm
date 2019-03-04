@@ -338,6 +338,13 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
         my $drone_run_bands = $v->{bands};
 
+        my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
+        my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
+        $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>";
+        $drone_run_html .= "<br/><b>Total Plot Image Count</b>: <div id=\"drone_run_band_total_plot_image_count_div_$k\">Loading...</div></div>";
+
+        $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View Bands</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
+
         my $drone_run_band_table_html = '<table class="table table-bordered"><thead><tr><th>Drone Run Band(s)</th><th>Images/Actions</th></thead><tbody>';
 
         foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
@@ -355,16 +362,77 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         }
         $drone_run_band_table_html .= '</tbody></table>';
 
-        my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
-        my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
-        $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a></div>";
         $drone_run_html .= $drone_run_band_table_html;
+
         $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
+
+        $drone_run_html .= '</div></div></div></div>';
 
         push @return, [$drone_run_html];
     }
 
     $c->stash->{rest} = { data => \@return };
+}
+
+sub raw_drone_imagery_plot_image_count : Path('/ajax/drone_imagery/raw_drone_imagery_plot_image_count') : ActionClass('REST') { }
+
+sub raw_drone_imagery_plot_image_count_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_mir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_tgi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_vari_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_ndvi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_tgi_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_vari_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndvi_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
+
+    my $observation_unit_polygon_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id_list=>[
+            $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id,
+            $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id,
+            $plot_polygon_tgi_stitched_drone_images_cvterm_id,
+            $plot_polygon_vari_stitched_drone_images_cvterm_id,
+            $plot_polygon_ndvi_stitched_drone_images_cvterm_id,
+            $plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id,
+            $plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id,
+            $plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id,
+            $plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id,
+            $plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id,
+            $plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id
+        ]
+    });
+    my ($observation_unit_polygon_result, $observation_unit_polygon_total_count) = $observation_unit_polygon_search->search();
+    #print STDERR Dumper $observation_unit_polygon_result;
+
+    my @return;
+    my %unique_drone_runs;
+    foreach (@$observation_unit_polygon_result) {
+        $unique_drone_runs{$_->{drone_run_project_id}}++;
+    }
+    #print STDERR Dumper \%unique_drone_runs;
+
+    $c->stash->{rest} = { data => \%unique_drone_runs };
 }
 
 sub raw_drone_imagery_drone_run_band_summary : Path('/ajax/drone_imagery/raw_drone_imagery_drone_run_band') : ActionClass('REST') { }

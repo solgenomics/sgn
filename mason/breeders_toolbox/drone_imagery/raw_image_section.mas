@@ -4,7 +4,7 @@
 <table class="table table-bordered table-hover" id="raw_drone_image_datatable">
     <thead>
         <tr>
-            <th>Drone Run</th>
+            <th>Drone Runs</th>
         </tr>
     </thead>
 </table>
@@ -44,6 +44,24 @@ jQuery(document).ready(function(){
 
     var raw_drone_imagery_table = jQuery('#raw_drone_image_datatable').DataTable( {
         'ajax': '/ajax/drone_imagery/raw_drone_imagery',
+        'paging': false
+    });
+    
+    raw_drone_imagery_table.on( 'draw', function () {
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/raw_drone_imagery_plot_image_count',
+            success: function(response){
+                console.log(response);
+                for (drone_run_project_id in response.data) {
+                    console.log(drone_run_project_id);
+                    console.log(response.data[drone_run_project_id]);
+                    jQuery('#drone_run_band_total_plot_image_count_div_'+drone_run_project_id).html(response.data[drone_run_project_id]);
+                }
+            },
+            error: function(response){
+                alert('Error getting plot image count!')
+            }
+        });
     });
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_stitch"]', function(){
