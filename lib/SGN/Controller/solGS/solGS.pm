@@ -3248,8 +3248,9 @@ sub format_phenotype_dataset_rows {
 
 sub format_phenotype_dataset_headers {
     my ($self, $all_headers, $meta_headers,  $traits_file) = @_;
-
-    $all_headers =~ s/\|\w+:\d+//g;
+    
+    $all_headers =~ s/(\|\w+:\d+)//g;
+    $all_headers =~ s/\|/ /g;
     $all_headers =~ s/\n//g; 
     
     my $traits = $all_headers;
