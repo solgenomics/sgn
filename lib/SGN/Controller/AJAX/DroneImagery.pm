@@ -340,9 +340,14 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $drone_run_bands = $v->{bands};
 
         my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
-        my $drone_run_html = '<div class="well well-sm"><b>Drone Run Name</b>: '.$v->{drone_run_project_name}.'<br/><b>Drone Run Type</b>: '.$v->{drone_run_type}.'<br/><b>Description</b>: '.$v->{drone_run_project_description}.'<br/><b>Date</b>: '.$drone_run_date;
-        $drone_run_html .= "<br/><b>Field Trial</b>: <a href=\"/breeders_toolbox/trial/$v->{trial_id}\">$v->{trial_name}</a>";
-        $drone_run_html .= "<br/><b>Total Plot Image Count</b>: <div id=\"drone_run_band_total_plot_image_count_div_$k\">Loading...</div></div>";
+        my $drone_run_html = '<div class="well well-sm">';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Drone Run Name</b>:</div><div class="col-sm-6">'.$v->{drone_run_project_name}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Drone Run Type</b>:</div><div class="col-sm-6">'.$v->{drone_run_type}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Description</b>:</div><div class="col-sm-6">'.$v->{drone_run_project_description}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Date</b>:</div><div class="col-sm-6">'.$drone_run_date.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Field Trial</b>:</div><div class="col-sm-6"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6" ><b>Total Plot Image Count</b>:</div><div class="col-sm-6"><div name="drone_run_band_total_plot_image_div" id="drone_run_band_total_plot_image_count_div_'.$k.'">Loading...</div></div></div>';
+        $drone_run_html .= '</div>';
 
         $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View Bands</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
 

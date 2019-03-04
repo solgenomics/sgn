@@ -52,6 +52,7 @@ jQuery(document).ready(function(){
             url : '/ajax/drone_imagery/raw_drone_imagery_plot_image_count',
             success: function(response){
                 console.log(response);
+                jQuery('div[name="drone_run_band_total_plot_image_div"]').html('None');
                 for (drone_run_project_id in response.data) {
                     console.log(drone_run_project_id);
                     console.log(response.data[drone_run_project_id]);
