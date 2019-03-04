@@ -33,7 +33,7 @@ sub combine_gebvs_of_traits {
     }
    
     my $index_file  = $c->stash->{selection_index_file};
-
+    
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
 
     if (scalar(@files_no) > 1 ) 
@@ -63,6 +63,8 @@ sub combine_gebvs_of_traits {
     {
         $c->stash->{combined_gebvs_files} = 0;           
     }
+
+   
 }
 
 
@@ -71,7 +73,7 @@ sub combine_gebvs_of_traits {
 sub get_gebv_files_of_traits {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
+    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{corre_pop_id};
     $c->stash->{model_id} = $pop_id;
     my $pred_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     
@@ -97,7 +99,7 @@ sub get_gebv_files_of_traits {
     {
         $c->controller('solGS::solGS')->analyzed_traits($c);
         my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
-
+	
         foreach my $tr_file (@analyzed_traits_files) 
         {
             $gebv_files .= $tr_file;
