@@ -27,6 +27,7 @@ use Image::Size;
 use Text::CSV;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::BrAPI::FileResponse;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -1174,13 +1175,40 @@ sub drone_imagery_analysis_query_GET : Args(0) {
 
     while (my($stock_id, $image_info_hash) = each %image_data_hash) {
         foreach (@project_image_names_list) {
-            push @{$data_hash{$stock_id}}, $image_info_hash->{$_};
+            my $image_string = join ',', @{$image_info_hash->{$_}};
+            push @{$data_hash{$stock_id}}, $image_string;
         }
     }
     #print STDERR Dumper \%data_hash;
+    my @data_array = values %data_hash;
+    my @data_total = (\@total_phenotype_header, @data_array);
 
-    
-    $return{data} = \%data_hash;
+    if ($return_format eq 'csv') {
+        my $dir = $c->tempfiles_subdir('download');
+        my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_csv_'.'XXXXX');
+        my $file_response = CXGN::BrAPI::FileResponse->new({
+            absolute_file_path => $download_file_path,
+            absolute_file_uri => $main_production_site.$download_uri,
+            format => $return_format,
+            data => \@data_total
+        });
+        my @data_files = $file_response->get_datafiles();
+        $return{files} = \@data_files;
+    } elsif ($return_format eq 'xls') {
+        my $dir = $c->tempfiles_subdir('download');
+        my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_xls_'.'XXXXX');
+        my $file_response = CXGN::BrAPI::FileResponse->new({
+            absolute_file_path => $download_file_path,
+            absolute_file_uri => $main_production_site.$download_uri,
+            format => $return_format,
+            data => \@data_total
+        });
+        my @data_files = $file_response->get_datafiles();
+        $return{files} = \@data_files;
+    } elsif ($return_format eq 'json') {
+        $return{header} = \@total_phenotype_header;
+        $return{data} = \@data_array;
+    }
 
     $c->stash->{rest} = \%return;
 }
