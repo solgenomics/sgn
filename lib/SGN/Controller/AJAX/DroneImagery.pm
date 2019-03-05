@@ -877,7 +877,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= join '', @{$d->{plot_polygon_original_background_removed_thresholded_tgi_mask_images}};
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= "</span>";
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= '<br/><br/>';
-                                            $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_original_background_removed_tgi_mask_imagery" >Calculate Phenotypes</button>';
+                                            $plot_polygon_original_background_removed_thresholded_tgi_mask_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery" >Calculate Phenotypes</button>';
                                         } else {
                                             $plot_polygon_original_background_removed_thresholded_tgi_mask_images = 'No Plot Polygons Assigned';
                                         }
@@ -2303,6 +2303,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
+    print STDERR Dumper $total_count;
 
     my $temp_images_subdir = '';
     my $temp_results_subdir = '';
