@@ -336,20 +336,23 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     my $calendar_funcs = CXGN::Calendar->new({});
     foreach my $k (sort keys %unique_drone_runs) {
         my $v = $unique_drone_runs{$k};
-
         my $drone_run_bands = $v->{bands};
-
         my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
+
         my $drone_run_html = '<div class="well well-sm">';
-        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Drone Run Name</b>:</div><div class="col-sm-6">'.$v->{drone_run_project_name}.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Drone Run Type</b>:</div><div class="col-sm-6">'.$v->{drone_run_type}.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Description</b>:</div><div class="col-sm-6">'.$v->{drone_run_project_description}.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Date</b>:</div><div class="col-sm-6">'.$drone_run_date.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-6"><b>Field Trial</b>:</div><div class="col-sm-6"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-6" ><b>Total Plot Image Count</b>:</div><div class="col-sm-6"><div name="drone_run_band_total_plot_image_div" id="drone_run_band_total_plot_image_count_div_'.$k.'">Loading...</div></div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Drone Run Name</b>:</div><div class="col-sm-9">'.$v->{drone_run_project_name}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Drone Run Type</b>:</div><div class="col-sm-9">'.$v->{drone_run_type}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Description</b>:</div><div class="col-sm-9">'.$v->{drone_run_project_description}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Date</b>:</div><div class="col-sm-9">'.$drone_run_date.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Field Trial</b>:</div><div class="col-sm-9"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
+
+        $drone_run_html .= "<hr>";
+
+        $drone_run_html .= '<div name="drone_run_band_total_plot_image_div" id="drone_run_band_total_plot_image_count_div_'.$k.'">';
+        $drone_run_html .= '<div class="panel-group"><div class="panel panel-default panel-sm"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >Loading Plot Image Summary...</a></h4></div></div></div>';
         $drone_run_html .= '</div>';
 
-        $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View Bands</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
+        $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View All Image Bands</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
 
         my $drone_run_band_table_html = '<table class="table table-bordered"><thead><tr><th>Drone Run Band(s)</th><th>Images/Actions</th></thead><tbody>';
 
@@ -373,6 +376,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
 
         $drone_run_html .= '</div></div></div></div>';
+
+        $drone_run_html .= '</div>';
 
         push @return, [$drone_run_html];
     }
@@ -434,7 +439,8 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my @return;
     my %unique_drone_runs;
     foreach (@$observation_unit_polygon_result) {
-        $unique_drone_runs{$_->{drone_run_project_id}}++;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{$_->{project_image_type_name}}++;
+        $unique_drone_runs{$_->{drone_run_project_id}}->{total_plot_image_count}++;
     }
     #print STDERR Dumper \%unique_drone_runs;
 
