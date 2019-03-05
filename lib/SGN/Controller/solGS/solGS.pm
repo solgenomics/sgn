@@ -3245,21 +3245,26 @@ sub format_phenotype_dataset_rows {
     
 }
 
+sub clean_traits {
+    my ($self, $terms) = @_;
+
+    $terms =~ s/(\|\w+:\d+)//g;
+    $terms = =~ s/\|/ /g;
+    $terms =~ s/^\s+|\s+$//g;
+
+    return $terms;
+}
 
 sub format_phenotype_dataset_headers {
     my ($self, $all_headers, $meta_headers,  $traits_file) = @_;
     
-    $all_headers =~ s/(\|\w+:\d+)//g;
-    $all_headers =~ s/\|/ /g;
-    $all_headers =~ s/\n//g; 
+    $all_headers = $self->clean_traits($all_headers);
     
     my $traits = $all_headers;
      
     foreach my $mh (@$meta_headers) {
        $traits =~ s/($mh)//g;
     }
-
-    $traits =~ s/^\s+|\s+$//g;
 
     write_file($traits_file, $traits) if $traits_file;   
     my  @filtered_traits = split(/\t/, $traits);
