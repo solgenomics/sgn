@@ -367,16 +367,25 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <div class="form-group">
-                <label class="col-sm-5 control-label">Select Channel:</label>
-                <div class="col-sm-7">
-                    <select class="form-control" id="drone_imagery_calculate_phenotypes_zonal_stats_channel_select_input">
-                        <option value="0">Channel 1</option>
-                        <option value="1">Channel 2</option>
-                        <option value="2">Channel 3</option>
-                    </select>
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Select Channel:</label>
+                    <div class="col-sm-7">
+                        <select class="form-control" id="drone_imagery_calculate_phenotypes_zonal_stats_channel_select_input">
+                            <option value="0">Channel 1</option>
+                            <option value="1">Channel 2</option>
+                            <option value="2">Channel 3</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Select Week In Drone Run Series:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_calculate_phenotypes_zonal_stats_time_select_div">
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
 
       </div>
@@ -2439,16 +2448,18 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats').click(function(){
+        get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005' });
         jQuery('#drone_imagery_calc_phenotypes_zonal_channel_dialog').modal('show');
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select').click(function(){
 
         var manage_drone_imagery_calculate_phenotypes_zonal_channel = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select_input').val();
-        
+        var manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_time_select').val();
+
         if ( ( (manage_drone_imagery_calculate_phenotypes_plot_polygons_type == 'tgi') || (manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'RGB Color Image') ) && (manage_drone_imagery_calculate_phenotypes_zonal_channel == '1' || manage_drone_imagery_calculate_phenotypes_zonal_channel == '2') ) {
             alert('The current image is composed of only a single channel, and so only channel 1 can be selected here!');
-            return;
+            return false;
         }
         else {
 
@@ -2460,6 +2471,7 @@ jQuery(document).ready(function() {
                     'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
                     'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
                     'image_band': manage_drone_imagery_calculate_phenotypes_zonal_channel,
+                    'time_cvterm_id': manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id,
                     'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type,
                 },
                 beforeSend: function() {
@@ -2471,7 +2483,7 @@ jQuery(document).ready(function() {
 
                     if(response.error) {
                         alert(response.error);
-                        return;
+                        return false;
                     }
 
                     var html = '<table class="table table-bordered table-hover" id="manage_drone_imagery_zonal_stats_table"><thead><tr><th>Observation Unit</th><th>Image</th>';
@@ -2490,6 +2502,7 @@ jQuery(document).ready(function() {
                     jQuery('#manage_drone_imagery_zonal_stats_table').DataTable();
 
                     jQuery('#drone_imagery_calc_phenotypes_zonal_channel_dialog').modal('hide');
+                    return false;
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");

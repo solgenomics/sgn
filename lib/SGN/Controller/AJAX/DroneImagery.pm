@@ -2296,6 +2296,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $drone_run_band_project_type = $c->req->param('drone_run_band_project_type');
     my $phenotype_method = $c->req->param('method');
     my $image_band_selected = $c->req->param('image_band');
+    my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $plot_polygons_type = $c->req->param('plot_polygons_type');
     #print STDERR Dumper $c->req->params();
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
