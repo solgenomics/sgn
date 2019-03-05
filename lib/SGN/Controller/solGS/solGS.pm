@@ -3249,7 +3249,7 @@ sub clean_traits {
     my ($self, $terms) = @_;
 
     $terms =~ s/(\|\w+:\d+)//g;
-    $terms = =~ s/\|/ /g;
+    $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
 
     return $terms;
