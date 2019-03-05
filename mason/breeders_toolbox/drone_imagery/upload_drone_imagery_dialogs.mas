@@ -24,7 +24,7 @@
                         <p>If you only have raw drone images that have not been stitched into an ortho mosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip) into a field trial and under a drone run in the database. You can have several drone runs for a single field trial. For an individual drone run, once you have uploaded all photos, you can stitch an ortho-image together. Afterwards, you will have options to cut the ortho image into plot polygons and extract phenotypes for those plots into the database.</p>
                         <p>If you already have an ortho mosaic image of your entire field, you can upload that image under a field trial and a drone run. Afterwards,  you will have options to cut the ortho-image into plot polygons and extract phenotypes for those plots into the database.</p>
                         <p>Optionally, multi-spectral images, where the camera captures duplicates of the same image under different spectra, can be divided into separate bands under a drone run.</p>
-                        <p>Limit your images to less than 20MB</p>
+                        <p>Limit your images to less than 50MB, preferably using a .png format</p>
                         <br/><br/>
                         <center>
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -108,18 +108,18 @@
                     <&| /util/workflow.mas:step, title=> "Image Info" &>
                         <& /page/page_title.mas, title=>"Stitched vs Unstitched and Number of Bands (Image Sets) To Upload" &>
 
-                        <div class="well">
+                        <!--<div class="well">
                             <ul>
                                 <li>Raw images (unstitched) coming from your drone can be uploaded in a zip file. We can then stitch them together into an ortho image of the entire drone run.</li>
                                 <li>Or you can choose to upload a single image and skip any stitching</li>
                             </ul>
-                        </div>
+                        </div>-->
                         <div class="well">
                             <ul>
                                 <li>It is possible to upload regular RGB or Black and White photos.</li>
                                 <li>For multi-spectral cameras, it is possible to upload individual spectra image sets.</li>
                                 <li>When uploading two or three or more separate spectral bands, make sure that the camera(s) capturing these image(s) are perfectly synchronized, so that all spectra capture the same frame at the same time.</li>
-                                <li>When uploading many separate bands of unstitched images, you will upload a zipfile (.zip) for each band. Make sure the images are in the same order in each of the zipfiles. We can then merge the different bands into one image for analysis.</li>
+                                <!--<li>When uploading many separate bands of unstitched images, you will upload a zipfile (.zip) for each band. Make sure the images are in the same order in each of the zipfiles. We can then merge the different bands into one image for analysis.</li>-->
                             </ul>
                         </div>
 
@@ -127,8 +127,8 @@
                             <label class="col-sm-3 control-label">Do you require stitching an ortho image of the drone run:</label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
-                                    <option value="">Select One</option>
-                                    <option value="yes">Yes, I am uploading a zipfile of images to stitch</option>
+                                    <!--<option value="">Select One</option>
+                                    <option value="yes">Yes, I am uploading a zipfile of images to stitch</option> -->
                                     <option value="no">No</option>
                                 </select>
                             </div>

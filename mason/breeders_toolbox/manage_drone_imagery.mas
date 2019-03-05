@@ -388,6 +388,83 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_standard_process_dialog" name="drone_imagery_standard_process_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryStandardProcessDialog" data-backdrop="static">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="droneImageryStandardProcessDialog">Run A Standard Process for a Drone Run</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "drone_imagery_standard_process_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through applying a standard to your drone run" &>
+                            <p>You should manually take one of your drone run bands all the way through to plot polygon saving before using this tool. Manual steps that are critical are: cropping original image and defining the plot polygon layout. Once you have completed those manual steps for one drone run band, they can be applied to all other drone run bands.</p>
+                            
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Initialize" &>
+                            <& /page/page_title.mas, title=>"Select the rotation, image cropping, and thresholding to use" &>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Drone Run Rotation(s): </label>
+                                <div class="col-sm-9" >
+                                    <div id="drone_imagery_standard_process_rotation_select_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Drone Run Image Cropping(s): </label>
+                                <div class="col-sm-9" >
+                                    <div id="drone_imagery_standard_process_cropping_select_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Drone Run Thresholding(s): </label>
+                                <div class="col-sm-9" >
+                                    <div id="drone_imagery_standard_process_thresholding_select_div"></div>
+                                </div>
+                            </div>
+                                
+                            <center>
+                            <button class="btn btn-primary" id="drone_imagery_standard_process_initialize_step">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Apply To" &>
+                            <& /page/page_title.mas, title=>"Select images to apply to" &>
+
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>Drone Run Name</th>
+                                        <th>Drone Run Type</th>
+                                        <th>Drone Run Description</th>
+                                        <th>Drone Run Date</th>
+                                        <th>Field Trial Name</th>
+                                        <th>Field Trial Description</th>
+                                    </tr>
+                                </thead>
+                            </table>
+
+                            <center>
+                            <button type="button" class="btn btn-info" name="drone_imagery_standard_process_application_step" id="drone_imagery_standard_process_application_step">Submit</button>
+                            </center>
+                        </&>
+
+                    </&>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -504,6 +581,14 @@
 <script>
 
 jQuery(document).ready(function() {
+
+    //
+    // Standard Process for Drone Runs
+    //
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process"]', function(){
+        jQuery('#drone_imagery_standard_process_dialog').modal('show');
+    });
 
     //
     // Keras CNN Training JS

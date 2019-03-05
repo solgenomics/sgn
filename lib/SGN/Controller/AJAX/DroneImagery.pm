@@ -340,11 +340,16 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
 
         my $drone_run_html = '<div class="well well-sm">';
-        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Drone Run Name</b>:</div><div class="col-sm-9">'.$v->{drone_run_project_name}.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Drone Run Type</b>:</div><div class="col-sm-9">'.$v->{drone_run_type}.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Description</b>:</div><div class="col-sm-9">'.$v->{drone_run_project_description}.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Date</b>:</div><div class="col-sm-9">'.$drone_run_date.'</div></div>';
-        $drone_run_html .= '<div class="row"><div class="col-sm-3"><b>Field Trial</b>:</div><div class="col-sm-9"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
+
+        $drone_run_html .= '<div class="row"><div class="col-sm-9">';
+        $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Drone Run Name</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_name}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Drone Run Type</b>:</div><div class="col-sm-7">'.$v->{drone_run_type}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Description</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_description}.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
+        $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
+        $drone_run_html .= '</div><div class="col-sm-3">';
+        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+        $drone_run_html .= '</div></div>';
 
         $drone_run_html .= "<hr>";
 
@@ -352,7 +357,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_html .= '<div class="panel-group"><div class="panel panel-default panel-sm"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >Loading Plot Image Summary...</a></h4></div></div></div>';
         $drone_run_html .= '</div>';
 
-        $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View All Image Bands</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
+        $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View All Image Bands (Advanced Users Only)</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
 
         my $drone_run_band_table_html = '<table class="table table-bordered"><thead><tr><th>Drone Run Band(s)</th><th>Images/Actions</th></thead><tbody>';
 
@@ -757,27 +762,27 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
             my $d = $drone_run_bands->{$drone_run_band_project_id};
 
-            $drone_run_band_table_html .= '<div class="panel-group" id="drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'" href="#drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'">View Raw Drone Run Images</a></h4></div><div id="drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'" class="panel-collapse collapse"><div class="panel-body">';
-
-            $drone_run_band_table_html .= '<div class="well well-sm">';
-
-            if ($d->{images}) {
-                $drone_run_band_table_html .= '<b>'.scalar(@{$d->{images}})." Raw Unstitched Images</b>:<br/><span>";
-                $drone_run_band_table_html .= join '', @{$d->{images}};
-                $drone_run_band_table_html .= "</span>";
-
-                my $usernames = '';
-                foreach (keys %{$d->{usernames}}){
-                    $usernames .= " $_ ";
-                }
-                $drone_run_band_table_html .= '<br/><br/>';
-                $drone_run_band_table_html .= '<b>Uploaded By</b>: '.$usernames;
-            } else {
-                $drone_run_band_table_html .= '<b>No Raw Unstitched Images</b>';
-            }
-            $drone_run_band_table_html .= '</div>';
-
-            $drone_run_band_table_html .= '</div></div></div></div>';
+            # $drone_run_band_table_html .= '<div class="panel-group" id="drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'" href="#drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'">View Raw Drone Run Images</a></h4></div><div id="drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'" class="panel-collapse collapse"><div class="panel-body">';
+            # 
+            # $drone_run_band_table_html .= '<div class="well well-sm">';
+            # 
+            # if ($d->{images}) {
+            #     $drone_run_band_table_html .= '<b>'.scalar(@{$d->{images}})." Raw Unstitched Images</b>:<br/><span>";
+            #     $drone_run_band_table_html .= join '', @{$d->{images}};
+            #     $drone_run_band_table_html .= "</span>";
+            # 
+            #     my $usernames = '';
+            #     foreach (keys %{$d->{usernames}}){
+            #         $usernames .= " $_ ";
+            #     }
+            #     $drone_run_band_table_html .= '<br/><br/>';
+            #     $drone_run_band_table_html .= '<b>Uploaded By</b>: '.$usernames;
+            # } else {
+            #     $drone_run_band_table_html .= '<b>No Raw Unstitched Images</b>';
+            # }
+            # $drone_run_band_table_html .= '</div>';
+            # 
+            # $drone_run_band_table_html .= '</div></div></div></div>';
 
             if ($d->{stitched_image}) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Stitched Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{stitched_image_username}.'<br/><b>Date</b>: '.$d->{stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{stitched_image}.'</div></div></div>';
@@ -1751,6 +1756,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    #print STDERR Dumper $c->req->params();
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $field_trial_id = $c->req->param('field_trial_id');
 
@@ -1793,6 +1799,7 @@ sub get_drone_run_projects_GET : Args(0) {
         );
         push @result, \@res;
     }
+    #print STDERR Dumper \@result;
 
     $c->stash->{rest} = { data => \@result };
 }
