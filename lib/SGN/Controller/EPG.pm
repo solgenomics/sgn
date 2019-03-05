@@ -11,14 +11,14 @@ SGN::Controller::EPG - show electrical penetration graph or EPG  pages for CG.or
 =cut
 
 
-sub microtomography_index :Path('/epg/index') Args(0) {
+sub epg_index :Path('/epg/index') Args(0) {
     my $self = shift;
     my $c = shift;
 
     $c->stash->{template} = '/epg/index.mas';
 }
 
-sub microtomography_javier_bruker_2017 :Path('/epg/george_acp_2018') Args(0) {
+sub epg_george_acp_2018 :Path('/epg/george_acp_2018') Args(0) {
     my $self = shift;
     my $c = shift;
 
