@@ -1,0 +1,72 @@
+<%args>
+</%args>
+
+<div class="well well-sm">
+    <form class="form-horizontal">
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Number of Rows: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_num_rows" name="drone_imagery_standard_process_plot_polygons_num_rows" type="number" placeholder="Number of rows in image section" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Number of Columns: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_num_cols" name="drone_imagery_standard_process_plot_polygons_num_cols" type="number" placeholder="Number of columns in image section"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Top Margin: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_offset" name="drone_imagery_standard_process_plot_polygons_top_offset" type="number" value="0"/>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Bottom Margin: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_offset" name="drone_imagery_standard_process_plot_polygons_bottom_offset" type="number" value="0"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Top Row Left Margin: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_left_offset" name="drone_imagery_standard_process_plot_polygons_top_left_offset" type="number" placeholder="Left offset of image section" value="0" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Top Row Right Margin: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_right_offset" name="drone_imagery_standard_process_plot_polygons_top_right_offset" type="number" placeholder="Left offset of image section" value="0" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Bottom Row Left Margin: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_left_offset" name="drone_imagery_standard_process_plot_polygons_bottom_left_offset" type="number" placeholder="Left offset of image section" value="0" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <button class="btn btn-sm btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_apply">Draw Rectangles (Does not save)</button>
+</div>

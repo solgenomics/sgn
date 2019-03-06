@@ -348,7 +348,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
         $drone_run_html .= '</div><div class="col-sm-3">';
-        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'">Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
         $drone_run_html .= '</div></div>';
 
         $drone_run_html .= "<hr>";
@@ -1327,6 +1327,7 @@ sub drone_imagery_rotate_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $angle_rotation = $c->req->param('angle');
@@ -1363,8 +1364,23 @@ sub drone_imagery_rotate_image_GET : Args(0) {
         });
         my ($rotated_stitched_temporary_result, $rotated_stitched_temporary_total_count) = $rotated_stitched_temporary_images_search->search();
         print STDERR Dumper $rotated_stitched_temporary_total_count;
-        
+        foreach (@$rotated_stitched_temporary_result){
+            my $temp_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+            $temp_image->delete(); #Sets to obsolete
+        }
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+        my $rotated_stitched_images_search = CXGN::DroneImagery::ImagesSearch->new({
+            bcs_schema=>$schema,
+            project_image_type_id=>$linking_table_type_id,
+            drone_run_band_project_id_list=>[$drone_run_band_project_id]
+        });
+        my ($rotated_stitched_result, $rotated_stitched_total_count) = $rotated_stitched_images_search->search();
+        print STDERR Dumper $rotated_stitched_total_count;
+        foreach (@$rotated_stitched_result){
+            my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+            $previous_image->delete(); #Sets to obsolete
+        }
 
         my $drone_run_band_rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
         my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
@@ -1377,10 +1393,24 @@ sub drone_imagery_rotate_image_GET : Args(0) {
             key=>'projectprop_c1'
         });
     }
-    my $ret = $image->process_image($archive_rotate_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
-    my $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
-    my $rotated_image_url = $image->get_image_url('original');
-    my $rotated_image_id = $image->get_image_id();
+
+    my $rotated_image_fullpath;
+    my $rotated_image_url;
+    my $rotated_image_id;
+    my $md5checksum = $image->calculate_md5sum($archive_rotate_temp_image);
+    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
+    if ($md_image->count() > 0) {
+        print STDERR Dumper "Image $archive_rotate_temp_image has already been added to the database and will not be added again.";
+        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
+        $rotated_image_url = $image->get_image_url('original');
+        $rotated_image_id = $image->get_image_id();
+    } else {
+        my $ret = $image->process_image($archive_rotate_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
+        $rotated_image_url = $image->get_image_url('original');
+        $rotated_image_id = $image->get_image_id();
+    }
 
     $c->stash->{rest} = { rotated_image_id => $rotated_image_id, image_url => $image_url, image_fullpath => $image_fullpath, rotated_image_url => $rotated_image_url, rotated_image_fullpath => $rotated_image_fullpath };
 }
@@ -1427,6 +1457,19 @@ sub drone_imagery_get_contours_GET : Args(0) {
     } else {
         $image->set_sp_person_id($user_id);
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        
+        my $previous_contour_images_search = CXGN::DroneImagery::ImagesSearch->new({
+            bcs_schema=>$schema,
+            project_image_type_id=>$linking_table_type_id,
+            drone_run_band_project_id_list=>[$drone_run_band_project_id]
+        });
+        my ($previous_contour_result, $previous_contour_total_count) = $previous_contour_images_search->search();
+        print STDERR Dumper $previous_contour_total_count;
+        foreach (@$previous_contour_result){
+            my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+            $previous_image->delete(); #Sets to obsolete
+        }
+
         my $ret = $image->process_image($archive_contours_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $contours_image_fullpath = $image->get_filename('original_converted', 'full');
         $contours_image_url = $image->get_image_url('original');
@@ -1602,6 +1645,7 @@ sub drone_imagery_denoise_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -1623,11 +1667,38 @@ sub drone_imagery_denoise_GET : Args(0) {
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
+
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $ret = $image->process_image($archive_denoise_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
-    my $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
-    my $denoised_image_url = $image->get_image_url('original');
-    my $denoised_image_id = $image->get_image_id();
+
+    my $previous_denoised_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$linking_table_type_id,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id]
+    });
+    my ($previous_denoised_result, $previous_denoised_total_count) = $previous_denoised_images_search->search();
+    print STDERR Dumper $previous_denoised_total_count;
+    foreach (@$previous_denoised_result){
+        my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        $previous_image->delete(); #Sets to obsolete
+    }
+
+    my $denoised_image_fullpath;
+    my $denoised_image_url;
+    my $denoised_image_id;
+    my $md5checksum = $image->calculate_md5sum($archive_denoise_temp_image);
+    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
+    if ($md_image->count() > 0) {
+        print STDERR Dumper "Image $archive_denoise_temp_image has already been added to the database and will not be added again.";
+        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
+        $denoised_image_url = $image->get_image_url('original');
+        $denoised_image_id = $image->get_image_id();
+    } else {
+        my $ret = $image->process_image($archive_denoise_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
+        $denoised_image_url = $image->get_image_url('original');
+        $denoised_image_id = $image->get_image_id();
+    }
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_id => $denoised_image_id, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath };
 }
@@ -1671,6 +1742,19 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'background_removed_temporary_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+    my $previous_background_removed_temp_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$linking_table_type_id,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id]
+    });
+    my ($previous_result, $previous_total_count) = $previous_background_removed_temp_images_search->search();
+    print STDERR Dumper $previous_total_count;
+    foreach (@$previous_result){
+        my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        $previous_image->delete(); #Sets to obsolete
+    }
+
     my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
     my $removed_background_image_url = $image->get_image_url('original');
@@ -1733,6 +1817,18 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     } elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_threshold', 'project_property')->cvterm_id();
+    }
+
+    my $previous_background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$linking_table_type_id,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id]
+    });
+    my ($previous_result, $previous_total_count) = $previous_background_removed_images_search->search();
+    print STDERR Dumper $previous_total_count;
+    foreach (@$previous_result){
+        my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        $previous_image->delete(); #Sets to obsolete
     }
 
     my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
@@ -2060,6 +2156,19 @@ sub drone_imagery_crop_image_GET : Args(0) {
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+    my $previous_cropped_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$linking_table_type_id,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id]
+    });
+    my ($previous_result, $previous_total_count) = $previous_cropped_images_search->search();
+    print STDERR Dumper $previous_total_count;
+    foreach (@$previous_result){
+        my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        $previous_image->delete(); #Sets to obsolete
+    }
+
     my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $cropped_image_fullpath = $image->get_filename('original_converted', 'full');
     my $cropped_image_url = $image->get_image_url('original');
@@ -2147,6 +2256,19 @@ sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
         $index_image_url = $image->get_image_url('original');
     } else {
         $image->set_sp_person_id($user_id);
+
+        my $previous_index_images_search = CXGN::DroneImagery::ImagesSearch->new({
+            bcs_schema=>$schema,
+            project_image_type_id=>$linking_table_type_id,
+            drone_run_band_project_id_list=>[$drone_run_band_project_id]
+        });
+        my ($previous_result, $previous_total_count) = $previous_index_images_search->search();
+        print STDERR Dumper $previous_total_count;
+        foreach (@$previous_result){
+            my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+            $previous_image->delete(); #Sets to obsolete
+        }
+
         my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $index_image_fullpath = $image->get_filename('original_converted', 'full');
         $index_image_url = $image->get_image_url('original');
@@ -2193,6 +2315,18 @@ sub drone_imagery_mask_remove_background_POST : Args(0) {
     $image->set_sp_person_id($user_id);
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $mask_type, 'project_md_image')->cvterm_id();;
+
+    my $previous_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$linking_table_type_id,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id]
+    });
+    my ($previous_result, $previous_total_count) = $previous_images_search->search();
+    print STDERR Dumper $previous_total_count;
+    foreach (@$previous_result){
+        my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        $previous_image->delete(); #Sets to obsolete
+    }
 
     my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $masked_image_fullpath = $image->get_filename('original_converted', 'full');
