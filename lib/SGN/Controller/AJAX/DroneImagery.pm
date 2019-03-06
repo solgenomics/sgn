@@ -1738,6 +1738,7 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
     my $removed_background_image_url = $image->get_image_url('original');
+    my $removed_background_image_id = $image->get_image_id();
 
     my $drone_run_band_remove_background_threshold = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$drone_run_band_remove_background_threshold_type_id,
@@ -1749,7 +1750,7 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
 }
 
 sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }

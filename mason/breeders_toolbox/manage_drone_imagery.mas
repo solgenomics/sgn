@@ -221,21 +221,31 @@
 
             <canvas id="drone_imagery_standard_process_remove_background_original"></canvas>
 
-            <br/>
-
-            <center>
-            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_thresholding_step">Go to Next Step</button>
-            </center>
         </&>
         <&| /util/workflow.mas:step, title=> "Plot Polygons" &>
             <& /page/page_title.mas, title=>"Define plot polygons relative to the field layout" &>
 
+            <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>0, info_section_title => "<h4 style='display:inline'>Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_standard_process_generate_plot_polygons_section" &>
 
-            <br/>
+            <div class="well well-sm">
+                <div id="drone_imagery_standard_process_plot_polygons_top_section"></div>
 
-            <center>
-            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_plot_polygon_step">Go to Next Step</button>
-            </center>
+                <button id="drone_imagery_standard_process_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
+            </div>
+
+            <div id="manage_drone_imagery_standard_process_plot_polygons_load_div">
+                <img src="/img/wheel.gif" />
+            </div>
+
+            <canvas id="drone_imagery_standard_process_plot_polygons_original_stitched_div"></canvas>
+
+            <div id="drone_imagery_standard_process_generated_polygons_div"></div>
+
+            <hr>
+            <div class="well well-sm">
+                <div id="drone_imagery_standard_process_trial_layout_div"></div>
+            </div>
+
         </&>
         <&| /util/workflow.mas:step, title=> "Apply" &>
             <& /page/page_title.mas, title=>"Apply these same steps to other drone run bands" &>
@@ -783,6 +793,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_rotated_stitched_image_id;
     var manage_drone_imagery_standard_process_cropped_image_id;
     var manage_drone_imagery_standard_process_denoised_image_id;
+    var manage_drone_imagery_standard_process_removed_background_image_id;
     var manage_drone_imagery_standard_process_current_image_type = 'threshold_background_removed_stitched_drone_imagery';
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process"]', function(){
@@ -959,19 +970,19 @@ jQuery(document).ready(function() {
                 'lower_threshold': lower_threshold,
                 'upper_threshold': upper_threshold
             },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
             success: function(response){
                 console.log(response);
                 if(response.error) {
                     alert(response.error);
                 }
+                manage_drone_imagery_standard_process_removed_background_image_id = response.removed_background_image_id;
 
-                jQuery("#working_modal").modal("hide");
+                showPlotPolygonStart(manage_drone_imagery_standard_process_removed_background_image_id, drone_run_band_project_id, 'drone_imagery_plot_polygons_original_stitched_div', 'drone_imagery_plot_polygons_top_section');
+
+                Workflow.complete("#drone_imagery_standard_process_remove_background_defined_percentage_submit");
+                Workflow.focus('#manage_drone_imagery_standard_process_workflow', 5);
             },
             error: function(response){
-                jQuery("#working_modal").modal("hide");
                 alert('Error saving standard process removed background image!')
             }
         });
@@ -1542,46 +1553,7 @@ jQuery(document).ready(function() {
 
         window.scrollTo(0,0);
     
-        jQuery.ajax({
-            url : '/ajax/drone_imagery/get_contours?image_id='+background_removed_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                console.log(response);
-                jQuery("#working_modal").modal("hide");
-                background_image_url = response.contours_image_url;
-
-                background_image_width = response.image_width;
-                background_image_height = response.image_height;
-
-                var top_section_html = '<h4>Total Image Width: '+response.image_width+'px. Total Image Height: '+response.image_height+'px.</h4>';
-                top_section_html = top_section_html + '<button class="btn btn-default btn-sm" id="drone_imagery_plot_polygons_switch" data-image_url="'+response.image_url+'" data-image_fullpath="'+response.image_fullpath+'" data-contours_image_url="'+response.contours_image_url+'" data-contours_image_fullpath="'+response.contours_image_fullpath+'">Switch Image View</button><br/><br/>';
-                jQuery('#drone_imagery_plot_polygons_top_section').html(top_section_html);
-
-                canvas = document.getElementById('drone_imagery_plot_polygons_original_stitched_div');
-                ctx = canvas.getContext('2d');
-                draw_canvas_image(background_image_url, 0);
-
-                plotpolygonsImg = document.getElementById("drone_imagery_plot_polygons_original_stitched_div");
-                //plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
-                plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygonsPoint;
-
-                //var html = '<canvas id="drone_imagery_plot_polygons_original_stitched_div" style="background:url('+response.contours_image_url+'); //background-repeat:no-repeat; width:'+response.image_width+'; height:'+response.image_height+';" ></canvas>';
-                //jQuery('#drone_imagery_plot_polygons_original_stitched_outer_div').html(html);
-
-                //var s = new CanvasState(document.getElementById('drone_imagery_plot_polygons_original_stitched_div'));
-                //s.addShape(new Shape(40,40,50,50)); // The default is gray
-                //s.addShape(new Shape(60,140,40,60, 'lightskyblue'));
-                //s.addShape(new Shape(80,150,60,30, 'rgba(127, 255, 212, .5)'));
-                //s.addShape(new Shape(125,80,30,80, 'rgba(245, 222, 179, .7)'));
-
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert('Error retrieving contours for image!')
-            }
-        });
+        showPlotPolygonStart(background_removed_stitched_image_id, drone_run_band_project_id, 'drone_imagery_plot_polygons_original_stitched_div', 'drone_imagery_plot_polygons_top_section');
     
         jQuery.ajax({
             url : '/ajax/breeders/trial/'+trial_id+'/layout_table',
@@ -1605,6 +1577,40 @@ jQuery(document).ready(function() {
         });
 
     });
+
+    function showPlotPolygonStart(background_removed_stitched_image_id, drone_run_band_project_id, canvas_div_id, info_div_id){
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_contours?image_id='+background_removed_stitched_image_id+'&drone_run_band_project_id='+drone_run_band_project_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                background_image_url = response.contours_image_url;
+
+                background_image_width = response.image_width;
+                background_image_height = response.image_height;
+
+                var top_section_html = '<h4>Total Image Width: '+response.image_width+'px. Total Image Height: '+response.image_height+'px.</h4>';
+                top_section_html = top_section_html + '<button class="btn btn-default btn-sm" id="drone_imagery_plot_polygons_switch" data-image_url="'+response.image_url+'" data-image_fullpath="'+response.image_fullpath+'" data-contours_image_url="'+response.contours_image_url+'" data-contours_image_fullpath="'+response.contours_image_fullpath+'">Switch Image View</button><br/><br/>';
+                jQuery('#'.info_div_id).html(top_section_html);
+
+                canvas = document.getElementById(canvas_div_id);
+                ctx = canvas.getContext('2d');
+                draw_canvas_image(background_image_url, 0);
+
+                plotpolygonsImg = document.getElementById(canvas_div_id);
+                //plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
+                plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygonsPoint;
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving contours for image!')
+            }
+        });
+    }
 
     var drone_imagery_plot_polygon_current_background_toggle = 1;
     jQuery(document).on('click', '#drone_imagery_plot_polygons_switch', function(){

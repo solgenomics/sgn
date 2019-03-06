@@ -320,6 +320,9 @@ $sample_observation_unit_type_name => undef
 % if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas &>
 % } #End manage_drone_imagery_generate_plot_polygons_section
+% if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
+% } #End manage_drone_imagery_generate_plot_polygons_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
