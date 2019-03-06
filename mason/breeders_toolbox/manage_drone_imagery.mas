@@ -22,6 +22,262 @@
 
 </div>
 
+<div id="manage_drone_imagery_standard_process_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Run A Standard Process" &>
+    
+    <&| /util/workflow.mas, id=> "manage_drone_imagery_standard_process_workflow" &>
+        <&| /util/workflow.mas:step, title=> "Intro" &>
+            <& /page/page_title.mas, title=>"This workflow will guide you through applying a standard process to your drone run bands" &>
+            <p>Here you can take one of the drone run bands you uploaded all the way through the process to plot image saving. This will require manual steps such as image rotation, cropping, and plot polygon templating. After you have completed this process for one drone run band, you can apply it to all other drone run bands and other calculated vegetative indices.</p>
+            <br/><br/>
+            <center>
+            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Drone Run Band" &>
+            <& /page/page_title.mas, title=>"Select a drone run band" &>
+
+            <div class="well well-sm">
+                <p>Please select one drone run band to take through the process. It is recommended to select a band that has high contrast, such as a NIR band.</p>
+            </div>
+
+            <div class="well well-sm">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_drone_run_bands_table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Drone Run Band Name</th>
+                                    <th>Drone Run Band Description</th>
+                                    <th>Drone Run Band Type</th>
+                                    <th>Drone Run Name</th>
+                                    <th>Drone Run Description</th>
+                                    <th>Drone Run Date</th>
+                                    <th>Field Trial Name</th>
+                                    <th>Field Trial Description</th>
+                                </tr>
+                            </thead>
+                        </table>
+
+                        <br/>
+
+                        <center>
+                        <button class="btn btn-primary" id="manage_drone_imagery_standard_process_drone_run_band_step">Go to Next Step</button>
+                        </center>
+                    </div>
+                </div>
+            </div>
+
+        </&>
+        <&| /util/workflow.mas:step, title=> "Rotate" &>
+            <& /page/page_title.mas, title=>"Rotate your selected drone run band" &>
+
+            <div class="well well-sm">
+                <ul>
+                    <li>Here you can do a rotation of your drone run image.</li>
+                    <li>Your image should have precise horizontal alignment.</li>
+                </ul>
+            </div>
+
+            <div class="well well-sm">
+
+                <form class="form-horizontal">
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-6 control-label">Rotate Counter-Clockwise Degrees: </label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="drone_imagery_standard_process_rotate_degrees_input" name="drone_imagery_standard_process_rotate_degrees_input" type="text" placeholder="Number of degrees to rotate" value="0.00"/>
+                        </div>
+                    </div>
+                </form>
+
+                <button class="btn btn-primary" id="drone_imagery_standard_process_rotate_stitched_view">Rotate Image (Does Not Save)</button>
+                <button class="btn btn-default" id="drone_imagery_standard_process_rotate_stitched_crosshairs">Draw Crosshairs Assist</button>
+                <button class="btn btn-default" id="drone_imagery_standard_process_rotate_stitched_restart">Restart</button>
+                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_rotate_step">Save Rotated Image And Go To Next Step</button>
+            </div>
+
+            <div id="manage_drone_imagery_standard_process_rotate_load_div">
+                <img src="/img/wheel.gif" />
+            </div>
+
+            <canvas id="drone_imagery_standard_process_rotate_original_stitched_div">
+            </canvas>
+
+        </&>
+        <&| /util/workflow.mas:step, title=> "Cropping" &>
+            <& /page/page_title.mas, title=>"Crop your drone run band to specific area" &>
+            
+            <div class="well well-sm">
+                <ul>
+                    <li>Here you can do a rough cropping of the stitched ortho image to focus only on the actual field experiment.</li>
+                    <li>Click on five points in the image to make a four-sided polygon.</li>
+                    <li>Only the last polygon that you draw will be used for the cropping.</li>
+                </ul>
+                <br/>
+                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_cropping_step">Save and Go to Next Step</button>
+            </div>
+
+            <div id="manage_drone_imagery_standard_process_crop_load_div">
+                <img src="/img/wheel.gif" />
+            </div>
+
+            <canvas id="drone_imagery_standard_process_crop_original_stitched_div"></canvas>
+
+        </&>
+        <&| /util/workflow.mas:step, title=> "Thresholding" &>
+            <& /page/page_title.mas, title=>"Threshold your drone run band to remove background" &>
+
+            <div class="well">
+                <&| /page/info_section.mas, title => 'Remove Background Using Graphical Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
+
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="well well-sm">
+                                <h5>The background can be removed by placing a threshold on pixel values</h5>
+                                <ul>
+                                    <li><b>1.</b> Click on the two right-most, highest peaks in the histogram. The right most peak represents the pixels we are interested in, while the peak immediately to the left of that peak represents the soil background.</li>
+                                    <li><b>2.</b> Click on the "Find Minimum" button.</li>
+                                    <li><b>3.</b> If the image looks good with the applied threshold, click Save. Otherwise, you can start over.</li>
+                                </ul>
+                            </div>
+
+                            <div class="well well-sm">
+                                <div name="drone_imagery_remove_background_threshold_current"></div>
+                                <div name="drone_imagery_remove_background_threshold"></div>
+                            </div>
+
+                            <canvas id="drone_imagery_standard_process_remove_background_histogram_div"></canvas>
+                            <hr>
+                            <button class="btn btn-primary" id="drone_imagery_standard_process_remove_background_find_minimum">Find Minimum</button>
+                            <button class="btn btn-default" id="drone_imagery_standard_process_remove_background_start_over">Start Over</button>
+                            <button class="btn btn-primary" id="drone_imagery_standard_process_remove_background_submit">Save</button>
+                            <hr>
+                        </div>
+                    </div>
+                </&>
+            </div>
+            <div class="well">
+                <&| /page/info_section.mas, title => 'Remove Background Using User Defined Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Discard Pixels with Value Lower Than: </label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_lower_threshold" name="drone_imagery_standard_process_remove_background_lower_threshold" type="number" max="255" min="0" placeholder="e.g. 10 (Min 0)" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Discard Pixels with Value Higher Than: </label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_upper_threshold" name="drone_imagery_standard_process_remove_background_upper_threshold" type="number" max="255" min="0" placeholder="e.g. 200 (Max 255)"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="drone_imagery_standard_process_remove_background_defined_submit" class="btn btn-primary">Apply Threshold</button>
+                        </div>
+                    </div>
+                </&>
+            </div>
+            <div class="well">
+                <&| /page/info_section.mas, title => 'Remove Background Using Percentage Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background by specifying percentage threshold value' &>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Discard Lowest Percent of Pixel Values: </label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_lower_threshold_percentage" name="drone_imagery_standard_process_remove_background_lower_threshold_percentage" type="number" max="99" min="0" placeholder="e.g. 10% of lowest pixel values (Min 0, Max 100)" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-6 control-label">Discard Highest Percent of Pixel Values: </label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_upper_threshold_percentage" name="drone_imagery_standard_process_remove_background_upper_threshold_percentage" type="number" max="99" min="0" placeholder="e.g. 10% of highest pixel values (Min 0, Max 100)"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="drone_imagery_standard_process_remove_background_defined_percentage_submit" class="btn btn-primary">Apply Threshold</button>
+                        </div>
+                    </div>
+                </&>
+            </div>
+            
+            <hr>
+
+            <div id="manage_drone_imagery_standard_process_remove_background_load_div">
+                <img src="/img/wheel.gif" />
+            </div>
+
+            <canvas id="drone_imagery_standard_process_remove_background_original"></canvas>
+
+            <br/>
+
+            <center>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_thresholding_step">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Plot Polygons" &>
+            <& /page/page_title.mas, title=>"Define plot polygons relative to the field layout" &>
+
+
+            <br/>
+
+            <center>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_plot_polygon_step">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Apply" &>
+            <& /page/page_title.mas, title=>"Apply these same steps to other drone run bands" &>
+
+
+            <br/>
+
+            <center>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_apply_step">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Indices" &>
+            <& /page/page_title.mas, title=>"Create and apply these same steps to vegetative indices" &>
+
+
+            <br/>
+
+            <center>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_indices_step">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Phenotypes" &>
+            <& /page/page_title.mas, title=>"Calculate phenotypes for all plot polygon images" &>
+
+
+            <br/>
+
+            <center>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_phenotypes_step">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Submit" &>
+
+            <center>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_submit_step">Submit</button>
+            </center>
+        </&>
+
+    </&>
+
+</div>
+
 <div id="manage_drone_imagery_rotate_div" style="display:none">
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Rotate Stitched Image" &>
@@ -45,7 +301,7 @@
             </div>
         </form>
 
-        <button class="btn btn-primary" id="drone_imagery_rotate_stitched_view">Rotate Image</button>
+        <button class="btn btn-primary" id="drone_imagery_rotate_stitched_view">Rotate Image (Does Not Save)</button>
         <button class="btn btn-default" id="drone_imagery_rotate_stitched_crosshairs">Draw Crosshairs Assist</button>
         <button class="btn btn-default" id="drone_imagery_rotate_stitched_restart">Restart</button>
         <button class="btn btn-primary" id="drone_imagery_rotate_stitched_submit">Save Rotated Image</button>
@@ -69,6 +325,7 @@
             <li>Click on five points in the image to make a four-sided polygon.</li>
             <li>Only the last polygon that you draw will be used for the cropping.</li>
         </ul>
+        <br/>
         <button class="btn btn-primary" id="drone_imagery_crop_stitched_submit">Crop Image To Selected Polygon</button>
     </div>
 
@@ -148,8 +405,8 @@
                     </div>
 
                     <div class="well well-sm">
-                        <div id="drone_imagery_remove_background_threshold_current"></div>
-                        <div id="drone_imagery_remove_background_threshold"></div>
+                        <div name="drone_imagery_remove_background_threshold_current"></div>
+                        <div name="drone_imagery_remove_background_threshold"></div>
                     </div>
 
                     <canvas id="drone_imagery_remove_background_histogram_div"></canvas>
@@ -226,7 +483,6 @@
     </div>
 
     <hr>
-    <h2>Image (Will update to show background removed result, allowing inspection before saving)</h2>
 
     <div id="manage_drone_imagery_remove_background_load_div">
         <img src="/img/wheel.gif" />
@@ -397,82 +653,6 @@
   </div>
 </div>
 
-<div class="modal fade" id="drone_imagery_standard_process_dialog" name="drone_imagery_standard_process_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryStandardProcessDialog" data-backdrop="static">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="droneImageryStandardProcessDialog">Run A Standard Process for a Drone Run</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <&| /util/workflow.mas, id=> "drone_imagery_standard_process_workflow" &>
-                        <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"This workflow will guide you through applying a standard to your drone run" &>
-                            <p>You should manually take one of your drone run bands all the way through to plot polygon saving before using this tool. Manual steps that are critical are: cropping original image and defining the plot polygon layout. Once you have completed those manual steps for one drone run band, they can be applied to all other drone run bands.</p>
-                            
-                            <br/><br/>
-                            <center>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
-                            </center>
-                        </&>
-                        <&| /util/workflow.mas:step, title=> "Initialize" &>
-                            <& /page/page_title.mas, title=>"Select the rotation, image cropping, and thresholding to use" &>
-
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Drone Run Rotation(s): </label>
-                                <div class="col-sm-9" >
-                                    <div id="drone_imagery_standard_process_rotation_select_div"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Drone Run Image Cropping(s): </label>
-                                <div class="col-sm-9" >
-                                    <div id="drone_imagery_standard_process_cropping_select_div"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Drone Run Thresholding(s): </label>
-                                <div class="col-sm-9" >
-                                    <div id="drone_imagery_standard_process_thresholding_select_div"></div>
-                                </div>
-                            </div>
-                                
-                            <center>
-                            <button class="btn btn-primary" id="drone_imagery_standard_process_initialize_step">Go to Next Step</button>
-                            </center>
-                        </&>
-                        <&| /util/workflow.mas:step, title=> "Apply To" &>
-                            <& /page/page_title.mas, title=>"Select images to apply to" &>
-
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Select</th>
-                                        <th>Drone Run Name</th>
-                                        <th>Drone Run Type</th>
-                                        <th>Drone Run Description</th>
-                                        <th>Drone Run Date</th>
-                                        <th>Field Trial Name</th>
-                                        <th>Field Trial Description</th>
-                                    </tr>
-                                </thead>
-                            </table>
-
-                            <center>
-                            <button type="button" class="btn btn-info" name="drone_imagery_standard_process_application_step" id="drone_imagery_standard_process_application_step">Submit</button>
-                            </center>
-                        </&>
-
-                    </&>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
@@ -595,9 +775,207 @@ jQuery(document).ready(function() {
     // Standard Process for Drone Runs
     //
 
+    var manage_drone_imagery_standard_process_drone_run_project_id;
+    var manage_drone_imagery_standard_process_drone_run_band_project_id;
+    var manage_drone_imagery_standard_process_rotate_stitched_image_id;
+    var manage_drone_imagery_standard_process_rotate_drone_run_band_project_id;
+    var manage_drone_imagery_standard_process_rotate_stitched_image_degrees;
+    var manage_drone_imagery_standard_process_rotated_stitched_image_id;
+    var manage_drone_imagery_standard_process_cropped_image_id;
+    var manage_drone_imagery_standard_process_denoised_image_id;
+    var manage_drone_imagery_standard_process_current_image_type = 'threshold_background_removed_stitched_drone_imagery';
+
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process"]', function(){
-        jQuery('#drone_imagery_standard_process_dialog').modal('show');
+        jQuery('#manage_drone_imagery_crop_div').hide();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+        jQuery('#manage_drone_imagery_standard_process_div').show();
+
+        window.scrollTo(0,0);
+
+        manage_drone_imagery_standard_process_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        jQuery('#manage_drone_imagery_standard_process_drone_run_bands_table').DataTable({
+            destroy : true,
+            ajax : '/ajax/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_band_select&drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id
+        });
     });
+
+    jQuery('#manage_drone_imagery_standard_process_drone_run_band_step').click(function(){
+        var selected = [];
+        jQuery('input[name="drone_run_standard_process_band_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length < 1){
+            alert('Please select at least one drone run band!');
+            return false;
+        } else if (selected.length > 1){
+            alert('Please select only one drone run band!');
+            return false;
+        } else {
+            manage_drone_imagery_standard_process_drone_run_band_project_id = selected[0];
+            jQuery.ajax({
+                url : '/ajax/drone_imagery/get_project_md_image?drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&project_image_type_name=stitched_drone_imagery',
+                success: function(response){
+                    console.log(response);
+                    manage_drone_imagery_standard_process_rotate_stitched_image_id = response.data[0]['image_id'];
+                    manage_drone_imagery_standard_process_rotate_stitched_image_degrees = 0.00;
+
+                    showRotateImage(manage_drone_imagery_standard_process_rotate_stitched_image_id, 'drone_imagery_standard_process_rotate_original_stitched_div', 'manage_drone_imagery_standard_process_rotate_load_div');
+                },
+                error: function(response){
+                    alert('Error getting standard process image rotation step!')
+                }
+            });
+        
+            Workflow.complete("#manage_drone_imagery_standard_process_drone_run_band_step");
+            Workflow.focus('#manage_drone_imagery_standard_process_workflow', 2);
+        }
+    });
+
+    jQuery('#drone_imagery_standard_process_rotate_stitched_view').click(function(){
+        manage_drone_imagery_standard_process_rotate_stitched_image_degrees = parseFloat(jQuery('#drone_imagery_standard_process_rotate_degrees_input').val());
+        applyShowRotateImage(manage_drone_imagery_standard_process_rotate_stitched_image_id, manage_drone_imagery_standard_process_drone_run_band_project_id, manage_drone_imagery_standard_process_rotate_stitched_image_degrees, 'drone_imagery_standard_process_rotate_original_stitched_div');
+    });
+
+    jQuery('#drone_imagery_standard_process_rotate_stitched_crosshairs').click(function(){
+        drawRotateCrosshairs(getRandomColor(), 'drone_imagery_standard_process_rotate_original_stitched_div');
+    });
+
+    jQuery('#drone_imagery_standard_process_rotate_stitched_restart').click(function(){
+        showRotateImage(manage_drone_imagery_standard_process_rotate_stitched_image_id, 'drone_imagery_standard_process_rotate_original_stitched_div', 'manage_drone_imagery_standard_process_rotate_load_div');
+        manage_drone_imagery_standard_process_rotate_stitched_image_degrees = 0.00;
+    });
+
+    jQuery('#manage_drone_imagery_standard_process_rotate_step').click(function() {
+        var rotate_stitched_image_degrees_text = jQuery('#drone_imagery_standard_process_rotate_degrees_input').val();
+        if (rotate_stitched_image_degrees_text == '') {
+            alert('Please give a number of degrees first! Can be a decimal amount.');
+            return;
+        }
+        if (isNaN(rotate_stitched_image_degrees_text)) {
+            alert('Please give a number of degrees first! Can be a decimal amount.');
+            return;
+        }
+        manage_drone_imagery_standard_process_rotate_stitched_image_degrees = parseFloat(rotate_stitched_image_degrees_text);
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/rotate_image?image_id='+manage_drone_imagery_standard_process_rotate_stitched_image_id+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&angle='+manage_drone_imagery_standard_process_rotate_stitched_image_degrees,
+            success: function(response){
+                console.log(response);
+                manage_drone_imagery_standard_process_rotated_stitched_image_id = response.rotated_image_id;
+                showCropImageStart(manage_drone_imagery_standard_process_rotated_stitched_image_id, 'drone_imagery_standard_process_crop_original_stitched_div', 'manage_drone_imagery_standard_process_crop_load_div');
+
+                Workflow.complete("#manage_drone_imagery_standard_process_rotate_step");
+                Workflow.focus('#manage_drone_imagery_standard_process_workflow', 3);
+            },
+            error: function(response){
+                alert('Error saving standard process rotated image image!')
+            }
+        });
+    });
+
+    jQuery(document).on('click', '#manage_drone_imagery_standard_process_cropping_step', function(){
+        console.log(crop_points);
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/crop_image?image_id='+manage_drone_imagery_standard_process_rotated_stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id,
+            success: function(response){
+                console.log(response);
+                manage_drone_imagery_standard_process_cropped_image_id = response.cropped_image_id;
+
+                jQuery.ajax({
+                    url : '/ajax/drone_imagery/denoise?image_id='+manage_drone_imagery_standard_process_cropped_image_id+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id,
+                    success: function(response){
+                        console.log(response);
+                        manage_drone_imagery_standard_process_denoised_image_id = response.denoised_image_id;
+                        remove_background_current_image_id = manage_drone_imagery_standard_process_denoised_image_id;
+                        remove_background_drone_run_band_project_id = manage_drone_imagery_standard_process_drone_run_band_project_id;
+    
+                        showRemoveBackgroundHistogramStart(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div', 'manage_drone_imagery_standard_process_remove_background_load_div');
+                        
+                        Workflow.complete("#manage_drone_imagery_standard_process_cropping_step");
+                        Workflow.focus('#manage_drone_imagery_standard_process_workflow', 4);
+                    },
+                    error: function(response){
+                        alert('Error standard process denoising image!')
+                    }
+                });
+            },
+            error: function(response){
+                alert('Error standard process cropping image!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_standard_process_remove_background_find_minimum').click(function(){
+        if (!removeBackgroundThresholdPeak1 || !removeBackgroundThresholdPeak2) {
+            alert('Please click on the two right-most peaks in the histogram first!');
+        } else {
+            showRemoveBackgroundHistogramMinimum(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div');
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_standard_process_remove_background_start_over').click(function(){
+        removeBackgroundThresholdPeak1 = undefined;
+        removeBackgroundThresholdPeak2 = undefined;
+        removeBackgroundThresholdPeak1pixels = undefined;
+        removeBackgroundThresholdPeak2pixels = undefined;
+
+        showRemoveBackgroundHistogramStart(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div', 'manage_drone_imagery_standard_process_remove_background_load_div');
+    });
+
+    jQuery('#drone_imagery_standard_process_remove_background_submit').click(function(){
+        manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, removeBackgroundThresholdValue, '255');
+    });
+
+    jQuery('#drone_imagery_standard_process_remove_background_defined_submit').click(function(){
+        var remove_background_drone_run_band_lower_threshold = jQuery('#drone_imagery_standard_process_remove_background_lower_threshold').val();
+        var remove_background_drone_run_band_upper_threshold = jQuery('#drone_imagery_standard_process_remove_background_upper_threshold').val();
+        manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, remove_background_drone_run_band_lower_threshold, remove_background_drone_run_band_upper_threshold);
+    });
+
+    jQuery('#drone_imagery_standard_process_remove_background_defined_percentage_submit').click(function(){
+        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_lower_threshold_percentage').val())/100;
+        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_upper_threshold_percentage').val())/100;
+    
+        var threshold_value_return = calculateThresholdPercentageValues('drone_imagery_remove_background_original', drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage);
+
+        manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, threshold_value_return[0], threshold_value_return[1]);
+    });
+
+    function manage_drone_imagery_standard_process_remove_background_threshold_save(image_id, image_type, drone_run_band_project_id, lower_threshold, upper_threshold){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/drone_imagery/remove_background_save',
+            dataType: "json",
+            data: {
+                'image_id': image_id,
+                'image_type': image_type,
+                'drone_run_band_project_id': drone_run_band_project_id,
+                'lower_threshold': lower_threshold,
+                'upper_threshold': upper_threshold
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                }
+
+                jQuery("#working_modal").modal("hide");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error saving standard process removed background image!')
+            }
+        });
+    }
 
     //
     // Keras CNN Training JS
@@ -714,6 +1092,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
 
         window.scrollTo(0,0);
 
@@ -721,12 +1100,20 @@ jQuery(document).ready(function() {
         rotate_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         rotate_stitched_image_degrees = 0.00;
 
-        showRotateImage();
+        showRotateImage(rotate_stitched_image_id, 'drone_imagery_rotate_original_stitched_div', 'manage_drone_imagery_rotate_load_div');
     });
 
     jQuery('#drone_imagery_rotate_stitched_view').click(function(){
         rotate_stitched_image_degrees = parseFloat(jQuery('#drone_imagery_rotate_degrees_input').val());
+        applyShowRotateImage(rotate_stitched_image_id, rotate_drone_run_band_project_id, rotate_stitched_image_degrees, 'drone_imagery_rotate_original_stitched_div');
+    });
 
+    jQuery('#drone_imagery_rotate_stitched_restart').click(function(){
+        showRotateImage(rotate_stitched_image_id, 'drone_imagery_rotate_original_stitched_div', 'manage_drone_imagery_rotate_load_div');
+        rotate_stitched_image_degrees = 0.00;
+    });
+
+    function applyShowRotateImage(rotate_stitched_image_id, rotate_drone_run_band_project_id, rotate_stitched_image_degrees, canvas_div_id) {
         jQuery.ajax({
             url : '/ajax/drone_imagery/rotate_image?image_id='+rotate_stitched_image_id+'&drone_run_band_project_id='+rotate_drone_run_band_project_id+'&angle='+rotate_stitched_image_degrees+'&view_only=1',
             beforeSend: function() {
@@ -736,7 +1123,7 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+                var canvas = document.getElementById(canvas_div_id);
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = function () {
@@ -751,24 +1138,9 @@ jQuery(document).ready(function() {
                 alert('Error getting rotated image!')
             }
         });
+    }
 
-        let src = cv.imread('drone_imagery_rotate_original_stitched_div');
-        let dst = new cv.Mat();
-        let dsize = new cv.Size(src.rows, src.cols);
-        let center = new cv.Point(src.cols / 2, src.rows / 2);
-
-        let M = cv.getRotationMatrix2D(center, rotate_stitched_image_degrees, 1);
-        cv.warpAffine(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
-        cv.imshow('drone_imagery_rotate_original_stitched_div', dst);
-        src.delete(); dst.delete(); M.delete();
-    });
-
-    jQuery('#drone_imagery_rotate_stitched_restart').click(function(){
-        showRotateImage();
-        rotate_stitched_image_degrees = 0.00;
-    });
-
-    function showRotateImage() {
+    function showRotateImage(rotate_stitched_image_id, canvas_div_id, load_div_id) {
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_image?image_id='+rotate_stitched_image_id,
             beforeSend: function() {
@@ -778,14 +1150,14 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+                var canvas = document.getElementById(canvas_div_id);
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = function () {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
-                    jQuery('#manage_drone_imagery_rotate_load_div').hide();
+                    jQuery('#'+load_div_id).hide();
                 };
                 image.src = response.image_url;
 
@@ -807,15 +1179,11 @@ jQuery(document).ready(function() {
     }
 
     jQuery('#drone_imagery_rotate_stitched_crosshairs').click(function(){
-        var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
-        var rotate_image_width = canvas.width;
-        var rotate_image_height = canvas.height;
-        var ctx = canvas.getContext("2d");
-        drawRotateCrosshairs(getRandomColor());
+        drawRotateCrosshairs(getRandomColor(), 'drone_imagery_rotate_original_stitched_div');
     });
 
-    function drawRotateCrosshairs(color) {
-        var canvas = document.getElementById('drone_imagery_rotate_original_stitched_div');
+    function drawRotateCrosshairs(color, canvas_div_id) {
+        var canvas = document.getElementById(canvas_div_id);
         var rotate_image_width = canvas.width;
         var rotate_image_height = canvas.height;
         var ctx = canvas.getContext("2d");
@@ -861,21 +1229,19 @@ jQuery(document).ready(function() {
         ctx.strokeStyle = color;
         ctx.lineWidth=5;
         ctx.stroke();
-
-        
     }
 
     jQuery('#drone_imagery_rotate_stitched_submit').click(function() {
-    var rotate_stitched_image_degrees_text = jQuery('#drone_imagery_rotate_degrees_input').val();
-    if (rotate_stitched_image_degrees_text == '') {
-        alert('Please give a number of degrees first!');
-        return;
-    }
-    if (isNaN(rotate_stitched_image_degrees_text)) {
-        alert('Please give a number of degrees first! Can be a decimal amount.');
-        return;
-    }
-    rotate_stitched_image_degrees = parseFloat(rotate_stitched_image_degrees_text);
+        var rotate_stitched_image_degrees_text = jQuery('#drone_imagery_rotate_degrees_input').val();
+        if (rotate_stitched_image_degrees_text == '') {
+            alert('Please give a number of degrees first! Can be a decimal amount.');
+            return;
+        }
+        if (isNaN(rotate_stitched_image_degrees_text)) {
+            alert('Please give a number of degrees first! Can be a decimal amount.');
+            return;
+        }
+        rotate_stitched_image_degrees = parseFloat(rotate_stitched_image_degrees_text);
         jQuery.ajax({
             url : '/ajax/drone_imagery/rotate_image?image_id='+rotate_stitched_image_id+'&drone_run_band_project_id='+rotate_drone_run_band_project_id+'&angle='+rotate_stitched_image_degrees,
             beforeSend: function() {
@@ -906,6 +1272,7 @@ jQuery(document).ready(function() {
     var drone_run_band_project_id;
     var crop_points = [];
     var crop_display_points = [];
+    var dronecroppingImg;
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_crop_image"]', function() {
         trial_id = jQuery(this).data('field_trial_id');
@@ -917,9 +1284,23 @@ jQuery(document).ready(function() {
 
         get_select_box('drone_imagery_parameter_select','plot_polygons_previously_saved_image_cropping_templates', {'name':'drone_imagery_previously_saved_image_cropping_select', 'id':'drone_imagery_previously_saved_image_cropping_select', 'empty':1, 'field_trial_id':trial_id, 'parameter':'image_cropping' });
 
+        jQuery('#manage_drone_imagery_crop_div').show();
+        jQuery('#manage_drone_imagery_top_div').hide();
+        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+        jQuery('#manage_drone_imagery_remove_background_div').hide();
+        jQuery('#manage_drone_imagery_rotate_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
+
+        showCropImageStart(rotated_stitched_image_id, 'drone_imagery_crop_original_stitched_div', 'manage_drone_imagery_crop_load_div');
+
+        window.scrollTo(0,0);
+    });
+
+    function showCropImageStart(rotated_stitched_image_id, canvas_div_id, load_div_id) {
         crop_points = [];
         crop_display_points = [];
-
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_image?image_id='+rotated_stitched_image_id,
             beforeSend: function() {
@@ -929,34 +1310,25 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                var canvas = document.getElementById('drone_imagery_crop_original_stitched_div');
+                var canvas = document.getElementById(canvas_div_id);
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = function () {
                     canvas.width = this.naturalWidth;
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
-                    jQuery('#manage_drone_imagery_crop_load_div').hide();
+                    jQuery('#'+load_div_id).hide();
                 };
                 image.src = response.image_url;
-
+                dronecroppingImg = canvas;
+                dronecroppingImg.onmousedown = GetCoordinatesCroppedImage;
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
                 alert('Error retrieving image!')
             }
         });
-
-        jQuery('#manage_drone_imagery_crop_div').show();
-        jQuery('#manage_drone_imagery_top_div').hide();
-        jQuery('#manage_drone_imagery_plot_polygons_div').hide();
-        jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
-        jQuery('#manage_drone_imagery_remove_background_div').hide();
-        jQuery('#manage_drone_imagery_rotate_div').hide();
-        jQuery('#manage_drone_imagery_vegetative_index_div').hide();
-
-        window.scrollTo(0,0);
-    });
+    }
 
     function FindPosition(oElement) {
         if(typeof( oElement.offsetParent ) != "undefined") {
@@ -1000,9 +1372,6 @@ jQuery(document).ready(function() {
         drawWaypoints(crop_display_points, undefined, 0);
     }
 
-    var dronecroppingImg = document.getElementById("drone_imagery_crop_original_stitched_div");
-    dronecroppingImg.onmousedown = GetCoordinatesCroppedImage;
-
     function drawPolyline(points){
         if (points.length == 4) {
             points.push(points[0]);
@@ -1039,7 +1408,6 @@ jQuery(document).ready(function() {
     }
 
     jQuery(document).on('click', '#drone_imagery_crop_stitched_submit', function(){
-
         jQuery.ajax({
             url : '/ajax/drone_imagery/crop_image?image_id='+rotated_stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_band_project_id='+drone_run_band_project_id,
             beforeSend: function() {
@@ -1055,7 +1423,6 @@ jQuery(document).ready(function() {
                 alert('Error cropping image!')
             }
         });
-
     });
 
     jQuery(document).on('click', '#drone_imagery_cropping_use_previous_cropping', function() {
@@ -1171,6 +1538,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
 
         window.scrollTo(0,0);
     
@@ -1880,6 +2248,7 @@ jQuery(document).ready(function() {
     //
 
     var removeBackgroundHistogramImg;
+    var removeBackgroundDisplayImg;
     var removeBackgroundThresholdPeak1;
     var removeBackgroundThresholdPeak1pixels;
     var removeBackgroundThresholdPeak2;
@@ -1898,6 +2267,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').show();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
 
         window.scrollTo(0,0);
 
@@ -1906,6 +2276,10 @@ jQuery(document).ready(function() {
         remove_background_current_image_id = jQuery(this).data('remove_background_current_image_id');
         remove_background_current_image_type = jQuery(this).data('remove_background_current_image_type');
 
+        showRemoveBackgroundHistogramStart(remove_background_current_image_id, 'drone_imagery_remove_background_original', 'drone_imagery_remove_background_histogram_div', 'manage_drone_imagery_remove_background_load_div');
+    });
+
+    function showRemoveBackgroundHistogramStart(remove_background_current_image_id, canvas_div_id, histogram_canvas_div_id, load_div_id) {
         jQuery.ajax({
             url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
             beforeSend: function() {
@@ -1915,7 +2289,8 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                var canvas = document.getElementById('drone_imagery_remove_background_original');
+                var canvas = document.getElementById(canvas_div_id);
+                removeBackgroundDisplayImg = canvas;
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = function () {
@@ -1923,7 +2298,7 @@ jQuery(document).ready(function() {
                     canvas.height = this.naturalHeight;
                     ctx.drawImage(this, 0, 0);
 
-                    var src = cv.imread('drone_imagery_remove_background_original');
+                    var src = cv.imread(canvas_div_id);
                     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
                     var srcVec = new cv.MatVector();
                     srcVec.push_back(src);
@@ -1948,14 +2323,14 @@ jQuery(document).ready(function() {
                         var point2 = new cv.Point((i + 1) * scale - 1, hist_height - binVal);
                         cv.rectangle(dst, point1, point2, color, cv.FILLED);
                     }
-                    cv.imshow('drone_imagery_remove_background_histogram_div', dst);
+                    cv.imshow(histogram_canvas_div_id, dst);
                     src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
 
-                    removeBackgroundHistogramImg = document.getElementById("drone_imagery_remove_background_histogram_div");
+                    removeBackgroundHistogramImg = document.getElementById(histogram_canvas_div_id);
                     removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
                     removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
 
-                    jQuery('#manage_drone_imagery_remove_background_load_div').hide();
+                    jQuery('#'+load_div_id).hide();
 
                 };
                 image.src = response.image_url;
@@ -1966,103 +2341,105 @@ jQuery(document).ready(function() {
                 alert('Error retrieving image!')
             }
         });
-
-    });
+    }
 
     jQuery('#drone_imagery_remove_background_find_minimum').click(function(){
         if (!removeBackgroundThresholdPeak1 || !removeBackgroundThresholdPeak2) {
             alert('Please click on the two right-most peaks in the histogram first!');
         } else {
-        
-            jQuery.ajax({
-                url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function(response){
-                    console.log(response);
-                    jQuery("#working_modal").modal("hide");
-
-                    var canvas = document.getElementById('drone_imagery_remove_background_original');
-                    ctx = canvas.getContext('2d');
-                    var image = new Image();
-                    image.onload = function () {
-                        canvas.width = this.naturalWidth;
-                        canvas.height = this.naturalHeight;
-                        ctx.drawImage(this, 0, 0);
-
-                        var src = cv.imread('drone_imagery_remove_background_original');
-                        cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-                        var srcVec = new cv.MatVector();
-                        srcVec.push_back(src);
-                        var accumulate = false;
-                        var channels = [0];
-                        var histSize = [256];
-                        var ranges = [0, 255];
-                        var hist = new cv.Mat();
-                        var mask = new cv.Mat();
-                        var color = new cv.Scalar(255, 255, 255);
-                        var scale = 3;
-                        var hist_height = src.rows/2;
-
-                        cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
-                        var result = cv.minMaxLoc(hist, mask);
-                        var max = result.maxVal;
-                        var dst = new cv.Mat.zeros(hist_height, histSize[0] * scale, cv.CV_8UC3);
-                        // draw histogram
-                        var minimum_x_val = 0;
-                        var minimum_x_val_pix = 0;
-                        var minimum_y_val = 1000000000000000000000000000;
-
-                        if (removeBackgroundThresholdPeak1pixels > removeBackgroundThresholdPeak2pixels) {
-                            var removeBackgroundThresholdPeak1pixels_original = removeBackgroundThresholdPeak1pixels;
-                            removeBackgroundThresholdPeak1pixels = removeBackgroundThresholdPeak2pixels;
-                            removeBackgroundThresholdPeak2pixels = removeBackgroundThresholdPeak1pixels_original;
-                        }
-
-                        for (let i = 0; i < histSize[0]; i++) {
-                            var binVal = hist.data32F[i] * hist_height / max;
-                            
-                            var x_start = i * scale;
-                            if (x_start >= removeBackgroundThresholdPeak1pixels && x_start <= removeBackgroundThresholdPeak2pixels){
-                                //console.log('x: '+i.toString()+' y: '+binVal.toString());
-                                if (binVal < minimum_y_val) {
-                                    minimum_y_val = binVal;
-                                    minimum_x_val = i;
-                                    minimum_x_val_pix = x_start;
-                                }
-                            }
-                            
-                            var point1 = new cv.Point(x_start, hist_height - 1);
-                            var point2 = new cv.Point((i + 1) * scale - 1, hist_height - binVal);
-                            cv.rectangle(dst, point1, point2, color, cv.FILLED);
-                        }
-                        cv.imshow('drone_imagery_remove_background_histogram_div', dst);
-                        src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
-
-                        removeBackgroundHistogramImg = document.getElementById("drone_imagery_remove_background_histogram_div");
-                        removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
-                        removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
-
-                        jQuery('#drone_imagery_remove_background_threshold').html('<h5>Selected Threshold Value: '+ minimum_x_val );
-
-                        removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, removeBackgroundThresholdPeak1pixels, removeBackgroundHistogramImg.height, '#ff0000');
-                        removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, removeBackgroundThresholdPeak2pixels, removeBackgroundHistogramImg.height, '#ff0000');
-                        removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, minimum_x_val_pix, removeBackgroundHistogramImg.height, '#0000ff');
-
-                        removeBackgroundThresholdValue = minimum_x_val;
-
-                        removeBackgroundHistogramImgReDraw();
-                    };
-                    image.src = response.image_url;
-                },
-                error: function(response){
-                    jQuery("#working_modal").modal("hide");
-                    alert('Error retrieving image!')
-                }
-            });
+            showRemoveBackgroundHistogramMinimum(remove_background_current_image_id, 'drone_imagery_remove_background_original', 'drone_imagery_remove_background_histogram_div');
         }
     });
+
+    function showRemoveBackgroundHistogramMinimum(remove_background_current_image_id, canvas_div_id, histogram_canvas_div_id) {
+        jQuery.ajax({
+            url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var canvas = document.getElementById(canvas_div_id);
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+
+                    var src = cv.imread(canvas_div_id);
+                    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                    var srcVec = new cv.MatVector();
+                    srcVec.push_back(src);
+                    var accumulate = false;
+                    var channels = [0];
+                    var histSize = [256];
+                    var ranges = [0, 255];
+                    var hist = new cv.Mat();
+                    var mask = new cv.Mat();
+                    var color = new cv.Scalar(255, 255, 255);
+                    var scale = 3;
+                    var hist_height = src.rows/2;
+
+                    cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+                    var result = cv.minMaxLoc(hist, mask);
+                    var max = result.maxVal;
+                    var dst = new cv.Mat.zeros(hist_height, histSize[0] * scale, cv.CV_8UC3);
+                    // draw histogram
+                    var minimum_x_val = 0;
+                    var minimum_x_val_pix = 0;
+                    var minimum_y_val = 1000000000000000000000000000;
+
+                    if (removeBackgroundThresholdPeak1pixels > removeBackgroundThresholdPeak2pixels) {
+                        var removeBackgroundThresholdPeak1pixels_original = removeBackgroundThresholdPeak1pixels;
+                        removeBackgroundThresholdPeak1pixels = removeBackgroundThresholdPeak2pixels;
+                        removeBackgroundThresholdPeak2pixels = removeBackgroundThresholdPeak1pixels_original;
+                    }
+
+                    for (let i = 0; i < histSize[0]; i++) {
+                        var binVal = hist.data32F[i] * hist_height / max;
+                        
+                        var x_start = i * scale;
+                        if (x_start >= removeBackgroundThresholdPeak1pixels && x_start <= removeBackgroundThresholdPeak2pixels){
+                            //console.log('x: '+i.toString()+' y: '+binVal.toString());
+                            if (binVal < minimum_y_val) {
+                                minimum_y_val = binVal;
+                                minimum_x_val = i;
+                                minimum_x_val_pix = x_start;
+                            }
+                        }
+                        
+                        var point1 = new cv.Point(x_start, hist_height - 1);
+                        var point2 = new cv.Point((i + 1) * scale - 1, hist_height - binVal);
+                        cv.rectangle(dst, point1, point2, color, cv.FILLED);
+                    }
+                    cv.imshow('drone_imagery_remove_background_histogram_div', dst);
+                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+
+                    removeBackgroundHistogramImg = document.getElementById(histogram_canvas_div_id);
+                    removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
+                    removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
+
+                    jQuery('div[name="drone_imagery_remove_background_threshold"]').html('<h5>Selected Threshold Value: '+ minimum_x_val );
+
+                    removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, removeBackgroundThresholdPeak1pixels, removeBackgroundHistogramImg.height, '#ff0000');
+                    removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, removeBackgroundThresholdPeak2pixels, removeBackgroundHistogramImg.height, '#ff0000');
+                    removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, minimum_x_val_pix, removeBackgroundHistogramImg.height, '#0000ff');
+
+                    removeBackgroundThresholdValue = minimum_x_val;
+
+                    removeBackgroundHistogramImgReDraw();
+                };
+                image.src = response.image_url;
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving image!')
+            }
+        });
+    }
 
     jQuery('#drone_imagery_remove_background_start_over').click(function(){
         removeBackgroundThresholdPeak1 = undefined;
@@ -2070,66 +2447,7 @@ jQuery(document).ready(function() {
         removeBackgroundThresholdPeak1pixels = undefined;
         removeBackgroundThresholdPeak2pixels = undefined;
 
-        jQuery.ajax({
-            url : '/ajax/drone_imagery/get_image?image_id='+remove_background_current_image_id,
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                console.log(response);
-                jQuery("#working_modal").modal("hide");
-
-                var canvas = document.getElementById('drone_imagery_remove_background_original');
-                ctx = canvas.getContext('2d');
-                var image = new Image();
-                image.onload = function () {
-                    canvas.width = this.naturalWidth;
-                    canvas.height = this.naturalHeight;
-                    ctx.drawImage(this, 0, 0);
-
-                    var src = cv.imread('drone_imagery_remove_background_original');
-                    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-                    var srcVec = new cv.MatVector();
-                    srcVec.push_back(src);
-                    var accumulate = false;
-                    var channels = [0];
-                    var histSize = [256];
-                    var ranges = [0, 255];
-                    var hist = new cv.Mat();
-                    var mask = new cv.Mat();
-                    var color = new cv.Scalar(255, 255, 255);
-                    var scale = 3;
-                    var hist_height = src.rows/2;
-
-                    cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
-                    var result = cv.minMaxLoc(hist, mask);
-                    var max = result.maxVal;
-                    var dst = new cv.Mat.zeros(hist_height, histSize[0] * scale, cv.CV_8UC3);
-                    // draw histogram
-                    for (let i = 0; i < histSize[0]; i++) {
-                        var binVal = hist.data32F[i] * hist_height / max;
-                        var point1 = new cv.Point(i * scale, hist_height - 1);
-                        var point2 = new cv.Point((i + 1) * scale - 1, hist_height - binVal);
-                        cv.rectangle(dst, point1, point2, color, cv.FILLED);
-                    }
-                    cv.imshow('drone_imagery_remove_background_histogram_div', dst);
-                    src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
-
-                    removeBackgroundHistogramImg = document.getElementById("drone_imagery_remove_background_histogram_div");
-                    removeBackgroundHistogramImg.onmousemove = GetCoordinatesRemoveBackgrounHistogram;
-                    removeBackgroundHistogramImg.onmousedown = GetCoordinatesRemoveBackgrounHistogramDrawLine;
-
-                    jQuery('#manage_drone_imagery_remove_background_load_div').hide();
-
-                };
-                image.src = response.image_url;
-
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert('Error retrieving image!')
-            }
-        });
+        showRemoveBackgroundHistogramStart(remove_background_current_image_id, 'drone_imagery_remove_background_original', 'drone_imagery_remove_background_histogram_div', 'manage_drone_imagery_remove_background_load_div');
     });
 
     function removeBackgroundHistogramImgDrawLine(removeBackgroundHistogramImg, position, image_height, color) {
@@ -2158,7 +2476,7 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
 
-                var canvas = document.getElementById('drone_imagery_remove_background_original');
+                var canvas = removeBackgroundDisplayImg;
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = function () {
@@ -2169,7 +2487,7 @@ jQuery(document).ready(function() {
                 image.src = response.removed_background_image_url;
             },
             error: function(response){
-                alert('Error saving removed background image!')
+                alert('Error saving removed background display image!')
             }
         });
     }
@@ -2191,7 +2509,7 @@ jQuery(document).ready(function() {
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
 
-        jQuery('#drone_imagery_remove_background_threshold_current').html('<h5>Current Mouse Value: '+ (((PosX+1)/3)-1) );
+        jQuery('div[name="drone_imagery_remove_background_threshold_current"]').html('<h5>Current Mouse Value: '+ (((PosX+1)/3)-1) );
     }
 
     function GetCoordinatesRemoveBackgrounHistogramDrawLine(e) {
@@ -2238,11 +2556,8 @@ jQuery(document).ready(function() {
         manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, remove_background_drone_run_band_lower_threshold, remove_background_drone_run_band_upper_threshold);
     });
 
-    jQuery('#drone_imagery_remove_background_defined_percentage_submit').click(function(){
-        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_remove_background_lower_threshold_percentage').val())/100;
-        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_remove_background_upper_threshold_percentage').val())/100;
-    
-        var src = cv.imread('drone_imagery_remove_background_original');
+    function calculateThresholdPercentageValues(canvas_div_id, drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage) {
+        var src = cv.imread(canvas_div_id);
         cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
         var srcVec = new cv.MatVector();
         srcVec.push_back(src);
@@ -2277,8 +2592,16 @@ jQuery(document).ready(function() {
                 break;
             }
         }
+        return [drone_imagery_remove_background_lower_percentage_threshold, drone_imagery_remove_background_upper_percentage_threshold];
+    }
 
-        manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, drone_imagery_remove_background_lower_percentage_threshold, drone_imagery_remove_background_upper_percentage_threshold);
+    jQuery('#drone_imagery_remove_background_defined_percentage_submit').click(function(){
+        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_remove_background_lower_threshold_percentage').val())/100;
+        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_remove_background_upper_threshold_percentage').val())/100;
+    
+        var threshold_value_return = calculateThresholdPercentageValues('drone_imagery_remove_background_original', drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage);
+        
+        manage_drone_imagery_remove_background_threshold_save(remove_background_current_image_id, remove_background_current_image_type, remove_background_drone_run_band_project_id, threshold_value_return[0], threshold_value_return[1]);
     });
 
     function manage_drone_imagery_remove_background_threshold_save(image_id, image_type, drone_run_band_project_id, lower_threshold, upper_threshold){
@@ -2328,6 +2651,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
 
         window.scrollTo(0,0);
 
@@ -2534,6 +2858,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').show();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
 
         jQuery('#manage_drone_imagery_vegetative_index_tgi_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_vari_div').show();
@@ -2554,6 +2879,7 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_remove_background_div').hide();
         jQuery('#manage_drone_imagery_rotate_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_div').show();
+        jQuery('#manage_drone_imagery_standard_process_div').hide();
 
         jQuery('#manage_drone_imagery_vegetative_index_tgi_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_vari_div').show();
