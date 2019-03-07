@@ -348,7 +348,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
         $drone_run_html .= '</div><div class="col-sm-3">';
-        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'">Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
         $drone_run_html .= '</div></div>';
 
         $drone_run_html .= "<hr>";
@@ -1511,6 +1511,34 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    if (!$assign_plot_polygons_type) {
+        my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+        my $projectprop_rs = $schema->resultset('Project::Projectprop')->search({project_id=>$drone_run_band_project_id, type_id=>$drone_run_band_type_cvterm_id});
+        if ($projectprop_rs->count != 1) {
+            die "Only One drone run band project type for a drone run band!\n";
+        }
+        my $drone_run_project_type = $projectprop_rs->first->value;
+        if ($drone_run_project_type eq 'Black and White Image') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_bw_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'RGB Color Image') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_rgb_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'Blue (450-520nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_blue_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'Green (515-600nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_green_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'Red (600-690nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_red_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'NIR (750-900nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_nir_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'MIR (1550-1750nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_mir_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'FIR (2080-2350nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_fir_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'Thermal IR (10400-12500nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_tir_background_removed_threshold_imagery';
+        }
+    }
+
     my $main_production_site = $c->config->{main_production_site_url};
 
     my $polygon_objs = decode_json $stock_polygons;
@@ -1537,6 +1565,30 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
+
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
+    if ($previous_plot_polygons_rs->count > 1) {
+        die "There should not be more than one saved entry for plot polygons for a drone run band";
+    }
+
+    my $save_stock_polygons;
+    if ($previous_plot_polygons_rs->count > 0) {
+        $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
+    }
+    foreach my $stock_name (keys %$polygon_objs) {
+        $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
+    }
+
+    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$drone_run_band_plot_polygons_type_id,
+        project_id=>$drone_run_band_project_id,
+        rank=>0,
+        value=> encode_json($save_stock_polygons)
+    },
+    {
+        key=>'projectprop_c1'
+    });
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();;
 
@@ -1578,30 +1630,6 @@ sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     }
     print STDERR Dumper \@plot_polygon_image_fullpaths;
     print STDERR Dumper \@plot_polygon_image_urls;
-
-    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
-    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
-    if ($previous_plot_polygons_rs->count > 1) {
-        die "There should not be more than one saved entry for plot polygons for a drone run band";
-    }
-
-    my $save_stock_polygons;
-    if ($previous_plot_polygons_rs->count > 0) {
-        $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
-    }
-    foreach my $stock_name (keys %$polygon_objs) {
-        $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
-    }
-
-    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
-        type_id=>$drone_run_band_plot_polygons_type_id,
-        project_id=>$drone_run_band_project_id,
-        rank=>0,
-        value=> encode_json($save_stock_polygons)
-    },
-    {
-        key=>'projectprop_c1'
-    });
 
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }
