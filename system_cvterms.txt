@@ -125,6 +125,7 @@ project_property	drone_run_band_background_removed_thresholded_vari_mask_origina
 project_property	drone_run_band_background_removed_thresholded_ndvi_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded ndvi mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_threshold	The threshold at which the image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_plot_polygons	The pixel coordinates for the defined plot polygons	10/5/2018	nm529	00103
+project_property	drone_run_standard_process_in_progress	Running a standard process on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093

@@ -292,9 +292,9 @@
                 <div class="form-group form-group-sm">
                     <label class="col-sm-6 control-label">Vegetative Indices To Apply to Each Selected Drone Run Band: </label>
                     <div class="col-sm-6">
-                        <input name="drone_imagery_standard_process_apply_indices_select" value="tgi" type="checkbox" checked> Triangular Greenness Index (TGI) <br/>
-                        <input name="drone_imagery_standard_process_apply_indices_select" value="vari" type="checkbox" checked> Visible Atmospheric Resistant Index (VARI) <br/>
-                        <input name="drone_imagery_standard_process_apply_indices_select" value="ndvi" type="checkbox" checked> Normalized difference vegetative index (NDVI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="TGI" type="checkbox" checked> Triangular Greenness Index (TGI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="VARI" type="checkbox" checked> Visible Atmospheric Resistant Index (VARI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="NDVI" type="checkbox" checked> Normalized difference vegetative index (NDVI) <br/>
                     </div>
                 </div>
             </form>
@@ -308,18 +308,30 @@
         <&| /util/workflow.mas:step, title=> "Phenotypes" &>
             <& /page/page_title.mas, title=>"Calculate phenotypes for all plot polygon images" &>
 
+            <form class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Zonal Statistics to Calculate and Save in Database: </label>
+                    <div class="col-sm-6">
+                        <input name="drone_imagery_standard_process_phenotypes_select" value="zonal" type="checkbox" checked disabled> Zonal Statistics: nonzero_pixel_count, total_pixel_sum, mean_pixel_value, harmonic_mean_value, median_pixel_value, variance_pixel_value, stdev_pixel_value, pstdev_pixel_value, min_pixel_value, max_pixel_value, minority_pixel_value, minority_pixel_count, majority_pixel_value, majority_pixel_count, pixel_variety_count <br/>
+                    </div>
+                </div>
+            </form>
 
             <br/>
 
             <center>
-            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_phenotypes_step">Go to Next Step</button>
+            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_phenotypes_step">Finish</button>
             </center>
         </&>
-        <&| /util/workflow.mas:step, title=> "Submit" &>
+        <&| /util/workflow.mas:complete, title=> "Complete" &>
+            <& /page/page_title.mas, title=>"Complete! Your drone run is being processed." &>
 
-            <center>
-            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_submit_step">Submit</button>
-            </center>
+            <p>
+                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                It will take time to finish processing your drone run and calculating phenotypes for all plot polygon images, vegetative indices, and processing combinations. Once it is complete, the "Processing Icon" on the Manage->Drone Imagery page will disappear from the drone run.
+            </p>
+
+            <br/>
         </&>
 
     </&>
@@ -1127,7 +1139,7 @@ jQuery(document).ready(function() {
 
         jQuery('#manage_drone_imagery_standard_process_drone_run_bands_apply_table').DataTable({
             destroy : true,
-            ajax : '/ajax/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&exclude_drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&select_all=1'
+            ajax : '/ajax/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&exclude_drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&select_all=1&disable=1'
         });
 
         Workflow.complete("#drone_imagery_standard_process_generated_polygons_div");
@@ -1150,7 +1162,7 @@ jQuery(document).ready(function() {
 
     jQuery('#manage_drone_imagery_standard_process_indices_step').click(function(){
         manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices = [];
-        jQuery('input[name="drone_run_standard_process_band_apply_select"]:checked').each(function() {
+        jQuery('input[name="drone_imagery_standard_process_apply_indices_select"]:checked').each(function() {
             manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices.push(jQuery(this).val());
         });
         if (manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices.length < 1){
@@ -1162,6 +1174,7 @@ jQuery(document).ready(function() {
                 url: '/ajax/drone_imagery/standard_process_apply',
                 dataType: "json",
                 data: {
+                    'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
                     'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
                     'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
                     'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices)
@@ -1176,8 +1189,44 @@ jQuery(document).ready(function() {
                     alert('Error saving standard process assigned plot polygons!')
                 }
             });
+
+            Workflow.complete("#manage_drone_imagery_standard_process_indices_step");
+            Workflow.focus('#manage_drone_imagery_standard_process_workflow', 8);
         }
     });
+
+    jQuery('#manage_drone_imagery_standard_process_phenotypes_step').click(function(){
+        var selected = [];
+        jQuery('input[name="drone_imagery_standard_process_apply_indices_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length < 1){
+            alert('Please select at least one phenotype!');
+            return false;
+        } else {
+            jQuery.ajax({
+                type: 'POST',
+                url: '/ajax/drone_imagery/standard_process_apply_phenotypes',
+                dataType: "json",
+                data: {
+                    'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
+                },
+                success: function(response){
+                    console.log(response);
+                    if(response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response){
+                    alert('Error saving standard process saved phenotypes!')
+                }
+            });
+
+            Workflow.complete("#manage_drone_imagery_standard_process_phenotypes_step");
+            Workflow.focus('#manage_drone_imagery_standard_process_workflow', -1); //Go to sucess page
+        }
+    });
+
 
     //
     // Keras CNN Training JS
