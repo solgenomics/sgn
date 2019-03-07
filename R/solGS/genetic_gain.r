@@ -13,7 +13,7 @@ library(data.table)
 library(dplyr)
 library(methods)
 library(ggplot2)
-library(plotly)
+#library(plotly)
 
 
 
