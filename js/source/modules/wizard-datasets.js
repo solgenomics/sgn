@@ -71,7 +71,7 @@ export function WizardDatasets(main_id,wizard){
     resolve(datasets.getDatasets());
   })).then(datasets_data=>{
     if(datasets_data.error){
-      main.selectAll("button").attr("disabled",true);
+      main.selectAll(".wizard-dataset-load, .wizard-dataset-create").attr("disabled",true);
       main.select(".wizard-dataset-select")
         .attr("disabled",true)
         .select("option[selected]")
