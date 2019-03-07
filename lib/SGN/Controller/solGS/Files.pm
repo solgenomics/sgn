@@ -255,7 +255,7 @@ sub genotype_file_name {
 sub rrblup_training_gebvs_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $trait  = $c->stash->{trait_abbr};
     my $data_set_type = $c->stash->{data_set_type};
         
