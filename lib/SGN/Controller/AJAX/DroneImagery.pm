@@ -2260,7 +2260,8 @@ sub standard_process_apply_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
-    my $drone_run_band_remove_background_threshold = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+    my $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -2505,11 +2506,21 @@ sub standard_process_apply_POST : Args(0) {
         }
     }
 
-    $drone_run_band_remove_background_threshold = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
         project_id=>$drone_run_project_id,
         rank=>0,
         value=>0
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$processed_cvterm_id,
+        project_id=>$drone_run_project_id,
+        rank=>0,
+        value=>1
     },
     {
         key=>'projectprop_c1'

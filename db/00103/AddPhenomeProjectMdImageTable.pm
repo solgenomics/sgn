@@ -142,7 +142,8 @@ sub patch {
             'drone_run_band_background_removed_thresholded_ndvi_mask_original_threshold',
             'drone_run_band_background_removed_threshold',
             'drone_run_band_plot_polygons',
-            'drone_run_standard_process_in_progress'
+            'drone_run_standard_process_in_progress',
+            'drone_run_standard_process_completed'
         ],
         'project_relationship' => [
             'drone_run_on_field_trial',
