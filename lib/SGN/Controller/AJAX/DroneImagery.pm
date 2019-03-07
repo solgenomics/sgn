@@ -1334,16 +1334,34 @@ sub drone_imagery_rotate_image_GET : Args(0) {
     my $view_only = $c->req->param('view_only');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+    my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+    $archive_rotate_temp_image .= '.png';
+    print STDERR $archive_rotate_temp_image."\n";
+
+    my $return = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $angle_rotation, $view_only, $user_id, $user_name, $user_role, $archive_rotate_temp_image);
+
+    $c->stash->{rest} = $return;
+}
+
+sub _perform_image_rotate {
+    my $c = shift;
+    my $schema = shift;
+    my $metadata_schema = shift;
+    my $drone_run_band_project_id = shift;
+    my $image_id = shift;
+    my $angle_rotation = shift;
+    my $view_only = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my $archive_rotate_temp_image = shift;
+
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
-
-    my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
-    my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
-    $archive_rotate_temp_image .= '.png';
-    print STDERR $archive_rotate_temp_image."\n";
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Rotate.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --angle '.$angle_rotation;
     print STDERR $cmd."\n";
@@ -1411,8 +1429,9 @@ sub drone_imagery_rotate_image_GET : Args(0) {
         $rotated_image_url = $image->get_image_url('original');
         $rotated_image_id = $image->get_image_id();
     }
-
-    $c->stash->{rest} = { rotated_image_id => $rotated_image_id, image_url => $image_url, image_fullpath => $image_fullpath, rotated_image_url => $rotated_image_url, rotated_image_fullpath => $rotated_image_fullpath };
+    return {
+        rotated_image_id => $rotated_image_id, image_url => $image_url, image_fullpath => $image_fullpath, rotated_image_url => $rotated_image_url, rotated_image_fullpath => $rotated_image_fullpath
+    };
 }
 
 sub drone_imagery_get_contours : Path('/ajax/drone_imagery/get_contours') : ActionClass('REST') { }
@@ -1678,18 +1697,34 @@ sub drone_imagery_denoise_GET : Args(0) {
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
+    my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
+    $archive_denoise_temp_image .= '.png';
+    print STDERR $archive_denoise_temp_image."\n";
+
     my $main_production_site = $c->config->{main_production_site_url};
+
+    my $return = _perform_image_denoise($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
+
+    $c->stash->{rest} = $return;
+}
+
+sub _perform_image_denoise {
+    my $c = shift;
+    my $schema = shift;
+    my $metadata_schema = shift;
+    my $image_id = shift;
+    my $drone_run_band_project_id = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my $archive_denoise_temp_image = shift;
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
-
-    my $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
-    my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
-    $archive_denoise_temp_image .= '.png';
-    print STDERR $archive_denoise_temp_image."\n";
 
     my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Denoise.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_denoise_temp_image.'\'');
 
@@ -1728,7 +1763,9 @@ sub drone_imagery_denoise_GET : Args(0) {
         $denoised_image_id = $image->get_image_id();
     }
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_id => $denoised_image_id, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath };
+    return {
+        image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_id => $denoised_image_id, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath
+    };
 }
 
 sub drone_imagery_remove_background_display : Path('/ajax/drone_imagery/remove_background_display') : ActionClass('REST') { }
@@ -1813,6 +1850,29 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
         $c->detach();
     }
 
+    my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+    my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+    $archive_remove_background_temp_image .= '.png';
+    print STDERR $archive_remove_background_temp_image."\n";
+
+    my $return = _perform_image_background_remove_threshold($c, $schema, $image_id, $drone_run_band_project_id, $image_type, $lower_threshold, $upper_threshold, $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+
+    $c->stash->{rest} = $return;
+}
+
+sub _perform_image_background_remove_threshold {
+    my $c = shift;
+    my $schema = shift;
+    my $image_id = shift;
+    my $drone_run_band_project_id = shift;
+    my $image_type = shift;
+    my $lower_threshold = shift;
+    my $upper_threshold = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my $archive_remove_background_temp_image = shift;
+
     my $main_production_site = $c->config->{main_production_site_url};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -1820,11 +1880,6 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
-
-    my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
-    my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
-    $archive_remove_background_temp_image .= '.png';
-    print STDERR $archive_remove_background_temp_image."\n";
 
     my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_threshold '.$lower_threshold.' --upper_threshold '.$upper_threshold);
 
@@ -1874,7 +1929,9 @@ sub drone_imagery_remove_background_save_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
+    return {
+        image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath
+    };
 }
 
 sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }
@@ -2031,6 +2088,8 @@ sub get_drone_run_band_projects_GET : Args(0) {
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $field_trial_id = $c->req->param('field_trial_id');
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $exclude_drone_run_band_project_id = $c->req->param('exclude_drone_run_band_project_id') || 0;
+    my $select_all = $c->req->param('select_all') || 0;
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
@@ -2061,23 +2120,109 @@ sub get_drone_run_band_projects_GET : Args(0) {
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my @res;
-        if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id'>";
+        if ($drone_run_band_project_id != $exclude_drone_run_band_project_id) {
+            if ($checkbox_select_name){
+                if ($select_all == 1) {
+                    push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' checked>";
+                } else {
+                    push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id'>";
+                }
+            }
+            my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+            push @res, (
+                $drone_run_band_name,
+                $drone_run_band_description,
+                $drone_run_band_type,
+                $drone_run_project_name,
+                $drone_run_project_description,
+                $drone_run_date_display,
+                "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",
+                $field_trial_project_description
+            );
+            push @result, \@res;
         }
-        my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
-        push @res, (
-            $drone_run_band_name,
-            $drone_run_band_description,
-            $drone_run_band_type,
-            $drone_run_project_name,
-            $drone_run_project_description,
-            $drone_run_date_display,
-            "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",
-            $field_trial_project_description
-        );
-        push @result, \@res;
     }
 
+    $c->stash->{rest} = { data => \@result };
+}
+
+sub standard_process_apply : Path('/ajax/drone_imagery/standard_process_apply') : ActionClass('REST') { }
+
+sub standard_process_apply_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $apply_drone_run_band_project_ids = decode_json $c->req->param('apply_drone_run_band_project_ids');
+    my $drone_run_band_project_id = decode_json $c->req->param('drone_run_band_project_id');
+    my $vegetative_indices = decode_json $c->req->param('vegetative_indices');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
+    my $cropping_polygon_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
+    my $plot_polygon_template_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+
+    my $q = "SELECT rotate.value, plot_polygons.value, cropping.value
+        FROM project AS drone_run_band
+        JOIN projectprop AS rotate ON(drone_run_band.project_id = rotate.project_id AND rotate.type_id=$rotate_angle_type_id)
+        JOIN projectprop AS plot_polygons ON(drone_run_band.project_id = plot_polygons.project_id AND plot_polygons.type_id=$plot_polygon_template_type_id)
+        JOIN projectprop AS cropping ON(drone_run_band.project_id = cropping.project_id AND cropping.type_id=$cropping_polygon_type_id)
+        WHERE drone_run_band.project_id = $drone_run_band_project_id;";
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my ($rotate_value, $plot_polygons_value, $cropping_value) = $h->fetchrow_array();
+
+    foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
+        my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        my $q = "SELECT project_md_image.image_id
+            FROM project AS drone_run_band
+            JOIN phenome.project_md_image AS project_md_image USING(project_id)
+            WHERE project_md_image.type_id = $project_image_type_id AND project_id = $apply_drone_run_band_project_id
+            ORDER BY project_id;";
+
+        my $h = $bcs_schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my @result;
+        my ($image_id) = $h->fetchrow_array();
+        
+        my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+        my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+        $archive_rotate_temp_image .= '.png';
+        print STDERR $archive_rotate_temp_image."\n";
+
+        my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $drone_run_band_project_id, $image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image);
+        my $rotated_image_id = $rotate_return->{rotated_image_id};
+
+        $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+        $archive_temp_image .= '.png';
+        print STDERR $archive_temp_image."\n";
+
+        my $cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id, $rotated_image_id, $plot_polygons_value, $user_id, $user_name, $user_role, $archive_temp_image);
+        my $cropped_image_id = $cropping_return->{cropped_image_id};
+
+        $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
+        my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
+        $archive_denoise_temp_image .= '.png';
+        print STDERR $archive_denoise_temp_image."\n";
+
+        my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
+        my $denoised_image_id = $denoise_return->{denoised_image_id};
+
+        $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+        my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+        $archive_remove_background_temp_image .= '.png';
+        print STDERR $archive_remove_background_temp_image."\n";
+
+        my $lower_threshold;
+        my $upper_threshold;
+
+        my $background_removed_threshold_return = _perform_image_background_remove_threshold($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, 'threshold_background_removed_stitched_drone_imagery', $lower_threshold, $upper_threshold, $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+        my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
+    }
+
+    my @result;
     $c->stash->{rest} = { data => \@result };
 }
 
@@ -2154,6 +2299,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $polygon = $c->req->param('polygon');
@@ -2165,6 +2311,27 @@ sub drone_imagery_crop_image_GET : Args(0) {
     my $polygons = encode_json [$polygon_obj];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+    $archive_temp_image .= '.png';
+    print STDERR $archive_temp_image."\n";
+
+    my $return = _perform_image_cropping($c, $schema, $drone_run_band_project_id, $image_id, $polygons, $user_id, $user_name, $user_role, $archive_temp_image);
+
+    $c->stash->{rest} = $return;
+}
+
+sub _perform_image_cropping {
+    my $c = shift;
+    my $schema = shift;
+    my $drone_run_band_project_id = shift;
+    my $image_id = shift;
+    my $polygons = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my $archive_temp_image = shift;
+    
     my $main_production_site = $c->config->{main_production_site_url};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -2172,11 +2339,6 @@ sub drone_imagery_crop_image_GET : Args(0) {
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
-
-    my $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
-    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
-    $archive_temp_image .= '.png';
-    print STDERR $archive_temp_image."\n";
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons'";
     my $status = system($cmd);
@@ -2213,7 +2375,9 @@ sub drone_imagery_crop_image_GET : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $c->stash->{rest} = { cropped_image_id => $cropped_image_id, image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath };
+    return {
+        cropped_image_id => $cropped_image_id, image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath
+    };
 }
 
 sub drone_imagery_calculate_rgb_vegetative_index : Path('/ajax/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }

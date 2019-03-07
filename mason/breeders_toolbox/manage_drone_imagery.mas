@@ -248,23 +248,61 @@
 
         </&>
         <&| /util/workflow.mas:step, title=> "Apply" &>
-            <& /page/page_title.mas, title=>"Apply these same steps to other drone run bands" &>
+            <& /page/page_title.mas, title=>"Apply these same steps to other drone run bands in the current drone run" &>
 
+            <div class="well well-sm">
+                <ul>
+                    <li>Here you can apply the same actions you did for the previous steps 1 to 6, to additional drone run bands in this drone run.</li>
+                    <li>Thresholding will be done dynamically, by removing the top and bottom 20% of pixel values.</li>
+                </ul>
+            </div>
 
-            <br/>
+            <div class="well well-sm">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_drone_run_bands_apply_table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Drone Run Band Name</th>
+                                    <th>Drone Run Band Description</th>
+                                    <th>Drone Run Band Type</th>
+                                    <th>Drone Run Name</th>
+                                    <th>Drone Run Description</th>
+                                    <th>Drone Run Date</th>
+                                    <th>Field Trial Name</th>
+                                    <th>Field Trial Description</th>
+                                </tr>
+                            </thead>
+                        </table>
 
-            <center>
-            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_apply_step">Go to Next Step</button>
-            </center>
+                        <br/>
+
+                        <center>
+                        <button class="btn btn-primary" id="manage_drone_imagery_standard_process_drone_run_band_apply_step">Go to Next Step</button>
+                        </center>
+                    </div>
+                </div>
+            </div>
         </&>
         <&| /util/workflow.mas:step, title=> "Indices" &>
             <& /page/page_title.mas, title=>"Create and apply these same steps to vegetative indices" &>
 
+            <form class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Vegetative Indices To Apply to Each Selected Drone Run Band: </label>
+                    <div class="col-sm-6">
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="tgi" type="checkbox" checked> Triangular Greenness Index (TGI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="vari" type="checkbox" checked> Visible Atmospheric Resistant Index (VARI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="ndvi" type="checkbox" checked> Normalized difference vegetative index (NDVI) <br/>
+                    </div>
+                </div>
+            </form>
 
             <br/>
 
             <center>
-            <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_indices_step">Go to Next Step</button>
+            <button type="button" class="btn btn-primary" id="manage_drone_imagery_standard_process_indices_step">Go to Next Step</button>
             </center>
         </&>
         <&| /util/workflow.mas:step, title=> "Phenotypes" &>
@@ -807,9 +845,10 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_denoised_image_id;
     var manage_drone_imagery_standard_process_removed_background_image_id;
     var manage_drone_imagery_standard_process_current_image_type = 'threshold_background_removed_stitched_drone_imagery';
+    var manage_drone_imagery_standard_process_apply_drone_run_band_project_ids = [];
+    var manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices = [];
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process"]', function(){
-        alert('x');
         showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
 
         manage_drone_imagery_standard_process_drone_run_project_id = jQuery(this).data('drone_run_project_id');
@@ -827,10 +866,10 @@ jQuery(document).ready(function() {
             selected.push(jQuery(this).val());
         });
         if (selected.length < 1){
-            alert('Please select at least one drone run band!');
+            alert('Please select at least one drone run band! Preferably one with high contrast such as NIR.');
             return false;
         } else if (selected.length > 1){
-            alert('Please select only one drone run band!');
+            alert('Please select only one drone run band! Preferably one with high contrast such as NIR.');
             return false;
         } else {
             manage_drone_imagery_standard_process_drone_run_band_project_id = selected[0];
@@ -1086,11 +1125,59 @@ jQuery(document).ready(function() {
             }
         });
 
+        jQuery('#manage_drone_imagery_standard_process_drone_run_bands_apply_table').DataTable({
+            destroy : true,
+            ajax : '/ajax/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&exclude_drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&select_all=1'
+        });
+
         Workflow.complete("#drone_imagery_standard_process_generated_polygons_div");
         Workflow.focus('#manage_drone_imagery_standard_process_workflow', 6);
     });
 
+    jQuery('#manage_drone_imagery_standard_process_drone_run_band_apply_step').click(function(){
+        manage_drone_imagery_standard_process_apply_drone_run_band_project_ids = [];
+        jQuery('input[name="drone_run_standard_process_band_apply_select"]:checked').each(function() {
+            manage_drone_imagery_standard_process_apply_drone_run_band_project_ids.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_standard_process_apply_drone_run_band_project_ids.length < 1){
+            alert('Please select at least one other drone run band!');
+            return false;
+        } else {
+            Workflow.complete("#manage_drone_imagery_standard_process_drone_run_band_apply_step");
+            Workflow.focus('#manage_drone_imagery_standard_process_workflow', 7);
+        }
+    });
 
+    jQuery('#manage_drone_imagery_standard_process_indices_step').click(function(){
+        manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices = [];
+        jQuery('input[name="drone_run_standard_process_band_apply_select"]:checked').each(function() {
+            manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices.length < 1){
+            alert('Please select at least one vegetative index!');
+            return false;
+        } else {
+            jQuery.ajax({
+                type: 'POST',
+                url: '/ajax/drone_imagery/standard_process_apply',
+                dataType: "json",
+                data: {
+                    'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
+                    'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
+                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices)
+                },
+                success: function(response){
+                    console.log(response);
+                    if(response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response){
+                    alert('Error saving standard process assigned plot polygons!')
+                }
+            });
+        }
+    });
 
     //
     // Keras CNN Training JS
