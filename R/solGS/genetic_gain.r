@@ -46,40 +46,22 @@ message('trait gebv:  ', trait)
 trGebv$pop <- 'training'
 slGebv$pop <- 'selection'
 
-print(head(trGebv))
-print(head(slGebv))
-
 boxplotData <- bind_rows(trGebv, slGebv)
 boxplotData$pop <- as.factor(boxplotData$pop)
 boxplotData$pop <- with(boxplotData, relevel(pop, "training"))
-
-trMed <- median(trGebv[, 2])
-slMed <- median(slGebv[, 2])
-trMax <- max(trGebv[, 2])
-slMax <- max(slGebv[, 2])
-trMin <- min(trGebv[, 2])
-slMin <- min(slGebv[, 2])
 
 pop       <- 'pop'
 training  <- 'training'
 selection <- 'selection'
 
-bp <- ggplot(boxplotData, aes_string(y=trait, x=pop, fill=pop)) +
-    geom_boxplot(width=0.5) +
-    geom_label(aes_string(x=training, y=trMed, label=trMed),
-               fill='white', label.size=NA) +
-    geom_label(aes_string(x=selection, y=slMed, label=slMed),
-               fill='white', label.size=NA) +
-    geom_label(aes_string(x=training, y=trMax, label=trMax),
-               fill='white', label.size=NA) +
-    geom_label(aes_string(x=selection, y=slMax, label=slMax),
-               fill='white', label.size=NA) +
-    geom_label(aes_string(x=training, y=trMin, label=trMin),
-               fill='white', label.size=NA) +
-    geom_label(aes_string(x=selection, y=slMin, label=slMin),
-               fill='white', label.size=NA)
-
-
+bp <- ggplot(boxplotData,
+             aes_string(y=trait, x=pop, fill=pop)) +
+     geom_boxplot(width=0.4) +
+     stat_summary(geom="text", fun.y=quantile,
+     aes(label=sprintf("%1.3f", ..y..), color=pop),
+     position=position_nudge(x=0.35), size=5) +
+     guides(fill=FALSE) +
+     theme_bw()      
 
 png(boxplotFile)
 bp
