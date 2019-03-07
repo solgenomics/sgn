@@ -1934,6 +1934,80 @@ sub _perform_image_background_remove_threshold {
     };
 }
 
+sub _perform_image_background_remove_threshold_percentage {
+    my $c = shift;
+    my $schema = shift;
+    my $image_id = shift;
+    my $drone_run_band_project_id = shift;
+    my $image_type = shift;
+    my $lower_threshold_percentage = shift;
+    my $upper_threshold_percentage = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my $archive_remove_background_temp_image = shift;
+
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\'');
+
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+
+    my $linking_table_type_id;
+    my $drone_run_band_remove_background_threshold_type_id;
+    if ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_tgi_threshold', 'project_property')->cvterm_id();
+    } elsif ($image_type eq 'threshold_background_removed_vari_stitched_drone_imagery') {
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_vari_threshold', 'project_property')->cvterm_id();
+    } elsif ($image_type eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_ndvi_threshold', 'project_property')->cvterm_id();
+    } elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_threshold', 'project_property')->cvterm_id();
+    }
+
+    my $previous_background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id=>$linking_table_type_id,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id]
+    });
+    my ($previous_result, $previous_total_count) = $previous_background_removed_images_search->search();
+    print STDERR Dumper $previous_total_count;
+    foreach (@$previous_result){
+        my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        $previous_image->delete(); #Sets to obsolete
+    }
+
+    my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+    my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $removed_background_image_url = $image->get_image_url('original');
+    my $removed_background_image_id = $image->get_image_id();
+
+    my $drone_run_band_remove_background_threshold = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$drone_run_band_remove_background_threshold_type_id,
+        project_id=>$drone_run_band_project_id,
+        rank=>0,
+        value=>"Lower Threshold Percentage:$lower_threshold_percentage. Upper Threshold Percentage:$upper_threshold_percentage"
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    return {
+        image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath
+    };
+}
+
 sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }
 
 sub get_drone_run_projects_GET : Args(0) {
@@ -2218,7 +2292,7 @@ sub standard_process_apply_POST : Args(0) {
         my $lower_threshold;
         my $upper_threshold;
 
-        my $background_removed_threshold_return = _perform_image_background_remove_threshold($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, 'threshold_background_removed_stitched_drone_imagery', $lower_threshold, $upper_threshold, $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+        my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, 'threshold_background_removed_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
         my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
     }
 
