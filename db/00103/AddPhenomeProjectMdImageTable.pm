@@ -143,7 +143,8 @@ sub patch {
             'drone_run_band_background_removed_threshold',
             'drone_run_band_plot_polygons',
             'drone_run_standard_process_in_progress',
-            'drone_run_standard_process_completed'
+            'drone_run_standard_process_completed',
+            'drone_run_standard_process_phenotype_calculation_in_progress'
         ],
         'project_relationship' => [
             'drone_run_on_field_trial',
