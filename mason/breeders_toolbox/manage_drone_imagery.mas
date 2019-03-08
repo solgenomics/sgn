@@ -290,7 +290,7 @@
 
             <form class="form-horizontal">
                 <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Vegetative Indices To Apply to Each Selected Drone Run Band: </label>
+                    <label class="col-sm-6 control-label">Vegetative Indices To Apply: </label>
                     <div class="col-sm-6">
                         <input name="drone_imagery_standard_process_apply_indices_select" value="TGI" type="checkbox" checked> Triangular Greenness Index (TGI) <br/>
                         <input name="drone_imagery_standard_process_apply_indices_select" value="VARI" type="checkbox" checked> Visible Atmospheric Resistant Index (VARI) <br/>
@@ -746,12 +746,14 @@
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
                     <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
                     <br/><br/>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Field Trial: </label>
-                        <div class="col-sm-9" >
-                            <div id="drone_imagery_train_keras_cnn_trial_select_div"></div>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_train_keras_cnn_trial_select_div"></div>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_field_trial_select_step">Go to Next Step</button>
@@ -760,12 +762,14 @@
                 <&| /util/workflow.mas:step, title=> "Trait Selection" &>
                     <& /page/page_title.mas, title=>"Select the trait you are interested in predicting" &>
                     <br/><br/>
-                    <div class="form-group">
-                        <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial: </label>
-                        <div class="col-sm-7" >
-                            <div id="drone_imagery_train_keras_cnn_trait_select_div"></div>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial: </label>
+                            <div class="col-sm-7" >
+                                <div id="drone_imagery_train_keras_cnn_trait_select_div"></div>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                     <br/><br/><br/>
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_trait_select_step">Go to Next Step</button>
@@ -951,7 +955,7 @@ jQuery(document).ready(function() {
                 showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
             },
             error: function(response){
-                alert('Error saving standard process rotated image image!');
+                //alert('Error saving standard process rotated image image!');
                 showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
             }
         });
@@ -1069,7 +1073,7 @@ jQuery(document).ready(function() {
                 showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
             },
             error: function(response){
-                alert('Error saving standard process removed background image!');
+                //alert('Error saving standard process removed background image!');
                 showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
             }
         });
@@ -1133,7 +1137,7 @@ jQuery(document).ready(function() {
                 }
             },
             error: function(response){
-                alert('Error saving standard process assigned plot polygons!')
+                //alert('Error saving standard process assigned plot polygons!')
             }
         });
 
@@ -1186,7 +1190,7 @@ jQuery(document).ready(function() {
                     }
                 },
                 error: function(response){
-                    alert('Error saving standard process assigned plot polygons!')
+                    //alert('Error saving standard process assigned plot polygons!')
                 }
             });
 
@@ -1218,7 +1222,7 @@ jQuery(document).ready(function() {
                     }
                 },
                 error: function(response){
-                    alert('Error saving standard process saved phenotypes!')
+                    //alert('Error saving standard process saved phenotypes!')
                 }
             });
 
@@ -1227,6 +1231,29 @@ jQuery(document).ready(function() {
         }
     });
 
+    //
+    // Download Phenotypes
+    //
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_download_phenotypes"]', function(){
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        var field_trial_id = jQuery(this).data('field_trial_id');
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/drone_imagery/analysis_query?drone_run_project_id_list='+JSON.stringify([drone_run_project_id])+'&trial_id_list='+JSON.stringify([field_trial_id])+'&format=xls',
+            dataType: "json",
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                }
+                location.href =response.files[0];
+            },
+            error: function(response){
+                alert('Error downloading drone image phenotypes!')
+            }
+        });
+    });
 
     //
     // Keras CNN Training JS
@@ -1252,8 +1279,6 @@ jQuery(document).ready(function() {
         if (manage_drone_imagery_train_keras_field_trial_id == '') {
             alert('Please select a field trial first!');
         } else {
-            Workflow.complete("#drone_imagery_train_keras_model_field_trial_select_step");
-
             get_select_box('traits', 'drone_imagery_train_keras_cnn_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_trait_id', 'id' : 'drone_imagery_train_keras_cnn_trait_id', 'empty':1, 'multiple':0, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id, 'stock_type':'plot' });
 
             jQuery('#drone_image_train_keras_drone_runs_table').DataTable({
@@ -1261,6 +1286,7 @@ jQuery(document).ready(function() {
                 ajax : '/ajax/drone_imagery/drone_runs?select_checkbox_name=train_keras_drone_imagery_drone_run_select&field_trial_id='+manage_drone_imagery_train_keras_field_trial_id
             });
 
+            Workflow.complete("#drone_imagery_train_keras_model_field_trial_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 2);
         }
         return false;
