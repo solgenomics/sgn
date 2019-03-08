@@ -15,7 +15,6 @@ use Cache::File;
 BEGIN { extends 'Catalyst::Controller' }
 
 
-
 sub marker_effects_file {
     my ($self, $c) = @_;
    
