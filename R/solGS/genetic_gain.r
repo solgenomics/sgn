@@ -59,9 +59,9 @@ bp <- ggplot(boxplotData,
      geom_boxplot(width=0.4) +
      stat_summary(geom="text", fun.y=quantile,
      aes(label=sprintf("%1.3f", ..y..), color=pop),
-     position=position_nudge(x=0.35), size=5) +
-     guides(fill=FALSE) +
-     theme_bw()      
+     position=position_nudge(x=0.35), size=5) +                      
+     theme_bw()  +
+     theme(legend.position="none")
 
 png(boxplotFile)
 bp
