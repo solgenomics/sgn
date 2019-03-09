@@ -394,8 +394,8 @@ sub mrna_cds_protein_sequence {
         -seq  => $peptide->residues,
      );
 
-    #Get the protein seq from translated CDS if no residues for polypeptide in the DB
-    if ( scalar $protein_seq->seq == 0 ) {
+    #Get the protein seq from translated CDS if no residues are found for polypeptide in the DB
+    if ( !$protein_seq->seq ) {
       $protein_seq = $cds_seq->translate;
     }
 
