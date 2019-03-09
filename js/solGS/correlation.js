@@ -176,7 +176,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'gebvs_file': gebvsFile,
                     'div_place' : divPlace,
                 };
-          
+		
                 runGenCorrelationAnalysis(args);
 
             } else {

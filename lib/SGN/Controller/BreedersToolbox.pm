@@ -89,7 +89,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    my $locations = decode_json($projects->get_location_geojson());
+    my $locations = decode_json($projects->get_all_locations_by_breeding_program());
 
     #print STDERR "Locations are ".Dumper($locations)."\n";
 
@@ -245,7 +245,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
         }
     }
 
-    my $locations = decode_json $crossingtrial->get_location_geojson();
+    my $locations = decode_json $crossingtrial->get_all_locations_by_breeding_program();
 
     $c->stash->{locations} = $locations;
 
@@ -297,7 +297,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
-    $c->stash->{geojson_locations} = decode_json($projects->get_location_geojson());
+    $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;

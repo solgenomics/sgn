@@ -200,7 +200,7 @@ function applySelectionIndex(params, legend, trainingPopId, selectionPopId) {
         }
         
         var action = '/solgs/calculate/selection/index/';
-          
+
         jQuery.ajax({
             type: 'POST',
             dataType: "json",
