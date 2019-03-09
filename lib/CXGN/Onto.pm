@@ -77,6 +77,7 @@ sub get_root_nodes {
 sub store_composed_term {
     my $self = shift;
     my $new_trait_names = shift;
+    #print STDERR Dumper $new_trait_names;
 
     my $schema = $self->schema();
     my $dbh = $schema->storage->dbh;

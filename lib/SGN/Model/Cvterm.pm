@@ -169,6 +169,10 @@ sub get_traits_from_component_categories {
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
     my $cvterm_id_hash = shift;
+    #print STDERR Dumper $cvterm_id_hash;
+    #print STDERR Dumper $allowed_composed_cvs;
+    #print STDERR Dumper $composable_cvterm_format;
+
     my %id_hash = %$cvterm_id_hash;
     delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
 

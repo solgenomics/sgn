@@ -339,17 +339,6 @@
             <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_phenotypes_step">Finish</button>
             </center>
         </&>
-        <&| /util/workflow.mas:complete, title=> "Complete" &>
-            <& /page/page_title.mas, title=>"Complete! Your drone run is being processed." &>
-
-            <p>
-                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                It will take time to finish processing your drone run and calculating phenotypes for all plot polygon images, vegetative indices, and processing combinations. Once it is complete, the "Processing Icon" on the Manage->Drone Imagery page will disappear from the drone run.
-            </p>
-
-            <br/>
-        </&>
-
     </&>
 
 </div>
@@ -855,6 +844,28 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_standard_process_complete_dialog" name="drone_imagery_standard_process_complete_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryStandardProcessCompleteDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryStandardProcessCompleteDialog">Standard Process Complete</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <p>
+                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                It will take time to finish processing your drone run and calculating phenotypes for all plot polygon images, vegetative indices, and processing combinations. Once it is complete, the "Processing Icon" on the Manage->Drone Imagery page will disappear from the drone run.
+            </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Finish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
 
@@ -1251,9 +1262,14 @@ jQuery(document).ready(function() {
             });
 
             Workflow.complete("#manage_drone_imagery_standard_process_phenotypes_step");
-            Workflow.focus('#manage_drone_imagery_standard_process_workflow', -1); //Go to sucess page
+            jQuery('#drone_imagery_standard_process_complete_dialog').modal('show');
         }
     });
+
+    jQuery('#drone_imagery_standard_process_complete_dialog').on('hidden.bs.modal', function () {
+        location.reload();
+    })
+
 
     //
     // Download Phenotypes

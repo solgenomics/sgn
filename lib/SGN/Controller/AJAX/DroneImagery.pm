@@ -356,7 +356,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
         $drone_run_html .= '</div><div class="col-sm-4">';
         if ($v->{drone_run_indicator}) {
-            $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing in Progress</span><br/><br/>';
+            $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Images in Progress</span><br/><br/>';
         }
         if ($v->{drone_run_phenotypes_indicator}) {
             $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Phenotypes in Progress</span><br/><br/>';
@@ -3162,18 +3162,6 @@ sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $in_progress_indicator = 1;
-    while ($in_progress_indicator == 1) {
-        sleep(7);
-        print STDERR "Waiting for drone standard process to finish before calculating phenotypes\n";
-        my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
-        my $drone_run_band_remove_background_threshold_rs = $schema->resultset('Project::Projectprop')->search({
-            type_id=>$process_indicator_cvterm_id,
-            project_id=>$drone_run_project_id,
-        });
-        $in_progress_indicator = $drone_run_band_remove_background_threshold_rs->first->value();
-    }
-
     my $drone_run_phenotype_calc_progress_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_phenotype_calculation_in_progress', 'project_property')->cvterm_id();
     my $drone_run_phenotype_calc_progress = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$drone_run_phenotype_calc_progress_type_id,
@@ -3184,6 +3172,18 @@ sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
     {
         key=>'projectprop_c1'
     });
+
+    my $in_progress_indicator = 1;
+    while ($in_progress_indicator == 1) {
+        sleep(10);
+        print STDERR "Waiting for drone standard image process to finish before calculating phenotypes\n";
+        my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
+        my $drone_run_band_remove_background_threshold_rs = $schema->resultset('Project::Projectprop')->search({
+            type_id=>$process_indicator_cvterm_id,
+            project_id=>$drone_run_project_id,
+        });
+        $in_progress_indicator = $drone_run_band_remove_background_threshold_rs->first->value();
+    }
 
     my @possible_plot_polygon_types = (
         'observation_unit_polygon_bw_background_removed_threshold_imagery',
@@ -3224,7 +3224,6 @@ sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
         foreach my $phenotype_method (@$phenotype_types) {
             foreach my $plot_polygons_type (@possible_plot_polygon_types) {
-                print STDERR Dumper [$phenotype_method, $image_band_selected, $time_cvterm_id, $plot_polygons_type, $drone_run_band_project_type, $drone_run_band_name];
                 my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $image_band_selected, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
                 if ($return->{error}){
                     print STDERR Dumper $return->{error};
@@ -3601,10 +3600,10 @@ sub _perform_phenotype_calculation {
     my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
         object => [],
         attribute => [$drone_run_band_project_type_cvterm_id],
-        method => [$drone_run_band_plot_polygons_preprocess_cvterm_id],
+        method => [],
         unit => [],
         trait => [$non_zero_pixel_count_cvterm_id, $total_pixel_sum_cvterm_id, $mean_pixel_value_cvterm_id, $harmonic_mean_pixel_value_cvterm_id, $median_pixel_value_cvterm_id, $pixel_variance_cvterm_id, $pixel_standard_dev_cvterm_id, $pixel_pstandard_dev_cvterm_id, $minimum_pixel_value_cvterm_id, $maximum_pixel_value_cvterm_id, $minority_pixel_value_cvterm_id, $minority_pixel_count_cvterm_id, $majority_pixel_value_cvterm_id, $majority_pixel_count_cvterm_id, $pixel_group_count_cvterm_id],
-        tod => [],
+        tod => [$drone_run_band_plot_polygons_preprocess_cvterm_id],
         toy => [$time_cvterm_id],
         gen => [],
     });
@@ -3664,7 +3663,7 @@ sub _perform_phenotype_calculation {
     my @header_cols;
     my @stocks;
     if ($total_count == 0) {
-        return {error => "No plot polygon images for this type!"};
+        return {error => "No plot polygon images for this type $plot_polygons_type!"};
     } else {
         my $temp_images_subdir = '';
         my $temp_results_subdir = '';
