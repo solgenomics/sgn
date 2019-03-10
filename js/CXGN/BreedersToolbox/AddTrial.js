@@ -360,6 +360,8 @@ jQuery(document).ready(function ($) {
         var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
+        alert(col_in_design_number);
+        alert(row_in_design_number);
         var no_of_rep_times = $('#no_of_rep_times').val();
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();

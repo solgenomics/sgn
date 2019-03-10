@@ -184,16 +184,25 @@ sub generate_experimental_design_POST : Args(0) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
     }
+    
+    my $number_of_prep_accession = scalar(@stock_names);
+    my $p_rep_total_plots;
+    my $replicated_plots;
+    my $unreplicated_plots;
+    my $calculated_total_plot;
+    
     if($design_type eq "p-rep"){
         @stock_names = (@replicated_accession, @unreplicated_accession);
-    }
+    #}
     #print STDERR Dumper(\@stock_names);
-    my $number_of_prep_accession = scalar(@stock_names);
-    my $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
-    my $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
-    my $unreplicated_plots = scalar(@unreplicated_accession);
-    my $calculated_total_plot = $replicated_plots + $unreplicated_plots;
-
+    
+        $number_of_prep_accession = scalar(@stock_names);
+        $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
+        $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
+        $unreplicated_plots = scalar(@unreplicated_accession);
+        $calculated_total_plot = $replicated_plots + $unreplicated_plots;
+    }
+    
     my @locations;
     my $trial_locations;
     my $multi_location;
