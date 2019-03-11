@@ -1322,7 +1322,7 @@ sub drone_imagery_analysis_query_GET : Args(0) {
 
     while (my($stock_id, $image_info_hash) = each %image_data_hash) {
         foreach (@project_image_names_list) {
-            my $image_string = join ',', @{$image_info_hash->{$_}};
+            my $image_string = $image_info_hash->{$_} ? join ',', @{$image_info_hash->{$_}} : '';
             push @{$data_hash{$stock_id}}, $image_string;
         }
     }
