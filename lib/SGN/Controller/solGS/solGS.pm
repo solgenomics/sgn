@@ -433,9 +433,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 
 sub population : Path('/solgs/population') Args(1) {
     my ($self, $c, $pop_id) = @_;
-  
-    #my ($pop_id, $action) = @{$c->req->captures};
-    print STDERR "\n population: pop id - $pop_id\n";
+      
     my $list_reference = $c->req->param('list_reference');
     $c->stash->{list_reference} = $list_reference;
 
@@ -2118,58 +2116,6 @@ sub build_multiple_traits_models {
 }
 
 
-sub traits_to_analyze :Path('/solgs/analyze/traits/population/') Args() {
-    my ($self, $c, $training_pop_id, $selection_pop_id) = @_; 
-   
-    my $req = $c->req->param('source');
-    
-    $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{prediction_pop_id} = $selection_pop_id;
-   
-    $self->build_multiple_traits_models($c);
-  
-    my $referer    = $c->req->referer;   
-    my $base       = $c->req->base;
-    $referer       =~ s/$base//;
-    my ($tr_id)    = $referer =~ /(\d+)/;
-    my $trait_page = "solgs/trait/$tr_id/population/$training_pop_id";
-
-    my $error = $c->stash->{script_error};
-  
-    if ($error) 
-    {
-        $c->stash->{message} = "$error can't create prediction models for the selected traits. 
-                                 There are problems with the datasets of the traits.
-                                 <p><a href=\"/solgs/population/$training_pop_id\">[ Go back ]</a></p>";
-
-        $c->stash->{template} = "/generic_message.mas"; 
-    } 
-    elsif ($req =~ /AJAX/)
-    {     
-    	my $ret->{status} = 'success';
-  
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);       
-    }
-     else
-    {
-        if ($referer =~ m/$trait_page/) 
-        { 
-            $c->res->redirect("/solgs/trait/$tr_id/population/$training_pop_id");
-            $c->detach(); 
-        }
-        else 
-        {
-            $c->res->redirect("/solgs/traits/all/population/$training_pop_id/$selection_pop_id");
-            $c->detach(); 
-        }
-    }
-
-}
-
-
 sub all_traits_output :Path('/solgs/traits/all/population') Args() {
      my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
      
@@ -2847,7 +2793,7 @@ sub analyzed_traits {
     my ($self, $c) = @_;
     
     my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id}; 
-
+    
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
@@ -2893,7 +2839,7 @@ sub analyzed_traits {
                     }
                 }
             }
-
+	    
             $self->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
 
