@@ -118,6 +118,9 @@ sub generate_experimental_design_POST : Args(0) {
     my $westcott_col = $c->req->param('westcott_col');
     my $westcott_col_between_check = $c->req->param('westcott_col_between_check');
 
+    print STDERR Dumper($westcott_col);
+    print STDERR Dumper($westcott_col_between_check);
+
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
@@ -398,6 +401,7 @@ sub generate_experimental_design_POST : Args(0) {
 
         try {
             $trial_design->calculate_design();
+            #    print STDERR "DESIGN: ". Dumper($trial_design);
         } catch {
             $c->stash->{rest} = {error => "Could not calculate design: $_"};
             $error=1;
@@ -407,7 +411,7 @@ sub generate_experimental_design_POST : Args(0) {
         }
         if ($trial_design->get_design()) {
             %design = %{$trial_design->get_design()}; 
-            #print STDERR "DESIGN: ". Dumper(%design);
+        #    print STDERR "DESIGN: ". Dumper(%design);
         } else {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;

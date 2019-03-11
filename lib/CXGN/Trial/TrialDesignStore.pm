@@ -179,7 +179,7 @@ sub validate_design {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
-    my %design = %{$self->get_design};
+    my %design = %{$self->get_design}; 
     my $error = '';
 
     if ($self->get_is_genotyping && $design_type ne 'genotyping_plate') {
@@ -240,6 +240,7 @@ sub validate_design {
     my %seen_stock_names;
     my %seen_source_names;
     my %seen_accession_names;
+     print STDERR Dumper %design;
     foreach my $stock (keys %design){
         if ($stock eq 'treatments'){
             next;

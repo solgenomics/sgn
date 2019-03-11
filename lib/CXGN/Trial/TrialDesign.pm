@@ -29,6 +29,7 @@ use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use POSIX;
 use List::Util 'max';
+use Scalar::Util qw(looks_like_number);
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
@@ -86,6 +87,7 @@ has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_
 my $design;
 
 sub get_design {
+     print STDERR Dumper $design;
   return $design;
 }
 
@@ -116,6 +118,7 @@ sub calculate_design {
     }
     elsif ($self->get_design_type() eq "westcott") {
       $design = _get_westcott_design($self);
+      print STDERR Dumper $design;
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -419,6 +422,7 @@ sub _get_crd_design {
 
 sub _get_westcott_design {
     my $self = shift;
+    print "I AM HERE\n";
     my %westcott_design;
     my $rbase = R::YapRI::Base->new();
     my @stock_list;
@@ -438,6 +442,7 @@ sub _get_westcott_design {
     
     if ($self->has_stock_list()) {
       @stock_list = @{$self->get_stock_list()};
+          print STDERR Dumper (@stock_list);
     } else {
       die "No stock list specified\n";
     }
@@ -458,19 +463,22 @@ sub _get_westcott_design {
     if ($self->has_westcott_col_between_check()) {
       $westcott_col_between_check = $self->get_westcott_col_between_check();
     }
-    
+        print "I AM HERE 2 \n";
+        print STDERR Dumper (@stock_list); 
     $stock_data_matrix =  R::YapRI::Data::Matrix->new({
         name => 'stock_data_matrix',
         rown => 1,
         coln => scalar(@stock_list),
         data => \@stock_list,
     });
+        print STDERR Dumper ($stock_data_matrix); 
     
     $r_block = $rbase->create_block('r_block');
     $stock_data_matrix->send_rbase($rbase, 'r_block'); 
     $r_block->add_command('library(devtools)');
     $r_block->add_command('library(st4gi)');
     $r_block->add_command('geno <-  stock_data_matrix[1,]');
+    #$r_block->add_command('geno <-   c("'.${@stock_list}.'")');
     $r_block->add_command('ch1 <- "'.$westcott_check_1.'"'); 
     $r_block->add_command('ch2 <- "'.$westcott_check_2.'"');
     $r_block->add_command('nc <- '.$westcott_col); 
@@ -485,8 +493,39 @@ sub _get_westcott_design {
     $r_block->add_command('westcott<-as.matrix(westcott)');
     $r_block->run_block();
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
-    @plot_numbers = $result_matrix->get_column("plot");
+    print STDERR Dumper ($result_matrix); 
+    @plot_numbers = $result_matrix->get_column("plot.num");
+    print STDERR Dumper (@plot_numbers); 
+    print "I AM HERE 3\n";
     @stock_names = $result_matrix->get_column("geno");
+    
+    my @vector_trt = (1..scalar(@stock_list));
+    my %accName;
+    for (my $i=0; $i< scalar(@stock_list); $i++){
+        $accName{$vector_trt[$i]} = $stock_list[$i];
+    }
+    print STDERR Dumper (@vector_trt);
+    print STDERR Dumper (\%accName);
+    #foreach my $vec_trt (@vector_trt){
+    for (my $i=0; $i<scalar(@stock_names); $i++){
+        for my $trt (keys %accName){
+            if ($stock_names[$i] eq $trt){
+                $stock_names[$i] = $accName{$trt};
+            }
+        }
+    }
+    #for (my $i=0; $i<scalar(@stock_list); $i++){
+    #    $a = $stock_names[$i];
+    #    if (looks_like_number($a)) {
+    #        if ($a == $i ){
+    #            print " THE ACCESSION: $stock_names[$i]\n";
+    #            $stock_names[$i] = $stock_list[$1];
+    #        }
+    #    }
+    #}
+    print STDERR Dumper (@stock_names); 
+    print "I AM HERE 4\n";
+    
     my @row_numbers = $result_matrix->get_column("row");
     my @col_numbers = $result_matrix->get_column("col");
     @block_numbers = $result_matrix->get_column("row");
@@ -507,7 +546,7 @@ sub _get_westcott_design {
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     %westcott_design = %{_build_plot_names($self,\%westcott_design)};
-
+print STDERR Dumper %westcott_design; 
     return \%westcott_design;   
 
 }

@@ -360,8 +360,6 @@ jQuery(document).ready(function ($) {
         var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
-        alert(col_in_design_number);
-        alert(row_in_design_number);
         var no_of_rep_times = $('#no_of_rep_times').val();
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
@@ -370,6 +368,9 @@ jQuery(document).ready(function ($) {
         var westcott_check_2 = $('#westcott_check_2').val();
         var westcott_col = $('#westcott_col').val();
         var westcott_col_between_check = $('#westcott_col_between_check').val();
+
+        alert(westcott_col_between_check);
+        alert(westcott_col);
 
         var plot_width = $('#add_project_plot_width').val();
         var plot_length = $('#add_project_plot_length').val();
@@ -479,7 +480,7 @@ jQuery(document).ready(function ($) {
                 'plot_length': plot_length
             },
             success: function (response) {
-                $('#working_modal').modal("hide");
+                $('#working_modal').modal("hide"); 
                 if (response.error) { 
                     alert(response.error);
                 } else {
