@@ -455,8 +455,11 @@ sub phenotype_metadata_file {
 sub rrblup_selection_gebvs_file {    
     my ($self, $c, $identifier, $trait_id) = @_;
 
-    my $cache_data = {key       => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id, 
-                      file      => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_id . '.txt',
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    my $trait_abbr  = $c->stash->{trait_abbr};
+
+    my $cache_data = {key       => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_abbr, 
+                      file      => 'rrblup_selection_gebvs_' . $identifier . '_' . $trait_abbr . '.txt',
                       stash_key => 'rrblup_selection_gebvs_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };

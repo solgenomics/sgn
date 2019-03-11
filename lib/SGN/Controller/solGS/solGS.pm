@@ -1312,27 +1312,29 @@ sub prediction_pop_analyzed_traits {
                  readdir($dh); 
    
 	closedir $dh; 
- 
+  
 	my @trait_ids;
-
+	my @trait_abbrs;
+	
 	if ($files[0]) 
 	{
 	    my @copy_files = @files;
    
-	    @trait_ids = map { s/rrblup_selection_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
-	    @trait_ids = map { s/\.txt|\s+// ? $_ : 0 } @trait_ids;
-	    
-	    my @traits = ();
-	    if(@trait_ids) 
+	    @trait_abbrs = map { s/rrblup_selection_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
+	    @trait_abbrs = map { s/\.txt|\s+// ? $_ : 0 } @trait_abbrs;
+	   
+	    if(@trait_abbrs) 
 	    {
-		foreach my $trait_id (@trait_ids)
+		foreach my $trait_abbr (@trait_abbrs)
 		{
-		    $self->get_trait_details($c, $trait_id);
-		    push @traits, $c->stash->{trait_abbr};
+		    $c->stash->{trait_abbr} = $trait_abbr;
+		    $self->get_trait_details_of_trait_abbr($c);
+		    
+		    push @trait_ids, $c->stash->{trait_id};
 		}
 	    }
    
-	    $c->stash->{prediction_pop_analyzed_traits}       = \@traits;
+	    $c->stash->{prediction_pop_analyzed_traits}       = \@trait_abbrs;
 	    $c->stash->{prediction_pop_analyzed_traits_ids}   = \@trait_ids;
 	    $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
 	} 
