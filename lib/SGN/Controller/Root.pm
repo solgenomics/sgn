@@ -8,6 +8,7 @@ use CatalystX::GlobalContext ();
 use CXGN::Login;
 use CXGN::People::Person;
 use List::MoreUtils 'uniq';
+use JSON;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -58,7 +59,7 @@ sub index :Path :Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
-    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{locations} = decode_json $projects->get_location_geojson();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -221,9 +222,9 @@ sub auto : Private {
 
 
 =head2 resolve_css_paths
-    
+
     Compiles list of CSS files added by mason/import_css.mas
-    
+
 =cut
 
 sub resolve_css_paths :Private {

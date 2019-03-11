@@ -380,9 +380,13 @@ sub anova_input_files {
     $self->anova_traits_file($c);   
     my $traits_file = $c->stash->{anova_traits_file};
 
+    $c->controller("solGS::Files")->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+
     my $file_list = join ("\t",
                           $pheno_file,
                           $traits_file,
+			  $metadata_file
 	);
      
     my $tmp_dir = $c->stash->{anova_temp_dir};

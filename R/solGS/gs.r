@@ -62,7 +62,7 @@ if (is.null(blupFile)) {
 markerTrait <- paste("marker_effects", trait, sep = "_")
 markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
 
-traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
+traitPhenoFile <- paste("phenotype_data", trait, sep = "_")
 traitPhenoFile <- grep(traitPhenoFile, outputFiles,ignore.case = TRUE, value = TRUE)
 
 varianceComponentsFile <- grep("variance_components", outputFiles, ignore.case = TRUE, value = TRUE)

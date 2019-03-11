@@ -743,12 +743,18 @@ jQuery(document).ready( function() {
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
-             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=1000&page=0',
+             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
                 var data = response.result.data;
+                console.log(data);
+                var data = data.sort(function(obj1, obj2) {
+	                  // Ascending: first plotNumber less than the previous
+	                return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
+                });
+                console.log(data);
                 var rows = [];
                 var cols = [];
                 var blocks = [];

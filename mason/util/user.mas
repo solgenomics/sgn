@@ -1,0 +1,36 @@
+%# Logged-in content
+<%method logged_in>
+% if(!!$c->user()){
+  <% $m->content %>
+% }
+</%method>
+
+%# Logged-out content
+<%method logged_out>
+% if(!$c->user()){
+  <% $m->content %>
+% }
+</%method>
+
+%# Role-based content
+%# <&| /util/user.mas:role, roles=>["curator"] &>
+%#   <span>You're a curator Harry.</span>
+%# </&>
+<%method role>
+  <%args>
+    $roles => []
+  </%args>
+  <%init>
+    my $role_match = 0;
+    if(!!$c->user()){
+      foreach my $role (@{$roles}) {
+        if (grep(/^$role$/, $c->user()->get_object->get_roles())){
+          $role_match = 1;
+        }
+      }
+    }
+  </%init>
+% if($role_match) {
+  <% $m->content %>
+% }
+</%method>

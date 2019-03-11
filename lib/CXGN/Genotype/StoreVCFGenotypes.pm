@@ -8,7 +8,8 @@ CXGN::Genotype::StoreVCFGenotypes - an object to handle storing genotypes in gen
 
 Genotyping project is a top level project for saving results from related genotyping runs under.
 Protocol is for saving all the marker info, top header lines, and reference_genome_name for the uploaded file. Many files can be uploaded under the same protocol if the data contained in the separate files is actually the same protocol. If data is separated into many files, but belongs to the same identical protocol, make sure that marker info is identical across different files, however the files can have different sample names.
-For sample names that contain IGD numbers e.g. ABC:9292:9:c19238, make sure to use the igd_numbers_included flag.
+For sample names that contain IGD numbers (with : separation) e.g. ABC:9292:9:c19238, make sure to use the igd_numbers_included flag.
+For sample names that contain Lab numbers (with . separation) e.g. ABC.A238, make sure to use the lab_numbers_included flag.
 
 protocol_info shold be a hashref with the following:
 notice that the info in the markers and markers_array keys are identical, just in two different representations.
@@ -134,6 +135,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
+    lab_numbers_included=>0,
     archived_filename => $archived_file,
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
@@ -158,6 +160,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
+    lab_numbers_included=>0,
     archived_filename => $archived_file,
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
@@ -185,6 +188,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
+    lab_numbers_included=>0,
     archived_filename => $archived_file,
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
@@ -208,6 +212,7 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     organism_id=>$organism_id,
     user_id => 41,
     igd_numbers_included=>0,
+    lab_numbers_included=>0,
     archived_filename => $archived_file,
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
@@ -364,6 +369,12 @@ has 'igd_numbers_included' => (
     default => 0,
 );
 
+has 'lab_numbers_included' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
+);
+
 sub BUILD {
     my $self = shift;
 }
@@ -377,6 +388,7 @@ sub validate {
     my $protocol_info = $self->protocol_info;
     my $genotype_info = $self->genotype_info;
     my $include_igd_numbers = $self->igd_numbers_included;
+    my $include_lab_numbers = $self->lab_numbers_included;
     my @error_messages;
     my @warning_messages;
 
@@ -393,14 +405,21 @@ sub validate {
 
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
-    if ($include_igd_numbers){
-        foreach (@$observation_unit_uniquenames) {
+    foreach (@$observation_unit_uniquenames) {
+        $_ =~ s/^\s+|\s+$//g;
+        if ($include_igd_numbers){
             my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
+            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
-    } else {
-        foreach (@$observation_unit_uniquenames) {
+        elsif ($include_lab_numbers){
+            my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
+            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            push @observation_unit_uniquenames_stripped, $observation_unit_name;
+        }
+        else {
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
@@ -453,7 +472,7 @@ sub validate {
             push @error_messages, "No genotype info provided";
         }
         foreach (keys %$marker_info){
-            if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format'){
+            if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
                 push @error_messages, "protocol_info key not recognized: $_";
             }
         }
@@ -544,6 +563,7 @@ sub store {
     my $map_protocol_description = $self->protocol_description;
     my $location_id = $self->project_location_id;
     my $igd_numbers_included = $self->igd_numbers_included;
+    my $lab_numbers_included = $self->lab_numbers_included;
     my $stock_type = $self->observation_unit_type_name;
     my $organism_id = $self->organism_id;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
@@ -646,14 +666,19 @@ sub store {
 
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
-    if ($igd_numbers_included){
-        foreach (@$observation_unit_uniquenames) {
+    foreach (@$observation_unit_uniquenames) {
+        $_ =~ s/^\s+|\s+$//g;
+        if ($igd_numbers_included){
             my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
-    } else {
-        foreach (@$observation_unit_uniquenames) {
+        elsif ($lab_numbers_included){
+            my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
+            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            push @observation_unit_uniquenames_stripped, $observation_unit_name;
+        }
+        else {
             my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
             push @observation_unit_uniquenames_stripped, $observation_unit_name;
         }
@@ -663,7 +688,7 @@ sub store {
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN ($accession_type_id,$tissue_sample_type_id) AND stock.is_obsolete = 'F' AND organism_id = $organism_id;";
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN ($accession_type_id,$tissue_sample_type_id) AND stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %stock_lookup;
@@ -677,12 +702,19 @@ sub store {
     }
 
     foreach (@$observation_unit_uniquenames) {
+        $_ =~ s/^\s+|\s+$//g;
         my $observation_unit_name_with_accession_name;
         my $observation_unit_name;
         my $accession_name;
         my $igd_number;
+        my $lab_number;
         if ($igd_numbers_included){
             ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
+            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+        } elsif ($lab_numbers_included) {
+            ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
+            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         } else {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);

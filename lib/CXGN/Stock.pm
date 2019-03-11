@@ -222,7 +222,7 @@ sub _retrieve_stock_owner {
 sub store {
     my $self = shift;
     my %return;
-
+   
     my $stock = $self->stock;
     my $schema = $self->schema();
 
@@ -282,6 +282,8 @@ sub store {
                 $self->_store_stockprop('organization', $self->organization_name());
             }
             if ($self->population_name){
+                print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
+                #DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
                 $self->_store_population_relationship();
             }
 
@@ -307,6 +309,8 @@ sub store {
             $self->_update_stockprop('organization', $self->organization_name());
         }
         if ($self->population_name){
+            print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
+            #DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
             $self->_update_population_relationship();
         }
     }
@@ -992,12 +996,14 @@ sub _retrieve_organismprop {
     return $res;
 }
 
+##Move to a population child object##
 sub _store_population_relationship {
     my $self = shift;
     my $schema = $self->schema;
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
-
+    
+    print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
     my $population = $schema->resultset("Stock::Stock")->find_or_create({
         uniquename => $self->population_name(),
         name => $self->population_name(),
@@ -1011,8 +1017,10 @@ sub _store_population_relationship {
     });
 }
 
+##Move to a population child object##
 sub _update_population_relationship {
     my $self = shift;
+    print STDERR "***STOCK.PM Updating population relationship\n\n";
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'member_of','stock_relationship')->cvterm_id();
     my $pop_rs = $self->stock->search_related('stock_relationship_subjects', {'type_id'=>$population_member_cvterm_id});
     while (my $r=$pop_rs->next){
@@ -1021,6 +1029,8 @@ sub _update_population_relationship {
     $self->_store_population_relationship();
 }
 
+
+##
 sub _retrieve_populations {
     my $self = shift;
     my $schema = $self->schema;
@@ -1046,6 +1056,7 @@ sub _retrieve_populations {
         $self->population_name($pop_string);
     }
 }
+###
 
 =head2 _new_metadata_id
 
@@ -1178,6 +1189,24 @@ sub merge {
 
     # move object relationships
     #
+
+    # TO DO: do not move parents if target already has parents.
+    #
+    # my $female_parent_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'female_parent')->cvterm_id();
+    # my $male_parent_id   = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'male_parent')->cvterm_id();
+    
+    # my $female_parent_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $female_parent_id });
+    # my $male_parent_rs   = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $male_parent_id });
+    
+    # if ($female_parent_rs->count() > 0) { 
+    # 	print STDERR "The target $stock_id already had a female parent... not moving any other objects.\n";
+    # 	return;
+    # }
+    # if ($male_parent_rs ->count() > 0) { 
+    # 	print STDERR "The target $stock_id already had a male parent... not moving any other objects.\n";
+    # 	return;
+    # }
+
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
 	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });

@@ -1,12 +1,13 @@
 <%args>
 $locations
+$geojson_locations
 $breeding_programs
 $timestamp
 $preferred_species => ""
 $editable_stock_props => {}
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /page/page_title.mas, title=>"Upload Data" &>
 
@@ -51,7 +52,6 @@ $editable_stock_props => {}
 <td>
 <a name="upload_trial_link"><p>Upload An Existing Trial</p></a>
 <a id="add_project_link"><p>Design A New Trial</p></a>
-<a id="add_multiloc_project_link"><p>Design New Multi-location Trial</p></a>
 </td>
 <td>
 <a href="/breeders/trials"><p>Go To Manage Trials</p></a>
@@ -63,9 +63,8 @@ $editable_stock_props => {}
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
-<& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs &>
 
 <div class="well well-sm">
 <h1>Genotyping Plates</h1><br/>
@@ -236,8 +235,8 @@ $editable_stock_props => {}
 </table>
 </div>
 <& /breeders_toolbox/cross_wishlist.mas &>
-<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
-<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
 <& /breeders_toolbox/cross/upload_update_crosses.mas &>
 
 

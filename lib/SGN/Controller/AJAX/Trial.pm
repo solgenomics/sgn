@@ -203,12 +203,11 @@ sub generate_experimental_design_POST : Args(0) {
     }
     
     my @locations;
-    my $trial_locations;
-    my $multi_location;
 
     try {
-        $multi_location = decode_json($trial_location);
+        my $multi_location = decode_json($trial_location);
         foreach my $loc (@$multi_location) {
+            print STDERR "One location is $loc\n";
             push @locations, $loc;
         }
     }
@@ -238,22 +237,42 @@ sub generate_experimental_design_POST : Args(0) {
     my @design_array;
     my @design_layout_view_html_array;
 
-    foreach $trial_locations (@locations) {
+    foreach my $location (@locations) {
+
+        #print STDERR "Working on location $location\n";
 
         my $trial_name = $c->req->param('project_name');
         my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
 
-        $geolocation_lookup->set_location_name($trial_locations);
-        #print STDERR Dumper(\$geolocation_lookup);
+        $geolocation_lookup->set_location_name($location);
         if (!$geolocation_lookup->get_geolocation()){
             $c->stash->{rest} = { error => "Trial location not found" };
             return;
         }
+        #print STDERR Dumper(\$geolocation_lookup);
 
-        if (scalar(@locations) > 1) {
-            $trial_name = $trial_name."_".$trial_locations;
+        if ($location_number > 1) {
+
+            # Add location abbreviation or name to trial name
+            my $location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id();
+            my $location_object = CXGN::Location->new( {
+                bcs_schema => $schema,
+                nd_geolocation_id => $location_id,
+            });
+
+            my $abbreviation = $location_object->abbreviation();
+            #print STDERR "Abbreviation is $abbreviation\n";
+
+            if ($abbreviation) {
+                $trial_name = $trial_name.$abbreviation;
+            } else {
+                $trial_name = $trial_name.$location;
+            }
+            #print STDERR "Trial name after addition is $trial_name\n";
         }
 
+        #strip name of any invalid filename characters
+        $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
         $trial_design->set_trial_name($trial_name);
 
         my $design_created = 0;
@@ -405,7 +424,12 @@ sub generate_experimental_design_POST : Args(0) {
             return;
         }
         if ($trial_design->get_design()) {
+<<<<<<< HEAD
             %design = %{$trial_design->get_design()}; 
+=======
+            %design = %{$trial_design->get_design()};
+            #print STDERR "DESIGN: ". Dumper(%design);
+>>>>>>> master
         } else {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;
@@ -415,7 +439,7 @@ sub generate_experimental_design_POST : Args(0) {
         # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
         $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
-        $design_map_view = design_layout_map_view(\%design, $design_type); 
+        $design_map_view = design_layout_map_view(\%design, $design_type);
         $design_info_view_html = design_info_view(\%design, \%design_info);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;
@@ -476,10 +500,9 @@ sub save_experimental_design_POST : Args(0) {
     #print STDERR "\nDesign: " . Dumper $design;
 
     my @locations;
-    my $trial_location;
     my $multi_location;
     #print STDERR Dumper $c->req->params();
-    my $trial_locations = $c->req->param('trial_location');
+    my $locations = $c->req->param('trial_location');
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
     my $breeding_program = $c->req->param('breeding_program_name');
@@ -500,13 +523,13 @@ sub save_experimental_design_POST : Args(0) {
     my $new_trial_id;
 
     try {
-        $multi_location = decode_json($trial_locations);
+        $multi_location = decode_json($locations);
         foreach my $loc (@$multi_location) {
             push @locations, $loc;
         }
     }
     catch {
-        push @locations, $trial_locations;
+        push @locations, $locations;
     };
     my $folder_id;
     my $parent_folder_id = 0;
@@ -514,7 +537,7 @@ sub save_experimental_design_POST : Args(0) {
 
         my $existing = $schema->resultset("Project::Project")->find( { name => $trial_name });
         if ($existing) {
-            $c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
+            $c->stash->{rest} = { error => "A folder or trial with that name already exists in the database. Please select another name." };
             return;
         }
 
@@ -530,11 +553,34 @@ sub save_experimental_design_POST : Args(0) {
 
     my $design_index = 0;
 
-    foreach $trial_location (@locations) {
+    foreach my $trial_location (@locations) {
         my $trial_name = $c->req->param('project_name');
+
         if (scalar(@locations) > 1) {
-            $trial_name = $trial_name."_".$trial_location;
+            my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+
+            $geolocation_lookup->set_location_name($trial_location);
+            my $location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id();
+            my $location_object = CXGN::Location->new( {
+                bcs_schema => $schema,
+                nd_geolocation_id => $location_id,
+            });
+            my $abbreviation = $location_object->abbreviation();
+            #print STDERR "Abbreviation is $abbreviation\n";
+
+            #print STDERR "Trial name before change is $trial_name\n";
+
+            if ($abbreviation) {
+                $trial_name = $trial_name.$abbreviation;
+            } else {
+                $trial_name = $trial_name.$trial_location;
+            }
+            #print STDERR "Trial name after addition is $trial_name\n";
         }
+
+        #strip name of any invalid filename characters
+        $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
+        #print STDERR "Trial name after strip is $trial_name\n";
 
         my $trial_location_design = decode_json($design->[$design_index]);
         #print STDERR Dumper $trial_location_design;
@@ -613,7 +659,7 @@ sub save_experimental_design_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => "1",}; 
+    $c->stash->{rest} = {success => "1",};
     return;
 }
 

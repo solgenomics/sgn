@@ -60,7 +60,7 @@ has 'country_code' => (
 	is => 'rw',
 );
 
-has 'breeding_program' => (
+has 'breeding_programs' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
 );
@@ -98,7 +98,17 @@ sub BUILD {
         $self->location( $self->location || $location );
         $self->nd_geolocation_id( $self->nd_geolocation_id || $location->nd_geolocation_id );
         $self->name( $self->name || $location->description );
+        $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property'));
+        $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property'));
+        $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property'));
+        $self->breeding_programs( $self->breeding_programs || $self->_get_ndgeolocationprop('breeding_program', 'project_property'));
+        $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property'));
+        $self->latitude( $self->latitude || $location->latitude);
+        $self->longitude( $self->longitude || $location->longitude);
+        $self->altitude( $self->altitude || $location->altitude);
     }
+
+    print STDERR "Breeding programs are: ".$self->breeding_programs()."\n";
 
     return $self;
 }
@@ -109,13 +119,11 @@ sub store_location {
     my $error;
 
     my $nd_geolocation_id = $self->nd_geolocation_id();
-    my $name = $self->name();
-    $name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+    my $name = _trim($self->name());
     my $abbreviation = $self->abbreviation();
     my $country_name = $self->country_name();
     my $country_code = $self->country_code();
-    my $breeding_program = $self->breeding_program();
-    my $breeding_program_id;
+    my $breeding_programs = $self->breeding_programs();
     my $location_type = $self->location_type();
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
@@ -137,16 +145,21 @@ sub store_location {
     if ($country_name && $country_name =~ m/[0-9]/) {
        return { error => "Country name $country_name is not a valid ISO standard country name." };
     }
-    
+
     if ($country_code && (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 ))) {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }
 
-    if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
-	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
-    } elsif ($breeding_program) {
-        $breeding_program_id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
+    my @breeding_program_ids;
+    foreach my $breeding_program (split ("&", $breeding_programs)) {
+        $breeding_program = _trim($breeding_program);
+        if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
+    	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
+        } else {
+            push @breeding_program_ids, $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
+        }
     }
+    my $breeding_program_ids = join '&', @breeding_program_ids;
 
     if ($location_type && !$self->_is_valid_type($location_type)) {
         return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
@@ -190,8 +203,8 @@ sub store_location {
             if ($country_code){
                 $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
-            if ($breeding_program_id){
-                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
+            if ($breeding_programs){
+                $self->_store_breeding_programs($breeding_program_ids);
             }
             if ($location_type){
                 $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
@@ -224,7 +237,7 @@ sub store_location {
             $self->_update_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
             $self->_update_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             $self->_update_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
-            $self->_update_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
+            $self->_store_breeding_programs($breeding_program_ids);
         }
         catch {
             $error =  $_;
@@ -242,7 +255,6 @@ sub store_location {
 
 sub delete_location {
     my $self = shift;
-
     my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id=> $self->nd_geolocation_id() });
     my $name = $row->description();
     my @experiments = $row->nd_experiments;
@@ -250,12 +262,17 @@ sub delete_location {
 
     if (@experiments) {
         my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
-	    print STDERR $error;
+        print STDERR $error;
         return { error => $error };
-	}
+    }
 	else {
 	    $row->delete();
-	    return { success => "Location $name was successfully deleted.\n" };
+        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location', 'project_property')->cvterm_id();
+        my $projectprop_rows = $self->bcs_schema->resultset("Project::Projectprop")->search({ value=> $self->nd_geolocation_id(), type_id=> $location_type_id });
+        while (my $r = $projectprop_rows->next()){ # remove any links to deleted location in projectprop
+            $r->delete();
+        }
+        return { success => "Location $name was successfully deleted.\n" };
 	}
 }
 
@@ -271,7 +288,7 @@ sub _get_ndgeolocationprop {
     while (my $r = $rs->next()){
         push @results, $r->value;
     }
-    my $res = join ',', @results;
+    my $res = join '&', @results;
     return $res;
 }
 
@@ -286,6 +303,25 @@ sub _update_ndgeolocationprop {
         $self->_store_ndgeolocationprop($type, $cv, $value);
     } elsif ($existing_prop) {
         $self->_remove_ndgeolocationprop($type, $cv, $existing_prop);
+    }
+}
+
+sub _store_breeding_programs {
+    my $self = shift;
+    my $new_programs = shift;
+    my @new_programs = split ("&", $new_programs);
+    my $existing_programs = $self->_get_ndgeolocationprop('breeding_program', 'project_property');
+    my @existing_programs = split ("&", $existing_programs);
+
+    foreach my $existing_program (@existing_programs) {
+        # print STDERR "Removing existing program $existing_program\n";
+        $existing_program = _trim($existing_program);
+        $self->_remove_ndgeolocationprop('breeding_program', 'project_property', $existing_program)
+    }
+    foreach my $new_program (@new_programs) {
+        # print STDERR "Storing new program $new_program\n";
+        $new_program = _trim($new_program);
+        $self->location->create_geolocationprops({ 'breeding_program' => $new_program}, {cv_name => 'project_property' });
     }
 }
 
@@ -396,6 +432,12 @@ sub _is_valid_type {
     else {
         return 1;
     }
+}
+
+sub _trim { #trim whitespace from both ends of a string
+    my $s = shift;
+    $s =~ s/^\s+|\s+$//g;
+    return $s;
 }
 
 1;

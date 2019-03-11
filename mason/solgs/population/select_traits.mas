@@ -18,7 +18,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $traits_form => ''
 $pop_id
 $all_traits_file
-$no_traits_selected
+
 
 </%args>
 
@@ -48,19 +48,10 @@ ROW
 
 }
 
-my $message;
-if ($no_traits_selected eq 'none')
-{
-   $message = qq | <p style="color:red">Please select one or more traits to analyze.</p> |;
-}
-
-
 </%perl>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
- <% $message %>
 
 % if ($trait_rows) {
  <div id="traits_selection_div">
