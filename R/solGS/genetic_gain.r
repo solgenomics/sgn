@@ -61,7 +61,10 @@ bp <- ggplot(boxplotData,
      aes(label=sprintf("%1.3f", ..y..), color=pop),
      position=position_nudge(x=0.35), size=5) +                      
      theme_bw()  +
-     theme(legend.position="none")
+         theme(legend.position="none",
+               axis.text=element_text(color='blue', size=12),
+               axis.title.y=element_text(color='blue'),
+               axis.title.x=element_blank())
 
 png(boxplotFile)
 bp
