@@ -240,7 +240,6 @@ sub validate_design {
     my %seen_stock_names;
     my %seen_source_names;
     my %seen_accession_names;
-     print STDERR Dumper %design;
     foreach my $stock (keys %design){
         if ($stock eq 'treatments'){
             next;

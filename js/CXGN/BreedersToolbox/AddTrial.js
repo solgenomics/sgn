@@ -368,10 +368,6 @@ jQuery(document).ready(function ($) {
         var westcott_check_2 = $('#westcott_check_2').val();
         var westcott_col = $('#westcott_col').val();
         var westcott_col_between_check = $('#westcott_col_between_check').val();
-
-        alert(westcott_col_between_check);
-        alert(westcott_col);
-
         var plot_width = $('#add_project_plot_width').val();
         var plot_length = $('#add_project_plot_length').val();
         var field_size = $('#new_trial_field_size').val();
