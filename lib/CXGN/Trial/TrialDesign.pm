@@ -440,7 +440,6 @@ sub _get_westcott_design {
     
     if ($self->has_stock_list()) {
       @stock_list = @{$self->get_stock_list()};
-          print STDERR Dumper (@stock_list);
     } else {
       die "No stock list specified\n";
     }
