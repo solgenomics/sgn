@@ -64,7 +64,7 @@ solGS.geneticGain = {
 	var geneticGainArgs = { 
 	    'training_pop_id'  : trainingPopId,
 	    'selection_pop_id' : selectionPopId,
-	    'trait_id'         : traitId
+	    'trait_id'         : [traitId]
 	}
 
 	return geneticGainArgs;
@@ -203,7 +203,87 @@ solGS.geneticGain = {
 	});  
 
     },
+    
 
+    ggSelectionPopulations: function()  {
+
+	 console.log('gg page: t')
+	var modelData  = getTrainingPopulationData();
+	
+	var trainingPopIdName = JSON.stringify(modelData);
+	console.log('gg page: ', trainingPopIdName)
+	var  popsList =  '<dl id="gg_selected_population" class="gg_dropdown">'
+            + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+            + '<dd>'
+            + '<ul>';
+            // + '<li>'
+            // + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
+            // + '</li>';  
+	
+	popsList += '</ul></dd></dl>'; 
+	
+	jQuery("#gg_select_a_population_div").empty().append(popsList).show();
+	
+	var dbSelPopsList;
+	if (modelData.id.match(/list/) == null) {
+            dbSelPopsList = addSelectionPopulations();
+	}
+
+	if (dbSelPopsList) {
+            jQuery("#gg_select_a_population_div ul").append(dbSelPopsList); 
+	}
+	
+	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
+	if (userUploadedSelExists == true) {
+	    
+            var userSelPops = listUploadedSelPopulations();
+            if (userSelPops) {
+		jQuery("#gg_select_a_population_div ul").append(userSelPops);  
+            }
+	}
+
+	jQuery(".gg_dropdown dt a").click(function() {
+            jQuery(".gg_dropdown dd ul").toggle();
+	});
+        
+	jQuery(".gg_dropdown dd ul li a").click(function() {
+	    
+            var text = jQuery(this).html();
+            
+            jQuery(".gg_dropdown dt a span").html(text);
+            jQuery(".gg_dropdown dd ul").hide();
+            
+            var idPopName = jQuery("#gg_selected_population").find("dt a span.value").html();
+            idPopName     = JSON.parse(idPopName);
+            modelId       = jQuery("#model_id").val();
+            
+            selectedPopId   = idPopName.id;
+            selectedPopName = idPopName.name;
+            selectedPopType = idPopName.pop_type; 
+	    
+            jQuery("#gg_selected_population_name").val(selectedPopName);
+            jQuery("#gg_selected_population_id").val(selectedPopId);
+            jQuery("#gg_selected_population_type").val(selectedPopType);
+            
+	});
+        
+	jQuery(".gg_dropdown").bind('click', function(e) {
+            var clicked = jQuery(e.target);
+            
+            if (! clicked.parents().hasClass("gg_dropdown"))
+		jQuery(".gg_dropdown dd ul").hide();
+
+            e.preventDefault();
+
+	});           
+    },
+
+
+///// genetic gain menu ///
+
+
+
+    
 
     plotGEBVs: function (trainingGEBVs, selectionGEBVs) {
 	
@@ -364,4 +444,12 @@ solGS.geneticGain = {
 }
 /////////   
 
- 
+jQuery(document).ready( function() { 
+    var page = document.URL;
+    console.log('gg page: ', page)
+    if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
+	
+	setTimeout(function() {solGS.geneticGain.ggSelectionPopulations()}, 5000);
+    }
+							 	 
+}); 
