@@ -165,7 +165,7 @@ function getSelectionPopTraits (modelId, selectedPopId) {
 
 function  selectionIndexForm(predictedTraits) {   
   
-    var trait = '</br><div>';
+    var trait = '<div>';
     for (var i=0; i < predictedTraits.length; i++) { 
 	trait += '<div class="form-group  class="col-sm-3">'
 	    + '<div  class="col-sm-1">'
@@ -178,8 +178,10 @@ function  selectionIndexForm(predictedTraits) {
     }
     
     trait += '<div class="col-sm-12">'
-	+ '<input class="btn btn-success" type="submit" value="Calculate" name= "rank" id="calculate_si"/>'
-	+ '</div>';
+	  + '<input style="margin: 10px 0 10px 0;"' + 
+                    'class="btn btn-success" type="submit"' + 
+                    'value="Calculate" name= "rank" id="calculate_si"' + '/>'
+	  + '</div>';
     
     trait += '</div>'
         
