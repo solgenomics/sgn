@@ -214,7 +214,8 @@ sub _retrieve_stock_owner {
  Desc:  store a new stock or update an existing stock
  Ret:   a database id
  Args:  none
- Side Effects: checks if the stock exists in the database (if a stock_id is provided), and if does, will attempt to update
+ Side Effects: checks for stock uniqueness using the organism_id and case-insensitive uniquename 
+checks if the stock exists in the database (if a stock_id is provided), and if does, will attempt to update
  Example:
 
 =cut
@@ -226,12 +227,7 @@ sub store {
     my $stock = $self->stock;
     my $schema = $self->schema();
 
-    #no stock id . Check first if the name  exists in te database
-    my $exists;
-    if ($self->check_name_exists){
-        $exists= $self->exists_in_database();
-    }
-
+    #stocks must have type_id and organism_id
     if (!$self->type_id) {
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
         $self->type_id($type_id);
@@ -260,6 +256,14 @@ sub store {
         }
     }
 
+    ###Check first if the name  exists in te database
+    my $exists;
+    if ($self->check_name_exists){
+	print STDERR "Checking stock uniquename \n";
+        $exists= $self->exists_in_database();
+    }
+    print STDERR "Stock exists check: $exists\n";
+    ####
     if (!$stock) { #Trying to create a new stock
         print STDERR "Storing Stock ".localtime."\n";
         if (!$exists) {
@@ -339,11 +343,12 @@ sub exists_in_database {
     my $stock = $self->stock;
     my $stock_id = $self->stock_id;
     my $uniquename = $self->uniquename || '' ;
+    print STDERR "Stock lookup for name $uniquename\n\n";
     my $stock_lookup = CXGN::Stock::StockLookup->new({
         schema => $schema,
-        stock_name => $uniquename
+        stock_name => $uniquename,
     });
-    my $s = $stock_lookup->get_stock();
+    my $s = $stock_lookup->get_stock($self->type_id, $self->organism_id );
 
     # loading new stock - $stock_id is undef
     #

@@ -39,16 +39,22 @@ functions to test, clear, set or get the stock name.
 
 has 'stock_name' => (isa => 'Str', is => 'rw', predicate => 'has_stock_name', clearer => 'clear_stock_name');
 
-=head2 function get_stock()
+=head2  get_stock
 
-retrieves a stock row
-
+ Usage: $self-> get_stock($stock_type_id, $stock_organism_id)
+ Desc:  check if the uniquename exists in the stock table
+ Ret:   stock object_row
+ Args: optional: stock_type_id (cvterm_id) , $stock_organism_id (organism_id)  
+ Side Effects: calls _get_stock_resultset, returns only one object row even if multiple stocks are found (would happen only if there are multiple stocks with the same uniquename of different letter case or different type_id or different organism_id) 
+ Example: $self->get_stock(undef, $manihot_esculenta_organism_id)
+ 
 =cut
 
 sub get_stock {
   my $self = shift;
   my $stock_type_id = shift;
-  my $stock_rs = $self->_get_stock_resultset($stock_type_id);
+  my $stock_organism_id = shift;
+  my $stock_rs = $self->_get_stock_resultset($stock_type_id, $stock_organism_id);
   my $stock;
   if ($stock_rs->count > 0) {
     $stock = $stock_rs->first;
@@ -156,6 +162,7 @@ sub get_organization_hash_lookup {
 sub _get_stock_resultset {
   my $self = shift;
   my $stock_type_id = shift;
+  my $stock_organism_id = shift;
   my $schema = $self->get_schema();
   my $stock_name = $self->get_stock_name();
   my $search_hash = {
@@ -170,6 +177,9 @@ sub _get_stock_resultset {
   };
   if ($stock_type_id){
       $search_hash->{'me.type_id'} = $stock_type_id;
+  }
+  if ($stock_organism_id) { 
+      $search_hash->{'me.organism_id'} = $stock_organism_id;
   }
   my $stock_rs = $schema->resultset("Stock::Stock")
       ->search($search_hash,
