@@ -16,6 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $trait_pages
 $analyzed_traits
+$analyzed_traits_ids => undef
 $pop_id
 $project_name
 $model_data
@@ -24,14 +25,22 @@ $prediction_pop_id => undef
 $list_of_prediction_pops => undef
 $prediction_pop_name => undef
 $prediction_pop_analyzed_traits => undef
+$prediction_pop_analyzed_traits_ids => undef
 $acronym
-$training_traits_ids => undef
-$training_traits_abbrs => undef
-$selection_traits_ids => undef
-$selection_traits_abbrs => undef
 
 </%args>
 
+<%perl>
+
+my $training_traits_ids = join(',', @$analyzed_traits_ids);
+
+my $selection_traits_ids;
+
+if ($prediction_pop_analyzed_traits_ids) {
+$selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
+}
+
+</%perl>
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
@@ -44,8 +53,11 @@ $selection_traits_abbrs => undef
 
 <& /solgs/model/model_summary.mas, 
      model_data => $model_data
-&>
-    
+  &>
+  
+  <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
+  <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
+ 
 <& selection_populations.mas,
    download_prediction            => $download_prediction,
    analyzed_traits                => $analyzed_traits,
@@ -85,7 +97,7 @@ $selection_traits_abbrs => undef
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
- <& /solgs/cluster/analysis.mas &>  
+<& /solgs/cluster/analysis.mas &>  
 
 <& acronym.mas,
    acronym => $acronym,
