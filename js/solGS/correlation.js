@@ -62,7 +62,7 @@ jQuery("#run_genetic_correlation").live("click", function() {
     var popId   = jQuery("#corre_selected_population_id").val();
     var popType = jQuery("#corre_selected_population_type").val();
     
-    jQuery("#correlation_canvas").empty();
+    //jQuery("#correlation_canvas").empty();
    
     jQuery("#correlation_message")
         .css({"padding-left": '0px'})
@@ -303,12 +303,13 @@ function runGenCorrelationAnalysis (args) {
                 divPlace = args.div_place;
                
                 if (divPlace === '#si_correlation_canvas') {
+		    jQuery("#si_correlation_message").empty();
                     jQuery("#si_correlation_section").show();                 
                 }
-                
+             
                 plotCorrelation(response.data, divPlace);
                 jQuery("#correlation_message").empty();
-                jQuery("#si_correlation_message").empty();
+               
                 
                 if (divPlace === '#si_correlation_canvas') {
   
@@ -353,7 +354,7 @@ function runGenCorrelationAnalysis (args) {
 
 
 function plotCorrelation (data, divPlace) {
-   
+
     data = data.replace(/\s/g, '');
     data = data.replace(/\\/g, '');
     data = data.replace(/^\"/, '');
