@@ -57,7 +57,8 @@ sub verify_accession_list_POST : Args(0) {
   my @organism_list = $organism_list_json ? @{_parse_list_from_json($organism_list_json)} : [];
 
   my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
-
+  print STDERR "verify_accession_list search. Fuzzy = $do_fuzzy_search\n\n";
+  print STDERR Dumper @accession_list ;
   if ($do_fuzzy_search) {
       $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
   }
@@ -272,7 +273,7 @@ sub verify_accessions_file_POST : Args(0) {
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
     );
-
+    print STDERR "verify_accessions_file returns: " . Dumper %return;
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }

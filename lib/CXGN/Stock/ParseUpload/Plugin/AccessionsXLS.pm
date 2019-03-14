@@ -202,7 +202,7 @@ sub _parse_with_plugin {
     my @synonyms_list = keys %seen_synonyms;
     my @organism_list = keys %seen_species_names;
     my %accession_lookup;
-    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-in=>\@accession_list}});
+    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>\@accession_list}});
     while(my $r=$accessions_in_db_rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
     }
@@ -440,6 +440,7 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
+    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";             
 
     if ($fuzzy_search_result->{'error'}){
         $return_data{error_string} = $fuzzy_search_result->{'error'};

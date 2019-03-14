@@ -49,7 +49,7 @@ sub get_matches {
     my %results;
     my $error = '';
     print STDERR "FuzzySearch 1".localtime()."\n";
-
+    
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id";
@@ -85,9 +85,12 @@ sub get_matches {
 	    my $uniquename = $lowercase_name_lookup{$lc_name};
             push @found_stocks, {matched_string => $stock_name, unique_name => $uniquename}; 
 	    next;
+	    print STDERR "EXACT MATCH = $stock_name\n";
         }
+	#check for lc synonyms too? 
         if (exists($synonym_uniquename_lookup{$stock_name})){
-            my %match_info;
+	    print STDERR "*****stock_name $stock_name matches synonym " . $synonym_uniquename_lookup{$stock_name} . "\n";
+	    my %match_info;
             if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
                 my $synonym_lookup_uniquename = join ',', @{$synonym_uniquename_lookup{$stock_name}};
                 $error .= "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
@@ -103,6 +106,7 @@ sub get_matches {
 
         my @search_stock_names;
         foreach (@lowercased_names){
+	    print STDERR "LOOKING at lowercase name $_\n";
             #if there is a difference in length greater than 10, it will not fuzzy search over that name
             if (abs(length($_) - length($stock_name)) <= 10){
                 push @search_stock_names, $_;
