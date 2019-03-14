@@ -88,8 +88,9 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
   &>
 
-  <& genetic_gain.mas,
+  <& /solgs/genetic_gain/genetic_gain.mas,
      analyzed_traits                => $analyzed_traits,
+     analyzed_traits_ids            => $analyzed_traits_ids,
      pop_id                         => $pop_id,
      project_name                   => $project_name,
      prediction_pop_id              => $prediction_pop_id,

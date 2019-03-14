@@ -1583,9 +1583,15 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
     my $ret->{result} = 0;
    
     if (-s $pred_pops_file) 
-    {  
+    {
 	$self->list_of_prediction_pops($c, $tr_pop_id);
-	$ret->{data} =  $c->stash->{list_of_prediction_pops};                
+	my $selection_pops_ids = $c->stash->{selection_pops_ids};
+	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
+	$self->prediction_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
+	my $selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
+	
+	$ret->{selection_traits} = $selection_pop_traits;
+	$ret->{data} = $formatted_selection_pops;                
     }    
 
     $ret = to_json($ret);
@@ -1593,6 +1599,32 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
     $c->res->content_type('application/json');
     $c->res->body($ret);    
 
+}
+
+
+sub selection_population_predicted_traits :Path('/solgs/selection/population/predicted/traits/') Args(0) {
+    my ($self, $c) = @_;
+
+    my $training_pop_id = $c->req->param('training_pop_id');
+    my $selection_pop_id = $c->req->param('selection_pop_id');
+
+    print STDERR "\ntr pop id: $training_pop_id -- sel pop id: $selection_pop_id\n";
+    
+    my $ret->{selection_traits} = undef;
+    if ($training_pop_id && $selection_pop_id) {
+	
+	$self->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+	my $selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
+	
+	$ret->{selection_traits} = $selection_pop_traits;
+          
+    }    
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+    
 }
 
 
@@ -1898,9 +1930,9 @@ sub list_of_prediction_pops {
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
   
     my @pred_pops_ids = split(/\n/, read_file($pred_pops_file));
- 
-    $self->format_selection_pops($c, \@pred_pops_ids); 
-
+    $c->stash->{selection_pops_ids} = \@pred_pops_ids;
+    
+    $self->format_selection_pops($c, \@pred_pops_ids);
     $c->stash->{list_of_prediction_pops} = $c->stash->{selection_pops_list};
 
 }

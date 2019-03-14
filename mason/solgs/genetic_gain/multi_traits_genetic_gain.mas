@@ -27,12 +27,13 @@ $training_traits_ids
 </div>
 
 <div id="gg_selected_population_div" style="display:none">    
-  <input type="hidden" id="model_id" value="<% $training_pop_id %>" />
-  <input type="hidden" id="model_name" value="<% $training_pop_name %>" />
   <input type="hidden" id="gg_selected_population_name" value="" />
   <input type="hidden" id="gg_selected_population_id" value="" />
   <input type="hidden" id="gg_selected_population_type" value="" />
 </div>
 
-<input type="hidden"  id="training_traits_ids" value="<% $training_traits_ids %>" /> 
-<input type="hidden"  id="selection_traits_ids" value="" />
+<input type="hidden" id="training_traits_ids" value="<% $training_traits_ids %>" /> 
+<input type="hidden" id="selection_traits_ids" value="" />
+<input type="hidden" id="selection_pop_id" value="" />
+<input type="hidden" id="training_pop_id" value="<% $training_pop_id %>" />
+<input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
