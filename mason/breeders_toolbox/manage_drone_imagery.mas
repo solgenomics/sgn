@@ -316,16 +316,6 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Channel:</label>
-                    <div class="col-sm-7">
-                        <select class="form-control" id="drone_imagery_standard_process_calculate_phenotypes_channel_select_input">
-                            <option value="0">Channel 1</option>
-                            <option value="1">Channel 2</option>
-                            <option value="2">Channel 3</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
                     <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
                     <div class="col-sm-7">
                         <div id="drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select_div">
@@ -729,6 +719,34 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_calc_phenotypes_trial_dialog" name="drone_imagery_calc_phenotypes_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalcPhenotypesZonalChannelTrialDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalcPhenotypesZonalChannelTrialDialog">Calculate Zonal Statistics On</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select_div">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_calculate_phenotypes_zonal_stats_trial_select">Calculate Zonal Statistics</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
@@ -1231,7 +1249,6 @@ jQuery(document).ready(function() {
     jQuery('#manage_drone_imagery_standard_process_phenotypes_step').click(function(){
         var selected = [];
         var manage_drone_imagery_standard_process_phenotype_time = jQuery('#drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select').val();
-        var manage_drone_imagery_standard_process_phenotype_channel = jQuery('#drone_imagery_standard_process_calculate_phenotypes_channel_select_input').val();
 
         jQuery('input[name="drone_imagery_standard_process_phenotypes_select"]:checked').each(function() {
             selected.push(jQuery(this).val());
@@ -1248,7 +1265,6 @@ jQuery(document).ready(function() {
                     'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
                     'phenotype_types': JSON.stringify(selected),
                     'time_cvterm_id': manage_drone_imagery_standard_process_phenotype_time,
-                    'channel_select': manage_drone_imagery_standard_process_phenotype_channel
                 },
                 success: function(response){
                     console.log(response);
@@ -1269,6 +1285,38 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_standard_process_complete_dialog').on('hidden.bs.modal', function () {
         location.reload();
     })
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_phenotype_run"]', function(){
+        manage_drone_imagery_standard_process_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005' });
+        jQuery('#drone_imagery_calc_phenotypes_trial_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_trial_select').click(function(){
+        var manage_drone_imagery_standard_process_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select').val();
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/ajax/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time,
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                }
+                location.href =response.files[0];
+            },
+            error: function(response){
+                alert('Error generating drone image phenotypes!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
 
 
     //

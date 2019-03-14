@@ -360,6 +360,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         }
         if ($v->{drone_run_phenotypes_indicator}) {
             $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Phenotypes in Progress</span><br/><br/>';
+        } else {
+            $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
         }
         if (!$v->{drone_run_processed}) {
             $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
@@ -3155,9 +3157,26 @@ sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
-    my $image_band_selected = $c->req->param('channel_select');
     my $phenotype_types = decode_json $c->req->param('phenotype_types');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_types, $user_id, $user_name, $user_role);
+
+    $c->stash->{rest} = $return;
+}
+
+sub _perform_phenotype_automated {
+    my $c = shift;
+    my $schema = shift;
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
+    my $drone_run_project_id = shift;
+    my $time_cvterm_id = shift;
+    my $phenotype_types = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+
     my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
@@ -3224,9 +3243,11 @@ sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
         foreach my $phenotype_method (@$phenotype_types) {
             foreach my $plot_polygons_type (@possible_plot_polygon_types) {
-                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $image_band_selected, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
-                if ($return->{error}){
-                    print STDERR Dumper $return->{error};
+                foreach my $channel (0..2) {
+                    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $channel, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+                    if ($return->{error}){
+                        print STDERR Dumper $return->{error};
+                    }
                 }
             }
         }
@@ -3242,7 +3263,9 @@ sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $c->stash->{rest} = {success => 1};
+    return {
+        success => 1
+    };
 }
 
 sub drone_imagery_calculate_phenotypes : Path('/ajax/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
@@ -3266,6 +3289,24 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $image_band_selected, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+
+    $c->stash->{rest} = $return;
+}
+
+sub drone_imagery_generate_phenotypes : Path('/ajax/drone_imagery/generate_phenotypes') : ActionClass('REST') { }
+
+sub drone_imagery_generate_phenotypes_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $phenotype_method = 'zonal';
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, [$phenotype_method], $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -3405,6 +3446,7 @@ sub _perform_phenotype_calculation {
 
     my $drone_run_band_plot_polygons_preprocess_cvterm_id;
     print STDERR Dumper $plot_polygons_type;
+    print STDERR Dumper $image_band_selected;
 
     if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
         if ($image_band_selected eq '0') {
