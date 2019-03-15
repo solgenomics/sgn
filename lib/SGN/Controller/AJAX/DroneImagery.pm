@@ -1784,9 +1784,9 @@ sub _perform_plot_polygon_assign {
         my $plot_polygon_image_url;
         $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         my $md5checksum = $image->calculate_md5sum($archive_plot_polygons_temp_image);
-        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image JOIN phenome.project_md_image AS project_md_image USING(image_id) WHERE md_image.obsolete = 'f' AND md_image.md5sum = $md5checksum AND project_md_image.type_id = $linking_table_type_id;";
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image JOIN phenome.project_md_image AS project_md_image USING(image_id) WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ?;";
         my $h = $schema->storage->dbh->prepare($q);
-        $h->execute();
+        $h->execute($md5checksum, $linking_table_type_id);
         my ($image_id) = $h->fetchrow_array();
 
         if ($image_id) {
