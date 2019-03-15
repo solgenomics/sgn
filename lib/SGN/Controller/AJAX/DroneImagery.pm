@@ -1784,10 +1784,14 @@ sub _perform_plot_polygon_assign {
         my $plot_polygon_image_url;
         $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         my $md5checksum = $image->calculate_md5sum($archive_plot_polygons_temp_image);
-        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-        if ($md_image->count() > 0) {
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image JOIN phenome.project_md_image AS project_md_image USING(image_id) WHERE md_image.obsolete = 'f' AND md_image.md5sum = $md5checksum AND project_md_image.type_id = $linking_table_type_id;";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute();
+        my ($image_id) = $h->fetchrow_array();
+
+        if ($image_id) {
             print STDERR Dumper "Image $archive_plot_polygons_temp_image has already been added to the database and will not be added again.";
-            $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+            $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
             $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
             $plot_polygon_image_url = $image->get_image_url('original');
         } else {
