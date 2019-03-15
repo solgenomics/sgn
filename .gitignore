@@ -40,3 +40,4 @@ temp_images/*
 js/node_modules
 js/build
 js/test_build
+js/package-lock.json
