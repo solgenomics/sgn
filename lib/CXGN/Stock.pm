@@ -23,6 +23,7 @@ use Moose;
 
 use Carp;
 use Data::Dumper;
+use JSON::Any;
 use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
 use SGN::Model::Cvterm;
@@ -321,6 +322,7 @@ sub store {
 
 ########################
 
+=head2 Class functions
 
 =head2 exists_in_database
 
@@ -369,6 +371,113 @@ sub exists_in_database {
 	}
     }
     return undef;
+}
+
+
+=head2 all_sequenced_stocks
+
+ Usage:        @sequenced_stocks = CXGN::Stock->sequenced_stocks();
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub all_sequenced_stocks {
+    my $class = shift;
+    my $schema = shift;
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequencing_project_info', 'stock_property')->cvterm_id();
+    my $stockprops = $schema->resultset("Stock::Stockprop")->find({ type_id=>$type_id });
+
+    my @sequenced_stocks = ();
+    foreach my $s ($stockprops->next()) {
+	push @sequenced_stocks, CXGN::Stock->new({ schema => $schema, stock_id=>$s->stock_id() });
+    }
+
+    return @sequenced_stocks;
+}
+
+=head2 Object methods
+
+
+=head2 get_sequencing_project_info
+
+ Usage:        @sequenced_stocks = CXGN::Stock->sequenced_stocks();
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_sequencing_project_info { 
+    my $self = shift;
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
+    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$type_id, stock_id => $self->stock_id() });
+
+    my $value;
+    if ($stockprop) {
+	$value = $stockprop->value();
+    }
+
+    return JSON::Any->decode($value);
+}
+
+=head2 set_sequencing_project_info
+
+ Usage:         $s->set_sequencing_project_info($info_hash)
+ Desc:          creates a sequencing project info in the stockprop
+                keys: name, people, institution, year, status, funding.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_sequencing_project_info {
+    my $self = shift;
+    my $info = shift;
+
+    #need to check keys in info...
+
+    my $info_json = JSON::Any->encode($info);
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
+    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->create({ type_id=>$type_id, stock_id => $self->stock_id(), value=> $info_json });
+
+    return $stockprop->stockprop_id();
+}
+    
+=head2 delete_sequencing_project_info
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_sequencing_project_info {
+    my $self = shift;
+    my $stockprop_id = shift;
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
+    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$type_id, stock_id => $self->stock_id(), stockprop_id=>$stockprop_id });
+
+    if (!$stockprop) {
+	return 0;
+    }
+    else {
+	$stockprop->delete();
+	return 1;
+    }
 }
 
 =head2 get_organism
