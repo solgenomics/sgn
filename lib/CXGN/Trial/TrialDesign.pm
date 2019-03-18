@@ -86,6 +86,7 @@ has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_
 my $design;
 
 sub get_design {
+     print STDERR Dumper $design;
   return $design;
 }
 
@@ -116,6 +117,7 @@ sub calculate_design {
     }
     elsif ($self->get_design_type() eq "westcott") {
       $design = _get_westcott_design($self);
+      print STDERR Dumper $design;
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -485,8 +487,22 @@ sub _get_westcott_design {
     $r_block->add_command('westcott<-as.matrix(westcott)');
     $r_block->run_block();
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
-    @plot_numbers = $result_matrix->get_column("plot");
+    @plot_numbers = $result_matrix->get_column("plot.num");
     @stock_names = $result_matrix->get_column("geno");
+    
+    my @vector_trt = (1..scalar(@stock_list));
+    my %accName;
+    for (my $i=0; $i< scalar(@stock_list); $i++){
+        $accName{$vector_trt[$i]} = $stock_list[$i];
+    }
+    for (my $i=0; $i<scalar(@stock_names); $i++){
+        for my $trt (keys %accName){
+            if ($stock_names[$i] eq $trt){
+                $stock_names[$i] = $accName{$trt};
+            }
+        }
+    }
+
     my @row_numbers = $result_matrix->get_column("row");
     my @col_numbers = $result_matrix->get_column("col");
     @block_numbers = $result_matrix->get_column("row");
@@ -507,7 +523,6 @@ sub _get_westcott_design {
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     %westcott_design = %{_build_plot_names($self,\%westcott_design)};
-
     return \%westcott_design;   
 
 }

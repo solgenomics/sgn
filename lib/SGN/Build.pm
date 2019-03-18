@@ -79,6 +79,8 @@ sub create_build_script {
 
     $self->check_R
         or warn $self->{R}{check_output};
+        
+    $self->check_Node_installed();
 
     return $self->SUPER::create_build_script(@_);
 }
@@ -98,6 +100,23 @@ sub check_R {
     } else {
 	return $self->_check_R_version
     }
+}
+
+sub check_Node_installed {
+    my ( $self, @args ) = @_;
+    
+    my $node = `node --version`;
+    $node =~ /v([\d+\.]+)/;
+    if(! $node){
+        warn "\n\nNode.js is not installed! JavaScript will not load properly.\n\n";
+    }
+    
+    my $npm = `npm --version`;
+    $npm =~ /([\d+\.]+)/;
+    if(! $node){
+        warn "\n\nNode Package Manager is not installed! JavaScript will not load properly.\n\n";
+    }
+    
 }
 
 sub _R_installdeps {
@@ -192,7 +211,7 @@ sub _R_version_current {
     my $r = `R --version`;
     return 0 unless $r;
 
-    $r =~ /R version ([\d\.]+)/;
+    $r =~ /R version ([\d+\.]+)/;
 
     return version->new($1);
 }
