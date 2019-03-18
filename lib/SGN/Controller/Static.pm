@@ -24,6 +24,14 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
+sub mason_forward :Path('/pages') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $page = shift;
+
+    print STDERR "Forwarding to $page...\n";
+    $c->stash->{template} = '/pages/'.$page.".mas";
+}
 
 sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
     my $self = shift;
