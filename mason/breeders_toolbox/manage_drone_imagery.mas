@@ -528,14 +528,6 @@
             </div>
         </&>
     </div>
-    <div class="well">
-        <&| /page/info_section.mas, title => 'Remove Background Using Vegetative Index Mask', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a vegetative index mask, either TGI, VARI, or NDVI' &>
-            <div class="panel panel-default">
-                <div class="panel-body">
-                </div>
-            </div>
-        </&>
-    </div>
 
     <hr>
 
@@ -1131,13 +1123,14 @@ jQuery(document).ready(function() {
 
         var num_rows_val = jQuery('#drone_imagery_standard_process_plot_polygons_num_rows').val();
         var num_cols_val = jQuery('#drone_imagery_standard_process_plot_polygons_num_cols').val();
-        var section_top_left_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_top_left_offset').val();
-        var section_bottom_left_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_bottom_left_offset').val();
-        var section_top_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_top_offset').val();
-        var section_top_right_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_top_right_offset').val();
-        var section_bottom_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_bottom_offset').val();
+        var section_top_row_left_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_top_row_left_offset').val();
+        var section_top_row_right_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_top_row_right_offset').val();
+        var section_bottom_row_left_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_bottom_row_left_offset').val();
+        var section_left_column_top_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_left_column_top_offset').val();
+        var section_left_column_bottom_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_left_column_bottom_offset').val();
+        var section_right_column_bottom_offset_val = jQuery('#drone_imagery_standard_process_plot_polygons_right_col_bottom_offset').val();
 
-        plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_left_offset_val, section_bottom_left_offset_val, section_top_offset_val, section_top_right_offset_val, section_bottom_offset_val, 'drone_imagery_standard_process_generated_polygons_div', 'drone_imagery_standard_process_generated_polygons_table', 'drone_imagery_standard_process_plot_polygons_generated_assign', 'drone_imagery_standard_process_plot_polygons_submit_bottom');
+        plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, 'drone_imagery_standard_process_generated_polygons_div', 'drone_imagery_standard_process_generated_polygons_table', 'drone_imagery_standard_process_plot_polygons_generated_assign', 'drone_imagery_standard_process_plot_polygons_submit_bottom');
     });
 
     jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_clear', function(){
@@ -2002,16 +1995,17 @@ jQuery(document).ready(function() {
 
         var num_rows_val = jQuery('#drone_imagery_plot_polygons_num_rows').val();
         var num_cols_val = jQuery('#drone_imagery_plot_polygons_num_cols').val();
-        var section_top_left_offset_val = jQuery('#drone_imagery_plot_polygons_top_left_offset').val();
-        var section_bottom_left_offset_val = jQuery('#drone_imagery_plot_polygons_bottom_left_offset').val();
-        var section_top_offset_val = jQuery('#drone_imagery_plot_polygons_top_offset').val();
-        var section_top_right_offset_val = jQuery('#drone_imagery_plot_polygons_top_right_offset').val();
-        var section_bottom_offset_val = jQuery('#drone_imagery_plot_polygons_bottom_offset').val();
+        var section_top_row_left_offset_val = jQuery('#drone_imagery_plot_polygons_top_row_left_offset').val();
+        var section_bottom_row_left_offset_val = jQuery('#drone_imagery_plot_polygons_bottom_row_left_offset').val();
+        var section_left_column_top_offset_val = jQuery('#drone_imagery_plot_polygons_left_column_top_offset').val();
+        var section_left_column_bottom_offset_val = jQuery('#drone_imagery_plot_polygons_left_column_bottom_offset').val();
+        var section_top_row_right_offset_val = jQuery('#drone_imagery_plot_polygons_top_row_right_offset').val();
+        var section_right_column_bottom_offset_val = jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset').val();
 
-        plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_left_offset_val, section_bottom_left_offset_val, section_top_offset_val, section_top_right_offset_val, section_bottom_offset_val, 'drone_imagery_generated_polygons_div', 'drone_imagery_generated_polygons_table', 'drone_imagery_plot_polygons_generated_assign', 'drone_imagery_plot_polygons_submit_bottom');
+        plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, 'drone_imagery_generated_polygons_div', 'drone_imagery_generated_polygons_table', 'drone_imagery_plot_polygons_generated_assign', 'drone_imagery_plot_polygons_submit_bottom');
     });
 
-    function plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_left_offset_val, section_bottom_left_offset_val, section_top_offset_val, section_top_right_offset_val, section_bottom_offset_val, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
+    function plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
         if (num_rows_val == ''){
             alert('Please give the number of rows!');
             return;
@@ -2020,24 +2014,28 @@ jQuery(document).ready(function() {
             alert('Please give the number of columns!');
             return;
         }
-        if (section_top_left_offset_val == ''){
-            alert('Please give the top left margin! This can be 0 if there is no offset.');
+        if (section_top_row_left_offset_val == ''){
+            alert('Please give the top-most rows left margin! This can be 0 if there is no offset.');
             return;
         }
-        if (section_bottom_left_offset_val == ''){
-            alert('Please give the bottom left margin! This can be 0 if there is no offset.');
+        if (section_bottom_row_left_offset_val == ''){
+            alert('Please give the bottom-most rows left margin! This can be 0 if there is no offset.');
             return;
         }
-        if (section_top_offset_val == ''){
-            alert('Please give the top margin! This can be 0 if there is no offset.');
+        if (section_left_column_top_offset_val == ''){
+            alert('Please give the left-most columns top margin! This can be 0 if there is no offset.');
             return;
         }
-        if (section_top_right_offset_val == ''){
-            alert('Please give the top right margin! This can be 0 if there is no offset.');
+        if (section_left_column_bottom_offset_val == ''){
+            alert('Please give the left-most columns bottom margin! This can be 0 if there is no offset.');
             return;
         }
-        if (section_bottom_offset_val == ''){
-            alert('Please give the bottom margin! This can be 0 if there is no offset.');
+        if (section_top_row_right_offset_val == ''){
+            alert('Please give the top-most rows right margin! This can be 0 if there is no offset.');
+            return;
+        }
+        if (section_right_column_bottom_offset_val == ''){
+            alert('Please give the right-most columns bottom margin! This can be 0 if there is no offset.');
             return;
         }
 
@@ -2045,34 +2043,41 @@ jQuery(document).ready(function() {
         plot_polygons_num_cols_generated = parseInt(num_cols_val);
         var section_width = background_image_width;
         var section_height = background_image_height;
-        var section_top_left_offset = parseInt(section_top_left_offset_val);
-        var section_bottom_left_offset = parseInt(section_bottom_left_offset_val);
-        var section_top_offset = parseInt(section_top_offset_val);
-        var section_top_right_offset = parseInt(section_top_right_offset_val);
-        var section_bottom_offset = parseInt(section_bottom_offset_val);
+        var section_top_row_left_offset = parseInt(section_top_row_left_offset_val);
+        var section_bottom_row_left_offset = parseInt(section_bottom_row_left_offset_val);
+        var section_left_column_top_offset = parseInt(section_left_column_top_offset_val);
+        var section_left_column_bottom_offset = parseInt(section_left_column_bottom_offset_val);
+        var section_top_row_right_offset = parseInt(section_top_row_right_offset_val);
+        var section_right_column_bottom_offset = parseInt(section_right_column_bottom_offset_val);
 
-        var total_left_shift = section_bottom_left_offset - section_top_left_offset;
-        var col_left_shift = total_left_shift / plot_polygons_num_rows_generated;
+        var total_gradual_left_shift = section_bottom_row_left_offset - section_top_row_left_offset;
+        var col_left_shift_increment = total_gradual_left_shift / plot_polygons_num_rows_generated;
 
-        var col_width = (section_width - section_top_left_offset - section_top_right_offset) / plot_polygons_num_cols_generated;
-        var row_height = (section_height - section_top_offset - section_bottom_offset) / plot_polygons_num_rows_generated;
+        var total_gradual_vertical_shift = section_right_column_bottom_offset - section_left_column_bottom_offset;
+        var col_vertical_shift_increment = total_gradual_vertical_shift / plot_polygons_num_cols_generated;
 
-        var x_pos = section_top_left_offset;
-        var y_pos = section_top_offset;
+        var col_width = (section_width - section_top_row_left_offset - section_top_row_right_offset) / plot_polygons_num_cols_generated;
+        var row_height = (section_height - section_left_column_top_offset - section_left_column_bottom_offset) / plot_polygons_num_rows_generated;
+
+        var x_pos = section_top_row_left_offset;
+        var y_pos = section_left_column_top_offset;
         var generated_polygons = [];
         var row_num = 1;
         for (var i=0; i<plot_polygons_num_rows_generated; i++) {
             for (var j=0; j<plot_polygons_num_cols_generated; j++) {
+                var x_pos_val = x_pos;
+                var y_pos_val = y_pos;
                 generated_polygons.push([
-                    {x:x_pos, y:y_pos},
-                    {x:x_pos + col_width, y:y_pos},
-                    {x:x_pos + col_width, y:y_pos + row_height},
-                    {x:x_pos, y:y_pos + row_height}
+                    {x:x_pos_val, y:y_pos_val},
+                    {x:x_pos_val + col_width, y:y_pos_val},
+                    {x:x_pos_val + col_width, y:y_pos_val + row_height},
+                    {x:x_pos_val, y:y_pos_val + row_height}
                 ]);
                 x_pos = x_pos + col_width;
+                y_pos = y_pos - col_vertical_shift_increment;
             }
-            x_pos = section_top_left_offset + (row_num * col_left_shift);
-            y_pos = y_pos + row_height;
+            x_pos = section_top_row_left_offset + (row_num * col_left_shift_increment);
+            y_pos = y_pos + row_height + total_gradual_vertical_shift;
             row_num = row_num + 1;
         }
         //console.log(generated_polygons);
@@ -2547,12 +2552,12 @@ jQuery(document).ready(function() {
 
     function droneImageryRectangleLayoutTable(generated_polygons, plot_polygons_layout_assignment_info, plot_polygons_layout_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
         var html = '<hr><div class="well well-sm"><h2>Assign Plot Polygons to Field Trial Entities</h2>';
-        html = html + '<div class="panel panel-default"><div class="panel-body">';
+        html = html + '<div class="panel panel-default"><div class="panel-body"><div class="form form-horizontal">';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Left: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_left" name="drone_imagery_plot_polygons_num_border_rows_left" type="number" placeholder="Number of border rows assigned on left" value="0"/></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Right: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_right" name="drone_imagery_plot_polygons_num_border_rows_right" type="number" placeholder="Number of border rows assigned on right" value="0"/></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Top: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_top" name="drone_imagery_plot_polygons_num_border_rows_top" type="number" placeholder="Number of border rows on top" value="0"/></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Number of Border Rows on Bottom: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_plot_polygons_num_border_rows_bottom" name="drone_imagery_plot_polygons_num_border_rows_bottom" type="number" placeholder="Number of border rows on bottom" value="0"/></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Location of First Plot (e.g. plot number 1): </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_first_plot_start" name="drone_imagery_plot_polygons_first_plot_start"><option value="top_left">Top Left</option><option value="top_right">Top Right</option><option value="bottom_left">Bottom Left</option><option value="bottom_right">Bottom Right</option></select></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Second Plot Follows First Plot Going: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_second_plot_follows" name="drone_imagery_plot_polygons_second_plot_follows"><option value="right">Right</option><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option></select></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Plot Number Orientation: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_plot_orientation" name="drone_imagery_plot_polygons_plot_orientation"><option value="serpentine">Serpentine</option><option value="zigzag">Zigzag (Not Serpentine)</option></select></div></div></div></div>';
-        html = html + '</div></div></div>';
+        html = html + '</div></div></div></div>';
         //html = html + '<table class="table table-borders table-hover" id="'+plot_polygons_layout_assignment_table+'"><thead><tr><th>Generated Number</th><th>Field Trial Observation Unit</th></tr></thead><tbody>';
         //for (key in generated_polygons) {
         //    html = html + '<tr><td>' + key + '</td><td><input class="form-control" type="text" name="drone_imagery_plot_polygons_autocomplete" data-generated_polygon_key="'+key+'"/></td></tr>';
