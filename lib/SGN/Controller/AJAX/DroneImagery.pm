@@ -39,7 +39,7 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub upload_drone_imagery : Path('/ajax/drone_imagery/upload_drone_imagery') : ActionClass('REST') { }
+sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : ActionClass('REST') { }
 
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
@@ -238,7 +238,7 @@ sub upload_drone_imagery_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
-sub raw_drone_imagery_summary : Path('/ajax/drone_imagery/raw_drone_imagery') : ActionClass('REST') { }
+sub raw_drone_imagery_summary : Path('/api/drone_imagery/raw_drone_imagery') : ActionClass('REST') { }
 
 sub raw_drone_imagery_summary_GET : Args(0) {
     my $self = shift;
@@ -410,7 +410,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
     $c->stash->{rest} = { data => \@return };
 }
 
-sub raw_drone_imagery_plot_image_count : Path('/ajax/drone_imagery/raw_drone_imagery_plot_image_count') : ActionClass('REST') { }
+sub raw_drone_imagery_plot_image_count : Path('/api/drone_imagery/raw_drone_imagery_plot_image_count') : ActionClass('REST') { }
 
 sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my $self = shift;
@@ -478,7 +478,7 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     $c->stash->{rest} = { data => \%unique_drone_runs };
 }
 
-sub raw_drone_imagery_drone_run_band_summary : Path('/ajax/drone_imagery/raw_drone_imagery_drone_run_band') : ActionClass('REST') { }
+sub raw_drone_imagery_drone_run_band_summary : Path('/api/drone_imagery/raw_drone_imagery_drone_run_band') : ActionClass('REST') { }
 
 sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $self = shift;
@@ -1207,7 +1207,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     $c->stash->{rest} = { data => \@return };
 }
 
-sub drone_imagery_analysis_query : Path('/ajax/drone_imagery/analysis_query') : ActionClass('REST') { }
+sub drone_imagery_analysis_query : Path('/api/drone_imagery/analysis_query') : ActionClass('REST') { }
 
 sub drone_imagery_analysis_query_GET : Args(0) {
     my $self = shift;
@@ -1244,7 +1244,7 @@ sub drone_imagery_analysis_query_GET : Args(0) {
     my $trait_id_list = $c->req->param('trait_id_list') ? decode_json $c->req->param('trait_id_list') : [];
     my $return_format = $c->req->param('format') || 'csv';
     my $trial_name_list = $c->req->param('trial_name_list');
-    my $trial_id_list = $c->req->param('trial_id_list') ? decode_json $c->req->param('trial_id_list') : [];
+    my $trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $project_image_type_id_list = $c->req->param('project_image_type_id_list') ? decode_json $c->req->param('project_image_type_id_list') : [$observation_unit_polygon_imagery_cvterm_id,
     $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id,
     $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id,
@@ -1287,8 +1287,8 @@ sub drone_imagery_analysis_query_GET : Args(0) {
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
-        push @{$image_data_hash{$_->{stock_id}}->{$_->{project_image_type_name}}}, $main_production_site.$image_url;
-        $project_image_type_names{$_->{project_image_type_name}}++;
+        push @{$image_data_hash{$_->{stock_id}}->{$_->{drone_run_band_project_name}.$_->{project_image_type_name}}}, $main_production_site.$image_url;
+        $project_image_type_names{$_->{drone_run_band_project_name}.$_->{project_image_type_name}}++;
     }
     my @project_image_names_list = sort keys %project_image_type_names;
 
@@ -1342,7 +1342,7 @@ sub drone_imagery_analysis_query_GET : Args(0) {
             data => \@data_total
         });
         my @data_files = $file_response->get_datafiles();
-        $return{files} = \@data_files;
+        $return{file} = $data_files[0];
     } elsif ($return_format eq 'xls') {
         my $dir = $c->tempfiles_subdir('download');
         my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_xls_'.'XXXXX');
@@ -1353,7 +1353,7 @@ sub drone_imagery_analysis_query_GET : Args(0) {
             data => \@data_total
         });
         my @data_files = $file_response->get_datafiles();
-        $return{files} = \@data_files;
+        $return{file} = $data_files[0];
     } elsif ($return_format eq 'json') {
         $return{header} = \@total_phenotype_header;
         $return{data} = \@data_array;
@@ -1362,7 +1362,7 @@ sub drone_imagery_analysis_query_GET : Args(0) {
     $c->stash->{rest} = \%return;
 }
 
-sub raw_drone_imagery_stitch : Path('/ajax/drone_imagery/raw_drone_imagery_stitch') : ActionClass('REST') { }
+sub raw_drone_imagery_stitch : Path('/api/drone_imagery/raw_drone_imagery_stitch') : ActionClass('REST') { }
 
 sub raw_drone_imagery_stitch_GET : Args(0) {
     my $self = shift;
@@ -1409,7 +1409,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     $c->stash->{rest} = { data => \@image_urls };
 }
 
-sub upload_drone_imagery_stitch : Path('/ajax/drone_imagery/upload_drone_imagery_stitch') : ActionClass('REST') { }
+sub upload_drone_imagery_stitch : Path('/api/drone_imagery/upload_drone_imagery_stitch') : ActionClass('REST') { }
 
 sub upload_drone_imagery_stitch_POST : Args(0) {
     my $self = shift;
@@ -1454,7 +1454,7 @@ sub upload_drone_imagery_stitch_POST : Args(0) {
     $c->stash->{rest} = { success => 1, uploaded_image_url => $uploaded_image_url, uploaded_image_fullpath => $uploaded_image_fullpath };
 }
 
-sub drone_imagery_rotate_image : Path('/ajax/drone_imagery/rotate_image') : ActionClass('REST') { }
+sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }
 
 sub drone_imagery_rotate_image_GET : Args(0) {
     my $self = shift;
@@ -1567,7 +1567,7 @@ sub _perform_image_rotate {
     };
 }
 
-sub drone_imagery_get_contours : Path('/ajax/drone_imagery/get_contours') : ActionClass('REST') { }
+sub drone_imagery_get_contours : Path('/api/drone_imagery/get_contours') : ActionClass('REST') { }
 
 sub drone_imagery_get_contours_GET : Args(0) {
     my $self = shift;
@@ -1597,6 +1597,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
 
     my $contours_image_fullpath;
     my $contours_image_url;
+    my $contours_image_id;
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_contours_temp_image);
@@ -1606,6 +1607,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
         $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
         $contours_image_fullpath = $image->get_filename('original_converted', 'full');
         $contours_image_url = $image->get_image_url('original');
+        $contours_image_id = $image->get_image_id();
     } else {
         $image->set_sp_person_id($user_id);
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
@@ -1625,12 +1627,13 @@ sub drone_imagery_get_contours_GET : Args(0) {
         my $ret = $image->process_image($archive_contours_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $contours_image_fullpath = $image->get_filename('original_converted', 'full');
         $contours_image_url = $image->get_image_url('original');
+        $contours_image_id = $image->get_image_id();
     }
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_id => $contours_image_id, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
 
-sub drone_imagery_retrieve_parameter_template : Path('/ajax/drone_imagery/retrieve_parameter_template') : ActionClass('REST') { }
+sub drone_imagery_retrieve_parameter_template : Path('/api/drone_imagery/retrieve_parameter_template') : ActionClass('REST') { }
 
 sub drone_imagery_retrieve_parameter_template_GET : Args(0) {
     my $self = shift;
@@ -1648,7 +1651,7 @@ sub drone_imagery_retrieve_parameter_template_GET : Args(0) {
     };
 }
 
-sub drone_imagery_assign_plot_polygons : Path('/ajax/drone_imagery/assign_plot_polygons') : ActionClass('REST') { }
+sub drone_imagery_assign_plot_polygons : Path('/api/drone_imagery/assign_plot_polygons') : ActionClass('REST') { }
 
 sub drone_imagery_assign_plot_polygons_POST : Args(0) {
     my $self = shift;
@@ -1719,7 +1722,7 @@ sub _perform_plot_polygon_assign {
             my $last_point = pop @$polygon;
         }
         if (scalar(@$polygon) != 4){
-            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.'should be 4 long!'};
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.' should be 4 long!'};
             $c->detach();
         }
         $polygon_objs->{$stock_name} = $polygon;
@@ -1808,11 +1811,11 @@ sub _perform_plot_polygon_assign {
     # print STDERR Dumper \@plot_polygon_image_urls;
 
     return {
-        image_url => $image_url, image_fullpath => $image_fullpath
+        image_url => $image_url, image_fullpath => $image_fullpath, success => 1
     };
 }
 
-sub drone_imagery_fourier_transform : Path('/ajax/drone_imagery/fourier_transform') : ActionClass('REST') { }
+sub drone_imagery_fourier_transform : Path('/api/drone_imagery/fourier_transform') : ActionClass('REST') { }
 
 sub drone_imagery_fourier_transform_GET : Args(0) {
     my $self = shift;
@@ -1845,7 +1848,7 @@ sub drone_imagery_fourier_transform_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }
 
-sub drone_imagery_denoise : Path('/ajax/drone_imagery/denoise') : ActionClass('REST') { }
+sub drone_imagery_denoise : Path('/api/drone_imagery/denoise') : ActionClass('REST') { }
 
 sub drone_imagery_denoise_GET : Args(0) {
     my $self = shift;
@@ -1927,7 +1930,7 @@ sub _perform_image_denoise {
     };
 }
 
-sub drone_imagery_remove_background_display : Path('/ajax/drone_imagery/remove_background_display') : ActionClass('REST') { }
+sub drone_imagery_remove_background_display : Path('/api/drone_imagery/remove_background_display') : ActionClass('REST') { }
 
 sub drone_imagery_remove_background_display_POST : Args(0) {
     my $self = shift;
@@ -1986,7 +1989,7 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
 }
 
-sub drone_imagery_remove_background_save : Path('/ajax/drone_imagery/remove_background_save') : ActionClass('REST') { }
+sub drone_imagery_remove_background_save : Path('/api/drone_imagery/remove_background_save') : ActionClass('REST') { }
 
 sub drone_imagery_remove_background_save_POST : Args(0) {
     my $self = shift;
@@ -2167,7 +2170,7 @@ sub _perform_image_background_remove_threshold_percentage {
     };
 }
 
-sub get_drone_run_projects : Path('/ajax/drone_imagery/drone_runs') : ActionClass('REST') { }
+sub get_drone_run_projects : Path('/api/drone_imagery/drone_runs') : ActionClass('REST') { }
 
 sub get_drone_run_projects_GET : Args(0) {
     my $self = shift;
@@ -2222,7 +2225,7 @@ sub get_drone_run_projects_GET : Args(0) {
 }
 
 
-sub get_plot_polygon_types : Path('/ajax/drone_imagery/plot_polygon_types') : ActionClass('REST') { }
+sub get_plot_polygon_types : Path('/api/drone_imagery/plot_polygon_types') : ActionClass('REST') { }
 
 sub get_plot_polygon_types_GET : Args(0) {
     my $self = shift;
@@ -2310,9 +2313,9 @@ sub get_plot_polygon_types_GET : Args(0) {
 
 # jQuery('#drone_image_upload_drone_bands_table').DataTable({
 #     destroy : true,
-#     ajax : '/ajax/drone_imagery/drone_run_bands?select_checkbox_name=upload_drone_imagery_drone_run_band_select&drone_run_project_id='+drone_run_project_id
+#     ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=upload_drone_imagery_drone_run_band_select&drone_run_project_id='+drone_run_project_id
 # });
-sub get_drone_run_band_projects : Path('/ajax/drone_imagery/drone_run_bands') : ActionClass('REST') { }
+sub get_drone_run_band_projects : Path('/api/drone_imagery/drone_run_bands') : ActionClass('REST') { }
 
 sub get_drone_run_band_projects_GET : Args(0) {
     my $self = shift;
@@ -2378,7 +2381,7 @@ sub get_drone_run_band_projects_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
-sub standard_process_apply : Path('/ajax/drone_imagery/standard_process_apply') : ActionClass('REST') { }
+sub standard_process_apply : Path('/api/drone_imagery/standard_process_apply') : ActionClass('REST') { }
 
 sub standard_process_apply_POST : Args(0) {
     my $self = shift;
@@ -2659,10 +2662,10 @@ sub standard_process_apply_POST : Args(0) {
     });
 
     my @result;
-    $c->stash->{rest} = { data => \@result };
+    $c->stash->{rest} = { data => \@result, success => 1 };
 }
 
-sub get_project_md_image : Path('/ajax/drone_imagery/get_project_md_image') : ActionClass('REST') { }
+sub get_project_md_image : Path('/api/drone_imagery/get_project_md_image') : ActionClass('REST') { }
 
 sub get_project_md_image_GET : Args(0) {
     my $self = shift;
@@ -2691,7 +2694,7 @@ sub get_project_md_image_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
-sub drone_imagery_get_image : Path('/ajax/drone_imagery/get_image') : ActionClass('REST') { }
+sub drone_imagery_get_image : Path('/api/drone_imagery/get_image') : ActionClass('REST') { }
 
 sub drone_imagery_get_image_GET : Args(0) {
     my $self = shift;
@@ -2712,7 +2715,7 @@ sub drone_imagery_get_image_GET : Args(0) {
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }
 
-sub drone_imagery_remove_image : Path('/ajax/drone_imagery/remove_image') : ActionClass('REST') { }
+sub drone_imagery_remove_image : Path('/api/drone_imagery/remove_image') : ActionClass('REST') { }
 
 sub drone_imagery_remove_image_GET : Args(0) {
     my $self = shift;
@@ -2729,7 +2732,7 @@ sub drone_imagery_remove_image_GET : Args(0) {
     $c->stash->{rest} = { status => $resp };
 }
 
-sub drone_imagery_crop_image : Path('/ajax/drone_imagery/crop_image') : ActionClass('REST') { }
+sub drone_imagery_crop_image : Path('/api/drone_imagery/crop_image') : ActionClass('REST') { }
 
 sub drone_imagery_crop_image_GET : Args(0) {
     my $self = shift;
@@ -2816,7 +2819,7 @@ sub _perform_image_cropping {
     };
 }
 
-sub drone_imagery_calculate_rgb_vegetative_index : Path('/ajax/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }
+sub drone_imagery_calculate_rgb_vegetative_index : Path('/api/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }
 
 sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
     my $self = shift;
@@ -2926,7 +2929,7 @@ sub _perform_vegetative_index_calculation {
     };
 }
 
-sub drone_imagery_mask_remove_background : Path('/ajax/drone_imagery/mask_remove_background') : ActionClass('REST') { }
+sub drone_imagery_mask_remove_background : Path('/api/drone_imagery/mask_remove_background') : ActionClass('REST') { }
 
 sub drone_imagery_mask_remove_background_POST : Args(0) {
     my $self = shift;
@@ -3004,7 +3007,7 @@ sub _perform_image_background_remove_mask {
     };
 }
 
-sub drone_imagery_get_plot_polygon_images : Path('/ajax/drone_imagery/get_plot_polygon_images') : ActionClass('REST') { }
+sub drone_imagery_get_plot_polygon_images : Path('/api/drone_imagery/get_plot_polygon_images') : ActionClass('REST') { }
 
 sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     my $self = shift;
@@ -3039,7 +3042,7 @@ sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     $c->stash->{rest} = { image_urls => \@image_urls };
 }
 
-sub drone_imagery_merge_bands : Path('/ajax/drone_imagery/merge_bands') : ActionClass('REST') { }
+sub drone_imagery_merge_bands : Path('/api/drone_imagery/merge_bands') : ActionClass('REST') { }
 
 sub drone_imagery_merge_bands_POST : Args(0) {
     my $self = shift;
@@ -3151,7 +3154,7 @@ sub _perform_image_merge {
     };
 }
 
-sub drone_imagery_standard_process_apply_phenotypes : Path('/ajax/drone_imagery/standard_process_apply_phenotypes') : ActionClass('REST') { }
+sub drone_imagery_standard_process_apply_phenotypes : Path('/api/drone_imagery/standard_process_apply_phenotypes') : ActionClass('REST') { }
 
 sub drone_imagery_standard_process_apply_phenotypes_POST : Args(0) {
     my $self = shift;
@@ -3272,7 +3275,7 @@ sub _perform_phenotype_automated {
     };
 }
 
-sub drone_imagery_calculate_phenotypes : Path('/ajax/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
+sub drone_imagery_calculate_phenotypes : Path('/api/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
 
 sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;
@@ -3297,7 +3300,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     $c->stash->{rest} = $return;
 }
 
-sub drone_imagery_generate_phenotypes : Path('/ajax/drone_imagery/generate_phenotypes') : ActionClass('REST') { }
+sub drone_imagery_generate_phenotypes : Path('/api/drone_imagery/generate_phenotypes') : ActionClass('REST') { }
 
 sub drone_imagery_generate_phenotypes_GET : Args(0) {
     my $self = shift;
@@ -3307,10 +3310,13 @@ sub drone_imagery_generate_phenotypes_GET : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
-    my $phenotype_method = 'zonal';
+    my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, [$phenotype_method], $user_id, $user_name, $user_role);
+    my $return;
+    foreach my $phenotype_method (@$phenotype_methods) {
+        $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_method, $user_id, $user_name, $user_role);
+    }
 
     $c->stash->{rest} = $return;
 }
@@ -3932,7 +3938,7 @@ sub _perform_phenotype_calculation {
     };
 }
 
-sub drone_imagery_train_keras_model : Path('/ajax/drone_imagery/train_keras_model') : ActionClass('REST') { }
+sub drone_imagery_train_keras_model : Path('/api/drone_imagery/train_keras_model') : ActionClass('REST') { }
 
 sub drone_imagery_train_keras_model_GET : Args(0) {
     my $self = shift;
@@ -4060,7 +4066,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     $c->stash->{rest} = { success => 1, results => \@result_agg };
 }
 
-sub drone_imagery_train_keras_model_optimize : Path('/ajax/drone_imagery/train_keras_model_optimize') : ActionClass('REST') { }
+sub drone_imagery_train_keras_model_optimize : Path('/api/drone_imagery/train_keras_model_optimize') : ActionClass('REST') { }
 
 sub drone_imagery_train_keras_model_optimize_GET : Args(0) {
     my $self = shift;

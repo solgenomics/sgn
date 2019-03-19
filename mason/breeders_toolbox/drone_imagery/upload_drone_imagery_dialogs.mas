@@ -210,7 +210,7 @@ jQuery(document).ready(function() {
         var field_trial_id = jQuery(this).val();
         jQuery('#drone_image_upload_drone_runs_table').DataTable({
             destroy : true,
-            ajax : '/ajax/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_id='+field_trial_id
+            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_id='+field_trial_id
         });
     });
 
@@ -374,7 +374,7 @@ jQuery(document).ready(function() {
     })
 
     function upload_drone_imagery_form() {
-        jQuery('#upload_drone_imagery_form').attr("action", "/ajax/drone_imagery/upload_drone_imagery");
+        jQuery('#upload_drone_imagery_form').attr("action", "/api/drone_imagery/upload_drone_imagery");
         jQuery("#upload_drone_imagery_form").submit();
     }
 
