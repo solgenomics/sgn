@@ -15,62 +15,74 @@
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
 <& /page/page_title.mas, title=>"SolGWAS" &>
 
-
-
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Dataset", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
 
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label>
-    <div id="dataset_select"></div>
+    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
     <br>
+
     <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
-
-
+    <br>
     <br>
 
     </div>
 
 
-
-
-</&>
-
-
-<&| /page/info_section.mas, id=>"input_parameter_section", title=>"Select Input Data", collapsible=>1, collapsed=>0 &>
-  <input type="hidden" name="outformat" value="0" />
-
-
-  <div class="form-group form-inline">
-    <label class="blast_select_label" for="pheno_select">Phenotypes &nbsp; </label>
-  <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-  <br>
-  <br>
-  <div class="form-group form-inline">
-    <input type="checkbox" id="princomp" />
-    <label>Include principal components in model &nbsp; </label>
-    <br>
-    <input type="checkbox" id="kinshipmat" />
-    <label>Include kinship matrix in model &nbsp; </label>
-  </div>
-
-
-<br>
-
-
-<!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-    <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-    <br>
-
-    </div>
-
-        <div style="text-align: center">
-          <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+      <div class="form-group form-inline">
+        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
+      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <br>
+      <br>
+      <br>
+      <center>
+        <div id="trait_histogram_plot">
         </div>
-        <br />
+      </center>
+      <br>
+      <br>
+      <div class="form-group form-inline">
+      <input type="checkbox" id="kinshipmat" />
+      <label>Include kinship matrix in model &nbsp; </label>
+        <br>
+        <input type="checkbox" id="princomp" />
+        <label>Include principal components in model &nbsp; </label>
+        <button class="btn btn-primary" id="preview_pca" type="submit" name="preview_pca" value="preview_pca">View PCA Plot</button>
+      </div>
+      <br>
+      <br>
+      <br>
+      <center>
+        <div id="pca_output"></div>
+      </center>
+
+
+    <br>
+
+
+    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
+        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
+        <br>
+
+        </div>
+
+            <div style="text-align: center">
+              <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+            </div>
+            <br />
+
+    <div id="tempfile" style="display:none" >
+    </div>
+
+
 
 
 
@@ -78,7 +90,8 @@
 
 
 
-<&| /page/info_section.mas, title=>"Results", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
 
 
@@ -114,7 +127,16 @@ jQuery(document).ready(function() {
   }
   else {
     alert('You must be logged in to use SolGWAS');
-    }
+  }
+  $('#pheno_select').attr("disabled",true).html('');
+  jQuery('#dataset_select').click(function() {
+    $('#pheno_select').attr("disabled",true).html('');
+    $('#trait_histogram_plot').html('');
+    $('#pca_output').empty();
+    $('#Solgwas_output').empty();
+    $('#princomp').attr('checked', false);
+    $('#kinshipmat').attr('checked', false);
+  });
   jQuery('#selectDataset').click(function() {
     var dataset_id = jQuery('#available_datasets').val();
 //    alert("Dataset ID: "+dataset_id);
@@ -133,6 +155,7 @@ jQuery(document).ready(function() {
 	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
 	  }
 	  $('#pheno_select').attr("disabled",false).html(option_html);
+      jQuery('#tempfile').html(response.tempfile);
 
 
 	}
@@ -143,54 +166,135 @@ jQuery(document).ready(function() {
       }
     });
   });
-  jQuery('#runGWA').click( function () {
-    $('#Solgwas_output').empty();
-    if ($('#pheno_select').val() != ""){
-      var dataset_id = $('#available_datasets').val();
-      var trait_id = $('#pheno_select').val();
-      var pc_check = 0;
-      var kinship_check = 0;
-      if ($('#princomp').is(':checked')) {
-        var pc_check = 1;
-      }
-      if ($('#kinshipmat').is(':checked')) {
-        var kinship_check = 1;
-      }
-      //alert(pc_check);
-      //alert(kinship_check);
-      //alert("Dataset ID: "+dataset_id);
-      //alert("Pheno ID: "+trait_id);
-      $.ajax({
-        url: '/ajax/solgwas/generate_results',
-        data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
-	      beforeSend: function() {
-          jQuery("#working_modal").modal("show");
-	      },
-        success: function(response) {
-	        jQuery("#working_modal").modal("hide");
-          if (response.error) {
-            $('#dataset_select').val('ERROR');
-          }
-          else {
-            var fig1_response = response.figure1;
-            var fig2_response = response.figure2;
-            var fig3_response = response.figure3;
-            var fig4_response = response.figure4;
-	    //alert("Response ID: "+temp_response);
-    	    //alert("Response ID: "+fig1_response);
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure1' src='"+ fig1_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
-	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
-	          }
 
 
-        },
-        error: function(response) {
-          alert("An error occurred, the service may temporarily be unavailable");
-        }
+  jQuery('#preview_trait_histogram_btn').on('click', function() {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      //alert("Inside trait preview");
+      var tempfile = jQuery('#tempfile').html();
+      var trait = jQuery('#pheno_select').val();
+      //alert(trait);
+      jQuery.ajax( {
+          url: '/ajax/solgwas/getdata',
+          data: { 'file' : tempfile },
+          success: function(r)  {
+          //alert("data grabbed "+JSON.stringify(r.data));
+          var v = {
+              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+              "width": 200,
+              "height": 100,
+              "padding": 5,
+              "data": { 'values': r.data },
+              "mark": "bar",
+              "encoding": {
+              "x": {
+                "bin": true,
+                "field": trait,
+                "type": "quantitative"
+              },
+              "y": {
+                "aggregate": "count",
+                "type": "quantitative"
+              }
+             }
+            };
+
+   //alert("embedding"+ JSON.stringify(v));
+            vegaEmbed("#trait_histogram_plot", v);
+            //alert("done");
+          },
+
+
+        error: function(e) { alert('error!'); }
       });
-    }
+    };
+  });
+
+
+  jQuery('#preview_pca').click( function () {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      $('#pca_output').empty();
+      if ($('#pheno_select').val() != ""){
+        var dataset_id = $('#available_datasets').val();
+        var trait_id = $('#pheno_select').val();
+        $.ajax({
+          url: '/ajax/solgwas/generate_pca',
+          async: true,
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+  	      beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+  	      },
+          success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+              $('#dataset_select').val('ERROR');
+            }
+            else {
+              var fig2_response = response.figure2;
+  	            $('#pca_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
+  	      }
+          },
+          error: function(response) {
+            alert("An error occurred, the service may temporarily be unavailable");
+          }
+        });
+      }
+    };
+  });
+
+  jQuery('#runGWA').click( function () {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+      $('#Solgwas_output').empty();
+    } else {
+      $('#Solgwas_output').empty();
+      if ($('#pheno_select').val() != ""){
+        var dataset_id = $('#available_datasets').val();
+        var trait_id = $('#pheno_select').val();
+        var pc_check = 0;
+        var kinship_check = 0;
+        if ($('#princomp').is(':checked')) {
+          var pc_check = 1;
+        }
+        if ($('#kinshipmat').is(':checked')) {
+          var kinship_check = 1;
+        }
+        //alert(pc_check);
+        //alert(kinship_check);
+        //alert("Dataset ID: "+dataset_id);
+        //alert("Pheno ID: "+trait_id);
+        $.ajax({
+          url: '/ajax/solgwas/generate_results',
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
+  	      beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+  	      },
+          success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+              $('#dataset_select').val('ERROR');
+            }
+            else {
+              var fig3_response = response.figure3;
+              var fig4_response = response.figure4;
+  	    //alert("Response ID: "+temp_response);
+      	    //alert("Response ID: "+fig3_response);
+              //setTimeout(function() {
+  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
+  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
+              //}, 6000);
+  	      }
+          },
+          error: function(response) {
+            alert("An error occurred, the service may temporarily be unavailable");
+          }
+        });
+      }
+    };
   });
 
 

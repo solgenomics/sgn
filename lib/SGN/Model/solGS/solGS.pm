@@ -1316,40 +1316,40 @@ sub prediction_pops {
 }
 
 
-sub plots_list_phenotype_data {
-    my ($self, $plots_names) = @_;
-   
-    if (@$plots_names) 
-    {
-	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
-	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
-
-	return \$data;
-    }
-    else
-    {
-	return;
-    }
-   
-}
-
-
 # sub plots_list_phenotype_data {
-#     my ($self, $plots_ids) = @_;
-
-#     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-# 	bcs_schema  =>$self->schema,
-# 	data_level  => 'plot',
-# 	search_type =>'MaterializedViewTable',
-# 	plot_list   => $plots_ids,
-# 	);
-
-#     my @data = $phenotypes_search->get_phenotype_matrix();
-#     my $clean_data = $self->structure_phenotype_data(\@data);
+#     my ($self, $plots_names) = @_;
    
-#     return \$clean_data;
+#     if (@$plots_names) 
+#     {
+# 	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
+# 	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
 
+# 	return \$data;
+#     }
+#     else
+#     {
+# 	return;
+#     }
+   
 # }
+
+
+sub plots_list_phenotype_data {
+    my ($self, $plots_ids) = @_;
+
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	bcs_schema  =>$self->schema,
+	data_level  => 'plot',
+	search_type =>'MaterializedViewTable',
+	plot_list   => $plots_ids,
+	);
+
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    my $clean_data = $self->structure_phenotype_data(\@data);
+   
+    return \$clean_data;
+
+}
 
 
 sub project_traits {
@@ -2082,6 +2082,34 @@ sub get_genotypes_from_dataset {
     my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
    
     return \@genotypes_ids;
+}
+
+
+sub get_dataset_data {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my  $dataset_data = $dataset->get_dataset_data();
+      
+    return $dataset_data;
+}
+
+
+sub get_dataset_plots_list {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my  $plots = $dataset->retrieve_plots();
+      
+    return $plots;
 }
 
 
