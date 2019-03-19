@@ -26,6 +26,8 @@ use File::Path qw / mkpath  /;
 use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions;
 use JSON;
+use List::MoreUtils qw /uniq/;
+use String::CRC;
 use URI::FromHash 'uri';
 
 
@@ -101,19 +103,25 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
 
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id  = $c->req->param('training_pop_id');
-
+    my $trait_id         = $c->req->param('trait_id');
+    
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{trait_id}         = $c->req->param('trait_id');
+    $c->stash->{trait_id}         = $trait_id;
 
+  
+    my $page = $c->req->referer;
+
+    print STDERR "\npage: $page -- trait id: $trait_id\n";
+    
     my $selection_pop_traits;
-    if ($training_pop_id && $selection_pop_id) {
+    if ($page =~ /solgs\/traits\/all\//) {
 	
 	$c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-	$selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};         
+	$selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
     }    
 
-    print STDERR "\nselection_traits_ids: @$selection_pop_traits - tr pop id: $training_pop_id -- sel pop id: $selection_pop_id\n";
+    $c->stash->{selection_traits} = $selection_pop_traits || [$trait_id];
     
     my $ret->{boxplot} = undef;
     
@@ -186,6 +194,12 @@ sub boxplot_id {
     my $training_pop_id    = $c->stash->{training_pop_id};
     my $trait_id           = $c->stash->{trait_id};
 
+    my $multi_traits = $c->stash->{selection_traits};
+    if (scalar(@$multi_traits) > 1) {
+
+	$trait_id = crc(join('', @$multi_traits));
+    }
+
     $c->stash->{boxplot_id} = "${training_pop_id}_${selection_pop_id}_${trait_id}";
   
 }
@@ -246,25 +260,30 @@ sub boxplot_data_file {
 
 sub boxplot_input_files {
     my ($self, $c) = @_;
- 
-    $self->get_training_pop_gebv_file($c);
-    my $training_gebv = $c->stash->{training_gebv_file};
 
-    $self->get_selection_pop_gebv_file($c);
-    my $sel_gebv = $c->stash->{selection_gebv_file};
+    my @files_list;
 
-    my $file_list = join ("\t",
-                          $training_gebv,
-			  $sel_gebv
-	);
-     
+    foreach my $trait_id (uniq(@{$c->stash->{selection_traits}}))    
+    {
+	$c->stash->{trait_id} = $trait_id;
+	$self->get_training_pop_gebv_file($c);
+	my $training_gebv = $c->stash->{training_gebv_file};
+
+	$self->get_selection_pop_gebv_file($c);
+	my $sel_gebv = $c->stash->{selection_gebv_file};
+
+	push @files_list, $training_gebv, $sel_gebv;
+    }
+
+    my $files = join("\t", @files_list);
+    
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
    
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
     my $name = "boxplot_input_files_${boxplot_id}";
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, $files);
     
     $c->stash->{boxplot_input_files} = $tempfile;
 
