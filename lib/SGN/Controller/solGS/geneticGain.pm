@@ -9,12 +9,12 @@ it under the same terms as Perl itself.
 
 =head1 DESCRIPTION
 
-SGN::Controller::solGS::gebvsComparison - Controller for comparing GEBVs of training and selection populations
+SGN::Controller::solGS::geneticGain- Controller for comparing GEBVs of training and selection populations
 
 =cut
 
 
-package SGN::Controller::solGS::gebvsComparison;
+package SGN::Controller::solGS::geneticGain;
 
 use Moose;
 use namespace::autoclean;

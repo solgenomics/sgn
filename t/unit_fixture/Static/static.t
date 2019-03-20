@@ -216,7 +216,7 @@ $mech->get_ok($_) for
         /js/solGS/linePlot.js
         /js/solGS/histogram.js
         /js/solGS/normalDistribution.js
-        /js/solGS/gebvsComparison.js
+        /js/solGS/geneticGain.js
         /js/solGS/selectionIndex.js
         /js/solGS/ajaxAutocomplete.js
         /js/solGS/selectionPopulations.js
