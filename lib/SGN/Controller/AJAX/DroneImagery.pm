@@ -438,40 +438,47 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my $plot_polygon_original_background_removed_tgi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_vari_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
+    my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
-    my $observation_unit_polygon_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id_list=>[
-            $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id,
-            $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id,
-            $plot_polygon_tgi_stitched_drone_images_cvterm_id,
-            $plot_polygon_vari_stitched_drone_images_cvterm_id,
-            $plot_polygon_ndvi_stitched_drone_images_cvterm_id,
-            $plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id,
-            $plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id,
-            $plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id,
-            $plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id,
-            $plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id,
-            $plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id,
-            $plot_polygon_original_background_removed_tgi_mask_images_cvterm_id,
-            $plot_polygon_original_background_removed_vari_mask_images_cvterm_id,
-            $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id
-        ]
-    });
-    my ($observation_unit_polygon_result, $observation_unit_polygon_total_count) = $observation_unit_polygon_search->search();
-    #print STDERR Dumper $observation_unit_polygon_result;
+    my @project_image_type_id_list = (
+        $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id, $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_nir_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_mir_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_fir_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id,
+        $plot_polygon_tgi_stitched_drone_images_cvterm_id,
+        $plot_polygon_vari_stitched_drone_images_cvterm_id,
+        $plot_polygon_ndvi_stitched_drone_images_cvterm_id,
+        $plot_polygon_background_removed_tgi_stitched_drone_images_cvterm_id,
+        $plot_polygon_background_removed_vari_stitched_drone_images_cvterm_id,
+        $plot_polygon_background_removed_ndvi_stitched_drone_images_cvterm_id,
+        $plot_polygon_original_background_removed_thresholded_tgi_mask_images_cvterm_id,
+        $plot_polygon_original_background_removed_thresholded_vari_mask_images_cvterm_id,
+        $plot_polygon_original_background_removed_thresholded_ndvi_mask_images_cvterm_id,
+        $plot_polygon_original_background_removed_tgi_mask_images_cvterm_id,
+        $plot_polygon_original_background_removed_vari_mask_images_cvterm_id,
+        $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id
+    );
+    my $sql = join ("," , @project_image_type_id_list);
+    my $q = "SELECT drone_run.project_id, project_image_type.name 
+        FROM project AS drone_run_band
+        JOIN project_relationship AS drone_run_band_rel ON(drone_run_band.project_id=drone_run_band_rel.subject_project_id AND drone_run_band_rel.type_id=$drone_run_band_drone_run_relationship_id)
+        JOIN project AS drone_run ON(drone_run.project_id=drone_run_band_rel.object_project_id)
+        JOIN phenome.project_md_image AS project_image ON(drone_run_band.project_id=project_image.project_id)
+        JOIN cvterm AS project_image_type ON(project_image_type.cvterm_id=project_image.type_id)
+        WHERE project_image.type_id in ($sql);";
 
-    my @return;
+    #print STDERR Dumper $q;
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+
     my %unique_drone_runs;
-    foreach (@$observation_unit_polygon_result) {
-        $unique_drone_runs{$_->{drone_run_project_id}}->{$_->{project_image_type_name}}++;
-        $unique_drone_runs{$_->{drone_run_project_id}}->{total_plot_image_count}++;
+    while (my ($drone_run_project_id, $project_image_type_name) = $h->fetchrow_array()) {
+        $unique_drone_runs{$drone_run_project_id}->{$project_image_type_name}++;
+        $unique_drone_runs{$drone_run_project_id}->{total_plot_image_count}++;
     }
     #print STDERR Dumper \%unique_drone_runs;
 
@@ -3251,6 +3258,7 @@ sub _perform_phenotype_automated {
         foreach my $phenotype_method (@$phenotype_types) {
             foreach my $plot_polygons_type (@possible_plot_polygon_types) {
                 foreach my $channel (0..2) {
+                    print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type, $channel];
                     my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $channel, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
                     if ($return->{error}){
                         print STDERR Dumper $return->{error};
@@ -3313,10 +3321,7 @@ sub drone_imagery_generate_phenotypes_GET : Args(0) {
     my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return;
-    foreach my $phenotype_method (@$phenotype_methods) {
-        $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_method, $user_id, $user_name, $user_role);
-    }
+    my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_methods, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -3421,7 +3426,7 @@ sub _perform_phenotype_calculation {
     my $channel_1_denoised_original_tir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 in Denoised Original Thermal IR Image with Background Removed via Threshold|ISOL:0000059')->cvterm_id;
 
     my $drone_run_band_project_type_cvterm_id;
-    print STDERR Dumper $drone_run_band_project_type;
+    #print STDERR Dumper $drone_run_band_project_type;
 
     if ($drone_run_band_project_type eq 'Black and White Image') {
         $drone_run_band_project_type_cvterm_id = $bw_cvterm_id;
@@ -3455,8 +3460,8 @@ sub _perform_phenotype_calculation {
     }
 
     my $drone_run_band_plot_polygons_preprocess_cvterm_id;
-    print STDERR Dumper $plot_polygons_type;
-    print STDERR Dumper $image_band_selected;
+    #print STDERR Dumper $plot_polygons_type;
+    #print STDERR Dumper $image_band_selected;
 
     if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
         if ($image_band_selected eq '0') {
@@ -3649,59 +3654,6 @@ sub _perform_phenotype_calculation {
         }
     }
 
-    my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
-        object => [],
-        attribute => [$drone_run_band_project_type_cvterm_id],
-        method => [],
-        unit => [],
-        trait => [$non_zero_pixel_count_cvterm_id, $total_pixel_sum_cvterm_id, $mean_pixel_value_cvterm_id, $harmonic_mean_pixel_value_cvterm_id, $median_pixel_value_cvterm_id, $pixel_variance_cvterm_id, $pixel_standard_dev_cvterm_id, $pixel_pstandard_dev_cvterm_id, $minimum_pixel_value_cvterm_id, $maximum_pixel_value_cvterm_id, $minority_pixel_value_cvterm_id, $minority_pixel_count_cvterm_id, $majority_pixel_value_cvterm_id, $majority_pixel_count_cvterm_id, $pixel_group_count_cvterm_id],
-        tod => [$drone_run_band_plot_polygons_preprocess_cvterm_id],
-        toy => [$time_cvterm_id],
-        gen => [],
-    });
-    my $existing_traits = $traits->{existing_traits};
-    my $new_traits = $traits->{new_traits};
-    my %new_trait_names;
-    foreach (@$new_traits) {
-        my $components = $_->[0];
-        $new_trait_names{$_->[1]} = join ',', @$components;
-    }
-
-    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-    my $new_terms = $onto->store_composed_term(\%new_trait_names);
-
-    my $non_zero_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$non_zero_pixel_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $total_pixel_sum_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$total_pixel_sum_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $mean_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$mean_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $harmonic_mean_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$harmonic_mean_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $median_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$median_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $pixel_variance_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_variance_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $pixel_standard_dev_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_standard_dev_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $pixel_pstandard_dev_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_pstandard_dev_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $minimum_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minimum_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $maximum_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$maximum_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $minority_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minority_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $minority_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minority_pixel_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $majority_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$majority_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $majority_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$majority_pixel_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-    my $pixel_group_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_group_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
-
-    my $non_zero_pixel_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $non_zero_pixel_count_composed_cvterm_id, 'extended');
-    my $total_pixel_sum_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $total_pixel_sum_composed_cvterm_id, 'extended');
-    my $mean_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $mean_pixel_value_composed_cvterm_id, 'extended');
-    my $harmonic_mean_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $harmonic_mean_pixel_value_composed_cvterm_id, 'extended');
-    my $median_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $median_pixel_value_composed_cvterm_id, 'extended');
-    my $pixel_variance_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_variance_composed_cvterm_id, 'extended');
-    my $pixel_standard_dev_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_standard_dev_composed_cvterm_id, 'extended');
-    my $pixel_pstandard_dev_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_pstandard_dev_composed_cvterm_id, 'extended');
-    my $minimum_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $minimum_pixel_value_composed_cvterm_id, 'extended');
-    my $maximum_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $maximum_pixel_value_composed_cvterm_id, 'extended');
-    my $majority_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $minority_pixel_value_composed_cvterm_id, 'extended');
-    my $majority_pixel_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $minority_pixel_count_composed_cvterm_id, 'extended');
-    my $minority_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $majority_pixel_value_composed_cvterm_id, 'extended');
-    my $minority_pixel_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $majority_pixel_count_composed_cvterm_id, 'extended');
-    my $pixel_group_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_group_count_composed_cvterm_id, 'extended');
-
     my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -3717,6 +3669,62 @@ sub _perform_phenotype_calculation {
     if ($total_count == 0) {
         return {error => "No plot polygon images for this type $plot_polygons_type!"};
     } else {
+
+        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+            object => [],
+            attribute => [$drone_run_band_project_type_cvterm_id],
+            method => [],
+            unit => [],
+            trait => [$non_zero_pixel_count_cvterm_id, $total_pixel_sum_cvterm_id, $mean_pixel_value_cvterm_id, $harmonic_mean_pixel_value_cvterm_id, $median_pixel_value_cvterm_id, $pixel_variance_cvterm_id, $pixel_standard_dev_cvterm_id, $pixel_pstandard_dev_cvterm_id, $minimum_pixel_value_cvterm_id, $maximum_pixel_value_cvterm_id, $minority_pixel_value_cvterm_id, $minority_pixel_count_cvterm_id, $majority_pixel_value_cvterm_id, $majority_pixel_count_cvterm_id, $pixel_group_count_cvterm_id],
+            tod => [$drone_run_band_plot_polygons_preprocess_cvterm_id],
+            toy => [$time_cvterm_id],
+            gen => [],
+        });
+        my $existing_traits = $traits->{existing_traits};
+        my $new_traits = $traits->{new_traits};
+        print STDERR Dumper $new_traits;
+        print STDERR Dumper $existing_traits;
+        my %new_trait_names;
+        foreach (@$new_traits) {
+            my $components = $_->[0];
+            $new_trait_names{$_->[1]} = join ',', @$components;
+        }
+
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        my $new_terms = $onto->store_composed_term(\%new_trait_names);
+
+        my $non_zero_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$non_zero_pixel_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $total_pixel_sum_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$total_pixel_sum_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $mean_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$mean_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $harmonic_mean_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$harmonic_mean_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $median_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$median_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $pixel_variance_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_variance_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $pixel_standard_dev_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_standard_dev_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $pixel_pstandard_dev_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_pstandard_dev_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $minimum_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minimum_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $maximum_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$maximum_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $minority_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minority_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $minority_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$minority_pixel_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $majority_pixel_value_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$majority_pixel_value_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $majority_pixel_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$majority_pixel_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+        my $pixel_group_count_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$pixel_group_count_cvterm_id, $drone_run_band_project_type_cvterm_id, $drone_run_band_plot_polygons_preprocess_cvterm_id, $time_cvterm_id]);
+
+        my $non_zero_pixel_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $non_zero_pixel_count_composed_cvterm_id, 'extended');
+        my $total_pixel_sum_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $total_pixel_sum_composed_cvterm_id, 'extended');
+        my $mean_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $mean_pixel_value_composed_cvterm_id, 'extended');
+        my $harmonic_mean_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $harmonic_mean_pixel_value_composed_cvterm_id, 'extended');
+        my $median_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $median_pixel_value_composed_cvterm_id, 'extended');
+        my $pixel_variance_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_variance_composed_cvterm_id, 'extended');
+        my $pixel_standard_dev_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_standard_dev_composed_cvterm_id, 'extended');
+        my $pixel_pstandard_dev_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_pstandard_dev_composed_cvterm_id, 'extended');
+        my $minimum_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $minimum_pixel_value_composed_cvterm_id, 'extended');
+        my $maximum_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $maximum_pixel_value_composed_cvterm_id, 'extended');
+        my $majority_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $minority_pixel_value_composed_cvterm_id, 'extended');
+        my $majority_pixel_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $minority_pixel_count_composed_cvterm_id, 'extended');
+        my $minority_pixel_value_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $majority_pixel_value_composed_cvterm_id, 'extended');
+        my $minority_pixel_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $majority_pixel_count_composed_cvterm_id, 'extended');
+        my $pixel_group_count_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $pixel_group_count_composed_cvterm_id, 'extended');
+
         my $temp_images_subdir = '';
         my $temp_results_subdir = '';
         my $calculate_phenotypes_script = '';
@@ -3781,7 +3789,7 @@ sub _perform_phenotype_calculation {
         my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
         my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
-        print STDERR Dumper $cmd;
+        #print STDERR Dumper $cmd;
         my $status = system($cmd);
 
         my $time = DateTime->now();
