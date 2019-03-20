@@ -18,7 +18,7 @@ This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
-Bryan Ellerbrock
+Nicolas Morales
 
 =head1 COPYRIGHT & LICENSE
 

@@ -58,7 +58,7 @@ sub upload_genotype_verify_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -67,7 +67,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
