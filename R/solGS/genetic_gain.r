@@ -39,13 +39,15 @@ message('boxplot file: ', boxplotFile)
 plotDataFile <-  grep("genetic_gain_data", outputFiles, value = TRUE)
 message('boxplot file: ', plotDataFile)
 
-trGebv <- c()
+trGebv   <- c()
+gebvsCol <- 'GEBVs'
+
 for (trGebvFile in trGebvFiles) {
     gebv <- data.frame(fread(trGebvFile))
     trait <- names(gebv)[2]
-    colnames(gebv)[2] <- 'Gebvs'
+    colnames(gebv)[2] <- gebvsCol
     gebv$trait <- trait
-    trGebv <- bind_rows(trGebv, gebv)=    
+    trGebv <- bind_rows(trGebv, gebv)   
 }
 
 trGebv$pop <- 'training'
@@ -54,7 +56,7 @@ slGebv <- c()
 for (slGebvFile in slGebvFiles) { 
     gebv <- data.frame(fread(slGebvFile))
     trait <- names(gebv)[2]
-    colnames(gebv)[2] <- 'Gebvs'
+    colnames(gebv)[2] <- gebvsCol
     gebv$trait <- trait
     slGebv <- bind_rows(slGebv, gebv)   
 }
@@ -67,26 +69,29 @@ boxplotData$trait <- as.factor(boxplotData$trait)
 
 boxplotData$pop <- with(boxplotData, relevel(pop, "training"))
 
-
 ## pop       <- 'pop'
 ## training  <- 'training'
 ## selection <- 'selection'
 ## trait     <- 'trait'
+## Gebvs     <- 'GEBVs'
 
 bp <- ggplot(boxplotData,
-             aes(y=Gebvs, x=pop, fill=pop)) +
+             aes(y=GEBVs, x=pop, fill=pop)) +
              geom_boxplot(width=0.4) +
-             stat_summary(geom="text", fun.y=quantile,
+             stat_summary(geom="text", fun.y=quantile, size=5,
              aes(label=sprintf("%1.3f", ..y..), color=pop),
-             position=position_nudge(x=0.35), size=5) +                      
-             facet_wrap(~trait) +
+             position=position_nudge(x=0.35)) +
+             theme_bw() +
+             facet_wrap(~trait, ncol=2, scales="free") +
              theme(legend.position="none",
-               axis.text=element_text(color='blue', size=12),
+               axis.text=element_text(color='blue', size=12,  face='bold'),
                axis.title.y=element_text(color='blue'),
-               axis.title.x=element_blank()) +                  
-            theme_bw()
+               axis.title.x=element_blank(),
+               strip.text.x=element_text(color='blue', face='bold'))
 
-png(boxplotFile, width=960)
+wid <- 480 * if(length(trGebvFiles) > 1) 2 else 1;
+
+png(boxplotFile, width=wid)
 bp
 dev.off()
 

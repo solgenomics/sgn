@@ -108,13 +108,10 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{trait_id}         = $trait_id;
-
   
-    my $page = $c->req->referer;
-
-    print STDERR "\npage: $page -- trait id: $trait_id\n";
-    
+    my $page = $c->req->referer;    
     my $selection_pop_traits;
+    
     if ($page =~ /solgs\/traits\/all\//) {
 	
 	$c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
