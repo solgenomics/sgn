@@ -46,7 +46,7 @@ my $training_traits_ids = join(',', @$analyzed_traits_ids)  if $analyzed_traits_
 <&| /page/info_section.mas, 
   collapsible => 1, 
    collapsed  => 0, 
-  title      => "Check Genetic Gain"
+  title      => "Check Expected Genetic Gain"
   &> 
 
 
