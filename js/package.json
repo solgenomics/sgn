@@ -31,6 +31,8 @@
     "webpack-command": "^0.4.2"
   },
   "dependencies": {
+    "@solgenomics/brapi-pedigree-viewer": "^2.0.0",
+    "@solgenomics/brapijs": "^0.3.6",
     "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git"
   },
   "engines": {
