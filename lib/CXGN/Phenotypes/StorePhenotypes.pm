@@ -399,6 +399,7 @@ sub store {
 
     my %experiment_ids;
     my @stored_details;
+    my %nd_experiment_md_images;
 
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
 
@@ -442,6 +443,7 @@ sub store {
                 my $timestamp = $value_array->[1];
                 $operator = $value_array->[2] ? $value_array->[2] : $operator;
                 my $observation = $value_array->[3];
+                my $image_id = $value_array->[4];
                 my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
                 if (defined($trait_value) && length($trait_value)) {
@@ -492,6 +494,9 @@ sub store {
                         while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
                             push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_id];
                             $experiment_ids{$nd_experiment_id}=1;
+                            if ($image_id) {
+                                $nd_experiment_md_images{$nd_experiment_id} = $image_id;
+                            }
                         }
 
                     } else {
@@ -515,6 +520,9 @@ sub store {
                         });
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
+                        if ($image_id) {
+                            $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+                        }
                     }
 
                     my %details = (
@@ -565,6 +573,9 @@ sub store {
 
     if ($archived_file) {
         $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
+    }
+    if (scalar(keys %nd_experiment_md_images) > 0) {
+        $self->save_archived_images_metadata(\%nd_experiment_md_images);
     }
 
     return ($error_message, $success_message, \@stored_details);
@@ -684,6 +695,17 @@ sub save_archived_file_metadata {
             });
         $experiment_files->insert();
         #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+    }
+}
+
+sub save_archived_images_metadata {
+    my $self = shift;
+    my $nd_experiment_md_images = shift;
+
+    my $q = "INSERT into phenome.nd_experiment_md_images (nd_experiment_id, image_id) VALUES (?, ?);";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    while (my ($nd_experiment_id, $image_id) = each %$nd_experiment_md_images) {
+        $h->execute($nd_experiment_id, $image_id);
     }
 }
 

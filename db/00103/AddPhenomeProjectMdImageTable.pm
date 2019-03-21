@@ -174,6 +174,16 @@ CREATE TABLE if not exists phenome.project_md_image (
 );
 grant select,insert on table phenome.project_md_image to web_usr;
 grant usage on phenome.project_md_image_project_md_image_id_seq to web_usr;
+
+CREATE TABLE if not exists phenome.nd_experiment_md_images (
+    nd_experiment_md_images_id serial PRIMARY KEY,
+    nd_experiment_id integer NOT NULL,
+    image_id integer NOT NULL,
+    constraint nd_experiment_md_images_nd_experiment_id_fkey FOREIGN KEY (nd_experiment_id) REFERENCES nd_experiment (nd_experiment_id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION,
+    constraint nd_experiment_md_images_image_id_fkey FOREIGN KEY (image_id) REFERENCES metadata.md_image (image_id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+grant select,insert on table phenome.nd_experiment_md_images to web_usr;
+grant usage on phenome.nd_experiment_md_images_nd_experiment_md_images_id_seq to web_usr;
 SQL
         $schema->storage->dbh->do($sql);
     };
