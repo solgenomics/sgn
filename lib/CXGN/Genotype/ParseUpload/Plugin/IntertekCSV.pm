@@ -283,20 +283,29 @@ sub _parse_with_plugin {
                 if ($ref && $alt) {
 
                     my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
+                    my @gt_vcf_genotype;
+                    my $gt_dosage = 0;
                     foreach my $a (@alleles){
-                        # if ($a eq $ref) {
-                        #     push @vcf_genotype, '0';
-                        # }
-                        # if ($a eq $alt) {
-                        #     push @vcf_genotype, '1';
-                        # }
+                        my $gt_val;
+                        if ($a eq $ref) {
+                            $gt_val = 0;
+                            push @gt_vcf_genotype, $gt_val;
+                        }
+                        if ($a eq $alt) {
+                            $gt_val = 1;
+                            push @gt_vcf_genotype, $gt_val;
+                        }
+                        $gt_dosage = $gt_dosage + $gt_val;
                         push @vcf_genotype, $a;
                     }
 
                     my $vcf_genotype_string = join '/', @vcf_genotype;
-                    $genotype_obj = { 'GT' => $vcf_genotype_string };
+                    my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
+                    $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
+                    $genotype_obj = { 'NT' => $vcf_genotype_string };
+                    $genotype_obj = { 'DS' => $gt_dosage };
                 } else {
-                    $genotype_obj = { 'AL' => \@alleles };
+                    die "There should always be a ref and alt according to validation above\n";
                 }
 
                 $genotype_info{$sample_id_with_lab_id}->{$marker_name} = $genotype_obj;

@@ -4,6 +4,7 @@ use Moose::Role;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
+use Math::Round qw(round);
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -259,19 +260,21 @@ sub _parse_with_plugin {
                 #    $value{@format[$fv]} = @fvalues[$fv];
                 #}
                 @value{@format} = @fvalues;
+                my $gt_dosage = 0;
                 if (exists($value{'GT'})) {
                     my @nucleotide_genotype;
                     my $gt = $value{'GT'};
                     my $separator = '/';
                     my @alleles = split (/\//, $gt);
-                    if (scalar(@alleles) < 1){
+                    if (scalar(@alleles) <= 1){
                         @alleles = split (/\|/, $gt);
-                        if (scalar(@alleles) > 0) {
+                        if (scalar(@alleles) > 1) {
                             $separator = '|';
                         }
                     }
                     foreach (@alleles) {
                         if (looks_like_number($_)) {
+                            $gt_dosage = $gt_dosage + $_;
                             my $index = $_ + 0;
                             if ($index == 0) {
                                 push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
@@ -282,7 +285,13 @@ sub _parse_with_plugin {
                             push @nucleotide_genotype, $_;
                         }
                     }
-                    $value{'GT'} = join $separator, @nucleotide_genotype;
+                    $value{'NT'} = join $separator, @nucleotide_genotype;
+                }
+                if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
+                    $value{'DS'} = $gt_dosage;
+                }
+                if (looks_like_number($value{'DS'})) {
+                    $value{'DS'} = round($value{'DS'});
                 }
                 $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
             }

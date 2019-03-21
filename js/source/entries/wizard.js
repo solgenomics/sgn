@@ -77,6 +77,7 @@ export function WizardSetup(main_id){
       formData.append('data', '');
       return fetch(window.location.origin+"/ajax/breeder/search",{
         method:"POST",
+        credentials: 'include',
         body:formData
       }).then(resp=>resp.json())
         .then(json=>{
@@ -102,6 +103,7 @@ export function WizardSetup(main_id){
       formData.append('categories[]', target);
       return fetch(window.location.origin+"/ajax/breeder/search",{
         method:"POST",
+        credentials: 'include',
         body:formData
       }).then(resp=>resp.json())
         .then(json=>{
@@ -112,9 +114,12 @@ export function WizardSetup(main_id){
     // // Returns type and list of of unique names or objects with a "name" key 
     // {"type":"typeID","items":["name","name",...]|[{"name":"example"},...]}
     .load_list((listID)=>{
-      return fetch(window.location.origin+`/list/desynonymize?list_id=${listID}`)
+      return fetch(window.location.origin+`/list/desynonymize?list_id=${listID}`,{
+        credentials: 'include'
+      })
         .then(resp=>resp.json())
         .then(list_data=>{
+        if(list_data.error) alert(list_data.error)
         var l = {
           type:list_data.list_type,
           items:list_data.list||[]
@@ -166,7 +171,10 @@ export function WizardSetup(main_id){
 export function updateStatus(element) {
   return fetch(
     document.location.origin+'/ajax/breeder/check_status',
-    {method: 'POST'}
+    {
+      method: 'POST',
+      credentials: 'include'
+    }
   ).then(resp=>resp.json())
    .then(json=>{
       var innerhtml = "";
@@ -192,7 +200,10 @@ export function refreshMatviews(matview_select, button){
   d3.select(button).attr("disabled",true);
   fetch(
     document.location.origin+`/ajax/breeder/refresh?matviews=${matview_select}`,
-    {method: 'POST'}
+    {
+      method: 'POST',
+      credentials: 'include'
+    }
   ).then(resp=>resp.json())
    .then(json=>{
       if (json.error) {

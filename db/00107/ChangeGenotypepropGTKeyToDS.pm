@@ -3,7 +3,7 @@
 
 =head1 NAME
 
- ChangeGenotypepropGTKeyToNucleotides.pm
+ ChangeGenotypepropGTKeyToDS.pm
 
 =head1 SYNOPSIS
 
@@ -13,7 +13,8 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch converts the genotypeprop GT key from the VCF representation of '0/1' to the nucleotide representation of 'C/T' using the nd_protocolprop 'ref' and 'alt' information in the database.
+This patch converts the genotypeprop GT key from the nucleotide representation of 'C/T' to the VCF genotype representation of '0/1' and adds a key NT that contains the nucleotide representation of 'C/T' and adds a DS key if the DS key is not there by summing the GT, and rounds the DS key if it exists.
+
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -30,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package ChangeGenotypepropGTKeyToNucleotides;
+package ChangeGenotypepropGTKeyToDS;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -38,6 +39,8 @@ use SGN::Model::Cvterm;
 use Try::Tiny;
 use JSON;
 use Scalar::Util qw(looks_like_number);
+use Math::Round qw(round);
+
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -85,35 +88,57 @@ sub patch {
             my %new_genotypeprop_hash;
             while (my ($marker_name, $geno) = each %$genotypeprop_hash) {
                 my $gt = $geno->{'GT'};
+                my $gt_dosage;
+                my $gt_not_empty;
+
                 if ($gt) {
                     my $marker_info = $markers_hash->{$marker_name};
                     my $ref = $marker_info->{'ref'};
                     my $alt = $marker_info->{'alt'};
                     my @separated_alts = split ',', $alt;
+                    my @complete_alleles= ($ref, @separated_alts);
+                    my %allele_lookup;
+                    my $index = 0;
+                    foreach (@complete_alleles) {
+                        $allele_lookup{$_} = $index;
+                        $index++;
+                    }
+                    $allele_lookup{'.'} = '.';
                     
                     my @nucleotide_genotype;
+                    my @gt_genotype;
+
                     my $separator = '/';
                     my @alleles = split (/\//, $gt);
-                    if (scalar(@alleles) < 1){
+                    if (scalar(@alleles) <= 1){
                         @alleles = split (/\|/, $gt);
-                        if (scalar(@alleles) > 0) {
+                        if (scalar(@alleles) > 1) {
                             $separator = '|';
                         }
                     }
-                    foreach (@alleles) {
+                    foreach (@alleles) { ### ['A', 'A'] OR [1, 1] OR ['.', '.']
                         if (looks_like_number($_)) {
-                            my $index = $_ + 0;
-                            if ($index == 0) {
-                                push @nucleotide_genotype, $ref; #Using Reference Allele
-                            } else {
-                                push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
-                            }
+                            push @gt_genotype, $_;
+                            $gt_dosage = $gt_dosage + $_;
                         } else {
                             push @nucleotide_genotype, $_;
+                            push @gt_genotype, $allele_lookup{$_}; #convert 'A' => 0
+                        }
+                        
+                        if ($_ ne '.') {
+                            $gt_not_empty = 1;
                         }
                     }
-                    $geno->{'GT'} = join $separator, @nucleotide_genotype;
+                    $geno->{'GT'} = join $separator, @gt_genotype;
+                    $geno->{'NT'} = join $separator, @nucleotide_genotype;
                 }
+                if ($gt_not_empty && !looks_like_number($geno->{'DS'})) {
+                    $geno->{'DS'} = $gt_dosage;
+                }
+                if (looks_like_number($geno->{'DS'})) {
+                    $geno->{'DS'} = round($geno->{'DS'});
+                }
+
                 $new_genotypeprop_hash{$marker_name} = $geno;
             }
             my $new_genotypeprop_string = encode_json \%new_genotypeprop_hash;

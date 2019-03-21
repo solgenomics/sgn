@@ -60,7 +60,8 @@ export function WizardDatasets(main_id,wizard){
       })
       console.log(document.location.origin+'/ajax/dataset/save'+params);
       fetch(document.location.origin+'/ajax/dataset/save'+params,{
-        method:'post'
+        method:'post',
+        credentials: 'include'
       }).then(()=>{
         d3.select(this).attr("disabled",null);
       })
