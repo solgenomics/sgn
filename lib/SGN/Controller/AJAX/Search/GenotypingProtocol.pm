@@ -40,7 +40,13 @@ sub genotyping_protocol_search_GET : Args(0) {
     my $limit;
     my $offset;
 
-    my $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, \@protocol_list, \@accession_list, \@tissue_sample_list, $limit, $offset, \@genotyping_data_project_list);
+    my $protocol_search_result;
+    if (scalar(@protocol_list)>0 || scalar(@accession_list)>0 || scalar(@tissue_sample_list)>0 || scalar(@genotyping_data_project_list)>0) {
+        $protocol_search_result = CXGN::Genotype::Protocol::list($bcs_schema, \@protocol_list, \@accession_list, \@tissue_sample_list, $limit, $offset, \@genotyping_data_project_list);
+    } else {
+        $protocol_search_result = CXGN::Genotype::Protocol::list_simple($bcs_schema);
+    }
+
     my @result;
     foreach (@$protocol_search_result){
         my $num_markers = scalar keys %{$_->{markers}};
@@ -50,6 +56,7 @@ sub genotyping_protocol_search_GET : Args(0) {
             push @trimmed, $_;
         }
         my $description = join '<br/>', @trimmed;
+        $description = $description ? $description : 'Not set. Please reload this protocol using new genotype protocol format.';
         push @result,
           [
             "<a href=\"/breeders_toolbox/protocol/$_->{protocol_id}\">$_->{protocol_name}</a>",
