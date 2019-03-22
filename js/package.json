@@ -26,12 +26,14 @@
     "nock": "^10.0.6",
     "node-fetch": "^2.3.0",
     "source-map-support": "^0.5.10",
+    "style-loader": "^0.23.1",
     "tape": "^4.10.1",
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^4.29.5",
     "webpack-command": "^0.4.2"
   },
   "dependencies": {
+    "@solgenomics/brapi-graphical-filtering": "^1.0.0",
     "@solgenomics/brapi-pedigree-viewer": "^2.0.0",
     "@solgenomics/brapijs": "^0.3.6",
     "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git"

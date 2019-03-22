@@ -9,13 +9,9 @@ $ajaxRequestString => ""
 
 </%args>
 
-<& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
-
 <& '/page/page_title.mas', title => "Graphical Filtering" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
-
-<div id="select_div" class="row" hidden="true">
+<div id="select_div" class="row">
   <!-- form for selecting a list -->
   <p>Choose a list of <!--plant, plots, or -->trials to filter.</p>
   <form class="tc-form">
@@ -63,11 +59,18 @@ $ajaxRequestString => ""
   </&>
 </div>
 
+<!-- /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] -->
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min'] &>
+<& '/util/import_javascript.mas', entries => [ 'graphicalfiltering' ] &>
 <script>
 
 (function() {
-  'use strict';
-  var currentGFilter = null;
+  
+  var gf = jsMod["graphicalfiltering"].init(
+    "#filter_div",
+    "#filtered_results"
+  );
+  
   var list = new CXGN.List();
   
   $('#accession_group').change(function(){$('#type_list_select').trigger("change");})
@@ -75,8 +78,7 @@ $ajaxRequestString => ""
   $('#type_list_select').change(function(){
     var list_id = $("#filter_list_select").val(),
         unit = $("#type_list_select").val(),
-        group = $('#accession_group').is(":checked"),
-        brapi = BrAPI("/brapi/v1");
+        group = $('#accession_group').is(":checked");
     if (!unit) return;
     var list_contents = list.transform2Ids(list_id),
         list_type = list.getListType(list_id);
@@ -86,94 +88,46 @@ $ajaxRequestString => ""
         alert("not yet implimented");
         break;
       case 'trials':
-        updateGFilter(group,
-          brapi.phenotypes_search({
-            "studyDbIds": list_contents,
-            "observationLevel": unit,
-            "pageSize": 100000
-          })
-        );
+        $("#filter_div").hide();
+        $("#filtered_results_wrap").hide();
+        $("#results-loading-spinner").show();
+        gf.update(group,{
+          "studyDbIds": list_contents,
+          "observationLevel": unit
+        }).then(function(){
+          $("#filter_div").show();
+          $("#filtered_results_wrap").show();
+          $("#results-loading-spinner").hide();
+        });
         break;
     }
   });
 
-  function updateGFilter(group,brapi_node){
-    if (currentGFilter!=null){
-      $("#filtered_results").DataTable().destroy();
-      $("#filtered_results").html("");
-    }
-    $('#filtered_results_wrap').hide();
-    $('#filter_div').hide();
-    $('#results-loading-spinner').show();
-    brapi_node.all(function(){
-      $('#filtered_results_wrap').show();
-      $('#filter_div').show();
-      $('#results-loading-spinner').hide();
-    })
-    currentGFilter = GraphicalFilter(
-        brapi_node,
-        obsTraits,
-        group? groupCols : obsCols,
-        group? ["Accession"] : ["Study","Unit","Accession"],
-        group? groupByAccession : undefined
-      );
-    currentGFilter.draw("#filter_div","#filtered_results");
-  }
-
-  $(document).ready(function(){
-    
-    // set up and show the list select div.
-    $('#select_div').show();
-
-    // set up list
-    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], 'Choose a List:');
-    $('#filter_list_select_container').html(filter_list_select_html);
-    $('#filter_list_select>option:first-of-type').prop('disabled', true);
-    
-    $('#filter_list_select').change(function(){
-      $(this).prop('disabled', true);
-      var list_id = $(this).val();
-      var list_type = list.getListType(list_id);
-      $(this).prop('disabled', false);
-      $('#type_list_select').prop('disabled', false);
-      switch (list_type) {
-        case 'trials':
-          $('#type_list_select').prop('val', "");
-          break;
-        case 'plots':
-          $('#type_list_select').val("plot").trigger("change");
-          $('#type_list_select').prop('disabled', true);
-          break;
-        case 'plants':
-          $('#type_list_select').val("plant").trigger("change");
-          $('#type_list_select').prop('disabled', true);
-          break;  
-      }
-    });
-  });
+  // set up list
+  var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], 'Choose a List:');
+  $('#filter_list_select_container').html(filter_list_select_html);
+  $('#filter_list_select>option:first-of-type').prop('disabled', true);
   
-  function obsTraits(d) { // traits/values
-    var traits = {}
-    d.observations.forEach(function(obs){
-      traits[obs.observationVariableName] = obs.value;
-    });
-    return traits;
-  }
-  function obsCols(d){ // header columns accessor
-    return {
-      'Study':d.studyName,
-      'Unit':d.observationUnitName,
-      'Accession':d.germplasmName,
+  $('#filter_list_select').change(function(){
+    $(this).prop('disabled', true);
+    var list_id = $(this).val();
+    var list_type = list.getListType(list_id);
+    $(this).prop('disabled', false);
+    $('#type_list_select').prop('disabled', false);
+    switch (list_type) {
+      case 'trials':
+        $('#type_list_select').prop('val', "");
+        break;
+      case 'plots':
+        $('#type_list_select').val("plot").trigger("change");
+        $('#type_list_select').prop('disabled', true);
+        break;
+      case 'plants':
+        $('#type_list_select').val("plant").trigger("change");
+        $('#type_list_select').prop('disabled', true);
+        break;  
     }
-  }
-  function groupCols(d) {
-    return {
-      'Accession':d.germplasmName
-    }
-  }
-  function groupByAccession(d) {
-    return d.germplasmDbId
-  }
+  });
   
   // set up the form for saving results as a list
   $('#new-list-form').submit(function () {

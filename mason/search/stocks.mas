@@ -429,61 +429,64 @@ jQuery(document).ready(function () {
 
 
     // For graphical filtering, using same search params
-    var run = false;
-    jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
-        var stock_type = jQuery('#stock_type_select option:selected').text();
-        if (stock_type == 'accession'){
-            jQuery.ajax ({
-                url : '/ajax/search/stocks',
-                data : {
-                    minimal_info : 1,
-                    any_name : jQuery('#any_name').val(),
-                    any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                    stock_type : jQuery('#stock_type_select option:selected').text(),
-                    organism : jQuery('#organism_select').val(),
-                    person : jQuery('#person').val(),
-                    trait : jQuery('#trait').val(),
-                    minimum_trait_value : jQuery('#minimum_trait_value').val(),
-                    maximum_trait_value : jQuery('#maximum_trait_value').val(),
-                    project : jQuery('#project').val(),
-                    location : jQuery('#location').val(),
-                    year : jQuery('#year').val(),
-                    breeding_program : jQuery('#breeding_program').val(),
-                    editable_stockprop_values : JSON.stringify(editable_stockprops_search)
-                },
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                    jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
-                },
-                success: function(response){
-                    //console.log(response);
-                    jQuery("#working_modal").modal("hide");
-                    var stock_ids = [];
-                    for (var i=0; i<response.data.length; i++){
-                        stock_ids.push(response.data[i][0]);
-                    }
+    if(jsMod["graphicalfiltering"]){
+      var run = false;
+      var gfilter = jsMod["graphicalfiltering"].init(
+        "#stock_search_graphical_filter_div",
+        "#stock_search_graphical_filter_results_div"
+      );
+      jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
+          var stock_type = jQuery('#stock_type_select option:selected').text();
+          if (stock_type == 'accession'){
+              jQuery.ajax ({
+                  url : '/ajax/search/stocks',
+                  data : {
+                      minimal_info : 1,
+                      any_name : jQuery('#any_name').val(),
+                      any_name_matchtype : jQuery('#any_name_matchtype').val(),
+                      stock_type : jQuery('#stock_type_select option:selected').text(),
+                      organism : jQuery('#organism_select').val(),
+                      person : jQuery('#person').val(),
+                      trait : jQuery('#trait').val(),
+                      minimum_trait_value : jQuery('#minimum_trait_value').val(),
+                      maximum_trait_value : jQuery('#maximum_trait_value').val(),
+                      project : jQuery('#project').val(),
+                      location : jQuery('#location').val(),
+                      year : jQuery('#year').val(),
+                      breeding_program : jQuery('#breeding_program').val(),
+                      editable_stockprop_values : JSON.stringify(editable_stockprops_search)
+                  },
+                  beforeSend: function() {
+                      jQuery("#working_modal").modal("show");
+                      jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
+                  },
+                  success: function(response){
+                      //console.log(response);
+                      jQuery("#working_modal").modal("hide");
+                      var stock_ids = [];
+                      for (var i=0; i<response.data.length; i++){
+                          stock_ids.push(response.data[i][0]);
+                      }
 
-                    if (run) {
-                        jQuery("#stock_search_graphical_filter_results_div").DataTable().destroy();
-                        jQuery("#stock_search_graphical_filter_results_div").html("");
-                    }
-                    run = true;
-                    params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
-                    loadBrAPIData("<% $c->config->{main_production_site_url} %>",params,function(response){
-                        useBrAPIData(response,true);
-                    });
+                      if (run) {
+                          jQuery("#stock_search_graphical_filter_results_div").DataTable().destroy();
+                          jQuery("#stock_search_graphical_filter_results_div").html("");
+                      }
+                      run = true;
+                      params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
+                      gfilter.update(true,params);
 
-                },
-                error: function(response){
-                    jQuery("#working_modal").modal("hide");
-                    alert("Error retrieving accessions in graphical filtering.");
-                }
-            });
-        } else {
-            jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
-        }
-    });
-
+                  },
+                  error: function(response){
+                      jQuery("#working_modal").modal("hide");
+                      alert("Error retrieving accessions in graphical filtering.");
+                  }
+              });
+          } else {
+              jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
+          }
+      });
+    }
 
 });
 
