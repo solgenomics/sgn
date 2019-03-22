@@ -211,10 +211,17 @@ my $parsed_data = $parser->parse_with_iterator();
 # }
 #print STDERR Dumper $parsed_data;
 
+my $protocolprop_info = $parser->extract_protocol_data();
+
+print STDERR Dumper($protocolprop_info);
+
 while (my $genotype = $parser->next()) {
-    print STDERR Dumper($genotype);
+    print STDERR "parsing next... ";
+    #print STDERR Dumper($genotype);
+    print STDERR "Done.\n";
 }
-    
+
+exit();    
 my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
 my $genotype_info = $parsed_data->{genotypes_info};
 my $protocol_info = $parsed_data->{protocol_info};

@@ -13,6 +13,7 @@ has 'ids' => (is => 'rw', isa => 'Ref');
 has 'refs' => (is => 'rw', isa => 'Ref');
 has 'alts' => (is => 'rw', isa => 'Ref');
 has 'qual' => (is => 'rw', isa => 'Ref');
+has 'filter' => (is => 'rw', isa => 'Ref');
 has 'info' => (is => 'rw', isa => 'Ref');
 has 'format' => (is => 'rw', isa => 'Ref');
 has '_fh' => (is => 'rw', isa => 'Ref');
@@ -34,7 +35,6 @@ sub _validate_with_plugin {
 
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
-    my @markers;
     my $line_count = 1;
 
     my $chroms = <$F>;
@@ -67,10 +67,10 @@ sub _validate_with_plugin {
     my @qual = split /\t/,$qual;
     $self->qual(\@qual);
     
-    # my $pass = <$F>;
-    # chomp($pass);
-    # my @pass = split /\t/, $pass;
-    # $self->pass(\@pass);
+    my $filter = <$F>;
+     chomp($filter);
+    my @filter = split /\t/, $filter;
+    $self->filter(\@filter);
     
     my $info = <$F>;
     chomp($info);
@@ -82,7 +82,7 @@ sub _validate_with_plugin {
     my @format = split /\t/, $format;
     $self->format(\@format);
     
-    print STDERR "marker count = ".scalar(@markers)."\n";
+    print STDERR "marker count = ".scalar(@ids)."\n";
     
     if ($chroms[0] ne '#CHROM'){
         push @error_messages, 'Line 1 must start with "#CHROM".';
@@ -102,7 +102,7 @@ sub _validate_with_plugin {
     if ($qual[0] ne 'QUAL'){
         push @error_messages, 'Line 6 must start with "QUAL".';
     }
-    if ($pass[0] ne 'FILTER'){
+    if ($filter[0] ne 'FILTER'){
         push @error_messages, 'Line 7 must start with "FILTER".';
     }
     if ($info[0] ne 'INFO'){
@@ -206,60 +206,85 @@ sub _parse_with_plugin {
     my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
+    foreach (1..9) { my $trash = <$F>; } # remove first 9 lines
     $self->_fh($F);
     
+    
+}
+
+sub extract_protocol_data {
+    my $self = shift;
+
+    my $marker_name;
+    my %protocolprop_info;
+    my $marker_info_p8;
+    
+    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
+
+    for (my $i=0; $i<@{$self->ids()}; $i++) { 
+	my $marker_info_p2 = $self->ids()->[$i];
+	my $marker_info_p8 = $self->format()->[$i];
+	if ($marker_info_p2 eq '.') {
+	    $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
+	} else {
+	    $marker_name = $self->ids()->[$i];
+	}
+	
+	my %marker = 
+	    (
+	     name => $self->ids()->[$i],
+	     chrom => $self->chroms()->[$i],
+	     pos => $self->pos()->[$i],
+	     ref => $self->refs()->[$i],
+	     alt => $self->alts()->[$i],
+	     qual => $self->qual()->[$i],
+	     filter => $self->filter()->[$i],
+	     info => $self->info()->[$i],
+	     format => $marker_info_p8,
+            );
+
+            #print STDERR "Marker: ".Dumper(\%marker);
+            $protocolprop_info{'markers'}->{$marker_name} = \%marker;
+            push @{$protocolprop_info{'marker_names'}}, $marker_name;
+            push @{$protocolprop_info{'markers_array'}}, \%marker;
+    }
+    return \%protocolprop_info;
 }
 
 sub next_genotype {
     my $self = shift;
     
-    
+    #print STDERR "Processing next genotype...\n";
     my @header_info;
     my @fields;
+
     my $genotypeprop; # hashref
     my $line;
-    my $F = $self->_fh();
 
+    my $F = $self->_fh();
+    
     my %protocolprop_info;
-    if (! ($line = <$F>)) { close($F); return 0; }
-    else { 
+    if (! ($line = <$F>)) { 
+	print STDERR "No next genotype... Done!\n"; 
+	close($F); 
+	return 0; 
+    }
+    else {
 	chomp($line);
+
+
 	my @fields = split /\t/, $line;
-	
-	my $observaton_unit_name = $fields[0];
-	my @scores = @fields[9..-1];
-	
+
+	my $observation_unit_name = $fields[0];
+	my @scores = @fields[1..$#fields];
+
 	my $marker_name = "";
 	
 	for(my $i=1; $i<@scores; $i++) { 
-	    my $marker_info_p2 = $self->ids()->[$i];
-	    my $marker_info_p8 = $self->format()->[$i];
-	    if ($marker_info_p2 eq '.') {
-		$marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
-	    } else {
-		$marker_name = $self->ids()->[$i];
-	    }
-	    
-	    #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-	    my %marker = (
-		name => $self->ids()->[$i],
-		chrom => $self->chrom()->[$i],
-		pos => $self->pos()->[$i],
-		ref => $self->ref()->[$i],
-		alt => $self->alt()->[$i],
-		qual => $self->qual()->[$i],
-		filter => $self->filter()->[$i],
-		info => $self->info()->[$i],
-		format => $marker_info_p8,
-            );
-
-            $protocolprop_info{'markers'}->{$marker_name} = \%marker;
-            push @{$protocolprop_info{'marker_names'}}, $marker_name;
-            push @{$protocolprop_info{'markers_array'}}, \%marker;
 
             my @separated_alts = split ',', $self->alts()->[$i];
 
-            my @format =  split /:/,  $marker_info_p8;
+            my @format =  split /:/,  $self->format()->[$i];
 
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
 
@@ -306,6 +331,8 @@ sub next_genotype {
             }
         }
 
+
+#        print STDERR Dumper($genotypeprop);
  #   close($F);
 
 #    $protocolprop_info{'header_information_lines'} = \@header_info;
