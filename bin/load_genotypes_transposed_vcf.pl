@@ -6,7 +6,7 @@ load_genotypes_transposed_vcf.pl - loading genotypes into cxgn databases, based 
 
 =head1 SYNOPSIS
 
-    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "BTI" -n "IGD" -b "accession" -m "test_protocol_01_new" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
+    perl bin/load_genotypes_transposed_vcf.pl -H localhost -D fixture -U postgres -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "BTI" -n "IGD" -b "accession" -m "test_protocol_01_new" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
     
     To use an existing project (not create a new project name entry), use -h project_id
     To use an existing protocol (not create a new nd_protocol name entry), use -j protocol_id
@@ -195,9 +195,11 @@ my $parser = CXGN::Genotype::ParseUpload->new({
     organism_id => $organism_id,
     create_missing_observation_units_as_accessions => $add_accessions,
     igd_numbers_included => $include_igd_numbers
-});
-$parser->load_plugin('VCF');
-my $parsed_data = $parser->parse();
+					      });
+
+print STDERR "Loading plugin and starting to parse...\n";
+$parser->load_plugin('transposedVCF');
+my $parsed_data = $parser->parse_with_iterator();
 # if (!$parsed_data) {
 #     if (!$parser->has_parse_errors() ){
 #         print STDERR "Could not get parsing errors\n";
