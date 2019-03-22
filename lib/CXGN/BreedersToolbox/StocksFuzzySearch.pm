@@ -106,8 +106,7 @@ sub get_matches {
 
         my @search_stock_names;
         foreach (@lowercased_names){
-	    print STDERR "LOOKING at lowercase name $_\n";
-            #if there is a difference in length greater than 10, it will not fuzzy search over that name
+	    #if there is a difference in length greater than 10, it will not fuzzy search over that name
             if (abs(length($_) - length($stock_name)) <= 10){
                 push @search_stock_names, $_;
             }
