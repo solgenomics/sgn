@@ -67,10 +67,10 @@ sub _validate_with_plugin {
     my @qual = split /\t/,$qual;
     $self->qual(\@qual);
     
-    my $pass = <$F>;
-    chomp($pass);
-    my @pass = split /\t/, $pass;
-    $self->pass(\@pass);
+    # my $pass = <$F>;
+    # chomp($pass);
+    # my @pass = split /\t/, $pass;
+    # $self->pass(\@pass);
     
     my $info = <$F>;
     chomp($info);
