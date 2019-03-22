@@ -1607,8 +1607,6 @@ sub selection_population_predicted_traits :Path('/solgs/selection/population/pre
 
     my $training_pop_id = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
-
-    print STDERR "\ntr pop id: $training_pop_id -- sel pop id: $selection_pop_id\n";
     
     my $ret->{selection_traits} = undef;
     if ($training_pop_id && $selection_pop_id) {
@@ -1616,8 +1614,7 @@ sub selection_population_predicted_traits :Path('/solgs/selection/population/pre
 	$self->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
 	my $selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
 	
-	$ret->{selection_traits} = $selection_pop_traits;
-          
+	$ret->{selection_traits} = $selection_pop_traits;          
     }    
 
     $ret = to_json($ret);

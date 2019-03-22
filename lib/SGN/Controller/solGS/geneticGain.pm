@@ -99,48 +99,58 @@ sub get_selection_pop_gebvs :Path('/solgs/get/gebvs/selection/population/') Args
 sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
     my ($self, $c) = @_;
   
-   # my $selection_traits_ids      = $c->req->param('selection_traits[]');
-
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $trait_id         = $c->req->param('trait_id');
+    my @selection_pop_traits = $c->req->param('selection_traits[]');
     
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{trait_id}         = $trait_id;
-  
-    my $page = $c->req->referer;    
-    my $selection_pop_traits;
-    
-    if ($page =~ /solgs\/traits\/all\//) {
-	
-	$c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-	$selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
-    }    
+    $c->stash->{trait_id}         = $trait_id; 
 
-    $c->stash->{selection_traits} = $selection_pop_traits || [$trait_id];
+    $c->stash->{selection_traits} = \@selection_pop_traits || [$trait_id];
     
     my $ret->{boxplot} = undef;
     
-    $self->boxplot_download_files($c);	
-    my $boxplot = $c->stash->{download_boxplot};
+    my $result = $self->check_genetic_gain_output($c);
     
-    if (!-s $boxplot)
+    if (!$result)
     {
-	$self->run_boxplot($c);
-	$self->boxplot_download_files($c);
-	
-	$ret->{boxplot} = $c->stash->{download_boxplot};
-	$ret->{boxplot_data} = $c->stash->{download_data};
-	$ret->{Error} = undef;
+	$self->run_boxplot($c);	
     }
-    
+
+    $self->boxplot_download_files($c);
+   
+    $ret->{boxplot} = $c->stash->{download_boxplot};
+    $ret->{boxplot_data} = $c->stash->{download_data};
+    $ret->{Error} = undef;
+       
     $ret = to_json($ret);       
     $c->res->content_type('application/json');
     $c->res->body($ret);    
 
 }
 
+
+sub check_genetic_gain_output {
+    my ($self, $c) = @_;
+
+    $self->boxplot_file($c);	
+    my $boxplot = $c->stash->{boxplot_file};
+
+    $self->boxplot_download_files($c);
+    my $dld_plot = $c->stash->{download_boxplot};
+
+    if ($boxplot && $dld_plot)
+    {
+	return 1;
+    }
+    else
+    {
+	return 0;
+    }
+    
+}
 
 sub get_training_pop_gebv_file {
     my ($self, $c) = @_;

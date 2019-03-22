@@ -39,9 +39,7 @@ solGS.geneticGain = {
 		.show();
 	}
 	else {
-	    console.log('tr pop id: ' + gebvParams.training_pop_id)
-	    console.log('sel pop id: ' + gebvParams.selection_pop_id)
-	    console.log('trait id: ' + gebvParams.trait_id)
+
 	    this.plotGeneticGainBoxplot(gebvParams);
 	    //getTrainingPopulationGEBVs(gebvParams);
 	}
@@ -49,14 +47,15 @@ solGS.geneticGain = {
 
 
     getGeneticGainArgs: function () {
-	
+
 	var trainingPopId   = jQuery('#gg_canvas #training_pop_id').val();
 	var trainingPopName = jQuery('#gg_canvas #training_pop_name').val();
 	var selectionPopId  = jQuery('#gg_canvas #selection_pop_id').val();
-	var selectionTraits = jQuery('#gg_canvas #selection_traits_ids').val();
+	var selectionTraits = jQuery('#gg_canvas').find('#selection_traits_ids').val();
 	var traitId         = jQuery('#trait_id').val();
 
-	console.log('genetic gain args: traits ' + selectionTraits + ' tr pop id ' +  trainingPopId)
+	selectionTraits = selectionTraits.split(',');
+	
 	var ggArgs = { 
 	    'training_pop_id'  : trainingPopId,
 	    'training_pop_name' : trainingPopName,
@@ -86,38 +85,41 @@ solGS.geneticGain = {
 		if (res.Error) {
 		    jQuery("#gg_canvas .multi-spinner-container").hide();
 		    jQuery("#gg_message").empty();
+		    
 		    solGS.showMessage("gg_message", response.Error);
-		    jQuery("#check_genetic_gain").show();
+		   
+		    if (document.URL.match(/\/solgs\/traits\/all\/population\//)) {
+                        jQuery("#check_genetic_gain").show();
+                    }
 		    
 		} else {
 		    var boxplot = res.boxplot;
 		    var boxplotData = res.boxplot_data
 		    var plot = '<img  src= "' + boxplot + '">';
 		    
-		    console.log('boxplot file ' + boxplot)
-		   	if (boxplot) {
+		    if (boxplot) {
 			   			    
-			    var fileNameBoxplot = boxplot.split('/').pop();					    
-			    boxplotFile = "<a href=\"" + boxplot +  "\" download=" + fileNameBoxplot + ">boxplot</a>";
-	
-			    var fileNameData = boxplotData.split('/').pop();					    
-			    var dataFile = "<a href=\"" + boxplotData +  "\" download=" + fileNameData + ">Data</a>";			    
-			    jQuery("#gg_plot")
-				.prepend('<div style="margin-top: 20px">' + plot + '</div>'
-					 + '<br /> <strong>Download:</strong> '
-					 + boxplotFile + ' | '
-				         + dataFile)
-				.show();
+			var fileNameBoxplot = boxplot.split('/').pop();					    
+			boxplotFile = "<a href=\"" + boxplot +  "\" download=" + fileNameBoxplot + ">boxplot</a>";
+			
+			var fileNameData = boxplotData.split('/').pop();					    
+			var dataFile = "<a href=\"" + boxplotData +  "\" download=" + fileNameData + ">Data</a>";			    
+			jQuery("#gg_plot")
+			    .prepend('<div style="margin-top: 20px">' + plot + '</div>'
+				     + '<br /> <strong>Download:</strong> '
+				     + boxplotFile + ' | '
+				     + dataFile)
+			    .show();
 
-			    jQuery("#gg_canvas .multi-spinner-container").hide();
-			    jQuery("#gg_message").empty();
+			jQuery("#gg_canvas .multi-spinner-container").hide();
+			jQuery("#gg_message").empty();
 			    
-			}  else {
-			    jQuery("#gg_canvas .multi-spinner-container").hide();
-			    showMessage("There is no genetic gain plot for this dataset."); 		
-			    jQuery("#check_genetic_gain").show();
-			    
-			}
+		    }  else {
+			jQuery("#gg_canvas .multi-spinner-container").hide();
+			showMessage("There is no genetic gain plot for this dataset."); 		
+			jQuery("#check_genetic_gain").show();
+			
+		    }
 		}
 		
 	    },
@@ -204,11 +206,8 @@ solGS.geneticGain = {
     
 
     ggSelectionPopulations: function()  {
-		console.log('IN ggSelectionPopulations')
-	var ggArgs  = this.getGeneticGainArgs();
 	
-	//var trainingPopIdName = JSON.stringify(modelData);
-	console.log('gg page: ' + ggArgs.training_pop_id + '  name ' + ggArgs.training_pop_name)
+	var ggArgs  = this.getGeneticGainArgs();
 	
 	var  popsList =  '<dl id="gg_selected_population" class="gg_dropdown">'
             + '<dt><a href="#"><span>Choose a population</span></a></dt>'
@@ -258,10 +257,6 @@ solGS.geneticGain = {
             jQuery("#gg_selected_population_id").val(selectedPopId);
 	    jQuery("#gg_canvas #selection_pop_id").val(selectedPopId);
             jQuery("#gg_selected_population_type").val(selectedPopType);
-
-	    // console.log(modelData.id + " selectedPopId " + selectedPopId)
-	    // getSelPopPredictedTraits(modelData.id, selectedPopId);
-            // console.log(modelData.id + " selectedPopId " + selectedPopId)
 	   
 	});
 	
@@ -278,30 +273,22 @@ solGS.geneticGain = {
     },
 
 
-    getSelPopPredictedTraits: function(trainingPopId, selectionPopId) {
-
-	console.log(trainingPopId + ' ' + selectionPopId)
-	
-	var popsIds = {
-	    'training_pop_id': trainingPopId,
-	    'selection_pop_id': selectionPopId
-	};
-
-	console.log(trainingPopId + "  " + selectionPopId)
+    getSelPopPredictedTraits: function(ggArgs) {
 		    
 	jQuery.ajax({
 	    type: 'POST',
 	    dataType: 'json',
-	    data: popsIds,
+	    data: ggArgs,
 	    url : '/solgs/selection/population/predicted/traits',
 	    success: function (res) {
 		if (res.selection_traits) {
-		    console.log('selection_traits: ' + res.selection_traits)
 		    
-		    jQuery('#gg_canvas #selection_traits_ids').val('[' + res.selection_traits + ']');
-		    var selectionTraits = jQuery('#gg_canvas').find('#selection_traits_ids').val();
-		     console.log('DOM selection_traits: ' + res.selectionTraits)
-		    jQuery('#gg_message').html('Plotting genetic gain... please wait');
+		    var selectionTraits = res.selection_traits.join(',');		    
+		    jQuery('#gg_canvas #selection_traits_ids').val(selectionTraits);
+
+		    var ggArgs = solGS.geneticGain.getGeneticGainArgs();
+		    solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
+		    
 		} else {
 		   jQuery('#gg_message')
 		    .html('This selection population has no predicted traits.')
@@ -494,16 +481,9 @@ jQuery(document).ready(function () {
 		.css({"padding-left": '0px'})
 		.html("checking predicted traits for selection population " + selectedPopName);
 
-	    console.log(" selectedPopId " + selectedPopId)
 	    var ggArgs  = solGS.geneticGain.getGeneticGainArgs();
-	    console.log(ggArgs.training_pop_id + " selectedPopId " + selectedPopId)
-	    solGS.geneticGain.getSelPopPredictedTraits(ggArgs.training_pop_id, selectedPopId);
-	    console.log('ggtr pop id: ' + ggArgs.training_pop_id + " gg selectedPopId " + selectedPopId)
-	    ggArgs = solGS.geneticGain.getGeneticGainArgs();
-	    console.log('ggArgs selection_traits ' +  ggArgs.selection_traits)
-	    solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
-	   
-	    
+	    solGS.geneticGain.getSelPopPredictedTraits(ggArgs);
+	   	    
 	}
     }); 
 });
@@ -511,9 +491,8 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready( function() { 
     var page = document.URL;
-    console.log('gg page: ', page)
-    if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
-	
+  
+    if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {	
 	setTimeout(function() {solGS.geneticGain.ggSelectionPopulations()}, 5000);
     }
 							 	 
