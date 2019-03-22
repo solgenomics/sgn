@@ -52,6 +52,13 @@ module.exports = {
                 use: [{
                     loader: path.resolve(__dirname,"./webpack_util/jsan-error-loader.js")
                 }]
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    { loader: "style-loader" },
+                    { loader: "css-loader" }
+                ]
             }
         ]
     },
