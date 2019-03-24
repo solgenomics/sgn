@@ -348,28 +348,31 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
         my $drone_run_html = '<div class="well well-sm">';
 
-        $drone_run_html .= '<div class="row"><div class="col-sm-8">';
+        $drone_run_html .= '<div class="row"><div class="col-sm-6">';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Drone Run Name</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_name}.'</div></div>';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Drone Run Type</b>:</div><div class="col-sm-7">'.$v->{drone_run_type}.'</div></div>';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Description</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_description}.'</div></div>';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
         $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
-        $drone_run_html .= '</div><div class="col-sm-4">';
+        $drone_run_html .= '</div><div class="col-sm-3">';
         if ($v->{drone_run_indicator}) {
             $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Images in Progress</span><br/><br/>';
         }
         if ($v->{drone_run_phenotypes_indicator}) {
             $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Phenotypes in Progress</span><br/><br/>';
-        } else {
-            $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+        } elsif ($v->{drone_run_processed}) {
+            $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
         }
+        $drone_run_html .= '</div><div class="col-sm-3">';
         if (!$v->{drone_run_processed}) {
             $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
         } else {
             $drone_run_html .= '<span class="label label-success" ><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;&nbsp;Processed</span><br/><br/>';
             $drone_run_html .= '<button class="btn btn-sm btn-success" name="project_drone_imagery_download_phenotypes" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;&nbsp;Download Phenotypes</button><br/><br/>';
         }
-        $drone_run_html .= '</div></div>';
+        $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Drone Run</button>';
+
+        $drone_run_html .= '</div></div></div>';
 
         $drone_run_html .= "<hr>";
 
@@ -3258,7 +3261,6 @@ sub _perform_phenotype_automated {
         foreach my $phenotype_method (@$phenotype_types) {
             foreach my $plot_polygons_type (@possible_plot_polygon_types) {
                 foreach my $channel (0..2) {
-                    print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type, $channel];
                     my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $channel, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
                     if ($return->{error}){
                         print STDERR Dumper $return->{error};
@@ -3343,6 +3345,8 @@ sub _perform_phenotype_calculation {
     my $allowed_composed_cvs = shift;
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
+
+    print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type, $image_band_selected];
 
     my $main_production_site = $c->config->{main_production_site_url};
 
@@ -4236,6 +4240,71 @@ sub drone_imagery_train_keras_model_optimize_GET : Args(0) {
     close($F);
 
     $c->stash->{rest} = { success => 1, results => \@result_agg };
+}
+
+sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
+
+sub drone_imagery_delete_drone_run_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    print STDERR "DELETING DRONE RUN\n";
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>[$drone_run_project_id],
+    });
+    my ($result, $total_count) = $images_search->search();
+    print STDERR Dumper $total_count;
+
+    my %drone_run_band_project_ids;
+    my %image_ids;
+    foreach (@$result) {
+        $drone_run_band_project_ids{$_->{drone_run_band_project_id}}++;
+        $image_ids{$_->{image_id}}++;
+    }
+    my @drone_run_band_ids = keys %drone_run_band_project_ids;
+    my @drone_run_image_ids = keys %image_ids;
+
+    foreach (keys %image_ids) {
+        my $image = SGN::Image->new( $schema->storage->dbh, $_, $c );
+        $image->delete(); #Sets to obsolete
+    }
+
+    my $drone_run_band_project_ids_sql = join ",", @drone_run_band_ids;
+    my $drone_run_band_image_ids_sql = join ",", @drone_run_image_ids;
+    my $q1 = "DELETE FROM phenome.project_md_image WHERE project_id in ($drone_run_band_project_ids_sql);";
+    my $q2 = "DELETE FROM project WHERE project_id in ($drone_run_band_project_ids_sql);";
+    my $q3 = "DELETE FROM project WHERE project_id = $drone_run_project_id;";
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute();
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+    $h2->execute();
+    my $h3 = $schema->storage->dbh()->prepare($q3);
+    $h3->execute();
+
+    my $q4 = "
+        DROP TABLE IF EXISTS temp_drone_image_pheno_deletion;
+        CREATE TEMP TABLE temp_drone_image_pheno_deletion AS
+        (SELECT phenotype_id, nd_experiment_id, image_id
+        FROM phenotype
+        JOIN nd_experiment_phenotype using(phenotype_id)
+        JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images using(nd_experiment_id)
+        WHERE nd_experiment_md_images.image_id IN ($drone_run_band_image_ids_sql) );
+        DELETE FROM phenotype WHERE phenotype_id IN (SELECT phenotype_id FROM temp_drone_image_pheno_deletion);
+        DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_drone_image_pheno_deletion);
+        DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_drone_image_pheno_deletion);
+        DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_drone_image_pheno_deletion);
+        DROP TABLE IF EXISTS temp_drone_image_pheno_deletion;
+        ";
+    my $h4 = $schema->storage->dbh()->prepare($q4);
+    $h4->execute();
+
+    $c->stash->{rest} = {success => 1};
 }
 
 sub _check_user_login {

@@ -182,7 +182,7 @@ CREATE TABLE if not exists phenome.nd_experiment_md_images (
     constraint nd_experiment_md_images_nd_experiment_id_fkey FOREIGN KEY (nd_experiment_id) REFERENCES nd_experiment (nd_experiment_id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION,
     constraint nd_experiment_md_images_image_id_fkey FOREIGN KEY (image_id) REFERENCES metadata.md_image (image_id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-grant select,insert on table phenome.nd_experiment_md_images to web_usr;
+grant select,insert,delete on table phenome.nd_experiment_md_images to web_usr;
 grant usage on phenome.nd_experiment_md_images_nd_experiment_md_images_id_seq to web_usr;
 SQL
         $schema->storage->dbh->do($sql);

@@ -711,6 +711,32 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_delete_drone_run_dialog" name="drone_imagery_delete_drone_run_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryDeleteDroneRunDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryDeleteDroneRunDialog">Delete a Drone Run</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="well">
+                <ul>
+                    <li>Deleting a drone run will remove the drone run and all drone run bands permanently.</li>
+                    <li>All images in the drone run will be deleted (obsoleted).</li>
+                    <li>Phenotypes that were generated for plots in this drone run will be deleted permanently.</li>
+                </ul>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_delete_drone_run_confirm">Delete Drone Run</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_calc_phenotypes_trial_dialog" name="drone_imagery_calc_phenotypes_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalcPhenotypesZonalChannelTrialDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -3431,6 +3457,42 @@ jQuery(document).ready(function() {
             error: function(response){
                 jQuery("#working_modal").modal("hide");
                 alert('Error merging bands!')
+            }
+        });
+    });
+
+    //
+    // Delete drone run
+    //
+
+    var manage_drone_imagery_delete_drone_run_project_id;
+    jQuery(document).on('click', 'button[name="project_drone_imagery_delete_drone_run"]', function(){
+        manage_drone_imagery_delete_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        jQuery('#drone_imagery_delete_drone_run_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_delete_drone_run_confirm').click(function(){
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/delete_drone_run?drone_run_project_id='+manage_drone_imagery_delete_drone_run_project_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if(response.error) {
+                    alert(response.error);
+                }
+                if(response.success) {
+                    alert('Drone run deleted successfully!');
+                }
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error deleting drone run!')
             }
         });
     });
