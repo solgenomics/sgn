@@ -88,11 +88,11 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my @results =@{$results_ref->{results}};
 
 
-  if (@results >= 100_000) {
-    $c->stash->{rest} = { list => [], message => scalar(@results).' matches. This is too many to display, please narrow your search' };
-    return;
-  }
-  elsif (@results >= 10_000) {
+##  if (@results >= 100_000) {
+##    $c->stash->{rest} = { list => [], message => scalar(@results).' matches. This is too many to display, please narrow your search' };
+##    return;
+##  }
+  if (@results >= 10_000) {
     $c->stash->{rest} = { list => \@results, message => 'Over 10,000 matches. Speeds may be affected, consider narrowing your search' };
     return;
   }

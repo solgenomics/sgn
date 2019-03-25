@@ -10,7 +10,8 @@ $dataset_id => undef
 
 <div class="row">
   <div class="col-md-12" style="margin-bottom:1em; text-align:right;">
-    Don't see your data? <button id="update_wizard_show" class="btn btn-default">Update Wizard</button>
+    Don't see your data? <button id="update_wizard_lists" class="btn btn-default">Refresh Lists</button>
+    <button id="update_wizard_show" class="btn btn-default">Update Wizard</button>
   </div>
 </div>
 
@@ -273,7 +274,7 @@ $dataset_id => undef
 </div>
 
 <script type="text/javascript">
-  jsMod['wizard'].WizardSetup("#wizard");
+  window.sWizard = jsMod['wizard'].WizardSetup("#wizard");
 </script>
 
 <div class="modal fade" id="update_wizard_dialog" name="update_wizard_dialog" tabindex="-1" role="dialog" aria-labelledby="updateWizardDialog">
@@ -320,4 +321,9 @@ $dataset_id => undef
   d3.select("#update_wizard").on('click',function(){
     jsMod['wizard'].refreshMatviews("fullview",this);
   });
+
+  d3.select("#update_wizard_lists").on('click',function(){
+    window.sWizard.reload_lists();
+  });
+
 </script>

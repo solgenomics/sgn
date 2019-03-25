@@ -266,10 +266,11 @@ export function Wizard(main_id,col_number){
     reflow(d.index,true);
   })
   allCols.select(".wizard-create-list").on("click",function(d){
-    var listName = d3.select(".wizard-create-list-name").property("value");
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    var listName = thiscol.select(".wizard-create-list-name").property("value");
     if(listName!=""){
       d3.select(this).attr("disabled",true);
-      d3.select(".wizard-create-list-name").property("value","");
+      thiscol.select(".wizard-create-list-name").property("value","");
       Promise.resolve(create_list(
         listName,
         d.selectedList.get().map(i=>i.value)
@@ -279,10 +280,12 @@ export function Wizard(main_id,col_number){
     }
   });
   allCols.select(".wizard-add-to-list").on("click",function(d){
-    var listID = d3.select(".wizard-add-to-list-id").property("value").slice(list_prefix.length);
+    var thiscol = allCols.filter(c_d=>c_d==d);
+    var listName = thiscol.select(".wizard-create-list-name").property("value");
+    var listID = thiscol.select(".wizard-add-to-list-id").property("value").slice(list_prefix.length);
     if(listID!=""){
       d3.select(this).attr("disabled",true);
-      d3.select(".wizard-add-to-list-id").property("value","");
+      thiscol.select(".wizard-add-to-list-id").property("value","");
       Promise.resolve(add_to_list(
         listID,
         d.selectedList.get().map(i=>i.value)
