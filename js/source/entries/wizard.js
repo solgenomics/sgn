@@ -114,19 +114,17 @@ export function WizardSetup(main_id){
     // // Returns type and list of of unique names or objects with a "name" key 
     // {"type":"typeID","items":["name","name",...]|[{"name":"example"},...]}
     .load_list((listID)=>{
-      return fetch(window.location.origin+`/list/desynonymize?list_id=${listID}`,{
-        credentials: 'include'
-      })
-        .then(resp=>resp.json())
-        .then(list_data=>{
-        if(list_data.error) alert(list_data.error)
-        var l = {
-          type:list_data.list_type,
-          items:list_data.list||[]
-        };
-        console.log(l)
-        return l 
-      })
+        return new Promise(res=>{
+           var ids = list.transform2Ids(listID);
+           var ldata = list.getListData(listID);
+           res({
+            "type":ldata.type_name,
+            "items":ids.map((ele_id,i)=>({
+                "id":ele_id,
+                "name":ldata.elements[i][1]
+            }))
+           });
+        })
     });
     
     var load_lists = ()=>(new Promise((resolve,reject)=>{
