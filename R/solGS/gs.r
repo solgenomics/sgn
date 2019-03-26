@@ -19,7 +19,7 @@ library(genoDataFilter)
 library(phenoAnalysis)
 library(caret)
 library(dplyr)
-
+library(tibble)
 
 allArgs <- commandArgs()
 
@@ -172,54 +172,54 @@ if (is.null(filteredGenoData)) {
 
 genoData <- genoData[order(row.names(genoData)), ]
 
-predictionTempFile <- grep("selection_population", inputFiles, ignore.case = TRUE, value = TRUE)
+selectionTempFile <- grep("selection_population", inputFiles, ignore.case = TRUE, value = TRUE)
 
-predictionFile       <- c()
+selectionFile       <- c()
 filteredPredGenoFile <- c()
-predictionAllFiles   <- c()
+selectionAllFiles   <- c()
 
-message('prediction temp genotype file: ', predictionTempFile)
+message('prediction temp genotype file: ', selectionTempFile)
 
-if (length(predictionTempFile) !=0 ) {
-  predictionAllFiles <- scan(predictionTempFile, what = "character")
+if (length(selectionTempFile) !=0 ) {
+  selectionAllFiles <- scan(selectionTempFile, what = "character")
 
-  predictionFile <- grep("\\/genotype_data", predictionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
-  message('prediction unfiltered genotype file: ', predictionFile)
+  selectionFile <- grep("\\/genotype_data", selectionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+  message('prediction unfiltered genotype file: ', selectionFile)
 
-  filteredPredGenoFile   <- grep("filtered_genotype_data_",  predictionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
-  message('prediction filtered genotype file: ', predictionFile)
+  filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+  message('prediction filtered genotype file: ', selectionFile)
 }
 
-predictionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
+selectionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
 
 message("filtered pred geno file: ", filteredPredGenoFile)
-message("prediction gebv file: ",  predictionPopGEBVsFile)
+message("prediction gebv file: ",  selectionPopGEBVsFile)
 
-predictionData           <- c()
+selectionData           <- c()
 readFilteredPredGenoData <- c()
 filteredPredGenoData     <- c()
 
 if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size != 0) {
-  predictionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
+  selectionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
   readFilteredPredGenoData <- 1
 
-  predictionData           <- as.data.frame(predictionData)
-  rownames(predictionData) <- predictionData[, 1]
-  predictionData[, 1]      <- NULL
+  selectionData           <- data.frame(selectionData)
+  rownames(selectionData) <- selectionData[, 1]
+  selectionData[, 1]      <- NULL
     
   message('read in filtered prediction genotype data')
-} else if (length(predictionFile) != 0) {
+} else if (length(selectionFile) != 0) {
     
-  predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
-  predictionData <- unique(predictionData, by='V1')
+  selectionData <- fread(selectionFile, na.strings = c("NA", " ", "--", "-"),)
+  selectionData <- unique(selectionData, by='V1')
   
-  predictionData <- filterGenoData(predictionData, maf=0.01)
-  predictionData <- roundAlleleDosage(predictionData)
+  selectionData <- filterGenoData(selectionData, maf=0.01)
+  selectionData <- roundAlleleDosage(selectionData)
   
-  predictionData  <- as.data.frame(predictionData)
-  rownames(predictionData) <- predictionData[, 1]
-  predictionData[, 1]      <- NULL
-  filteredPredGenoData <- predictionData
+  selectionData  <- data.frame(selectionData)
+  rownames(selectionData) <- selectionData[, 1]
+  selectionData[, 1]      <- NULL
+  filteredPredGenoData <- selectionData
 }
 
 
@@ -262,17 +262,17 @@ rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
 phenoTraitMarker[, 1]      <- NULL
 
 #impute missing data in prediction data
-predictionDataMissing <- c()
-if (length(predictionData) != 0) {
+selectionDataMissing <- c()
+if (length(selectionData) != 0) {
   #purge markers unique to both populations
-  commonMarkers       <- intersect(names(data.frame(genoDataFilteredObs)), names(predictionData))
-  predictionData      <- subset(predictionData, select = commonMarkers)
+  commonMarkers       <- intersect(names(data.frame(genoDataFilteredObs)), names(selectionData))
+  selectionData      <- subset(selectionData, select = commonMarkers)
   genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
   
-  if (sum(is.na(predictionData)) > 0) {
-    predictionDataMissing <- c('yes')
-    message("sum of geno missing values, ", sum(is.na(predictionData)) )  
-    predictionData <- data.matrix(na.roughfix(predictionData))    
+  if (sum(is.na(selectionData)) > 0) {
+    selectionDataMissing <- c('yes')
+    message("sum of geno missing values, ", sum(is.na(selectionData)) )  
+    selectionData <- data.matrix(na.roughfix(selectionData))    
   }
 }
 
@@ -283,15 +283,15 @@ if(length(genoTrCode) != 0) {
   genoDataFilteredObs <- genoDataFilteredObs - 1
 }
 
-if (length(predictionData) != 0 ) {
-  genoSlCode <- grep("2", predictionData[1, ], value = TRUE)
+if (length(selectionData) != 0 ) {
+  genoSlCode <- grep("2", selectionData[1, ], value = TRUE)
   if (length(genoSlCode) != 0 ) {
-    predictionData <- predictionData - 1
+    selectionData <- selectionData - 1
   }
 }
 
 ordered.markerEffects <- c()
-ordered.trGEBV        <- c()
+#ordered.trGEBV        <- c()
 validationAll         <- c()
 combinedGebvsFile     <- c()
 allGebvs              <- c()
@@ -334,17 +334,38 @@ if (nCores > 1) {
 
 message('assgined no cores: ', nCores)
 
-if (length(predictionData) == 0) {
+if (length(selectionData) == 0) {
 
-  trGEBV  <- kin.blup(data   = phenoTrait,
+  trModel  <- kin.blup(data   = phenoTrait,
                       geno   = 'genotypes',
                       pheno  = trait,
                       K      = relationshipMatrixFiltered,
                       n.core = nCores,
+                      PEV    = TRUE
                      )
 
-  trGEBVu <- trGEBV$g
+  trGEBV <- trModel$g
 
+  trGEBVPEV <- trModel$PEV
+  trGEBVSE  <- sqrt(trGEBVPEV)
+  trGEBVSE  <- data.frame(round(trGEBVSE, 2))
+
+  trGEBV <- data.frame(round(trGEBV, 2))
+  
+  colnames(trGEBVSE) <- c('SE')
+  colnames(trGEBV) <- trait
+    
+  trGEBVSE <- rownames_to_column(trGEBVSE, var="genotypes")
+  trGEBV   <- rownames_to_column(trGEBV, var="genotypes")
+  trGEBVSE <- full_join(trGEBV, trGEBVSE)
+
+  trGEBVSE <-  trGEBVSE %>% arrange_(.dots= paste0('desc(', trait, ')'))                                
+ 
+  trGEBVSE <- column_to_rownames(trGEBVSE, var="genotypes")
+  
+  trGEBV <- trGEBV %>% arrange_(.dots = paste0('desc(', trait, ')'))
+  trGEBV <- column_to_rownames(trGEBV, var="genotypes")
+   
   phenoTraitMarker    <- data.matrix(phenoTraitMarker)
   genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
          
@@ -362,34 +383,26 @@ if (length(predictionData) == 0) {
 
   traitPhenoData   <- data.frame(round(phenoTraitMarker, 2))   
 
-  heritability  <- round((trGEBV$Vg/(trGEBV$Ve + trGEBV$Vg)), 2)
+  heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
 
   cat("\n", file = varianceComponentsFile,  append = FALSE)
-  cat('Error variance', trGEBV$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
+  cat('Error variance', trModel$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat('Additive genetic variance',  trGEBV$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat('Additive genetic variance',  trModel$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
-
-
-  trGEBV         <- data.matrix(trGEBVu)
-  ordered.trGEBV <- as.data.frame(trGEBV[order(-trGEBV[, 1]), ])
-  ordered.trGEBV <- round(ordered.trGEBV, 3)
 
   combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
 
   if (length(combinedGebvsFile) != 0) {
     fileSize <- file.info(combinedGebvsFile)$size
     if (fileSize != 0 ) {
-        combinedGebvs <- as.data.frame(fread(combinedGebvsFile))
+        combinedGebvs <- data.frame(fread(combinedGebvsFile))
 
         rownames(combinedGebvs) <- combinedGebvs[,1]
         combinedGebvs[,1]       <- NULL
 
-        colnames(ordered.trGEBV) <- c(trait)
-      
-        traitGEBV <- as.data.frame(ordered.trGEBV)
-        allGebvs <- merge(combinedGebvs, traitGEBV,
+        allGebvs <- merge(combinedGebvs, trGEBV,
                           by = 0,
                           all = TRUE                     
                           )
@@ -399,11 +412,9 @@ if (length(predictionData) == 0) {
      }
   }
 
-  colnames(ordered.trGEBV) <- c(trait)
-                  
 #cross-validation
 
-  if (is.null(predictionFile)) {
+  if (is.null(selectionFile)) {
     genoNum <- nrow(phenoTrait)
     if (genoNum < 20 ) {
       warning(genoNum, " is too small number of genotypes.")
@@ -432,6 +443,7 @@ if (length(predictionData) == 0) {
                            pheno = trait,
                            K     = relationshipMatrixFiltered,
                            n.core = nCores,
+                           PEV    = TRUE
                            )
         
         assign(kblup, result)
@@ -490,35 +502,54 @@ if (length(predictionData) == 0) {
   }
 }
 
-predictionPopResult <- c()
-predictionPopGEBVs  <- c()
+selectionPopResult <- c()
+selectionPopGEBVs  <- c()
+selectionPopGEBVSE <- c()
 
-if (length(predictionData) != 0) {
-    message("running prediction for selection candidates...marker data", ncol(predictionData), " vs. ", ncol(genoDataFilteredObs))
-
-    genoDataTrSl <- rbind(genoDataFilteredObs, predictionData)
+if (length(selectionData) != 0) {
+    
+    genoDataTrSl <- rbind(genoDataFilteredObs, selectionData)
     rTrSl <- A.mat(genoDataTrSl)
     
-    predictionPopResult <- kin.blup(data   = phenoTrait,
+    selectionPopResult <- kin.blup(data   = phenoTrait,
                                     geno   = 'genotypes',
                                     pheno  = trait,
                                     K      = rTrSl,
                                     n.core = nCores,
+                                    PEV    = TRUE
                                     )
     
      message("running prediction for selection candidates...DONE!!")
-    predictionPopGEBVs <- round(data.frame(predictionPopResult$g), 3)
-    genotypesSl        <- rownames(predictionData)
-    predictionPopGEBVs <- predictionPopGEBVs[(rownames(predictionPopGEBVs) %in% genotypesSl), ]
-    predictionPopGEBVs <- data.frame(predictionPopGEBVs)
-    predictionPopGEBVs <- data.frame(predictionPopGEBVs[order(-predictionPopGEBVs[, 1]), ])
+    selectionPopGEBVs <- round(data.frame(selectionPopResult$g), 2)
+
+    selectionPopPEV <- selectionPopResult$PEV
+    selectionPopSE  <- sqrt(selectionPopPEV)
+    selectionPopSE  <- data.frame(round(selectionPopSE, 2))   
+    genotypesSl     <- rownames(selectionData)
+    selectionPopSE  <- selectionPopSE[rownames(selectionPopSE) %in% genotypesSl, ]
+    selectionPopSE  <- data.frame(selectionPopSE)
+    colnames(selectionPopSE) <- c('SE')
+
+    selectionPopGEBVs <- selectionPopGEBVs[rownames(selectionPopGEBVs) %in% genotypesSl, ]
+    selectionPopGEBVs <- data.frame(selectionPopGEBVs)  
+    colnames(selectionPopGEBVs) <- c(trait)
+    
+    selectionPopSE    <- rownames_to_column(selectionPopSE, var="genotypes")
+    selectionPopGEBVs <- rownames_to_column(selectionPopGEBVs, var="genotypes")
+    
+    selectionPopGEBVSE <- full_join(selectionPopGEBVs, selectionPopSE)
+    
+    selectionPopGEBVs <- selectionPopGEBVs %>% arrange_(.dots = paste0('desc(', trait, ')'))
+    selectionPopGEBVs <- column_to_rownames(selectionPopGEBVs, var="genotypes")
    
-    colnames(predictionPopGEBVs) <- c(trait)
+    selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange_(.dots= paste0('desc(', trait, ')'))                                
 }
 
-if (!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
-    fwrite(predictionPopGEBVs,
-           file  = predictionPopGEBVsFile,
+
+
+if (!is.null(selectionPopGEBVs) & length(selectionPopGEBVsFile) != 0)  {
+    fwrite(selectionPopGEBVs,
+           file  = selectionPopGEBVsFile,
            row.names = TRUE,
            sep   = "\t",
            quote = FALSE,
@@ -545,8 +576,8 @@ if (!is.null(ordered.markerEffects)) {
 }
 
 
-if (!is.null(ordered.trGEBV)) {
-    fwrite(ordered.trGEBV,
+if (!is.null(trGEBV)) {
+    fwrite(trGEBV,
            file  = blupFile,
            row.names = TRUE,
            sep   = "\t",
@@ -557,7 +588,7 @@ if (!is.null(ordered.trGEBV)) {
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
-        fwrite(ordered.trGEBV,
+        fwrite(trGEBV,
                file  = combinedGebvsFile,
                row.names = TRUE,
                sep   = "\t",
