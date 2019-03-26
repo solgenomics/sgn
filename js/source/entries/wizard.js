@@ -119,10 +119,10 @@ export function WizardSetup(main_id){
            var ldata = list.getListData(listID);
            res({
             "type":ldata.type_name,
-            "items":ids.map((ele_id,i)=>({
+            "items":!ids.error?ids.map((ele_id,i)=>({
                 "id":ele_id,
                 "name":ldata.elements[i][1]
-            }))
+            })):[]
            });
         })
     });

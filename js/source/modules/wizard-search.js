@@ -231,8 +231,8 @@ export function Wizard(main_id,col_number){
       .style("opacity","0.5")
       .select(".wizard-loader")
       .style("display",null);
-    load_list(listID).then(list_details=>{ 
-      setColumn(index,list_details.type||"",null,()=>true,list_details.items);
+    load_list(listID).then(list_details=>{
+      setColumn(index,list_details.type||"",null,()=>true,list_details.items||[]);
       allCols.filter(d=>d.index==index)
         .style("opacity","1")
         .select(".wizard-loader")
