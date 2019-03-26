@@ -14,7 +14,7 @@ $timestamp
 <& /breeders_toolbox/folder/folder_set.mas, project_type => 'Trial' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
-<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list'&>
 
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 
@@ -29,7 +29,7 @@ $timestamp
   <thead>
     <tr>
       <th>Information</th>
-      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
+      <th>Breeding Programs -- Folders -- Trials</th>
     </tr>
   </thead>
   <tbody>
@@ -75,7 +75,7 @@ $timestamp
   jQuery(document).ready(function($) {
 
     jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
+      url: '/ajax/breeders/get_trials_with_folders?type=trial',
       success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 

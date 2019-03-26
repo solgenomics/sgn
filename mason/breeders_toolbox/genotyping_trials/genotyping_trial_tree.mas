@@ -9,7 +9,7 @@
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Genotyping Plate' &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type=>'Genotyping Plate' &>
 <& /breeders_toolbox/folder/folder_move.mas, project_type=>'Genotyping Plate' &>
-<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Genotyping Plate', folder_tree_identifier => 'genotyping_trial_list', folder_tree_refresh_name => 'refresh_genotyping_trial_jstree_html' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Genotyping Plate', folder_tree_identifier => 'genotyping_trial_list'&>
 
 <table class="table table-bordered">
     <thead>
@@ -59,7 +59,7 @@ jQuery.noConflict();
 jQuery(document).ready(function($) {
 
     jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',
+      url: '/ajax/breeders/get_trials_with_folder?type=genotyping_trial',
       success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 

@@ -1,7 +1,6 @@
 <%args>
 $folder_tree_type
 $folder_tree_identifier
-$folder_tree_refresh_name
 </%args>
 
 <div class="modal fade" id="edit_folders_dialog" name="edit_folders_dialog" tabindex="-1" role="dialog" aria-labelledby="editFoldersDialog">
@@ -34,7 +33,7 @@ $folder_tree_refresh_name
               </div>
 	        </div>
 	       </form><br/>
-         
+
         </div>
       </div>
       <div class="modal-footer">
@@ -53,7 +52,7 @@ jQuery(document).ready(function() {
   jQuery('#edit_folders_button').click( function () {
     jQuery('#edit_folders_dialog').modal("show");
   });
-  
+
   jQuery('#edit_folders_categories_save_button').click( function () {
     save_folders_categories();
   });
@@ -73,7 +72,7 @@ function save_folders_categories() {
     for(var i=0; i<trial_id_array.length; i++){
         jQuery.ajax( {
             url: '/ajax/folder/'+trial_id_array[i]+'/categories',
-            data: { 
+            data: {
               'folder_for_trials' : folder_for_trials,
               'folder_for_crosses' : folder_for_crosses,
               'folder_for_genotyping_trials' : folder_for_genotyping_trials
@@ -88,10 +87,6 @@ function save_folders_categories() {
     }
     if (error == 1){
         alert('Error setting folder categories!');
-    } else {
-        if(confirm('Categories set for folder(s)! Refresh <% $folder_tree_type %> Tree?')){
-            jQuery("[name='<% $folder_tree_refresh_name %>']").trigger("click");
-        }
     }
 }
 

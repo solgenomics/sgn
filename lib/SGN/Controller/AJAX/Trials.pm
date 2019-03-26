@@ -58,39 +58,41 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     }
     print STDERR "Finished get trials $tree_type at time ".localtime()."\n";
 
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    eval { make_path($dir) };
-    if ($@) {
-        print "Couldn't create $dir: $@";
-    }
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
-
-    my $OUTFILE;
-    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
-
-    $c->stash->{rest} = { status => 1 };
-}
-
-sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
-
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
-    my $html = '';
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
-    {
-        local $/;
-        $html = <$fh>;
-    }
-    close($fh);
-
-    #print STDERR $html;
     $c->stash->{rest} = { html => $html };
+
+    # my $dir = catdir($c->site_cluster_shared_dir, "folder");
+    # eval { make_path($dir) };
+    # if ($@) {
+    #     print "Couldn't create $dir: $@";
+    # }
+    # my $filename = $dir."/entire_jstree_html_$tree_type.txt";
+    #
+    # my $OUTFILE;
+    # open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    # print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
+    # close $OUTFILE or croak "Cannot close $filename: $!";
+    #
+    # $c->stash->{rest} = { status => 1 };
 }
+
+# sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
+#     my $self = shift;
+#     my $c = shift;
+#     my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
+#
+#     my $dir = catdir($c->site_cluster_shared_dir, "folder");
+#     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
+#     my $html = '';
+#     open(my $fh, '<', $filename) or die "cannot open file $filename";
+#     {
+#         local $/;
+#         $html = <$fh>;
+#     }
+#     close($fh);
+#
+#     #print STDERR $html;
+#     $c->stash->{rest} = { html => $html };
+# }
 
 sub trial_autocomplete : Local : ActionClass('REST') { }
 

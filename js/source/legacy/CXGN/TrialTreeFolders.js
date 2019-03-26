@@ -1,17 +1,17 @@
 
 jQuery(document).ready(function($) {
 
-    jQuery("[name='refresh_jstree_html']").click(function(){
-        refreshTrailJsTree(1);
-    });
-
-    jQuery("[name='refresh_crosses_jstree_html']").click(function(){
-        refreshCrossJsTree(1);
-    });
-
-    jQuery("[name='refresh_genotyping_trial_jstree_html']").click( function() {
-        refreshGenotypingTrialJsTree(1);
-    });
+    // jQuery("[name='refresh_jstree_html']").click(function(){
+    //     refreshTrailJsTree(1);
+    // });
+    //
+    // jQuery("[name='refresh_crosses_jstree_html']").click(function(){
+    //     refreshCrossJsTree(1);
+    // });
+    //
+    // jQuery("[name='refresh_genotyping_trial_jstree_html']").click( function() {
+    //     refreshGenotypingTrialJsTree(1);
+    // });
 
 });
 

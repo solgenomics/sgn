@@ -17,13 +17,13 @@ $user_id => undef
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_move.mas, project_type=>'Cross' &>
-<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list'&>
 
 <table class="table table-bordered">
     <thead>
         <tr>
             <th>Information</th>
-            <th>Breeding Programs -- Folders -- Crossing Experiments&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
+            <th>Breeding Programs -- Folders -- Crossing Experiments</th>
         </tr>
     </thead>
     <tbody>
@@ -74,7 +74,7 @@ jQuery(document).ready(function($) {
     });
 
     jQuery.ajax( {
-      url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',
+      url: '/ajax/breeders/get_trials_with_folders?type=cross',
       success: function(response) {
         var html = '<ul>'+response.html+'</ul>';
 
