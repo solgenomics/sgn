@@ -23,20 +23,20 @@ library(tibble)
 
 allArgs <- commandArgs()
 
-inputFiles  <- scan(grep("input_files", allArgs, ignore.case = TRUE, perl = TRUE, value = TRUE),
+inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                    what = "character")
 
-outputFiles <- scan(grep("output_files", allArgs, ignore.case = TRUE,perl = TRUE, value = TRUE),
+outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
                     what = "character")
 
-traitsFile <- grep("traits", inputFiles, ignore.case = TRUE, value = TRUE)
-traitFile  <- grep("trait_info", inputFiles, ignore.case = TRUE, value = TRUE)
+traitsFile <- grep("traits", inputFiles,  value = TRUE)
+traitFile  <- grep("trait_info", inputFiles, value = TRUE)
 traitInfo  <- scan(traitFile, what = "character",)
 traitInfo  <- strsplit(traitInfo, "\t");
 traitId    <- traitInfo[[1]]
 trait      <- traitInfo[[2]]
 
-datasetInfoFile <- grep("dataset_info", inputFiles, ignore.case = TRUE, value = TRUE)
+datasetInfoFile <- grep("dataset_info", inputFiles, value = TRUE)
 datasetInfo     <- c()
 
 if (length(datasetInfoFile) != 0 ) { 
@@ -47,32 +47,32 @@ if (length(datasetInfoFile) != 0 ) {
   }
 
 validationTrait <- paste("validation", trait, sep = "_")
-validationFile  <- grep(validationTrait, outputFiles, ignore.case = TRUE, value = TRUE)
+validationFile  <- grep(validationTrait, outputFiles, value = TRUE)
 
 if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
 kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
-blupFile     <- grep(kinshipTrait, outputFiles, ignore.case = TRUE, value = TRUE)
+blupFile     <- grep(kinshipTrait, outputFiles, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
 markerTrait <- paste("marker_effects", trait, sep = "_")
-markerFile  <- grep(markerTrait, outputFiles, ignore.case = TRUE, value = TRUE)
+markerFile  <- grep(markerTrait, outputFiles, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_data", trait, sep = "_")
-traitPhenoFile <- grep(traitPhenoFile, outputFiles,ignore.case = TRUE, value = TRUE)
+traitPhenoFile <- grep(traitPhenoFile, outputFiles, value = TRUE)
 
-varianceComponentsFile <- grep("variance_components", outputFiles, ignore.case = TRUE, value = TRUE)
-filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, ignore.case = TRUE, value = TRUE)
-formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
+varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
+filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
+formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
 
 formattedPhenoData <- c()
 phenoData          <- c()
 
-genoFile <- grep("genotype_data_", inputFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
 message('geno file ', genoFile)
 
 if (is.null(genoFile)) {
@@ -104,7 +104,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
                                             ))
 
 } else {
-  phenoFile <- grep("\\/phenotype_data", inputFiles, ignore.case = TRUE, value = TRUE, perl = TRUE)
+  phenoFile <- grep("\\/phenotype_data", inputFiles, value = TRUE)
 
   if (is.null(phenoFile)) {
     stop("phenotype data file is missing.")
@@ -127,7 +127,7 @@ if (datasetInfo == 'combined populations') {
       phenoTrait <- na.omit(phenoTrait)
    
     } else {
-      dropColumns <- grep(trait, names(phenoData), ignore.case = TRUE, value = TRUE)
+      dropColumns <- grep(trait, names(phenoData), value = TRUE)
       phenoTrait  <- phenoData[, !(names(phenoData) %in% dropColumns)]
    
       phenoTrait            <- as.data.frame(phenoTrait)   
@@ -172,7 +172,7 @@ if (is.null(filteredGenoData)) {
 
 genoData <- genoData[order(row.names(genoData)), ]
 
-selectionTempFile <- grep("selection_population", inputFiles, ignore.case = TRUE, value = TRUE)
+selectionTempFile <- grep("selection_population", inputFiles, value = TRUE)
 
 selectionFile       <- c()
 filteredPredGenoFile <- c()
@@ -183,14 +183,14 @@ message('prediction temp genotype file: ', selectionTempFile)
 if (length(selectionTempFile) !=0 ) {
   selectionAllFiles <- scan(selectionTempFile, what = "character")
 
-  selectionFile <- grep("\\/genotype_data", selectionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+  selectionFile <- grep("\\/genotype_data", selectionAllFiles, value = TRUE)
   message('prediction unfiltered genotype file: ', selectionFile)
 
-  filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+  filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, value = TRUE)
   message('prediction filtered genotype file: ', selectionFile)
 }
 
-selectionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
+selectionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, value = TRUE)
 
 message("filtered pred geno file: ", filteredPredGenoFile)
 message("prediction gebv file: ",  selectionPopGEBVsFile)
@@ -301,7 +301,7 @@ relationshipMatrix    <- c()
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
-relationshipMatrixFile <- grep("relationship_matrix", outputFiles, ignore.case = TRUE, value = TRUE)
+relationshipMatrixFile <- grep("relationship_matrix", outputFiles, value = TRUE)
 
 message("relationship matrix file: ", relationshipMatrixFile)
 
@@ -544,7 +544,6 @@ if (length(selectionData) != 0) {
    
     selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange_(.dots= paste0('desc(', trait, ')'))                                
 }
-
 
 
 if (!is.null(selectionPopGEBVs) & length(selectionPopGEBVsFile) != 0)  {
