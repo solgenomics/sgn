@@ -236,7 +236,7 @@ export function Wizard(main_id,col_number){
       allCols.filter(d=>d.index==index)
         .style("opacity","1")
         .select(".wizard-loader")
-        .style("display","hidden");
+        .style("display","none");
     })
   }
   
