@@ -968,7 +968,14 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     $c->stash->{pop_id} = $pop_id;
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
-   
+
+    my $referer = $c->req->referer;
+   if ($referer =~ /combined\/populations\//) 
+   {
+       $c->stash->{data_set_type} = 'combined populations';
+       $c->stash->{combo_pops_id} = $pop_id;      
+   };
+    
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     my $blups_file = $c->stash->{rrblup_training_gebvs_file};
 
