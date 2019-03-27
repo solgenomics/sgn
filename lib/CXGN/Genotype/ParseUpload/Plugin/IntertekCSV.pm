@@ -137,7 +137,7 @@ sub _validate_with_plugin {
 
     @missing_stocks = sort keys %unique_stocks;
     my @missing_stocks_return;
-    # Optionally the missing sample ids can be created in the database as new accessions, but that is not recommended 
+    # Optionally the missing sample ids can be created in the database as new accessions, but that is not recommended
     foreach (@missing_stocks){
         if (!$self->get_create_missing_observation_units_as_accessions){
             push @missing_stocks_return, $_;
@@ -303,7 +303,7 @@ sub _parse_with_plugin {
                     my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
                     $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
                     $genotype_obj = { 'NT' => $vcf_genotype_string };
-                    $genotype_obj = { 'DS' => $gt_dosage };
+                    $genotype_obj = { 'DS' => "$gt_dosage"};
                 } else {
                     die "There should always be a ref and alt according to validation above\n";
                 }

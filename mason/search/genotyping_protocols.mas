@@ -13,7 +13,6 @@
             <thead>
               <tr>
                   <th>Protocol</th>
-                  <th>Genotyping Data Project</th>
                   <th>Header Description</th>
                   <th>Number of Markers</th>
                   <th>Protocol Description</th>
