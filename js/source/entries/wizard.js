@@ -117,6 +117,9 @@ export function WizardSetup(main_id){
         return new Promise(res=>{
            var ids = list.transform2Ids(listID);
            var ldata = list.getListData(listID);
+           if(initialtypes.indexOf(ldata.type_name)==-1){
+               setTimeout(()=>alert("List is not of an appropriate type."),1);
+           }
            res({
             "type":ldata.type_name,
             "items":!ids.error?ids.map((ele_id,i)=>({
@@ -147,14 +150,17 @@ export function WizardSetup(main_id){
     wiz.add_to_list((listID,items)=>{
       var count = list.addBulk(listID,items.map(i=>i.name));
       if(count) alert(`${count} items added to list.`);
+      load_lists();
     })
     // Function which creates a new list from items
-    .create_list((listName,items)=>{
-      var newID = list.newList(listName,"");
+    .create_list((listName,colType,items)=>{
+        var newID = list.newList(listName,"");
       if(newID){
+        list.setListType(newID, colType);
         var count = list.addBulk(newID,items.map(i=>i.name));
         if(count) alert(`${count} items added to list ${listName}.`);
       } 
+      load_lists();
     });
     
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
