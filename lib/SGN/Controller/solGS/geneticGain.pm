@@ -108,12 +108,19 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{trait_id}         = $trait_id; 
 
-    $c->stash->{selection_traits} = \@selection_pop_traits || [$trait_id];
+    if (@selection_pop_traits)
+    {
+	$c->stash->{selection_traits} =  \@selection_pop_traits;
+    } 
+    else 
+    {
+	$c->stash->{selection_traits} = [$trait_id];
+    }
     
     my $ret->{boxplot} = undef;
     
     my $result = $self->check_genetic_gain_output($c);
-    
+
     if (!$result)
     {
 	$self->run_boxplot($c);	
@@ -141,7 +148,7 @@ sub check_genetic_gain_output {
     $self->boxplot_download_files($c);
     my $dld_plot = $c->stash->{download_boxplot};
 
-    if ($boxplot && $dld_plot)
+    if (-s $boxplot && $dld_plot)
     {
 	return 1;
     }
@@ -193,6 +200,7 @@ sub get_selection_pop_gebv_file {
     $c->stash->{selection_gebv_file} = $gebv_file;
 
 }
+
 
 sub boxplot_id {
     my ($self, $c) = @_;

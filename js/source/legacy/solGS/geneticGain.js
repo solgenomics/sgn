@@ -54,7 +54,9 @@ solGS.geneticGain = {
 	var selectionTraits = jQuery('#gg_canvas').find('#selection_traits_ids').val();
 	var traitId         = jQuery('#trait_id').val();
 
-	selectionTraits = selectionTraits.split(',');
+	if(document.URL.match(/solgs\/traits\/all\/population\//)) {
+	    selectionTraits = selectionTraits.split(',');
+	}
 	
 	var ggArgs = { 
 	    'training_pop_id'  : trainingPopId,
@@ -467,6 +469,7 @@ solGS.geneticGain = {
 jQuery(document).ready(function () {
     jQuery('#check_genetic_gain').on('click', function () {
 	var page = document.URL;
+	
 	if (page.match(/solgs\/selection\//)) {
 	    solGS.geneticGain.gebvsComparison();
 	} else {
@@ -475,8 +478,7 @@ jQuery(document).ready(function () {
 	    var selectedPopId   = jQuery("#gg_selected_population_id").val();
 	    var selectedPopType = jQuery("#gg_selected_population_type").val();
 	    var selectedPopName = jQuery("#gg_selected_population_name").val();
-	    
-	    
+	    	    
 	    jQuery("#gg_message")
 		.css({"padding-left": '0px'})
 		.html("checking predicted traits for selection population " + selectedPopName);
