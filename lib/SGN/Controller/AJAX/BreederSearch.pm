@@ -84,7 +84,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   }
   my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref);
 
-  print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
+  #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
   my @results =@{$results_ref->{results}};
 
 
