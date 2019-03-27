@@ -1797,9 +1797,9 @@ sub _perform_plot_polygon_assign {
         my $plot_polygon_image_url;
         $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
         my $md5checksum = $image->calculate_md5sum($archive_plot_polygons_temp_image);
-        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image JOIN phenome.project_md_image AS project_md_image USING(image_id) WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ?;";
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image JOIN phenome.project_md_image AS project_md_image USING(image_id) WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
         my $h = $schema->storage->dbh->prepare($q);
-        $h->execute($md5checksum, $linking_table_type_id);
+        $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
         my ($image_id) = $h->fetchrow_array();
 
         if ($image_id) {
@@ -2839,11 +2839,12 @@ sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $vegetative_index = $c->req->param('vegetative_index');
+    my $image_type = $c->req->param('image_type');
     my $view_only = $c->req->param('view_only');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_vegetative_index_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $vegetative_index, $view_only, $user_id, $user_name, $user_role);
+    my $return = _perform_vegetative_index_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $vegetative_index, $view_only, $image_type, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -2856,35 +2857,43 @@ sub _perform_vegetative_index_calculation {
     my $drone_run_band_project_id = shift;
     my $vegetative_index = shift;
     my $view_only = shift;
+    my $image_type = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
 
     my $index_script = '';
     my $linking_table_type_id;
-    if ($vegetative_index eq 'TGI') {
-        $index_script = 'TGI';
-        if ($view_only == 1){
-            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_temporary_drone_imagery', 'project_md_image')->cvterm_id();
-        } else {
-            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_drone_imagery', 'project_md_image')->cvterm_id();
+    if ($image_type eq 'BGR') {
+        if ($vegetative_index eq 'TGI') {
+            $index_script = 'TGI';
+            if ($view_only == 1){
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+            } else {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_tgi_drone_imagery', 'project_md_image')->cvterm_id();
+            }
+        }
+        if ($vegetative_index eq 'VARI') {
+            $index_script = 'VARI';
+            if ($view_only == 1){
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+            } else {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
+            }
         }
     }
-    if ($vegetative_index eq 'VARI') {
-        $index_script = 'VARI';
-        if ($view_only == 1){
-            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_temporary_drone_imagery', 'project_md_image')->cvterm_id();
-        } else {
-            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_vari_drone_imagery', 'project_md_image')->cvterm_id();
+    elsif ($image_type eq 'NRN') {
+        if ($vegetative_index eq 'NDVI') {
+            $index_script = 'NDVI';
+            if ($view_only == 1){
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+            } else {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_drone_imagery', 'project_md_image')->cvterm_id();
+            }
         }
     }
-    if ($vegetative_index eq 'NDVI') {
-        $index_script = 'NDVI';
-        if ($view_only == 1){
-            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_temporary_drone_imagery', 'project_md_image')->cvterm_id();
-        } else {
-            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_drone_imagery', 'project_md_image')->cvterm_id();
-        }
+    if (!$linking_table_type_id) {
+        die "Could not get vegetative index image type id\n";
     }
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
