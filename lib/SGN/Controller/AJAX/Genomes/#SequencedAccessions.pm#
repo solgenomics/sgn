@@ -1,0 +1,7 @@
+
+package SGN::Controller::AJAX::SequencedAccessions;
+
+BEGIN { extends 'Catalyst::Controller::REST' };
+
+
+use 
