@@ -485,6 +485,7 @@ export function Wizard(main_id,col_number){
   function set_lists(list_dict){
     list_dict = list_dict || {};
     var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k]}));
+    lists = lists.sort((a,b)=>a.name<b.name?-1:b.name<a.name?1:0);
     var opts = allCols.selectAll(".wizard-lists-group").selectAll("option")
       .data(lists);
     opts.enter().append("option").merge(opts)
