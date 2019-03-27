@@ -7,8 +7,6 @@ $breeding_program_id => undef
 $breeding_program_name => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
-
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;

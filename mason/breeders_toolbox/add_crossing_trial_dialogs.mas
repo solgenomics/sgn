@@ -3,7 +3,7 @@ $programs
 $locations
 </%args>
 
-<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses'] &>
 
 <div class="modal fade" id="create_crossingtrial_dialog" name="create_crossingtrial_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossingTrialDialog">
     <div class="modal-dialog modal-lg" role="document">

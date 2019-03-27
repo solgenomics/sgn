@@ -14,7 +14,7 @@ $prep_description => "Have some treatments that are unreplicated and rely on rep
 $westcott_description => "Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)."
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js' ] &>
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min.js' ] &>
 
 <style>
 #container_field_map_view {display: none; }

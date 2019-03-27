@@ -9,8 +9,6 @@ $breeding_program_id => undef
 $breeding_program_name => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
-
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
@@ -117,7 +115,7 @@ jQuery(document).ready(function() {
       breeding_program_change_move_folders();
     }
   });
-  
+
   jQuery("#move_folder_breeding_program_select_div").on('change', "#move_folder_breeding_program_id", function() {
     breeding_program_change_move_parent_folders();
     breeding_program_change_move_folders();
@@ -184,7 +182,6 @@ function move_folder() {
         jQuery('#move_folder_dialog').modal("hide");
       }
       else {
-        refreshTrailJsTree(0);
         jQuery('#folder_move_success_dialog_message').modal("show");
         jQuery('#move_folder_dialog').modal("hide");
       }
