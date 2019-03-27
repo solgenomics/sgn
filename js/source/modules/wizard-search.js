@@ -78,6 +78,7 @@ export function Wizard(main_id,col_number){
    * Adds items to existing list from wizard selection
    * @callback Wizard~add_to_listCallback
    * @param {string} listID listID selected by user
+   * @param {string} colType column type selected by user
    * @param {Array.<Wizard~columnItem>} items items to add to list
    */
   var add_to_list = (listID,items)=>{};
@@ -282,6 +283,7 @@ export function Wizard(main_id,col_number){
       thiscol.select(".wizard-create-list-name").property("value","");
       Promise.resolve(create_list(
         listName,
+        d.type,
         d.selectedList.get().map(i=>i.value)
       )).then(()=>{
         d3.select(this).attr("disabled",null);
