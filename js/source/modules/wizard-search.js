@@ -78,6 +78,7 @@ export function Wizard(main_id,col_number){
    * Adds items to existing list from wizard selection
    * @callback Wizard~add_to_listCallback
    * @param {string} listID listID selected by user
+   * @param {string} colType column type selected by user
    * @param {Array.<Wizard~columnItem>} items items to add to list
    */
   var add_to_list = (listID,items)=>{};
@@ -103,7 +104,7 @@ export function Wizard(main_id,col_number){
   }
   
   col_objects.forEach((col)=>{
-    col.reload = ()=>{
+    col.reload = (list_content)=>{
       
       col.loading = true;      
       var load_promise;
@@ -115,6 +116,9 @@ export function Wizard(main_id,col_number){
           // Don't bother loading if the reload is no longer the most recent.
           if (col.load_promise != load_promise){
             throw load_outdated;
+          }
+          else if (list_content){
+            return list_content;
           }
           else if(col.type==""||col.type==null){
             return []
@@ -192,7 +196,7 @@ export function Wizard(main_id,col_number){
     return col_objects;
   }
   
-  function setColumn(index, new_type, intersect, selector){
+  function setColumn(index, new_type, intersect, selector, list_content){
     var col = col_objects[index];
     
     if(new_type==col.type && intersect==undefined && selector==undefined){
@@ -204,7 +208,7 @@ export function Wizard(main_id,col_number){
     // Prevents call loop with .wizard-type-select callback
     var select = allCols.filter(d=>d.index==index).select(".wizard-type-select");
     var selVal = select.property("value");
-    if (selVal!=new_type){
+    if (!list_content && selVal!=new_type){
       select.property("value",new_type);
     }
     redraw_types();
@@ -212,7 +216,7 @@ export function Wizard(main_id,col_number){
     col.intersect = intersect!=undefined ? intersect : col.intersect;
     
     selector = selector || (()=>null);
-    col.reload().then(()=>{
+    col.reload(list_content).then(()=>{
       if(col.type==new_type){
         col.items.forEach(i=>{
           var select = selector(i.value);
@@ -224,10 +228,16 @@ export function Wizard(main_id,col_number){
   }
   
   function setColumnFromList(index,listID){
-    load_list(listID).then(list_details=>{ 
-      setColumn(index,list_details.type||"",null,(i)=>{
-        return list_details.items.indexOf(itemName(i))!=-1
-      });
+    allCols.filter(d=>d.index==index)
+      .style("opacity","0.5")
+      .select(".wizard-loader")
+      .style("display",null);
+    load_list(listID).then(list_details=>{
+      setColumn(index,list_details.type||"",null,()=>true,list_details.items||[]);
+      allCols.filter(d=>d.index==index)
+        .style("opacity","1")
+        .select(".wizard-loader")
+        .style("display","none");
     })
   }
   
@@ -273,6 +283,7 @@ export function Wizard(main_id,col_number){
       thiscol.select(".wizard-create-list-name").property("value","");
       Promise.resolve(create_list(
         listName,
+        d.type,
         d.selectedList.get().map(i=>i.value)
       )).then(()=>{
         d3.select(this).attr("disabled",null);
@@ -474,6 +485,7 @@ export function Wizard(main_id,col_number){
   function set_lists(list_dict){
     list_dict = list_dict || {};
     var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k]}));
+    lists = lists.sort((a,b)=>a.name.toLowerCase() < b.name.toLowerCase() ? -1 : b.name.toLowerCase() < a.name.toLowerCase() ? 1 : 0);
     var opts = allCols.selectAll(".wizard-lists-group").selectAll("option")
       .data(lists);
     opts.enter().append("option").merge(opts)
@@ -496,7 +508,8 @@ export function Wizard(main_id,col_number){
     var used = [];
     allCols.select(".wizard-types-group").each(function(d,i){
       var select = d3.select(this.parentNode);
-      var selected = select.property("value");
+      //var selected = select.property("value");
+      var selected = select.datum().type;
       var type_options = i!=0 ?
         list.filter(o=>used.indexOf(o.id)==-1)
         : list.filter(o=>initial_types.indexOf(o.id)!=-1);
