@@ -264,9 +264,9 @@ sub rrblup_training_gebvs_file {
 
     if ($data_set_type =~ /combined populations/)
     {
-        my $combo_identifier = $c->stash->{combo_pops_id};
-        $cache_data = {key       => 'rrblup_training_gebvs_combined_pops_'.  $combo_identifier . "_" . $trait,
-                       file      => 'rrblup_training_gebvs_'. $trait . '_'  . $combo_identifier. '_combined_pops.txt',
+        my $combo_id = $c->stash->{combo_pops_id};
+        $cache_data = {key       => 'rrblup_training_gebvs_combined_pops_'.  $combo_id . "_" . $trait,
+                       file      => 'rrblup_training_gebvs_'. $trait . '_'  . $combo_id. '_combined_pops.txt',
                        stash_key => 'rrblup_training_gebvs_file',
 		       cache_dir => $c->stash->{solgs_cache_dir}
 

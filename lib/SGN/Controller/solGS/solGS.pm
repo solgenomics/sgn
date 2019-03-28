@@ -1795,12 +1795,19 @@ sub check_population_has_genotype {
 sub check_selection_population_relevance :Path('/solgs/check/selection/population/relevance') Args() {
     my ($self, $c) = @_;
 
-    my $data_set_type      = $c->req->param('data_set_type');  
+    #my $data_set_type      = $c->req->param('data_set_type');  
     my $training_pop_id    = $c->req->param('training_pop_id');
     my $selection_pop_name = $c->req->param('selection_pop_name');
     my $trait_id           = $c->req->param('trait_id');    
+
+    my$referer = $c->req->referer;
     
-    $c->stash->{data_set_type} = $data_set_type;
+   
+    if ($referer =~ /models\/combined\/trials\//) 
+    {
+	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{combo_pops_id} = $training_pop_id;	
+    }
 
     my $pr_rs = $c->model("solGS::solGS")->project_details_by_exact_name($selection_pop_name);
    
@@ -1827,41 +1834,27 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	    $c->stash->{pop_id} = $selection_pop_id;
 
 	    $self->first_stock_genotype_data($c, $selection_pop_id);
-	    my $selection_pop_geno_file = $c->stash->{first_stock_genotype_file};
+	    my $selection_geno_file = $c->stash->{first_stock_genotype_file};
 
-	    my $training_pop_geno_file;
-	
-	    if ($training_pop_id =~ /list/) 
-	    {	  	
-		my $dir = $c->stash->{solgs_lists_dir};
-		my $user_id = $c->user->id;
-		my $tr_geno_file = "genotype_data_${training_pop_id}";
-		$training_pop_geno_file = $c->controller('solGS::Files')->grep_file($dir,  $tr_geno_file);  	
+	    my $referer = $c->req->referer;
+	    my $tr_pop_id;
+	    if ($referer =~ /models\/combined\/trials\//) 
+	    {	   
+		$tr_pop_id = "${training_pop_id}_combined";
 	    }
-	    else 
+	    else
 	    {
-		my $dir = $c->stash->{solgs_cache_dir}; 
-		my $tr_geno_file;
-	
-		if ($data_set_type =~ /combined populations/) 
-		{
-		    $self->get_trait_details($c, $trait_id);
-		    my $trait_abbr = $c->stash->{trait_abbr}; 
-		    $tr_geno_file  = "genotype_data_${training_pop_id}_${trait_abbr}";
-		}
-		else
-		{
-		    $tr_geno_file = "genotype_data_${training_pop_id}";
-		}
-		
-		$training_pop_geno_file = $c->controller('solGS::Files')->grep_file($dir,  $tr_geno_file); 
+		$tr_pop_id = $training_pop_id;
 	    }
+	    
+	    $c->controller('solGS::Files')->genotype_file_name($c, $tr_pop_id);
+	    my $training_geno_file = $c->stash->{genotype_file_name};
 
-	    $similarity = $self->compare_marker_set_similarity([$selection_pop_geno_file, $training_pop_geno_file]);
+	    $similarity = $self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
 	} 
 
 	my $selection_pop_data;
-	if ($similarity >= 0.5 ) 
+	unless ($similarity < 0.5 ) 
 	{	
 	    $c->stash->{training_pop_id} = $training_pop_id;
 	    $self->format_selection_pops($c, [$selection_pop_id]);
@@ -1878,7 +1871,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     {
 	$ret->{selection_pop_id}   = $selection_pop_id;
     }
- 
+
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -3147,7 +3140,7 @@ sub submit_cluster_phenotype_query {
 sub submit_cluster_genotype_query {
     my ($self, $c, $args) = @_;
 
-    my $pop_id = $args->{population_id};
+    my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id};
 
     $c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
     $self->create_cluster_accesible_tmp_files($c);
@@ -3362,19 +3355,16 @@ sub acronymize_traits {
 
 
 sub genotype_file  {
-    my ($self, $c, $pred_pop_id) = @_;
-   
-    my $pop_id  = $c->stash->{pop_id};
-    my $geno_file;
-
-    if ($pred_pop_id) 
-    {      
-        $pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id}; 
-        $geno_file = $c->stash->{user_selection_list_genotype_data_file}; 
-    } 
+    my ($self, $c, $selection_pop_id) = @_;
     
+    my $training_pop_id  = $c->stash->{pop_id};
+    my $geno_file;
+    
+    $c->stash->{selection_pop_id} = $selection_pop_id;
+    
+    my $pop_id =  $selection_pop_id || $training_pop_id;
     die "Population id must be provided to get the genotype data set." if !$pop_id;
-  
+    
     if ($c->stash->{list_reference} || $pop_id =~ /list/) 
     {
   	if (!$c->user)
@@ -3385,50 +3375,49 @@ sub genotype_file  {
 	}
     }
 
+    if ($selection_pop_id) 
+    {      
+        $geno_file = $c->stash->{user_selection_list_genotype_data_file}; 
+    } 
+
+
     unless ($geno_file)
-    {
+    {	
 	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
 	$geno_file = $c->stash->{genotype_file_name};
     }
-
+    
     no warnings 'uninitialized';
-
     unless (-s $geno_file)
-    {  
-	my $model_id = $c->stash->{model_id};
-	
-	my $dir = ($model_id =~ /list/) 
-	    ? $c->stash->{solgs_lists_dir} 
-	    : $c->stash->{solgs_cache_dir};
+    { 
+	my $referer = $c->req->referer;
+      
+	my $training_pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+	my $tr_pop_id;
+	if ($referer =~ /models\/combined\/trials\//) 
+	{	   
+	    $tr_pop_id = "${training_pop_id}_combined";
+	} 
+	else
+	{
+	     $tr_pop_id = $training_pop_id;
+	}
 
-	my $trait_abbr = $c->stash->{trait_abbr};
-
-	my $tr_file = ($c->stash->{data_set_type} =~ /combined/) 
-	    ? "genotype_data_${model_id}_${trait_abbr}_combined" 
-	    : "genotype_data_${model_id}.txt";
-	
-	my $tr_geno_file = catfile($dir, $tr_file);
+	$c->controller('solGS::Files')->genotype_file_name($c, $tr_pop_id);
+	my $training_geno_file = $c->stash->{genotype_file_name};
 
 	my $args = {
-	    'population_id' => $pop_id,
-	    'prediction_id' => $pred_pop_id,
-	    'model_id'      => $model_id,
-	    'tr_geno_file'  => $tr_geno_file,
-	    'genotype_file' => $geno_file,
+	    'training_pop_id' => $training_pop_id,
+	    'selection_pop_id' => $selection_pop_id,
+	    'training_geno_file'  => $training_geno_file,
+	    'genotype_file'       => $geno_file,
 	    'cache_dir'     => $c->stash->{solgs_cache_dir},
 	};
-
+	
 	$self->submit_cluster_genotype_query($c, $args);
     }
-   
-    if ($pred_pop_id) 
-    {
-        $c->stash->{pred_genotype_file} = $geno_file;
-    }
-    else 
-    {
-        $c->stash->{genotype_file} = $geno_file; 
-    }
+       
+    $c->stash->{genotype_file} = $geno_file; 
  
 }
 

@@ -750,10 +750,10 @@ sub first_stock_genotype_data {
 sub genotype_data {
     my ($self, $args) = @_;
 
-    my $training_pop_id  = $args->{population_id};
-    my $selection_pop_id = $args->{prediction_id};
-    my $tr_geno_file     = $args->{tr_geno_file};
-    my $model_id         = ($args->{model_id} ? $args->{model_id} : $training_pop_id);
+    my $training_pop_id  = $args->{training_pop_id};
+    my $selection_pop_id = $args->{selection_pop_id};
+    my $tr_geno_file     = $args->{training_geno_file};
+    #my $model_id         = ($args->{model_id} ? $args->{model_id} : $training_pop_id);
 
     my @genotypes;
     my $geno_data = {};
