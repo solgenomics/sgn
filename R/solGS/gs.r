@@ -73,7 +73,6 @@ formattedPhenoData <- c()
 phenoData          <- c()
 
 genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
-message('geno file ', genoFile)
 
 if (is.null(genoFile)) {
   stop("genotype data file is missing.")
@@ -88,14 +87,12 @@ filteredGenoData <- c()
 if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
   filteredGenoData     <- fread(filteredGenoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
   readFilteredGenoData <- 1
-  message('read in filtered geno data')
 }
 
 genoData <- c()
 if (is.null(filteredGenoData)) {
   genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
   genoData <- unique(genoData, by='V1')
-  message('read in unfiltered geno data')
 }
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
@@ -114,10 +111,10 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
     stop("phenotype data file is empty.")
   }
 
-  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
+  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", " ", "--", "-", "."), header = TRUE)
+  phenoData <- data.frame(phenoData)
 }
 
-phenoData  <- as.data.frame(phenoData)
 phenoTrait <- c()
 
 if (datasetInfo == 'combined populations') {
@@ -126,31 +123,34 @@ if (datasetInfo == 'combined populations') {
       phenoTrait <- subset(formattedPhenoData, select = trait)
       phenoTrait <- na.omit(phenoTrait)
    
-    } else {
-      dropColumns <- grep(trait, names(phenoData), value = TRUE)
-      phenoTrait  <- phenoData[, !(names(phenoData) %in% dropColumns)]
-   
-      phenoTrait            <- as.data.frame(phenoTrait)   
+  } else {
+        
+      if (any(grepl('Average', names(phenoData)))) {
+          phenoTrait <- phenoData %>% select(V1, Average) %>% data.frame        
+      } else {
+          phenoTrait <- phenoData
+      }
+          
       colnames(phenoTrait)  <- c('genotypes', trait)
-    }   
+  }   
  } else {
 
-  if (!is.null(formattedPhenoData)) {
-    phenoTrait <- subset(formattedPhenoData, select = c('V1', trait))
-    phenoTrait <- as.data.frame(phenoTrait)
-    phenoTrait <- na.omit(phenoTrait)
-    
-    colnames(phenoTrait)[1] <- 'genotypes'
-   
-} else if (length(grep('list', phenoFile)) != 0) {
+     if (!is.null(formattedPhenoData)) {
+         phenoTrait <- subset(formattedPhenoData, select = c('V1', trait))
+         phenoTrait <- as.data.frame(phenoTrait)
+         phenoTrait <- na.omit(phenoTrait)
+         
+         colnames(phenoTrait)[1] <- 'genotypes'
+         
+     } else if (length(grep('list', phenoFile)) != 0) {
 
-    phenoTrait <- averageTrait(phenoData, trait)
-    
-} else {
+         phenoTrait <- averageTrait(phenoData, trait)
+         
+     } else {
 
-    phenoTrait <- getAdjMeans(phenoData, trait)
+         phenoTrait <- getAdjMeans(phenoData, trait)
 
-  }
+     }
 }
 
 if (is.null(filteredGenoData)) {
@@ -178,24 +178,17 @@ selectionFile       <- c()
 filteredPredGenoFile <- c()
 selectionAllFiles   <- c()
 
-message('prediction temp genotype file: ', selectionTempFile)
-
 if (length(selectionTempFile) !=0 ) {
   selectionAllFiles <- scan(selectionTempFile, what = "character")
 
   selectionFile <- grep("\\/genotype_data", selectionAllFiles, value = TRUE)
-  message('prediction unfiltered genotype file: ', selectionFile)
-
+  
   filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, value = TRUE)
-  message('prediction filtered genotype file: ', selectionFile)
 }
 
 selectionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, value = TRUE)
 
-message("filtered pred geno file: ", filteredPredGenoFile)
-message("prediction gebv file: ",  selectionPopGEBVsFile)
-
-selectionData           <- c()
+selectionData            <- c()
 readFilteredPredGenoData <- c()
 filteredPredGenoData     <- c()
 
@@ -207,7 +200,6 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
   rownames(selectionData) <- selectionData[, 1]
   selectionData[, 1]      <- NULL
     
-  message('read in filtered prediction genotype data')
 } else if (length(selectionFile) != 0) {
     
   selectionData <- fread(selectionFile, na.strings = c("NA", " ", "--", "-"),)
@@ -229,15 +221,12 @@ genoDataMissing <- c()
 if (sum(is.na(genoData)) > 0) {
   genoDataMissing<- c('yes')
 
-  message("sum of geno missing values, ", sum(is.na(genoData)) )  
   genoData <- na.roughfix(genoData)
   genoData <- data.matrix(genoData)
 }
 
 #create phenotype and genotype datasets with
 #common stocks only
-message('phenotyped lines: ', length(row.names(phenoTrait)))
-message('genotyped lines: ', length(row.names(genoData)))
 
 #extract observation lines with both
 #phenotype and genotype data only.
@@ -245,19 +234,13 @@ commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
 commonObs           <- data.frame(commonObs)
 rownames(commonObs) <- commonObs[, 1]
 
-message('lines with both genotype and phenotype data: ', length(row.names(commonObs)))
-
 #include in the genotype dataset only phenotyped lines
-message("genotype lines before filtering for phenotyped only: ", length(row.names(genoData)))        
 genoDataFilteredObs <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
-message("genotype lines after filtering for phenotyped only: ", length(row.names(genoDataFilteredObs)))
 
 #drop phenotyped lines without genotype data
-message("phenotype lines before filtering for genotyped only: ", length(row.names(phenoTrait)))        
 phenoTrait <- phenoTrait[(phenoTrait$genotypes %in% rownames(commonObs)), ]
-message("phenotype lines after filtering for genotyped only: ", length(row.names(phenoTrait)))
 
-phenoTraitMarker           <- as.data.frame(phenoTrait)
+phenoTraitMarker           <- data.frame(phenoTrait)
 rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
 phenoTraitMarker[, 1]      <- NULL
 
@@ -271,7 +254,6 @@ if (length(selectionData) != 0) {
   
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
-    message("sum of geno missing values, ", sum(is.na(selectionData)) )  
     selectionData <- data.matrix(na.roughfix(selectionData))    
   }
 }
@@ -291,7 +273,7 @@ if (length(selectionData) != 0 ) {
 }
 
 ordered.markerEffects <- c()
-#ordered.trGEBV        <- c()
+trGEBV                <- c()
 validationAll         <- c()
 combinedGebvsFile     <- c()
 allGebvs              <- c()
@@ -302,8 +284,6 @@ relationshipMatrix    <- c()
 #calculate the inner products for
 #genotypes (realized relationship matrix)
 relationshipMatrixFile <- grep("relationship_matrix", outputFiles, value = TRUE)
-
-message("relationship matrix file: ", relationshipMatrixFile)
 
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
@@ -325,14 +305,12 @@ relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshi
 relationshipMatrix         <- data.frame(relationshipMatrix)
 
 nCores <- detectCores()
-message('no cores: ', nCores)
+
 if (nCores > 1) {
   nCores <- (nCores %/% 2)
 } else {
   nCores <- 1
 }
-
-message('assgined no cores: ', nCores)
 
 if (length(selectionData) == 0) {
 
@@ -354,11 +332,12 @@ if (length(selectionData) == 0) {
   
   colnames(trGEBVSE) <- c('SE')
   colnames(trGEBV) <- trait
-    
+   
   trGEBVSE <- rownames_to_column(trGEBVSE, var="genotypes")
   trGEBV   <- rownames_to_column(trGEBV, var="genotypes")
+  
   trGEBVSE <- full_join(trGEBV, trGEBVSE)
-
+  
   trGEBVSE <-  trGEBVSE %>% arrange_(.dots= paste0('desc(', trait, ')'))                                
  
   trGEBVSE <- column_to_rownames(trGEBVSE, var="genotypes")
@@ -368,11 +347,11 @@ if (length(selectionData) == 0) {
    
   phenoTraitMarker    <- data.matrix(phenoTraitMarker)
   genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
-         
+
   markerEffects <- mixed.solve(y = phenoTraitMarker,
                                Z = genoDataFilteredObs
                                )
-
+  
   ordered.markerEffects <- data.matrix(markerEffects$u)
   ordered.markerEffects <- data.matrix(ordered.markerEffects [order (-ordered.markerEffects[, 1]), ])
   ordered.markerEffects <- round(ordered.markerEffects, 5)
@@ -519,7 +498,6 @@ if (length(selectionData) != 0) {
                                     PEV    = TRUE
                                     )
     
-     message("running prediction for selection candidates...DONE!!")
     selectionPopGEBVs <- round(data.frame(selectionPopResult$g), 2)
 
     selectionPopPEV <- selectionPopResult$PEV
@@ -544,7 +522,6 @@ if (length(selectionData) != 0) {
    
     selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange_(.dots= paste0('desc(', trait, ')'))                                
 }
-
 
 if (!is.null(selectionPopGEBVs) & length(selectionPopGEBVsFile) != 0)  {
     fwrite(selectionPopGEBVs,
@@ -583,7 +560,6 @@ if (!is.null(trGEBV)) {
            quote = FALSE,
            )
 }
-
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
