@@ -879,11 +879,11 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
                             $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_add_georeference" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Add Georeferenced Points</button><br/><br/>';
 
-                            if ($d->{drone_run_band_project_type} eq 'RGB Color Image' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands') {
+                            if ($d->{drone_run_band_project_type} eq 'RGB Color Image' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands BGR' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands NRN') {
                                 if ($d->{drone_run_band_project_type} eq 'RGB Color Image') {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_rgb_vegetative" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'">Convert to Vegetative Index</button><br/><br/>';
                                 }
-                                if ($d->{drone_run_band_project_type} eq 'Merged 3 Bands') {
+                                if ($d->{drone_run_band_project_type} eq 'Merged 3 Bands BGR' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands NRN') {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_3_band_vegetative" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'">Convert to Vegetative Index</button><br/><br/>';
                                 }
                             } else {
@@ -901,6 +901,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 $plot_polygon_type = 'observation_unit_polygon_green_background_removed_threshold_imagery';
                             } elsif ($d->{drone_run_band_project_type} eq 'Red (600-690nm)') {
                                 $plot_polygon_type = 'observation_unit_polygon_red_background_removed_threshold_imagery';
+                            } elsif ($d->{drone_run_band_project_type} eq 'Red Edge (690-750nm)') {
+                                $plot_polygon_type = 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
                             } elsif ($d->{drone_run_band_project_type} eq 'NIR (750-900nm)') {
                                 $plot_polygon_type = 'observation_unit_polygon_nir_background_removed_threshold_imagery';
                             } elsif ($d->{drone_run_band_project_type} eq 'MIR (1550-1750nm)') {
@@ -1711,6 +1713,8 @@ sub _perform_plot_polygon_assign {
             $assign_plot_polygons_type = 'observation_unit_polygon_green_background_removed_threshold_imagery';
         } elsif ($drone_run_project_type eq 'Red (600-690nm)') {
             $assign_plot_polygons_type = 'observation_unit_polygon_red_background_removed_threshold_imagery';
+        } elsif ($drone_run_project_type eq 'Red Edge (690-750nm)') {
+            $assign_plot_polygons_type = 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
         } elsif ($drone_run_project_type eq 'NIR (750-900nm)') {
             $assign_plot_polygons_type = 'observation_unit_polygon_nir_background_removed_threshold_imagery';
         } elsif ($drone_run_project_type eq 'MIR (1550-1750nm)') {
@@ -2515,7 +2519,7 @@ sub standard_process_apply_POST : Args(0) {
     
     if (exists($vegetative_indices_hash{'TGI'}) || exists($vegetative_indices_hash{'VARI'})) {
         if(exists($selected_drone_run_band_types{'Blue (450-520nm)'}) && exists($selected_drone_run_band_types{'Green (515-600nm)'}) && exists($selected_drone_run_band_types{'Red (600-690nm)'}) ) {
-            my $merged_return = _perform_image_merge($c, $bcs_schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $selected_drone_run_band_types{'Blue (450-520nm)'}, $selected_drone_run_band_types{'Green (515-600nm)'}, $selected_drone_run_band_types{'Red (600-690nm)'}, $user_id, $user_name, $user_role);
+            my $merged_return = _perform_image_merge($c, $bcs_schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $selected_drone_run_band_types{'Blue (450-520nm)'}, $selected_drone_run_band_types{'Green (515-600nm)'}, $selected_drone_run_band_types{'Red (600-690nm)'}, 'BGR', $user_id, $user_name, $user_role);
             my $merged_image_id = $merged_return->{merged_image_id};
             my $merged_drone_run_band_project_id = $merged_return->{merged_drone_run_band_project_id};
 
@@ -2609,7 +2613,7 @@ sub standard_process_apply_POST : Args(0) {
     }
     if (exists($vegetative_indices_hash{'NDVI'})) {
         if(exists($selected_drone_run_band_types{'NIR (750-900nm)'}) && exists($selected_drone_run_band_types{'Red (600-690nm)'}) ) {
-            my $merged_return = _perform_image_merge($c, $bcs_schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $selected_drone_run_band_types{'NIR (750-900nm)'}, $selected_drone_run_band_types{'Red (600-690nm)'}, $selected_drone_run_band_types{'NIR (750-900nm)'}, $user_id, $user_name, $user_role);
+            my $merged_return = _perform_image_merge($c, $bcs_schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $selected_drone_run_band_types{'NIR (750-900nm)'}, $selected_drone_run_band_types{'Red (600-690nm)'}, $selected_drone_run_band_types{'NIR (750-900nm)'}, 'NRN', $user_id, $user_name, $user_role);
             my $merged_image_id = $merged_return->{merged_image_id};
             my $merged_drone_run_band_project_id = $merged_return->{merged_drone_run_band_project_id};
 
@@ -3079,8 +3083,9 @@ sub drone_imagery_merge_bands_POST : Args(0) {
     my $band_1_drone_run_band_project_id = $c->req->param('band_1_drone_run_band_project_id');
     my $band_2_drone_run_band_project_id = $c->req->param('band_2_drone_run_band_project_id');
     my $band_3_drone_run_band_project_id = $c->req->param('band_3_drone_run_band_project_id');
+    my $merged_image_type = $c->req->param('merged_image_type');
 
-    my $return = _perform_image_merge($c, $schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $band_1_drone_run_band_project_id, $band_2_drone_run_band_project_id, $band_3_drone_run_band_project_id, $user_id, $user_name, $user_role);
+    my $return = _perform_image_merge($c, $schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $band_1_drone_run_band_project_id, $band_2_drone_run_band_project_id, $band_3_drone_run_band_project_id, $merged_image_type, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -3094,6 +3099,7 @@ sub _perform_image_merge {
     my $band_1_drone_run_band_project_id = shift;
     my $band_2_drone_run_band_project_id = shift;
     my $band_3_drone_run_band_project_id = shift;
+    my $merged_image_type = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -3159,7 +3165,7 @@ sub _perform_image_merge {
         my $project_rs = $schema->resultset("Project::Project")->create({
             name => "$drone_run_project_name Merged:$band_1_drone_run_band_project_type (project_id:$band_1_drone_run_band_project_id),$band_2_drone_run_band_project_type (project_id:$band_2_drone_run_band_project_id),$band_3_drone_run_band_project_type (project_id:$band_3_drone_run_band_project_id)",
             description => "Merged $band_1_drone_run_band_project_type (project_id:$band_1_drone_run_band_project_id),$band_2_drone_run_band_project_type (project_id:$band_2_drone_run_band_project_id),$band_3_drone_run_band_project_type (project_id:$band_3_drone_run_band_project_id)",
-            projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => 'Merged 3 Bands'}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
+            projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => 'Merged 3 Bands '.$merged_image_type}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
             project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $drone_run_project_id}]
         });
         $merged_drone_run_band_id = $project_rs->project_id();
@@ -3381,22 +3387,18 @@ sub _perform_phenotype_calculation {
     my $tgi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'TGI|ISOL:0000017')->cvterm_id;
     my $ndvi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI|ISOL:0000018')->cvterm_id;
     my $vari_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'VARI|ISOL:0000019')->cvterm_id;
-    my $merged_3_bands_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands|ISOL:0000020')->cvterm_id;
+    my $merged_3_bands_bgr_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands BGR|ISOL:0000061')->cvterm_id;
+    my $merged_3_bands_nrn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NRN|ISOL:0000062')->cvterm_id;
     my $rgb_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'RGB Color Image|ISOL:0000002')->cvterm_id;
     my $bw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Black and White Image|ISOL:0000003')->cvterm_id;
     my $blue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Blue (450-520nm)|ISOL:0000004')->cvterm_id;
     my $green_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Green (515-600nm)|ISOL:0000005')->cvterm_id;
     my $red_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red (600-690nm)|ISOL:0000006')->cvterm_id;
+    my $red_edge_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red Edge (690-750nm)|ISOL:0000006')->cvterm_id;
     my $nir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NIR (750-900nm)|ISOL:0000007')->cvterm_id;
     my $mir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'MIR (1550-1750nm)|ISOL:0000008')->cvterm_id;
     my $fir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FIR (2080-2350nm)|ISOL:0000009')->cvterm_id;
     my $thermal_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Thermal IR (10400-12500nm)|ISOL:0000010')->cvterm_id;
-    my $merged_3_bands_band_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 In Merged 3 Bands Image|ISOL:0000011')->cvterm_id;
-    my $merged_3_bands_band_2_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 2 In Merged 3 Bands Image|ISOL:0000012')->cvterm_id;
-    my $merged_3_bands_band_3_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 3 In Merged 3 Bands Image|ISOL:0000013')->cvterm_id;
-    my $rgb_band_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 In RGB Image|ISOL:0000014')->cvterm_id;
-    my $rgb_band_2_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 2 In RGB Image|ISOL:0000015')->cvterm_id;
-    my $rgb_band_3_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 3 In RGB Image|ISOL:0000016')->cvterm_id;
 
     my $tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'TGI From Denoised Original Image|ISOL:0000022')->cvterm_id;
     my $vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'VARI From Denoised Original Image|ISOL:0000023')->cvterm_id;
@@ -3456,6 +3458,9 @@ sub _perform_phenotype_calculation {
     if ($drone_run_band_project_type eq 'Red (600-690nm)') {
         $drone_run_band_project_type_cvterm_id = $red_cvterm_id;
     }
+    if ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
+        $drone_run_band_project_type_cvterm_id = $red_edge_cvterm_id;
+    }
     if ($drone_run_band_project_type eq 'NIR (750-900nm)') {
         $drone_run_band_project_type_cvterm_id = $nir_cvterm_id;
     }
@@ -3471,8 +3476,11 @@ sub _perform_phenotype_calculation {
     if ($drone_run_band_project_type eq 'RGB Color Image') {
         $drone_run_band_project_type_cvterm_id = $rgb_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Merged 3 Bands') {
-        $drone_run_band_project_type_cvterm_id = $merged_3_bands_cvterm_id;
+    if ($drone_run_band_project_type eq 'Merged 3 Bands BGR') {
+        $drone_run_band_project_type_cvterm_id = $merged_3_bands_bgr_cvterm_id;
+    }
+    if ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
+        $drone_run_band_project_type_cvterm_id = $merged_3_bands_nrn_cvterm_id;
     }
 
     my $drone_run_band_plot_polygons_preprocess_cvterm_id;

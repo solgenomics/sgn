@@ -75,6 +75,7 @@ sub patch {
             'observation_unit_polygon_blue_background_removed_threshold_imagery',
             'observation_unit_polygon_green_background_removed_threshold_imagery',
             'observation_unit_polygon_red_background_removed_threshold_imagery',
+            'observation_unit_polygon_red_edge_background_removed_threshold_imagery',
             'observation_unit_polygon_nir_background_removed_threshold_imagery',
             'observation_unit_polygon_mir_background_removed_threshold_imagery',
             'observation_unit_polygon_fir_background_removed_threshold_imagery',

@@ -654,6 +654,16 @@
                         <div id="drone_imagery_merge_bands_band3_select"></div>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Merge Image Type:</label>
+                    <div class="col-sm-7">
+                        <select class="form-control" id="drone_run_merge_image_type" name="drone_run_merge_image_type">
+                            <option value="">Select One</option>
+                            <option value="BGR">BGR (Band 1 = Blue, Band 2 = Green, Band 3 = Red)</option>
+                            <option value="NRN">NRN (Band 1 = NIR, Band 2 = Red, Band 3 = NIR)</option>
+                        </select>
+                    </div>
+                </div>
             </form>
         </div>
 
@@ -3144,7 +3154,7 @@ jQuery(document).ready(function() {
         var manage_drone_imagery_calculate_phenotypes_zonal_channel = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select_input').val();
         var manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_time_select').val();
 
-        if ( ( (manage_drone_imagery_calculate_phenotypes_plot_polygons_type == 'tgi') || (manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'RGB Color Image') ) && (manage_drone_imagery_calculate_phenotypes_zonal_channel == '1' || manage_drone_imagery_calculate_phenotypes_zonal_channel == '2') ) {
+        if ( ( (manage_drone_imagery_calculate_phenotypes_plot_polygons_type == 'tgi') || (manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands BGR' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands NRN' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'RGB Color Image') ) && (manage_drone_imagery_calculate_phenotypes_zonal_channel == '1' || manage_drone_imagery_calculate_phenotypes_zonal_channel == '2') ) {
             alert('The current image is composed of only a single channel, and so only channel 1 can be selected here!');
             return false;
         }
@@ -3435,6 +3445,12 @@ jQuery(document).ready(function() {
         var band_1_drone_run_band_project_id = jQuery('#drone_run_merge_band_select_1').val();
         var band_2_drone_run_band_project_id = jQuery('#drone_run_merge_band_select_2').val();
         var band_3_drone_run_band_project_id = jQuery('#drone_run_merge_band_select_3').val();
+        var merged_image_type = jQuery('#drone_run_merge_image_type').val();
+        if (merged_image_type == '') {
+            alert('Please select a merged image type first!');
+            return false;
+        }
+
         jQuery.ajax({
             type: 'POST',
             url: '/api/drone_imagery/merge_bands',
@@ -3444,7 +3460,8 @@ jQuery(document).ready(function() {
                 'band_2_drone_run_band_project_id': band_2_drone_run_band_project_id,
                 'band_3_drone_run_band_project_id': band_3_drone_run_band_project_id,
                 'drone_run_project_id': drone_imagery_merge_channels_drone_run_project_id,
-                'drone_run_project_name': drone_imagery_merge_channels_drone_run_project_name
+                'drone_run_project_name': drone_imagery_merge_channels_drone_run_project_name,
+                'merged_image_type' : merged_image_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
