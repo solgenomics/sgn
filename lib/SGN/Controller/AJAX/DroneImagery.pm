@@ -366,9 +366,6 @@ sub raw_drone_imagery_summary_GET : Args(0) {
         $drone_run_html .= '</div><div class="col-sm-3">';
         if (!$v->{drone_run_processed}) {
             $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-        } else {
-            $drone_run_html .= '<span class="label label-success" ><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;&nbsp;Processed</span><br/><br/>';
-            $drone_run_html .= '<button class="btn btn-sm btn-success" name="project_drone_imagery_download_phenotypes" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;&nbsp;Download Phenotypes</button><br/><br/>';
         }
         $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Drone Run</button>';
 
@@ -1224,7 +1221,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
 sub drone_imagery_analysis_query : Path('/api/drone_imagery/analysis_query') : ActionClass('REST') { }
 
-sub drone_imagery_analysis_query_GET : Args(0) {
+sub drone_imagery_analysis_query_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1257,7 +1254,7 @@ sub drone_imagery_analysis_query_GET : Args(0) {
 
     my $drone_run_project_id_list = $c->req->param('drone_run_project_id_list') ? decode_json $c->req->param('drone_run_project_id_list') : [];
     my $drone_run_band_project_id_list = $c->req->param('drone_run_band_project_id_list') ? decode_json $c->req->param('drone_run_band_project_id_list') : [];
-    my $trait_id_list = $c->req->param('trait_id_list') ? decode_json $c->req->param('trait_id_list') : [];
+    my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $return_format = $c->req->param('format') || 'csv';
     my $trial_name_list = $c->req->param('trial_name_list');
     my $trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];

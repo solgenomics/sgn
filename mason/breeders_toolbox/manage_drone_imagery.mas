@@ -18,7 +18,12 @@
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button>", icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
+<%perl>
+#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button>";
+</%perl>
+
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
 
 </div>
 
@@ -776,6 +781,70 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_download_phenotypes_dialog" name="drone_imagery_download_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryDownloadPhenotypesDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryDownloadPhenotypesDialog">Select a dataset to download drone phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_download_phenotypes_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_download_phenotypes_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_download_phenotypes_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
+                    <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in downloading" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_download_phenotypes_trait_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_download_phenotypes_trait_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Download" &>
+                    <& /page/page_title.mas, title=>"Download!" &>
+
+                    <div id ="drone_imagery_download_phenotypes_file_div">
+                    </div>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_download_phenotypes_confirm_step">Submit</button>
+                    </center>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -1352,13 +1421,55 @@ jQuery(document).ready(function() {
     // Download Phenotypes
     //
 
-    jQuery(document).on('click', 'button[name="project_drone_imagery_download_phenotypes"]', function(){
-        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
-        var field_trial_id = jQuery(this).data('field_trial_id');
+    var manage_drone_imagery_download_phenotypes_field_trial_id = undefined;
+    var manage_drone_imagery_download_phenotypes_trait_ids = [];
+
+    jQuery('#download_phenotypes_drone_imagery_link').click(function(){
+        jQuery('#drone_imagery_download_phenotypes_dialog').modal('show');
+        get_select_box('trials', 'drone_imagery_download_phenotypes_trial_select_div', { 'name' : 'drone_imagery_download_phenotypes_field_trial_id', 'id' : 'drone_imagery_download_phenotypes_field_trial_id', 'empty':1, 'multiple':0 });
+
+        manage_drone_imagery_download_phenotypes_field_trial_id = undefined;
+        manage_drone_imagery_download_phenotypes_trait_ids = [];
+    });
+
+    jQuery('#drone_imagery_download_phenotypes_field_trial_select_step').click(function(){
+        manage_drone_imagery_download_phenotypes_field_trial_id = jQuery('#drone_imagery_download_phenotypes_field_trial_id').val();
+        if (manage_drone_imagery_download_phenotypes_field_trial_id == '') {
+            alert('Please select a field trial first!');
+        } else {
+            get_select_box('traits', 'drone_imagery_download_phenotypes_trait_select_div', { 'name' : 'drone_imagery_download_phenotypes_trait_id_select', 'id' : 'drone_imagery_download_phenotypes_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_download_phenotypes_field_trial_id, 'stock_type':'plot' });
+
+            Workflow.complete("#drone_imagery_download_phenotypes_field_trial_select_step");
+            Workflow.focus('#drone_imagery_download_phenotypes_workflow', 1);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_download_phenotypes_trait_select_step').click(function(){
+        manage_drone_imagery_download_phenotypes_trait_ids = jQuery('#drone_imagery_download_phenotypes_trait_id_select').val();
+        if (manage_drone_imagery_download_phenotypes_trait_ids == null || manage_drone_imagery_download_phenotypes_trait_ids == undefined) {
+            alert('Please select at least one observation variable!');
+            return false;
+        }
+        if (manage_drone_imagery_download_phenotypes_trait_ids.length < 1){
+            alert('Please select at least one observation variable!');
+        } else {
+            Workflow.complete("#drone_imagery_download_phenotypes_trait_select_step");
+            Workflow.focus('#drone_imagery_download_phenotypes_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_download_phenotypes_confirm_step').click(function() {
         jQuery.ajax({
-            type: 'GET',
-            url: '/api/drone_imagery/analysis_query?drone_run_project_id_list='+JSON.stringify([drone_run_project_id])+'&field_trial_id_list='+JSON.stringify([field_trial_id])+'&format=csv',
+            type: 'POST',
+            url: '/api/drone_imagery/analysis_query',
             dataType: "json",
+            data: {
+                'observation_variable_id_list':JSON.stringify(manage_drone_imagery_download_phenotypes_trait_ids),
+                'field_trial_id_list':JSON.stringify([manage_drone_imagery_download_phenotypes_field_trial_id]),
+                'format':'csv'
+            },
             beforeSend: function (){
                 jQuery('#working_modal').modal('show');
             },
@@ -1368,7 +1479,7 @@ jQuery(document).ready(function() {
                 if(response.error) {
                     alert(response.error);
                 }
-                location.href =response.file;
+                jQuery('#drone_imagery_download_phenotypes_file_div').html('Download File: <a href="'+response.file+'">'+response.file+'</a>');
             },
             error: function(response){
                 alert('Error downloading drone image phenotypes!');
