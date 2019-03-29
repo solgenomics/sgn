@@ -832,10 +832,14 @@ sub trait :Path('/solgs/trait') Args(3) {
  
     if ($ajaxredirect) 
     {
-        my $trait_abbr = $c->stash->{trait_abbr};
-        my $cache_dir  = $c->stash->{solgs_cache_dir};
-        my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
-        $gebv_file     = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
+        #my $trait_abbr = $c->stash->{trait_abbr};
+        #my $cache_dir  = $c->stash->{solgs_cache_dir};
+        #my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
+       # $gebv_file     = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
+
+	#my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
+        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+	my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
         my $ret->{status} = 'failed';
         
@@ -1255,17 +1259,17 @@ sub list_predicted_selection_pops {
    
     opendir my $dh, $dir or die "can't open $dir: $!\n";
    
-    my  @files  =  grep { /rrblup_selection_gebvs_${model_id}_/ && -f "$dir/$_" } 
+    my  @files  =  grep { /rrblup_selection_gebvs_\w+_${model_id}_/ && -f "$dir/$_" } 
     readdir($dh); 
    
     closedir $dh; 
-    
+
     my @pred_pops;
     
     foreach (@files) 
     {        
         unless ($_ =~ /list/) {
-            my ($model_id2, $pred_pop_id, $trait_id) = $_ =~ m/\d+/g;
+            my ($model_id2, $pred_pop_id) = $_ =~ m/\d+/g;
             
             push @pred_pops, $pred_pop_id;  
         }
@@ -1310,16 +1314,14 @@ sub prediction_pop_analyzed_traits {
     no warnings 'uninitialized';
   
     my $prediction_is_list = $c->stash->{list_prediction};
-  
-    #$prediction_pop_id = "list_${prediction_pop_id}" if $prediction_is_list;
- 
+   
     if ($training_pop_id !~ /$prediction_pop_id/) 
     {
-	my  @files  =  grep { /rrblup_selection_gebvs_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" > 0 } 
+	my  @files  =  grep { /rrblup_selection_gebvs_\w+_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" > 0 } 
                  readdir($dh); 
    
 	closedir $dh; 
-  
+
 	my @trait_ids;
 	my @trait_abbrs;
 	
@@ -1327,9 +1329,10 @@ sub prediction_pop_analyzed_traits {
 	{
 	    my @copy_files = @files;
    
-	    @trait_abbrs = map { s/rrblup_selection_gebvs_${training_pop_id}_${prediction_pop_id}_//g ? $_ : 0} @copy_files;
-	    @trait_abbrs = map { s/\.txt|\s+// ? $_ : 0 } @trait_abbrs;
-	   
+	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
+	    @trait_abbrs = map { s/${training_pop_id}_${prediction_pop_id}//g ? $_ : 0} @trait_abbrs;
+	    @trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
+
 	    if(@trait_abbrs) 
 	    {
 		foreach my $trait_abbr (@trait_abbrs)
@@ -3582,7 +3585,6 @@ sub run_rrblup_trait {
         
         if ($prediction_id)
         { 
-            #$prediction_id = "prediction_id} if $c->stash->{list_prediction};
             my $identifier =  $pop_id . '_' . $prediction_id;
 
             $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
