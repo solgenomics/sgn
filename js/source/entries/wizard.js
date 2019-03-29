@@ -122,7 +122,7 @@ export function WizardSetup(main_id){
            }
            res({
             "type":ldata.type_name,
-            "items":!ids.error?ids.map((ele_id,i)=>({
+            "items":(ids && !ids.error) ? ids.map((ele_id,i)=>({
                 "id":ele_id,
                 "name":ldata.elements[i][1]
             })):[]
