@@ -54,7 +54,7 @@ solGS.geneticGain = {
 	var selectionTraits = jQuery('#gg_canvas').find('#selection_traits_ids').val();
 	var traitId         = jQuery('#trait_id').val();
 
-	if(document.URL.match(/solgs\/traits\/all\/population\//)) {
+	if(document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
 	    selectionTraits = selectionTraits.split(',');
 	}
 	
@@ -90,7 +90,7 @@ solGS.geneticGain = {
 		    
 		    solGS.showMessage("gg_message", response.Error);
 		   
-		    if (document.URL.match(/\/solgs\/traits\/all\/population\//)) {
+		    if (document.URL.match(/\/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
                         jQuery("#check_genetic_gain").show();
                     }
 		    
@@ -103,7 +103,7 @@ solGS.geneticGain = {
 			   			    
 			var fileNameBoxplot = boxplot.split('/').pop();					    
 			boxplotFile = "<a href=\"" + boxplot +  "\" download=" + fileNameBoxplot + ">boxplot</a>";
-			
+		
 			var fileNameData = boxplotData.split('/').pop();					    
 			var dataFile = "<a href=\"" + boxplotData +  "\" download=" + fileNameData + ">Data</a>";			    
 			jQuery("#gg_plot")
@@ -115,6 +115,10 @@ solGS.geneticGain = {
 
 			jQuery("#gg_canvas .multi-spinner-container").hide();
 			jQuery("#gg_message").empty();
+
+			if (document.URL.match(/\/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
+                            jQuery("#check_genetic_gain").show();
+			}
 			    
 		    }  else {
 			jQuery("#gg_canvas .multi-spinner-container").hide();
