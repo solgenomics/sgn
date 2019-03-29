@@ -317,7 +317,7 @@ export function Wizard(main_id,col_number){
         return false;
       }
     }
-    reflow(d.index, false, true);
+    reflow(d.index, true, true);
   });
   
   //set up virtual scroll sections
@@ -487,7 +487,7 @@ export function Wizard(main_id,col_number){
     var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k]}));
     lists = lists.sort((a,b)=>a.name.toLowerCase() < b.name.toLowerCase() ? -1 : b.name.toLowerCase() < a.name.toLowerCase() ? 1 : 0);
     var opts = allCols.selectAll(".wizard-lists-group").selectAll("option")
-      .data(lists);
+          .data(lists, d=>d.id);
     opts.enter().append("option").merge(opts)
       .attr("value",d=>list_prefix+d.id)
       .text(d=>d.name);
