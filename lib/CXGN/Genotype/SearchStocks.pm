@@ -118,7 +118,11 @@ sub get_accessions_using_snps {
 
     my @selected_accessions = ();
     my %homozygous_nt;
+    my %heterozygous_nt1;
+    my %heterozygous_nt2;
     my $protocol_id;
+    my @het_array1;
+    my @het_array2;
 
     print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
 
@@ -139,6 +143,14 @@ sub get_accessions_using_snps {
                 my $homozygous_param = $allele_1.'/'.$allele_2;
                 $homozygous_nt{$marker_name} = {'NT' => $homozygous_param}
             }
+
+            if ($allele_1 ne $allele_2){
+
+                my $heterozygous_param1 = $allele_1.'/'.$allele_2;
+                my $heterozygous_param2 = $allele_2.'/'.$allele_1;
+                $heterozygous_nt1{$marker_name} = {'NT' => $heterozygous_param1};
+                $heterozygous_nt2{$marker_name} = {'NT' => $heterozygous_param2};
+            }
         }
     }
 
@@ -148,9 +160,39 @@ sub get_accessions_using_snps {
     }
 
     print STDERR "HOMOZYGOUS NT JSON=" .Dumper($homozygous_nt_string). "\n";
-#    print STDERR "HET PARAMS=" .Dumper(\@het_params). "\n";
 
-    if ($homozygous_nt_string){
+    print STDERR "HET HASH=" .Dumper(\%heterozygous_nt1). "\n";
+
+    if (%heterozygous_nt1 && %heterozygous_nt2){
+        foreach my $key (keys%heterozygous_nt1){
+            my %each_hash1 = ($key, $heterozygous_nt1{$key});
+            my $het_nt_string = encode_json \%each_hash1;
+            push @het_array1, $het_nt_string;
+        }
+
+        foreach my $key (keys%heterozygous_nt2){
+            my %each_hash2 = ($key, $heterozygous_nt2{$key});
+            my $het_nt_string = encode_json \%each_hash2;
+            push @het_array2, $het_nt_string;
+        }
+    }
+
+    my @all_het_params = (@het_array1, @het_array2);
+    my $het_count = @all_het_params;
+
+    print STDERR "ALL HET JASON=" .Dumper(\@all_het_params). "\n";
+    print STDERR "ALL HET COUNT=" .Dumper($het_count). "\n";
+
+
+
+
+    my $heterozygous_nt_string1;
+
+
+
+#    print STDERR "HETEROZYGOUS NT STRING=" .Dumper($heterozygous_nt_string). "\n";
+
+    if ($heterozygous_nt_string1){
         my @homozygous_accessions;
         my $first_q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
@@ -160,36 +202,16 @@ sub get_accessions_using_snps {
             AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
 
         my $h = $schema->storage->dbh()->prepare($first_q);
-        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $homozygous_nt_string, @accessions);
+        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $heterozygous_nt_string1, @accessions);
 
         while (my @row = $h->fetchrow_array()){
             push @homozygous_accessions, $row[0]
         }
 
-        print STDERR "HOMOZYGOUS TEST=" .Dumper(\@homozygous_accessions). "\n";
+        print STDERR "HOMOZYGOUS ACCESSIONS =" .Dumper(\@homozygous_accessions). "\n";
     }
 
-#    if (@het_params){
-#        my @pair;
-#        my $pair_ref = \@pair;
-#        foreach my $pair_ref(@het_params){
-#            my $next_q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
-#                JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
-#                JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-#                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-#                WHERE genotypeprop.value @> ? OR genotypeprop.value @> ?
-#                AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
 
-#            my $h = $schema->storage->dbh()->prepare($next_q);
-#            $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $pair_ref->[0], $pair_ref->[1], @accessions);
-#            while (my @row = $h->fetchrow_array()){
-#                push @selected_accessions, [$row[0]];
-
-#            }
-#        }
-#        print STDERR "HETEROZYGOUS TEST=" .Dumper(\@selected_accessions). "\n";
-
-#    }
 
     return \@selected_accessions;
 
