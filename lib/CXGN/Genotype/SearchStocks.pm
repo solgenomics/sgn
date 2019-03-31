@@ -178,19 +178,42 @@ sub get_accessions_using_snps {
     }
 
     my @all_het_params = (@het_array1, @het_array2);
-    my $het_count = @all_het_params;
+    my $het_param_count = @het_array1;
 
     print STDERR "ALL HET JASON=" .Dumper(\@all_het_params). "\n";
-    print STDERR "ALL HET COUNT=" .Dumper($het_count). "\n";
+    print STDERR "HET PARAM COUNT=" .Dumper($het_param_count). "\n";
 
+    my @het_all_accessions;
 
+    if ($het_param_count != 0){
+    foreach my $het_json(@all_het_params){
+        my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+            WHERE genotypeprop.value @> ?
+            AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $het_json, @accessions);
+
+        while (my @row = $h->fetchrow_array()){
+            push @het_all_accessions, $row[0]
+        }
+    }
+}
+
+    print STDERR "HET ALL ACCESSIONS=" .Dumper(\@het_all_accessions). "\n";
+
+    my %accession_count;
+    $accession_count{$_}++ foreach @het_all_accessions;
+
+    my @het_selected_accessions = grep { $accession_count{$_} eq $het_param_count } keys %accession_count;
+
+    print STDERR "HET SELECTED ACCESSIONS=" .Dumper(\@het_selected_accessions). "\n";
 
 
     my $heterozygous_nt_string1;
-
-
-
-#    print STDERR "HETEROZYGOUS NT STRING=" .Dumper($heterozygous_nt_string). "\n";
 
     if ($heterozygous_nt_string1){
         my @homozygous_accessions;
