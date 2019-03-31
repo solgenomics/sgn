@@ -123,6 +123,8 @@ sub get_accessions_using_snps {
     my $protocol_id;
     my @het_array1;
     my @het_array2;
+    my @het_all_accessions;
+    my @het_selected_accessions;
 
     print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
 
@@ -183,10 +185,8 @@ sub get_accessions_using_snps {
     print STDERR "ALL HET JASON=" .Dumper(\@all_het_params). "\n";
     print STDERR "HET PARAM COUNT=" .Dumper($het_param_count). "\n";
 
-    my @het_all_accessions;
-
-    if ($het_param_count != 0){
-    foreach my $het_json(@all_het_params){
+    my @homozygous_accessions;
+    if ($homozygous_nt_string){
         my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
             JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -195,45 +195,63 @@ sub get_accessions_using_snps {
             AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
 
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $het_json, @accessions);
-
-        while (my @row = $h->fetchrow_array()){
-            push @het_all_accessions, $row[0]
-        }
-    }
-}
-
-    print STDERR "HET ALL ACCESSIONS=" .Dumper(\@het_all_accessions). "\n";
-
-    my %accession_count;
-    $accession_count{$_}++ foreach @het_all_accessions;
-
-    my @het_selected_accessions = grep { $accession_count{$_} eq $het_param_count } keys %accession_count;
-
-    print STDERR "HET SELECTED ACCESSIONS=" .Dumper(\@het_selected_accessions). "\n";
-
-
-    my $heterozygous_nt_string1;
-
-    if ($heterozygous_nt_string1){
-        my @homozygous_accessions;
-        my $first_q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
-            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
-            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-            WHERE genotypeprop.value @> ?
-            AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
-
-        my $h = $schema->storage->dbh()->prepare($first_q);
-        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $heterozygous_nt_string1, @accessions);
+        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $homozygous_nt_string, @accessions);
 
         while (my @row = $h->fetchrow_array()){
             push @homozygous_accessions, $row[0]
         }
+        print STDERR "SELECTED HOMOZYGOUS ACCESSIONS =" .Dumper(\@homozygous_accessions). "\n";
 
-        print STDERR "HOMOZYGOUS ACCESSIONS =" .Dumper(\@homozygous_accessions). "\n";
+        if ($het_param_count != 0){
+            foreach my $het_json(@all_het_params){
+                my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+                JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+                JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                WHERE genotypeprop.value @> ?
+                AND stock.stock_id IN (" . join(', ', ('?') x @homozygous_accessions) . ")";
+
+                my $h = $schema->storage->dbh()->prepare($q);
+                $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $het_json, @homozygous_accessions);
+
+                while (my @row = $h->fetchrow_array()){
+                    push @het_all_accessions, $row[0]
+                }
+            }
+
+            my %accession_count;
+            $accession_count{$_}++ foreach @het_all_accessions;
+
+            @het_selected_accessions = grep { $accession_count{$_} eq $het_param_count } keys %accession_count;
+
+            print STDERR "HET HOMO SELECTED ACCESSIONS=" .Dumper(\@het_selected_accessions). "\n";
+        }
+    } elsif (($homozygous_nt_string == 0) && ($het_param_count != 0)){
+        foreach my $het_json(@all_het_params){
+            my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+                JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+                JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                WHERE genotypeprop.value @> ?
+                AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
+
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $het_json, @accessions);
+
+            while (my @row = $h->fetchrow_array()){
+                push @het_all_accessions, $row[0]
+            }
+        }
+
+        my %accession_count;
+        $accession_count{$_}++ foreach @het_all_accessions;
+
+        my @het_selected_accessions = grep { $accession_count{$_} eq $het_param_count } keys %accession_count;
+
+        print STDERR "ONLY HET SELECTED ACCESSIONS=" .Dumper(\@het_selected_accessions). "\n";
+
+
     }
-
 
 
     return \@selected_accessions;
