@@ -157,11 +157,25 @@ sub get_accessions_using_snps {
     }
 
     my $homozygous_nt_string;
+    my $heterozygous_nt_string;
+    my $all_nt_string;
     if (%homozygous_nt){
         $homozygous_nt_string = encode_json \%homozygous_nt;
     }
 
+    if (%heterozygous_nt1){
+        $heterozygous_nt_string = encode_json \%heterozygous_nt1;
+    }
+
+    if ((%homozygous_nt) && (%heterozygous_nt1)){
+        my %all_params = (%homozygous_nt, %heterozygous_nt1);
+        $all_nt_string = encode_json \%all_params;
+
+}
+
     print STDERR "HOMOZYGOUS NT JSON=" .Dumper($homozygous_nt_string). "\n";
+    print STDERR "HETEROZYGOUS NT JSON=" .Dumper($heterozygous_nt_string). "\n";
+    print STDERR "ALL NT JSON=" .Dumper($all_nt_string). "\n";
 
     print STDERR "HET HASH=" .Dumper(\%heterozygous_nt1). "\n";
 
@@ -197,12 +211,15 @@ sub get_accessions_using_snps {
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $homozygous_nt_string, @accessions);
 
-        while (my @row = $h->fetchrow_array()){
-            push @homozygous_accessions, $row[0]
-        }
-        print STDERR "SELECTED HOMOZYGOUS ACCESSIONS =" .Dumper(\@homozygous_accessions). "\n";
+        if ($het_param_count == 0){
+            while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
+                push @selected_accessions, [$selected_id, $selected_uniquename, $homozygous_nt_string]
+            }
+        } elsif ($het_param_count != 0){
+            while (my @row = $h->fetchrow_array()){
+                push @homozygous_accessions, $row[0]
+            }
 
-        if ($het_param_count != 0){
             foreach my $het_json(@all_het_params){
                 my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
@@ -225,6 +242,13 @@ sub get_accessions_using_snps {
             @het_selected_accessions = grep { $accession_count{$_} eq $het_param_count } keys %accession_count;
 
             print STDERR "HET HOMO SELECTED ACCESSIONS=" .Dumper(\@het_selected_accessions). "\n";
+
+            my $q = "SELECT stock_id, uniquename FROM stock where stock_id IN (" . join(', ', ('?') x @het_selected_accessions) . ")";
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute(@het_selected_accessions);
+            while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
+                push @selected_accessions, [$selected_id, $selected_uniquename, $all_nt_string]
+            }
         }
     } elsif (($homozygous_nt_string == 0) && ($het_param_count != 0)){
         foreach my $het_json(@all_het_params){
@@ -250,12 +274,16 @@ sub get_accessions_using_snps {
 
         print STDERR "ONLY HET SELECTED ACCESSIONS=" .Dumper(\@het_selected_accessions). "\n";
 
+        my $q = "SELECT stock_id, uniquename FROM stock where stock_id IN (" . join(', ', ('?') x @het_selected_accessions) . ")";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute(@het_selected_accessions);
+        while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
+            push @selected_accessions, [$selected_id, $selected_uniquename, $heterozygous_nt_string]
+        }
 
     }
 
-
     return \@selected_accessions;
-
 
 }
 
