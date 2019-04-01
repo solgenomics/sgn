@@ -72,17 +72,22 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
     #print STDERR Dumper $predefined_columns;
 
     foreach (@trial_ids){
+        my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
         if ($data_level eq 'plants') {
-            my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
             if (!$trial->has_plant_entries()) {
                 $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
                 return;
             }
         }
         if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
-            my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
             if (!$trial->has_subplot_entries()) {
                 $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
+                return;
+            }
+        }
+        if ($data_level eq 'tissue_samples') {
+            if (!$trial->has_tissue_sample_entries()) {
+                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have tissue sample entries. Please create the tissue sample entries first." };
                 return;
             }
         }
