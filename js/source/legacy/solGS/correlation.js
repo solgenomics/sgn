@@ -161,7 +161,7 @@ function formatGenCorInputData (popId, type, indexFile) {
 		
                 gebvsFile = response.gebvs_file;
 		indexFile = response.index_file;
-		
+		console.log('index file: ' + indexFile + ' gebvsFile: ' + gebvsFile)	
                 var divPlace;
                 if (indexFile) {
                     divPlace = '#si_correlation_canvas';
@@ -172,6 +172,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'corr_population_id': popId, 
                     'type': type, 
                     'gebvs_file': gebvsFile,
+		    'index_file': indexFile,
                     'div_place' : divPlace,
                 };
 		

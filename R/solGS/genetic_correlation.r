@@ -14,6 +14,8 @@ library(ltm)
 library(plyr)
 library(rjson)
 library(methods)
+library(dplyr)
+library(tibble)
 
 allArgs <- commandArgs()
 
@@ -26,11 +28,9 @@ inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
 correTableFile <- grep("genetic_corre_table", outputFiles, value=TRUE)
 correJsonFile  <- grep("genetic_corre_json", outputFiles, value=TRUE)
 
-message('corre table file: ', correTableFile)
-message('corre json file: ', correJsonFile)
-
 geneticDataFile <- grep("combined_gebvs", inputFiles, value=TRUE)
-message('genetic data file: ', geneticDataFile)
+
+selectionIndexFile <- grep("selection_index", inputFiles, value=TRUE)
 
 geneticData <- read.table(geneticDataFile,
                           header = TRUE,
@@ -40,7 +40,37 @@ geneticData <- read.table(geneticDataFile,
                           dec = "."
                           )
 
-coefpvalues <- rcor.test(geneticData,
+indexData <- c()
+
+if (length(selectionIndexFile) != 0
+    && file.info(selectionIndexFile)$size != 0) {
+    indexData <- read.table(selectionIndexFile,
+                            header = TRUE,
+                            row.names = 1,
+                            sep = "\t",
+                            na.strings = c("NA"),
+                            dec = "."
+                            )
+}
+
+corrData <- c()
+
+if (!is.null(indexData)) {
+    geneticData <- rownames_to_column(geneticData, var="genotypes")    
+    indexData   <- rownames_to_column(indexData, var="genotypes")
+   
+    geneticData <- geneticData %>% arrange(genotypes)
+    indexData   <- indexData %>% arrange(genotypes)
+    
+    corrData <- full_join(geneticData, indexData)      
+    corrData <- column_to_rownames(corrData, var="genotypes")
+  
+} else {
+    corrData <- geneticData
+}
+
+
+coefpvalues <- rcor.test(corrData,
                          method="pearson",
                          use="pairwise"
                          )
