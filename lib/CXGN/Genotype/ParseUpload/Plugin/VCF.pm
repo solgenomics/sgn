@@ -291,7 +291,8 @@ sub _parse_with_plugin {
                     $value{'DS'} = $gt_dosage;
                 }
                 if (looks_like_number($value{'DS'})) {
-                    $value{'DS'} = round($value{'DS'});
+                    my $rounded_ds = round($value{'DS'});
+                    $value{'DS'} = "$rounded_ds";
                 }
                 $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
             }
