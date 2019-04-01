@@ -156,7 +156,7 @@ jQuery(document).ready(function() {
 
     jQuery('#create_spreadsheet_data_level').change(function() {
         jQuery("#create_spreadsheet_sample_number").val('');
-        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' || jQuery('#create_spreadsheet_data_level').val() == 'subplots' || jQuery('#create_spreadsheet_data_level').val() == 'tissue_samples') {
+        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' || jQuery('#create_spreadsheet_data_level').val() == 'subplots' ) {
             jQuery('#create_spreadsheet_plant_options').show();
         } else {
             jQuery('#create_spreadsheet_plant_options').hide();
