@@ -51,7 +51,9 @@ This script loads genotype data into the Chado genotype table it encodes the gen
 This script mimics exactly the "online process" in SGN::Controller::AJAX::GenotypesVCFUpload->upload_genotype_verify
 
 =head1 AUTHOR
+
  Nicolas Morales (nm529@cornell.edu) May 2016
+
 =cut
 
 use strict;
@@ -211,53 +213,97 @@ my $parsed_data = $parser->parse_with_iterator();
 # }
 #print STDERR Dumper $parsed_data;
 
-my $protocolprop_info = $parser->extract_protocol_data();
+my $protocol_info = $parser->extract_protocol_data();
 
-print STDERR Dumper($protocolprop_info);
+#print STDERR Dumper($protocol_info);
 
-while (my $genotype = $parser->next()) {
+# store the first genotype with the protocol data,
+# then use the protocol id to store the other genotypes.
+#
+my $protocol_id;
+my $project_id;
+my $observation_unit_uniquenames;
+
+if (my $genotype_info = $parser->next()) {
+    print STDERR "Parsing first genotype and extracting protocol info...\n";
+    $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+    my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+	bcs_schema=>$schema,
+	metadata_schema=>$metadata_schema,
+	phenome_schema=>$phenome_schema,
+	protocol_info=>$protocol_info,
+	genotype_info=>$genotype_info,
+	observation_unit_type_name=>$obs_type,
+	observation_unit_uniquenames=>$observation_unit_uniquenames,
+#	project_id=>$opt_h,
+	genotyping_facility=>$opt_n, #projectprop
+	breeding_program_id=>$breeding_program_id, #project_rel
+	project_year=>$opt_y, #projectprop
+	project_location_id=>$location_id, #ndexperiment and projectprop
+	project_name=>$opt_p, #project_attr
+	project_description=>$opt_d, #project_attr
+	protocol_name=>$opt_m,
+	protocol_description=>$opt_k,
+	organism_id=>$organism_id,
+	igd_numbers_included=>$include_igd_numbers,
+	user_id=>$sp_person_id,
+	archived_filename=>$archived_filename_with_path,
+	archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+								 });
+    my $verified_errors = $store_genotypes->validate();
+    if (scalar(@{$verified_errors->{error_messages}}) > 0){
+	print STDERR Dumper $verified_errors;
+	print STDERR Dumper "There exist errors in your file. Not storing!\n";
+	die;
+    }   
+    
+    my $result = $store_genotypes->store();
+    
+    $protocol_id = $result->{protocol_id};
+    $project_id = $result->{project_id};
+}
+    
+
+while (my $genotype_info = $parser->next()) {
     print STDERR "parsing next... ";
-    #print STDERR Dumper($genotype);
-    print STDERR "Done.\n";
-}
+    
+    my $genotype_info = $parsed_data->{genotypes_info};
+    my $protocol_info = $parsed_data->{protocol_info};
+    $protocol_info->{'reference_genome_name'} = $reference_genome_name;
+    $protocol_info->{'species_name'} = $organism_species;
+    
+    my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+	bcs_schema=>$schema,
+	metadata_schema=>$metadata_schema,
+	phenome_schema=>$phenome_schema,
+	protocol_id => $protocol_id,
+	genotype_info=>$genotype_info,
+	observation_unit_type_name=>$obs_type,
+	observation_unit_uniquenames=>$observation_unit_uniquenames,
+	project_id=>$opt_h,
+	protocol_id=>$opt_j,
+	genotyping_facility=>$opt_n, #projectprop
+	breeding_program_id=>$breeding_program_id, #project_rel
+#	project_year=>$opt_y, #projectprop#
+#	project_location_id=>$location_id, #ndexperiment and projectprop
+#	project_name=>$opt_p, #project_attr
+	#	project_description=>$opt_d, #project_attr
+	project_id => $project_id,
+	organism_id=>$organism_id,
+	igd_numbers_included=>$include_igd_numbers,
+	user_id=>$sp_person_id,
+	archived_filename=>$archived_filename_with_path,
+	archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+								 });
+    my $verified_errors = $store_genotypes->validate();
+    if (scalar(@{$verified_errors->{error_messages}}) > 0){
+	print STDERR Dumper $verified_errors;
+	print STDERR Dumper "There exist errors in your file. Not storing!\n";
+	die;
+    }
+    my $return = $store_genotypes->store();
+    
 
-exit();    
-my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-my $genotype_info = $parsed_data->{genotypes_info};
-my $protocol_info = $parsed_data->{protocol_info};
-$protocol_info->{'reference_genome_name'} = $reference_genome_name;
-$protocol_info->{'species_name'} = $organism_species;
-
-my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
-    bcs_schema=>$schema,
-    metadata_schema=>$metadata_schema,
-    phenome_schema=>$phenome_schema,
-    protocol_info=>$protocol_info,
-    genotype_info=>$genotype_info,
-    observation_unit_type_name=>$obs_type,
-    observation_unit_uniquenames=>$observation_unit_uniquenames,
-    project_id=>$opt_h,
-    protocol_id=>$opt_j,
-    genotyping_facility=>$opt_n, #projectprop
-    breeding_program_id=>$breeding_program_id, #project_rel
-    project_year=>$opt_y, #projectprop
-    project_location_id=>$location_id, #ndexperiment and projectprop
-    project_name=>$opt_p, #project_attr
-    project_description=>$opt_d, #project_attr
-    protocol_name=>$opt_m,
-    protocol_description=>$opt_k,
-    organism_id=>$organism_id,
-    igd_numbers_included=>$include_igd_numbers,
-    user_id=>$sp_person_id,
-    archived_filename=>$archived_filename_with_path,
-    archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-});
-my $verified_errors = $store_genotypes->validate();
-if (scalar(@{$verified_errors->{error_messages}}) > 0){
-    print STDERR Dumper $verified_errors;
-    print STDERR Dumper "There exist errors in your file. Not storing!\n";
-    die;
 }
-my $return = $store_genotypes->store();
 
 print STDERR "Complete!\n";
