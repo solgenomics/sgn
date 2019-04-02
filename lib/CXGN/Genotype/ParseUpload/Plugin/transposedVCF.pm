@@ -1,3 +1,28 @@
+
+=head1 NAME
+
+CXGN::Genotype::ParseUpload::Plugin::transposedVCF - plugin to load transposed VCF files
+
+=head1 SYNOPSIS
+
+ my $up = CXGN::Genotype::ParseUpload->new( { 
+    chado_schema => $schema,
+    filename => $archived_filename_with_path,
+    observation_unit_type_name => $obs_type,
+    organism_id => $organism_id,
+    create_missing_observation_units_as_accessions => $add_accessions,
+    igd_numbers_included => $include_igd_numbers
+  });
+
+  $up->load_plugin("transposedVCF");
+  if ($up->validate_with_plugin()) { 
+    $up->
+
+
+=cut
+
+
+
 package CXGN::Genotype::ParseUpload::Plugin::transposedVCF;
 
 use Moose::Role;
@@ -16,6 +41,9 @@ has 'qual' => (is => 'rw', isa => 'Ref');
 has 'filter' => (is => 'rw', isa => 'Ref');
 has 'info' => (is => 'rw', isa => 'Ref');
 has 'format' => (is => 'rw', isa => 'Ref');
+has 'protocol_data' => (is => 'rw', isa=> 'Ref');
+has 'header_info' => (is => 'rw', isa => 'Ref');
+has 'observation_unit_names' => (isa => 'rw', isa => 'Ref');
 has '_fh' => (is => 'rw', isa => 'Ref');
 
 
@@ -34,96 +62,110 @@ sub _validate_with_plugin {
     my @fields;
 
     open($F, "<", $filename) || die "Can't open file $filename\n";
-
-    my $line_count = 1;
-
-    my $chroms = <$F>;
-    chomp($chroms);
-    my @chroms = split /\t/, $chroms;
-    $self->chroms(\@chroms);
- 
-    my $pos = <$F>;
-    chomp($pos);
-    my @pos = split /\t/, $pos;
-    $self->pos(\@pos);
     
-    my $ids = <$F>;
-    chomp($ids);
-    my @ids = split /\t/, $ids;
-    $self->ids(\@ids);
+    my @header_info;
 
-    my $refs = <$F>;
-    chomp($refs);
-    my @refs = split /\t/, $refs;
-    $self->refs(\@refs);
+    while (<$F> =~ m/^\#\#/) {
+	chomp;
+	print STDERR "Reading header line $_\n";
+	push @header_info, $_;
+    }
+    while (<$F>) { 
+	my $chroms = <$F>;
+	print STDERR "CHROMS: $chroms\n";
+	chomp($chroms);
+	my @chroms = split /\t/, $chroms;
+	$self->chroms(\@chroms);
+	
+	my $pos = <$F>;
+	chomp($pos);
+	my @pos = split /\t/, $pos;
+	$self->pos(\@pos);
+	
+	my $ids = <$F>;
+	chomp($ids);
+	my @ids = split /\t/, $ids;
+	$self->ids(\@ids);
+	
+	print STDERR "IDS = ".Dumper(\@ids);
+	
+	my $refs = <$F>;
+	chomp($refs);
+	my @refs = split /\t/, $refs;
+	$self->refs(\@refs);
+	
+	my $alts = <$F>;
+	chomp($alts);
+	my @alts = split /\t/, $alts;
+	$self->alts(\@alts);
+	
+	my $qual = <$F>;
+	chomp($qual);
+	my @qual = split /\t/,$qual;
+	$self->qual(\@qual);
+	
+	my $filter = <$F>;
+	chomp($filter);
+	my @filter = split /\t/, $filter;
+	$self->filter(\@filter);
+	
+	my $info = <$F>;
+	chomp($info);
+	my @info = split /\t/, $info;
+	$self->info(\@info);
+	
+	my $format = <$F>;
+	chomp($format);
+	my @format = split /\t/, $format;
+	$self->format(\@format);
+	
+	print STDERR "marker count = ".scalar(@ids)."\n";
+	
+	if ($chroms[0] ne '#CHROM'){
+	    push @error_messages, 'Line 1 must start with "#CHROM".';
+	}
+	if ($pos[0] ne 'POS'){
+	    push @error_messages, 'Line 2 must start with "POS".';
+	    }
+	if ($ids[0] ne 'ID'){
+	    push @error_messages, 'Line 3 must start with "ID".';
+	    }
+	if ($refs[0] ne 'REF'){
+	    push @error_messages, 'Line 4 must start with "REF".';
+	}
+	if ($alts[0] ne 'ALT'){
+	    push @error_messages, 'Line 5 must start with "ALT".';
+	}
+	if ($qual[0] ne 'QUAL'){
+	    push @error_messages, 'Line 6 must start with "QUAL".';
+	}
+	if ($filter[0] ne 'FILTER'){
+	    push @error_messages, 'Line 7 must start with "FILTER".';
+	}
+	if ($info[0] ne 'INFO'){
+	    push @error_messages, 'Line 8 must start with "INFO".';
+	}
+	if ($format[0] ne 'FORMAT'){
+	    push @error_messages, 'Line 9 must start with "FORMAT".';
+	}
+    }
 
-    my $alts = <$F>;
-    chomp($alts);
-    my @alts = split /\t/, $alts;
-    $self->alts(\@alts);
-
-    my $qual = <$F>;
-    chomp($qual);
-    my @qual = split /\t/,$qual;
-    $self->qual(\@qual);
     
-    my $filter = <$F>;
-     chomp($filter);
-    my @filter = split /\t/, $filter;
-    $self->filter(\@filter);
-    
-    my $info = <$F>;
-    chomp($info);
-    my @info = split /\t/, $info;
-    $self->info(\@info);
-
-    my $format = <$F>;
-    chomp($format);
-    my @format = split /\t/, $format;
-    $self->format(\@format);
-    
-    print STDERR "marker count = ".scalar(@ids)."\n";
-    
-    if ($chroms[0] ne '#CHROM'){
-        push @error_messages, 'Line 1 must start with "#CHROM".';
-    }
-    if ($pos[0] ne 'POS'){
-        push @error_messages, 'Line 2 must start with "POS".';
-    }
-    if ($ids[0] ne 'ID'){
-        push @error_messages, 'Line 3 must start with "ID".';
-    }
-    if ($refs[0] ne 'REF'){
-        push @error_messages, 'Line 4 must start with "REF".';
-    }
-    if ($alts[0] ne 'ALT'){
-        push @error_messages, 'Line 5 must start with "ALT".';
-    }
-    if ($qual[0] ne 'QUAL'){
-        push @error_messages, 'Line 6 must start with "QUAL".';
-    }
-    if ($filter[0] ne 'FILTER'){
-        push @error_messages, 'Line 7 must start with "FILTER".';
-    }
-    if ($info[0] ne 'INFO'){
-        push @error_messages, 'Line 8 must start with "INFO".';
-    }
-    if ($format[0] ne 'FORMAT'){
-        push @error_messages, 'Line 9 must start with "FORMAT".';
-    }
-
     my @observation_unit_names;
-    
+   
     while (<$F>) {
 	chomp;
+
 	my @fields = split /\t/;
 	print "Parsing line $fields[0]\n";
 	push @observation_unit_names, $fields[0];
     }
+
     close($F);
+    
     my $number_observation_units = scalar(@observation_unit_names);
     print STDERR "Number of observation units: $number_observation_units\n";
-
+    
     my @observation_units_names_trim;
     if ($self->get_igd_numbers_included){
         foreach (@observation_unit_names) {
@@ -185,7 +227,11 @@ sub _validate_with_plugin {
         $self->_set_parse_errors(\%errors);
         return;
     }
+    $self->observation_unit_names(\@observation_unit_names);
+    $self->header_info(\@header_info);
 
+    my $protocol_data = $self->extract_protoco_data();
+    $self->protocol_data($protocol_data);
    
     return 1; #returns true if validation is passed
 }
@@ -198,10 +244,6 @@ sub _parse_with_plugin {
     my $stock_type = $self->get_observation_unit_type_name;
 
     print STDERR "Reading VCF to parse\n";
-
-    my %protocolprop_info;
-
-    my @observation_unit_names;
 
     my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
@@ -219,7 +261,7 @@ sub extract_protocol_data {
     my %protocolprop_info;
     my $marker_info_p8;
     
-    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
+#    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
 
     for (my $i=0; $i<@{$self->ids()}; $i++) { 
 	my $marker_info_p2 = $self->ids()->[$i];
@@ -248,6 +290,10 @@ sub extract_protocol_data {
             push @{$protocolprop_info{'marker_names'}}, $marker_name;
             push @{$protocolprop_info{'markers_array'}}, \%marker;
     }
+    my $stock_type = $self->get_observation_unit_type_name;
+     $protocolprop_info{header_information_lines} = $self->header_info();
+     $protocolprop_info{sample_observation_unit_type_name} = $stock_type;
+
     return \%protocolprop_info;
 }
 
@@ -255,7 +301,6 @@ sub next_genotype {
     my $self = shift;
     
     #print STDERR "Processing next genotype...\n";
-    my @header_info;
     my @fields;
 
     my $genotypeprop; # hashref
@@ -263,7 +308,7 @@ sub next_genotype {
 
     my $F = $self->_fh();
     
-    my %protocolprop_info;
+
     if (! ($line = <$F>)) { 
 	print STDERR "No next genotype... Done!\n"; 
 	close($F); 
@@ -272,6 +317,7 @@ sub next_genotype {
     else {
 	chomp($line);
 
+	if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; next; }
 
 	my @fields = split /\t/, $line;
 
@@ -287,67 +333,67 @@ sub next_genotype {
             my @format =  split /:/,  $self->format()->[$i];
 
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-
-                my @fvalues = split /:/, $scores[$i];
-                my %value;
-                #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-                #    $value{@format[$fv]} = @fvalues[$fv];
-                #}
-                @value{@format} = @fvalues;
-                my $gt_dosage = 0;
-                if (exists($value{'GT'})) {
-                    my @nucleotide_genotype;
-                    my $gt = $value{'GT'};
-                    my $separator = '/';
-                    my @alleles = split (/\//, $gt);
-                    if (scalar(@alleles) <= 1){
-                        @alleles = split (/\|/, $gt);
-                        if (scalar(@alleles) > 1) {
-                            $separator = '|';
-                        }
-                    }
-                    foreach (@alleles) {
-                        if (looks_like_number($_)) {
-                            $gt_dosage = $gt_dosage + $_;
-                            my $index = $_ + 0;
-                            if ($index == 0) {
-                                push @nucleotide_genotype, $self->refs()->[$i]; #Using Reference Allele
-                            } else {
-                                push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
-                            }
-                        } else {
-                            push @nucleotide_genotype, $_;
-                        }
-                    }
-                    $value{'NT'} = join $separator, @nucleotide_genotype;
-                }
-                if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-                    $value{'DS'} = $gt_dosage;
-                }
-                if (looks_like_number($value{'DS'})) {
-                    $value{'DS'} = round($value{'DS'});
-                }
-                $genotypeprop->{$marker_name} = \%value;
-            }
-        }
-
-
-#        print STDERR Dumper($genotypeprop);
- #   close($F);
-
-#    $protocolprop_info{'header_information_lines'} = \@header_info;
-#    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
-
+	    
+	    my @fvalues = split /:/, $scores[$i];
+	    my %value;
+	    #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
+	    #    $value{@format[$fv]} = @fvalues[$fv];
+	    #}
+	    @value{@format} = @fvalues;
+	    my $gt_dosage = 0;
+	    if (exists($value{'GT'})) {
+		my @nucleotide_genotype;
+		my $gt = $value{'GT'};
+		my $separator = '/';
+		my @alleles = split (/\//, $gt);
+		if (scalar(@alleles) <= 1){
+		    @alleles = split (/\|/, $gt);
+		    if (scalar(@alleles) > 1) {
+			$separator = '|';
+		    }
+		}
+		foreach (@alleles) {
+		    if (looks_like_number($_)) {
+			$gt_dosage = $gt_dosage + $_;
+			my $index = $_ + 0;
+			if ($index == 0) {
+			    push @nucleotide_genotype, $self->refs()->[$i]; #Using Reference Allele
+			} else {
+			    push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+			}
+		    } else {
+			push @nucleotide_genotype, $_;
+		    }
+		}
+		$value{'NT'} = join $separator, @nucleotide_genotype;
+	    }
+	    if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
+		$value{'DS'} = $gt_dosage;
+	    }
+	    if (looks_like_number($value{'DS'})) {
+		$value{'DS'} = round($value{'DS'});
+	    }
+	    $genotypeprop->{$marker_name} = \%value;
+	}
+    }
+    
+    
+    #        print STDERR Dumper($genotypeprop);
+    #   close($F);
+    
+    #    $protocolprop_info{'header_information_lines'} = \@header_info;
+    #    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
+    
     #print STDERR Dumper \%protocolprop_info;
     #print STDERR Dumper \%genotypeprop_observation_units;
-
-  #  my %parsed_data = (
-  #      protocol_info => \%protocolprop_info,
-  #      genotypes_info => \%genotypeprop_observation_units,
-  #      observation_unit_uniquenames => \@observation_unit_names
-  #  );
-
-   # $self->_set_parsed_data(\%parsed_data);
+    
+    #  my %parsed_data = (
+    #      protocol_info => \%protocolprop_info,
+    #      genotypes_info => \%genotypeprop_observation_units,
+    #      observation_unit_uniquenames => \@observation_unit_names
+    #  );
+    
+    # $self->_set_parsed_data(\%parsed_data);
 
     return $genotypeprop;
 }

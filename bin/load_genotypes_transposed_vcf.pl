@@ -50,9 +50,12 @@ This script loads genotype data into the Chado genotype table it encodes the gen
 
 This script mimics exactly the "online process" in SGN::Controller::AJAX::GenotypesVCFUpload->upload_genotype_verify
 
+This script has been modified to use a transposed vcf format for loading. The vcf file header should be removed, the file transposed using transpose_matrix.pl and then the header needs to be added again.
+
 =head1 AUTHOR
 
  Nicolas Morales (nm529@cornell.edu) May 2016
+ Lukas Mueller <lam87@cornell.edu> - transposed loading, March 2019
 
 =cut
 
@@ -197,11 +200,14 @@ my $parser = CXGN::Genotype::ParseUpload->new({
     organism_id => $organism_id,
     create_missing_observation_units_as_accessions => $add_accessions,
     igd_numbers_included => $include_igd_numbers
-					      });
+});
+
 
 print STDERR "Loading plugin and starting to parse...\n";
 $parser->load_plugin('transposedVCF');
+
 my $parsed_data = $parser->parse_with_iterator();
+#my $protocol_info = $parser->extract_protocol_data();
 # if (!$parsed_data) {
 #     if (!$parser->has_parse_errors() ){
 #         print STDERR "Could not get parsing errors\n";
@@ -213,7 +219,7 @@ my $parsed_data = $parser->parse_with_iterator();
 # }
 #print STDERR Dumper $parsed_data;
 
-my $protocol_info = $parser->extract_protocol_data();
+
 
 #print STDERR Dumper($protocol_info);
 
@@ -231,7 +237,7 @@ if (my $genotype_info = $parser->next()) {
 	bcs_schema=>$schema,
 	metadata_schema=>$metadata_schema,
 	phenome_schema=>$phenome_schema,
-	protocol_info=>$protocol_info,
+	protocol_info=>$parser->protocol_info(),
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
 	observation_unit_uniquenames=>$observation_unit_uniquenames,
