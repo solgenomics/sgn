@@ -43,7 +43,7 @@ has 'info' => (is => 'rw', isa => 'Ref');
 has 'format' => (is => 'rw', isa => 'Ref');
 has 'protocol_data' => (is => 'rw', isa=> 'Ref');
 has 'header_info' => (is => 'rw', isa => 'Ref');
-has 'observation_unit_names' => (isa => 'rw', isa => 'Ref');
+has 'observation_unit_names' => (is => 'rw', isa => 'Ref');
 has '_fh' => (is => 'rw', isa => 'Ref');
 
 
@@ -65,91 +65,95 @@ sub _validate_with_plugin {
     
     my @header_info;
 
-    while (<$F> =~ m/^\#\#/) {
-	chomp;
-	print STDERR "Reading header line $_\n";
-	push @header_info, $_;
-    }
+    my $chroms;
     while (<$F>) { 
-	my $chroms = <$F>;
-	print STDERR "CHROMS: $chroms\n";
-	chomp($chroms);
-	my @chroms = split /\t/, $chroms;
-	$self->chroms(\@chroms);
-	
-	my $pos = <$F>;
-	chomp($pos);
-	my @pos = split /\t/, $pos;
-	$self->pos(\@pos);
-	
-	my $ids = <$F>;
-	chomp($ids);
-	my @ids = split /\t/, $ids;
-	$self->ids(\@ids);
-	
-	print STDERR "IDS = ".Dumper(\@ids);
-	
-	my $refs = <$F>;
-	chomp($refs);
-	my @refs = split /\t/, $refs;
-	$self->refs(\@refs);
-	
-	my $alts = <$F>;
-	chomp($alts);
-	my @alts = split /\t/, $alts;
-	$self->alts(\@alts);
-	
-	my $qual = <$F>;
-	chomp($qual);
-	my @qual = split /\t/,$qual;
-	$self->qual(\@qual);
-	
-	my $filter = <$F>;
-	chomp($filter);
-	my @filter = split /\t/, $filter;
-	$self->filter(\@filter);
-	
-	my $info = <$F>;
-	chomp($info);
-	my @info = split /\t/, $info;
-	$self->info(\@info);
-	
-	my $format = <$F>;
-	chomp($format);
-	my @format = split /\t/, $format;
-	$self->format(\@format);
-	
-	print STDERR "marker count = ".scalar(@ids)."\n";
-	
-	if ($chroms[0] ne '#CHROM'){
-	    push @error_messages, 'Line 1 must start with "#CHROM".';
+	chomp;
+	if (m/\#\#/) { 
+	    print STDERR "Reading header line $_\n";
+	    push @header_info, $_;
 	}
-	if ($pos[0] ne 'POS'){
-	    push @error_messages, 'Line 2 must start with "POS".';
-	    }
-	if ($ids[0] ne 'ID'){
-	    push @error_messages, 'Line 3 must start with "ID".';
-	    }
-	if ($refs[0] ne 'REF'){
-	    push @error_messages, 'Line 4 must start with "REF".';
-	}
-	if ($alts[0] ne 'ALT'){
-	    push @error_messages, 'Line 5 must start with "ALT".';
-	}
-	if ($qual[0] ne 'QUAL'){
-	    push @error_messages, 'Line 6 must start with "QUAL".';
-	}
-	if ($filter[0] ne 'FILTER'){
-	    push @error_messages, 'Line 7 must start with "FILTER".';
-	}
-	if ($info[0] ne 'INFO'){
-	    push @error_messages, 'Line 8 must start with "INFO".';
-	}
-	if ($format[0] ne 'FORMAT'){
-	    push @error_messages, 'Line 9 must start with "FORMAT".';
+	else {
+	    $chroms = $_;
+	    last();
 	}
     }
 
+    print STDERR "CHROMS: $chroms\n";
+    chomp($chroms);
+    my @chroms = split /\t/, $chroms;
+    $self->chroms(\@chroms);
+    
+    my $pos = <$F>;
+    chomp($pos);
+    my @pos = split /\t/, $pos;
+    $self->pos(\@pos);
+    
+    my $ids = <$F>;
+    chomp($ids);
+    my @ids = split /\t/, $ids;
+    $self->ids(\@ids);
+    
+    print STDERR "IDS = ".Dumper(\@ids);
+    
+    my $refs = <$F>;
+    chomp($refs);
+    my @refs = split /\t/, $refs;
+    $self->refs(\@refs);
+    
+    my $alts = <$F>;
+    chomp($alts);
+    my @alts = split /\t/, $alts;
+    $self->alts(\@alts);
+    
+    my $qual = <$F>;
+    chomp($qual);
+    my @qual = split /\t/,$qual;
+    $self->qual(\@qual);
+    
+    my $filter = <$F>;
+    chomp($filter);
+    my @filter = split /\t/, $filter;
+    $self->filter(\@filter);
+    
+    my $info = <$F>;
+    chomp($info);
+    my @info = split /\t/, $info;
+    $self->info(\@info);
+    
+    my $format = <$F>;
+    chomp($format);
+    my @format = split /\t/, $format;
+    $self->format(\@format);
+    
+    print STDERR "marker count = ".scalar(@ids)."\n";
+    
+    if ($chroms[0] ne '#CHROM'){
+	push @error_messages, 'Line 1 must start with "#CHROM".';
+    }
+    if ($pos[0] ne 'POS'){
+	push @error_messages, 'Line 2 must start with "POS".';
+    }
+    if ($ids[0] ne 'ID'){
+	push @error_messages, 'Line 3 must start with "ID".';
+    }
+    if ($refs[0] ne 'REF'){
+	push @error_messages, 'Line 4 must start with "REF".';
+    }
+    if ($alts[0] ne 'ALT'){
+	push @error_messages, 'Line 5 must start with "ALT".';
+    }
+    if ($qual[0] ne 'QUAL'){
+	push @error_messages, 'Line 6 must start with "QUAL".';
+    }
+    if ($filter[0] ne 'FILTER'){
+	push @error_messages, 'Line 7 must start with "FILTER".';
+    }
+    if ($info[0] ne 'INFO'){
+	push @error_messages, 'Line 8 must start with "INFO".';
+    }
+    if ($format[0] ne 'FORMAT'){
+	push @error_messages, 'Line 9 must start with "FORMAT".';
+    }
     
     my @observation_unit_names;
    
@@ -230,7 +234,7 @@ sub _validate_with_plugin {
     $self->observation_unit_names(\@observation_unit_names);
     $self->header_info(\@header_info);
 
-    my $protocol_data = $self->extract_protoco_data();
+    my $protocol_data = $self->extract_protocol_data();
     $self->protocol_data($protocol_data);
    
     return 1; #returns true if validation is passed
@@ -317,7 +321,7 @@ sub next_genotype {
     else {
 	chomp($line);
 
-	if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; next; }
+	LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; chomp;  goto LABEL; }
 
 	my @fields = split /\t/, $line;
 

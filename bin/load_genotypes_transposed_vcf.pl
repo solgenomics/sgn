@@ -206,7 +206,7 @@ my $parser = CXGN::Genotype::ParseUpload->new({
 print STDERR "Loading plugin and starting to parse...\n";
 $parser->load_plugin('transposedVCF');
 
-my $parsed_data = $parser->parse_with_iterator();
+$parser->parse_with_iterator();
 #my $protocol_info = $parser->extract_protocol_data();
 # if (!$parsed_data) {
 #     if (!$parser->has_parse_errors() ){
@@ -232,12 +232,12 @@ my $observation_unit_uniquenames;
 
 if (my $genotype_info = $parser->next()) {
     print STDERR "Parsing first genotype and extracting protocol info...\n";
-    $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+    $observation_unit_uniquenames = $parser->observation_unit_names();
     my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
 	bcs_schema=>$schema,
 	metadata_schema=>$metadata_schema,
 	phenome_schema=>$phenome_schema,
-	protocol_info=>$parser->protocol_info(),
+	protocol_info=>$parser->protocol_data(),
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
 	observation_unit_uniquenames=>$observation_unit_uniquenames,
@@ -268,13 +268,12 @@ if (my $genotype_info = $parser->next()) {
     $protocol_id = $result->{protocol_id};
     $project_id = $result->{project_id};
 }
-    
+
+print STDERR "Done loading first accession, moving on...\n";    
 
 while (my $genotype_info = $parser->next()) {
     print STDERR "parsing next... ";
-    
-    my $genotype_info = $parsed_data->{genotypes_info};
-    my $protocol_info = $parsed_data->{protocol_info};
+    my $protocol_info = $parser->protocol_data();
     $protocol_info->{'reference_genome_name'} = $reference_genome_name;
     $protocol_info->{'species_name'} = $organism_species;
     
@@ -308,6 +307,7 @@ while (my $genotype_info = $parser->next()) {
 	die;
     }
     my $return = $store_genotypes->store();
+    print STDERR "Successfully stored genotype.\n";
     
 
 }
