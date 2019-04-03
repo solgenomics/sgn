@@ -242,21 +242,16 @@ sub list_simple {
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
 
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
         FROM nd_protocol
         LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
-        JOIN nd_experiment_protocol ON(nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN nd_experiment_project USING(nd_experiment_id)
-        JOIN project USING(project_id)
-        GROUP BY (nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name)
         ORDER BY nd_protocol.nd_protocol_id ASC;";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
     my @results;
-    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name) = $h->fetchrow_array()) {
+    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json) = $h->fetchrow_array()) {
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : {};
         my $marker_set = $protocol->{markers} || {};
         my $marker_names = $protocol->{marker_names} || [];
@@ -276,8 +271,6 @@ sub list_simple {
             reference_genome_name => $reference_genome_name,
             species_name => $species_name,
             sample_observation_unit_type_name => $sample_observation_unit_type_name,
-            project_name => $project_name,
-            project_id => $project_id,
             create_date => $create_date
         };
     }
