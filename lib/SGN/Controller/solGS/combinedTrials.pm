@@ -490,27 +490,27 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
 
 sub multi_pops_pheno_files {
     my ($self, $c, $pop_ids) = @_;
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
  
     my $trait_id = $c->stash->{trait_id};
-    my $dir = $c->stash->{solgs_cache_dir};
     my $files;
    
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
         foreach my $pop_id (@$pop_ids) 
         {
-	    my $exp = 'phenotype_data_' . $pop_id . '.txt';
-            $files .= catfile($dir, $exp);
+	    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	    $files .= $c->stash->{phenotype_file_name};
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id); 		
         }
 
         $c->stash->{multi_pops_pheno_files} = $files;
-
     }
     else 
     {
-        my $exp = 'phenotype_data_' . ${pop_ids} . '.txt';
-        $files = catfile($dir, $exp);
+	  $c->controller('solGS::Files')->phenotype_file_name($c, $pop_ids);
+	  $files = $c->stash->{phenotype_file_name};
     }
 
     if ($trait_id)
@@ -526,25 +526,27 @@ sub multi_pops_pheno_files {
 
 sub multi_pops_geno_files {
     my ($self, $c, $pop_ids) = @_;
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
  
     my $trait_id = $c->stash->{trait_id};
-    my $dir = $c->stash->{solgs_cache_dir};
     my $files;
     
     if (defined reftype($pop_ids) && reftype($pop_ids) eq 'ARRAY')
     {
         foreach my $pop_id (@$pop_ids) 
         {
-            my $exp = 'genotype_data_' . $pop_id . '.txt';
-            $files .= catfile($dir, $exp);        
+	    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+	    $files .= $c->stash->{genotype_file_name};     
             $files .= "\t" unless (@$pop_ids[-1] eq $pop_id);    
         }
+	
         $c->stash->{multi_pops_geno_files} = $files;
     }
     else 
     {
-        my $exp = 'genotype_data_' . ${pop_ids} . '.txt';
-        $files = catfile($dir, $exp);
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_ids);
+	$files = $c->stash->{genotype_file_name};   
     }
 
     if ($trait_id)
@@ -560,6 +562,8 @@ sub multi_pops_geno_files {
 
 sub multi_pops_phenotype_data {
     my ($self, $c, $pop_ids) = @_;
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
    
     no warnings 'uninitialized';
     my @job_ids;
@@ -587,7 +591,9 @@ sub multi_pops_phenotype_data {
 
 sub multi_pops_genotype_data {
     my ($self, $c, $pop_ids) = @_;
-   
+
+    $pop_ids = $c->stash->{pops_ids_list} if !$pop_ids;
+
     no warnings 'uninitialized';
     my @job_ids;
     if (@$pop_ids)
@@ -615,7 +621,8 @@ sub combined_pops_catalogue_file {
 
     my $cache_data = {key       => 'combined_pops_catalogue_file',
                       file      => 'combined_pops_catalogue_file',
-                      stash_key => 'combined_pops_catalogue_file'
+                      stash_key => 'combined_pops_catalogue_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -652,10 +659,14 @@ sub catalogue_combined_pops {
 
 sub get_combined_pops_list {
     my ($self, $c, $id) = @_;
+ print STDERR "\n id - $id \n";
+    $id = $c->stash->{combo_pops_id} if !$id;
 
+    print STDERR "\n id - $id \n";
+    
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
-    
+      print STDERR "\n file : $combo_pops_catalogue_file \n";
     my @combos = uniq(read_file($combo_pops_catalogue_file));
     
     foreach my $entry (@combos)
@@ -666,7 +677,7 @@ sub get_combined_pops_list {
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
 
 	    if ($id == $combo_pops_id)
-	    {
+	    {  print STDERR "\n pops: $pops \n";
 		my @pops_list = split(',', $pops);
 		$c->stash->{combined_pops_list} = \@pops_list;
 		$c->stash->{trait_combo_pops} = \@pops_list;
@@ -754,22 +765,21 @@ sub cache_combined_pops_data {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $combo_pops_id = $c->stash->{combo_pops_id};
 
-
     if ($trait_abbr)
     {
-	my  $cache_pheno_data = {key       => "phenotype_data_${trait_id}_${combo_pops_id}_combined",
-				 file      => "phenotype_data_${combo_pops_id}_${trait_abbr}_combined",
-				 stash_key => 'trait_combined_pheno_file'
-	};
-	
-	my  $cache_geno_data = {key       => "genotype_data_${trait_id}_${combo_pops_id}_combined",
-				file      => "genotype_data_${combo_pops_id}_${trait_abbr}_combined",
-				stash_key => 'trait_combined_geno_file'
-	};
-	
-	$c->controller('solGS::Files')->cache_file($c, $cache_pheno_data);
-	$c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
+	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{pop_id} =  $combo_pops_id;
+	$c->controller('solGS::Files')->trait_phenodata_file($c);
+	$c->stash->{trait_combined_pheno_file} = $c->stash->{trait_phenodata_file};
     }
+   
+    my  $cache_geno_data = {key       => "genotype_data_${combo_pops_id}_combined",
+			    file      => "genotype_data_${combo_pops_id}_combined.txt",
+			    stash_key => 'trait_combined_geno_file',
+			    cache_dir => $c->stash->{solgs_cache_dir} 
+    };
+	
+    $c->controller('solGS::Files')->cache_file($c, $cache_geno_data);
 
 }
 
@@ -1014,7 +1024,6 @@ sub count_combined_trials_members {
 	}
 	
 	$genos_cnt = scalar(uniq(@genotypes));
-	 print STDERR "\ncount: $genos_cnt\n";	
     }
   
     return $genos_cnt;

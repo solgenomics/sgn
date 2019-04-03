@@ -47,14 +47,18 @@ sub new_breeding_program :Path('/breeders/program/new') Args(0) {
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    my $error = $p->new_breeding_program($name, $desc);
+    my $new_program = $p->new_breeding_program($name, $desc);
 
-    if ($error) {
-	$c->stash->{rest} = { error => $error };
-    }
-    else {
-	$c->stash->{rest} =  {};
-    }
+    print STDERR "New program is ".Dumper($new_program)."\n";
+
+    $c->stash->{rest} = $new_program;
+
+    # if ($new_program->{'error'}) {
+	# $c->stash->{rest} = { error => $error };
+    # }
+    # else {
+	# $c->stash->{rest} =  { success => "The new breeding program $name was created.", id => };
+    # }
 }
 
 sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
@@ -196,7 +200,7 @@ sub get_trial_location : Path('/ajax/breeders/trial/location') Args(1) {
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    trial_id => $trial_id
 	});
-    
+
     if ($t) {
 	$c->stash->{rest} = { location => $t->get_location() };
     }

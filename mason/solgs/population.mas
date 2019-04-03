@@ -4,7 +4,6 @@ $pop_id
 $show_data => 1;
 $traits_form => ''
 $all_traits_file
-$no_traits_selected
 $project_name
 $project_desc
 $stocks_no
@@ -69,7 +68,6 @@ $acronym
      pop_id             => $pop_id,
      traits_form        => $traits_form,
      all_traits_file    => $all_traits_file,
-     no_traits_selected => $no_traits_selected,
      list_reference => $list_reference
 &>
 

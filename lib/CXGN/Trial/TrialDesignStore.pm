@@ -179,7 +179,7 @@ sub validate_design {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
-    my %design = %{$self->get_design};
+    my %design = %{$self->get_design}; 
     my $error = '';
 
     if ($self->get_is_genotyping && $design_type ne 'genotyping_plate') {

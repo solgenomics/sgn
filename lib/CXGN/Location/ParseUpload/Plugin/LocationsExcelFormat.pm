@@ -92,8 +92,14 @@ sub parse {
         if (!$program) {
             push @errors, "Row $row_num, column E: Program is undefined.\n";
         }
-        elsif (!$check->_is_valid_program($program)) {
-            push @errors, "Row $row_num, column E: Program $program does not exist in the database.\n";
+
+        #split on comma and test each individual program
+        my @programs = split ("&", $program);
+        foreach my $bp (@programs) {
+            $bp =~ s/^\s+|\s+$//g; #trim whitespace
+            if (!$check->_is_valid_program($bp)) {
+                push @errors, "Row $row_num, column E: Program $bp does not exist in the database.\n";
+            }
         }
 
         # check is defined, is one of approved types

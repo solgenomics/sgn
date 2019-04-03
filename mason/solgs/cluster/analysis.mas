@@ -26,6 +26,10 @@ $list_id => undef
 $dataset_id => undef
 $data_structure_type => undef
 
+$pop_name => undef
+$pop_type => undef
+
+
 </%args>
 
 <%perl>
@@ -40,22 +44,44 @@ if (!$data_structure_type) {
    }
 }
 
+my $url = $c->req->path;
+
 </%perl>
 
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "K-Means Clustering (Using Marker Data)" 
-&> 
+  title       => "Clustering" 
+  &>
 
-  <input id="run_cluster" class="button" type="button" value="Run Cluster" />
-  
-  <& /solgs/cluster/plot.mas,
-     pop_id => $pop_id,
-    list_id => $list_id,
-    dataset_id => $dataset_id,
-    data_structure_type => $data_structure_type,
+<div id="cluster_canvas">
+    
+% if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
+
+  <& /solgs/cluster/gebvs_cluster.mas,
+     pop_name => $pop_name,
+    pop_id => $pop_id,
+    pop_type => $pop_type
     &>
+
+%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//) {
+ <& /solgs/cluster/trial_cluster.mas &>
+    
+%} else {
+    <input id="run_cluster" class="button" type="button" value="Run Cluster" />
+%}
+  
+
+<& /solgs/cluster/plot.mas,
+   pop_id => $pop_id,
+  list_id => $list_id,
+  dataset_id => $dataset_id,
+  data_structure_type => $data_structure_type,
+  &>
+
+
+
+</div>
 
 </&>

@@ -155,20 +155,20 @@
 
 
       <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/Sol2018.jpg) center center; background-size:cover;" class="slider-size">
+          <div style="background:url(/documents/img/homepage_carousel/sol2019.jpg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-              <a href="https://www.solanaceae2018.com/" target="_blank" style="color: #00426c">
+              <a href="https://www.sol2019.org/" target="_blank" style="color: #00426c">
                 <!-- <h3>Solcuc2017</h3> -->
-                <h3>The 15th Solanaceae Conference</h3>
-                <p>September 30th - October 4th 2018, Chiang Mai, Thailand</p>
+                <h3>The 16th Solanaceae Conference</h3>
+                <p>September 15th - 19th 2019, Jerusalem, Israel</p>
               </a>
             </div>
 
             <div class="carousel-sgn-links" style="background-color: #efefef">
               <ul class="sgn_sm_list">
-                <a href="https://www.solanaceae2018.com/register" target="_blank"><li style="color: #00426c">Registration</li></a>
-                <a href="https://www.solanaceae2018.com/program" target="_blank"><li style="color: #00426c">Preliminary Program</li></a>
-                <a href="https://www.solanaceae2018.com/venue" target="_blank"><li style="color: #00426c">Venue</li></a>
+                <a href="https://www.sol2019.org/registration" target="_blank"><li style="color: #00426c">Registration</li></a>
+                <a href="https://www.sol2019.org/program-outline" target="_blank"><li style="color: #00426c">Program outline</li></a>
+                <a href="https://www.sol2019.org/general-information" target="_blank"><li style="color: #00426c">Venue and Information</li></a>
               </ul>
             </div>
 

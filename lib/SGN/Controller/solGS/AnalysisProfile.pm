@@ -11,6 +11,7 @@ use Try::Tiny;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
+use URI;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -370,31 +371,20 @@ sub structure_output_details {
     my $combo_pops_id = $c->stash->{combo_pops_id};
    
     my $referer = $c->req->referer;
-    $referer=~ s/\/$//;
-
-    my $base    = $c->req->base;   
- 
-    if ($base !~ /localhost/)
-    {
-	$referer =~ s/$base//;
-	$base =~ s/:\d+//;
-	$referer = $base . $referer;
-    } 
-              
+    my $base = $c->req->base; 
+    $base =~ s/:\d+//;
+       
     my %output_details = ();
-
-    my $solgs_controller = $c->controller('solGS::solGS');
-    my $analysis_page = $analysis_data->{analysis_page};
-  
-    $analysis_page =~ s/$base//;
-
-    if ($analysis_page =~ m/(solgs\/analyze\/traits\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/models\/combined\/trials\/)/) 
+   
+    my $analysis_page = $analysis_data->{analysis_page};  
+    #$analysis_page =~ s/$base//;
+    if ($analysis_page =~ m/solgs\/traits\/all\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/models\/combined\/trials\//) 
     {	
 	foreach my $trait_id (@traits_ids)
 	{	    
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
  
-	    $solgs_controller->get_trait_details($c, $trait_id);	    
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);	    
 	    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	 
 	    my $trait_abbr = $c->stash->{trait_abbr};
@@ -403,10 +393,9 @@ sub structure_output_details {
 	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
-		
-		if ($analysis_page =~ m/solgs\/analyze\/traits\//) 
+		if ($analysis_page =~ m/solgs\/traits\/all\/population\//) 
 		{		    
-		   $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
+		    $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
 		} 
 	    }
 	    
@@ -467,7 +456,7 @@ sub structure_output_details {
 	    $pheno_file = $c->stash->{phenotype_file_name};
 	    $geno_file  = $c->stash->{genotype_file_name};
 	  
-	    $solgs_controller->get_project_details($c, $pop_id);
+	    $c->controller('solGS::solGS')->get_project_details($c, $pop_id);
 	    $pop_name = $c->stash->{project_name};
 	}
 	    $output_details{'population_id_' . $pop_id} = {
@@ -488,21 +477,22 @@ sub structure_output_details {
 	    push @traits_ids, $c->stash->{trait_id};
 	}
 	else 
-	{ 	
-	    @traits_with_valid_models = @{$solgs_controller->traits_with_valid_models($c)};
-	    foreach  my $trait_abbr (@traits_with_valid_models) {
+	{    
+	    $c->controller('solGS::solGS')->traits_with_valid_models($c);
+	    my $traits_with_valid_models = $c->stash->{traits_with_valid_models};
+	    
+	    foreach  my $trait_abbr (@$traits_with_valid_models) {
 		$c->stash->{trait_abbr} = $trait_abbr;	    
 		$c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);
 		  
 		my $trait_id = $c->stash->{trait_id};
-		push @traits_ids, $trait_id;
-		
+		push @traits_ids, $trait_id;		
 	    }
 	}
 
 	foreach my $trait_id (@traits_ids)
-	{ 
-	     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	{	    
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	    my $trait_id = $c->stash->{trait_id};	    
 	    my $trait_abbr = $c->stash->{trait_abbr};
 	    my $trait_name = $c->stash->{trait_name};
@@ -590,7 +580,7 @@ sub structure_output_details {
 	
 	foreach my $pop_id (@combined_pops_ids) 
 	{	    
-	    $solgs_controller->get_project_details($c, $pop_id);
+	    $c->controller('solGS::solGS')->get_project_details($c, $pop_id);
 	    my $population_name = $c->stash->{project_name};
 	    my $population_page = $base . "solgs/population/$pop_id";
 	    
@@ -647,7 +637,7 @@ sub run_analysis {
  
     eval
     {
-	if ($analysis_page =~ /solgs\/analyze\/traits\//) 
+	if ($analysis_page =~ /solgs\/traits\/all\/population\//) 
 	{  
 	    $c->controller('solGS::solGS')->build_multiple_traits_models($c);	
 	} 
@@ -687,7 +677,7 @@ sub run_analysis {
 		$c->stash->{list_id} = $list_id;
         
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
-		$c->controller('solGS::List')->genotypes_list_genotype_file($c);
+		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	    }
 	    else
@@ -728,7 +718,7 @@ sub run_analysis {
 		    my $list_id = $selection_pop_id;
 		    $list_id =~ s/list_//;
 		    $c->stash->{list_id} = $list_id;
-		    $c->controller('solGS::List')->genotypes_list_genotype_file($c);		      
+		    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $selection_pop_id);		      
 		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
 
 		    $c->stash->{dependency} = $c->stash->{geno_data_query_job_id};
@@ -752,10 +742,10 @@ sub run_analysis {
 		
 		if ($selection_pop_id =~ /list/)
 		{
-		     my $list_id = $selection_pop_id;
+		    my $list_id = $selection_pop_id;
 		    $list_id =~ s/list_//;
 		    $c->stash->{list_id} = $list_id;
-		    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
+		    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $selection_pop_id);
 		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
 
 		    $c->stash->{dependency} = $c->stash->{geno_data_query_job_id};
@@ -780,7 +770,7 @@ sub run_analysis {
 		     my $list_id = $selection_pop_id;
 		    $list_id =~ s/list_//g;
 		    $c->stash->{list_id} = $list_id;
-		    $c->controller('solGS::List')->genotypes_list_genotype_file($c);		    
+		    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $selection_pop_id);		    
 		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
 		    
 		    $c->stash->{dependency} = $c->stash->{geno_data_query_job_id};
@@ -792,19 +782,17 @@ sub run_analysis {
 		    }
 		    else 
 		    {
-			$c->stash->{pop_id} = $c->stash->{combo_pops_id};;
+			$c->stash->{pop_id} = $c->stash->{combo_pops_id};
 			$c->controller("solGS::solGS")->traits_with_valid_models($c);
 			my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
 
 			foreach my $trait_abbr (@traits_with_valid_models) 
-			{
-			    
+			{  
 			    $c->stash->{trait_abbr} = $trait_abbr;
 			    $c->controller("solGS::solGS")->get_trait_details_of_trait_abbr($c);
 			    
 			    my $trait_id = $c->stash->{trait_id};
 			    my $trait_name = $c->stash->{trait_name};
-	
 			    $c->controller('solGS::List')->predict_list_selection_pop_combined_pops_model($c);
 			}
 		    }
@@ -815,7 +803,20 @@ sub run_analysis {
 		    $c->controller('solGS::solGS')->genotype_file($c, $selection_pop_id);
 		    $c->stash->{dependency} = $c->stash->{r_job_id};
 		    $c->stash->{dependency_type} = 'download_data';
-		    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
+  
+		    $c->controller("solGS::solGS")->traits_with_valid_models($c);
+		    my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
+
+		    foreach my $trait_abbr (@traits_with_valid_models) 
+		    {
+			$c->stash->{trait_abbr} = $trait_abbr;
+			$c->controller("solGS::solGS")->get_trait_details_of_trait_abbr($c);
+			
+			my $trait_id = $c->stash->{trait_id};			
+			my $trait_name = $c->stash->{trait_name};
+	    
+			$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
+		    }
 		}
 	    }	    
 	}

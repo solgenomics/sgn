@@ -34,7 +34,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 </%perl>
 
 <& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca", "solGS.Dataset", "CXGN.List"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca", "solGS.Dataset", "CXGN.List", "jquery.blockUI"] &>
 
 <br />
 

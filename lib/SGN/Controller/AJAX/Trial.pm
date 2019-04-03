@@ -117,7 +117,6 @@ sub generate_experimental_design_POST : Args(0) {
     my $westcott_check_2 = $c->req->param('westcott_check_2');
     my $westcott_col = $c->req->param('westcott_col');
     my $westcott_col_between_check = $c->req->param('westcott_col_between_check');
-
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
@@ -184,15 +183,24 @@ sub generate_experimental_design_POST : Args(0) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
     }
+
+    my $number_of_prep_accession = scalar(@stock_names);
+    my $p_rep_total_plots;
+    my $replicated_plots;
+    my $unreplicated_plots;
+    my $calculated_total_plot;
+
     if($design_type eq "p-rep"){
         @stock_names = (@replicated_accession, @unreplicated_accession);
-    }
+    #}
     #print STDERR Dumper(\@stock_names);
-    my $number_of_prep_accession = scalar(@stock_names);
-    my $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
-    my $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
-    my $unreplicated_plots = scalar(@unreplicated_accession);
-    my $calculated_total_plot = $replicated_plots + $unreplicated_plots;
+
+        $number_of_prep_accession = scalar(@stock_names);
+        $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
+        $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
+        $unreplicated_plots = scalar(@unreplicated_accession);
+        $calculated_total_plot = $replicated_plots + $unreplicated_plots;
+    }
 
     my @locations;
 
@@ -251,7 +259,8 @@ sub generate_experimental_design_POST : Args(0) {
                 bcs_schema => $schema,
                 nd_geolocation_id => $location_id,
             });
-            my $abbreviation = $location_object->get_prop('abbreviation');
+
+            my $abbreviation = $location_object->abbreviation();
             #print STDERR "Abbreviation is $abbreviation\n";
 
             if ($abbreviation) {
@@ -416,7 +425,6 @@ sub generate_experimental_design_POST : Args(0) {
         }
         if ($trial_design->get_design()) {
             %design = %{$trial_design->get_design()};
-            #print STDERR "DESIGN: ". Dumper(%design);
         } else {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;
@@ -552,7 +560,7 @@ sub save_experimental_design_POST : Args(0) {
                 bcs_schema => $schema,
                 nd_geolocation_id => $location_id,
             });
-            my $abbreviation = $location_object->get_prop('abbreviation');
+            my $abbreviation = $location_object->abbreviation();
             #print STDERR "Abbreviation is $abbreviation\n";
 
             #print STDERR "Trial name before change is $trial_name\n";

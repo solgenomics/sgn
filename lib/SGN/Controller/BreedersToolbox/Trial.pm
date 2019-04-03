@@ -13,7 +13,7 @@ use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_
 use CXGN::Trial::Download;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
-use CXGN::List; 
+use CXGN::List;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -106,9 +106,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
-    
+
     $c->stash->{has_col_and_row_numbers} = $trial->has_col_and_row_numbers();
-    $c->stash->{has_plant_entries} = $trial->has_plant_entries(); 
+    $c->stash->{has_plant_entries} = $trial->has_plant_entries();
     $c->stash->{has_subplot_entries} = $trial->has_subplot_entries();
     $c->stash->{has_tissue_sample_entries} = $trial->has_tissue_sample_entries();
     $c->stash->{phenotypes_fully_uploaded} = $trial->get_phenotypes_fully_uploaded();
@@ -134,6 +134,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     if ($design_type eq "genotyping_plate") {
         $c->stash->{plate_id} = $c->stash->{trial_id};
+        $c->stash->{raw_data_link} = $trial->get_raw_data_link;
         $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
         $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
@@ -208,7 +209,7 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 #For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument, as that is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
-    my $c = shift; 
+    my $c = shift;
     my $what = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 

@@ -1066,6 +1066,28 @@ sub set_phenotypes_fully_uploaded {
     $self->_set_projectprop('phenotypes_fully_uploaded', $value);
 }
 
+=head2 accessors get_raw_data_link(), set_raw_data_link()
+
+ Usage: For genotyping plates, a genotyping facility can be set as a projectprop value e.g. 'igd'
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_raw_data_link {
+    my $self = shift;
+    return $self->_get_projectprop('raw_data_link');
+}
+
+sub set_raw_data_link {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('raw_data_link', $value);
+}
+
 
 =head2 accessors get_genotyping_facility(), set_genotyping_facility()
 
@@ -2749,7 +2771,7 @@ sub has_col_and_row_numbers {
             push @col_numbers, $col_number;
         }
     }
-    
+
     if (scalar(@row_numbers) ne '0' && scalar(@col_numbers) ne '0'){
 		return 1;
 	} else {
@@ -3332,7 +3354,7 @@ sub get_trial_contacts {
 
 	Usage:        $trial->get_data_agreement();
 	Desc:         return data agreement saved for trial.
-	Ret:          
+	Ret:
 	Args:
 	Side Effects:
 	Example:
@@ -3364,9 +3386,9 @@ sub get_data_agreement {
 				   $c->stash->{rest} = { error => $suppress_return_error };
 				   return;
 				 }
- 
+
  Desc:         Suppresses plot phenotype
- Ret:          
+ Ret:
  Args:
  Side Effects:
  Example:
@@ -3387,24 +3409,24 @@ sub suppress_plot_phenotype {
 	my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
 	my $error;
 	my $json_string = { value => 1, username=>$username, timestamp=>$timestamp };
-	
+
 	my $prop_rs = $self->bcs_schema->resultset('Phenotype::Phenotypeprop')->search(
 		{ 'phenotype_id' => $phenotype_id, 'type_id'=>$phenotype_outlier_type_id }
 	);
-	
+
 	if ($prop_rs->count == 0) {
 		my $suppress_plot_pheno = $schema->resultset("Phenotype::Phenotypeprop")->create({
 			phenotype_id => $phenotype_id,
 			type_id       => $phenotype_outlier_type_id,
 			value => encode_json $json_string,
 		});
-	} 
+	}
 	else {
 		$error = "This plot phenotype has already been suppressed.";
 	}
-	
+
 	return $error;
-	
+
 }
 
 =head2 delete_assayed_trait
@@ -3414,9 +3436,9 @@ sub suppress_plot_phenotype {
    					$c->stash->{rest} = { error => $delete_trait_return_error };
    					return;
  				}
- 
+
  Desc:         Delete Assayed Traits
- Ret:          
+ Ret:
  Args:
  Side Effects:
  Example:
@@ -3462,20 +3484,20 @@ sub delete_assayed_trait {
 		while (my $res = $delete_nd_expt_md_files_id_rs->next()){
 			$res->delete;
 		}
-		
+
 		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});
 		while (my $res = $delete_nd_expt_id_rs->next()){
 			$res->delete;
-		}			
+		}
 	}
 	else {
 		$error = "List of trait or phenotype ids was not provided for deletion.";
 	}
-	
+
 	return $error;
-	
+
 }
 
 1;
