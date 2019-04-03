@@ -66,13 +66,13 @@ sub validate {
       $design_type  = $worksheet->get_cell(3,3)->value();
     }
     if (!$design_type ) {
-        $parse_result{'error'} = "No design type in header. Make sure you are using the correct spreadsheet format.";
+        $parse_result{'error'} = "No design type in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website.";
         print STDERR "No design type in header\n";
         return \%parse_result;
     }
-    if (!$name_head || ($name_head ne 'plot_name' && $name_head ne 'plant_name' && $name_head ne 'subplot_name')) {
-        $parse_result{'error'} = "No plot_name or plant_name or subplot_name in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website.";
-        print STDERR "No plot_name or plant_name or subplot_name in header\n";
+    if (!$name_head || ($name_head ne 'plot_name' && $name_head ne 'plant_name' && $name_head ne 'subplot_name' && $name_head ne 'tissue_sample_name')) {
+        $parse_result{'error'} = "No plot_name or plant_name or subplot_name or tissue_sample_name in header. Make sure you are using the correct spreadsheet format. It may help to recreate your spreadsheet from the website.";
+        print STDERR "No plot_name or plant_name or subplot_name or tissue_sample_name in header\n";
         return \%parse_result;
     }
     if ($data_level eq 'plots' && ( $worksheet->get_cell(6,0)->value() ne 'plot_name' ||
@@ -100,6 +100,21 @@ sub validate {
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') ) {
         $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plants\n";
+        return \%parse_result;
+    }
+    if ($data_level eq 'tissue_samples' && ($worksheet->get_cell(6,0)->value() ne 'tissue_sample_name' ||
+                                    $worksheet->get_cell(6,1)->value() ne 'plant_name' ||
+                                    $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
+                                    $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
+                                    $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
+                                    $worksheet->get_cell(6,5)->value() ne 'block_number' ||
+                                    $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
+                                    $worksheet->get_cell(6,7)->value() ne 'rep_number' ||
+                                    $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
+                                    $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
+                                    $worksheet->get_cell(6,10)->value() ne 'trial_name') ) {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Tissue Sample phenotypes: 'tissue_sample_name', 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        print STDERR "Columns not correct and data_level is tissue_samples\n";
         return \%parse_result;
     }
     if ($data_level eq 'subplots' && ( ($worksheet->get_cell(6,0)->value() ne 'subplot_name' ||
@@ -139,6 +154,8 @@ sub validate {
             @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'plant_name') {
             @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+        } elsif ($name_head eq 'tissue_sample_name') {
+            @fixed_columns = qw | tissue_sample_name plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     }
     my $num_fixed_col = scalar(@fixed_columns);
@@ -228,6 +245,8 @@ sub parse {
             @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         } elsif ($name_head eq 'plant_name') {
             @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
+        } elsif ($name_head eq 'tissue_sample_name') {
+            @fixed_columns = qw | tissue_sample_name plant_name plot_name accession_name plot_number block_number is_a_control rep_number planting_date harvest_date trial_name |;
         }
     }
     my $num_fixed_col = scalar(@fixed_columns);

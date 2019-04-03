@@ -8,8 +8,15 @@ use Data::Dumper;
 use SGN::Test::Fixture;
 use CXGN::Onto;
 use SGN::Model::Cvterm;
+use Test::WWW::Mechanize;
+use JSON;
+
+my $mech = Test::WWW::Mechanize->new;
+my $json = JSON->new->allow_nonref;
 
 my $t = SGN::Test::Fixture->new();
+my $schema = $t->bcs_schema();
+
 my $onto = CXGN::Onto->new( { schema => $t->bcs_schema() });
 
 my $cv_type = 'attribute_ontology';
@@ -346,5 +353,81 @@ is_deeply(\@check_names, [
             'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
         ], 'check that duplicate traits are separated from new_traits');
 
+
+## Test adding observation variables, traits, methods, scales
+
+my $response;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+my $q = "Select db_id FROM db where name = 'CO_334';";
+my $sth = $schema->storage->dbh->prepare($q);
+$sth->execute();
+my ($db_id) = $sth->fetchrow_array();
+
+$mech->post_ok('http://localhost:3010/ajax/onto/store_trait_method_scale_observation_variable',
+    [
+        "sgn_session_id"=>$sgn_session_id,
+        "selected_observation_variable_db_id"=> $db_id,
+        "new_observation_variable_name"=> "new observation variable name",
+        "new_observation_variable_definition"=> "new observation variable definition",
+        "selected_trait_db_id"=> $db_id,
+        "selected_trait_cvterm_id"=> "",
+        "new_trait_name"=> "new trait name",
+        "new_trait_definition"=> "new trait definition",
+        "selected_method_db_id"=> $db_id,
+        "selected_method_cvterm_id"=> "",
+        "new_method_name"=> "new method name",
+        "new_method_definition"=> "new method definition",
+        "selected_scale_db_id"=> $db_id,
+        "selected_scale_cvterm_id"=> "",
+        "new_scale_name"=> "new scale name",
+        "new_scale_definition"=> "new scale definition",
+        "new_scale_format"=> "",
+        "new_scale_minimum"=> "",
+        "new_scale_maximum"=> "",
+        "new_scale_default"=> "",
+        "new_scale_categories"=> ""
+    ]
+);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+ok($response->{success});
+
+$q = "Select cvterm_id FROM cvterm where name = 'new trait name';";
+$sth = $schema->storage->dbh->prepare($q);
+$sth->execute();
+my ($trait_cvterm_id) = $sth->fetchrow_array();
+
+$mech->post_ok('http://localhost:3010/ajax/onto/store_trait_method_scale_observation_variable',
+    [
+        "selected_observation_variable_db_id"=> $db_id,
+        "new_observation_variable_name"=> "new observation variable name 2",
+        "new_observation_variable_definition"=> "new observation variable definition 2",
+        "selected_trait_db_id"=> $db_id,
+        "selected_trait_cvterm_id"=> $trait_cvterm_id,
+        "new_trait_name"=> "",
+        "new_trait_definition"=> "",
+        "selected_method_db_id"=> $db_id,
+        "selected_method_cvterm_id"=> "",
+        "new_method_name"=> "new method name 2",
+        "new_method_definition"=> "new method definition 2",
+        "selected_scale_db_id"=> $db_id,
+        "selected_scale_cvterm_id"=> "",
+        "new_scale_name"=> "new scale name 2",
+        "new_scale_definition"=> "new scale definition 2",
+        "new_scale_format"=> "",
+        "new_scale_minimum"=> "",
+        "new_scale_maximum"=> "",
+        "new_scale_default"=> "",
+        "new_scale_categories"=> ""
+    ]
+);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+ok($response->{success});
 
 done_testing();

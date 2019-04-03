@@ -47,6 +47,12 @@
                                         <input class="form-control" id="add_new_observation_variable_name" name="add_new_observation_variable_name" type="text" placeholder="e.g. total mass of fruit harvest from a plant using MachineX in kilograms"/>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Observation Variable Definition: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_definition" name="add_new_observation_variable_definition" type="text" placeholder="e.g. total mass of fruit harvest from a plant using MachineX in kilograms"/>
+                                    </div>
+                                </div>
                             </form>
                             <br/>
 
@@ -58,7 +64,10 @@
                         <&| /util/workflow.mas:step, title=> "Trait" &>
                             <& /page/page_title.mas, title=>"Define your trait" &>
 
-                            <p>A trait defines the attribute being measured. It is one component of an observation variable; the others are a method and a scale.</p>
+                            <ul>
+                                <li>A trait defines the attribute being measured. It is one component of an observation variable; the others are a method and a scale.</li>
+                                <li>Here you can select a trait that already exists in an ontology in the database or you can add a new trait into an ontology.</li>
+                            </ul>
                             <hr>
 
                             <form class="form-horizontal">
@@ -76,6 +85,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                <hr>
 
                                 <div class="well">
                                     <h3>If the trait does not exist in the ontology you selected above, you can add a new trait into the ontology here.</h3>
@@ -113,6 +123,19 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Existing Methods in Selected Ontology: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_existing_method_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+
+                                <div class="well">
+                                    <h3>If the method does not exist in the ontology you selected above, you can add a new method into the ontology here.</h3>
+                                </div>
+
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">New Method Name: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_new_trait_method_name" name="add_new_trait_method_name" type="text" placeholder="e.g. BrandA Mass Balance 0.001g Accuracy"/>
@@ -143,6 +166,19 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Existing Scales in Selected Ontology: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_new_trait_existing_scale_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+
+                                <div class="well">
+                                    <h3>If the scale does not exist in the ontology you selected above, you can add a new scale into the ontology here.</h3>
+                                </div>
+
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">New Scale Name: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_new_trait_scale_name" name="add_new_trait_scale_name" type="text" placeholder="e.g. mass in kilograms"/>
@@ -158,6 +194,7 @@
                                     <label class="col-sm-3 control-label">New Scale Format: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_new_trait_scale_format" name="add_new_trait_scale_format" >
+                                            <option value="">Select One</option>
                                             <option value="qualitative">qualitative</option>
                                             <option value="quantitative">quantitative</option>
                                         </select>
@@ -196,11 +233,16 @@
                         </&>
                         <&| /util/workflow.mas:step, title=> "Confirm" &>
                             <& /page/page_title.mas, title=>"Confirm you are creating this observation variable in the database" &>
-                            
-                            <button class="btn btn-primary" id="add_new_trait_submit_button">Submit</button>
+
+                            <center>
+                                <button class="btn btn-primary" id="add_new_trait_submit_button">Submit</button>
+                            </center>
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your observation variable is now in the database" &>
+
+                            <div id="add_new_trait_added_observation_variable_div">
+                            </div>
                         </&>
 
                     </&><!-- End of workflow -->
@@ -226,9 +268,16 @@ jQuery(document).ready(function() {
         
     });
 
+    var add_new_trait_new_observation_variable_db_id;
+    var add_new_trait_new_observation_variable_name;
+    var add_new_trait_new_observation_variable_definition;
     jQuery('#add_new_trait_observation_variable_step').click(function() {
         if (jQuery('#add_new_observation_variable_name').val() == '') {
             alert('Please give a new observation variable name!');
+            return false;
+        }
+        if (jQuery('#add_new_observation_variable_definition').val() == '') {
+            alert('Please give a new observation variable definition!');
             return false;
         }
         var selected = [];
@@ -240,12 +289,16 @@ jQuery(document).ready(function() {
         } else if (selected.length > 1) {
             alert('Only select one observation variable ontology!');
         } else {
+            add_new_trait_new_observation_variable_name = jQuery('#add_new_observation_variable_name').val();
+            add_new_trait_new_observation_variable_definition = jQuery('#add_new_observation_variable_definition').val();
+            add_new_trait_new_observation_variable_db_id = selected[0];
             Workflow.complete('#add_new_trait_observation_variable_step');
             Workflow.focus('#add_new_trait_workflow', 2);
         }
         return false;
     });
 
+    var add_new_trait_new_trait_db_id;
     jQuery(document).on('change', 'input[name="add_new_trait_ontology_select"]', function(){
         var selected = [];
         jQuery('input[name="add_new_trait_ontology_select"]:checked').each(function(){
@@ -254,17 +307,53 @@ jQuery(document).ready(function() {
         if (selected.length > 1) {
             alert('Only select one trait ontology!');
         } else {
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'cv_id':selected[0] });
+            add_new_trait_new_trait_db_id = selected[0];
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'db_id':selected[0] });
         }
     });
 
+    var add_new_trait_new_method_db_id;
+    jQuery(document).on('change', 'input[name="add_new_trait_method_ontology_select"]', function(){
+        var selected = [];
+        jQuery('input[name="add_new_trait_method_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1) {
+            alert('Only select one method ontology!');
+        } else {
+            add_new_trait_new_method_db_id = selected[0];
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_method_select_div', { 'selectbox_name':'add_new_trait_existing_method_select',    'selectbox_id':'add_new_trait_existing_method_select', 'empty':1, 'db_id':selected[0] });
+        }
+    });
+
+    var add_new_trait_new_scale_db_id;
+    jQuery(document).on('change', 'input[name="add_new_trait_scale_ontology_select"]', function(){
+        var selected = [];
+        jQuery('input[name="add_new_trait_scale_ontology_select"]:checked').each(function(){
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1) {
+            alert('Only select one scale ontology!');
+        } else {
+            add_new_trait_new_scale_db_id = selected[0];
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_scale_select_div', { 'selectbox_name':'add_new_trait_existing_scale_select',    'selectbox_id':'add_new_trait_existing_scale_select', 'empty':1, 'db_id':selected[0] });
+        }
+    });
+
+    var add_new_trait_selected_trait_cvterm_id;
+    var add_new_trait_new_trait_name;
+    var add_new_trait_new_trait_definition;
     jQuery('#add_new_trait_trait_step').click(function() {
-        if (jQuery('#add_new_trait_name').val() == ''){
-            alert('Please give a new trait name!');
+        var add_new_trait_selected_trait_val = jQuery('#add_new_trait_existing_trait_select').val();
+        if (add_new_trait_selected_trait_val == '0') {
+            add_new_trait_selected_trait_val = '';
+        }
+        if (add_new_trait_selected_trait_val == '' && jQuery('#add_new_trait_name').val() == '') {
+            alert('Please select an existing trait or give a new trait name!');
             return false;
         }
-        if (jQuery('#add_new_trait_definition').val() == ''){
-            alert('Please give a new trait definition!');
+        if (add_new_trait_selected_trait_val != '' && jQuery('#add_new_trait_name').val() != '') {
+            alert('Please select an existing trait or give a new trait name, and not both!');
             return false;
         }
         var selected = [];
@@ -276,19 +365,42 @@ jQuery(document).ready(function() {
         } else if (selected.length > 1) {
             alert('Only select one trait ontology!');
         } else {
-            Workflow.complete('#add_new_trait_trait_step');
-            Workflow.focus('#add_new_trait_workflow', 3);
+            if (add_new_trait_selected_trait_val == '') {
+                if (jQuery('#add_new_trait_name').val() == ''){
+                    alert('Please give a new trait name!');
+                }
+                else if (jQuery('#add_new_trait_definition').val() == ''){
+                    alert('Please give a new trait definition!');
+                }
+                else {
+                    add_new_trait_new_trait_name = jQuery('#add_new_trait_name').val();
+                    add_new_trait_new_trait_definition = jQuery('#add_new_trait_definition').val();
+                    Workflow.complete('#add_new_trait_trait_step');
+                    Workflow.focus('#add_new_trait_workflow', 3);
+                }
+            } else {
+                add_new_trait_selected_trait_cvterm_id = add_new_trait_selected_trait_val;
+                Workflow.complete('#add_new_trait_trait_step');
+                Workflow.focus('#add_new_trait_workflow', 3);
+            }
         }
         return false;
     });
 
+    var add_new_trait_selected_method_cvterm_id;
+    var add_new_trait_new_method_name;
+    var add_new_trait_new_method_definition;
     jQuery('#add_new_trait_method_step').click(function(){
-        if (jQuery('#add_new_trait_method_name').val() == ''){
-            alert('Please give a new method name!');
+        var add_new_trait_selected_method_val = jQuery('#add_new_trait_existing_method_select').val();
+        if (add_new_trait_selected_method_val == '0') {
+            add_new_trait_selected_method_val = '';
+        }
+        if (add_new_trait_selected_method_val == '' && jQuery('#add_new_trait_method_name').val() == '') {
+            alert('Please select an existing method or give a new method name!');
             return false;
         }
-        if (jQuery('#add_new_trait_method_definition').val() == ''){
-            alert('Please give a new method definition!');
+        if (add_new_trait_selected_method_val != '' && jQuery('#add_new_trait_method_name').val() != '') {
+            alert('Please select an existing method or give a new method name, and not both!');
             return false;
         }
         var selected = [];
@@ -300,35 +412,47 @@ jQuery(document).ready(function() {
         } else if (selected.length > 1) {
             alert('Only select one method ontology!');
         } else {
-            Workflow.complete('#add_new_trait_method_step');
-            Workflow.focus('#add_new_trait_workflow', 4);
+            if (add_new_trait_selected_method_val == '') {
+                if (jQuery('#add_new_trait_method_name').val() == ''){
+                    alert('Please give a new method name!');
+                }
+                else if (jQuery('#add_new_trait_method_definition').val() == ''){
+                    alert('Please give a new method definition!');
+                }
+                else {
+                    add_new_trait_new_method_name = jQuery('#add_new_trait_method_name').val();
+                    add_new_trait_new_method_definition = jQuery('#add_new_trait_method_definition').val();
+                    Workflow.complete('#add_new_trait_method_step');
+                    Workflow.focus('#add_new_trait_workflow', 4);
+                }
+            } else {
+                add_new_trait_selected_method_cvterm_id = add_new_trait_selected_method_val;
+                Workflow.complete('#add_new_trait_method_step');
+                Workflow.focus('#add_new_trait_workflow', 4);
+            }
         }
         return false;
     });
 
+    var add_new_trait_selected_scale_cvterm_id;
+    var add_new_trait_new_scale_name;
+    var add_new_trait_new_scale_definition;
+    var add_new_trait_new_scale_format;
+    var add_new_trait_new_scale_minimum;
+    var add_new_trait_new_scale_maximum;
+    var add_new_trait_new_scale_default;
+    var add_new_trait_new_scale_categories;
     jQuery('#add_new_trait_scale_step').click(function(){
-        if (jQuery('#add_new_trait_scale_name').val() == ''){
-            alert('Please give a new scale name!');
+        var add_new_trait_selected_scale_val = jQuery('#add_new_trait_existing_scale_select').val();
+        if (add_new_trait_selected_scale_val == '0') {
+            add_new_trait_selected_scale_val = '';
+        }
+        if (add_new_trait_selected_scale_val == '' && jQuery('#add_new_trait_scale_name').val() == '') {
+            alert('Please select an existing scale or give a new scale name!');
             return false;
         }
-        if (jQuery('#add_new_trait_scale_definition').val() == ''){
-            alert('Please give a new scale definition!');
-            return false;
-        }
-        if (jQuery('#add_new_trait_scale_format').val() == ''){
-            alert('Please give a new scale format!');
-            return false;
-        }
-        if (jQuery('#add_new_trait_scale_minimum').val() == ''){
-            alert('Please give a new scale minimum!');
-            return false;
-        }
-        if (jQuery('#add_new_trait_scale_maximum').val() == ''){
-            alert('Please give a new scale maximum!');
-            return false;
-        }
-        if (jQuery('#add_new_trait_scale_default').val() == ''){
-            alert('Please give a new scale default value!');
+        if (add_new_trait_selected_scale_val != '' && jQuery('#add_new_trait_scale_name').val() != '') {
+            alert('Please select an existing scale or give a new scale name, and not both!');
             return false;
         }
         var selected = [];
@@ -340,10 +464,92 @@ jQuery(document).ready(function() {
         } else if (selected.length > 1) {
             alert('Only select one scale ontology!');
         } else {
-            Workflow.complete('#add_new_trait_scale_step');
-            Workflow.focus('#add_new_trait_workflow', 5);
+            if (add_new_trait_selected_scale_val == '') {
+                if (jQuery('#add_new_trait_scale_name').val() == ''){
+                    alert('Please give a new scale name!');
+                }
+                else if (jQuery('#add_new_trait_scale_definition').val() == ''){
+                    alert('Please give a new scale definition!');
+                }
+                else if (jQuery('#add_new_trait_scale_format').val() == ''){
+                    alert('Please give a new scale format!');
+                }
+                else if (jQuery('#add_new_trait_scale_minimum').val() == ''){
+                    alert('Please give a new scale minimum!');
+                }
+                else if (jQuery('#add_new_trait_scale_maximum').val() == ''){
+                    alert('Please give a new scale maximum!');
+                }
+                else {
+                    add_new_trait_new_scale_name = jQuery('#add_new_trait_scale_name').val();
+                    add_new_trait_new_scale_definition = jQuery('#add_new_trait_scale_definition').val();
+                    add_new_trait_new_scale_format = jQuery('#add_new_trait_scale_format').val();
+                    add_new_trait_new_scale_minimum = jQuery('#add_new_trait_scale_minimum').val();
+                    add_new_trait_new_scale_maximum = jQuery('#add_new_trait_scale_maximum').val();
+                    add_new_trait_new_scale_default = jQuery('#add_new_trait_scale_default').val();
+                    add_new_trait_new_scale_categories = jQuery('#add_new_trait_scale_categories').val();
+                    Workflow.complete('#add_new_trait_scale_step');
+                    Workflow.focus('#add_new_trait_workflow', 5);
+                }
+            } else {
+                add_new_trait_selected_scale_cvterm_id = add_new_trait_selected_scale_val;
+                Workflow.complete('#add_new_trait_scale_step');
+                Workflow.focus('#add_new_trait_workflow', 5);
+            }
         }
         return false;
+    });
+
+    jQuery('#add_new_trait_submit_button').click(function(){
+        jQuery.ajax ({
+            url: '/ajax/onto/store_trait_method_scale_observation_variable',
+            type: 'POST',
+            data: {
+                'selected_observation_variable_db_id':add_new_trait_new_observation_variable_db_id,
+                'new_observation_variable_name':add_new_trait_new_observation_variable_name,
+                'new_observation_variable_definition':add_new_trait_new_observation_variable_definition,
+                'selected_trait_db_id':add_new_trait_new_trait_db_id,
+                'selected_trait_cvterm_id':add_new_trait_selected_trait_cvterm_id,
+                'new_trait_name':add_new_trait_new_trait_name,
+                'new_trait_definition':add_new_trait_new_trait_definition,
+                'selected_method_db_id':add_new_trait_new_method_db_id,
+                'selected_method_cvterm_id':add_new_trait_selected_method_cvterm_id,
+                'new_method_name':add_new_trait_new_method_name,
+                'new_method_definition':add_new_trait_new_method_definition,
+                'selected_scale_db_id':add_new_trait_new_scale_db_id,
+                'selected_scale_cvterm_id':add_new_trait_selected_scale_cvterm_id,
+                'new_scale_name':add_new_trait_new_scale_name,
+                'new_scale_definition':add_new_trait_new_scale_definition,
+                'new_scale_format':add_new_trait_new_scale_format,
+                'new_scale_minimum':add_new_trait_new_scale_minimum,
+                'new_scale_maximum':add_new_trait_new_scale_maximum,
+                'new_scale_default':add_new_trait_new_scale_default,
+                'new_scale_categories':add_new_trait_new_scale_categories,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                //if (response.message){
+                //    jQuery('#add_new_trait_added_observation_variable_div').html(response.message);
+                //    Workflow.complete('#add_new_trait_submit_button');
+                //    Workflow.focus("#add_new_trait_workflow", -1); //go to success page
+                //}
+                if (response.success) {
+                    alert(response.success);
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error saving observation variable.");
+            }
+        });
     });
 });
 </script>

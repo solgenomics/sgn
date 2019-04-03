@@ -320,6 +320,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         my $subplots = $c->stash->{trial}->get_subplots();
         $total_complete_number = scalar (@$subplots);
     }
+    if ($display eq 'tissue_samples') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        my $subplots = $c->stash->{trial}->get_subplots();
+        $total_complete_number = scalar (@$subplots);
+    }
     my $stocks_per_accession;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -332,6 +338,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        $select_clause_additional = ', accession.uniquename, accession.stock_id';
+        $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
+    }
+    if ($display eq 'tissue_samples_accession') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
