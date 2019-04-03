@@ -58,7 +58,7 @@
                 <thead>
                     <tr>
                         <th>Accession</th>
-                        <th>Trait</th>
+                        <th>Observation Variable</th>
                         <th>Mean</th>
                         <th>Min</th>
                         <th>Max</th>
