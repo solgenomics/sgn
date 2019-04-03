@@ -60,7 +60,6 @@ sub genotyping_protocol_search_GET : Args(0) {
         push @result,
           [
             "<a href=\"/breeders_toolbox/protocol/$_->{protocol_id}\">$_->{protocol_name}</a>",
-            "<a href=\"/breeders_toolbox/trial/$_->{project_id}\">$_->{project_name}</a>",
             $description,
             $num_markers,
             $_->{protocol_description},
