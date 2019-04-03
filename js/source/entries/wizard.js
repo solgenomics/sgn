@@ -114,19 +114,20 @@ export function WizardSetup(main_id){
     // // Returns type and list of of unique names or objects with a "name" key 
     // {"type":"typeID","items":["name","name",...]|[{"name":"example"},...]}
     .load_list((listID)=>{
-      return fetch(window.location.origin+`/list/desynonymize?list_id=${listID}`,{
-        credentials: 'include'
-      })
-        .then(resp=>resp.json())
-        .then(list_data=>{
-        if(list_data.error) alert(list_data.error)
-        var l = {
-          type:list_data.list_type,
-          items:list_data.list||[]
-        };
-        console.log(l)
-        return l 
-      })
+        return new Promise(res=>{
+           var ids = list.transform2Ids(listID);
+           var ldata = list.getListData(listID);
+           if(initialtypes.indexOf(ldata.type_name)==-1){
+               setTimeout(()=>alert("List is not of an appropriate type."),1);
+           }
+           res({
+            "type":ldata.type_name,
+            "items":!ids.error?ids.map((ele_id,i)=>({
+                "id":ele_id,
+                "name":ldata.elements[i][1]
+            })):[]
+           });
+        })
     });
     
     var load_lists = ()=>(new Promise((resolve,reject)=>{
@@ -149,14 +150,17 @@ export function WizardSetup(main_id){
     wiz.add_to_list((listID,items)=>{
       var count = list.addBulk(listID,items.map(i=>i.name));
       if(count) alert(`${count} items added to list.`);
+      load_lists();
     })
     // Function which creates a new list from items
-    .create_list((listName,items)=>{
-      var newID = list.newList(listName,"");
+    .create_list((listName,colType,items)=>{
+        var newID = list.newList(listName,"");
       if(newID){
+        list.setListType(newID, colType);
         var count = list.addBulk(newID,items.map(i=>i.name));
         if(count) alert(`${count} items added to list ${listName}.`);
       } 
+      load_lists();
     });
     
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
