@@ -136,7 +136,7 @@ sub get_md5 {
     my $file_name_and_location = shift;
     #print STDERR $file_name_and_location;
 
-    open(my $F, "<", $file_name_and_location) || die "Can't open file ";
+    open(my $F, "<", $file_name_and_location) || die "Can't open file $file_name_and_location";
     binmode $F;
     my $md5 = Digest::MD5->new();
     $md5->addfile($F);

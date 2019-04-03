@@ -228,28 +228,30 @@ $parser->parse_with_iterator();
 #
 my $protocol_id;
 my $project_id;
-my $observation_unit_uniquenames;
 
-if (my $genotype_info = $parser->next()) {
-    print STDERR "Parsing first genotype and extracting protocol info...\n";
-    $observation_unit_uniquenames = $parser->observation_unit_names();
+if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
+    print STDERR "Parsing first genotype and extracting protocol info... \n";
+
+    print STDERR "PROTOCOL: ".Dumper($parser->protocol_data());
+    print STDERR "GENOTYPE: ".Dumper($genotype_info);
     my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
 	bcs_schema=>$schema,
 	metadata_schema=>$metadata_schema,
 	phenome_schema=>$phenome_schema,
-	protocol_info=>$parser->protocol_data(),
+	#protocol_info=>$parser->protocol_data(),
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
-	observation_unit_uniquenames=>$observation_unit_uniquenames,
-#	project_id=>$opt_h,
+	observation_unit_uniquenames=> [ $observation_unit_name ],
+	project_id=>$opt_h,
 	genotyping_facility=>$opt_n, #projectprop
 	breeding_program_id=>$breeding_program_id, #project_rel
 	project_year=>$opt_y, #projectprop
 	project_location_id=>$location_id, #ndexperiment and projectprop
 	project_name=>$opt_p, #project_attr
 	project_description=>$opt_d, #project_attr
-	protocol_name=>$opt_m,
-	protocol_description=>$opt_k,
+#	protocol_name=>$opt_m,
+	#	protocol_description=>$opt_k,
+	protocol_name => $opt_m,
 	organism_id=>$organism_id,
 	igd_numbers_included=>$include_igd_numbers,
 	user_id=>$sp_person_id,
@@ -271,7 +273,7 @@ if (my $genotype_info = $parser->next()) {
 
 print STDERR "Done loading first accession, moving on...\n";    
 
-while (my $genotype_info = $parser->next()) {
+while (my ($observation_unit_name, $genotype_info) = $parser->next()) {
     print STDERR "parsing next... ";
     my $protocol_info = $parser->protocol_data();
     $protocol_info->{'reference_genome_name'} = $reference_genome_name;
@@ -284,7 +286,7 @@ while (my $genotype_info = $parser->next()) {
 	protocol_id => $protocol_id,
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
-	observation_unit_uniquenames=>$observation_unit_uniquenames,
+	observation_unit_uniquenames=> [ $genotype_info->{observation_unit_name} ],
 	project_id=>$opt_h,
 	protocol_id=>$opt_j,
 	genotyping_facility=>$opt_n, #projectprop

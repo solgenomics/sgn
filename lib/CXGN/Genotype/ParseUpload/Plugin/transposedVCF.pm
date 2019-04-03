@@ -87,7 +87,7 @@ sub _validate_with_plugin {
     chomp($pos);
     my @pos = split /\t/, $pos;
     $self->pos(\@pos);
-    
+    print STDERR "POS = ".Dumper(\@pos);
     my $ids = <$F>;
     chomp($ids);
     my @ids = split /\t/, $ids;
@@ -99,31 +99,37 @@ sub _validate_with_plugin {
     chomp($refs);
     my @refs = split /\t/, $refs;
     $self->refs(\@refs);
+    print STDERR "REFS = ".Dumper(\@refs);
     
     my $alts = <$F>;
     chomp($alts);
     my @alts = split /\t/, $alts;
     $self->alts(\@alts);
+    print STDERR "ALTS = ".Dumper(\@alts);
     
     my $qual = <$F>;
     chomp($qual);
     my @qual = split /\t/,$qual;
     $self->qual(\@qual);
+    print STDERR "QUAL = ".Dumper(\@qual);
     
     my $filter = <$F>;
     chomp($filter);
     my @filter = split /\t/, $filter;
     $self->filter(\@filter);
+    print STDERR "FILTER = ".Dumper(\@filter);
     
     my $info = <$F>;
     chomp($info);
     my @info = split /\t/, $info;
     $self->info(\@info);
+    print STDERR "INFO = ".Dumper(\@info);
     
     my $format = <$F>;
     chomp($format);
     my @format = split /\t/, $format;
     $self->format(\@format);
+    print STDERR "FORMAT = ".Dumper(\@format);
     
     print STDERR "marker count = ".scalar(@ids)."\n";
     
@@ -267,7 +273,7 @@ sub extract_protocol_data {
     
 #    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
 
-    for (my $i=0; $i<@{$self->ids()}; $i++) { 
+    for (my $i=1; $i<@{$self->ids()}; $i++) { 
 	my $marker_info_p2 = $self->ids()->[$i];
 	my $marker_info_p8 = $self->format()->[$i];
 	if ($marker_info_p2 eq '.') {
@@ -308,11 +314,12 @@ sub next_genotype {
     my @fields;
 
     my $genotypeprop; # hashref
+    my $observation_unit_name;
+    
     my $line;
 
     my $F = $self->_fh();
     
-
     if (! ($line = <$F>)) { 
 	print STDERR "No next genotype... Done!\n"; 
 	close($F); 
@@ -321,17 +328,22 @@ sub next_genotype {
     else {
 	chomp($line);
 
-	LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; chomp;  goto LABEL; }
+	LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
 
+	print STDERR "Skipping 8 more lines... ";
+	for (0..7) { $line = <$F>; }
+	print STDERR "Done.\n";
+	
 	my @fields = split /\t/, $line;
 
-	my $observation_unit_name = $fields[0];
+	$observation_unit_name = $fields[0];
+
 	my @scores = @fields[1..$#fields];
 
 	my $marker_name = "";
 	
 	for(my $i=1; $i<@scores; $i++) { 
-
+	    my $marker_name = $self->ids()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
 
             my @format =  split /:/,  $self->format()->[$i];
@@ -399,7 +411,7 @@ sub next_genotype {
     
     # $self->_set_parsed_data(\%parsed_data);
 
-    return $genotypeprop;
+    return ($observation_unit_name, $genotypeprop);
 }
 
 1;

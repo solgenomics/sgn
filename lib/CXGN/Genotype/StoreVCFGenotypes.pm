@@ -406,6 +406,7 @@ sub validate {
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
     foreach (@$observation_unit_uniquenames) {
+	print STDERR "Now dealing with observation unit $_...\n";
         $_ =~ s/^\s+|\s+$//g;
         if ($include_igd_numbers){
             my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
@@ -444,11 +445,11 @@ sub validate {
             $all_names{$uniquename}++;
             if ($type_id) {
                 if ($type_id == $synonym_type_id) {
-                    if (exists($all_names{$synonym})){
-                        my $previous_use = $all_names{$synonym};
-                        push @error_messages, "DATABASE PROBLEM: The synonym $synonym is being used in $previous_use AND $uniquename. PLEASE RESOLVE THIS NOW OR CONTACT US!";
-                    }
-                    $all_names{$synonym} = $uniquename;
+                    #if (exists($all_names{$synonym})){
+                     #   my $previous_use = $all_names{$synonym};
+                     #   push @error_messages, "DATABASE PROBLEM: The synonym $synonym is being used in $previous_use AND $uniquename. PLEASE RESOLVE THIS NOW OR CONTACT US!";
+                    #}
+                    #$all_names{$synonym} = $uniquename;
                 }
             }
         }
@@ -512,6 +513,9 @@ sub validate {
     }
 
     #check if genotype_info is correct
+
+    print STDERR Dumper($genotype_info);
+    
     while (my ($observation_unit_name, $marker_result) = each %$genotype_info){
         if (!$observation_unit_name || !$marker_result){
             push @error_messages, "No geno info in genotype_info";
@@ -534,6 +538,7 @@ sub validate {
         order_by => 'genotype.genotype_id'
     });
     while(my $r = $previous_genotypes_rs->next){
+	print STDERR "PREVIOUS GENOTYPES ".join (",", ($r->get_column('uniquename'), $r->get_column('protocol_name'), $r->get_column('project_name')))."\n";
         my $uniquename = $r->uniquename;
         my $protocol_name = $r->get_column('protocol_name');
         my $project_name = $r->get_column('project_name');
