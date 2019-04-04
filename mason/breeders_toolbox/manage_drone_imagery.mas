@@ -666,6 +666,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             <option value="">Select One</option>
                             <option value="BGR">BGR (Band 1 = Blue, Band 2 = Green, Band 3 = Red)</option>
                             <option value="NRN">NRN (Band 1 = NIR, Band 2 = Red, Band 3 = NIR)</option>
+                            <option value="NReN">NReN (Band 1 = NIR, Band 2 = Red Edge, Band 3 = NIR)</option>
                         </select>
                     </div>
                 </div>
@@ -676,6 +677,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <li>TGI = {GREEN band2} - 0.39*{RED band3} - 0.61*{BLUE band1}</li>
             <li>VARI = ( {GREEN band2} - {RED band3} ) / ( {GREEN band2} + {RED band3} - {BLUE band1} )</li>
             <li>NDVI = ( {NIR band1} - {RED band 2} ) / ( {NIR band1} + {RED band2} )</li>
+            <li>NDRE = ( {NIR band1} - {RED EDGE band 2} ) / ( {NIR band1} + {RED EDGE band2} )</li>
         </ul>
 
       </div>

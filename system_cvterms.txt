@@ -276,13 +276,16 @@ project_md_image	threshold_background_removed_stitched_drone_imagery	Stitched im
 project_md_image	threshold_background_removed_tgi_stitched_drone_imagery	Vegetative index TGI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_vari_stitched_drone_imagery	Vegetative index VARI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_ndvi_stitched_drone_imagery	Vegetative index NDVI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
+project_md_image	threshold_background_removed_ndre_stitched_drone_imagery	Vegetative index NDRE stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_temporary_stitched_drone_imagery	Stitched image without background via threshold (soil, etc) that is temporarily saved	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_tgi_mask_original	Stitched image without background via tgi mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_vari_mask_original	Stitched image without background via vari mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_ndvi_mask_original	Stitched image without background via ndvi mask via threshold (soil, etc)	10/5/2018	nm529	00103
+project_md_image	denoised_background_removed_ndre_mask_original	Stitched image without background via ndre mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_thresholded_tgi_mask_original	Stitched image without background via thresholded tgi mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_thresholded_vari_mask_original	Stitched image without background via thresholded vari mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_thresholded_ndvi_mask_original	Stitched image without background via thresholded ndvi mask via threshold (soil, etc)	10/5/2018	nm529	00103
+project_md_image	denoised_background_removed_thresholded_ndre_mask_original	Stitched image without background via thresholded ndre mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_imagery	Cropped image for an observation unit polygon for original image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_bw_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original black and white image after background removed via threshold	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original rgb image after background removed via threshold	10/5/2018	nm529	00103
@@ -297,34 +300,39 @@ project_md_image	observation_unit_polygon_tir_background_removed_threshold_image
 project_md_image	observation_unit_polygon_tgi_imagery	Cropped image for an observation unit polygon from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_vari_imagery	Cropped image for an observation unit polygon from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_ndvi_imagery	Cropped image for an observation unit polygon from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_ndre_imagery	Cropped image for an observation unit polygon from NDRE vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_background_removed_tgi_imagery	Cropped image for an observation unit polygon from threshold background removed TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_background_removed_vari_imagery	Cropped image for an observation unit polygon from threshold background removed VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_background_removed_ndvi_imagery	Cropped image for an observation unit polygon from threshold background removed NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_background_removed_ndre_imagery	Cropped image for an observation unit polygon from threshold background removed NDRE vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_original_background_removed_tgi_mask_imagery	Cropped image for an observation unit polygon from original background removed via TGI vegetative index mask	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_original_background_removed_vari_mask_imagery	Cropped image for an observation unit polygon from original background removed via VARI vegetative index mask	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_original_background_removed_ndvi_mask_imagery	Cropped image for an observation unit polygon from original background removed via NDVI vegetative index mask	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_original_background_removed_ndre_mask_imagery	Cropped image for an observation unit polygon from original background removed via NDRE vegetative index mask	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery	Cropped image for an observation unit polygon from original background removed via thresholded_TGI vegetative index mask	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery	Cropped image for an observation unit polygon from original background removed via thresholded_VARI vegetative index mask	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery	Cropped image for an observation unit polygon from original background removed via thresholded_NDVI vegetative index mask	10/5/2018	nm529	00103
-project_md_image	calculate_phenotypes_zonal_stats_drone_imagery	Calculate zonal stats phenotypes on observation unit	10/5/2018	nm529	00103
-project_md_image	calculate_phenotypes_zonal_stats_drone_imagery_tgi	Calculate zonal stats phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
-project_md_image	calculate_phenotypes_zonal_stats_drone_imagery_vari	Calculate zonal stats phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
-project_md_image	calculate_phenotypes_zonal_stats_drone_imagery_ndvi	Calculate zonal stats phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery	Cropped image for an observation unit polygon from original background removed via thresholded_NDRE vegetative index mask	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery	Calculate surf phenotypes on observation unit	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery_tgi	Calculate surf phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery_vari	Calculate surf phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery_ndvi	Calculate surf phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_surf_drone_imagery_ndre	Calculate surf phenotypes on observation unit from NDRE vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_sift_drone_imagery	Calculate sift phenotypes on observation unit	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_sift_drone_imagery_tgi	Calculate sift phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_sift_drone_imagery_vari	Calculate sift phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_sift_drone_imagery_ndvi	Calculate sift phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_sift_drone_imagery_ndre	Calculate sift phenotypes on observation unit from NDRE vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_orb_drone_imagery	Calculate orb phenotypes on observation unit	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_orb_drone_imagery_tgi	Calculate orb phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_orb_drone_imagery_vari	Calculate orb phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_orb_drone_imagery_ndvi	Calculate orb phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_orb_drone_imagery_ndre	Calculate orb phenotypes on observation unit from NDRE vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_tgi_drone_imagery	Calculate TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_tgi_temporary_drone_imagery	Calculate TGI vegetative index to view temporarily	10/5/2018	nm529	00103
 project_md_image	calculate_vari_drone_imagery	Calculate VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_vari_temporary_drone_imagery	Calculate VARI vegetative index to view temporarily	10/5/2018	nm529	00103
 project_md_image	calculate_ndvi_drone_imagery	Calculate NDVI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_ndvi_temporary_drone_imagery	Calculate NDVI vegetative index to view temporarily	10/5/2018	nm529	00103
+project_md_image	calculate_ndre_drone_imagery	Calculate NDRE vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_ndre_temporary_drone_imagery	Calculate NDRE vegetative index to view temporarily	10/5/2018	nm529	00103
