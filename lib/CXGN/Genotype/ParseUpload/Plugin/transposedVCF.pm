@@ -44,6 +44,7 @@ has 'format' => (is => 'rw', isa => 'Ref');
 has 'protocol_data' => (is => 'rw', isa=> 'Ref');
 has 'header_info' => (is => 'rw', isa => 'Ref');
 has 'observation_unit_names' => (is => 'rw', isa => 'Ref');
+has '_is_first_line' => (is => 'rw', isa => 'Bool', default => 1);
 has '_fh' => (is => 'rw', isa => 'Ref');
 
 
@@ -323,16 +324,17 @@ sub next_genotype {
     if (! ($line = <$F>)) { 
 	print STDERR "No next genotype... Done!\n"; 
 	close($F); 
-	return 0; 
+	return undef;
     }
     else {
 	chomp($line);
 
 	LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
 
-	print STDERR "Skipping 8 more lines... ";
-	for (0..7) { $line = <$F>; }
-	print STDERR "Done.\n";
+	if ($self->_is_first_line()) {
+	    print STDERR "Skipping 8 more lines... ";
+	    for (0..7) { $line = <$F>; }
+	}
 	
 	my @fields = split /\t/, $line;
 
@@ -391,6 +393,7 @@ sub next_genotype {
 	    }
 	    $genotypeprop->{$marker_name} = \%value;
 	}
+	$self->_is_first_line(0);
     }
     
     
@@ -411,7 +414,7 @@ sub next_genotype {
     
     # $self->_set_parsed_data(\%parsed_data);
 
-    return ($observation_unit_name, $genotypeprop);
+    return ( $observation_unit_name, { $observation_unit_name => $genotypeprop } );
 }
 
 1;

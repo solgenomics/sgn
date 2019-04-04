@@ -513,8 +513,7 @@ sub validate {
     }
 
     #check if genotype_info is correct
-
-    print STDERR Dumper($genotype_info);
+    #print STDERR Dumper($genotype_info);
     
     while (my ($observation_unit_name, $marker_result) = each %$genotype_info){
         if (!$observation_unit_name || !$marker_result){
