@@ -117,12 +117,15 @@ project_property	drone_run_band_cropped_polygon	The polygon that the drone run b
 project_property	drone_run_band_background_removed_tgi_threshold	The threshold at which the tgi image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_vari_threshold	The threshold at which the vari image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_ndvi_threshold	The threshold at which the ndvi image was background removed	10/5/2018	nm529	00103
+project_property	drone_run_band_background_removed_ndre_threshold	The threshold at which the ndre image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_tgi_mask_original_threshold	The threshold at which the original image was background removed after applying tgi mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_vari_mask_original_threshold	The threshold at which the original image was background removed after applying vari mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_ndvi_mask_original_threshold	The threshold at which the original image was background removed after applying ndvi mask	10/5/2018	nm529	00103
+project_property	drone_run_band_background_removed_ndre_mask_original_threshold	The threshold at which the original image was background removed after applying ndre mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_thresholded_tgi_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded tgi mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_thresholded_vari_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded vari mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_thresholded_ndvi_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded ndvi mask	10/5/2018	nm529	00103
+project_property	drone_run_band_background_removed_thresholded_ndre_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded ndre mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_threshold	The threshold at which the image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_plot_polygons	The pixel coordinates for the defined plot polygons	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_in_progress	Running a standard process on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103
