@@ -28,7 +28,6 @@ load_genotypes_transposed_vcf.pl - loading genotypes into cxgn databases, based 
  -g population name (required) e.g. "NaCRRI training population"
  -b observation unit type name (required) e.g. "tissue_sample" or "accession"
  -e breeding program name (required) e.g. "IITA"
- -s include igd numbers in sample names
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
  -k protocol description (required)
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
@@ -83,9 +82,9 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
+our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
 
-getopts('H:U:i:r:u:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:');
+getopts('H:U:i:r:u:tD:p:y:g:axm:k:l:q:zf:d:b:n:e:h:j:');
 
 if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
@@ -226,19 +225,19 @@ $parser->parse_with_iterator();
 # store the first genotype with the protocol data,
 # then use the protocol id to store the other genotypes.
 #
-my $protocol_id;
 my $project_id;
+
 
 if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
     print STDERR "Parsing first genotype and extracting protocol info... \n";
 
     print STDERR "PROTOCOL: ".Dumper($parser->protocol_data());
     print STDERR "GENOTYPE: ".Dumper($genotype_info);
+
     my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
 	bcs_schema=>$schema,
 	metadata_schema=>$metadata_schema,
 	phenome_schema=>$phenome_schema,
-	#protocol_info=>$parser->protocol_data(),
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
 	observation_unit_uniquenames=> [ $observation_unit_name ],
@@ -249,9 +248,11 @@ if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
 	project_location_id=>$location_id, #ndexperiment and projectprop
 	project_name=>$opt_p, #project_attr
 	project_description=>$opt_d, #project_attr
-#	protocol_name=>$opt_m,
-	#	protocol_description=>$opt_k,
+	protocol_id => $protocol_id,
+	protocol_name=>$opt_m,
+	protocol_description=>$opt_k,
 	protocol_name => $opt_m,
+	protocol_info=>$parser->protocol_data(),
 	organism_id=>$organism_id,
 	igd_numbers_included=>$include_igd_numbers,
 	user_id=>$sp_person_id,
@@ -287,8 +288,6 @@ while (my ($observation_unit_name, $genotype_info) = $parser->next()) {
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
 	observation_unit_uniquenames=> [ $genotype_info->{observation_unit_name} ],
-	project_id=>$opt_h,
-	protocol_id=>$opt_j,
 	genotyping_facility=>$opt_n, #projectprop
 	breeding_program_id=>$breeding_program_id, #project_rel
 #	project_year=>$opt_y, #projectprop#
