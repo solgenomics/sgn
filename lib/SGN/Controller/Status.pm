@@ -56,6 +56,21 @@ sub status : Path('/status') Args(0) {
     $h->execute();
     my ($pheno_last_addition) = $h->fetchrow_array() and $h->finish();
 
+    # Get genotype protocol count
+    $h = $dbh->prepare("SELECT COUNT(genotyping_protocol_id) FROM genotyping_protocols;");
+    $h->execute();
+    my ($geno_protocol_count) = $h->fetchrow_array() and $h->finish();
+
+    # Get marker count
+    $h = $dbh->prepare("SELECT COUNT(marker_id) FROM sgn.marker;");
+    $h->execute();
+    my ($marker_count) = $h->fetchrow_array() and $h->finish();
+
+    # Get last geno addition date
+    $h = $dbh->prepare("SELECT MAX(create_date) FROM genotype;");
+    $h->execute();
+    my ($geno_last_addition) = $h->fetchrow_array() and $h->finish();
+
     # Pass query results to template
     $c->stash->{accession_count} = $accession_count;
     $c->stash->{breeding_program_count} = $breeding_program_count;
@@ -65,6 +80,9 @@ sub status : Path('/status') Args(0) {
     $c->stash->{pheno_trial_count} = $pheno_trial_count;
     $c->stash->{pheno_observations} = $pheno_observations;
     $c->stash->{pheno_last_addition} = $pheno_last_addition;
+    $c->stash->{geno_protocol_count} = $geno_protocol_count;
+    $c->stash->{marker_count} = $marker_count;
+    $c->stash->{geno_last_addition} = $geno_last_addition;
     $c->stash->{template} = '/about/sgn/status.mas';
 }
 

@@ -139,3 +139,41 @@
     </div>
 
 </&>
+
+
+
+<&| /page/info_section.mas, 
+        id=>'content_genotype',
+        title=>'Genotype Data',
+        collapsible=>1,
+        collapsed=>0 &>
+
+    <div class="well content-status-well">
+        <table class="content-status-table">
+
+            <tr>
+                <td>Genotyping Protocols</td>
+                <td><% $geno_protocol_count %></td>
+                <td>
+                    <a href="/search/genotyping_protocols" class="btn btn-primary" role="button">Search</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Markers</td>
+                <td><% $marker_count %></td>
+                <td>
+                    <a href="/search/markers" class="btn btn-primary" role="button">Search</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Last Addition</td>
+                <td><% $geno_last_addition %></td>
+                <td></td>
+            </tr>
+
+        </table>
+    </div>
+
+</&>
