@@ -137,7 +137,19 @@ sub get_accessions_using_snps {
     my $all_markers_string;
 
 
-    print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
+#    print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
+
+    my $dataset_table = "DROP TABLE IF EXISTS dataset_table;
+        CREATE TEMP TABLE dataset_table(stock_id INT)";
+    my $d_t = $schema->storage->dbh()->prepare($dataset_table);
+    $d_t->execute();
+
+    foreach my $accession(@accessions){
+        my $added_table = "INSERT INTO dataset_table (stock_id) VALUES (?)";
+        my $h = $schema->storage->dbh()->prepare($added_table);
+        $h->execute($accession);
+    }
+
 
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
@@ -193,15 +205,16 @@ sub get_accessions_using_snps {
 
     my @homozygous_accessions;
     if ($homozygous_nt_string){
-        my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+        my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
+            JOIN stock ON (dataset_table.stock_id = stock.stock_id)
+            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
             JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
             JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-            WHERE genotypeprop.value @> ?
-            AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
+            WHERE genotypeprop.value @> ?";
 
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $homozygous_nt_string, @accessions);
+        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $homozygous_nt_string);
 
         if ($het_param_count == 0){
             while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
@@ -244,15 +257,16 @@ sub get_accessions_using_snps {
         }
     } elsif (($homozygous_nt_string == 0) && ($het_param_count != 0)){
         foreach my $pair(@all_het_pairs){
-            my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+            my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
+                JOIN stock ON (dataset_table.stock_id = stock.stock_id)
+                JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
                 JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-                WHERE genotypeprop.value @> ? or genotypeprop.value @> ?
-                AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
+                WHERE genotypeprop.value @> ? or genotypeprop.value @> ?";
 
             my $h = $schema->storage->dbh()->prepare($q);
-            $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $$pair[0], $$pair[1], @accessions);
+            $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $$pair[0], $$pair[1]);
 
             while (my @row = $h->fetchrow_array()){
                 push @het_all_accessions, $row[0]
