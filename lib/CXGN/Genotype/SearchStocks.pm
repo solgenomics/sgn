@@ -88,15 +88,27 @@ sub get_selected_accessions {
 #    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
 #    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
 
-    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+    my $dataset_table = "DROP TABLE IF EXISTS dataset_table;
+        CREATE TEMP TABLE dataset_table(stock_id INT)";
+    my $d_t = $schema->storage->dbh()->prepare($dataset_table);
+    $d_t->execute();
+
+    foreach my $accession(@accessions){
+        my $added_table = "INSERT INTO dataset_table (stock_id) VALUES (?)";
+        my $h = $schema->storage->dbh()->prepare($added_table);
+        $h->execute($accession);
+    }
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
+        JOIN stock ON (dataset_table.stock_id = stock.stock_id)
+        JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-        WHERE genotypeprop.value @> ?
-        AND stock.stock_id IN (" . join(', ', ('?') x @accessions) . ")";
+        WHERE genotypeprop.value @> ? ";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $vcf_params_string, @accessions);
+    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $vcf_params_string);
 
     while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
         push @selected_accessions, [$selected_id, $selected_uniquename, $vcf_params_string]
