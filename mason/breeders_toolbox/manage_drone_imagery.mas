@@ -439,6 +439,10 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
         <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDVI">Calculate "Normalized Difference Vegetative Index" NDVI. NDVI = ({NIR band1} - {Red band2}) / ({NIR band1} + {Red band2})</button>
         <hr>
     </div>
+    <div id="manage_drone_imagery_vegetative_index_ndre_div" style="display:none">
+        <button class="btn btn-primary" id="drone_imagery_vegetative_index_NDRE">Calculate "Normalized Difference Red Edge" NDRE. NDRE = ({NIR band1} - {Red Edge band2}) / ({NIR band1} + {Red Edge band2})</button>
+        <hr>
+    </div>
 
     <button class="btn btn-success" id="drone_imagery_rgb_vegetative_index_submit">Finish and Save Vegetative Index</button>
     <hr>
@@ -3343,9 +3347,10 @@ jQuery(document).ready(function() {
         jQuery('#manage_drone_imagery_vegetative_index_tgi_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_vari_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_ndvi_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_ndre_div').hide();
     });
 
-    jQuery(document).on('click', 'button[name="project_drone_imagery_3_band_vegetative"]', function(){
+    jQuery(document).on('click', 'button[name="project_drone_imagery_3_band_bgr_vegetative"]', function(){
         manage_drone_imagery_vi_rgb_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         manage_drone_imagery_vi_rgb_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
         manage_drone_imagery_vi_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
@@ -3354,7 +3359,34 @@ jQuery(document).ready(function() {
 
         jQuery('#manage_drone_imagery_vegetative_index_tgi_div').show();
         jQuery('#manage_drone_imagery_vegetative_index_vari_div').show();
+        jQuery('#manage_drone_imagery_vegetative_index_ndvi_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_ndre_div').hide();
+    });
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_3_band_nrn_vegetative"]', function(){
+        manage_drone_imagery_vi_rgb_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        manage_drone_imagery_vi_rgb_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
+        manage_drone_imagery_vi_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
+
+        showManageDroneImagerySection('manage_drone_imagery_vegetative_index_div');
+
+        jQuery('#manage_drone_imagery_vegetative_index_tgi_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_vari_div').hide();
         jQuery('#manage_drone_imagery_vegetative_index_ndvi_div').show();
+        jQuery('#manage_drone_imagery_vegetative_index_ndre_div').hide();
+    });
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_3_band_nren_vegetative"]', function(){
+        manage_drone_imagery_vi_rgb_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        manage_drone_imagery_vi_rgb_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
+        manage_drone_imagery_vi_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
+
+        showManageDroneImagerySection('manage_drone_imagery_vegetative_index_div');
+
+        jQuery('#manage_drone_imagery_vegetative_index_tgi_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_vari_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_ndvi_div').hide();
+        jQuery('#manage_drone_imagery_vegetative_index_ndre_div').show();
     });
 
     jQuery('#drone_imagery_vegetative_index_TGI').click(function(){
@@ -3372,6 +3404,12 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_vegetative_index_NDVI').click(function(){
         manage_drone_imagery_vi_selected_index = 'NDVI';
         manage_drone_imagery_vi_selected_image_type = 'NRN';
+        getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1, manage_drone_imagery_vi_selected_image_type);
+    });
+
+    jQuery('#drone_imagery_vegetative_index_NDRE').click(function(){
+        manage_drone_imagery_vi_selected_index = 'NDRE';
+        manage_drone_imagery_vi_selected_image_type = 'NReN';
         getVegetativeIndex('calculate_rgb_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1, manage_drone_imagery_vi_selected_image_type);
     });
 
