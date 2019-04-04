@@ -37,3 +37,5 @@ system_message.txt
 sgn_local.conf.old
 export/*
 temp_images/*
+lib/SGN/Controller/Triticum
+bin/t3*
