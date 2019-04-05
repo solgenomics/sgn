@@ -2154,6 +2154,9 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
      my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
      
      my $req = $c->req->param('source');
+     my @traits_ids = $c->req->param('trait_id[]');
+
+     print STDERR "\ntraits ids: @traits_ids \n";
 
      if (!$training_pop_id) 
      {
@@ -2327,7 +2330,8 @@ sub get_model_accuracy_value {
     
     my ($row) = grep {/Average/} read_file($validation_file);
     my ($text, $accuracy_value) = split(/\t/,  $row);
- 
+
+    $accuracy_value =~ s/\s+//g;
     $c->stash->{accuracy_value} = $accuracy_value;
   
 }
@@ -2826,7 +2830,8 @@ sub traits_acronym_table {
 sub analyzed_traits {
     my ($self, $c) = @_;
     
-    my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id}; 
+    my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};   
+    my @selected_analyzed_traits = @{$c->stash->{selected_analyzed_traits}} if $c->stash->{selected_analyzed_traits};
     
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
@@ -2878,13 +2883,40 @@ sub analyzed_traits {
             my $av = $c->stash->{accuracy_value};
 
             if ($av && $av =~ m/\d+/ && $av > 0) 
-            { 
-              push @si_traits, $trait;
-              push @valid_traits_files, $trait_file;
+            {
+		if (@selected_analyzed_traits)
+		{
+		    if (grep($trait_id == $_,  @selected_analyzed_traits)) 
+		    {
+			print STDERR "\ntrait id $trait_id is selected\n";
+			push @si_traits, $trait;
+			push @valid_traits_files, $trait_file;
+		    }
+		}
+		else
+		{	print STDERR "\nNo selection trait id $trait_id is selected\n";   
+		    push @si_traits, $trait;
+		    push @valid_traits_files, $trait_file;
+		    
+		}
             }
-                           
-            push @traits, $trait;
-	    push @analyzed_traits_files, $trait_file;
+
+	    if (@selected_analyzed_traits) {
+	    if (grep($trait_id == $_, @selected_analyzed_traits)) 
+	    {   
+         
+		print STDERR "\ntrait id $trait_id is selected\n";             
+		push @traits, $trait;
+		push @analyzed_traits_files, $trait_file;
+	    }
+	    }
+	    else
+	    {
+		print STDERR "\nNo selection trait id $trait_id is selected\n";             
+		push @traits, $trait;
+		push @analyzed_traits_files, $trait_file;
+		
+	    }
         }      
 
     }
