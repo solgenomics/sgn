@@ -44,23 +44,58 @@ print STDERR "Connecting to DBI schema...\n";
 my $bcs_schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
 my $phenome_schema = CXGN::Phenome::Schema->connect($dsn, "postgres", $pw,  { on_connect_do => ['set search_path to public,phenome;'] });
 
-my $q0 = "SELECT count(*) FROM genotypeprop WHERE genotype_id in (SELECT nd_genotype_id FROM nd_experiment_protocol join nd_experiment_genotype using(nd_protocol_id) JOIN genotypeprop USING(genotype_id) WHERE nd_protocol_id=?)";
+$dbh->{AutoCommit} = 0;
 
+eval { 
+    my $q0 = "SELECT count(*) FROM genotypeprop WHERE genotypeprop_id in (SELECT genotypeprop_id FROM nd_experiment_protocol join nd_experiment_genotype using(nd_experiment_id) JOIN genotypeprop USING(genotype_id) WHERE nd_protocol_id=?)";
     
-my $q1 = "DELETE FROM genotype WHERE genotype_id in (SELECT nd_genotype_id FROM nd_experiment_protocol join nd_experiment_genotype using(nd_protocol_id) JOIN genotype USING(genotype_id) WHERE nd_protocol_id=?)";
+    my $h0 = $dbh->prepare($q0);
+    $h0->execute($opt_p);
+    
+    my ($count) = $h0->fetchrow_array();
+    print "You are about to delete $count genotyping entries. Proceed? Y/n :";
+    my $answer = (<>);
+    chomp;
+    if ($answer !~ m/y|Y/) {
+	die "Aborted due to user request.";
+    }
+    
+    print STDERR "Deleteing genotype entries... ";
+    my $q1 = "DELETE FROM genotype WHERE genotype_id in (SELECT genotype_id FROM nd_experiment_protocol join nd_experiment_genotype using(nd_experiment_id) JOIN genotype USING(genotype_id) WHERE nd_protocol_id=?)";
+    my $h1 = $dbh->prepare($q1);
+    $h1->execute($opt_p);
+    print STDERR "Done.\n";
 
-my $h1 = $dbh->prepare($q1);
-$h1->execute($opt_p);
+    print STDERR "Delete nd_experiment_md_files entries... ";
+    my $q8 = "DELETE FROM nd_experiement
+    
+    print STDERR "Deleting nd_experiment entries... ";
+    my $q2 = "DELETE FROM nd_experiment WHERE nd_experiment_id in (SELECT nd_experiment_id FROM nd_experiment_protocol join nd_experiment using(nd_experiment_id) WHERE nd_protocol_id=?)";
+    
+    my $h2 = $dbh->prepare($q2);
+    $h2 ->execute($opt_p);
+    print STDERR "Done.\n";
+    
+    print STDERR "Deleting protocol entry... ";
+    my $q3 = "DELETE FROM nd_protocol WHERE nd_protocol_id=?";
+    my $h3 = $dbh->prepare($q3);
+    $h3->execute($opt_p);
+    print STDERR "Done.\n";
+};
 
-my $q2 = "DELETE FROM nd_experiment WHERE nd_experiment_id in (SELECT nd_experiment_id FROM nd_experiment_protocol join nd_experiment using(nd_protocol_id) WHERE nd_protocol_id=?)";
-
-my $h2 = $dbh->prepare($q2);
-$h2 ->execute($opt_p);
-
-my $q3 = "DELETE FROM nd_experiment WHERE nd_experiment_id=?";
-my $h3 = $dbh->prepare($q3);
-$h3->execute($opt_p);
-
+if ($@) {
+    print STDERR "An error occurred $@... Not deleting.\n";
+    $dbh->rollback();
+}
+else {
+    print STDERR "Deletion successful. Commit? Y/N : ";
+    my $answer = <>;
+    if ($answer =~ m/Y|y/) {
+	print STDERR "Deleting... ";
+	$dbh->commit();
+	print STDERR "Done.\n";
+    }
+}
 	
     
 
