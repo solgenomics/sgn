@@ -134,8 +134,8 @@ sub get_accessions_using_snps {
     my @het_all_accessions;
     my @het_selected_accessions;
     my @selected_accessions;
+    my %all_markers;
     my $all_markers_string;
-
 
 #    print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
 
@@ -150,7 +150,6 @@ sub get_accessions_using_snps {
         $h->execute($accession);
     }
 
-
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
@@ -164,6 +163,9 @@ sub get_accessions_using_snps {
         }
 
         if ($marker_name){
+            my $nt_value = $allele_1.'/'.$allele_2;
+            $all_markers{$marker_name} = {'NT' => $nt_value};
+
             if ($allele_1 eq $allele_2){
                 my $homozygous_param = $allele_1.'/'.$allele_2;
                 $homozygous_nt{$marker_name} = {'NT' => $homozygous_param}
@@ -183,11 +185,6 @@ sub get_accessions_using_snps {
                 push @het_pair, $heterozygous_nt_string1, $heterozygous_nt_string2;
                 push @all_het_pairs, \@het_pair;
             }
-
-            my %all_markers;
-            my $nt_value = $allele_1.'/'.$allele_2;
-            $all_markers{$marker_name} = {'NT' => $nt_value};
-            $all_markers_string = encode_json \%all_markers;
         }
     }
 
@@ -198,7 +195,9 @@ sub get_accessions_using_snps {
         $homozygous_nt_string = encode_json \%homozygous_nt;
     }
 
+    $all_markers_string = encode_json \%all_markers;
 
+    print STDERR "ALL MARKER=" .Dumper(\%all_markers). "\n";
     print STDERR "HOMOZYGOUS NT JSON=" .Dumper($homozygous_nt_string). "\n";
     print STDERR "ALL HET PAIRS=" .Dumper(\@all_het_pairs). "\n";
     print STDERR "HET PARAM COUNT=" .Dumper($het_param_count). "\n";
