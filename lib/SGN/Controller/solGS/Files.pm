@@ -596,6 +596,9 @@ sub create_file_id {
     my $data_type        = $c->stash->{data_type};
     my $k_number         = $c->stash->{k_number};
 
+    my $traits_ids = $c->stash->{selected_analyzed_traits};
+    my $traits_selection_id = $c->controller('solGS::combinedTrials')->create_traits_selection_id($traits_ids);
+        
     my $file_id;
     my $referer = $c->req->referer;
     
@@ -631,6 +634,8 @@ sub create_file_id {
 
     $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
+    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
+    
     $c->stash->{file_id} = $file_id;
     
 }

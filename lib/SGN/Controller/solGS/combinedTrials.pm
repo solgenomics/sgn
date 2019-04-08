@@ -754,12 +754,11 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
     
     my @traits_ids = $c->req->param('trait_ids[]');
    
-    my $traits_selection_id;
     my $ret->{status} = 0;
-  
+
     if (@traits_ids > 1) 
     {
-	$traits_selection_id = crc(join('', @traits_ids));	    
+	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);	    
 	my $ids = join(',', @traits_ids);
 	my $entry = "\n" . $traits_selection_id . "\t" . $ids;
 	$self->catalogue_traits_selection($c, $entry);
@@ -775,6 +774,20 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
 
 }
 
+sub create_traits_selection_id {
+    my ($self, $traits_ids) = @_;
+    
+    if ($traits_ids)
+    {
+	return  crc(join('', @$traits_ids));
+    }
+    else
+    {
+	return 0;
+    }
+}
+
+	
 
 #####
 

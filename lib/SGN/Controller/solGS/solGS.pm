@@ -2873,8 +2873,17 @@ sub analyzed_traits {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                                       
                         $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-                       
-                        push @traits_ids, $trait_id;                                               
+			if (@selected_analyzed_traits)
+			{
+			    if (grep($trait_id == $_,  @selected_analyzed_traits)) 
+			    {
+				push @traits_ids, $trait_id;   
+			    } 
+			} 
+			else 
+			{
+			    push @traits_ids, $trait_id; 
+			}                                          
                     }
                 }
             }
