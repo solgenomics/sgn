@@ -136,6 +136,120 @@ sub get_gebv_files_of_traits {
 }
 
 
+sub traits_selection_catalogue_file {
+    my ($self, $c) = @_;
+
+    my $cache_data = {key       => 'traits_selection_catalogue_file',
+                      file      => 'traits_selection_catalogue_file.txt',
+                      stash_key => 'traits_selection_catalogue_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub catalogue_traits_selection {
+    my ($self, $c, $entry) = @_;
+    
+    $self->traits_selection_catalogue_file($c);
+    my $file = $c->stash->{traits_selection_catalogue_file};
+  
+    if (!-s $file) 
+    {
+        my $header = 'traits_selection_id' . "\t" . 'traits_ids';
+        write_file($file, ($header, $entry));    
+    }
+    else 
+    {
+        $entry =~ s/\n//;
+        my @combo = ($entry);
+
+        my (@entries) = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
+        my @intersect = intersect(@combo, @entries);
+
+        unless( @intersect ) 
+        {
+            write_file($file, {append => 1}, "\n" . "$entry");
+        }
+    }
+    
+}
+
+
+sub get_traits_selection_list {
+    my ($self, $c, $id) = @_;
+
+    $id = $c->stash->{traits_selection_id} if !$id;
+    
+    $self->traits_selection_catalogue_file($c);
+    my $traits_selection_catalogue_file = $c->stash->{traits_selection_catalogue_file};
+   
+    my @combos = uniq(read_file($traits_selection_catalogue_file));
+    
+    foreach my $entry (@combos)
+    {
+        if ($entry =~ m/$id/)
+        {
+	    chomp($entry);
+            my ($traits_selection_id, $traits)  = split(/\t/, $entry);
+
+	    if ($id == $traits_selection_id)
+	    {
+		my @traits_list = split(',', $traits);
+		$c->stash->{traits_selection_list} = \@traits_list;
+	    }
+        }   
+    }     
+
+}
+
+
+sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
+    my ($self, $c) = @_;
+    
+    my @traits_ids = $c->req->param('trait_ids[]');
+   
+    my $ret->{status} = 0;
+
+    if (@traits_ids > 1) 
+    {
+	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);	    
+	my $ids = join(',', @traits_ids);
+	my $entry = "\n" . $traits_selection_id . "\t" . $ids;
+	$self->catalogue_traits_selection($c, $entry);
+
+	$ret->{traits_selection_id} = $traits_selection_id;
+	$ret->{status} = 1;
+    }
+
+    $ret = to_json($ret);
+    
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
+sub create_traits_selection_id {
+    my ($self, $traits_ids) = @_;
+    
+    if ($traits_ids)
+    {
+	return  crc(join('', @$traits_ids));
+    }
+    else
+    {
+	return 0;
+    }
+}
+
+	
+
+#####
+
+
 sub begin : Private {
     my ($self, $c) = @_;
 
