@@ -67,7 +67,9 @@ eval {
     print STDERR "Done.\n";
 
     print STDERR "Delete nd_experiment_md_files entries... ";
-    my $q8 = "DELETE FROM nd_experiement
+    my $q8 = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id in (SELECT nd_experiment_id FROM nd_experiment_protocol join nd_experiment using(nd_experiment_id) WHERE nd_protocol_id=?)";
+    my $h8 = $dbh->prepare($q8);
+    $h8->execute($opt_p);
     
     print STDERR "Deleting nd_experiment entries... ";
     my $q2 = "DELETE FROM nd_experiment WHERE nd_experiment_id in (SELECT nd_experiment_id FROM nd_experiment_protocol join nd_experiment using(nd_experiment_id) WHERE nd_protocol_id=?)";
