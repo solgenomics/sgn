@@ -933,8 +933,8 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my @marker_sets;
     foreach my $list (@$lists){
         my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
-#        push @marker_sets, [$name, $item_count, $desc];
         push @marker_sets, {
+            markerset_id => $id,
             markerset_name => $name,
             number_of_markers => $item_count,
             description => $desc,
@@ -944,6 +944,58 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     $c->stash->{rest} = {data => \@marker_sets};
 }
 
+
+sub delete_markerset : Path('/markerset/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $markerset_id = $c->req->param("markerset_id");
+
+    my $error = $self->check_user($c, $markerset_id);
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    $error = CXGN::List::delete_list($c->dbc->dbh(), $markerset_id);
+
+    if (!$error){
+        $c->stash->{rest} = { success => 1 };
+    }
+    else {
+        $c->stash->{rest} = { error => $error };
+    }
+
+}
+
+
+sub get_markerset_items :Path('/markerset/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $markerset_id = $c->req->param("markerset_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+    	$c->stash->{rest} = { error => 'You must be logged in to use marker sets.', };
+    	return;
+    }
+
+    my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
+    my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
+
+    my @items;
+    foreach my $markerset_item (@$markerset_items_ref){
+        my ($id, $name) = @$markerset_item;
+        push @items, {
+            item_id => $id,
+            item_name => $name,
+        }
+    }
+
+    $c->stash->{rest} = {success => 1, data => \@items};
+
+}
 
 
 #########
