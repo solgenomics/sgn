@@ -79,7 +79,7 @@ sub _validate_with_plugin {
 	}
     }
 
-    print STDERR "CHROMS: $chroms\n";
+    #print STDERR "CHROMS: $chroms\n";
     chomp($chroms);
     my @chroms = split /\t/, $chroms;
     $self->chroms(\@chroms);
@@ -88,49 +88,49 @@ sub _validate_with_plugin {
     chomp($pos);
     my @pos = split /\t/, $pos;
     $self->pos(\@pos);
-    print STDERR "POS = ".Dumper(\@pos);
+    #print STDERR "POS = ".Dumper(\@pos);
     my $ids = <$F>;
     chomp($ids);
     my @ids = split /\t/, $ids;
     $self->ids(\@ids);
     
-    print STDERR "IDS = ".Dumper(\@ids);
+    #print STDERR "IDS = ".Dumper(\@ids);
     
     my $refs = <$F>;
     chomp($refs);
     my @refs = split /\t/, $refs;
     $self->refs(\@refs);
-    print STDERR "REFS = ".Dumper(\@refs);
+    #print STDERR "REFS = ".Dumper(\@refs);
     
     my $alts = <$F>;
     chomp($alts);
     my @alts = split /\t/, $alts;
     $self->alts(\@alts);
-    print STDERR "ALTS = ".Dumper(\@alts);
+    #print STDERR "ALTS = ".Dumper(\@alts);
     
     my $qual = <$F>;
     chomp($qual);
     my @qual = split /\t/,$qual;
     $self->qual(\@qual);
-    print STDERR "QUAL = ".Dumper(\@qual);
+    #print STDERR "QUAL = ".Dumper(\@qual);
     
     my $filter = <$F>;
     chomp($filter);
     my @filter = split /\t/, $filter;
     $self->filter(\@filter);
-    print STDERR "FILTER = ".Dumper(\@filter);
+    #print STDERR "FILTER = ".Dumper(\@filter);
     
     my $info = <$F>;
     chomp($info);
     my @info = split /\t/, $info;
     $self->info(\@info);
-    print STDERR "INFO = ".Dumper(\@info);
+    #print STDERR "INFO = ".Dumper(\@info);
     
     my $format = <$F>;
     chomp($format);
     my @format = split /\t/, $format;
     $self->format(\@format);
-    print STDERR "FORMAT = ".Dumper(\@format);
+    #print STDERR "FORMAT = ".Dumper(\@format);
     
     print STDERR "marker count = ".scalar(@ids)."\n";
     
@@ -347,8 +347,9 @@ sub next_genotype {
 	for(my $i=1; $i<@scores; $i++) { 
 	    my $marker_name = $self->ids()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
-
-            my @format =  split /:/,  $self->format()->[$i];
+	    #print STDERR "ALTS = ".Dumper(\@separated_alts);
+            
+	    my @format =  split /:/,  $self->format()->[$i];
 
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
 	    
@@ -377,12 +378,18 @@ sub next_genotype {
 			if ($index == 0) {
 			    push @nucleotide_genotype, $self->refs()->[$i]; #Using Reference Allele
 			} else {
-			    push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+			    if ($separated_alts[$index-1]) {
+				push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+			    } else {
+				push @nucleotide_genotype, '.'; #Alt not found
+			    }
 			}
 		    } else {
 			push @nucleotide_genotype, $_;
 		    }
+		    #print STDERR "Allele".$_."\n";
 		}
+		#print STDERR "N_G = ".Dumper(\@nucleotide_genotype);
 		$value{'NT'} = join $separator, @nucleotide_genotype;
 	    }
 	    if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
