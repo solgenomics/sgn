@@ -3970,7 +3970,7 @@ sub _perform_phenotype_calculation {
             $temp_images_subdir = 'drone_imagery_calc_phenotypes_zonal_stats';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_zonal_stats_results';
             $calculate_phenotypes_script = 'CalculatePhenotypeZonalStats.py';
-            $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type;
+            $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. '--margin_percent 5';
         } elsif ($phenotype_method eq 'sift') {
             $temp_images_subdir = 'drone_imagery_calc_phenotypes_sift';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_sift_results';
