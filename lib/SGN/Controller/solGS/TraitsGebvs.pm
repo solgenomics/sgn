@@ -3,8 +3,8 @@ package SGN::Controller::solGS::TraitsGebvs;
 use Moose;
 use namespace::autoclean;
 
+use Array::Utils qw(:all);
 use Cache::File;
-
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
@@ -13,6 +13,8 @@ use File::Copy;
 use File::Basename;
 
 use JSON;
+use List::MoreUtils qw /uniq/;
+use String::CRC;
 use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller' }

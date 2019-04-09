@@ -167,7 +167,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(3) {
 
     if ($traits_selection_id =~ /^\d+$/)	
     {
-	$self->get_traits_selection_list($c, $traits_selection_id);
+	$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
 	@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
     } 
 
@@ -655,8 +655,6 @@ sub create_model_summary {
     my $trait_id =  $c->stash->{trait_id};
     my $model_id =  $c->stash->{model_id};
 
-    #my $model_url = 
-
     $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
     my $tr_abbr = $c->stash->{trait_abbr};
 	    
@@ -669,7 +667,6 @@ sub create_model_summary {
     $c->controller("solGS::Heritability")->get_heritability($c);
     my $heritability = $c->stash->{heritability};
 
-    print STDERR "\naccuracy: $accuracy_value -- heritability: $heritability\n";
     my $trait_page =  qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
    	    	    
     my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
