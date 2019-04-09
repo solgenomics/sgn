@@ -1307,6 +1307,8 @@ sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
            
     my $dir = $c->stash->{solgs_cache_dir};
+    my $selected_analyzed_traits = $c->stash->{selected_analyzed_traits};
+    
     my @pred_files;
    
     opendir my $dh, $dir or die "can't open $dir: $!\n";
@@ -1324,26 +1326,48 @@ sub prediction_pop_analyzed_traits {
 
 	my @trait_ids;
 	my @trait_abbrs;
+	my @selected_trait_abbrs;
+	my @selected_files;
 	
-	if ($files[0]) 
+	if (@files) 
 	{
-	    my @copy_files = @files;
+	    #my @copy_files = @files;
    
-	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
+	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @files;
 	    @trait_abbrs = map { s/${training_pop_id}_${prediction_pop_id}//g ? $_ : 0} @trait_abbrs;
 	    @trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
 
-	    if(@trait_abbrs) 
+	    if (@trait_abbrs) 
 	    {
 		foreach my $trait_abbr (@trait_abbrs)
 		{
 		    $c->stash->{trait_abbr} = $trait_abbr;
 		    $self->get_trait_details_of_trait_abbr($c);
+		    my $trait_id = $c->stash->{trait_id};
 		    
-		    push @trait_ids, $c->stash->{trait_id};
+		    if ($selected_analyzed_traits) 
+		    {
+			if (grep($trait_id == $_, @$selected_analyzed_traits)) 
+			{
+			    push @trait_ids, $trait_id;
+			    push @selected_trait_abbrs, $trait_abbr;
+
+			    my ($file) = grep($trait_abbr, @files);
+			    print STDERR "\selection pop analyzed traits: $trait_abbr - file: $file\n";
+			    push @selected_files, grep($trait_abbr, @files);
+			    
+			}
+		    }
+		    else
+		    {
+			push @trait_ids, $trait_id;	
+		    }
 		}
 	    }
-   
+
+	    @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
+	    @files       = @selected_files if @selected_files;
+	    
 	    $c->stash->{prediction_pop_analyzed_traits}       = \@trait_abbrs;
 	    $c->stash->{prediction_pop_analyzed_traits_ids}   = \@trait_ids;
 	    $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
@@ -1585,6 +1609,9 @@ sub convert_to_arrayref_of_arrays {
 sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
     my ($self, $c, $tr_pop_id) = @_;
 
+    my @traits_ids = $c->req->param('trait_ids[]');
+   
+    
     $c->stash->{training_pop_id} = $tr_pop_id;
 
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
@@ -1594,9 +1621,12 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
    
     if (-s $pred_pops_file) 
     {
+	$c->stash->{selected_analyzed_traits} = \@traits_ids;
+	
 	$self->list_of_prediction_pops($c, $tr_pop_id);
 	my $selection_pops_ids = $c->stash->{selection_pops_ids};
 	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
+
 	$self->prediction_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
 	my $selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
 	
@@ -2911,13 +2941,13 @@ sub analyzed_traits {
             }
 
 	    if (@selected_analyzed_traits) {
-	    if (grep($trait_id == $_, @selected_analyzed_traits)) 
-	    {   
-         
-		print STDERR "\ntrait id $trait_id is selected\n";             
-		push @traits, $trait;
-		push @analyzed_traits_files, $trait_file;
-	    }
+		if (grep($trait_id == $_, @selected_analyzed_traits)) 
+		{   
+		    
+		    print STDERR "\ntrait id $trait_id is selected\n";             
+		    push @traits, $trait;
+		    push @analyzed_traits_files, $trait_file;
+		}
 	    }
 	    else
 	    {
