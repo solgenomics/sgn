@@ -262,7 +262,6 @@ sub _parse_with_plugin {
                 @value{@format} = @fvalues;
                 my $gt_dosage = 0;
                 if (exists($value{'GT'})) {
-                    my @nucleotide_genotype;
                     my $gt = $value{'GT'};
                     my $separator = '/';
                     my @alleles = split (/\//, $gt);
@@ -272,18 +271,29 @@ sub _parse_with_plugin {
                             $separator = '|';
                         }
                     }
+
+                    my @nucleotide_genotype;
+                    my @nucleotide_genotype_unphased;
+                    my @ref_calls;
+                    my @alt_calls;
                     foreach (@alleles) {
                         if (looks_like_number($_)) {
                             $gt_dosage = $gt_dosage + $_;
                             my $index = $_ + 0;
                             if ($index == 0) {
                                 push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
+                                push @ref_calls, $marker_info[3];
                             } else {
                                 push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+                                push @alt_calls, $separated_alts[$index-1];
                             }
                         } else {
                             push @nucleotide_genotype, $_;
                         }
+                    }
+                    if ($separator eq '/') {
+                        $separator = ',';
+                        @nucleotide_genotype = (@ref_calls, @alt_calls);
                     }
                     $value{'NT'} = join $separator, @nucleotide_genotype;
                 }
@@ -291,7 +301,8 @@ sub _parse_with_plugin {
                     $value{'DS'} = $gt_dosage;
                 }
                 if (looks_like_number($value{'DS'})) {
-                    $value{'DS'} = round($value{'DS'});
+                    my $rounded_ds = round($value{'DS'});
+                    $value{'DS'} = "$rounded_ds";
                 }
                 $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
             }

@@ -37,8 +37,10 @@ $trial_id
                     <option value="plots">Trait Values for Plots in this Trial</option>
                     <option value="plants">Trait Values for Plants in this Trial</option>
                     <option value="subplots">Trait Values for Subplots in this Trial</option>
+                    <option value="tissue_samples">Trait Values for Tissue Samples in this Trial</option>
                     <option value="plots_accession">Trait Values for Plots in this Trial grouped by Accession</option>
                     <option value="plants_accession">Trait Values for Plants in this Trial grouped by Accession</option>
+                    <option value="tissue_samples_accession">Trait Values for Tissue Samples in this Trial grouped by Accession</option>
                 </select>
             </div>
         </div>
@@ -86,6 +88,7 @@ $trial_id
                                 <option value="plot">Values for Plots in this Trial</option>
                                 <option value="plant">Values for Plants in this Trial</option>
                                 <option value="subplot">Values for Subplots in this Trial</option>
+                                <option value="tissue_sample">Values for Tissue Samples in this Trial</option>
                             </select>
                         </div>
                     </div>
@@ -122,10 +125,10 @@ jQuery(document).ready(function () {
         jQuery(document).on('change', '#display_trial_phenosummary', function() {
             var html = '';
             var display = jQuery('#display_trial_phenosummary').val();
-            if (display == 'plots' || display == 'plants' || display == 'subplots') {
+            if (display == 'plots' || display == 'plants' || display == 'subplots' || display == 'tissue_samples') {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
-            if (display == 'plots_accession' || display == 'plants_accession') {
+            if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             jQuery('#pheno_summary_table_div').empty().html(html);

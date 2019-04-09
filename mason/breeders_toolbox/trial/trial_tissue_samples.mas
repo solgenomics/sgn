@@ -47,7 +47,7 @@ jQuery(document).ready(function () {
                     });
                 }
 
-                jQuery('#trial_tissue_samples_select_all').click( function() { // select al
+                jQuery('#trial_tissue_sample_select_all').click( function() { // select al
                     var data_id = "trial_tissue_samples_data";
                     selectAllOptions(document.getElementById(data_id));
 

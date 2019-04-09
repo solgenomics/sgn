@@ -89,7 +89,7 @@ sub _validate_with_plugin {
 
     @missing_stocks = sort keys %unique_stocks;
     my @missing_stocks_return;
-    # Optionally the missing sample ids can be created in the database as new accessions, but that is not recommended 
+    # Optionally the missing sample ids can be created in the database as new accessions, but that is not recommended
     foreach (@missing_stocks){
         if (!$self->get_create_missing_observation_units_as_accessions){
             push @missing_stocks_return, $_;
@@ -213,28 +213,31 @@ sub _parse_with_plugin {
                 my $genotype_obj;
                 if ($ref && $alt) {
 
-                    my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
                     my @gt_vcf_genotype;
+                    my @ref_calls;
+                    my @alt_calls;
                     my $gt_dosage = 0;
                     foreach my $a (@alleles){
                         my $gt_val;
                         if ($a eq $ref) {
                             $gt_val = 0;
                             push @gt_vcf_genotype, $gt_val;
+                            push @ref_calls, $a;
                         }
                         if ($a eq $alt) {
                             $gt_val = 1;
                             push @gt_vcf_genotype, $gt_val;
+                            push @alt_calls, $a;
                         }
                         $gt_dosage = $gt_dosage + $gt_val;
-                        push @vcf_genotype, $a;
                     }
 
-                    my $vcf_genotype_string = join '/', @vcf_genotype;
+                    my @vcf_genotype = (@ref_calls, @alt_calls);
+                    my $vcf_genotype_string = join ',', @vcf_genotype;
                     my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
                     $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
                     $genotype_obj = { 'NT' => $vcf_genotype_string };
-                    $genotype_obj = { 'DS' => $gt_dosage };
+                    $genotype_obj = { 'DS' => "$gt_dosage"};
                 } else {
                     die "There should always be a ref and alt according to validation above\n";
                 }
