@@ -21,8 +21,6 @@ CXGN::Genotype::ParseUpload::Plugin::transposedVCF - plugin to load transposed V
 
 =cut
 
-
-
 package CXGN::Genotype::ParseUpload::Plugin::transposedVCF;
 
 use Moose::Role;
@@ -46,7 +44,6 @@ has 'header_info' => (is => 'rw', isa => 'Ref');
 has 'observation_unit_names' => (is => 'rw', isa => 'Ref');
 has '_is_first_line' => (is => 'rw', isa => 'Bool', default => 1);
 has '_fh' => (is => 'rw', isa => 'Ref');
-
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -163,15 +160,20 @@ sub _validate_with_plugin {
     }
     
     my @observation_unit_names;
-   
+
+    print STDERR "Scanning file for observation unit names... \n";
+    my $lines = 0;
     while (<$F>) {
 	chomp;
 
 	my @fields = split /\t/;
 	print "Parsing line $fields[0]\n";
 	push @observation_unit_names, $fields[0];
+	$lines++;
+	if ($lines % 100 == 0) { print STDERR "Reading line $lines...        \r"; }
     }
-
+    
+    print STDERR "\n";
     close($F);
     
     my $number_observation_units = scalar(@observation_unit_names);
