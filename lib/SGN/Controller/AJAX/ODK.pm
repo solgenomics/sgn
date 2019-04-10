@@ -20,6 +20,7 @@ use CXGN::Phenome::Schema;
 use Bio::Chado::Schema;
 use DateTime;
 use SGN::Model::Cvterm;
+use LWP::Simple;
 use LWP::UserAgent;
 use JSON;
 use CXGN::ODK::Crosses;
@@ -69,7 +70,35 @@ sub get_crossing_available_forms : Path('/ajax/odk/get_crossing_available_forms'
 
 sub get_crossing_available_forms_GET {
     my ( $self, $c ) = @_;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $bcs_schema->storage->dbh;
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+    my $session_id = $c->req->param('session_id');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to look at ONA forms!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to look at ONA forms!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
     my $message_hash;
     if ($odk_crossing_data_service_name eq 'ONA'){
         my $ua = LWP::UserAgent->new;
@@ -82,8 +111,6 @@ sub get_crossing_available_forms_GET {
             my $message = $resp->decoded_content;
             $message_hash = decode_json $message;
         }
-    } else {
-        $message_hash = [];
     }
     $c->stash->{rest} = { success => 1, forms=>$message_hash };
 }
@@ -125,6 +152,10 @@ sub get_crossing_data_GET {
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
     my $temp_file_path = $temp_file->filename;
+    my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
+    my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
+    my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
 
     my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
@@ -138,6 +169,8 @@ sub get_crossing_data_GET {
         archive_path=>$c->config->{archive_path},
         temp_file_dir=>$c->config->{basepath}.$tempfiles_dir,
         temp_file_path=>$temp_file_path,
+        cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
+        germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
         cross_wishlist_md_file_id=>$cross_wishlist_id,
         cross_wishlist_file_name=>$cross_wishlist_file_name,
         allowed_cross_properties=>$c->config->{cross_properties},
@@ -487,7 +520,13 @@ sub get_crossing_saved_ona_forms_GET {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $bcs_schema->storage->dbh;
-    
+
+    my $odk_ona_forms = _get_allowed_ONA_ODK_forms_from_lists($dbh);
+    $c->stash->{rest} = {success => 1, odk_ona_forms => $odk_ona_forms};
+}
+
+sub _get_allowed_ONA_ODK_forms_from_lists {
+    my $dbh = shift;
     my $odk_ona_lists = CXGN::List::available_public_lists($dbh, 'odk_ona_forms');
     my %odk_ona_forms_unique;
     foreach (@$odk_ona_lists) {
@@ -498,8 +537,7 @@ sub get_crossing_saved_ona_forms_GET {
         }
     }
     my @odk_ona_forms = keys %odk_ona_forms_unique;
-
-    $c->stash->{rest} = {success => 1, odk_ona_forms => \@odk_ona_forms};
+    return \@odk_ona_forms;
 }
 
 1;

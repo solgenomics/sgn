@@ -159,11 +159,25 @@ has 'odk_cross_progress_tree_file_dir' => (
     required => 1,
 );
 
+has 'cross_wishlist_temp_file_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'germplasm_info_temp_file_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
 sub save_ona_cross_info {
     my $self = shift;
     my $context = shift; #Needed for SGN::Image to store images to plots
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
+    my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
+    my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
     my $form_id = $self->odk_crossing_data_service_form_id;
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
@@ -173,6 +187,24 @@ sub save_ona_cross_info {
     my $server_endpoint = "https://api.ona.io/api/v1/data/$form_id";
     print STDERR $server_endpoint."\n";
     my $resp = $ua->get($server_endpoint);
+
+    my $server_endpoint2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+    my $resp2 = $ua->get($server_endpoint2);
+
+    if ($resp2->is_success) {
+        my $message2 = $resp2->decoded_content;
+        my $message_hash2 = decode_json $message2;
+
+        foreach my $t (@$message_hash2) {
+            if (index($t->{data_value}, 'cross_wishlist') != -1) {
+                getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+            }
+            if (index($t->{data_value}, 'germplasm_info') != -1) {
+                getstore($t->{media_url}, $germplasm_info_temp_file_path);
+            }
+        }
+    }
+
 
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -486,142 +518,130 @@ sub create_odk_cross_progress_tree {
     my $bcs_schema = $self->bcs_schema;
     my $phenome_schema = $self->phenome_schema;
     my $metadata_schema = $self->metadata_schema;
+    my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
+    my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
 
     my %combined;
-
-    #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-    #my $wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({file_id=> $wishlist_file_id});
-
-    my $h = $metadata_schema->storage->dbh->prepare("SELECT dirname, basename FROM metadata.md_files WHERE file_id=?");
-    $h->execute($wishlist_file_id);
-    my @wishlist_file_elements = $h->fetchrow_array;
 
     my @wishlist_file_lines;
     my %open_tree;
     my %cross_combinations;
     my %top_level_title;
     my %all_plant_status_info;
-    if (@wishlist_file_elements){
 
-        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-        #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-        my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_test_5nSlbRZ.txt";
-        print STDERR "cross_wishlist $wishlist_file_path\n";
+    print STDERR "cross_wishlist $cross_wishlist_temp_file_path\n";
 
-        open(my $fh, '<', $wishlist_file_path)
-            or die "Could not open file '$wishlist_file_path' $!";
-        my $header_row = <$fh>;
-        chomp $header_row;
-        my @header_row = split ',', $header_row;
-        while ( my $row = <$fh> ){
-            chomp $row;
-            my @cols = split ',', $row;
-            push @wishlist_file_lines, \@cols;
+    open(my $fh, '<', $cross_wishlist_temp_file_path)
+        or die "Could not open file '$cross_wishlist_temp_file_path' $!";
+    my $header_row = <$fh>;
+    chomp $header_row;
+    my @header_row = split ',', $header_row;
+    while ( my $row = <$fh> ){
+        chomp $row;
+        my @cols = split ',', $row;
+        push @wishlist_file_lines, \@cols;
+    }
+    #print STDERR Dumper \@wishlist_file_lines;
+
+    my %cross_wishlist_hash;
+    foreach (@wishlist_file_lines){
+        my $female_accession_name = $_->[2];
+        my $female_plot_name = $_->[1];
+        my $wishlist_entry_created_timestamp = $_->[7];
+        my $wishlist_entry_created_by = $_->[8];
+        my $number_males = $_->[9];
+        $wishlist_entry_created_by =~ tr/"//d;
+        $wishlist_entry_created_timestamp =~ tr/"//d;
+        $female_accession_name =~ tr/"//d;
+        $female_plot_name =~ tr/"//d;
+        $number_males =~ tr/"//d;
+        my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
+        my $num_males_int = $number_males ? int($number_males) : 0;
+        for my $n (10 .. 10+$num_males_int){
+            if ($_->[$n]){
+                $_->[$n] =~ tr/"//d;
+                $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
+            }
         }
-        #print STDERR Dumper \@wishlist_file_lines;
+    }
+    #print STDERR Dumper \%cross_wishlist_hash;
 
-        my %cross_wishlist_hash;
-        foreach (@wishlist_file_lines){
-            my $female_accession_name = $_->[2];
-            my $female_plot_name = $_->[1];
-            my $wishlist_entry_created_timestamp = $_->[7];
-            my $wishlist_entry_created_by = $_->[8];
-            my $number_males = $_->[9];
-            $wishlist_entry_created_by =~ tr/"//d;
-            $wishlist_entry_created_timestamp =~ tr/"//d;
-            $female_accession_name =~ tr/"//d;
-            $female_plot_name =~ tr/"//d;
-            $number_males =~ tr/"//d;
-            my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
-            my $num_males_int = $number_males ? int($number_males) : 0;
-            for my $n (10 .. 10+$num_males_int){
-                if ($_->[$n]){
-                    $_->[$n] =~ tr/"//d;
-                    $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
+    my @all_cross_parents;
+    my %all_cross_info;
+
+    #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
+    #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
+    #while (my $r=$odk_submissions->next)
+    #    my $odk_submission = decode_json $r->comment;
+
+    my $h = $metadata_schema->storage->dbh->prepare("SELECT comment FROM metadata.md_files WHERE filetype='ODK_ONA_cross_info_download' ORDER BY file_id ASC");
+    $h->execute();
+    my $odk_cross_submission_count = 0;
+    while (my $r = $h->fetchrow_array) {
+        $odk_cross_submission_count++;
+        my $odk_submission = decode_json $r;
+        my $cross_parents = $odk_submission->{cross_parents};
+        my $cross_info = $odk_submission->{cross_info};
+        my $plant_status_info = $odk_submission->{plant_status_info};
+        push @all_cross_parents, $cross_parents;
+        foreach my $cross (keys %$cross_info){
+            $all_cross_info{$cross} = $cross_info->{$cross};
+        }
+        foreach my $plant (keys %$plant_status_info){
+            $all_plant_status_info{$plant} = $plant_status_info->{$plant};
+        }
+    }
+    print STDERR "Number ODK Cross Submissions: ".$odk_cross_submission_count."\n";
+    #print STDERR Dumper \@all_cross_parents;
+    #print STDERR Dumper \%all_plant_status_info;
+    #print STDERR Dumper \%all_cross_info;
+
+    foreach my $top_level (keys %cross_wishlist_hash){
+        foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
+            my $planned_female_plot_name_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name};
+            foreach my $planned_female_plot_name (keys %$planned_female_plot_name_hash){
+                if (exists($all_plant_status_info{$planned_female_plot_name}->{'status'})){
+                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{'planned_female_plot_name_status'} = $all_plant_status_info{$planned_female_plot_name}->{'status'};
                 }
-            }
-        }
-        #print STDERR Dumper \%cross_wishlist_hash;
-
-        my @all_cross_parents;
-        my %all_cross_info;
-
-        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-        #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
-        #while (my $r=$odk_submissions->next)
-        #    my $odk_submission = decode_json $r->comment;
-
-        $h = $metadata_schema->storage->dbh->prepare("SELECT comment FROM metadata.md_files WHERE filetype='ODK_ONA_cross_info_download' ORDER BY file_id ASC");
-        $h->execute();
-        my $odk_cross_submission_count = 0;
-        while (my $r = $h->fetchrow_array) {
-            $odk_cross_submission_count++;
-            my $odk_submission = decode_json $r;
-            my $cross_parents = $odk_submission->{cross_parents};
-            my $cross_info = $odk_submission->{cross_info};
-            my $plant_status_info = $odk_submission->{plant_status_info};
-            push @all_cross_parents, $cross_parents;
-            foreach my $cross (keys %$cross_info){
-                $all_cross_info{$cross} = $cross_info->{$cross};
-            }
-            foreach my $plant (keys %$plant_status_info){
-                $all_plant_status_info{$plant} = $plant_status_info->{$plant};
-            }
-        }
-        print STDERR "Number ODK Cross Submissions: ".$odk_cross_submission_count."\n";
-        #print STDERR Dumper \@all_cross_parents;
-        #print STDERR Dumper \%all_plant_status_info;
-        #print STDERR Dumper \%all_cross_info;
-
-        foreach my $top_level (keys %cross_wishlist_hash){
-            foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
-                my $planned_female_plot_name_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name};
-                foreach my $planned_female_plot_name (keys %$planned_female_plot_name_hash){
-                    if (exists($all_plant_status_info{$planned_female_plot_name}->{'status'})){
-                        $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{'planned_female_plot_name_status'} = $all_plant_status_info{$planned_female_plot_name}->{'status'};
-                    }
-                    my $male_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$planned_female_plot_name};
-                    foreach my $male_accession_name (keys %$male_hash){
-                        foreach my $cross_parents (@all_cross_parents){
-                            if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
-                                my $cycles_hash = $cross_parents->{$female_accession_name}->{$male_accession_name};
-                                foreach my $cycle (keys %$cycles_hash){
-                                    foreach my $cross_name (keys %{$cycles_hash->{$cycle}}){
-                                        my $cross_info = $all_cross_info{$cross_name};
-                                        $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = $cross_info;
-                                        if ($cross_info->{'firstPollination'}){
-                                            foreach my $first_pollination (@{$cross_info->{'firstPollination'}}){
-                                                my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
-                                                if ($planned_female_plot_name eq $female_plot_name){
-                                                    $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
-                                                    $cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = 1;
-                                                } else {
-                                                    $combined{$top_level}->{'wishlist_female_plot_no_match'} = $female_plot_name;
-                                                }
+                my $male_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$planned_female_plot_name};
+                foreach my $male_accession_name (keys %$male_hash){
+                    foreach my $cross_parents (@all_cross_parents){
+                        if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
+                            my $cycles_hash = $cross_parents->{$female_accession_name}->{$male_accession_name};
+                            foreach my $cycle (keys %$cycles_hash){
+                                foreach my $cross_name (keys %{$cycles_hash->{$cycle}}){
+                                    my $cross_info = $all_cross_info{$cross_name};
+                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = $cross_info;
+                                    if ($cross_info->{'firstPollination'}){
+                                        foreach my $first_pollination (@{$cross_info->{'firstPollination'}}){
+                                            my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
+                                            if ($planned_female_plot_name eq $female_plot_name){
+                                                $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
+                                                $cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = 1;
+                                            } else {
+                                                $combined{$top_level}->{'wishlist_female_plot_no_match'} = $female_plot_name;
                                             }
                                         }
-                                        $open_tree{$top_level}++;
                                     }
+                                    $open_tree{$top_level}++;
                                 }
-                            } else {
-                                if ($male_accession_name =~ /^\s*$/) {
-                                    $male_accession_name =~ s/\s+//g;
-                                }
-                                if ($male_accession_name){
-                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name} = "No Crosses Performed";
-                                }
+                            }
+                        } else {
+                            if ($male_accession_name =~ /^\s*$/) {
+                                $male_accession_name =~ s/\s+//g;
+                            }
+                            if ($male_accession_name){
+                                $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name} = "No Crosses Performed";
                             }
                         }
                     }
-                    my $male_accession_names = join ',', keys %$male_hash;
-                    $top_level_title{$top_level} = "Planned Female Accession: $female_accession_name. Planned Female Plot: $planned_female_plot_name. Planned Male Accession(s): $male_accession_names.";
                 }
+                my $male_accession_names = join ',', keys %$male_hash;
+                $top_level_title{$top_level} = "Planned Female Accession: $female_accession_name. Planned Female Plot: $planned_female_plot_name. Planned Male Accession(s): $male_accession_names.";
             }
         }
-        #print STDERR Dumper \%combined;
     }
-    #print STDERR Dumper \%cross_combinations;
+    #print STDERR Dumper \%combined;
 
     my %seen_top_levels;
     my %top_level_contents;
