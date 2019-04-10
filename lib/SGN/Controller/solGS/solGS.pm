@@ -1304,22 +1304,22 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
 
 
 sub prediction_pop_analyzed_traits {
-    my ($self, $c, $training_pop_id, $prediction_pop_id) = @_;
-           
-    my $dir = $c->stash->{solgs_cache_dir};
+    my ($self, $c, $training_pop_id, $selection_pop_id) = @_;           
+   
     my $selected_analyzed_traits = $c->stash->{selected_analyzed_traits};
     
     my @pred_files;
    
-    opendir my $dh, $dir or die "can't open $dir: $!\n";
-   
     no warnings 'uninitialized';
   
     my $prediction_is_list = $c->stash->{list_prediction};
-   
-    if ($training_pop_id !~ /$prediction_pop_id/) 
+    
+    my $dir = $c->stash->{solgs_cache_dir};
+    opendir my $dh, $dir or die "can't open $dir: $!\n";
+    
+    if ($training_pop_id !~ /$selection_pop_id/) 
     {
-	my  @files  =  grep { /rrblup_selection_gebvs_\w+_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" > 0 } 
+	my  @files  =  grep { /rrblup_selection_gebvs_\w+_${training_pop_id}_${selection_pop_id}/ && -s "$dir/$_" > 0 } 
                  readdir($dh); 
    
 	closedir $dh; 
@@ -1331,10 +1331,10 @@ sub prediction_pop_analyzed_traits {
 	
 	if (@files) 
 	{
-	    #my @copy_files = @files;
+	    my @copy_files = @files;
    
-	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @files;
-	    @trait_abbrs = map { s/${training_pop_id}_${prediction_pop_id}//g ? $_ : 0} @trait_abbrs;
+	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
+	    @trait_abbrs = map { s/${training_pop_id}_${selection_pop_id}//g ? $_ : 0} @trait_abbrs;
 	    @trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
 
 	    if (@trait_abbrs) 
@@ -1350,12 +1350,14 @@ sub prediction_pop_analyzed_traits {
 			if (grep($trait_id == $_, @$selected_analyzed_traits)) 
 			{
 			    push @trait_ids, $trait_id;
-			    push @selected_trait_abbrs, $trait_abbr;
 
-			    my ($file) = grep($trait_abbr, @files);
-			    print STDERR "\selection pop analyzed traits: $trait_abbr - file: $file\n";
-			    push @selected_files, grep($trait_abbr, @files);
+			    $self->get_trait_details($c, $trait_id);
+			    my $selected_trait_abbr = $c->stash->{trait_abbr};
 			    
+			     push @selected_trait_abbrs, $selected_trait_abbr;
+			    
+			    my ($file) = grep(/$selected_trait_abbr/, @files);
+			    push @selected_files, $file;
 			}
 		    }
 		    else
@@ -2180,134 +2182,106 @@ sub build_multiple_traits_models {
 }
 
 
-sub all_traits_output :Path('/solgs/traits/all/population') Args() {
-     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
-     
-     my $req = $c->req->param('source');
-     my @traits_ids = $c->req->param('trait_id[]');
+sub all_traits_output :Path('/solgs/traits/all/population') Args(3) {
+     my ($self, $c, $training_pop_id, $tr_txt, $traits_selection_id) = @_;
+          
+     my @traits_ids;
 
-     print STDERR "\ntraits ids: @traits_ids \n";
-
-     if (!$training_pop_id) 
+     if ($traits_selection_id =~ /^\d+$/)	
      {
-        $c->stash->{message} = "No valid training population provided.";
-        $c->stash->{template} = "/generic_message.mas"; 
-     }
-     elsif ($training_pop_id !~ /\d+/) 
-     {	 
-	 $c->stash->{message} = "$training_pop_id is not  valid training population id.";
-	 $c->stash->{template} = "/generic_message.mas"; 	 
-     }
-     else
-     {
-
- 	 my @traits = $c->req->param; 
-	 @traits    = grep {$_ ne 'rank'} @traits;
-	 $c->stash->{training_pop_id} = $training_pop_id;
-	 $c->stash->{pop_id} = $training_pop_id;
-
-	 $self->build_multiple_traits_models($c);
-
-	 my $referer    = $c->req->referer;   
-	 my $base       = $c->req->base;
-	 $referer       =~ s/$base//;
-	 my ($tr_id)    = $referer =~ /(\d+)/;
-	 my $trait_page = "solgs/trait/$tr_id/population/$training_pop_id";
-
-	 my $error = $c->stash->{script_error};
-  
-	 if ($error) 
-	 {
-	     $c->stash->{message} = "$error can't create prediction models for the selected traits. 
-                                 There are problems with the datasets of the traits.
-                                 <p><a href=\"/solgs/population/$training_pop_id\">[ Go back ]</a></p>";
-
-	     $c->stash->{template} = "/generic_message.mas"; 
-	 } 
-	 elsif ($req =~ /AJAX/)
-	 {     
-	     my $ret->{status} = 'success';
-	     
-	     $ret = to_json($ret);
-	     
-	     $c->res->content_type('application/json');
-	     $c->res->body($ret);       
-	 }
-	 else
-	 {
-	     if ($referer =~ m/$trait_page/) 
-	     { 
-		 $c->res->redirect("/solgs/trait/$tr_id/population/$training_pop_id");
-		 $c->detach(); 
-	     } 
-	     else
-	     {
-		 
-		 if ($selection_pop_id)
-		 {
-		     $c->stash->{prediction_pop_id} = $selection_pop_id;
-		     $c->stash->{population_is} = 'prediction population';
-		     $c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
-		     
-		     my $pr_rs = $c->model('solGS::solGS')->project_details($selection_pop_id);
-		     
-		     while (my $row = $pr_rs->next) 
-		     {
-			 $c->stash->{prediction_pop_name} = $row->name;
-		     }
-		 }
-		 else
-		 {
-		     $c->stash->{prediction_pop_id} = undef;
-		     $c->stash->{population_is} = 'training population';
-		 }
-		 
-		 $c->stash->{model_id} = $training_pop_id; 
-		 
-		 my @trait_pages;
-		 
-		 $self->traits_with_valid_models($c);
-		 my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
-		 
-		 if (!@traits_with_valid_models)
-		 {
-		     $c->res->redirect("/solgs/population/$training_pop_id");
-		     $c->detach();
-		 }
-
-		 foreach my $trait_abbr (@traits_with_valid_models)
-		 {
-		     $c->stash->{trait_abbr} = $trait_abbr;
-		     $self->get_trait_details_of_trait_abbr($c);
-
-		     my $trait_id = $c->stash->{trait_id};
-		     
-		     $self->get_model_accuracy_value($c, $training_pop_id, $trait_abbr);        
-		     my $accuracy_value = $c->stash->{accuracy_value};
-		     
-		     $c->controller("solGS::Heritability")->get_heritability($c);
-		     my $heritability = $c->stash->{heritability};
-
-		     push @trait_pages,  [ qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id">$trait_abbr</a>|, $accuracy_value, $heritability];
-		     
-		 }
-
-		 $self->project_description($c, $training_pop_id);
-		 my $project_name = $c->stash->{project_name};
-		 my $project_desc = $c->stash->{project_desc};
-		 
-		 my @model_desc = ([qq | <a href="/solgs/population/$training_pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
-		 
-		 $c->stash->{template}    = $c->controller('solGS::Files')->template('/population/multiple_traits_output.mas');
-		 $c->stash->{trait_pages} = \@trait_pages;
-		 $c->stash->{model_data}  = \@model_desc;
-		 
-		 my $acronym = $self->get_acronym_pairs($c);
-		 $c->stash->{acronym} = $acronym;
-	     }
-	 }
+	$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
+	@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
      } 
+
+
+     $self->project_description($c, $training_pop_id);
+     my $training_pop_name = $c->stash->{project_name};
+     my $training_pop_desc = $c->stash->{project_desc};
+     my $training_pop_page = qq | <a href="/solgs/population/$training_pop_id">$training_pop_name</a> |;
+     
+     my @select_analysed_traits;
+    
+     if(!@traits_ids)
+     {	 
+	 $c->stash->{message} = "Cached output for this page does not exist anymore.\n" . 
+	     " Please go to $training_pop_name and run the analysis.";
+	 
+	 $c->stash->{template} = "/generic_message.mas"; 
+     } 
+     else 
+     {
+	 my @traits_pages;	
+	 if (scalar(@traits_ids) == 1) 
+	 {
+	     my $trait_id = $traits_ids[0];
+	     $c->res->redirect("/solgs/trait/$trait_id/population/$training_pop_id");
+	     $c->detach();
+	 }
+	 else 
+	 {
+	     foreach my $trait_id (@traits_ids) 
+	     { 
+		 $c->stash->{trait_id} = $trait_id;
+		 $c->stash->{model_id} = $training_pop_id;
+		 $self->create_model_summary($c);
+		 my $model_summary = $c->stash->{model_summary};
+
+		 push @traits_pages, $model_summary;
+	     }
+	 }  
+
+	 $c->stash->{selected_analyzed_traits} = \@traits_ids;
+	 $c->controller('solGS::solGS')->analyzed_traits($c);
+	 my $analyzed_traits = $c->stash->{analyzed_traits};
+	 
+	 
+	 $c->stash->{trait_pages} = \@traits_pages;
+	 
+	 my @training_pop_data = ([$training_pop_page, $training_pop_desc, \@traits_pages]);
+	 
+	 $c->stash->{model_data} = \@training_pop_data;
+	 $c->stash->{pop_id} = $training_pop_id;
+	 $c->controller('solGS::solGS')->get_acronym_pairs($c);
+
+	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';	
+     }     
+
 }
+
+
+sub create_model_summary {
+    my ($self, $c) = @_;
+
+    my $trait_id =  $c->stash->{trait_id};
+    my $model_id =  $c->stash->{model_id};
+      
+    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    my $tr_abbr = $c->stash->{trait_abbr};
+
+    my $path = $c->req->path;
+    my $trait_page;
+
+    if ($path =~ /solgs\/traits\/all\/population\//)
+    {
+	$trait_page = qq | <a href="/solgs/trait/$trait_id/population/$model_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
+    }
+    elsif ($path =~ /solgs\/models\/combined\/trials\//)
+    {
+	$trait_page =  qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
+    }
+	            
+    $c->controller("solGS::solGS")->get_model_accuracy_value($c, $model_id, $tr_abbr);
+    my $accuracy_value = $c->stash->{accuracy_value};
+     
+    $c->controller("solGS::Heritability")->get_heritability($c);
+    my $heritability = $c->stash->{heritability};
+   	    	    
+    my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
+
+    $c->stash->{model_summary} = $model_summary;
+    
+}
+
 
 
 sub traits_with_valid_models {
@@ -2927,34 +2901,28 @@ sub analyzed_traits {
 		{
 		    if (grep($trait_id == $_,  @selected_analyzed_traits)) 
 		    {
-			print STDERR "\ntrait id $trait_id is selected\n";
 			push @si_traits, $trait;
 			push @valid_traits_files, $trait_file;
 		    }
 		}
 		else
-		{	print STDERR "\nNo selection trait id $trait_id is selected\n";   
+		{
 		    push @si_traits, $trait;
-		    push @valid_traits_files, $trait_file;
-		    
+		    push @valid_traits_files, $trait_file;	    
 		}
             }
 
 	    if (@selected_analyzed_traits) {
 		if (grep($trait_id == $_, @selected_analyzed_traits)) 
 		{   
-		    
-		    print STDERR "\ntrait id $trait_id is selected\n";             
 		    push @traits, $trait;
 		    push @analyzed_traits_files, $trait_file;
 		}
 	    }
 	    else
 	    {
-		print STDERR "\nNo selection trait id $trait_id is selected\n";             
 		push @traits, $trait;
-		push @analyzed_traits_files, $trait_file;
-		
+		push @analyzed_traits_files, $trait_file;		
 	    }
         }      
 

@@ -197,9 +197,12 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(3) {
 	else 
 	{
 	    foreach my $trait_id (@traits_ids) 
-	    { 
+	    {
+		#$self->combine_trait_data($c);  
+		#$self->build_model_combined_trials_trait($c);
 		$c->stash->{trait_id} = $trait_id;
-		$self->create_model_summary($c);
+  
+		$c->controller('solGS::solGS')->create_model_summary($c);
 		my $model_summary = $c->stash->{model_summary};
 
 		push @traits_pages, $model_summary;
@@ -649,31 +652,6 @@ sub get_combined_pops_list {
 
 
 
-sub create_model_summary {
-    my ($self, $c) = @_;
-
-    my $trait_id =  $c->stash->{trait_id};
-    my $model_id =  $c->stash->{model_id};
-
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-    my $tr_abbr = $c->stash->{trait_abbr};
-	    
-    #$self->combine_trait_data($c);  
-    #$self->build_model_combined_trials_trait($c);
-         
-    $c->controller("solGS::solGS")->get_model_accuracy_value($c, $model_id, $tr_abbr);
-    my $accuracy_value = $c->stash->{accuracy_value};
-     
-    $c->controller("solGS::Heritability")->get_heritability($c);
-    my $heritability = $c->stash->{heritability};
-
-    my $trait_page =  qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-   	    	    
-    my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
-
-    $c->stash->{model_summary} = $model_summary;
-    
-}
 
 
 

@@ -244,8 +244,7 @@ solGS.waitPage = function (page, args) {
     function getTraitsSelectionId (page, args) {
 
 	var traitIds = args.trait_id;
-	var comboPopsId = args.training_pop_id;
-
+	
 	jQuery.ajax({
 	    dataType: 'json',
 	    type    : 'POST',
@@ -253,8 +252,7 @@ solGS.waitPage = function (page, args) {
 	    url     : '/solgs/get/traits/selection/id',
 	    success : function (res){
 		var traitsSelectionId = res.traits_selection_id;
-		window.location = '/solgs/models/combined/trials/' + comboPopsId + '/traits/' + traitsSelectionId;
-		
+		window.location = page + '/traits/' + traitsSelectionId;		
 	    },
 	    error: function (res, st, error) {
 		console.log('error: ' + error)
@@ -278,35 +276,7 @@ solGS.waitPage = function (page, args) {
 	    window.location = page;
 	    
 	} else if (page.match(multiTraitsUrls)) {
-
-
-	    
-	   // submitTraitSelections(page, args);
-		    
-	    if (page.match('solgs/traits/all/population/')) {
-		var popId  = jQuery('#population_id').val();
-		var traitIds = args.trait_id;
-	
-		jQuery.ajax({
-		    dataType: 'json',
-		    type    : 'POST',
- 		    data    : {'trait_id': traitIds, 'source': 'AJAX'},
-		    url     : '/solgs/traits/all/population/' + popId,
-		    success : function (res){
-		    	if (res.status) {
-		    	    window.location = '/solgs/traits/all/population/' + popId;
-		    	} else	{
-		    	    window.location = window.location.href;
-		    	}				
-		    }
-		});
-		
-	    } else {
-		console.log('calling getraitsselectionid')
-		getTraitsSelectionId(page, args);
-		
-	    }
-	   
+		getTraitsSelectionId(page, args);	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
