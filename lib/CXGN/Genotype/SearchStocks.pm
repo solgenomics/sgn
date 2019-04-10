@@ -174,31 +174,26 @@ sub get_accessions_using_snps {
             my @nt = ();
 
             if ($allele_1 ne $allele_2){
-
                 foreach my $allele(@allele_param){
-                    my $count = grep{/$allele/}(@ref_alt);
-                    if ($count eq '0') {
-                        last;
-                    } elsif ($count eq '1'){
+                    if (grep{/$allele/}(@ref_alt)){
                         if ($allele eq $ref_alt[0]){
                             $nt[0] = $allele;
                         } elsif ($allele eq $ref_alt[1]){
                             $nt[1] = $allele;
                         }
+                        my $nt_string = join("/", @nt);
+                        $genotype_nt{$marker_name} = {'NT' => $nt_string};
+                    } else {
+                        last;
                     }
                 }
-                my $nt_string = join("/", @nt);
-                $genotype_nt{$marker_name} = {'NT' => $nt_string};
-
             } elsif ($allele_1 eq $allele_2){
-
-                my $count = grep{/$allele_1/}(@ref_alt);
-                if ($count eq '0') {
+                if (grep{/$allele_1/}(@ref_alt)){
+                    @nt = ($allele_1, $allele_2);
+                    my $nt_string = join("/", @nt);
+                    $genotype_nt{$marker_name} = {'NT' => $nt_string};
+                 } else {
                     last;
-                } elsif ($count eq '1'){
-                   @nt = ($allele_1, $allele_2);
-                   my $nt_string = join("/", @nt);
-                   $genotype_nt{$marker_name} = {'NT' => $nt_string};
                 }
 
             }
@@ -210,8 +205,8 @@ sub get_accessions_using_snps {
         $all_nt_string = encode_json \%genotype_nt;
     }
 
-print STDERR "PARAM HASH=" .Dumper(\%genotype_nt). "\n";
-print STDERR "PARAM STRING=" .Dumper($all_nt_string). "\n";
+    print STDERR "PARAM HASH=" .Dumper(\%genotype_nt). "\n";
+    print STDERR "PARAM STRING=" .Dumper($all_nt_string). "\n";
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
         JOIN stock ON (dataset_table.stock_id = stock.stock_id)
