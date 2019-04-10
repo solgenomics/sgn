@@ -41,8 +41,8 @@ override('retrieve_genotypes',
      	     write_file($file, $genotype_string);
 
 
-#	     my $genotype_json = JSON::Any->encode($genotypes);
-#	     write_file($file, $genotype_json);
+	     #my $genotype_json = JSON::Any->encode($genotypes);
+	     #write_file($file, $genotype_json);
 	     return $genotypes;
 	 });
 

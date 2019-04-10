@@ -186,6 +186,8 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $trait_id =~ tr/\//./;
 #    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
 #    system($clean_cmd);
+#    my $geno_filepathGCTA = $tempfile . "_genotype_GCTA.txt"
+
     my $geno_filepath2 = $tempfile . "_genotype_edit.txt";
     my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
     system($edit_cmd);
@@ -251,12 +253,11 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
-
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
     copy($figure2file,$figure_path);
-
     my $figure2basename = basename($figure2file);
     my $figure2file_response = "/documents/tempfiles/solgwas_files/" . $figure2basename;
+
 
     $c->stash->{rest} = {
         figure2 => $figure2file_response,
@@ -405,6 +406,13 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
+    $cmd->run_cluster(
+            "~/Documents/gcta_1.92.0beta/gcta64 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out ~/Documents/gcta_1.92.0beta/Kinship --thread-num 1 > ~/Documents/gcta_1.92.0beta/Kinship.log",
+    );
+    $cmd->alive;
+    $cmd->is_cluster(1);
+    $cmd->wait;
+
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);
     copy($figure4file,$figure_path);
@@ -416,6 +424,57 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure4basename = basename($figure4file);
     my $figure4file_response = "/documents/tempfiles/solgwas_files/" . $figure4basename;
 #    $figure4file_response =~ s/\.\/static//;
+    my $cmd2 = CXGN::Tools::Run->new(
+        {
+            backend => $c->config->{backend},
+            temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+    # To test, copied the test.* gcta files to export temp_base
+    # Hardcoding gcta for testing only:
+    my $bfile = "test";
+    my $grm_out = "afp2apr2019";
+    $cmd2->run_cluster(
+            "gcta64 --bfile",
+            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
+            "--make-grm --out",
+            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
+    );
+    $cmd2->alive;
+    $cmd2->is_cluster(1);
+    $cmd2->wait;
+
+    my $cmd3 = CXGN::Tools::Run->new(
+        {
+            backend => $c->config->{backend},
+            temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+    # To test, copied the test.* gcta files to export temp_base
+    # Hardcoding gcta for testing only:
+    $cmd3->run_cluster(
+            "gcta64 --mlma",
+            "--bfile",
+            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
+            "--pheno",
+            $c->config->{cluster_shared_tempdir} . "/solgwas_files/test.phen",
+            "--grm",
+            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
+            "--out",
+            $c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1",
+    );
+    $cmd3->alive;
+    $cmd3->is_cluster(1);
+    $cmd3->wait;
+
     $c->stash->{rest} = {
         figure3 => $figure3file_response,
         figure4 => $figure4file_response,
