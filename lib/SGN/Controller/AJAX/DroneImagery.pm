@@ -360,6 +360,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             my $drone_run_bands = $v->{bands};
             my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
 
+            $drone_run_html .= '<div class="well well-sm"><div class="panel panel-body">';
             $drone_run_html .= '<div class="well well-sm">';
 
             $drone_run_html .= '<div class="row"><div class="col-sm-6">';
@@ -416,7 +417,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
             $drone_run_html .= '</div></div></div></div>';
 
-            $drone_run_html .= '</div>';
+            $drone_run_html .= '</div></div>';
         }
         $drone_run_html .= '</div></div></div></div>';
 
