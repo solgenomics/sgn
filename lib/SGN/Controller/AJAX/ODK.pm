@@ -477,17 +477,24 @@ sub get_odk_cross_summary_cached_GET {
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$ona_form_id.".txt";
+    my $filename = $dir."/ona_odk_cross_progress_summary_info_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
-    my $contents;
+    my $summary;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = <$fh> ? decode_json <$fh> : undef;
+        $summary = <$fh> ? decode_json <$fh> : undef;
     }
     close($fh);
-    my $summary = $contents->{summary_info};
-    my $plant_status_summary = $contents->{summary_plant_status_info};
+    $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$ona_form_id.".txt";
+    print STDERR "Opening $filename \n";
+    my $plant_status_summary;
+    open($fh, '<', $filename) or warn "cannot open file $filename";
+    {
+        local $/;
+        $plant_status_summary = <$fh> ? decode_json <$fh> : undef;
+    }
+    close($fh);
 
     #print STDERR Dumper $summary;
     $c->stash->{rest} = { summary => $summary, plant_status_summary => $plant_status_summary };
