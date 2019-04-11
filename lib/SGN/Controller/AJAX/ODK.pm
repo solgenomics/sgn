@@ -478,7 +478,6 @@ sub get_odk_cross_summary_cached_GET {
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        print STDERR Dumper <$fh>;
         $contents = <$fh> ? decode_json <$fh> : undef;
     }
     close($fh);
