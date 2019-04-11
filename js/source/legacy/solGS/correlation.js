@@ -98,11 +98,8 @@ function listGenCorPopulations ()  {
     }
       
     var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-    	console.log('corr userUploadedSelExists ' + userUploadedSelExists)
-    if (userUploadedSelExists == true) {
-      
+    if (userUploadedSelExists == true) {     
         var userSelPops = listUploadedSelPopulations();
-	 console.log('corr userSelPops ' + userSelPops)
         if (userSelPops) {
 
             jQuery("#corre_select_a_population_div ul").append(userSelPops);  
@@ -163,7 +160,7 @@ function formatGenCorInputData (popId, type, indexFile) {
 		
                 gebvsFile = response.gebvs_file;
 		indexFile = response.index_file;
-		console.log('index file: ' + indexFile + ' gebvsFile: ' + gebvsFile)	
+		
                 var divPlace;
                 if (indexFile) {
                     divPlace = '#si_correlation_canvas';
