@@ -413,7 +413,8 @@ sub get_odk_cross_progress_cached_GET {
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = <$fh> ? decode_json <$fh> : undef;
+        my $line = <$fh>;
+        $contents = $line && $line ne '{}' ? decode_json $line : undef;
     }
     close($fh);
     my $json = $contents->{top_level_json} || {};
@@ -430,7 +431,8 @@ sub get_odk_cross_progress_cached_GET {
         open(my $fh, '<', $filename) or warn "cannot open file $filename";
         {
             local $/;
-            $top_level_contents = <$fh> ? decode_json <$fh> : undef;
+            my $line = <$fh>;
+            $top_level_contents = $line && $line ne '{}' ? decode_json $line : undef;
         }
         close($fh);
         $json = $top_level_contents->{$top_level_id};
@@ -484,7 +486,6 @@ sub get_odk_cross_summary_cached_GET {
     {
         local $/;
         my $line = <$fh>;
-        print STDERR Dumper $line;
         $summary = $line && $line ne '{}' ? decode_json $line : undef;
     }
     close($fh);
@@ -495,7 +496,6 @@ sub get_odk_cross_summary_cached_GET {
     {
         local $/;
         my $line = <$fh>;
-        print STDERR Dumper $line;
         $plant_status_summary = $line && $line ne '{}' ? decode_json $line : undef;
     }
     close($fh);
