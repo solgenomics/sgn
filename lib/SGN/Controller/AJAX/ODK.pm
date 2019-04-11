@@ -409,15 +409,14 @@ sub get_odk_cross_progress_cached_GET {
     }
     my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
-    my $contents;
+    my $json;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;
-        $contents = $line && $line ne '{}' ? decode_json $line : {};
+        $json = $line && $line ne '{}' ? decode_json $line : {};
     }
     close($fh);
-    my $json = $contents->{top_level_json} || {};
 
     my $top_level_id = $c->req->param('id');
     print STDERR "ODK Cross Tree Progress Node: ".$top_level_id."\n";
