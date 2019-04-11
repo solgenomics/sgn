@@ -233,9 +233,11 @@ solGS.geneticGain = {
 	}
 	
 	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
+	console.log('userUploadedSelExists ' + userUploadedSelExists)
 	if (userUploadedSelExists == true) {
 	    
             var userSelPops = listUploadedSelPopulations();
+	    console.log('userSelPops ' + userSelPops)
             if (userSelPops) {
 		jQuery("#gg_select_a_population_div ul").append(userSelPops);  
             }

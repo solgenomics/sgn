@@ -98,9 +98,11 @@ function listGenCorPopulations ()  {
     }
       
     var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
+    	console.log('corr userUploadedSelExists ' + userUploadedSelExists)
     if (userUploadedSelExists == true) {
       
         var userSelPops = listUploadedSelPopulations();
+	 console.log('corr userSelPops ' + userSelPops)
         if (userSelPops) {
 
             jQuery("#corre_select_a_population_div ul").append(userSelPops);  
@@ -122,9 +124,9 @@ function listGenCorPopulations ()  {
         idPopName     = JSON.parse(idPopName);
         modelId       = jQuery("#model_id").val();
                    
-        selectedPopId   = idPopName.id;
-        selectedPopName = idPopName.name;
-        selectedPopType = idPopName.pop_type; 
+        var selectedPopId   = idPopName.id;
+        var selectedPopName = idPopName.name;
+        var selectedPopType = idPopName.pop_type; 
        
         jQuery("#corre_selected_population_name").val(selectedPopName);
         jQuery("#corre_selected_population_id").val(selectedPopId);
