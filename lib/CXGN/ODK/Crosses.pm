@@ -15,7 +15,6 @@ my $odk_crosses = CXGN::ODK::Crosses->new({
     sp_person_role=>$sp_person_role,
     archive_path=>$archive_path,
     temp_file_dir=>$temp_file_dir,
-    temp_file_path=>$temp_file_path,
     cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
     germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
     allowed_cross_properties=>$allowed_cross_properties,
@@ -130,12 +129,6 @@ has 'archive_path' => (
 );
 
 has 'temp_file_dir' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1,
-);
-
-has 'temp_file_path' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
