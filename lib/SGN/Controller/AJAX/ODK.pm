@@ -407,7 +407,7 @@ sub get_odk_cross_progress_cached_GET {
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$ona_form_id.".txt";
+    my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
@@ -424,7 +424,15 @@ sub get_odk_cross_progress_cached_GET {
         $top_level_id = undef;
     }
     if ($top_level_id){
-        my $top_level_contents = $contents->{top_level_contents};
+        $filename = $dir."/ona_odk_cross_progress_top_level_contents_html_".$ona_form_id.".txt";
+        print STDERR "Opening $filename \n";
+        my $top_level_contents;
+        open(my $fh, '<', $filename) or warn "cannot open file $filename";
+        {
+            local $/;
+            $top_level_contents = <$fh> ? decode_json <$fh> : undef;
+        }
+        close($fh);
         $json = $top_level_contents->{$top_level_id};
     }
 

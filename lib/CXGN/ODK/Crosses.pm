@@ -395,7 +395,7 @@ sub save_ona_cross_info {
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
                         my $plot_name = $a->{'FieldActivities/Flowering/flowersID'} || $a->{'FieldActivities/Flowering/floweringID'};
-                        my $plot_name = _get_plot_name_from_barcode_id($plot_name);
+                        $plot_name = _get_plot_name_from_barcode_id($plot_name);
                         $plant_status_info{$plot_name}->{'flowering'} = $a;
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
@@ -1000,12 +1000,34 @@ sub create_odk_cross_progress_tree {
     }
     my $filename = $dir."/entire_odk_cross_progress_html_".$form_id.".txt";
     print STDERR "Writing to $filename \n";
-
     my $OUTFILE;
     open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
     print { $OUTFILE } encode_json \%save_content or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
 
+    $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \@top_level_json or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    $filename = $dir."/ona_odk_cross_progress_top_level_contents_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \%top_level_contents or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    $filename = $dir."/ona_odk_cross_progress_summary_info_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \%summary_info or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \%all_plant_status_info or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
 
     # find or create crossing trial using name of cross wishlist
     # create cross in db if not existing
