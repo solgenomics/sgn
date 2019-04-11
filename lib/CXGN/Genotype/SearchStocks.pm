@@ -181,7 +181,7 @@ sub get_accessions_using_snps {
                         } elsif ($allele eq $ref_alt[1]){
                             $nt[1] = $allele;
                         }
-                        my $nt_string = join("/", @nt);
+                        my $nt_string = join(",", @nt);
                         $genotype_nt{$marker_name} = {'NT' => $nt_string};
                     } else {
                         last;
@@ -190,7 +190,7 @@ sub get_accessions_using_snps {
             } elsif ($allele_1 eq $allele_2){
                 if (grep{/$allele_1/}(@ref_alt)){
                     @nt = ($allele_1, $allele_2);
-                    my $nt_string = join("/", @nt);
+                    my $nt_string = join(",", @nt);
                     $genotype_nt{$marker_name} = {'NT' => $nt_string};
                  } else {
                     last;
