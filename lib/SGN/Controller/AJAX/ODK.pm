@@ -149,8 +149,6 @@ sub get_crossing_data_GET {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
-    my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
-    my $temp_file_path = $temp_file->filename;
     my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
     my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
@@ -167,7 +165,6 @@ sub get_crossing_data_GET {
         sp_person_role=>$user_role,
         archive_path=>$c->config->{archive_path},
         temp_file_dir=>$c->config->{basepath}.$tempfiles_dir,
-        temp_file_path=>$temp_file_path,
         cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
         germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
         allowed_cross_properties=>$c->config->{cross_properties},

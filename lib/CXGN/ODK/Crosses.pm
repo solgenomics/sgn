@@ -506,56 +506,8 @@ sub save_ona_cross_info {
             raw_message => $message_hash
         );
 
-        #Store recieved info into file and use UploadFile to archive
-        #Store recieved info into metadata for display on ODK dashboard
-        my $temp_file_path = $self->temp_file_path;
-        my $encoded_odk_cross_hash = encode_json \%odk_cross_hash;
-        open(my $F1, ">", $temp_file_path) || die "Can't open file ".$temp_file_path;
-            print $F1 $encoded_odk_cross_hash;
-        close($F1);
-
-        my $time = DateTime->now();
-        my $timestamp = $time->ymd()."_".$time->hms();
-        my $file_type = "ODK_ONA_cross_info_download";
-        my $uploader = CXGN::UploadFile->new({
-            tempfile => $temp_file_path,
-            subdirectory => "ODK_ONA_cross_info",
-            archive_path => $self->archive_path,
-            archive_filename => $file_type,
-            timestamp => $timestamp,
-            user_id => $self->sp_person_id,
-            user_role => $self->sp_person_role
-        });
-        my $archived_filename_with_path = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_filename_with_path);
-        if (!$archived_filename_with_path) {
-            return { error => "Could not save file ODK_ONA_cross_info_download in archive" };
-        }
-
-        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-        #my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->sp_person_id});
-        #my $file_row = $metadata_schema->resultset("MdFiles")
-        #    ->create({
-        #        basename => basename($archived_filename_with_path),
-        #        dirname => dirname($archived_filename_with_path),
-        #        filetype => $file_type,
-        #        md5checksum => $md5->hexdigest(),
-        #        metadata_id => $md_row->metadata_id(),
-        #        comment => $encoded_odk_cross_hash
-        #    });
-
-        #The database should only store the last pull from ONA, which will contain all info from ONA
-        my $h_del2 = $metadata_schema->storage->dbh->prepare("DELETE FROM metadata.md_files WHERE filetype = ?");
-        my $r_del2 = $h_del2->execute($file_type);
-
-        my $h = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_metadata (create_person_id) VALUES (?) RETURNING metadata_id");
-        my $r = $h->execute($self->sp_person_id);
-        my $metadata_id = $h->fetchrow_array();
-        my $h2 = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_files (basename, dirname, filetype, md5checksum, metadata_id, comment) VALUES (?,?,?,?,?,?) RETURNING metadata_id");
-        my $r2 = $h2->execute(basename($archived_filename_with_path), dirname($archived_filename_with_path), $file_type, $md5->hexdigest(), $metadata_id, $encoded_odk_cross_hash);
-
         #Update cross progress tree
-        my $return = $self->create_odk_cross_progress_tree();
+        my $return = $self->create_odk_cross_progress_tree(\%odk_cross_hash);
         if ($return->{error}){
             return { error => $return->{error} };
         }
@@ -569,6 +521,7 @@ sub save_ona_cross_info {
 
 sub create_odk_cross_progress_tree {
     my $self = shift;
+    my $odk_submission = shift;
     my $bcs_schema = $self->bcs_schema;
     my $phenome_schema = $self->phenome_schema;
     my $metadata_schema = $self->metadata_schema;
@@ -632,29 +585,16 @@ sub create_odk_cross_progress_tree {
     my @all_cross_parents;
     my %all_cross_info;
 
-    #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-    #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
-    #while (my $r=$odk_submissions->next)
-    #    my $odk_submission = decode_json $r->comment;
-
-    my $h = $metadata_schema->storage->dbh->prepare("SELECT comment FROM metadata.md_files WHERE filetype='ODK_ONA_cross_info_download' ORDER BY file_id ASC");
-    $h->execute();
-    my $odk_cross_submission_count = 0;
-    while (my $r = $h->fetchrow_array) {
-        $odk_cross_submission_count++;
-        my $odk_submission = decode_json $r;
-        my $cross_parents = $odk_submission->{cross_parents};
-        my $cross_info = $odk_submission->{cross_info};
-        my $plant_status_info = $odk_submission->{plant_status_info};
-        push @all_cross_parents, $cross_parents;
-        foreach my $cross (keys %$cross_info){
-            $all_cross_info{$cross} = $cross_info->{$cross};
-        }
-        foreach my $plant (keys %$plant_status_info){
-            $all_plant_status_info{$plant} = $plant_status_info->{$plant};
-        }
+    my $cross_parents = $odk_submission->{cross_parents};
+    my $cross_info = $odk_submission->{cross_info};
+    my $plant_status_info = $odk_submission->{plant_status_info};
+    push @all_cross_parents, $cross_parents;
+    foreach my $cross (keys %$cross_info){
+        $all_cross_info{$cross} = $cross_info->{$cross};
     }
-    print STDERR "Number ODK Cross Submissions: ".$odk_cross_submission_count."\n";
+    foreach my $plant (keys %$plant_status_info){
+        $all_plant_status_info{$plant} = $plant_status_info->{$plant};
+    }
     #print STDERR Dumper \@all_cross_parents;
     #print STDERR Dumper \%all_plant_status_info;
     #print STDERR Dumper \%all_cross_info;
