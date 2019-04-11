@@ -414,7 +414,7 @@ sub get_odk_cross_progress_cached_GET {
     {
         local $/;
         my $line = <$fh>;
-        $contents = $line && $line ne '{}' ? decode_json $line : undef;
+        $contents = $line && $line ne '{}' ? decode_json $line : {};
     }
     close($fh);
     my $json = $contents->{top_level_json} || {};
@@ -432,7 +432,7 @@ sub get_odk_cross_progress_cached_GET {
         {
             local $/;
             my $line = <$fh>;
-            $top_level_contents = $line && $line ne '{}' ? decode_json $line : undef;
+            $top_level_contents = $line && $line ne '{}' ? decode_json $line : {};
         }
         close($fh);
         $json = $top_level_contents->{$top_level_id};
