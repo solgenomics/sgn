@@ -213,24 +213,27 @@ sub _parse_with_plugin {
                 my $genotype_obj;
                 if ($ref && $alt) {
 
-                    my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
                     my @gt_vcf_genotype;
+                    my @ref_calls;
+                    my @alt_calls;
                     my $gt_dosage = 0;
                     foreach my $a (@alleles){
                         my $gt_val;
                         if ($a eq $ref) {
                             $gt_val = 0;
                             push @gt_vcf_genotype, $gt_val;
+                            push @ref_calls, $a;
                         }
                         if ($a eq $alt) {
                             $gt_val = 1;
                             push @gt_vcf_genotype, $gt_val;
+                            push @alt_calls, $a;
                         }
                         $gt_dosage = $gt_dosage + $gt_val;
-                        push @vcf_genotype, $a;
                     }
 
-                    my $vcf_genotype_string = join '/', @vcf_genotype;
+                    my @vcf_genotype = (@ref_calls, @alt_calls);
+                    my $vcf_genotype_string = join ',', @vcf_genotype;
                     my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
                     $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
                     $genotype_obj = { 'NT' => $vcf_genotype_string };
