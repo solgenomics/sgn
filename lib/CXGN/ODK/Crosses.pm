@@ -203,6 +203,8 @@ sub save_ona_cross_info {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
 
+    print STDERR "ONA ODK CROSS SUMMARY 1\n";
+
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
@@ -554,6 +556,8 @@ sub create_odk_cross_progress_tree {
     }
     #print STDERR Dumper \@wishlist_file_lines;
 
+    print STDERR "ONA ODK CROSS SUMMARY 2\n";
+
     my %cross_wishlist_hash;
     foreach (@wishlist_file_lines){
         my $female_accession_name = $_->[2];
@@ -593,6 +597,8 @@ sub create_odk_cross_progress_tree {
     #print STDERR Dumper \@all_cross_parents;
     #print STDERR Dumper \%all_plant_status_info;
     #print STDERR Dumper \%all_cross_info;
+
+    print STDERR "ONA ODK CROSS SUMMARY 3\n";
 
     foreach my $top_level (keys %cross_wishlist_hash){
         foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
@@ -640,6 +646,8 @@ sub create_odk_cross_progress_tree {
         }
     }
     #print STDERR Dumper \%combined;
+
+    print STDERR "ONA ODK CROSS SUMMARY 4\n";
 
     my %seen_top_levels;
     my %top_level_contents;
@@ -987,29 +995,17 @@ sub create_odk_cross_progress_tree {
         $top_level_contents{$top_level} = \@top_level_content_json;
     }
     #print STDERR Dumper \%summary_info;
-
-    my %save_content = (
-        top_level_json => \@top_level_json,
-        top_level_contents => \%top_level_contents,
-        summary_info => \%summary_info,
-        summary_plant_status_info => \%all_plant_status_info
-    );
-
+    
     print STDERR "WRITING ONA ODK SUMMARY FILES\n";
     my $dir = $self->odk_cross_progress_tree_file_dir;
     eval { make_path($dir) };
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$form_id.".txt";
+
+    my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$form_id.".txt";
     print STDERR "Writing to $filename \n";
     my $OUTFILE;
-    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } encode_json \%save_content or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
-
-    $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$form_id.".txt";
-    print STDERR "Writing to $filename \n";
     open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
     print { $OUTFILE } encode_json \@top_level_json or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
