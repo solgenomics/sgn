@@ -483,7 +483,9 @@ sub get_odk_cross_summary_cached_GET {
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $summary = <$fh> && <$fh> ne '{}' ? decode_json <$fh> : undef;
+        my $line = <$fh>;
+        print STDERR Dumper $line;
+        $summary = $line && $line ne '{}' ? decode_json $line : undef;
     }
     close($fh);
     $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$ona_form_id.".txt";
@@ -492,7 +494,9 @@ sub get_odk_cross_summary_cached_GET {
     open($fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $plant_status_summary = <$fh> ? decode_json <$fh> : undef;
+        my $line = <$fh>;
+        print STDERR Dumper $line;
+        $plant_status_summary = $line && $line ne '{}' ? decode_json $line : undef;
     }
     close($fh);
 
