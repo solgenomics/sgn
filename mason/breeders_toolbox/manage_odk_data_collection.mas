@@ -210,6 +210,28 @@ jQuery(document).ready(function () {
                             }
                             form_dropdown_select_html = form_dropdown_select_html + '</select>';
                             jQuery('#import_odk_cross_data_available_forms').html(form_dropdown_select_html);
+
+                            //Load ODK Cross Progress Tree
+                            jQuery('#odk_cross_progress_tree_div').jstree({
+                                "core": {
+                                    'data' : {
+                                        'url' : '/ajax/odk/get_odk_cross_progress_cached?form_id='+jQuery('#availabe_odk_crossing_forms').val(),
+                                        'data' : function (node) {
+                                            return { 'id' : node.id };
+                                        }
+                                    },
+                                    'themes': { 'name': 'proton', 'responsive': true}
+                                },
+                                "search" : {
+                                    "case_insensitive" : true,
+                                },
+                                "plugins" : ["html_data","search","sort"],
+                            });
+
+                            jQuery("#odk_cross_progress_tree_search").keyup(function() {
+                                var v = jQuery("#odk_cross_progress_tree_search").val();
+                                jQuery("#odk_cross_progress_tree_div").jstree(true).search(v);
+                            });
                         }
                     },
                     error: function(response_forms){
@@ -357,28 +379,6 @@ jQuery(document).ready(function () {
         error: function(response){
             alert("Error retrieving available ODK cross summary");
         }
-    });
-
-    //Load ODK Cross Progress Tree
-    jQuery('#odk_cross_progress_tree_div').jstree({
-        "core": {
-            'data' : {
-                'url' : '/ajax/odk/get_odk_cross_progress_cached?form_id='+jQuery('#availabe_odk_crossing_forms').val(),
-                'data' : function (node) {
-                    return { 'id' : node.id };
-                }
-            },
-            'themes': { 'name': 'proton', 'responsive': true}
-        },
-        "search" : {
-            "case_insensitive" : true,
-        },
-        "plugins" : ["html_data","search","sort"],
-    });
-
-    jQuery("#odk_cross_progress_tree_search").keyup(function() {
-        var v = jQuery("#odk_cross_progress_tree_search").val();
-        jQuery("#odk_cross_progress_tree_div").jstree(true).search(v);
     });
 
     jQuery.ajax ( {
