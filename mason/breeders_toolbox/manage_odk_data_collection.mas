@@ -203,11 +203,12 @@ jQuery(document).ready(function () {
                             var form_dropdown_select_html = '<select class="form-control" id="availabe_odk_crossing_forms">';
                             var allowed_forms = response_forms.odk_ona_forms;
                             allowed_forms.push('<% $c->config->{odk_crossing_data_test_form_name} %>');
-                            var first_form_id = response.forms[0].id;
+                            var first_form_id;
                             console.log(first_form_id);
                             for(var i=0; i<response.forms.length; i++){
                                 if (jQuery.inArray(response.forms[i].id_string, allowed_forms) != -1){
                                     form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+'</option>';
+                                    first_form_id = response.forms[i].id;
                                 }
                             }
                             form_dropdown_select_html = form_dropdown_select_html + '</select>';
