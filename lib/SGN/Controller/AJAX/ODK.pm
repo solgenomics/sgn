@@ -172,7 +172,6 @@ sub get_crossing_data_GET {
         cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
         germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
         cross_wishlist_md_file_id=>$cross_wishlist_id,
-        cross_wishlist_file_name=>$cross_wishlist_file_name,
         allowed_cross_properties=>$c->config->{cross_properties},
         odk_crossing_data_service_url=>$c->config->{odk_crossing_data_service_url},
         odk_crossing_data_service_username=>$c->config->{odk_crossing_data_service_username},
@@ -206,8 +205,6 @@ sub schedule_get_crossing_data_GET {
         $c->detach();
     }
     my $form_id = $c->req->param('form_id');
-    my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
-    my $cross_wishlist_file_name = $c->req->param('cross_wishlist_file_name');
     my $timing_select = $c->req->param('timing');
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
@@ -238,6 +235,10 @@ sub schedule_get_crossing_data_GET {
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
     my $temp_file_path = $temp_file->filename;
+    my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
+    my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
+    my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
 
     my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
@@ -255,7 +256,7 @@ sub schedule_get_crossing_data_GET {
     my $www_user = $c->config->{www_user};
     my $crontab_log = $c->config->{crontab_log_filepath};
     my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/local-lib/lib/perl5"';
-    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -i $user_name -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -w $cross_wishlist_id -x $cross_wishlist_file_name -f $progress_tree_dir -l $ODK_url -c $cross_properties -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
+    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -i $user_name -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -q $cross_wishlist_temp_file_path -y $germplasm_info_temp_file_path -f $progress_tree_dir -l $ODK_url -c $cross_properties -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
     my $timing = '';
     if ($timing_select eq 'everyminute'){
         $timing = "0-59/1 * * * * ";
@@ -378,7 +379,7 @@ sub get_odk_cross_progress_cached : Path('/ajax/odk/get_odk_cross_progress_cache
 
 sub get_odk_cross_progress_cached_GET {
     my ( $self, $c ) = @_;
-    my $wishlist_file_id = $c->req->param("cross_wishlist_file_id");
+    my $ona_form_id = $c->req->param("form_id");
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
@@ -411,7 +412,7 @@ sub get_odk_cross_progress_cached_GET {
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
+    my $filename = $dir."/entire_odk_cross_progress_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
@@ -440,7 +441,7 @@ sub get_odk_cross_summary_cached : Path('/ajax/odk/get_odk_cross_summary_cached'
 
 sub get_odk_cross_summary_cached_GET {
     my ( $self, $c ) = @_;
-    my $wishlist_file_id = $c->req->param("cross_wishlist_file_id");
+    my $ona_form_id = $c->req->param("form_id");
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
@@ -473,7 +474,7 @@ sub get_odk_cross_summary_cached_GET {
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
+    my $filename = $dir."/entire_odk_cross_progress_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $contents;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";

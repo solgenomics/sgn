@@ -35,14 +35,6 @@ $odk_phenotyping_data_service_url => undef
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <form class="form-horizontal" id="odk_cross_data_form_wishlist_select" name="odk_cross_data_form_wishlist_select">
-            <div class="form-group">
-                <label class="col-sm-4 control-label">Select A Cross Wishlist: </label>
-                <div class="col-sm-8" >
-                    <div id="odk_cross_data_available_wishlists">LOADING...</div>
-                </div>
-            </div>
-        </form>
         <form class="form-horizontal" id="import_odk_cross_data_form" name="import_odk_cross_data_form">
             <div class="form-group">
                 <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
@@ -242,16 +234,8 @@ jQuery(document).ready(function () {
                 alert(response.error);
             }
             if (response.success){
-                var wishlist_dropdown_select_html = '<select class="form-control" id="odk_cross_data_available_wishlists_select">';
-                for(var i=0; i<response.wishlists.length; i++){
-                    wishlist_dropdown_select_html = wishlist_dropdown_select_html + '<option value="'+response.wishlists[i][0]+'">'+response.wishlists[i][1]+'</option>';
-                }
-                wishlist_dropdown_select_html = wishlist_dropdown_select_html + '</select>';
-                jQuery('#odk_cross_data_available_wishlists').html(wishlist_dropdown_select_html);
-
-
                 jQuery.ajax ({
-                    url : '/ajax/odk/get_odk_cross_summary_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                    url : '/ajax/odk/get_odk_cross_summary_cached?form_id='+jQuery('#availabe_odk_crossing_forms').val(),
                     success: function(response){
                         console.log(response);
                         summary = response.summary;
@@ -388,7 +372,7 @@ jQuery(document).ready(function () {
                 jQuery('#odk_cross_progress_tree_div').jstree({
                     "core": {
                         'data' : {
-                            'url' : '/ajax/odk/get_odk_cross_progress_cached?cross_wishlist_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val(),
+                            'url' : '/ajax/odk/get_odk_cross_progress_cached?form_id='+jQuery('#availabe_odk_crossing_forms').val(),
                             'data' : function (node) {
                                 return { 'id' : node.id };
                             }
@@ -471,7 +455,7 @@ jQuery(document).ready(function () {
     
     jQuery('#import_odk_cross_data').click( function(){
         jQuery.ajax ( {
-            url : '/ajax/odk/get_crossing_data?cross_wishlist_file_name='+jQuery("#odk_cross_data_available_wishlists_select option:selected").text()+'&cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val(),
+            url : '/ajax/odk/get_crossing_data?form_id='+jQuery('#availabe_odk_crossing_forms').val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -493,7 +477,7 @@ jQuery(document).ready(function () {
 
     jQuery('#schedule_import_odk_cross_data').click( function(){
         jQuery.ajax ( {
-            url : '/ajax/odk/schedule_get_crossing_data?cross_wishlist_file_name='+jQuery("#odk_cross_data_available_wishlists_select option:selected").text()+'&cross_wishlist_md_file_id='+jQuery('#odk_cross_data_available_wishlists_select').val()+'&form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
+            url : '/ajax/odk/schedule_get_crossing_data?form_id='+jQuery('#availabe_odk_crossing_forms').val()+'&timing='+jQuery('#schedule_import_odk_crossing_form_data').val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
