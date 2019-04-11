@@ -483,7 +483,7 @@ sub get_odk_cross_summary_cached_GET {
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $summary = <$fh> ? decode_json <$fh> : undef;
+        $summary = <$fh> && <$fh> ne '{}' ? decode_json <$fh> : undef;
     }
     close($fh);
     $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$ona_form_id.".txt";
