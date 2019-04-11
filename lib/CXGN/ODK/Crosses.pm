@@ -163,6 +163,7 @@ has '_ona_germplasm_info_file_name' => (
 );
 
 sub save_ona_cross_info {
+    print STDERR "SAVE ONA CROSS INFO START\n";
     my $self = shift;
     my $context = shift; #Needed for SGN::Image to store images to plots
     my $schema = $self->bcs_schema;
@@ -513,6 +514,7 @@ sub save_ona_cross_info {
 }
 
 sub create_odk_cross_progress_tree {
+    print STDERR "CREATE ODK CROSS PROGRESS TREE START\n";
     my $self = shift;
     my $odk_submission = shift;
     my $bcs_schema = $self->bcs_schema;
@@ -993,6 +995,7 @@ sub create_odk_cross_progress_tree {
         summary_plant_status_info => \%all_plant_status_info
     );
 
+    print STDERR "WRITING ONA ODK SUMMARY FILES\n";
     my $dir = $self->odk_cross_progress_tree_file_dir;
     eval { make_path($dir) };
     if ($@) {
