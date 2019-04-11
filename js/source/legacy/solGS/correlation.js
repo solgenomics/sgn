@@ -56,13 +56,11 @@ jQuery(document).ready( function() {
 });
 
 
-
-
 jQuery("#run_genetic_correlation").live("click", function() {        
     var popId   = jQuery("#corre_selected_population_id").val();
     var popType = jQuery("#corre_selected_population_type").val();
     
-    jQuery("#correlation_canvas").empty();
+    //jQuery("#correlation_canvas").empty();
    
     jQuery("#correlation_message")
         .css({"padding-left": '0px'})
@@ -163,7 +161,7 @@ function formatGenCorInputData (popId, type, indexFile) {
 		
                 gebvsFile = response.gebvs_file;
 		indexFile = response.index_file;
-		
+		console.log('index file: ' + indexFile + ' gebvsFile: ' + gebvsFile)	
                 var divPlace;
                 if (indexFile) {
                     divPlace = '#si_correlation_canvas';
@@ -174,6 +172,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'corr_population_id': popId, 
                     'type': type, 
                     'gebvs_file': gebvsFile,
+		    'index_file': indexFile,
                     'div_place' : divPlace,
                 };
 		
@@ -303,12 +302,13 @@ function runGenCorrelationAnalysis (args) {
                 divPlace = args.div_place;
                
                 if (divPlace === '#si_correlation_canvas') {
+		    jQuery("#si_correlation_message").empty();
                     jQuery("#si_correlation_section").show();                 
                 }
-                
+             
                 plotCorrelation(response.data, divPlace);
                 jQuery("#correlation_message").empty();
-                jQuery("#si_correlation_message").empty();
+               
                 
                 if (divPlace === '#si_correlation_canvas') {
   
@@ -353,7 +353,7 @@ function runGenCorrelationAnalysis (args) {
 
 
 function plotCorrelation (data, divPlace) {
-   
+
     data = data.replace(/\s/g, '');
     data = data.replace(/\\/g, '');
     data = data.replace(/^\"/, '');

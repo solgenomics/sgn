@@ -291,8 +291,13 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
     my $type        = $c->req->param('type');
 
     my $gebvs_file = $c->req->param('gebvs_file');
+    my $index_file = $c->req->param('index_file');
+    
     $c->stash->{data_input_file} = $gebvs_file;
 
+    $c->stash->{selection_index_file} = $index_file;
+    $c->stash->{gebvs_file} = $gebvs_file;
+    
     $c->stash->{pop_id} = $corr_pop_id;
   
     if (-s $gebvs_file) 
@@ -461,10 +466,12 @@ sub temp_geno_corre_input_file {
     
     my $pop_id = $c->stash->{pop_id};
     
-    my $gebvs_file = $c->stash->{data_input_file};
+    my $gebvs_file = $c->stash->{gebvs_file}; #$c->stash->{data_input_file};
+    my $index_file = $c->stash->{selection_index_file};
   
     my $files = join ("\t",
-		      $gebvs_file,          
+		      $gebvs_file,  
+		      $index_file
 	);
      
     my $tmp_dir = $c->stash->{correlation_temp_dir};
