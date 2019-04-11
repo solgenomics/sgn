@@ -120,6 +120,7 @@ sub get_crossing_data : Path('/ajax/odk/get_crossing_data') : ActionClass('REST'
 sub get_crossing_data_GET {
     my ( $self, $c ) = @_;
     my $form_id = $c->req->param('form_id');
+    print STDERR Dumper $form_id;
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
