@@ -762,7 +762,7 @@ sub create_odk_cross_progress_tree {
                     while (my ($male_accession_name, $crosses_cycle_hash) = each %$male_accession_hash){
                         if ($male_accession_name eq 'planned_female_plot_name_status'){
                             my $status = $crosses_cycle_hash;
-                            print STDERR Dumper $status;
+                            #print STDERR Dumper $status;
                             $planned_female_plot_node->{text} .= ' : '.$status->{'attachment_display_tiny'}.' : STATUS = '.$status->{'status_message'};
                         }
                         else {

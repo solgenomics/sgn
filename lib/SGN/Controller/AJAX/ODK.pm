@@ -119,8 +119,6 @@ sub get_crossing_data : Path('/ajax/odk/get_crossing_data') : ActionClass('REST'
 
 sub get_crossing_data_GET {
     my ( $self, $c ) = @_;
-    my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
-    my $cross_wishlist_file_name = $c->req->param('cross_wishlist_file_name');
     my $form_id = $c->req->param('form_id');
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
@@ -171,7 +169,6 @@ sub get_crossing_data_GET {
         temp_file_path=>$temp_file_path,
         cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
         germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
-        cross_wishlist_md_file_id=>$cross_wishlist_id,
         allowed_cross_properties=>$c->config->{cross_properties},
         odk_crossing_data_service_url=>$c->config->{odk_crossing_data_service_url},
         odk_crossing_data_service_username=>$c->config->{odk_crossing_data_service_username},
