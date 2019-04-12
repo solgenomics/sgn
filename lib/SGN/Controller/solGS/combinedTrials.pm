@@ -178,7 +178,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(3) {
 
     my @select_analysed_traits;
     
-    if(!@traits_ids)
+    if (!@traits_ids)
     {	 
 	$c->stash->{message} = "Cached output for this page does not exist anymore.\n" . 
 	    " Please go to $training_pop_page and run the analysis.";
