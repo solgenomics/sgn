@@ -152,11 +152,15 @@ sub traits_selection_catalogue_file {
 
 
 sub catalogue_traits_selection {
-    my ($self, $c, $entry) = @_;
-    
+    my ($self, $c, $traits_ids) = @_;
+  
     $self->traits_selection_catalogue_file($c);
     my $file = $c->stash->{traits_selection_catalogue_file};
-  
+
+    my $traits_selection_id = $self->create_traits_selection_id($traits_ids);	    
+    my $ids = join(',', @$traits_ids);
+    my $entry = $traits_selection_id . "\t" . $ids;
+	 
     if (!-s $file) 
     {
         my $header = 'traits_selection_id' . "\t" . 'traits_ids';
@@ -164,10 +168,10 @@ sub catalogue_traits_selection {
     }
     else 
     {
-        $entry =~ s/\n//;
+	
         my @combo = ($entry);
 
-        my (@entries) = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
+        my @entries = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
         my @intersect = intersect(@combo, @entries);
 
         unless( @intersect ) 
@@ -216,11 +220,9 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
 
     if (@traits_ids > 1) 
     {
-	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);	    
-	my $ids = join(',', @traits_ids);
-	my $entry = "\n" . $traits_selection_id . "\t" . $ids;
-	$self->catalogue_traits_selection($c, $entry);
-
+	$self->catalogue_traits_selection($c, \@traits_ids);
+	
+	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);
 	$ret->{traits_selection_id} = $traits_selection_id;
 	$ret->{status} = 1;
     }
