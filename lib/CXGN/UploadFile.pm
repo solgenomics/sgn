@@ -93,17 +93,18 @@ sub archive {
     my $file_destination;
     my $error;
 
-    if (!$subdirectory || !$tempfile || !$archive_filename || !$timestamp || !$archive_path || !$user_id){
+    #    if (!$subdirectory || !$tempfile || !$archive_filename || !$timestamp || !$archive_path || !$user_id){
+    if (!$subdirectory || !$tempfile || !$timestamp || !$user_id){
         die "To archive a tempfile you need to provide: tempfile, subdirectory, archive_filename, timestamp, archive_path, and user_id\n";
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
 	die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
-    if (!$subdirectory || !$tempfile || !$archive_filename ) {
-        print STDERR "File archive failed: incomplete information to archive file.\n";
-	die "File archive failed: incomplete information to archive file.\n";
-    }
+    # if (!$subdirectory || !$tempfile || !$archive_filename ) {
+    #     print STDERR "File archive failed: incomplete information to archive file.\n";
+    # 	die "File archive failed: incomplete information to archive file.\n";
+    # }
     if ($self->include_timestamp){
         $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
     }
@@ -125,7 +126,7 @@ sub archive {
 	$error = "Error saving archived file: $file_destination\n$_";
     };
     if ($error) {
-	die "$error\n";
+	print STDERR  "$error\n";
     }
     print STDERR "ARCHIVED: $file_destination\n";
     return $file_destination;
