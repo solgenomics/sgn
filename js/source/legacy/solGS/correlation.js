@@ -56,7 +56,7 @@ jQuery(document).ready( function() {
 });
 
 
-jQuery("#run_genetic_correlation").live("click", function() {        
+jQuery(document).on("click", "#run_genetic_correlation", function() {        
     var popId   = jQuery("#corre_selected_population_id").val();
     var popType = jQuery("#corre_selected_population_type").val();
     

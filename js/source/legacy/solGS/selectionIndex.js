@@ -14,7 +14,7 @@ jQuery(document).ready( function () {
 });
 
 
-jQuery("#calculate_si").live("click", function() {        
+jQuery(document).on("click", "#calculate_si", function() {        
     var modelId        = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
     var popType        = jQuery("#si_canvas #selected_population_type").val();
