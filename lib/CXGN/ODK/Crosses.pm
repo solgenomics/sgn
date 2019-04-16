@@ -1031,7 +1031,7 @@ sub create_odk_cross_progress_tree {
     # find or create crossing trial using name of cross wishlist
     # create cross in db if not existing
     # save properties to cross
-    print STDERR Dumper \%summary_info;
+    #print STDERR Dumper \%summary_info;
     my %parsed_data;
     foreach my $cross_hash (values %summary_info){
         while ( my ($cross_name, $activities) = each %$cross_hash){
