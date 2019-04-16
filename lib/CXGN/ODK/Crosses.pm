@@ -560,11 +560,11 @@ sub create_odk_cross_progress_tree {
 
     my %cross_wishlist_hash;
     foreach (@wishlist_file_lines){
-        my $female_accession_name = $_->[2];
+        my $female_accession_name = $_->[5];
         my $female_plot_name = $_->[1];
-        my $wishlist_entry_created_timestamp = $_->[7];
-        my $wishlist_entry_created_by = $_->[8];
-        my $number_males = $_->[9];
+        my $wishlist_entry_created_timestamp = $_->[15];
+        my $wishlist_entry_created_by = $_->[16];
+        my $number_males = $_->[17];
         $wishlist_entry_created_by =~ tr/"//d;
         $wishlist_entry_created_timestamp =~ tr/"//d;
         $female_accession_name =~ tr/"//d;
@@ -572,7 +572,7 @@ sub create_odk_cross_progress_tree {
         $number_males =~ tr/"//d;
         my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
         my $num_males_int = $number_males ? int($number_males) : 0;
-        for my $n (10 .. 10+$num_males_int){
+        for my $n (18 .. 18+$num_males_int){
             if ($_->[$n]){
                 $_->[$n] =~ tr/"//d;
                 $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
