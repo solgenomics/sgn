@@ -1919,6 +1919,8 @@ sub _perform_plot_polygon_assign {
 
     my $polygon_objs = decode_json $stock_polygons;
     my %stock_ids;
+
+    #print STDERR Dumper $polygon_objs;
     foreach my $stock_name (keys %$polygon_objs) {
         my $polygon = $polygon_objs->{$stock_name};
         if ($from_web_interface) {

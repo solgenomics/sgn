@@ -236,6 +236,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <div id="drone_imagery_standard_process_plot_polygons_top_section"></div>
 
                 <button id="drone_imagery_standard_process_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
+                <button id="drone_imagery_standard_process_plot_polygons_clear_one" class="btn btn-danger">Clear One Polygon</button>
             </div>
 
             <div id="manage_drone_imagery_standard_process_plot_polygons_load_div">
@@ -1272,6 +1273,24 @@ jQuery(document).ready(function() {
         plotPolygonsRectanglesApply(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, 'drone_imagery_standard_process_generated_polygons_div', 'drone_imagery_standard_process_generated_polygons_table', 'drone_imagery_standard_process_plot_polygons_generated_assign', 'drone_imagery_standard_process_plot_polygons_submit_bottom');
     });
 
+    var drone_imagery_standard_process_plot_polygon_click_type = '';
+    jQuery('#drone_imagery_standard_process_plot_polygons_top_left_click').click(function(){
+        alert('Now click the top left corner of your field on the image below.');
+        drone_imagery_standard_process_plot_polygon_click_type = 'top_left';
+    });
+    jQuery('#drone_imagery_standard_process_plot_polygons_top_right_click').click(function(){
+        alert('Now click the top right corner of your field on the image below.');
+        drone_imagery_standard_process_plot_polygon_click_type = 'top_right';
+    });
+    jQuery('#drone_imagery_standard_process_plot_polygons_bottom_left_click').click(function(){
+        alert('Now click the bottom left corner of your field on the image below.');
+        drone_imagery_standard_process_plot_polygon_click_type = 'bottom_left';
+    });
+    jQuery('#drone_imagery_standard_process_plot_polygons_bottom_right_click').click(function(){
+        alert('Now click the bottom right corner of your field on the image below.');
+        drone_imagery_standard_process_plot_polygon_click_type = 'bottom_right';
+    });
+
     jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_clear', function(){
         plot_polygons_display_points = [];
         plot_polygons_ind_points = [];
@@ -1279,10 +1298,17 @@ jQuery(document).ready(function() {
         drone_imagery_plot_polygons = {};
         drone_imagery_plot_generated_polygons = {};
         drone_imagery_plot_polygons_display = {};
+        plot_polygons_generated_polygons = [];
+        drone_imagery_plot_polygons_removed_numbers = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw_canvas_image(background_image_url, 0);
         jQuery('#drone_imagery_standard_process_generated_polygons_div').html('');
         droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons, 'drone_imagery_standard_process_trial_layout_div', 'drone_imagery_standard_process_layout_table');
+    });
+
+    jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_clear_one', function(){
+        jQuery('#drone_imagery_plot_polygon_remove_polygon').modal('show');
+        return false;
     });
 
     jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_generated_assign', function() {
@@ -2295,7 +2321,9 @@ jQuery(document).ready(function() {
         for (var i=0; i<plot_polygons_generated_polygons.length; i++) {
             plot_polygons_ind_4_points = plot_polygons_generated_polygons[i];
             plot_polygons_display_points = plot_polygons_ind_4_points;
-            plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+            if (plot_polygons_display_points.length == 4) {
+                plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+            }
             drawPolyline(plot_polygons_display_points);
             drawWaypoints(plot_polygons_display_points, i, 0);
             drone_imagery_plot_generated_polygons[i] = plot_polygons_ind_4_points;
@@ -2402,7 +2430,7 @@ jQuery(document).ready(function() {
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
 
-        if (drone_imagery_plot_polygon_click_type == '') {
+        if (drone_imagery_plot_polygon_click_type == '' && drone_imagery_standard_process_plot_polygon_click_type == '') {
             alert('X Coordinate: '+PosX+'. Y Coordinate: '+PosY+'.');
         }
         else if (drone_imagery_plot_polygon_click_type == 'top_left') {
@@ -2422,6 +2450,24 @@ jQuery(document).ready(function() {
         else if (drone_imagery_plot_polygon_click_type == 'bottom_right') {
             drone_imagery_plot_polygon_click_type = '';
             jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset').val(background_image_height-PosY);
+        }
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'top_left') {
+            drone_imagery_standard_process_plot_polygon_click_type = '';
+            jQuery('#drone_imagery_standard_process_plot_polygons_left_column_top_offset').val(PosY);
+            jQuery('#drone_imagery_standard_process_plot_polygons_top_row_left_offset').val(PosX);
+        }
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'top_right') {
+            drone_imagery_standard_process_plot_polygon_click_type = '';
+            jQuery('#drone_imagery_standard_process_plot_polygons_top_row_right_offset').val(background_image_width-PosX);
+        }
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'bottom_left') {
+            drone_imagery_standard_process_plot_polygon_click_type = '';
+            jQuery('#drone_imagery_standard_process_plot_polygons_bottom_row_left_offset').val(PosX);
+            jQuery('#drone_imagery_standard_process_plot_polygons_left_column_bottom_offset').val(background_image_height-PosY);
+        }
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'bottom_right') {
+            drone_imagery_standard_process_plot_polygon_click_type = '';
+            jQuery('#drone_imagery_standard_process_plot_polygons_right_col_bottom_offset').val(background_image_height-PosY);
         }
     }
 
