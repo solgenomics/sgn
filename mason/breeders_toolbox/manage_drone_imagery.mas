@@ -2095,6 +2095,24 @@ jQuery(document).ready(function() {
         });
     }
 
+    var drone_imagery_plot_polygon_click_type = '';
+    jQuery('#drone_imagery_plot_polygons_top_left_click').click(function(){
+        alert('Now click the top left corner of your field on the image below.');
+        drone_imagery_plot_polygon_click_type = 'top_left';
+    });
+    jQuery('#drone_imagery_plot_polygons_top_right_click').click(function(){
+        alert('Now click the top right corner of your field on the image below.');
+        drone_imagery_plot_polygon_click_type = 'top_right';
+    });
+    jQuery('#drone_imagery_plot_polygons_bottom_left_click').click(function(){
+        alert('Now click the bottom left corner of your field on the image below.');
+        drone_imagery_plot_polygon_click_type = 'bottom_left';
+    });
+    jQuery('#drone_imagery_plot_polygons_bottom_right_click').click(function(){
+        alert('Now click the bottom right corner of your field on the image below.');
+        drone_imagery_plot_polygon_click_type = 'bottom_right';
+    });
+
     var drone_imagery_plot_polygon_current_background_toggle = 1;
     jQuery(document).on('click', '#drone_imagery_plot_polygons_switch', function(){
         var image_url;
@@ -2318,6 +2336,8 @@ jQuery(document).ready(function() {
     }
 
     function GetCoordinatesPlotPolygonsPoint(e) {
+        background_image_width
+        background_image_height
         var PosX = 0;
         var PosY = 0;
         var ImgPos;
@@ -2333,7 +2353,28 @@ jQuery(document).ready(function() {
         }
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
-        alert('X Coordinate: '+PosX+'. Y Coordinate: '+PosY+'.');
+
+        if (drone_imagery_plot_polygon_click_type == '') {
+            alert('X Coordinate: '+PosX+'. Y Coordinate: '+PosY+'.');
+        }
+        else if (drone_imagery_plot_polygon_click_type == 'top_left') {
+            drone_imagery_plot_polygon_click_type = '';
+            jQuery('#drone_imagery_plot_polygons_left_column_top_offset').val(PosY);
+            jQuery('#drone_imagery_plot_polygons_top_row_left_offset').val(PosX);
+        }
+        else if (drone_imagery_plot_polygon_click_type == 'top_right') {
+            drone_imagery_plot_polygon_click_type = '';
+            jQuery('#drone_imagery_plot_polygons_top_row_right_offset').val(background_image_width-PosX);
+        }
+        else if (drone_imagery_plot_polygon_click_type == 'bottom_left') {
+            drone_imagery_plot_polygon_click_type = '';
+            jQuery('#').val();
+            jQuery('#').val();
+        }
+        else if (drone_imagery_plot_polygon_click_type == 'bottom_right') {
+            drone_imagery_plot_polygon_click_type = '';
+            jQuery('#').val();
+        }
     }
 
     jQuery('#drone_imagery_assign_plot_dialog').on('shown.bs.modal', function (e) {

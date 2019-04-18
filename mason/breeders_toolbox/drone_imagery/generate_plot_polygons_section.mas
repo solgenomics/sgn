@@ -2,81 +2,99 @@
 </%args>
 
 <div class="well well-sm">
-    <form class="form-horizontal">
-        <div class="row">
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Number of Rows: </label>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <form class="form-horizontal">
+                <div class="row">
                     <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_num_rows" name="drone_imagery_plot_polygons_num_rows" type="number" placeholder="Number of rows in image section" />
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-6 control-label">Number of Rows: </label>
+                            <div class="col-sm-6">
+                                <input class="form-control" id="drone_imagery_plot_polygons_num_rows" name="drone_imagery_plot_polygons_num_rows" type="number" placeholder="Number of rows in image section" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-6 control-label">Number of Columns: </label>
+                            <div class="col-sm-6">
+                                <input class="form-control" id="drone_imagery_plot_polygons_num_cols" name="drone_imagery_plot_polygons_num_cols" type="number" placeholder="Number of columns in image section"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Number of Columns: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_num_cols" name="drone_imagery_plot_polygons_num_cols" type="number" placeholder="Number of columns in image section"/>
-                    </div>
-                </div>
-            </div>
+            </form>
+            <hr>
+            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_left_click">Click Top Left Corner</button>
+            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_right_click">Click Top Right Corner</button>
+            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_bottom_left_click">Click Bottom Left Corner</button>
+            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_bottom_right_click">Click Bottom Right Corner</button>
         </div>
-        <div class="row">
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Left-most Column Top Margin: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_left_column_top_offset" name="drone_imagery_plot_polygons_left_column_top_offset" type="number" value="0"/>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title => 'Template Parameters', collapsible=>1, collapsed => 1, subtitle=> 'View and edit template parameters. These parameters can be filled using the above button clicks' &>
+                <form class="form-horizontal">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Left-most Column Top Margin: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_plot_polygons_left_column_top_offset" name="drone_imagery_plot_polygons_left_column_top_offset" type="number" value="0"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Left-most Column Bottom Margin: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_plot_polygons_left_column_bottom_offset" name="drone_imagery_plot_polygons_left_column_bottom_offset" type="number" value="0"/>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Left-most Column Bottom Margin: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_left_column_bottom_offset" name="drone_imagery_plot_polygons_left_column_bottom_offset" type="number" value="0"/>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Top-most Row Left Margin: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_plot_polygons_top_row_left_offset" name="drone_imagery_plot_polygons_top_row_left_offset" type="number" placeholder="Left offset of image section" value="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Top-most Row Right Margin: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_plot_polygons_top_row_right_offset" name="drone_imagery_plot_polygons_top_row_right_offset" type="number" placeholder="Left offset of image section" value="0" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Bottom-most Row Left Margin: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_plot_polygons_bottom_row_left_offset" name="drone_imagery_plot_polygons_bottom_row_left_offset" type="number" placeholder="Left offset of image section" value="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Right-most Column Bottom Margin: </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_plot_polygons_right_col_bottom_offset" name="drone_imagery_plot_polygons_right_col_bottom_offset" type="number" placeholder="Right-most column bottom offset" value="0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </&>
         </div>
-        <div class="row">
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Top-most Row Left Margin: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_top_row_left_offset" name="drone_imagery_plot_polygons_top_row_left_offset" type="number" placeholder="Left offset of image section" value="0" />
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Top-most Row Right Margin: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_top_row_right_offset" name="drone_imagery_plot_polygons_top_row_right_offset" type="number" placeholder="Left offset of image section" value="0" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Bottom-most Row Left Margin: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_bottom_row_left_offset" name="drone_imagery_plot_polygons_bottom_row_left_offset" type="number" placeholder="Left offset of image section" value="0" />
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Right-most Column Bottom Margin: </label>
-                    <div class="col-sm-6">
-                        <input class="form-control" id="drone_imagery_plot_polygons_right_col_bottom_offset" name="drone_imagery_plot_polygons_right_col_bottom_offset" type="number" placeholder="Right-most column bottom offset" value="0" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-    <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Rectangles (Does not save)</button>
+    </div>
+    <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Plot Polygon Template (Does not save)</button>
 </div>
 
 <div class="well well-sm">
