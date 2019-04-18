@@ -98,8 +98,7 @@ function listGenCorPopulations ()  {
     }
       
     var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-    if (userUploadedSelExists == true) {
-      
+    if (userUploadedSelExists == true) {     
         var userSelPops = listUploadedSelPopulations();
         if (userSelPops) {
 
@@ -122,9 +121,9 @@ function listGenCorPopulations ()  {
         idPopName     = JSON.parse(idPopName);
         modelId       = jQuery("#model_id").val();
                    
-        selectedPopId   = idPopName.id;
-        selectedPopName = idPopName.name;
-        selectedPopType = idPopName.pop_type; 
+        var selectedPopId   = idPopName.id;
+        var selectedPopName = idPopName.name;
+        var selectedPopType = idPopName.pop_type; 
        
         jQuery("#corre_selected_population_name").val(selectedPopName);
         jQuery("#corre_selected_population_id").val(selectedPopId);
@@ -166,7 +165,7 @@ function formatGenCorInputData (popId, type, indexFile) {
 		
                 gebvsFile = response.gebvs_file;
 		indexFile = response.index_file;
-		console.log('index file: ' + indexFile + ' gebvsFile: ' + gebvsFile)	
+		
                 var divPlace;
                 if (indexFile) {
                     divPlace = '#si_correlation_canvas';
