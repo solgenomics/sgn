@@ -2336,8 +2336,6 @@ jQuery(document).ready(function() {
     }
 
     function GetCoordinatesPlotPolygonsPoint(e) {
-        background_image_width
-        background_image_height
         var PosX = 0;
         var PosY = 0;
         var ImgPos;
@@ -2368,12 +2366,12 @@ jQuery(document).ready(function() {
         }
         else if (drone_imagery_plot_polygon_click_type == 'bottom_left') {
             drone_imagery_plot_polygon_click_type = '';
-            jQuery('#').val();
-            jQuery('#').val();
+            jQuery('#drone_imagery_plot_polygons_bottom_row_left_offset').val(PosX);
+            jQuery('#drone_imagery_plot_polygons_left_column_bottom_offset').val(background_image_height-PosY);
         }
         else if (drone_imagery_plot_polygon_click_type == 'bottom_right') {
             drone_imagery_plot_polygon_click_type = '';
-            jQuery('#').val();
+            jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset').val(background_image_height-PosY);
         }
     }
 
