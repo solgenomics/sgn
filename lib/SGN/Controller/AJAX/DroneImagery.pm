@@ -3650,6 +3650,51 @@ sub _perform_phenotype_calculation {
     my $channel_1_denoised_original_fir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 in Denoised Original FIR Image with Background Removed via Threshold|ISOL:0000058')->cvterm_id;
     my $channel_1_denoised_original_tir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 in Denoised Original Thermal IR Image with Background Removed via Threshold|ISOL:0000059')->cvterm_id;
 
+    my $ft_hpf30_tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 TGI From Denoised Original Image|ISOL:0000064')->cvterm_id;
+    my $ft_hpf30_vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 VARI From Denoised Original Image|ISOL:0000065')->cvterm_id;
+    my $ft_hpf30_ndvi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 NDVI From Denoised Original Image|ISOL:0000066')->cvterm_id;
+
+    my $ft_hpf30_channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Original TGI Mask|ISOL:0000067')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Thresholded TGI Mask|ISOL:0000068')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Original VARI Mask|ISOL:0000069')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Thresholded VARI Mask|ISOL:0000070')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Original NDVI Mask|ISOL:0000071')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Thresholded NDVI Mask|ISOL:0000072')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Threshold|ISOL:0000073')->cvterm_id;
+
+    my $ft_hpf30_channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Original TGI Mask|ISOL:0000074')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Thresholded TGI Mask|ISOL:0000075')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Original VARI Mask|ISOL:0000076')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Thresholded VARI Mask|ISOL:0000077')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Original NDVI Mask|ISOL:0000078')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Thresholded NDVI Mask|ISOL:0000079')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original Image with Background Removed via Threshold|ISOL:0000080')->cvterm_id;
+
+    my $ft_hpf30_channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Original TGI Mask|ISOL:0000081')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Thresholded TGI Mask|ISOL:0000082')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Original VARI Mask|ISOL:0000083')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Thresholded VARI Mask|ISOL:0000084')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_background_removed_original_ndvi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Original NDVI Mask|ISOL:0000085')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Thresholded NDVI Mask|ISOL:0000086')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original Image with Background Removed via Threshold|ISOL:0000087')->cvterm_id;
+
+    my $ft_hpf30_threshold_background_removed_tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 TGI with Background Removed via Threshold|ISOL:0000088')->cvterm_id;
+    my $ft_hpf30_threshold_background_removed_vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 VARI with Background Removed via Threshold|ISOL:0000089')->cvterm_id;
+    my $ft_hpf30_threshold_background_removed_ndvi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 NDVI with Background Removed via Threshold|ISOL:0000090')->cvterm_id;
+
+    my $ft_hpf30_channel_1_denoised_original_bw_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Black and White Image with Background Removed via Threshold|ISOL:0000091')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_rgb_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original RGB Image with Background Removed via Threshold|ISOL:0000092')->cvterm_id;
+    my $ft_hpf30_channel_2_denoised_original_rgb_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 2 in Denoised Original RGB Image with Background Removed via Threshold|ISOL:0000093')->cvterm_id;
+    my $ft_hpf30_channel_3_denoised_original_rgb_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 3 in Denoised Original RGB Image with Background Removed via Threshold|ISOL:0000094')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_blue_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Blue Image with Background Removed via Threshold|ISOL:0000095')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_green_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Green Image with Background Removed via Threshold|ISOL:0000096')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_red_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Red Image with Background Removed via Threshold|ISOL:0000097')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_red_edge_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Red Edge Image with Background Removed via Threshold|ISOL:0000102')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_nir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original NIR Image with Background Removed via Threshold|ISOL:0000098')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_mir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original MIR Image with Background Removed via Threshold|ISOL:0000099')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_fir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original FIR Image with Background Removed via Threshold|ISOL:0000100')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_tir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Thermal IR Image with Background Removed via Threshold|ISOL:0000101')->cvterm_id;
+
     my $drone_run_band_project_type_cvterm_id;
     #print STDERR Dumper $drone_run_band_project_type;
 
@@ -3989,6 +4034,11 @@ sub _perform_phenotype_calculation {
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_surf_results';
             $calculate_phenotypes_script = 'CalculatePhenotypeSurf.py';
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
+        } elsif ($phenotype_method eq 'fourier_transform') {
+            $temp_images_subdir = 'drone_imagery_calc_phenotypes_fourier_transform';
+            $temp_results_subdir = 'drone_imagery_calc_phenotypes_fourier_transform_results';
+            $calculate_phenotypes_script = 'CalculatePhenotypeFourierTransform.py';
+            $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_fourier_transform_drone_imagery', 'project_md_image')->cvterm_id();
         }
 
         my @image_paths;
@@ -4030,6 +4080,12 @@ sub _perform_phenotype_calculation {
         my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
         #print STDERR Dumper $cmd;
         my $status = system($cmd);
+
+        if ($phenotype_method eq 'fourier_transform') {
+            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeZonalStats.py --image_paths \''.$out_paths_string.'\' --results_outfile_path \''.$archive_temp_results.'\' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5';
+            #print STDERR Dumper $cmd;
+            my $status = system($cmd);
+        }
 
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();

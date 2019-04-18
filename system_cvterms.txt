@@ -331,7 +331,8 @@ project_md_image	calculate_phenotypes_orb_drone_imagery_tgi	Calculate orb phenot
 project_md_image	calculate_phenotypes_orb_drone_imagery_vari	Calculate orb phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_orb_drone_imagery_ndvi	Calculate orb phenotypes on observation unit from NDVI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_orb_drone_imagery_ndre	Calculate orb phenotypes on observation unit from NDRE vegetative index	10/5/2018	nm529	00103
-project_md_image	calculate_tgi_drone_imagery	Calculate TGI vegetative index	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_surf_drone_imagery	Calculate surf phenotypes on observation unit	10/5/2018	nm529	00103
+project_md_image	calculate_phenotypes_fourier_transform_drone_imagery	Calculate fourier transform on observation unit	10/5/2018	nm529	00103
 project_md_image	calculate_tgi_temporary_drone_imagery	Calculate TGI vegetative index to view temporarily	10/5/2018	nm529	00103
 project_md_image	calculate_vari_drone_imagery	Calculate VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_vari_temporary_drone_imagery	Calculate VARI vegetative index to view temporarily	10/5/2018	nm529	00103

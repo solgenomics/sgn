@@ -125,6 +125,7 @@ sub patch {
             'calculate_phenotypes_surf_drone_imagery_vari',
             'calculate_phenotypes_surf_drone_imagery_ndvi',
             'calculate_phenotypes_surf_drone_imagery_ndre',
+            'calculate_phenotypes_fourier_transform_drone_imagery',
             'calculate_tgi_drone_imagery',
             'calculate_tgi_temporary_drone_imagery',
             'calculate_vari_drone_imagery',
