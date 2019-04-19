@@ -29,7 +29,7 @@ solGS.getDatasetData = function (id) {
 
   
 solGS.getDatasetsMenu = function (dType) {
-
+    console.log('forming datasets menu')
     console.log(Array.isArray(dType))
     
     if (!Array.isArray(dType)) {
@@ -46,18 +46,32 @@ solGS.getDatasetsMenu = function (dType) {
     for (var i=0; i < allDatasets.length; i++) {
     	var id = allDatasets[i][0];
     	var name = allDatasets[i][1];
-
+	console.log('name ' + name)
     	var d = dataset.getDataset(id);
-	
-	for (var j=0; j<dType.length; j++ ) {
-    	    if (d.categories[dType[j]].length) {
+
+	for (var j=0; j<dType.length; j++) {
+	    console.log('dtype j ' + dType[j])
+	    console.log('d.categories[dType[j]]: ' + d.categories[dType[j]])
+	    //d.categories[dType[j]].length
+    	    if (d.categories[dType[j]] !== null && d.categories[dType[j]].length ) {
 
 		if (!dsIds.includes(id)) {
-		    dsIds.push(id);
-		    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
-		}	
-    	    }
-    	}	
+		    if (!dType[j].match(/accessions/)) {
+			if (d.categories['accessions'] == ''
+			    || d.categories['accessions'] == null) {
+			  
+			    dsIds.push(id);
+			    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
+			} else {
+			    console.log('NOT ADDING ' + name)
+			}
+		    } else {
+			dsIds.push(id);
+			dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';  
+		    }	
+    		}
+    	    }	
+	}
     }
 
     return dMenu;
