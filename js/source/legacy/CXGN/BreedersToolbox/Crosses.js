@@ -31,8 +31,8 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        var crossingtrial_program_id = $("#crossingtrial_program").val();
-        if (!crossingtrial_program_id) {
+        var selectedProgram = $("#crossingtrial_program").val();
+        if (!selectedProgram) {
             alert("Breeding program is required");
             return;
         }
@@ -55,7 +55,7 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description);
+        add_crossingtrial(crossingtrial_name, selectedProgram, crossingtrial_location, year, project_description);
 
     });
 
@@ -406,7 +406,7 @@ jQuery(document).ready(function($) {
         return names;
     }
 
-    function add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description, crossingtrial_folder_name, crossingtrial_folder_id) {
+    function add_crossingtrial(crossingtrial_name, selectedProgram, crossingtrial_location, year, project_description, crossingtrial_folder_name, crossingtrial_folder_id) {
         $.ajax({
             url: '/ajax/cross/add_crossingtrial',
             timeout: 3000000,
@@ -414,7 +414,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data:{
                 'crossingtrial_name': crossingtrial_name,
-                'crossingtrial_program_id': crossingtrial_program_id,
+                'crossingtrial_program_name': selectedProgram,
                 'crossingtrial_location': crossingtrial_location,
                 'year': year,
                 'project_description': project_description,
