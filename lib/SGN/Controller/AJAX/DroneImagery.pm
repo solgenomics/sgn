@@ -3739,202 +3739,403 @@ sub _perform_phenotype_calculation {
     #print STDERR Dumper $plot_polygons_type;
     #print STDERR Dumper $image_band_selected;
 
-    if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
+    if ($phenotype_method eq 'fourier_transform') {
+        if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_tgi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On TGI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On TGI there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_vari_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_vari_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On VARI there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_vari_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $vari_from_denoised_original_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_ndvi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_ndvi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On NDVI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On VARI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_ndvi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndvi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On NDVI there is only the first channel!"};
-        }
-    }
 
-    if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_tgi_from_denoised_original_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_threshold_background_removed_tgi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On TGI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On TGI there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_vari_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_threshold_background_removed_vari_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On VARI there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_vari_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_vari_from_denoised_original_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_threshold_background_removed_ndvi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On NDVI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On VARI there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_tgi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_ndvi_from_denoised_original_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_vari_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On NDVI there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_tgi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_vari_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_bw_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_bw_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Black and White there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_rgb_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_rgb_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_2_denoised_original_rgb_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_3_denoised_original_rgb_background_removed_threshold_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_blue_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_blue_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Blue original image there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_green_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_green_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Green original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_red_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_red_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Red original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_red_edge_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_red_edge_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Red original image there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_nir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_nir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On NIR original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_mir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_mir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On MIR original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_fir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_fir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On FIR original image there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_tir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_tir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On TIR original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+    } else {
+        if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On TGI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_vari_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $vari_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On VARI there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_ndvi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndvi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On NDVI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+
+        if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_tgi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On TGI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_vari_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_vari_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On VARI there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_bw_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_bw_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_ndvi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On NDVI there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Black and White there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_tgi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_rgb_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_rgb_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_vari_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_rgb_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_rgb_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_blue_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_blue_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Blue original image there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_green_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_green_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_bw_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_bw_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Black and White there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Green original image there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_rgb_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_rgb_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_rgb_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '2') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_rgb_background_removed_threshold_cvterm_id;
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_red_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_red_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_blue_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_blue_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Blue original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Red original image there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_green_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_green_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Green original image there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_red_edge_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_red_edge_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_red_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_red_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Red original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Red original image there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_red_edge_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_red_edge_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On Red original image there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_nir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_nir_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_nir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_nir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On NIR original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On NIR original image there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_mir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_mir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On MIR original image there is only the first channel!"};
+            }
         }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_mir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_mir_background_removed_threshold_cvterm_id;
+        if ($plot_polygons_type eq 'observation_unit_polygon_fir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_fir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On FIR original image there is only the first channel!"};
+            }
         }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On MIR original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_fir_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On FIR original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_tir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_tir_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On TIR original image there is only the first channel!"};
+        if ($plot_polygons_type eq 'observation_unit_polygon_tir_background_removed_threshold_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_tir_background_removed_threshold_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On TIR original image there is only the first channel!"};
+            }
         }
     }
 
@@ -4014,6 +4215,7 @@ sub _perform_phenotype_calculation {
         my $calculate_phenotypes_script = '';
         my $linking_table_type_id;
         my $calculate_phenotypes_extra_args = '';
+        my $calculate_phenotypes_ft_extra_args = '';
         if ($phenotype_method eq 'zonal') {
             $temp_images_subdir = 'drone_imagery_calc_phenotypes_zonal_stats';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_zonal_stats_results';
@@ -4035,14 +4237,14 @@ sub _perform_phenotype_calculation {
             $calculate_phenotypes_script = 'CalculatePhenotypeSurf.py';
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
         } elsif ($phenotype_method eq 'fourier_transform') {
-            $temp_images_subdir = 'drone_imagery_calc_phenotypes_fourier_transform';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_fourier_transform_results';
-            $calculate_phenotypes_script = 'CalculatePhenotypeFourierTransform.py';
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_fourier_transform_drone_imagery', 'project_md_image')->cvterm_id();
+            $calculate_phenotypes_ft_extra_args = ' --image_band_index '.$image_band_selected.'  --frequency_threshold 30';
         }
 
         my @image_paths;
         my @out_paths;
+        my @fourier_transform_out_paths;
         foreach (@$result) {
             my $image_id = $_->{image_id};
             my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -4057,6 +4259,12 @@ sub _perform_phenotype_calculation {
                 $archive_temp_image .= '.png';
                 push @out_paths, $archive_temp_image;
             }
+            if ($phenotype_method ne 'fourier_transform') {
+                my $dir = $c->tempfiles_subdir('/drone_imagery_calc_phenotypes_fourier_transform');
+                my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_calc_phenotypes_fourier_transform/imageXXXX');
+                $archive_temp_image .= '.png';
+                push @fourier_transform_out_paths, $archive_temp_image;
+            }
 
             push @stocks, {
                 stock_id => $_->{stock_id},
@@ -4069,20 +4277,28 @@ sub _perform_phenotype_calculation {
         #print STDERR Dumper \@image_paths;
         my $image_paths_string = join ',', @image_paths;
         my $out_paths_string = join ',', @out_paths;
+        my $fourier_transform_out_paths_string = join ',', @fourier_transform_out_paths;
 
         if ($out_paths_string) {
             $out_paths_string = ' --outfile_paths '.$out_paths_string;
+        }
+        if ($fourier_transform_out_paths_string) {
+            $fourier_transform_out_paths_string = ' --outfile_paths '.$fourier_transform_out_paths_string;
         }
 
         my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
         my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
-        #print STDERR Dumper $cmd;
-        my $status = system($cmd);
-
         if ($phenotype_method eq 'fourier_transform') {
-            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeZonalStats.py --image_paths \''.$out_paths_string.'\' --results_outfile_path \''.$archive_temp_results.'\' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5';
+            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeFourierTransform.py --image_paths \''.$image_paths_string.'\' '.$fourier_transform_out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_ft_extra_args;
+            #print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$fourier_transform_out_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
+            #print STDERR Dumper $cmd;
+            $status = system($cmd);
+        } else {
+            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
             #print STDERR Dumper $cmd;
             my $status = system($cmd);
         }

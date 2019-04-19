@@ -319,6 +319,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <label class="col-sm-6 control-label">Zonal Statistics to Calculate and Save in Database: </label>
                     <div class="col-sm-6">
                         <input name="drone_imagery_standard_process_phenotypes_select" value="zonal" type="checkbox" checked disabled> Zonal Statistics: nonzero_pixel_count, total_pixel_sum, mean_pixel_value, harmonic_mean_value, median_pixel_value, variance_pixel_value, stdev_pixel_value, pstdev_pixel_value, min_pixel_value, max_pixel_value, minority_pixel_value, minority_pixel_count, majority_pixel_value, majority_pixel_count, pixel_variety_count <br/>
+                        <input name="drone_imagery_standard_process_phenotypes_select" value="fourier_transform" type="checkbox" checked disabled> High Pass Fourier Transform (30) Zonal Statistics: nonzero_pixel_count, total_pixel_sum, mean_pixel_value, harmonic_mean_value, median_pixel_value, variance_pixel_value, stdev_pixel_value, pstdev_pixel_value, min_pixel_value, max_pixel_value, minority_pixel_value, minority_pixel_count, majority_pixel_value, majority_pixel_count, pixel_variety_count <br/>
                     </div>
                 </div>
                 <div class="form-group">
