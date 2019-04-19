@@ -16,11 +16,20 @@ jQuery(document).ready( function() {
     var list = new CXGN.List();
         
     var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials']);
+
+    var dType = ['plots', 'trials'];
+   
+    var dMenu = solGS.getDatasetsMenu(dType);
        
     if (listMenu.match(/option/) != null) {           
-        jQuery("#list_type_training_pops_list").append(listMenu);
+        jQuery("#list_type_training_pops_list")
+	    .append(listMenu);
+	
+	jQuery("#list_type_training_pops_list_select")
+	    .append(dMenu);
     } else {
-        jQuery("#list_type_training_pops_list").append("<select><option>no lists found</option></select>");
+        jQuery("#list_type_training_pops_list")
+	    .append("<select><option>no lists or datasets found</option></select>");
     }
                
 });
@@ -33,8 +42,16 @@ jQuery(document).ready( function() {
         
     jQuery("#list_type_training_pops_list_select")
 	.change(function() { 
-        
-	    var listId = jQuery(this).find("option:selected").val();
+            var selectType = jQuery(this)
+		.find("option:selected")
+		.attr('name');
+
+	    alert('selected type: ' + selectType)
+
+	    if (typeof selectType === 'undefined' || !selectType.match(/dataset/i)) {
+		var listId = jQuery(this)
+		    .find("option:selected")
+		    .val();
           
             if (listId) {  
 		var listDetail = getListTypeTrainingPopDetail(listId);
@@ -50,6 +67,10 @@ jQuery(document).ready( function() {
 		    }
 		});
             }
+	    } else {
+
+		alert('dataset type')
+	    }
 	});       
 });
 
