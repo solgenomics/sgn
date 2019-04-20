@@ -1,6 +1,6 @@
 
-import '../../legacy/jquery.js';
-import '../../legacy/d3/d3Min.js';
+import '../legacy/jquery.js';
+import '../legacy/d3/d3Min.js';
 
 export function init(main_div){
   if (!(main_div instanceof HTMLElement)){
