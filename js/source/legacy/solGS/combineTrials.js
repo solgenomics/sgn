@@ -144,8 +144,8 @@ function combineTraitTrials () {
 		if (comboPopsId) {
 		    window.location.href = newUrl;
 		    jQuery.unblockUI();
-                } else if (res.redirect_url) {
-		    goToSingleTrialPage(res.redirect_url);
+                } else if (res.pop_id) {
+		    goToSingleTrialTrainingPopPage(res.pop_id, trId);
 		    jQuery.unblockUI();
                 } 
                     
@@ -186,15 +186,11 @@ function getCombinedPopsId(comboPopsList) {
     var referer       = window.location.href;
     var page;
 	 
-    if (comboPopsList.length > 1)
-    {
-	//var trialsIds  = comboPopsList.join(","); 
-	var action     = "/solgs/get/combined/populations/id";
-
+    if (comboPopsList.length > 1) {
 	jQuery.ajax({  
             type: 'POST',
             dataType: "json",
-            url: action,
+            url: "/solgs/get/combined/populations/id",
             data: {'trials': comboPopsList},
             success: function(res) {                         
 		if (res.status) {               
@@ -204,22 +200,13 @@ function getCombinedPopsId(comboPopsList) {
 			delete Array.prototype.toJSON;
 		    }
 
-		    var args = {
+		     var args = {
 			'combo_pops_id'   : [ comboPopsId ],
 			'combo_pops_list' : comboPopsList,
-			'analysis_type'   : 'combine populations',
-			'data_set_type'   : 'multiple populations',
 			'trait_id'        : traitId,
-		    };		    
-		   
-		    if (referer.match(/search\/trials\/trait\//)) {
-			page = '/solgs/model/combined/trials/' + comboPopsId + '/trait/' + traitId;
-			
-		    } else {
-			page = '/solgs/populations/combined/' + comboPopsId;
-		    }
-	    
-		    solGS.waitPage(page, args);
+		     };		    
+
+		    goToCombinedTrialsTrainingPopPage(args);		    
 		} 
 
             },
@@ -229,25 +216,36 @@ function getCombinedPopsId(comboPopsList) {
 	}); 
    
     } else {
-	var popId = comboPopsList[0];
-
-	if (referer.match(/search\/trials\/trait\//)) {
-	    page = '/solgs/trait/' + traitId + '/population/' + popId;
-		    
-	} else {
-	    var hostName = window.location.protocol + '//' + window.location.host;  
-	    page = hostName +  '/solgs/population/' + popId;
-	}
-	
-	var args = {'population_id'   : [ popId ],
-		    'analysis_type'   : 'population download',
-		    'data_set_type'   : 'single population',
-		    'trait_id'        : traitId,
-		   };
-
-	solGS.waitPage(page, args);
-
+	var popId = comboPopsList;
+	goToSingleTrialTrainingPopPage(popId, traitId)
     }
+}
+
+
+function goToCombinedTrialsTrainingPopPage (args) {
+
+    console.log('going to combined trials page')
+    args['analysis_type'] = 'combine populations';
+    args['data_set_type'] = 'multiple populations';		    
+
+    var comboPopsId = args.combo_pops_id;
+    comboPopsId = comboPopsId[0];
+    
+    var referer = window.location.href;
+    var page;
+    
+    if (referer.match(/search\/trials\/trait\//)) {
+	var traitId = args.trait_id;
+	traitId = traitId[0];
+	
+	page = '/solgs/model/combined/trials/' + comboPopsId + '/trait/' + traitId;
+	
+    } else {
+	page = '/solgs/populations/combined/' + comboPopsId;
+    }
+    console.log('calling solgs wait page...')
+    solGS.waitPage(page, args);
+    
 }
 
 
@@ -275,8 +273,8 @@ function retrievePopsData(trialsIds) {
                 if (combinedPopsId) {
                     goToCombinedTrialsPage(combinedPopsId);
                     jQuery.unblockUI();
-                } else if (res.redirect_url) {
-                    goToSingleTrialPage(res.redirect_url);
+                } else if (res.pop_id) {
+                    goToSingleTrialTrainingPopPage(res.pop_id);
                     jQuery.unblockUI();
                 } 
                                      
@@ -329,13 +327,35 @@ function goToCombinedTrialsPage(combinedPopsId) {
 }
 
 
-function goToSingleTrialPage(url) {
+// function goToSingleTrialPage(url) {
     
-    if (url) {      
-        window.location.href = url;
-    }    
-}
+//     if (url) {      
+// 	window.location.href = url;
+//    }
 
+// }
+
+
+function goToSingleTrialTrainingPopPage(popId, traitId) {
+    
+    var referer       = window.location.href;
+    var page;
+    if (referer.match(/search\/trials\/trait\//)) {
+	page = '/solgs/trait/' + traitId + '/population/' + popId;
+	
+    } else {
+	var hostName = window.location.protocol + '//' + window.location.host;  
+	page = hostName +  '/solgs/population/' + popId;
+    }
+    
+    var args = {'population_id'   : [ popId ],
+		'analysis_type'   : 'population download',
+		'data_set_type'   : 'single population',
+		'trait_id'        : traitId,
+	       };
+
+    solGS.waitPage(page, args);
+}
 
 function  getTraitId() {
    
