@@ -784,10 +784,13 @@ sub add_crossingtrial_POST :Args(0){
     my $dbh = $c->dbc->dbh;
     print STDERR Dumper $c->req->params();
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
-    my $breeding_program_id = $c->req->param('crossingtrial_program_id');
+    my $breeding_program_name = $c->req->param('crossingtrial_program_name');
     my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
+
+    my $breeding_program_id = $schema->resultset('Project::Project')->find({ name => $breeding_program_name })->project_id();
+
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);
     if(!$geolocation_lookup->get_geolocation()){
