@@ -44,10 +44,9 @@ $locations
 <%perl>
 foreach my $program (@$programs) {
     if (@$program[3]) {
-        print STDERR "Selected Program is ".@$program[1]."\n";
-        print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+        print "<option selected=\"selected\" value='".@$program[0]."'>".@$program[1]."</option>";
     } else {
-        print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+        print "<option value='".@$program[0]."'>".@$program[1]."</option>";
     }
 }
 </%perl>
@@ -113,11 +112,11 @@ foreach my $program (@$programs) {
 </div>
 
 <script>
-var selectedProgram = jQuery('#crossingtrial_program').val()
+var selectedProgram = jQuery('#crossingtrial_program option:selected').text()
 
 filter_options(selectedProgram, 'program', 'crossingtrial_location');
 
 jQuery('#crossingtrial_program').change(function() {
-    filter_options(jQuery(this).val(), 'program', 'crossingtrial_location');
+    filter_options(jQuery('#crossingtrial_program option:selected').text(), 'program', 'crossingtrial_location');
 });
 </script>
