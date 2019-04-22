@@ -103,6 +103,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         $c->controller('solGS::solGS')->genotype_file($c);
         
         $ret->{redirect_url} = "/solgs/population/$pop_id";
+	$ret->{pop_id} = $pop_id;
     }
       
     $ret = to_json($ret);
@@ -427,6 +428,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
     else 
     {
         my $pop_id = $pop_ids[0];
+	$ret->{pop_id} = $pop_id;
         $ret->{redirect_url} = "/solgs/trait/$trait_id/population/$pop_id";
     }
        
