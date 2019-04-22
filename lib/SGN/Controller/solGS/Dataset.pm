@@ -11,9 +11,64 @@ use namespace::autoclean;
 #use JSON;
 
 #use CXGN::List;
+use Carp qw/ carp confess croak /;
+
+#BEGIN { extends 'Catalyst::Controller' }
+
+BEGIN { extends 'Catalyst::Controller::REST' }
 
 
-BEGIN { extends 'Catalyst::Controller' }
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON', 
+		   'text/html' => 'JSON' },
+    );
+
+
+
+sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
+    my ($self, $c)  = @_;
+    
+    my $dataset_id = $c->req->param('dataset_id');
+    
+    croak "Dataset id missing." if !$dataset_id;
+    $c->stash->{dataset_id} = $dataset_id;
+    $self->get_dataset_trials_details($c);
+    my $trials_ids = $c->stash->{dataset_trials_ids};
+    my $combo_pops_id = $c->stash->{dataset_combo_trials_id};
+
+    print STDERR "\n dataset id: $dataset_id - trials ids: @$trials_ids - combo pops ids: $combo_pops_id\n";
+    if ($trials_ids) 
+    {	
+	$c->stash->{rest}{'trials_ids'} = $trials_ids;
+	$c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
+    }
+       
+}
+
+
+sub get_dataset_trials_details {
+    my ($self, $c) = @_;
+    my $dataset_id = $c->stash->{dataset_id};
+  
+    my $model = $self->get_model();
+    my $data = $model->get_dataset_data($dataset_id);
+    my $trials_ids = $data->{categories}->{trials};
+    $c->stash->{dataset_trials_ids} = $trials_ids;
+
+    if (scalar(@$trials_ids) > 1)
+    {
+	$c->stash->{pops_ids_list} = $trials_ids;
+	#$self->create_combined_pops_id($c);
+
+	$c->controller('solGS::List')->process_trials_list_details($c);
+	$c->stash->{dataset_combo_trials_id} = $c->stash->{combo_pops_id};
+    }
+   
+       
+}
 
 
 sub get_dataset_genotypes_genotype_data {
@@ -21,8 +76,8 @@ sub get_dataset_genotypes_genotype_data {
     
     my $dataset_id = $c->stash->{dataset_id};
 
+    
     $self->get_dataset_genotypes_list($c);
-
     $c->controller('solGS::List')->genotypes_list_genotype_file($c, $dataset_id);
     
 }
@@ -33,11 +88,8 @@ sub get_dataset_genotypes_list {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    
+    my $model = $self->get_model();    
     my $genotypes_ids = $model->get_genotypes_from_dataset($dataset_id);
-
-
     my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
     
     $c->stash->{genotypes_list} = $genotypes;
