@@ -77,3 +77,39 @@ solGS.getDatasetsMenu = function (dType) {
     return dMenu;
     
 }
+
+
+solGS.datasetTrainingPop = function (datasetId) {
+    
+    	jQuery.ajax({  
+            type: 'POST',
+            dataType: "json",
+            url: '/solgs/get/dataset/trials',
+            data: {'dataset_id': datasetId},
+            success: function(res) {
+		console.log('success fetching trials ids')
+		var trialsIds = res.trials_ids;
+		var comboPopsId = res.combo_pops_id; 
+		if (trialsIds) {
+		    console.log('got dataset trials ids: ' + trialsIds)
+
+		     var args = {
+			'combo_pops_id'   : [ comboPopsId ],
+			'combo_pops_list' : trialsIds,
+		     };
+		    if (trialsIds.length > 1) {
+			goToCombinedTrialsTrainingPopPage(args);
+		    } else {
+			goToSingleTrialTrainingPopPage(trialsIds[0])
+		    }
+		} else {
+		    Alert('No trials ids were found for this dataset')
+		}
+	    },
+	    error: function(res) {
+		Alert('Error Occurred fetching trials ids in the dataset. ' + res.responseText)	
+	    }
+	});
+
+    
+}
