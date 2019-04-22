@@ -48,29 +48,31 @@ jQuery(document).ready( function() {
 
 	    alert('selected type: ' + selectType)
 
-	    if (typeof selectType === 'undefined' || !selectType.match(/dataset/i)) {
-		var listId = jQuery(this)
+	    var selectedId = jQuery(this)
 		    .find("option:selected")
-		    .val();
+		    .val();	
           
-            if (listId) {  
-		var listDetail = getListTypeTrainingPopDetail(listId);
+            if (selectedId) {  	
 		jQuery("#list_type_training_pop_load").click(function() {
-		    
-		    if (listDetail.type.match(/plots/)) {
-			askTrainingJobQueueing(listId);
-		    } else {
-			var trialsList = listDetail.list;
-			var trialsNames = listDetail.list_elements_names;
+		    if (typeof selectType === 'undefined'
+			|| !selectType.match(/dataset/i)) {
+			var listDetail = getListTypeTrainingPopDetail(selectedId);
+
+			if (listDetail.type.match(/plots/)) {
+			    askTrainingJobQueueing(selectedId);
+			} else {
+			    var trialsList = listDetail.list;
+			    var trialsNames = listDetail.list_elements_names;
 			
-			loadTrialListTypeTrainingPop(trialsNames);		    
+			    loadTrialListTypeTrainingPop(trialsNames);		    
+			}
+		    } else {
+
+			console.log('creating training pop dataset type: ' + selectedId)
+			solGS.datasetTrainingPop(selectedId);
 		    }
 		});
-            }
-	    } else {
-
-		alert('dataset type')
-	    }
+            }	   
 	});       
 });
 
