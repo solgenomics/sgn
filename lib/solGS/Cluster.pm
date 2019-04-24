@@ -78,7 +78,7 @@ sub trial_genotype_data {
     my $args       = retrieve($self->args_file);
 
     my $geno_file  = $args->{genotype_file}; 
-    my $pop_id     = ($args->{prediction_id} ? $args->{prediction_id} : $args->{population_id});
+    my $pop_id     = ($args->{selection_pop_id} ? $args->{selection_pop_id} : $args->{training_pop_id});
 
     my $model = $self->get_model();
 					      

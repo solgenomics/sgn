@@ -307,7 +307,7 @@ function plotPca(plotData){
     var scores      = plotData.scores;
     var variances   = plotData.variances;
     var trialsNames = plotData.trials_names;
-   
+     
     var pc12 = [];
     var pc1  = [];
     var pc2  = []; 

@@ -838,6 +838,12 @@ solGS.getPopulationDetails = function () {
 }
 
 
+solGS.showMessage = function (divId, msg) {
+     jQuery("#" + divId)
+        .css({"padding-left": '0px'})
+        .html(msg);
+    
+}
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {

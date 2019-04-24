@@ -350,7 +350,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
 
-    $c->stash->{template} = $c->controller('solGS::solGS')->template('/selection/combined/selection_trait.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/selection/combined/selection_trait.mas');
 } 
 
 
@@ -484,7 +484,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
     }
     
     $c->stash->{selected_pops_details} = \@selected_pops_details;    
-    $c->stash->{template} = $c->controller('solGS::solGS')->template('/search/result/confirm/populations.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/search/result/confirm/populations.mas');
 
 }
 

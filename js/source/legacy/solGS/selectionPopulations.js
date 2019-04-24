@@ -25,6 +25,7 @@ function checkSelectionPopulations () {
             if (response.data) {
 		jQuery("#selection_populations").show();
 		jQuery("#search_all_selection_pops").show();
+		
 		displaySelectionPopulations(response.data);					
             } else { 
 		jQuery("#search_all_selection_pops").show();	
