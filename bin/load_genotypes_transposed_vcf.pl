@@ -86,7 +86,7 @@ our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $op
 
 getopts('H:U:i:r:u:tD:p:y:g:axm:k:l:q:zf:d:b:n:e:h:j:');
 
-if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
+if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
 }
 
@@ -142,7 +142,7 @@ my $uploader = CXGN::UploadFile->new({
 my $archived_filename_with_path = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 if (!$archived_filename_with_path) {
-    die "Could not archive file!\n";
+    warn "Could not archive file!\n";
 } else {
     print STDERR "File saved in archive.\n";
 }
@@ -213,6 +213,8 @@ $parser->parse_with_iterator();
 my $project_id;
 my $protocol = $parser->protocol_data();
 
+my $store_genotypes;
+
 if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
     print STDERR "Parsing first genotype and extracting protocol info... \n";
 
@@ -222,7 +224,7 @@ if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
     $protocol->{'reference_genome_name'} = $reference_genome_name;
     $protocol->{'species_name'} = $organism_species;
 
-    my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+    $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
 	bcs_schema=>$schema,
 	metadata_schema=>$metadata_schema,
 	phenome_schema=>$phenome_schema,
@@ -253,7 +255,9 @@ if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
 	print STDERR Dumper "There exist errors in your file. Not storing!\n";
 	die;
     }   
-	
+
+    $store_genotypes->store_metadata();
+    
     my $result = $store_genotypes->store();
     
     $protocol_id = $result->{nd_protocol_id};
@@ -269,35 +273,41 @@ while (my ($observation_unit_name, $genotype_info) = $parser->next()) {
 	my $protocol_info = $parser->protocol_data();
 	$protocol_info->{'reference_genome_name'} = $reference_genome_name;
 	$protocol_info->{'species_name'} = $organism_species;
+
 	
-	my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
-	    bcs_schema=>$schema,
-	    metadata_schema=>$metadata_schema,
-	    phenome_schema=>$phenome_schema,
-	    protocol_id => $protocol_id,
-	    genotype_info=>$genotype_info,
-	    observation_unit_type_name=>$obs_type,
-	    observation_unit_uniquenames=> [ $observation_unit_name ],
-	    genotyping_facility=>$opt_n, #projectprop
-	    breeding_program_id=>$breeding_program_id, #project_rel
-	    #	project_year=>$opt_y, #projectprop#
-	    project_location_id=>$location_id, #ndexperiment and projectprop
-	    #	project_name=>$opt_p, #project_attr
-	    #	project_description=>$opt_d, #project_attr
-	    protocol_info=>$protocol,
-	    project_id => $project_id,
-	    organism_id=>$organism_id,
-	    igd_numbers_included=>$include_igd_numbers,
-	    user_id=>$sp_person_id,
-	    archived_filename=>$archived_filename_with_path,
-	    archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-								     });
-	my $verified_errors = $store_genotypes->validate();
-	if (scalar(@{$verified_errors->{error_messages}}) > 0){
-	    print STDERR Dumper $verified_errors;
-	    print STDERR Dumper "There exist errors in your file. Not storing!\n";
-	    die;
-	}
+	# my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+	#     bcs_schema=>$schema,
+	#     metadata_schema=>$metadata_schema,
+	#     phenome_schema=>$phenome_schema,
+	#     protocol_id => $protocol_id,
+	#     genotype_info=>$genotype_info,
+	#     observation_unit_type_name=>$obs_type,
+	#     observation_unit_uniquenames=> [ $observation_unit_name ],
+	#     genotyping_facility=>$opt_n, #projectprop
+	#     breeding_program_id=>$breeding_program_id, #project_rel
+	#     #	project_year=>$opt_y, #projectprop#
+	#     project_location_id=>$location_id, #ndexperiment and projectprop
+	#     #	project_name=>$opt_p, #project_attr
+	#     #	project_description=>$opt_d, #project_attr
+	#     protocol_info=>$protocol,
+	#     project_id => $project_id,
+	#     organism_id=>$organism_id,
+	#     igd_numbers_included=>$include_igd_numbers,
+	#     user_id=>$sp_person_id,
+	#     archived_filename=>$archived_filename_with_path,
+	#     archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+	# 							     });
+	#my $verified_errors = $store_genotypes->validate();
+	#if (scalar(@{$verified_errors->{error_messages}}) > 0){
+	#    print STDERR Dumper $verified_errors;
+	#    print STDERR Dumper "There exist errors in your file. Not storing!\n";
+	#    die;
+	#}
+
+	# re-use old object instance...
+	#
+	$store_genotypes->genotype_info($genotype_info);
+	$store_genotypes->observation_unit_uniquenames( [ $observation_unit_name ]);
 	my $return = $store_genotypes->store();
 	print STDERR "Successfully stored genotype.\n";
     } else {

@@ -366,13 +366,13 @@ has 'user_id' => (
 has 'archived_filename' => (
     isa => 'Str',
     is => 'rw',
-    required => 1,
+    required => 0,
 );
 
 has 'archived_file_type' => ( #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
     isa => 'Str',
     is => 'rw',
-    required => 1,
+    required => 0,
 );
 
     has 'igd_numbers_included' => (
@@ -388,27 +388,27 @@ has 'lab_numbers_included' => (
     );
 
 has 'geno_cvterm_id' => (
-    isa => 'int',
+    isa => 'Int',
     is => 'rw',
     );
 
 has 'stock_type_id' => (
-    isa => 'int',
+    isa => 'Int',
     is => 'rw',
     );
 
 has 'synonym_type_id' => (
-    isa => 'int',
+    isa => 'Int',
     is => 'rw',
     );
 
 has 'accession_type_id' => (
-    isa => 'int',
+    isa => 'Int',
     is => 'rw',
     );
 
 has 'synonym_type_id' => (
-    isa => 'int',
+    isa => 'Int',
     is => 'rw',
     );
 
@@ -423,7 +423,7 @@ has 'genotyping_facility_cvterm' => (
     );
     
 has 'snp_genotypingprop_cvterm_id' => (
-    isa => 'Ref',
+    isa => 'Int',
     is => 'rw',
     );
 
@@ -434,12 +434,12 @@ has 'snp_genotype_id' => (
     );
     
 has 'population_stock_id' => (
-    isa => 'Int',
+    isa => 'Maybe[Int]',
     is => 'rw',
     );
 
 has 'population_members_id' => (
-    isa => 'Int',
+    isa => 'Maybe[Int]',
     is => 'rw',
     );
 
@@ -448,6 +448,11 @@ has 'igd_number_cvterm_id' => (
     is => 'rw',
     );
 
+has 'population_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw',
+    );
+    
 has 'md_file_id' => (
     isa => 'Int',
     is => 'rw',
@@ -458,8 +463,26 @@ has 'tissue_sample_type_id' => (
     is => 'rw',
     );
 
-    
+has 'snp_vcf_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw',
+    );
 
+has 'vcf_map_details_id' => (
+    isa => 'Int',
+    is => 'rw',
+    );
+
+has 'design_cvterm' => (
+    isa => 'Ref',
+    is => 'rw',
+    );
+
+has 'project_year_cvterm' => (
+    isa => 'Ref',
+    is => 'rw',
+    );
+  
 sub BUILD {
     my $self = shift;
 }
@@ -478,7 +501,7 @@ sub validate {
     my @warning_messages;
 
     #to disntiguish genotyprop between old dosage only format and more info vcf format
-    if ($self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage'){
+    if ($self->archived_file_type && $self->archived_file_type ne 'genotype_vcf' && $self->archived_file_type ne 'genotype_dosage'){
         push @error_messages, 'Archived filetype must be either genotype_vcf or genotype_dosage';
         return {error_messages => \@error_messages};
     }
@@ -720,14 +743,14 @@ sub store_metadata {
         $project_id = $project->project_id();
         $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
         $project->create_projectprops( { $self->genotyping_facility_cvterm()->name() => $genotype_facility } );
-        $project->create_projectprops( { $design_cvterm->name() => 'genotype_data_project' } );
+        $project->create_projectprops( { $self->design_cvterm->name() => 'genotype_data_project' } );
 
         my $t = CXGN::Trial->new({
             bcs_schema => $schema,
             trial_id => $project_id
         });
-        $t->breeding_program_id($self->breeding_program_id);
-        $t->project_location_id($location_id);
+        #$t->breeding_program_id($self->breeding_program_id);
+        $self->project_location_id($location_id);
     }
 
     $self->project_id($project_id);
@@ -740,7 +763,7 @@ sub store_metadata {
             organism_id => $organism_id,
             name       => $self->accession_population_name,
             uniquename => $self->accession_population_name,
-            type_id => $population_cvterm_id,
+            type_id => $self->population_cvterm_id(),
         });
         $population_stock_id = $population_stock->stock_id();
     }
@@ -776,9 +799,9 @@ sub store_metadata {
 
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     $self->tissue_sample_type_id($tissue_sample_type_id);
-    
-    my %stock_lookup;
 
+    print STDERR "Generating stock synonym lookup table...\n";
+    my %stock_lookup;
     my %all_names;
     my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
@@ -793,7 +816,9 @@ sub store_metadata {
         }
     }
     $self->stock_lookup(\%stock_lookup);
+    print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
 
+    print STDERR "Generating md_file entry...\n";
     #create relationship between nd_experiment and originating archived file
     my $file = $self->archived_filename;
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id});
@@ -808,8 +833,8 @@ sub store_metadata {
         md5checksum => $md5checksum,
         metadata_id => $md_row->metadata_id(),
     });
-    $self->md_file_id($file_row->md_file_id());
-
+    $self->md_file_id($file_row->file_id());
+    print STDERR "md_file_id is ".$self->md_file_id()."\n";
 }
 
 sub store {
