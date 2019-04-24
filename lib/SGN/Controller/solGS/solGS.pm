@@ -75,6 +75,21 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
 }
 
 
+sub solgs_login_message :Path('/solgs/login/message') Args(0) {
+    my ($self, $c) = @_;
+
+    my $page = $c->req->param('page');
+
+    my $message = "This is a private data. If you are the owner, "
+	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
+
+    $c->stash->{message} = $message;
+
+    $c->stash->{template} = "/generic_message.mas"; 
+   
+}
+
+
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
@@ -3216,7 +3231,7 @@ sub phenotype_file {
 	    
 	    my $page = "/" . $c->req->path;
 	 
-	    $c->res->redirect("/solgs/list/login/message?page=$page");
+	    $c->res->redirect("/solgs/login/message?page=$page");
 	    $c->detach;   
 
 	}	
@@ -3373,7 +3388,7 @@ sub genotype_file  {
   	if (!$c->user)
 	{
 	    my $path = "/" . $c->req->path;
-	    $c->res->redirect("/solgs/list/login/message?page=$path");
+	    $c->res->redirect("/solgs/login/message?page=$path");
 	    $c->detach;
 	}
     }
