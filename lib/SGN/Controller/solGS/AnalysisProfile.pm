@@ -336,6 +336,16 @@ sub parse_arguments {
 	  {
 	      $c->stash->{list_id} = $arguments->{$k}; 
 	  }
+
+	  if ($k eq 'dataset_name') 
+	  {
+	      $c->stash->{dataset_name} = $arguments->{$k}; 
+	  }
+
+	  if ($k eq 'dataset_id') 
+	  {
+	      $c->stash->{dataset_id} = $arguments->{$k}; 
+	  }
 	
 	  if ($k eq 'analysis_type') 
 	  {
