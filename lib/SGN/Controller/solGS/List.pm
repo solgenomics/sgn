@@ -140,19 +140,19 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
 }
 
 
-sub solgs_list_login_message :Path('/solgs/list/login/message') Args(0) {
-    my ($self, $c) = @_;
+# sub solgs_login_message :Path('/solgs/login/message') Args(0) {
+#     my ($self, $c) = @_;
 
-    my $page = $c->req->param('page');
+#     my $page = $c->req->param('page');
 
-    my $message = "This is a private data. If you are the owner, "
-	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
+#     my $message = "This is a private data. If you are the owner, "
+# 	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
 
-    $c->stash->{message} = $message;
+#     $c->stash->{message} = $message;
 
-    $c->stash->{template} = "/generic_message.mas"; 
+#     $c->stash->{template} = "/generic_message.mas"; 
    
-}
+# }
 
 
 sub get_trial_id :Path('/solgs/get/trial/id') Args(0) {
@@ -292,7 +292,7 @@ sub create_list_population_metadata {
     $metadata .= "\n" . 'list_name' . "\t" . $c->{stash}->{list_name};
     $metadata .= "\n" . 'description' . "\t" . 'Uploaded on: ' . strftime "%a %b %e %H:%M %Y", localtime;
     
-    $c->stash->{user_list_population_metadata} = $metadata;
+    $c->stash->{list_metadata} = $metadata;
   
 }
 
@@ -303,14 +303,17 @@ sub create_list_population_metadata_file {
     my $user_id = $c->user->id;
     my $tmp_dir = $c->stash->{solgs_lists_dir};
               
-    my $file = catfile ($tmp_dir, "metadata_${user_id}_${list_pop_id}");
+    #my $file = catfile ($tmp_dir, "metadata_${user_id}_list_${list_pop_id}");
+
+    $c->controller('solGS::Files')->population_metadata_file($c, $list_pop_id, $tmp_dir);   
+    my $file = $c->stash->{population_metadata_file}; 
    
     $self->create_list_population_metadata($c);
-    my $metadata = $c->stash->{user_list_population_metadata};
+    my $metadata = $c->stash->{list_metadata};
     
     write_file($file, $metadata);
  
-    $c->stash->{user_list_population_metadata_file} = $file;
+    $c->stash->{list_metadata_file} = $file;
  
   
 }
@@ -782,30 +785,27 @@ sub list_population_summary {
     if (!$c->user)
     {
 	my $page = "/" . $c->req->path;
-	$c->res->redirect("/solgs/list/login/message?page=$page");
+	$c->res->redirect("/solgs/login/message?page=$page");
 	$c->detach;
     }
     else
     {
-	my $user_name = $c->user->id;
-    
-	#my $model_id = $c->stash->{model_id};
-	#my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
- 
-        my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c);
+	my $user_name = $c->user->id; 
+        my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c);
 
 	if ($list_pop_id) 
 	{
-	    my $metadata_file_tr = catfile($tmp_dir, "metadata_${user_name}_${list_pop_id}");
+	    $c->controller('solGS::Files')->population_metadata_file($c, $list_pop_id, $tmp_dir);   
+	    my $metadata_file = $c->stash->{population_metadata_file}; 
        
-	    my @metadata_tr = read_file($metadata_file_tr) if $list_pop_id;
+	    my @metadata = read_file($metadata_file);
        
 	    my ($key, $list_name, $desc);
      
-	    ($desc)        = grep {/description/} @metadata_tr;       
+	    ($desc)        = grep {/description/} @metadata;       
 	    ($key, $desc)  = split(/\t/, $desc);
       
-	    ($list_name)       = grep {/list_name/} @metadata_tr;      
+	    ($list_name)       = grep {/list_name/} @metadata;      
 	    ($key, $list_name) = split(/\t/, $list_name); 
 	   
 	    $c->stash(project_id          => $list_pop_id,
@@ -929,7 +929,6 @@ sub get_trial_genotype_data {
     }
    
 }
-
 
 
 sub register_trials_list  {
