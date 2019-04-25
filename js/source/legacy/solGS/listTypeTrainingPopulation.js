@@ -19,7 +19,7 @@ jQuery(document).ready( function() {
 
     var dType = ['plots', 'trials'];
    
-    var dMenu = solGS.getDatasetsMenu(dType);
+    var dMenu = solGS.dataset.getDatasetsMenu(dType);
        
     if (listMenu.match(/option/) != null) {           
         jQuery("#list_type_training_pops_list")
@@ -69,7 +69,7 @@ jQuery(document).ready( function() {
 		    } else {
 
 			console.log('creating training pop dataset type: ' + selectedId)
-			solGS.datasetTrainingPop(selectedId);
+			solGS.dataset.datasetTrainingPop(selectedId);
 		    }
 		});
             }	   
