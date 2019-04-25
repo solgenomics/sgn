@@ -587,6 +587,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     </div>
 
     <hr>
+    <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_fourier_transform">Fourier Transform</button>
     <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_zonal_stats">Zonal Statistics</button>
     <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_sift">Calculate SIFT Features</button>
     <button class="btn btn-primary" id="drone_imagery_calculate_phenotypes_surf">Calculate SURF Features</button>
@@ -594,6 +595,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <hr>
 
     <div id="manage_drone_imagery_calculate_phenotypes_show_zonal_stats" style="overflow:scroll"></div>
+    <div id="manage_drone_imagery_calculate_phenotypes_show_fourier_transform" style="overflow:scroll"></div>
     <div id="manage_drone_imagery_calculate_phenotypes_show_sift"></div>
     <div id="manage_drone_imagery_calculate_phenotypes_show_surf"></div>
     <div id="manage_drone_imagery_calculate_phenotypes_show_orb"></div>
@@ -757,6 +759,45 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="drone_imagery_calculate_phenotypes_zonal_stats_channel_select">Calculate Zonal Statistics</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_calc_phenotypes_fourier_transform_channel_dialog" name="drone_imagery_calc_phenotypes_fourier_transform_channel_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalcPhenotypesFourierTransformChannelDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalcPhenotypesFourierTransformChannelDialog">Select the Channel to Calculate Fourier Transform HPF30 On</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Select Channel:</label>
+                    <div class="col-sm-7">
+                        <select class="form-control" id="drone_imagery_calculate_phenotypes_fourier_transform_hpf30_channel_select_input">
+                            <option value="0">Channel 1</option>
+                            <option value="1">Channel 2</option>
+                            <option value="2">Channel 3</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_calculate_phenotypes_fourier_transform_hpf30_time_select_div">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_calculate_phenotypes_fourier_transform_hpf30_channel_select">Calculate Fourier Transform HPF30</button>
       </div>
     </div>
   </div>
@@ -3450,6 +3491,11 @@ jQuery(document).ready(function() {
         jQuery('#drone_imagery_calc_phenotypes_zonal_channel_dialog').modal('show');
     });
 
+    jQuery('#drone_imagery_calculate_phenotypes_fourier_transform').click(function(){
+        get_select_box('ontology_children','drone_imagery_calculate_phenotypes_fourier_transform_hpf30_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_fourier_transform_hpf30_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_fourier_transform_hpf30_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005' });
+        jQuery('#drone_imagery_calc_phenotypes_fourier_transform_channel_dialog').modal('show');
+    });
+
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select').click(function(){
 
         var manage_drone_imagery_calculate_phenotypes_zonal_channel = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select_input').val();
@@ -3505,6 +3551,67 @@ jQuery(document).ready(function() {
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
                     alert('Error calculating zonal stats!')
+                }
+            });
+        }
+
+    });
+
+    jQuery('#drone_imagery_calculate_phenotypes_fourier_transform_hpf30_channel_select').click(function(){
+
+        var manage_drone_imagery_calculate_phenotypes_fourier_transform_channel = jQuery('#drone_imagery_calculate_phenotypes_fourier_transform_hpf30_channel_select_input').val();
+        var manage_drone_image_calculate_phenotypes_fourier_transform_hpf30_time_cvterm_id = jQuery('#drone_imagery_calculate_phenotypes_fourier_transform_hpf30_time_select').val();
+
+        if ( ( (manage_drone_imagery_calculate_phenotypes_plot_polygons_type == 'tgi') || (manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands BGR' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'Merged 3 Bands NRN' && manage_drone_imagery_calculate_phenotypes_drone_run_band_type != 'RGB Color Image') ) && (manage_drone_imagery_calculate_phenotypes_fourier_transform_channel == '1' || manage_drone_imagery_calculate_phenotypes_fourier_transform_channel == '2') ) {
+            alert('The current image is composed of only a single channel, and so only channel 1 can be selected here!');
+            return false;
+        }
+        else {
+
+            jQuery.ajax({
+                type: 'POST',
+                url: '/api/drone_imagery/calculate_phenotypes?method=fourier_transform',
+                dataType: "json",
+                data: {
+                    'drone_run_band_project_id': manage_drone_imagery_calculate_phenotypes_drone_run_band_id,
+                    'drone_run_band_project_type': manage_drone_imagery_calculate_phenotypes_drone_run_band_type,
+                    'image_band': manage_drone_imagery_calculate_phenotypes_fourier_transform_channel,
+                    'time_cvterm_id': manage_drone_image_calculate_phenotypes_fourier_transform_hpf30_time_cvterm_id,
+                    'plot_polygons_type': manage_drone_imagery_calculate_phenotypes_plot_polygons_type,
+                },
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    if(response.error) {
+                        alert(response.error);
+                        return false;
+                    }
+
+                    var html = '<table class="table table-bordered table-hover" id="manage_drone_imagery_fourier_transform_table"><thead><tr><th>Observation Unit</th><th>Image</th>';
+                    for (var i=0; i<response.result_header.length; i++) {
+                        html = html + '<th>'+response.result_header[i]+'</th>';
+                    }
+                    html = html + '</tr></thead><tbody>';
+                    for (var i=0; i<response.results.length; i++) {
+                        html = html + '<tr><td><a target="_blank" href="/stock/' + response.results[i].stock_id + '/view" >' + response.results[i].stock_uniquename + '</a></td><td>' + response.results[i].image + '</td>';
+                        for (var j=0; j<response.results[i].result.length; j++){
+                            html = html + '<td>'+response.results[i].result[j]+'</td>';
+                        }
+                        html = html + '</tr>';
+                    }
+                    jQuery('#manage_drone_imagery_calculate_phenotypes_show_fourier_transform').html(html);
+                    jQuery('#manage_drone_imagery_fourier_transform_table').DataTable();
+
+                    jQuery('#drone_imagery_calc_phenotypes_fourier_transform_channel_dialog').modal('hide');
+                    return false;
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error calculating fourier transform HPF30!')
                 }
             });
         }

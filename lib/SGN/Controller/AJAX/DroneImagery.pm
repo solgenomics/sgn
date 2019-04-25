@@ -4215,7 +4215,6 @@ sub _perform_phenotype_calculation {
         my $calculate_phenotypes_script = '';
         my $linking_table_type_id;
         my $calculate_phenotypes_extra_args = '';
-        my $calculate_phenotypes_ft_extra_args = '';
         if ($phenotype_method eq 'zonal') {
             $temp_images_subdir = 'drone_imagery_calc_phenotypes_zonal_stats';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_zonal_stats_results';
@@ -4237,14 +4236,15 @@ sub _perform_phenotype_calculation {
             $calculate_phenotypes_script = 'CalculatePhenotypeSurf.py';
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_surf_drone_imagery', 'project_md_image')->cvterm_id();
         } elsif ($phenotype_method eq 'fourier_transform') {
+            $temp_images_subdir = 'drone_imagery_calc_phenotypes_fourier_transform';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_fourier_transform_results';
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_fourier_transform_drone_imagery', 'project_md_image')->cvterm_id();
-            $calculate_phenotypes_ft_extra_args = ' --image_band_index '.$image_band_selected.'  --frequency_threshold 30';
+            $calculate_phenotypes_script = 'CalculatePhenotypeFourierTransform.py';
+            $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5 --frequency_threshold 30';
         }
 
         my @image_paths;
         my @out_paths;
-        my @fourier_transform_out_paths;
         foreach (@$result) {
             my $image_id = $_->{image_id};
             my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -4259,12 +4259,6 @@ sub _perform_phenotype_calculation {
                 $archive_temp_image .= '.png';
                 push @out_paths, $archive_temp_image;
             }
-            if ($phenotype_method ne 'fourier_transform') {
-                my $dir = $c->tempfiles_subdir('/drone_imagery_calc_phenotypes_fourier_transform');
-                my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_calc_phenotypes_fourier_transform/imageXXXX');
-                $archive_temp_image .= '.png';
-                push @fourier_transform_out_paths, $archive_temp_image;
-            }
 
             push @stocks, {
                 stock_id => $_->{stock_id},
@@ -4277,31 +4271,17 @@ sub _perform_phenotype_calculation {
         #print STDERR Dumper \@image_paths;
         my $image_paths_string = join ',', @image_paths;
         my $out_paths_string = join ',', @out_paths;
-        my $fourier_transform_out_paths_string = join ',', @fourier_transform_out_paths;
 
         if ($out_paths_string) {
             $out_paths_string = ' --outfile_paths '.$out_paths_string;
-        }
-        if ($fourier_transform_out_paths_string) {
-            $fourier_transform_out_paths_string = ' --outfile_paths '.$fourier_transform_out_paths_string;
         }
 
         my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
         my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-        if ($phenotype_method eq 'fourier_transform') {
-            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeFourierTransform.py --image_paths \''.$image_paths_string.'\' '.$fourier_transform_out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_ft_extra_args;
-            #print STDERR Dumper $cmd;
-            my $status = system($cmd);
-
-            $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$fourier_transform_out_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
-            #print STDERR Dumper $cmd;
-            $status = system($cmd);
-        } else {
-            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
-            #print STDERR Dumper $cmd;
-            my $status = system($cmd);
-        }
+        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
+        #print STDERR Dumper $cmd;
+        my $status = system($cmd);
 
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
@@ -4310,6 +4290,7 @@ sub _perform_phenotype_calculation {
         open(my $fh, '<', $archive_temp_results)
             or die "Could not open file '$archive_temp_results' $!";
 
+            print STDERR "Opened $archive_temp_results\n";
             my $header = <$fh>;
             if ($csv->parse($header)) {
                 @header_cols = $csv->fields();
@@ -4388,6 +4369,7 @@ sub _perform_phenotype_calculation {
             }
 
         close $fh;
+        print STDERR "Read $line lines in results file\n";
 
         if ($line > 0) {
             my %phenotype_metadata = (
