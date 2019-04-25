@@ -56,7 +56,7 @@ jQuery(document).ready( function() {
 });
 
 
-jQuery("#run_genetic_correlation").live("click", function() {        
+jQuery(document).on("click", "#run_genetic_correlation", function() {        
     var popId   = jQuery("#corre_selected_population_id").val();
     var popType = jQuery("#corre_selected_population_type").val();
     
@@ -145,12 +145,17 @@ function listGenCorPopulations ()  {
 
 function formatGenCorInputData (popId, type, indexFile) {
     var modelDetail = getPopulationDetails();
+    var traitsIds = jQuery('#training_traits_ids').val();
+    traitsIds = traitsIds.split(',');
 
+    console.log('formatGenCor: traitsIds ' + traitsIds)
+    var modelId  = modelDetail.population_id;
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'model_id': modelDetail.population_id,
+        data: {'model_id': modelId,
 	       'corr_population_id': popId,
+	       'traits_ids': traitsIds,
 	       'type' : type,
 	       'index_file': indexFile},
         url: '/correlation/genetic/data/',
@@ -169,7 +174,8 @@ function formatGenCorInputData (popId, type, indexFile) {
                 var args = {
                     'model_id': modelDetail.population_id, 
                     'corr_population_id': popId, 
-                    'type': type, 
+                    'type': type,
+		    'traits_ids': traitsIds,
                     'gebvs_file': gebvsFile,
 		    'index_file': indexFile,
                     'div_place' : divPlace,
