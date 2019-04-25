@@ -56,7 +56,7 @@ jQuery(document).ready( function() {
 });
 
 
-jQuery("#run_genetic_correlation").live("click", function() {        
+jQuery(document).on("click", "#run_genetic_correlation", function() {        
     var popId   = jQuery("#corre_selected_population_id").val();
     var popType = jQuery("#corre_selected_population_type").val();
     
@@ -98,8 +98,7 @@ function listGenCorPopulations ()  {
     }
       
     var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-    if (userUploadedSelExists == true) {
-      
+    if (userUploadedSelExists == true) {     
         var userSelPops = listUploadedSelPopulations();
         if (userSelPops) {
 
@@ -122,9 +121,9 @@ function listGenCorPopulations ()  {
         idPopName     = JSON.parse(idPopName);
         modelId       = jQuery("#model_id").val();
                    
-        selectedPopId   = idPopName.id;
-        selectedPopName = idPopName.name;
-        selectedPopType = idPopName.pop_type; 
+        var selectedPopId   = idPopName.id;
+        var selectedPopName = idPopName.name;
+        var selectedPopType = idPopName.pop_type; 
        
         jQuery("#corre_selected_population_name").val(selectedPopName);
         jQuery("#corre_selected_population_id").val(selectedPopId);
@@ -146,12 +145,17 @@ function listGenCorPopulations ()  {
 
 function formatGenCorInputData (popId, type, indexFile) {
     var modelDetail = getPopulationDetails();
+    var traitsIds = jQuery('#training_traits_ids').val();
+    traitsIds = traitsIds.split(',');
 
+    console.log('formatGenCor: traitsIds ' + traitsIds)
+    var modelId  = modelDetail.population_id;
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'model_id': modelDetail.population_id,
+        data: {'model_id': modelId,
 	       'corr_population_id': popId,
+	       'traits_ids': traitsIds,
 	       'type' : type,
 	       'index_file': indexFile},
         url: '/correlation/genetic/data/',
@@ -161,7 +165,7 @@ function formatGenCorInputData (popId, type, indexFile) {
 		
                 gebvsFile = response.gebvs_file;
 		indexFile = response.index_file;
-		console.log('index file: ' + indexFile + ' gebvsFile: ' + gebvsFile)	
+		
                 var divPlace;
                 if (indexFile) {
                     divPlace = '#si_correlation_canvas';
@@ -170,7 +174,8 @@ function formatGenCorInputData (popId, type, indexFile) {
                 var args = {
                     'model_id': modelDetail.population_id, 
                     'corr_population_id': popId, 
-                    'type': type, 
+                    'type': type,
+		    'traits_ids': traitsIds,
                     'gebvs_file': gebvsFile,
 		    'index_file': indexFile,
                     'div_place' : divPlace,

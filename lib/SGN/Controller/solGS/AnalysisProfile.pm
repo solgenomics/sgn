@@ -377,8 +377,13 @@ sub structure_output_details {
     my %output_details = ();
    
     my $analysis_page = $analysis_data->{analysis_page};  
-    #$analysis_page =~ s/$base//;
-    if ($analysis_page =~ m/solgs\/traits\/all\/population\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/models\/combined\/trials\//) 
+  
+    my $match_pages = 'solgs\/traits\/all\/population\/' 
+	. '|solgs\/trait\/' 
+	. '|solgs\/model\/combined\/trials\/' 
+	. '|solgs\/models\/combined\/trials\/';
+    
+    if ($analysis_page =~ m/$match_pages/) 
     {	
 	foreach my $trait_id (@traits_ids)
 	{	    
@@ -394,8 +399,13 @@ sub structure_output_details {
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
 		if ($analysis_page =~ m/solgs\/traits\/all\/population\//) 
-		{		    
-		    $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
+		{
+		    my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+		    $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" 
+			. $pop_id . '/traits/' 
+			. $traits_selection_id;
+
+		    $c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
 		} 
 	    }
 	    
@@ -407,6 +417,16 @@ sub structure_output_details {
 	    if ( $referer =~ m/solgs\/populations\/combined\// ) 
 	    {
 		$trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
+
+		if ($analysis_page =~ m/solgs\/models\/combined\/trials\//) 
+		{
+		    my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+		    $analysis_data->{analysis_page} = $base . "solgs/models/combined/trials/" 
+			. $combo_pops_id . '/traits/' 
+			. $traits_selection_id;
+
+		    $c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
+		} 
 	    }
 
 	    if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) 

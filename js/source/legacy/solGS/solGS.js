@@ -28,7 +28,7 @@ solGS.waitPage = function (page, args) {
 
 	if (page.match(/list_/)) {
 	    askUser(page, args)
-	} else {
+	} else {	    
 	    checkCachedResult(page, args);
 	}
 
@@ -42,7 +42,7 @@ solGS.waitPage = function (page, args) {
 
 	args = getArgsFromUrl(page, args);
 	args = JSON.stringify(args);
-	
+	console.log(' check cached result: args' + args)
 	jQuery.ajax({
 	    type    : 'POST',
 	    dataType: 'json',
@@ -51,7 +51,10 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.cached) {
 		    args = JSON.parse(args);
+		    console.log('cache res page ' + page)
+		    console.log('cache res trait id ' + args.trait_id)
 		    displayAnalysisNow(page, args);
+		   
 		} else {
 		    if (window.location.href.match(/solgs\/search\//)) {
 			args = JSON.parse(args);
@@ -238,6 +241,27 @@ solGS.waitPage = function (page, args) {
 
     }
 
+    function getTraitsSelectionId (page, args) {
+
+	var traitIds = args.trait_id;
+	
+	jQuery.ajax({
+	    dataType: 'json',
+	    type    : 'POST',
+ 	    data    : {'trait_ids': traitIds},
+	    url     : '/solgs/get/traits/selection/id',
+	    success : function (res){
+		var traitsSelectionId = res.traits_selection_id;
+		window.location = page + '/traits/' + traitsSelectionId;		
+	    },
+	    error: function (res, st, error) {
+		console.log('error: ' + error)
+	    },
+			
+	});
+	
+    }
+
     function goToPage (page, args) { 
 
 	var matchItems = 'solgs/confirm/request'
@@ -252,48 +276,7 @@ solGS.waitPage = function (page, args) {
 	    window.location = page;
 	    
 	} else if (page.match(multiTraitsUrls)) {
-
-
-	   // submitTraitSelections(page, args);
-		    
-	    if (page.match('solgs/traits/all/population/')) {
-		var popId  = jQuery('#population_id').val();
-		var traitIds = args.trait_id;
-	
-		jQuery.ajax({
-		    dataType: 'json',
-		    type    : 'POST',
- 		    data    : {'trait_id': traitIds, 'source': 'AJAX'},
-		    url     : '/solgs/traits/all/population/' + popId,
-		    success : function (res){
-			if (res.status) {
-			    window.location = '/solgs/traits/all/population/' + popId;
-			} else	{
-			    window.location = window.location.href;
-			}				
-		    }
-		});
-		
-	    } else {
-		var comboPopsId = jQuery("#population_id").val();
-		var traitIds = args.trait_id;
-	
-		jQuery.ajax({
-		    dataType: 'json',
-		    type    : 'POST',
- 		    data    : {'trait_id': traitIds, 'source': 'AJAX'},
-		    url     : '/solgs/models/combined/trials/' + comboPopsId,
-		    success : function (res){			
-			if (res.status) {
-			    window.location = '/solgs/models/combined/trials/' + comboPopsId;			    
-			} else {
-			    window.location = window.location.href;
-			}				
-		    }
-		});
-		
-	    }
-	   
+		getTraitsSelectionId(page, args);	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
@@ -676,7 +659,7 @@ jQuery(document).ready(function (){
 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
 	 var popId    = jQuery('#population_id').val(); 
-
+	 console.log('traits ids: ' + traitIds)
 	 if (traitIds.length) {	  
 	     var page;
 	     var analysisType;
