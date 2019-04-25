@@ -365,7 +365,7 @@ sub store {
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes trait list so it can be handled separately
+    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs trait lists so they can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
@@ -421,10 +421,28 @@ sub store {
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
 
+            # create plot-wide nd_experiment entry
+
+            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+                nd_geolocation_id => $location_id,
+                type_id => $phenotyping_experiment_cvterm_id,
+                nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
+                nd_experiment_projects => [{project_id => $project_id}],
+                nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}]
+            });
+
+            $experiment_ids{$experiment->nd_experiment_id()}=1;
+
             # Check if there is a note for this plot, If so add it using dedicated function
             my $note_array = $plot_trait_value{$plot_name}->{'notes'};
             if (defined $note_array) {
                 $self->store_stock_note($stock_id, $note_array, $operator);
+            }
+
+            # Check if there is nirs data for this plot, If so add it using dedicated function
+            my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
+            if (defined $nirs_hashref) {
+                $self->store_nirs_data($nirs_hashref, $experiment->nd_experiment_id());
             }
 
             foreach my $trait_name (@trait_list) {
@@ -501,16 +519,10 @@ sub store {
                         $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
                         $self->handle_operator($operator, $phenotype->phenotype_id);
 
-                        my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-                            nd_geolocation_id => $location_id,
-                            type_id => $phenotyping_experiment_cvterm_id,
-                            nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
-                            nd_experiment_projects => [{project_id => $project_id}],
-                            nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}],
+                        $experiment->create({
                             nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
                         });
 
-                        $experiment_ids{$experiment->nd_experiment_id()}=1;
                     }
 
                     my %details = (
@@ -580,6 +592,30 @@ sub store_stock_note {
     $note = $note ." (Operator: $operator, Time: $timestamp)";
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
     $stock->create_stockprops( { 'notes' => $note } );
+}
+
+sub store_nirs_data {
+    my $self = shift;
+    my $nirs_hashref = shift;
+    my $nd_experiment_id = shift;
+
+    #convert hashref to json, store in md_json table with type 'nirs_spectra'
+    my $nirs_json = encode_json $nirs_hashref;
+
+    my $json_row = $self->metadata_schema->resultset("MdJson")
+        ->create({
+            json_type => 'nirs_spectra',
+            json => $nirs_json
+        });
+
+        ## Link the json to the experiment
+        my $experiment_json = $self->phenome_schema->resultset("NdExperimentMdJson")
+            ->create({
+                nd_experiment_id => $nd_experiment_id,
+                json_id => $json_row->json_id(),
+            });
+        $experiment_json->insert();
+        print STDERR "[StorePhenotypes] Linking json to experiment id " . $nd_experiment_id . "\n";
 }
 
 sub delete_previous_phenotypes {

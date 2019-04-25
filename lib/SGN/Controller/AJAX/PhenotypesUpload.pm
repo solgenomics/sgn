@@ -183,6 +183,9 @@ sub _prep_upload {
         if ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
         }
+        if ($spreadsheet_format eq 'NIRS'){
+            $validate_type = "phenotype spreadsheet NIRS";
+        }
         $subdirectory = "spreadsheet_phenotype_upload";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
@@ -216,7 +219,7 @@ sub _prep_upload {
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
-        #print STDERR $user_type."\n"; 
+        #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
             return (\@success_status, \@error_status);
@@ -338,7 +341,7 @@ sub update_plot_phenotype_POST : Args(0) {
   print "MY LIST OPTION:  $trait_list_option\n";
   my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $plot_type_id = $plot->type_id();
-  
+
   if (!$c->user()) {
     print STDERR "User not logged in... not uploading phenotype.\n";
     $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };
