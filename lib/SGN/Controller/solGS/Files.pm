@@ -403,6 +403,22 @@ sub traits_list_file {
 }
 
 
+sub population_metadata_file {
+    my ($self, $c, $pop_id, $dir) = @_;
+
+    my $user_id = $c->user->id;
+    
+    my $cache_data = {key       => "metadata_${user_id}_${pop_id}",
+                      file      => "metadata_${user_id}_${pop_id}",
+                      stash_key => 'population_metadata_file',
+		      cache_dir => $dir,
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
 sub phenotype_metadata_file {
     my ($self, $c) = @_;
 
@@ -722,6 +738,7 @@ sub get_solgs_dirs {
     my $solqtl_cache    = catdir($tmp_dir, 'solqtl', 'cache');
     my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
     my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
+    my $solgs_datasets  = catdir($tmp_dir, 'solgs', 'tempfiles', 'datasets');
     my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
     my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
@@ -735,7 +752,7 @@ sub get_solgs_dirs {
 
     mkpath (
 	[
-	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists, 
+	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
 	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
 	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
 	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
@@ -748,6 +765,7 @@ sub get_solgs_dirs {
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_lists_dir             => $solgs_lists,
+	      solgs_datasets_dir          => $solgs_datasets,
 	      pca_cache_dir               => $pca_cache,
 	      pca_temp_dir                => $pca_temp,
 	      cluster_cache_dir           => $cluster_cache,
