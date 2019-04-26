@@ -4215,11 +4215,13 @@ sub _perform_phenotype_calculation {
         my $calculate_phenotypes_script = '';
         my $linking_table_type_id;
         my $calculate_phenotypes_extra_args = '';
+        my $archive_file_type = '';
         if ($phenotype_method eq 'zonal') {
             $temp_images_subdir = 'drone_imagery_calc_phenotypes_zonal_stats';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_zonal_stats_results';
             $calculate_phenotypes_script = 'CalculatePhenotypeZonalStats.py';
             $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5';
+            $archive_file_type = 'zonal_statistics_image_phenotypes';
         } elsif ($phenotype_method eq 'sift') {
             $temp_images_subdir = 'drone_imagery_calc_phenotypes_sift';
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_sift_results';
@@ -4241,6 +4243,7 @@ sub _perform_phenotype_calculation {
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_fourier_transform_drone_imagery', 'project_md_image')->cvterm_id();
             $calculate_phenotypes_script = 'CalculatePhenotypeFourierTransform.py';
             $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5 --frequency_threshold 30';
+            $archive_file_type = 'fourier_transform_image_phenotypes';
         }
 
         my @image_paths;
@@ -4300,7 +4303,7 @@ sub _perform_phenotype_calculation {
             my %zonal_stat_phenotype_data;
             my %plots_seen;
             my @traits_seen;
-            if ($phenotype_method eq 'zonal') {
+            if ($phenotype_method eq 'zonal' || $phenotype_method eq 'fourier_transform') {
                 if ($header_cols[0] ne 'nonzero_pixel_count' ||
                     $header_cols[1] ne 'total_pixel_sum' ||
                     $header_cols[2] ne 'mean_pixel_value' ||
@@ -4374,7 +4377,7 @@ sub _perform_phenotype_calculation {
         if ($line > 0) {
             my %phenotype_metadata = (
                 'archived_file' => $archive_temp_results,
-                'archived_file_type' => 'zonal_statistics_image_phenotypes',
+                'archived_file_type' => $archive_file_type,
                 'operator' => $user_name,
                 'date' => $timestamp
             );
