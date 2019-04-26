@@ -156,110 +156,74 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args(3) {
 }
 
 
-sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
-    my ($self, $c, $combo_pops_id) = @_;
-  
+sub models_combined_trials :Path('/solgs/models/combined/trials') Args(3) {
+    my ($self, $c, $combo_pops_id, $tr_txt, $traits_selection_id) = @_;
+
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{model_id} = $combo_pops_id;
     $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{data_set_type} = 'combined populations';
-   
-    my @traits_ids = $c->req->param('trait_id[]');
-    my $req = $c->req->param('source');
-    my @traits_pages;
-  
-    my $solgs_controller = $c->controller('solGS::solGS');
-
-    if (!@traits_ids) {
     
-        $solgs_controller->analyzed_traits($c);
-	my @analyzed_traits  = @{ $c->stash->{analyzed_traits} };
+    my @traits_ids;
 
-	foreach my $tr (@analyzed_traits)
-	{	 
-	    my $acronym_pairs = $solgs_controller->get_acronym_pairs($c);
-	    my $trait_name;
-	    if ($acronym_pairs)
-	    {
-		foreach my $r (@$acronym_pairs) 
-		{
-		    if ($r->[0] eq $tr) 
-		    {
-			$trait_name = $r->[1];
-			$trait_name =~ s/\n//g;
-			$c->stash->{trait_name} = $trait_name;
-			$c->stash->{trait_abbr} = $r->[0];   
-		    }
-		}
-	    }
-         
-	    my $trait_id   = $c->model('solGS::solGS')->get_trait_id($trait_name);
-	    my $trait_abbr = $c->stash->{trait_abbr}; 
+    if ($traits_selection_id =~ /^\d+$/)	
+    {
+	$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
+	@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
+    } 
 
-	    $solgs_controller->get_model_accuracy_value($c, $combo_pops_id, $trait_abbr);
-	    my $accuracy_value = $c->stash->{accuracy_value};
+    $self->combined_trials_desc($c);        
+    my $training_pop_name = $c->stash->{project_name};
+    my $training_pop_desc = $c->stash->{project_desc};
+    my $training_pop_page = qq | <a href="/solgs/populations/combined/$combo_pops_id">$training_pop_name</a> |;
+
+    my @select_analysed_traits;
+    
+    if (!@traits_ids)
+    {	 
+	$c->stash->{message} = "Cached output for this page does not exist anymore.\n" . 
+	    " Please go to $training_pop_page and run the analysis.";
 	
-	    $c->controller("solGS::Heritability")->get_heritability($c);
-	    my $heritability = $c->stash->{heritability};
-	    
-	    push @traits_pages, 
-	    [ qq | <a href="/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id" onclick="solGS.waitPage()">$trait_abbr</a>|, $accuracy_value, $heritability];
-	}
-    }  
-    elsif (scalar(@traits_ids) == 1) 
-    {
-        my $trait_id = $traits_ids[0];
-        $c->res->redirect("/solgs/model/combined/trials/$combo_pops_id/trait/$trait_id");
-        $c->detach();
-    }
-    elsif (scalar(@traits_ids) > 1) 
-    {
-        foreach my $trait_id (@traits_ids) 
-        { 
-            $c->stash->{trait_id} = $trait_id;
-            $solgs_controller->get_trait_details($c, $trait_id);
-            my $tr_abbr = $c->stash->{trait_abbr};
-	    
-	    $self->combine_trait_data($c);  
-            $self->build_model_combined_trials_trait($c);
-         
-            $solgs_controller->get_model_accuracy_value($c, $combo_pops_id, $tr_abbr);
-            my $accuracy_value = $c->stash->{accuracy_value};
-     
-	    $c->controller("solGS::Heritability")->get_heritability($c);
-	    my $heritability = $c->stash->{heritability};
-
-            push @traits_pages, 
-            [ qq | <a href="/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id" onclick="solGS.waitPage()">$tr_abbr</a>|, $accuracy_value, $heritability];
-	    
-        }
-    }  
-  
-    if ($req =~ /AJAX/) 
-    {
-	my $ret->{status} = 'success';
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);       	
+	$c->stash->{template} = "/generic_message.mas"; 
     } 
     else 
     {
-	$solgs_controller->analyzed_traits($c);
+	my @traits_pages;	
+	if (scalar(@traits_ids) == 1) 
+	{
+	    my $trait_id = $traits_ids[0];
+	    $c->res->redirect("/solgs/model/combined/trials/$combo_pops_id/trait/$trait_id");
+	    $c->detach();
+	}
+	else 
+	{
+	    foreach my $trait_id (@traits_ids) 
+	    {
+		#$self->combine_trait_data($c);  
+		#$self->build_model_combined_trials_trait($c);
+		$c->stash->{trait_id} = $trait_id;
+  
+		$c->controller('solGS::solGS')->create_model_summary($c);
+		my $model_summary = $c->stash->{model_summary};
+
+		push @traits_pages, $model_summary;
+	    }
+	}  
+
+	$c->stash->{selected_analyzed_traits} = \@traits_ids;
+	$c->controller('solGS::solGS')->analyzed_traits($c);
 	my $analyzed_traits = $c->stash->{analyzed_traits};
 	
-	$c->stash->{trait_pages} = \@traits_pages;
-	$c->stash->{template}    = $c->controller('solGS::Files')->template('/population/combined/multiple_traits_output.mas');
 	
-	$self->combined_trials_desc($c);
-        
-	my $project_name = $c->stash->{project_name};
-	my $project_desc = $c->stash->{project_desc};
-        
-	my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
-	$c->stash->{model_data} = \@model_desc;
+	$c->stash->{trait_pages} = \@traits_pages;
+		
+	my @training_pop_data = ([$training_pop_page, $training_pop_desc, \@traits_pages]);
+	
+	$c->stash->{model_data} = \@training_pop_data;
 	$c->stash->{pop_id} = $combo_pops_id;
-	$solgs_controller->get_acronym_pairs($c);  
+	$c->controller('solGS::solGS')->get_acronym_pairs($c);
+
+	$c->stash->{template} = '/solgs/population/combined/multiple_traits_output.mas';	
     }
 }
 
@@ -661,14 +625,12 @@ sub catalogue_combined_pops {
 
 sub get_combined_pops_list {
     my ($self, $c, $id) = @_;
- print STDERR "\n id - $id \n";
+ 
     $id = $c->stash->{combo_pops_id} if !$id;
-
-    print STDERR "\n id - $id \n";
     
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
-      print STDERR "\n file : $combo_pops_catalogue_file \n";
+   
     my @combos = uniq(read_file($combo_pops_catalogue_file));
     
     foreach my $entry (@combos)
@@ -679,7 +641,7 @@ sub get_combined_pops_list {
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
 
 	    if ($id == $combo_pops_id)
-	    {  print STDERR "\n pops: $pops \n";
+	    {
 		my @pops_list = split(',', $pops);
 		$c->stash->{combined_pops_list} = \@pops_list;
 		$c->stash->{trait_combo_pops} = \@pops_list;
@@ -688,6 +650,11 @@ sub get_combined_pops_list {
     }     
 
 }
+
+
+
+
+
 
 
 sub combined_pops_summary {

@@ -14,7 +14,7 @@ jQuery(document).ready( function () {
 });
 
 
-jQuery("#calculate_si").live("click", function() {        
+jQuery(document).on("click", "#calculate_si", function() {        
     var modelId        = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
     var popType        = jQuery("#si_canvas #selected_population_type").val();
@@ -59,8 +59,7 @@ function listSelectionIndexPopulations ()  {
     }
 
     getSelectionPopTraits(modelData.id, modelData.id);
-
-
+    
    jQuery(".si_dropdown dt a").click(function() {
             jQuery(".si_dropdown dd ul").toggle();
         });
@@ -135,12 +134,20 @@ function addSelectionPopulations(){
 function getSelectionPopTraits (modelId, selectedPopId) {
 
     if (modelId === selectedPopId) {selectedPopId=undefined;}
-   
+
+    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+    trainingTraitsIds = trainingTraitsIds.split(',');
+
+    console.log('selection index: traitsIds ' + trainingTraitsIds)
+    var args = {'selection_pop_id': selectedPopId,
+		'training_pop_id': modelId,
+		'training_traits_ids': trainingTraitsIds};
+
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
         url: '/solgs/selection/index/form',
-        data: {'selection_pop_id': selectedPopId, 'training_pop_id': modelId},
+        data: args,
         success: function(res) {
                 
             if (res.status == 'success') {
