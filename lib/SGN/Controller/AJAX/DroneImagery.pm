@@ -983,6 +983,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Vegetative index cannot be calculated on an image with a single channel.<br/>You can merge bands into a multi-channel image using the "Merge Drone Run Bands" button below this table</button><br/><br/>';
                             }
 
+                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_stitched_image" >Convert to Fourier Transform HPF30</button><br/><br/>';
+
                             my $plot_polygon_type = '';
                             if ($d->{drone_run_band_project_type} eq 'Black and White Image') {
                                 $plot_polygon_type = 'observation_unit_polygon_bw_background_removed_threshold_imagery';
@@ -3029,6 +3031,27 @@ sub _perform_image_cropping {
     return {
         cropped_image_id => $cropped_image_id, image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath
     };
+}
+
+sub drone_imagery_calculate_fourier_transform : Path('/api/drone_imagery/calculate_fourier_transform') : ActionClass('REST') { }
+
+sub drone_imagery_calculate_fourier_transform_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $drone_run_band_project_type = $c->req->param('drone_run_band_project_type');
+    my $selected_channel = $c->req->param('selected_channel');
+    my $image_type = $c->req->param('image_type');
+    my $high_pass_filter = $c->req->param('high_pass_filter');
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $return = _perform_fourier_transform_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $drone_run_band_project_type, $selected_channel, $image_type, $high_pass_filter, $user_id, $user_name, $user_role);
+
+    $c->stash->{rest} = $return;
 }
 
 sub drone_imagery_calculate_rgb_vegetative_index : Path('/api/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }

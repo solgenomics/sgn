@@ -3485,6 +3485,11 @@ sub delete_assayed_trait {
 			$res->delete;
 		}
 
+        my $sql = join ("," , @nd_expt_ids);
+        my $q = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id in ($sql);";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+
 		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
 			nd_experiment_id => { '-in' => \@nd_expt_ids },
 		});
