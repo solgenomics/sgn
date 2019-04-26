@@ -172,7 +172,6 @@ solGS.dataset = {
     },
 
 
-
     queueDatasetTrainingPop: function (datasetId) {
  
     var args = createDatasetTrainingReqArgs(listId);

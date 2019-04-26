@@ -1,7 +1,7 @@
 
 /**
 
-reference population upload from lists.
+For training population made from list of plots and trial.
 
 Isaak Y Tecle 
 iyt2@cornell.edu
@@ -45,8 +45,6 @@ jQuery(document).ready( function() {
             var selectType = jQuery(this)
 		.find("option:selected")
 		.attr('name');
-
-	    alert('selected type: ' + selectType)
 
 	    var selectedId = jQuery(this)
 		    .find("option:selected")
@@ -188,7 +186,6 @@ function createTrainingReqArgs (listId) {
 function loadPlotListTypeTrainingPop(listId) {     
   
     var args  = createTrainingReqArgs(listId);
-    var len   = args.list.length;
     var popId = args.training_pop_id;
 
     if (window.Prototype) {
@@ -197,7 +194,7 @@ function loadPlotListTypeTrainingPop(listId) {
     
     args = JSON.stringify(args);
 
-    if (len === 0) {       
+    if ( args.list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
     else {  
