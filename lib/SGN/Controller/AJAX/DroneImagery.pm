@@ -531,6 +531,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $vegetative_index_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndvi_drone_imagery', 'project_md_image')->cvterm_id();
     my $vegetative_index_ndre_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndre_drone_imagery', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_tgi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
@@ -569,7 +570,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $denoised_background_removed_tgi_mask_original_cvterm_id,
             $denoised_background_removed_vari_mask_original_cvterm_id,
             $denoised_background_removed_ndvi_mask_original_cvterm_id,
-            $denoised_background_removed_ndre_mask_original_cvterm_id
+            $denoised_background_removed_ndre_mask_original_cvterm_id,
+            $fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id
         ]
     });
     my ($result, $total_count) = $images_search->search();
@@ -618,6 +620,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $plot_polygon_original_background_removed_vari_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
 
     my $plot_polygons_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -638,7 +641,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $plot_polygon_original_background_removed_tgi_mask_images_cvterm_id,
             $plot_polygon_original_background_removed_vari_mask_images_cvterm_id,
             $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id,
-            $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id
+            $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id,
+            $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id
         ]
     });
     my ($plot_polygons_result, $plot_polygons_total_count) = $plot_polygons_images_search->search();
@@ -829,8 +833,15 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_image_original} = $image_original;
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_image_id} = $image_id;
         }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
         else {
-            print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 1!\n";
+            die "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 1!\n";
         }
     }
 
@@ -902,6 +913,10 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_ndre_mask_imagery') {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_ndre_mask} = $_->{drone_run_band_plot_polygons};
             push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_ndre_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
         }
         else {
             print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 2!\n";
@@ -1359,6 +1374,26 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 } else {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{vegetative_index_ndre_image_id}.'" data-remove_background_current_image_type="threshold_background_removed_ndre_stitched_drone_imagery" >NDRE Vegetative Index Remove Background via Threshold</button><br/><br/>';
                                 }
+                            }
+                            if ($d->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on NRN Denoised Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
                             }
                             if (!$d->{vegetative_index_tgi_stitched_image} && !$d->{vegetative_index_vari_stitched_image} && !$d->{vegetative_index_ndvi_stitched_image} && !$d->{vegetative_index_ndre_stitched_image}) {
 
@@ -3052,6 +3087,89 @@ sub drone_imagery_calculate_fourier_transform_POST : Args(0) {
     my $return = _perform_fourier_transform_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $drone_run_band_project_type, $selected_channel, $image_type, $high_pass_filter, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
+}
+
+sub _perform_fourier_transform_calculation {
+    my $c = shift;
+    my $schema = shift;
+    my $metadata_schema = shift;
+    my $image_id = shift;
+    my $drone_run_band_project_id = shift;
+    my $drone_run_band_project_type = shift;
+    my $selected_channel = shift;
+    my $image_type = shift;
+    my $high_pass_filter = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    print STDERR Dumper $high_pass_filter;
+    print STDERR Dumper $drone_run_band_project_type;
+    print STDERR Dumper $image_type;
+    print STDERR Dumper $selected_channel;
+    my $linking_table_type_id;
+    if ($high_pass_filter eq '30') {
+        if ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+            }
+        }
+    }
+    if (!$linking_table_type_id) {
+        die "Could not get fourier transform image type id\n";
+    }
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    print STDERR Dumper $image_url;
+    print STDERR Dumper $image_fullpath;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_fourier_transform_hpf_image');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_fourier_transform_hpf_image/imageXXXX');
+    $archive_temp_image .= '.png';
+    print STDERR $archive_temp_image."\n";
+
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' --image_band_index $selected_channel --frequency_threshold $high_pass_filter";
+    my $status = system($cmd);
+
+    my $index_image_fullpath;
+    my $index_image_url;
+    my $index_image_id;
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    my $md5checksum = $image->calculate_md5sum($archive_temp_image);
+    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
+    if ($md_image->count() > 0) {
+        print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
+        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $index_image_fullpath = $image->get_filename('original_converted', 'full');
+        $index_image_url = $image->get_image_url('original');
+        $index_image_id = $image->get_image_id();
+    } else {
+        $image->set_sp_person_id($user_id);
+
+        my $previous_index_images_search = CXGN::DroneImagery::ImagesSearch->new({
+            bcs_schema=>$schema,
+            project_image_type_id=>$linking_table_type_id,
+            drone_run_band_project_id_list=>[$drone_run_band_project_id]
+        });
+        my ($previous_result, $previous_total_count) = $previous_index_images_search->search();
+        print STDERR Dumper $previous_total_count;
+        foreach (@$previous_result){
+            my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+            $previous_image->delete(); #Sets to obsolete
+        }
+
+        my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        $index_image_fullpath = $image->get_filename('original_converted', 'full');
+        $index_image_url = $image->get_image_url('original');
+        $index_image_id = $image->get_image_id();
+    }
+
+    return {
+        image_url => $image_url, image_fullpath => $image_fullpath, index_image_id => $index_image_id, index_image_url => $index_image_url, index_image_fullpath => $index_image_fullpath
+    };
 }
 
 sub drone_imagery_calculate_rgb_vegetative_index : Path('/api/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }

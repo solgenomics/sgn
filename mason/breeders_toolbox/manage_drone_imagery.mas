@@ -3869,7 +3869,7 @@ jQuery(document).ready(function() {
         jQuery('#drone_imagery_fourier_transform_channel_dialog').modal("show");
     });
 
-    jQuery('#drone_imagery_vegetative_index_TGI').click(function(){
+    jQuery('#drone_imagery_fourier_transform_hpf30_channel_select').click(function(){
         manage_drone_imagery_ft_hpf30_selected_channel = jQuery('#drone_imagery_fourier_transform_hpf30_channel_select_input').val();
         getFourierTransform(30, manage_drone_imagery_ft_hpf30_rgb_denoised_stitched_image_id, manage_drone_imagery_ft_hpf30_rgb_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_channel, manage_drone_imagery_ft_hpf30_selected_image_type);
     });
@@ -3901,6 +3901,7 @@ jQuery(document).ready(function() {
                 location.reload();
             },
             error: function(response){
+                jQuery("#working_modal").modal("hide");
                 alert('Error getting fourier transform!')
             }
         });
