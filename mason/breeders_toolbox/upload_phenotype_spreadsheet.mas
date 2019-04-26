@@ -29,7 +29,7 @@
                         <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
                             <option value="detailed">Detailed</option>
                             <option value="simple">Simple</option>
-                            <option value="simple">NIRS</option>
+                            <option value="nirs">NIRS</option>
                         </select>
                     </div>
                 </div>

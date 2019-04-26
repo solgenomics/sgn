@@ -175,16 +175,16 @@ sub _prep_upload {
     my $data_level;
     my $image_zip;
     if ($file_type eq "spreadsheet") {
-        print STDERR "Spreadsheet \n";
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed
+        #print STDERR "File type is Spreadsheet \n";
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         }
         if ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
         }
-        if ($spreadsheet_format eq 'NIRS'){
-            $validate_type = "phenotype spreadsheet NIRS";
+        if ($spreadsheet_format eq 'nirs'){
+            $validate_type = "phenotype spreadsheet nirs";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
         $metadata_file_type = "spreadsheet phenotype file";
@@ -193,7 +193,7 @@ sub _prep_upload {
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     }
     elsif ($file_type eq "fieldbook") {
-        print STDERR "Fieldbook \n";
+        # print STDERR "Fieldbook \n";
         $subdirectory = "tablet_phenotype_upload";
         $validate_type = "field book";
         $metadata_file_type = "tablet phenotype file";
@@ -203,7 +203,7 @@ sub _prep_upload {
         $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
     }
     elsif ($file_type eq "datacollector") {
-        print STDERR "Datacollector \n";
+        # print STDERR "Datacollector \n";
         $subdirectory = "data_collector_phenotype_upload";
         $validate_type = "datacollector spreadsheet";
         $metadata_file_type = "data collector phenotype file";

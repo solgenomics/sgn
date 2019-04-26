@@ -142,7 +142,7 @@ sub parse {
                             $column_name = $worksheet->get_cell(0,$col)->value();
                             if (defined($column_name)) {
                                 if ($column_name ne '' && $column_name =~ /CO\d{3}:\d{7}/){
-
+                                    print STDERR "Column name is a trait $column_name\n";
                                     $traits_seen{$column_name} = 1;
                                     my $value_string = '';
 

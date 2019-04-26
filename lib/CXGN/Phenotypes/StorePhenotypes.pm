@@ -149,7 +149,9 @@ sub create_hash_lookups {
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
+    print STDERR "trait list before map: @trait_list\n";
+    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra hash from trait validation
+    print STDERR "trait list after map: @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -158,7 +160,7 @@ sub create_hash_lookups {
     $self->stock_id_list($stock_id_list->{'transform'});
 
     foreach my $trait_name (@trait_list) {
-        #print STDERR "trait: $trait_name\n";
+        print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
         $trait_objs{$trait_name} = $trait_cvterm;
         push @cvterm_ids, $trait_cvterm->cvterm_id();
@@ -199,7 +201,7 @@ sub verify {
     my $self = shift;
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
+    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes field from trait validation
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;

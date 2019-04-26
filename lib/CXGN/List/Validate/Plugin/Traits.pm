@@ -24,7 +24,7 @@ sub validate {
 
         my @parts = split (/\|/ , $term);
         my ($db_name, $accession) = split ":", pop @parts;
-        
+
         $accession =~ s/\s+$//;
         $accession =~ s/^\s+//;
         $db_name =~ s/\s+$//;
