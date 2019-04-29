@@ -460,6 +460,12 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my $plot_polygon_original_background_removed_vari_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
     my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
     my @project_image_type_id_list = (
@@ -488,7 +494,13 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
         $plot_polygon_original_background_removed_tgi_mask_images_cvterm_id,
         $plot_polygon_original_background_removed_vari_mask_images_cvterm_id,
         $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id,
-        $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id
+        $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id,
+        $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_ourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_ourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_ourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_ourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_ourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id
     );
     my $sql = join ("," , @project_image_type_id_list);
     my $q = "SELECT drone_run.project_id, project_image_type.name
@@ -532,6 +544,11 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $vegetative_index_ndre_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_ndre_drone_imagery', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $fourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $fourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_tgi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_vari_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $threshold_background_removed_ndvi_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
@@ -571,7 +588,12 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $denoised_background_removed_vari_mask_original_cvterm_id,
             $denoised_background_removed_ndvi_mask_original_cvterm_id,
             $denoised_background_removed_ndre_mask_original_cvterm_id,
-            $fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id
+            $fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id,
+            $fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id,
+            $fourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id,
+            $fourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id,
+            $fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id,
+            $fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id
         ]
     });
     my ($result, $total_count) = $images_search->search();
@@ -621,6 +643,11 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_ourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
 
     my $plot_polygons_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -642,7 +669,12 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $plot_polygon_original_background_removed_vari_mask_images_cvterm_id,
             $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id,
             $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id,
-            $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id
+            $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id,
+            $plot_polygon_original_ourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id,
+            $plot_polygon_original_ourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id,
+            $plot_polygon_original_ourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id,
+            $plot_polygon_original_ourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id,
+            $plot_polygon_original_ourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id
         ]
     });
     my ($plot_polygons_result, $plot_polygons_total_count) = $plot_polygons_images_search->search();
@@ -840,6 +872,41 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_original} = $image_original;
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id} = $image_id;
         }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
         else {
             die "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 1!\n";
         }
@@ -917,6 +984,26 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1') {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
             push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_red_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_green_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
         }
         else {
             print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 2!\n";
@@ -1388,6 +1475,106 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                     $plot_polygon_images .= "</span>";
                                     $plot_polygon_images .= '<br/><br/>';
                                     $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
+                            }
+                            if ($d->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on Blue Denoised Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
+                            }
+                            if ($d->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on Green Denoised Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
+                            }
+                            if ($d->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on Red Denoised Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
+                            }
+                            if ($d->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on Red Edge Denoised Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
+                                } else {
+                                    $plot_polygon_images = 'No Plot Polygons Assigned';
+                                }
+                                $drone_run_band_table_html .= $plot_polygon_images;
+
+                                $drone_run_band_table_html .= '</div></div></div>';
+                            }
+                            if ($d->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image}) {
+                                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on NIR Denoised Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1">Create/View Plot Polygons</button>';
+
+                                $drone_run_band_table_html .= '<hr>';
+                                my $plot_polygon_images = '';
+                                if ($d->{plot_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_images}) {
+                                    $plot_polygon_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_images}})." Plot Polygons<br/><span>";
+                                    $plot_polygon_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_images}};
+                                    $plot_polygon_images .= "</span>";
+                                    $plot_polygon_images .= '<br/><br/>';
+                                    $plot_polygon_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1" >Calculate Phenotypes</button>';
                                 } else {
                                     $plot_polygon_images = 'No Plot Polygons Assigned';
                                 }
@@ -3115,6 +3302,41 @@ sub _perform_fourier_transform_calculation {
                 }
             }
         }
+        if ($drone_run_band_project_type eq 'Blue (450-520nm)') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+            }
+        }
+        if ($drone_run_band_project_type eq 'Green (515-600nm)') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+            }
+        }
+        if ($drone_run_band_project_type eq 'Red (600-690nm)') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+            }
+        }
+        if ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+            }
+        }
+        if ($drone_run_band_project_type eq 'NIR (750-900nm)') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+            }
+        }
     }
     if (!$linking_table_type_id) {
         die "Could not get fourier transform image type id\n";
@@ -3836,6 +4058,14 @@ sub _perform_phenotype_calculation {
     my $ft_hpf30_channel_1_denoised_original_fir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original FIR Image with Background Removed via Threshold|ISOL:0000100')->cvterm_id;
     my $ft_hpf30_channel_1_denoised_original_tir_background_removed_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Thermal IR Image with Background Removed via Threshold|ISOL:0000101')->cvterm_id;
 
+    my $ft_hpf30_channel_1_denoised_original_blue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Blue Image|ISOL:0000103')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_green_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Green Image|ISOL:0000104')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_red_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Red Image|ISOL:0000105')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_red_edge_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Red Edge Image|ISOL:0000106')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_nir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original NIR Image|ISOL:0000107')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_mir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original MIR Image|ISOL:0000108')->cvterm_id;
+    my $ft_hpf30_channel_1_denoised_original_tir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original TIR Image|ISOL:0000109')->cvterm_id;
+
     my $drone_run_band_project_type_cvterm_id;
     #print STDERR Dumper $drone_run_band_project_type;
 
@@ -4278,6 +4508,65 @@ sub _perform_phenotype_calculation {
                 return {error => "On TIR original image there is only the first channel!"};
             }
         }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_blue_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On blue image there is only the first channel!"};
+            }
+        }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_green_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On green image there is only the first channel!"};
+            }
+        }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_red_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On red image there is only the first channel!"};
+            }
+        }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_red_edge_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On rededge image there is only the first channel!"};
+            }
+        }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_nir_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On nir image there is only the first channel!"};
+            }
+        }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_mir_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On mir image there is only the first channel!"};
+            }
+        }
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_tir_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "On tir image there is only the first channel!"};
+            }
+        }
+    }
+    if (!$drone_run_band_plot_polygons_preprocess_cvterm_id) {
+        die "Could not get preprocess cvterm for $plot_polygons_type\n";
     }
 
     my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();

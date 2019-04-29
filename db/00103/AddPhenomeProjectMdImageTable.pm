@@ -97,6 +97,11 @@ sub patch {
             'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery',
             'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery',
             'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1',
+            'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1',
+            'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1',
+            'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1',
+            'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1',
+            'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1',
             'threshold_background_removed_stitched_drone_imagery',
             'threshold_background_removed_temporary_stitched_drone_imagery',
             'threshold_background_removed_tgi_stitched_drone_imagery',
@@ -135,7 +140,12 @@ sub patch {
             'calculate_ndvi_temporary_drone_imagery',
             'calculate_ndre_drone_imagery',
             'calculate_ndre_temporary_drone_imagery',
-            'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1'
+            'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1',
+            'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1',
+            'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1',
+            'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1',
+            'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1',
+            'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1'
         ],
         'project_property' => [
             'project_start_date',
