@@ -155,6 +155,8 @@ if (datasetInfo == 'combined populations') {
      }
 }
 
+colnames(phenoTrait)  <- c('genotypes', trait)
+
 if (is.null(filteredGenoData)) {
  
   #genoDataFilter::filterGenoData
