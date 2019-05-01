@@ -2666,7 +2666,7 @@ jQuery(document).ready(function() {
         if (plot_polygons_first_plot_start == 'top_left') {
             var generated_polygon_key_first_plot_number = 0;
             if (plot_polygons_second_plot_follows == 'left' || plot_polygons_second_plot_follows == 'up') {
-                alert('Second plot cannot follow left or up from first plot if the first plot starts at the top left.');
+                alert('Second plot cannot follow left or up from first plot if the first plot starts at the top left, because that is physically impossible.');
                 return;
             }
             if (plot_polygons_second_plot_follows == 'right') {
@@ -2752,14 +2752,14 @@ jQuery(document).ready(function() {
                 }
             }
             if (plot_polygons_second_plot_follows == 'down') {
-                alert('Down not implemented if first plot starts in top left. Please contact us or try rotating your image differently before assigning plot polygons.');
+                alert('Down not implemented if first plot starts in top left. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate another 90 degrees clock-wise, then first plot starts in top right and you can go left for plot assignment).');
                 return;
             }
         }
         if (plot_polygons_first_plot_start == 'top_right') {
-            var generated_polygon_key_first_plot_number = plot_polygons_num_cols_generated - 1;
+            var generated_polygon_key_first_plot_number = plot_polygons_template_current_num_cols - 1;
             if (plot_polygons_second_plot_follows == 'right' || plot_polygons_second_plot_follows == 'up') {
-                alert('Second plot cannot follow right or up from first plot if the first plot starts at the top right.');
+                alert('Second plot cannot follow right or up from first plot if the first plot starts at the top right, because that is physically impossible.');
                 return;
             }
             if (plot_polygons_second_plot_follows == 'left') {
@@ -2830,14 +2830,14 @@ jQuery(document).ready(function() {
                 }
             }
             if (plot_polygons_second_plot_follows == 'down') {
-                alert('Down not implemented if your first plot starts in top right. Please contact us or try rotating your image differently before assigning plot polygons.');
+                alert('Down not implemented if your first plot starts in top right. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clockwise, then first plot starts in bottom right corner and plot assignment can follow going left).');
                 return;
             }
         }
         if (plot_polygons_first_plot_start == 'bottom_left') {
             var generated_polygon_key_first_plot_number = plot_polygons_number_generated - (plot_polygons_num_border_rows_bottom * plot_polygons_num_cols_generated) - plot_polygons_num_border_rows_right;
             if (plot_polygons_second_plot_follows == 'left' || plot_polygons_second_plot_follows == 'down') {
-                alert('Second plot cannot follow left or down from the first plot if the first plot starts at the bottom left.');
+                alert('Second plot cannot follow left or down from the first plot if the first plot starts at the bottom left, because that is physically impossible.');
                 return;
             }
             if (plot_polygons_second_plot_follows == 'right') {
@@ -2904,14 +2904,14 @@ jQuery(document).ready(function() {
                 }
             }
             if (plot_polygons_second_plot_follows == 'up') {
-                alert('Up not implemented if your first plot starts in bottom left. Please contact us or try rotating your image differently before assigning plot polygons.');
+                alert('Up not implemented if your first plot starts in bottom left. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image clockwise 90 degrees, then first plot starts in top-left corner and plot assignment can follow going right).');
                 return;
             }
         }
         if (plot_polygons_first_plot_start == 'bottom_right') {
             var generated_polygon_key_first_plot_number = plot_polygons_number_generated - (plot_polygons_num_border_rows_bottom * plot_polygons_num_cols_generated) - plot_polygons_num_border_rows_right - 1;
             if (plot_polygons_second_plot_follows == 'right' || plot_polygons_second_plot_follows == 'down') {
-                alert('Second plot cannot follow right or down from the first plot if the first plot starts at the bottom right.');
+                alert('Second plot cannot follow right or down from the first plot if the first plot starts at the bottom right, because that is physically impossible.');
                 return;
             }
             if (plot_polygons_second_plot_follows == 'left') {
@@ -2979,7 +2979,7 @@ jQuery(document).ready(function() {
                 }
             }
             if (plot_polygons_second_plot_follows == 'up') {
-                alert('Up not implemented if your first plot starts in bottom right. Please contact us or try rotating your image differently before assigning plot polygons.');
+                alert('Up not implemented if your first plot starts in bottom right. Please contact us or try rotating your image differently before assigning plot polygons (e.g. rotate image 90 degrees clockwise, then first plot starts in bottom left corner and plot assignment can follow going right).');
                 return;
             }
         }
