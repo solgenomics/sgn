@@ -23,6 +23,7 @@ library(lme4)
 library(lmerTest)
 #library(emmeans)
 library(effects)
+library(phenoAnalysis);
 
 pd = read.csv(datafile, sep="\t")
 source(paramfile)  # should give us dependent_variable and the model
