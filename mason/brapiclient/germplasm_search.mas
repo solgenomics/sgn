@@ -132,7 +132,9 @@ jQuery(document).ready(function() {
           'beforeSend': function(){
             jQuery('#working_modal').modal('show');
           },
-          'data': search_query_data,
+          'data': JSON.stringfy(search_query_data),
+          'contentType': 'application/json; charset=utf-8',
+          'dataType': 'json',
           'success': function(response) {
             //console.log(response);
             brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', return_url, { "germplasmName": ["germplasmPUI", ""] }, search_query_data, ['germplasmName','commonCropName','genus','species','accessionNumber','germplasmPUI','synonyms'], 'germplasmName', ['species']);
