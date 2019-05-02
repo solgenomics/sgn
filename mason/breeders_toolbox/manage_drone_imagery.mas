@@ -1374,6 +1374,7 @@ jQuery(document).ready(function() {
         drone_imagery_plot_polygons_display = {};
         plot_polygons_generated_polygons = [];
         drone_imagery_plot_polygons_removed_numbers = [];
+        plot_polygons_template_dimensions = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw_canvas_image(background_image_url, 0);
         jQuery('#drone_imagery_standard_process_generated_polygons_div').html('');
@@ -2427,6 +2428,7 @@ jQuery(document).ready(function() {
         drone_imagery_plot_generated_polygons = {};
         drone_imagery_plot_polygons_display = {};
         plot_polygons_generated_polygons = [];
+        plot_polygons_template_dimensions = [];
         drone_imagery_plot_polygons_removed_numbers = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw_canvas_image(background_image_url, 0);
