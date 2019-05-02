@@ -21,8 +21,7 @@ $back = 'solGS';
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <div> 
-  <& /breeders_toolbox/breeder_search.mas &>
-    <& /breeders_toolbox/breeder_search_dataset.mas &>
+  <& /breeders_toolbox/breeder_search_page.mas &>
 </div>
 
 <button class="button" id="goback_button" >Go to back to <% $back %> </button>

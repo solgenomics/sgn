@@ -212,7 +212,7 @@ sub _check_combined_trials_model_all_traits_output {
 	}
 	else
 	{
-	       $c->stash->{rest}{cached} = 1;	       
+	       $c->stash->{rest}{cached} = 1;
 	}
     }   
     

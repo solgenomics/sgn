@@ -15,9 +15,8 @@ my $odk_crosses = CXGN::ODK::Crosses->new({
     sp_person_role=>$sp_person_role,
     archive_path=>$archive_path,
     temp_file_dir=>$temp_file_dir,
-    temp_file_path=>$temp_file_path,
-    cross_wishlist_md_file_id=>$cross_wishlist_md_file_id,
-    cross_wishlist_file_name=>$cross_wishlist_file_name,
+    cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
+    germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
     allowed_cross_properties=>$allowed_cross_properties,
     odk_crossing_data_service_url=>$odk_crossing_data_service_url,
     odk_crossing_data_service_username=>$odk_crossing_data_service_username,
@@ -87,18 +86,6 @@ has 'sp_person_username' => (
     required => 1,
 );
 
-has 'cross_wishlist_file_name' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1,
-);
-
-has 'cross_wishlist_md_file_id' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
 has 'sp_person_role' => (
     isa => 'Str',
     is => 'rw',
@@ -147,23 +134,42 @@ has 'temp_file_dir' => (
     required => 1,
 );
 
-has 'temp_file_path' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1,
-);
-
 has 'odk_cross_progress_tree_file_dir' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
 );
 
+has 'cross_wishlist_temp_file_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'germplasm_info_temp_file_path' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has '_ona_cross_wishlist_file_name' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has '_ona_germplasm_info_file_name' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
 sub save_ona_cross_info {
+    print STDERR "SAVE ONA CROSS INFO START\n";
     my $self = shift;
     my $context = shift; #Needed for SGN::Image to store images to plots
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
+    my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
+    my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
     my $form_id = $self->odk_crossing_data_service_form_id;
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
@@ -174,8 +180,30 @@ sub save_ona_cross_info {
     print STDERR $server_endpoint."\n";
     my $resp = $ua->get($server_endpoint);
 
+    my $server_endpoint2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+    my $resp2 = $ua->get($server_endpoint2);
+
+    if ($resp2->is_success) {
+        my $message2 = $resp2->decoded_content;
+        my $message_hash2 = decode_json $message2;
+
+        foreach my $t (@$message_hash2) {
+            if (index($t->{data_value}, 'cross_wishlist') != -1) {
+                getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                $self->_ona_cross_wishlist_file_name($t->{data_value});
+            }
+            if (index($t->{data_value}, 'germplasm_info') != -1) {
+                getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                $self->_ona_germplasm_info_file_name($t->{data_value});
+            }
+        }
+    }
+
+
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+
+    print STDERR "ONA ODK CROSS SUMMARY 1\n";
 
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
@@ -196,8 +224,19 @@ sub save_ona_cross_info {
         my %rooting_subculture_lookup;
         my %rooting_activeseed_lookup;
         foreach my $activity_hash (@$message_hash){
-            my $activity_category = $activity_hash->{userCategory};
+            #print STDERR Dumper $activity_hash;
+
+            if ( ($activity_hash->{userCategory} && $activity_hash->{userCategory} eq 'lookup') || ($activity_hash->{Action} && ($activity_hash->{Action} eq 'reprint_barcodes' || $activity_hash->{Action} eq 'lookup'))) {
+                next;
+            }
+
+            my $activity_category = $activity_hash->{Category} || $activity_hash->{userCategory};
+            #print STDERR Dumper $activity_category;
+
             my $actions = $activity_hash->{$user_categories{$activity_category}};
+            if (!$actions) {
+                next;
+            }
             my $attachments = $activity_hash->{'_attachments'};
             my %attachment_lookup;
             foreach (@$attachments){
@@ -217,6 +256,8 @@ sub save_ona_cross_info {
             }
 
             foreach my $a (@$actions){
+                #print STDERR Dumper $a;
+
                 $a->{userCategory} = $activity_hash->{userCategory};
                 $a->{startTime} = $activity_hash->{startTime};
                 $a->{userName} = $activity_hash->{userName};
@@ -280,6 +321,32 @@ sub save_ona_cross_info {
                             $status_user_identifier = 'FieldActivities/plantstatus/Disease/disease_reporter';
                             $status_trial_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseLocTrialName';
                             $status_accession_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseLocAccName';
+                        } elsif ($a->{'FieldActivities/plantstatus/fallen_plant/fallen_statusID'}){
+                            $status_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_statusID';
+                            $attachment_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_image';
+                            $status_note_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_date';
+                            $status_user_identifier = 'userName';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_statusID';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/fallen_plant/fallen_statusID';
+                        } elsif ($a->{'FieldActivities/plantstatus/Disease/plant_diseaseID'}){
+                            $status_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseID';
+                            $attachment_identifier = 'FieldActivities/plantstatus/Disease/disease_image';
+                            $status_note_identifier = 'FieldActivities/plantstatus/Disease/disease_comments';
+                            $status_date_identifier = 'FieldActivities/plantstatus/Disease/disease_Date';
+                            $status_user_identifier = 'userName';
+                            $status_trial_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseID';
+                            $status_accession_identifier = 'FieldActivities/plantstatus/Disease/plant_diseaseID';
+                        } elsif ($a->{'FieldActivities/PlantStatus/plant_statusID'}){
+                            $status_identifier = 'FieldActivities/PlantStatus/plant_statusID';
+                            $attachment_identifier = 'FieldActivities/PlantStatus/plant_status_image';
+                            $status_note_identifier = 'FieldActivities/PlantStatus/plant_status_notes';
+                            $status_date_identifier = 'FieldActivities/PlantStatus/plant_status_date';
+                            $status_user_identifier = 'userName';
+                            $status_trial_identifier = 'FieldActivities/PlantStatus/plant_statusID';
+                            $status_accession_identifier = 'FieldActivities/PlantStatus/plant_statusID';
+                        } else {
+                            print STDERR Dumper $a;
                         }
                         my $image_temp_file_info = $attachment_lookup{$a->{$attachment_identifier}};
                         my $image_temp_file = $image_temp_file_info->[0];
@@ -329,47 +396,54 @@ sub save_ona_cross_info {
                             }
                         }
                     }
-                    if ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
-                        my $plot_name = _get_plot_name_from_barcode_id($a->{'FieldActivities/Flowering/flowersID'});
+                    elsif ($a->{'FieldActivities/fieldActivity'} eq 'flowering'){
+                        my $plot_name = $a->{'FieldActivities/Flowering/flowersID'} || $a->{'FieldActivities/Flowering/floweringID'};
+                        $plot_name = _get_plot_name_from_barcode_id($plot_name);
                         $plant_status_info{$plot_name}->{'flowering'} = $a;
                     }
-                    if ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
+                    elsif ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
                         push @{$cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}}}, $a;
 
                         my $female_accession_name = $a->{'FieldActivities/FirstPollination/FemaleName'};
                         my $male_accession_name = $a->{'FieldActivities/FirstPollination/selectedMaleName'};
-                        my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'};
+                        my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'} || 1;
                         $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
                     }
-                    if ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
+                    elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
 
                         #my $female_accession_name = $a->{'FieldActivities/RepeatPollination/getRptFemaleAccName'};
                         #my $male_accession_name = $a->{'FieldActivities/RepeatPollination/getMaleAccName'};
                         #$cross_parents{$female_accession_name}->{$male_accession_name}->{$a->{'FieldActivities/RepeatPollination/getCrossID'}}++;
                     }
-                    if ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
-                        push @{$cross_info{$a->{'FieldActivities/harvesting/harvestID'}}->{'harvesting'}}, $a;
+                    elsif ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
+                        my $cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'} || $a->{'FieldActivities/harvesting/harvestID'};
+                        push @{$cross_info{$cross_id}->{'harvesting'}}, $a;
                     }
-                    if ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
-                        push @{$cross_info{$a->{'FieldActivities/seedExtraction/extractionID'}}->{'seedExtraction'}}, $a;
+                    elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
+                        my $cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
+                        push @{$cross_info{$cross_id}->{'seedExtraction'}}, $a;
+                    }
+                    else {
+                        print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
+                        print STDERR Dumper $a;
                     }
                 }
-                if ($activity_category eq 'laboratory'){
+                elsif ($activity_category eq 'laboratory'){
                     #MISSING
                     if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
                         push @{$cross_info{$a->{'Laboratory/embryoRescue/embryorescueID'}}->{'embryoRescue'}}, $a;
                     }
-                    if ($a->{'Laboratory/labActivity'} eq 'germinating_after_2wks'){
+                    elsif ($a->{'Laboratory/labActivity'} eq 'germinating_after_2wks'){
                         push @{$cross_info{$a->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wksID'}}->{'germinating_after_2wks'}}, $a;
                     }
-                    if ($a->{'Laboratory/labActivity'} eq 'germinating_after_8weeks'){
+                    elsif ($a->{'Laboratory/labActivity'} eq 'germinating_after_8weeks'){
                         push @{$cross_info{$a->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeksID'}}->{'germinating_after_8weeks'}}, $a;
                         foreach my $active_seed (@{$a->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds'}}){
                             $cross_info{$a->{'Laboratory/embryo_germinatn_after_8weeks/germinating_8weeksID'}}->{'active_seeds'}->{$active_seed->{'Laboratory/embryo_germinatn_after_8weeks/label_active_seeds/activeID'}} = $active_seed;
                         }
                     }
-                    if ($a->{'Laboratory/labActivity'} eq 'subculture'){
+                    elsif ($a->{'Laboratory/labActivity'} eq 'subculture'){
                         push @{$cross_info{$a->{'Laboratory/subculturing/cross_Sub'}}->{'subculture'}}, $a;
                         foreach my $subculture (@{$a->{'Laboratory/subculturing/subccultures'}}){
                             $cross_info{$a->{'Laboratory/subculturing/cross_Sub'}}->{'active_seeds'}->{$a->{'Laboratory/subculturing/getGerminating_8weeks_ID'}}->{'subcultures'}->{$subculture->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $subculture;
@@ -377,31 +451,43 @@ sub save_ona_cross_info {
                             $cross_activeseed_lookup{$subculture->{'Laboratory/subculturing/subccultures/multiplicationID'}} = $a->{'Laboratory/subculturing/getGerminating_8weeks_ID'};
                         }
                     }
-                    if ($a->{'Laboratory/labActivity'} eq 'rooting'){
+                    elsif ($a->{'Laboratory/labActivity'} eq 'rooting'){
                         push @{$cross_info{$cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'rooting'}}, $a;
                         $cross_info{$cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'active_seeds'}->{$cross_activeseed_lookup{$a->{'Laboratory/rooting/getSubcultureID'}}}->{'subcultures'}->{$a->{'Laboratory/rooting/getSubcultureID'}}->{'rooting'}->{$a->{'Laboratory/rooting/rootingID'}} = $a;
                         $rooting_cross_lookup{$a->{'Laboratory/rooting/rootingID'}} = $cross_subculture_lookup{$a->{'Laboratory/rooting/getSubcultureID'}};
                         $rooting_activeseed_lookup{$a->{'Laboratory/rooting/rootingID'}} = $cross_activeseed_lookup{$a->{'Laboratory/rooting/getSubcultureID'}};
                         $rooting_subculture_lookup{$a->{'Laboratory/rooting/rootingID'}} = $a->{'Laboratory/rooting/getSubcultureID'};
                     }
-                    if ($a->{'Laboratory/labActivity'} eq 'contamination'){
+                    elsif ($a->{'Laboratory/labActivity'} eq 'contamination'){
                         push @{$cross_info{$cross_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}}->{'contamination'}}, $a;
                         $cross_info{$cross_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}}->{'active_seeds'}->{$cross_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}}->{'subcultures'}->{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}}->{'contamination'}->{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $a;
                         $rooting_cross_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $cross_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}};
                         $rooting_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $cross_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}};
                         $rooting_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $a->{'Laboratory/embryo_contamination/lab_econtaminationID'};
                     }
+                    else {
+                        print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
+                        print STDERR Dumper $a;
+                    }
                 }
-                if ($activity_category eq 'screenhouse'){
+                elsif ($activity_category eq 'screenhouse'){
                     #MISSING
                     if ($a->{'screenhse_activities/screenhouseActivity'} eq 'screenhouse_humiditychamber'){
                         push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'screenhouse_humiditychamber'}}, $a;
                         $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'rooting'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}->{'screenhouse_humiditychamber'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}} = $a;
                     }
-                    if ($a->{'screenhse_activities/screenhouseActivity'} eq 'hardening'){
+                    elsif ($a->{'screenhse_activities/screenhouseActivity'} eq 'hardening'){
                         push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'hardening'}}, $a;
                         $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'rooting'}->{$a->{'screenhse_activities/hardening/hardeningID'}}->{'hardening'}->{$a->{'screenhse_activities/hardening/hardeningID'}} = $a;
                     }
+                    else {
+                        print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
+                        print STDERR Dumper $a;
+                    }
+                }
+                else {
+                    print STDERR "UNKNOWN ONA ODK $activity_category\n";
+                    print STDERR Dumper $a;
                 }
             }
         }
@@ -416,62 +502,11 @@ sub save_ona_cross_info {
             raw_message => $message_hash
         );
 
-        #Store recieved info into file and use UploadFile to archive
-        #Store recieved info into metadata for display on ODK dashboard
-        my $temp_file_path = $self->temp_file_path;
-        my $encoded_odk_cross_hash = encode_json \%odk_cross_hash;
-        open(my $F1, ">", $temp_file_path) || die "Can't open file ".$temp_file_path;
-            print $F1 $encoded_odk_cross_hash;
-        close($F1);
-
-        my $time = DateTime->now();
-        my $timestamp = $time->ymd()."_".$time->hms();
-        my $file_type = "ODK_ONA_cross_info_download";
-        my $uploader = CXGN::UploadFile->new({
-            tempfile => $temp_file_path,
-            subdirectory => "ODK_ONA_cross_info",
-            archive_path => $self->archive_path,
-            archive_filename => $file_type,
-            timestamp => $timestamp,
-            user_id => $self->sp_person_id,
-            user_role => $self->sp_person_role
-        });
-        my $archived_filename_with_path = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_filename_with_path);
-        if (!$archived_filename_with_path) {
-            return { error => "Could not save file ODK_ONA_cross_info_download in archive" };
-        }
-
-        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-        #my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->sp_person_id});
-        #my $file_row = $metadata_schema->resultset("MdFiles")
-        #    ->create({
-        #        basename => basename($archived_filename_with_path),
-        #        dirname => dirname($archived_filename_with_path),
-        #        filetype => $file_type,
-        #        md5checksum => $md5->hexdigest(),
-        #        metadata_id => $md_row->metadata_id(),
-        #        comment => $encoded_odk_cross_hash
-        #    });
-
-        #The database should only store the last pull from ONA, which will contain all info from ONA
-        my $h_del2 = $metadata_schema->storage->dbh->prepare("DELETE FROM metadata.md_files WHERE filetype = ?");
-        my $r_del2 = $h_del2->execute($file_type);
-
-        my $h = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_metadata (create_person_id) VALUES (?) RETURNING metadata_id");
-        my $r = $h->execute($self->sp_person_id);
-        my $metadata_id = $h->fetchrow_array();
-        my $h2 = $metadata_schema->storage->dbh->prepare("INSERT INTO metadata.md_files (basename, dirname, filetype, md5checksum, metadata_id, comment) VALUES (?,?,?,?,?,?) RETURNING metadata_id");
-        my $r2 = $h2->execute(basename($archived_filename_with_path), dirname($archived_filename_with_path), $file_type, $md5->hexdigest(), $metadata_id, $encoded_odk_cross_hash);
-
         #Update cross progress tree
-        my $return = $self->create_odk_cross_progress_tree();
+        my $return = $self->create_odk_cross_progress_tree(\%odk_cross_hash);
         if ($return->{error}){
             return { error => $return->{error} };
         }
-
-        $self->create_odk_cross_progress_tree();
-
         return { success => 1 };
 
     } else {
@@ -481,147 +516,138 @@ sub save_ona_cross_info {
 }
 
 sub create_odk_cross_progress_tree {
+    print STDERR "CREATE ODK CROSS PROGRESS TREE START\n";
     my $self = shift;
-    my $wishlist_file_id = $self->cross_wishlist_md_file_id;
+    my $odk_submission = shift;
     my $bcs_schema = $self->bcs_schema;
     my $phenome_schema = $self->phenome_schema;
     my $metadata_schema = $self->metadata_schema;
+    my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
+    my $wishlist_file_name = $self->_ona_cross_wishlist_file_name;
+    my $germplasm_info_file_name = $self->_ona_germplasm_info_file_name;
+    my $form_id = $self->odk_crossing_data_service_form_id;
+
+    $wishlist_file_name =~ s/.csv//;
+    my $wishlist_file_name_loc = $wishlist_file_name;
+    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
+    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
+    print STDERR $wishlist_file_name_loc."\n";
 
     my %combined;
-
-    #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-    #my $wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({file_id=> $wishlist_file_id});
-
-    my $h = $metadata_schema->storage->dbh->prepare("SELECT dirname, basename FROM metadata.md_files WHERE file_id=?");
-    $h->execute($wishlist_file_id);
-    my @wishlist_file_elements = $h->fetchrow_array;
 
     my @wishlist_file_lines;
     my %open_tree;
     my %cross_combinations;
     my %top_level_title;
     my %all_plant_status_info;
-    if (@wishlist_file_elements){
 
-        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-        #my $wishlist_file_path = $wishlist_md_file->dirname."/".$wishlist_md_file->basename;
-        my $wishlist_file_path = $wishlist_file_elements[0]."/".$wishlist_file_elements[1];
-        #my $wishlist_file_path = "/home/vagrant/Downloads/cross_wishlist_test_5nSlbRZ.txt";
-        print STDERR "cross_wishlist $wishlist_file_path\n";
+    print STDERR "cross_wishlist $cross_wishlist_temp_file_path\n";
 
-        open(my $fh, '<', $wishlist_file_path)
-            or die "Could not open file '$wishlist_file_path' $!";
-        my $header_row = <$fh>;
-        chomp $header_row;
-        my @header_row = split ',', $header_row;
-        while ( my $row = <$fh> ){
-            chomp $row;
-            my @cols = split ',', $row;
-            push @wishlist_file_lines, \@cols;
+    open(my $fh, '<', $cross_wishlist_temp_file_path)
+        or die "Could not open file '$cross_wishlist_temp_file_path' $!";
+    my $header_row = <$fh>;
+    chomp $header_row;
+    my @header_row = split ',', $header_row;
+    while ( my $row = <$fh> ){
+        chomp $row;
+        my @cols = split ',', $row;
+        push @wishlist_file_lines, \@cols;
+    }
+    #print STDERR Dumper \@wishlist_file_lines;
+
+    print STDERR "ONA ODK CROSS SUMMARY 2\n";
+
+    my %cross_wishlist_hash;
+    foreach (@wishlist_file_lines){
+        my $female_accession_name = $_->[5];
+        my $female_plot_name = $_->[1];
+        my $wishlist_entry_created_timestamp = $_->[15];
+        my $wishlist_entry_created_by = $_->[16];
+        my $number_males = $_->[17];
+        $wishlist_entry_created_by =~ tr/"//d;
+        $wishlist_entry_created_timestamp =~ tr/"//d;
+        $female_accession_name =~ tr/"//d;
+        $female_plot_name =~ tr/"//d;
+        $number_males =~ tr/"//d;
+        my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
+        my $num_males_int = $number_males ? int($number_males) : 0;
+        for my $n (18 .. 18+$num_males_int){
+            if ($_->[$n]){
+                $_->[$n] =~ tr/"//d;
+                $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
+            }
         }
-        #print STDERR Dumper \@wishlist_file_lines;
+    }
+    #print STDERR Dumper \%cross_wishlist_hash;
 
-        my %cross_wishlist_hash;
-        foreach (@wishlist_file_lines){
-            my $female_accession_name = $_->[2];
-            my $female_plot_name = $_->[1];
-            my $wishlist_entry_created_timestamp = $_->[7];
-            my $wishlist_entry_created_by = $_->[8];
-            my $number_males = $_->[9];
-            $wishlist_entry_created_by =~ tr/"//d;
-            $wishlist_entry_created_timestamp =~ tr/"//d;
-            $female_accession_name =~ tr/"//d;
-            $female_plot_name =~ tr/"//d;
-            $number_males =~ tr/"//d;
-            my $top_level = "$wishlist_entry_created_by @ $wishlist_entry_created_timestamp";
-            my $num_males_int = $number_males ? int($number_males) : 0;
-            for my $n (10 .. 10+$num_males_int){
-                if ($_->[$n]){
-                    $_->[$n] =~ tr/"//d;
-                    $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$female_plot_name}->{$_->[$n]}++;
+    my @all_cross_parents;
+    my %all_cross_info;
+
+    my $cross_parents = $odk_submission->{cross_parents};
+    my $cross_info = $odk_submission->{cross_info};
+    my $plant_status_info = $odk_submission->{plant_status_info};
+    push @all_cross_parents, $cross_parents;
+    foreach my $cross (keys %$cross_info){
+        $all_cross_info{$cross} = $cross_info->{$cross};
+    }
+    foreach my $plant (keys %$plant_status_info){
+        $all_plant_status_info{$plant} = $plant_status_info->{$plant};
+    }
+    #print STDERR Dumper \@all_cross_parents;
+    #print STDERR Dumper \%all_plant_status_info;
+    #print STDERR Dumper \%all_cross_info;
+
+    print STDERR "ONA ODK CROSS SUMMARY 3\n";
+
+    foreach my $top_level (keys %cross_wishlist_hash){
+        foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
+            my $planned_female_plot_name_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name};
+            foreach my $planned_female_plot_name (keys %$planned_female_plot_name_hash){
+                if (exists($all_plant_status_info{$planned_female_plot_name}->{'status'})){
+                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{'planned_female_plot_name_status'} = $all_plant_status_info{$planned_female_plot_name}->{'status'};
                 }
-            }
-        }
-        #print STDERR Dumper \%cross_wishlist_hash;
-
-        my @all_cross_parents;
-        my %all_cross_info;
-
-        #Metadata schema not working for some reason in cron job (can't find md_metadata table?), so use sql instead
-        #my $odk_submissions = $metadata_schema->resultset("MdFiles")->search({filetype=>"ODK_ONA_cross_info_download"}, {order_by => { -asc => 'file_id' }});
-        #while (my $r=$odk_submissions->next)
-        #    my $odk_submission = decode_json $r->comment;
-
-        $h = $metadata_schema->storage->dbh->prepare("SELECT comment FROM metadata.md_files WHERE filetype='ODK_ONA_cross_info_download' ORDER BY file_id ASC");
-        $h->execute();
-        my $odk_cross_submission_count = 0;
-        while (my $r = $h->fetchrow_array) {
-            $odk_cross_submission_count++;
-            my $odk_submission = decode_json $r;
-            my $cross_parents = $odk_submission->{cross_parents};
-            my $cross_info = $odk_submission->{cross_info};
-            my $plant_status_info = $odk_submission->{plant_status_info};
-            push @all_cross_parents, $cross_parents;
-            foreach my $cross (keys %$cross_info){
-                $all_cross_info{$cross} = $cross_info->{$cross};
-            }
-            foreach my $plant (keys %$plant_status_info){
-                $all_plant_status_info{$plant} = $plant_status_info->{$plant};
-            }
-        }
-        print STDERR "Number ODK Cross Submissions: ".$odk_cross_submission_count."\n";
-        #print STDERR Dumper \@all_cross_parents;
-        #print STDERR Dumper \%all_plant_status_info;
-        #print STDERR Dumper \%all_cross_info;
-
-        foreach my $top_level (keys %cross_wishlist_hash){
-            foreach my $female_accession_name (keys %{$cross_wishlist_hash{$top_level}}){
-                my $planned_female_plot_name_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name};
-                foreach my $planned_female_plot_name (keys %$planned_female_plot_name_hash){
-                    if (exists($all_plant_status_info{$planned_female_plot_name}->{'status'})){
-                        $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{'planned_female_plot_name_status'} = $all_plant_status_info{$planned_female_plot_name}->{'status'};
-                    }
-                    my $male_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$planned_female_plot_name};
-                    foreach my $male_accession_name (keys %$male_hash){
-                        foreach my $cross_parents (@all_cross_parents){
-                            if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
-                                my $cycles_hash = $cross_parents->{$female_accession_name}->{$male_accession_name};
-                                foreach my $cycle (keys %$cycles_hash){
-                                    foreach my $cross_name (keys %{$cycles_hash->{$cycle}}){
-                                        my $cross_info = $all_cross_info{$cross_name};
-                                        $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = $cross_info;
-                                        if ($cross_info->{'firstPollination'}){
-                                            foreach my $first_pollination (@{$cross_info->{'firstPollination'}}){
-                                                my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
-                                                if ($planned_female_plot_name eq $female_plot_name){
-                                                    $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
-                                                    $cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = 1;
-                                                } else {
-                                                    $combined{$top_level}->{'wishlist_female_plot_no_match'} = $female_plot_name;
-                                                }
+                my $male_hash = $cross_wishlist_hash{$top_level}->{$female_accession_name}->{$planned_female_plot_name};
+                foreach my $male_accession_name (keys %$male_hash){
+                    foreach my $cross_parents (@all_cross_parents){
+                        if (exists($cross_parents->{$female_accession_name}->{$male_accession_name})){
+                            my $cycles_hash = $cross_parents->{$female_accession_name}->{$male_accession_name};
+                            foreach my $cycle (keys %$cycles_hash){
+                                foreach my $cross_name (keys %{$cycles_hash->{$cycle}}){
+                                    my $cross_info = $all_cross_info{$cross_name};
+                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = $cross_info;
+                                    if ($cross_info->{'firstPollination'}){
+                                        foreach my $first_pollination (@{$cross_info->{'firstPollination'}}){
+                                            my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
+                                            if ($planned_female_plot_name eq $female_plot_name){
+                                                $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
+                                                $cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = 1;
+                                            } else {
+                                                $combined{$top_level}->{'wishlist_female_plot_no_match'} = $female_plot_name;
                                             }
                                         }
-                                        $open_tree{$top_level}++;
                                     }
+                                    $open_tree{$top_level}++;
                                 }
-                            } else {
-                                if ($male_accession_name =~ /^\s*$/) {
-                                    $male_accession_name =~ s/\s+//g;
-                                }
-                                if ($male_accession_name){
-                                    $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name} = "No Crosses Performed";
-                                }
+                            }
+                        } else {
+                            if ($male_accession_name =~ /^\s*$/) {
+                                $male_accession_name =~ s/\s+//g;
+                            }
+                            if ($male_accession_name){
+                                $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name} = "No Crosses Performed";
                             }
                         }
                     }
-                    my $male_accession_names = join ',', keys %$male_hash;
-                    $top_level_title{$top_level} = "Planned Female Accession: $female_accession_name. Planned Female Plot: $planned_female_plot_name. Planned Male Accession(s): $male_accession_names.";
                 }
+                my $male_accession_names = join ',', keys %$male_hash;
+                $top_level_title{$top_level} = "Planned Female Accession: $female_accession_name. Planned Female Plot: $planned_female_plot_name. Planned Male Accession(s): $male_accession_names.";
             }
         }
-        #print STDERR Dumper \%combined;
     }
-    #print STDERR Dumper \%cross_combinations;
+    #print STDERR Dumper \%combined;
+
+    print STDERR "ONA ODK CROSS SUMMARY 4\n";
 
     my %seen_top_levels;
     my %top_level_contents;
@@ -679,6 +705,7 @@ sub create_odk_cross_progress_tree {
                     while (my ($male_accession_name, $crosses_cycle_hash) = each %$male_accession_hash){
                         if ($male_accession_name eq 'planned_female_plot_name_status'){
                             my $status = $crosses_cycle_hash;
+                            #print STDERR Dumper $status;
                             $planned_female_plot_node->{text} .= ' : '.$status->{'attachment_display_tiny'}.' : STATUS = '.$status->{'status_message'};
                         }
                         else {
@@ -968,32 +995,43 @@ sub create_odk_cross_progress_tree {
         $top_level_contents{$top_level} = \@top_level_content_json;
     }
     #print STDERR Dumper \%summary_info;
-
-    my %save_content = (
-        top_level_json => \@top_level_json,
-        top_level_contents => \%top_level_contents,
-        summary_info => \%summary_info,
-        summary_plant_status_info => \%all_plant_status_info
-    );
-
+    
+    print STDERR "WRITING ONA ODK SUMMARY FILES\n";
     my $dir = $self->odk_cross_progress_tree_file_dir;
     eval { make_path($dir) };
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
-    print STDERR "Writing to $filename \n";
 
+    my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
     my $OUTFILE;
     open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } encode_json \%save_content or croak "Cannot write to $filename: $!";
+    print { $OUTFILE } encode_json \@top_level_json or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
 
+    $filename = $dir."/ona_odk_cross_progress_top_level_contents_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \%top_level_contents or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    $filename = $dir."/ona_odk_cross_progress_summary_info_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \%summary_info or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$form_id.".txt";
+    print STDERR "Writing to $filename \n";
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } encode_json \%all_plant_status_info or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
 
     # find or create crossing trial using name of cross wishlist
     # create cross in db if not existing
     # save properties to cross
-    print STDERR Dumper \%summary_info;
+    #print STDERR Dumper \%summary_info;
     my %parsed_data;
     foreach my $cross_hash (values %summary_info){
         while ( my ($cross_name, $activities) = each %$cross_hash){
@@ -1083,19 +1121,12 @@ sub create_odk_cross_progress_tree {
     #print STDERR Dumper \%parsed_data;
 
     my $cross_trial_id;
-    my $wishlist_file_name = $self->cross_wishlist_file_name;
-    $wishlist_file_name =~ s/.csv//;
-    my $wishlist_file_name_loc = $wishlist_file_name;
-    $wishlist_file_name_loc =~ s/cross_wishlist_//;
-    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
-    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
-    print STDERR $wishlist_file_name_loc."\n";
     my $location_id;
     my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
     if ($location){
         $location_id = $location->nd_geolocation_id;
     }
-    my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $self->cross_wishlist_file_name});
+    my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $wishlist_file_name});
     my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
     my $t = Time::Piece->new();
     if ($previous_crossing_trial_rs){

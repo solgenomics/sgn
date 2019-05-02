@@ -32,15 +32,13 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 print STDERR $sgn_session_id."\n";
 
-my $breeding_program_id = $schema->resultset('Project::Project')->find({name =>'test'})->project_id();
-
-$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial', 'crossingtrial_program_id' => $breeding_program_id ,
+$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial', 'crossingtrial_program_name' => 'test' ,
     'crossingtrial_location' => 'test_location', 'year' => '2017', 'project_description' => 'test description' ]);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial2', 'crossingtrial_program_id' => $breeding_program_id ,
+$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial2', 'crossingtrial_program_name' => 'test' ,
     'crossingtrial_location' => 'test_location', 'year' => '2018', 'project_description' => 'test description2' ]);
 
 $response = decode_json $mech->content;

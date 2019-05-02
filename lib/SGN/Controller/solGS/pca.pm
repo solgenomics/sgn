@@ -107,12 +107,6 @@ sub check_result :Path('/pca/check/result/') Args() {
     if ($self->check_pca_output($c))
     {
 	$ret = $c->stash->{formatted_pca_output};
-	$ret->{result} = 1;
-	$ret->{list_id} = $list_id;
-	$ret->{pop_id}  = $file_id;
-	$ret->{list_name} = $c->stash->{list_name};
-	$ret->{trials_names} = $c->stash->{trials_names};
-	$ret->{combo_pops_id} = $combo_pops_id; 
     }
 
     $ret = to_json($ret);
@@ -137,8 +131,7 @@ sub pca_run :Path('/pca/run/') Args() {
     
     my $pop_id;
     my $file_id;
-    my $trials_names;
-    
+   
     if ($referer =~ /solgs\/selection\//)
     {
 	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
@@ -157,7 +150,6 @@ sub pca_run :Path('/pca/run/') Args() {
 	 $c->stash->{data_set_type} = 'combined_populations';
 	 
 	 $c->controller('solGS::List')->process_trials_list_details($c);
-	 $trials_names = $c->stash->{trials_names};
     } 
     else 
     {
@@ -182,12 +174,10 @@ sub pca_run :Path('/pca/run/') Args() {
 	    $c->controller('solGS::List')->get_trials_list_ids($c);
 	    $c->stash->{pops_ids_list} = $c->stash->{trials_ids};	    
 	    $c->controller('solGS::List')->process_trials_list_details($c);
-	    $trials_names = $c->stash->{trials_names};
 	}		
     }
     
     $c->stash->{file_id} = $file_id;
-
     my $ret->{status} = 'PCA analysis failed';
    
     if (!$self->check_pca_output($c)) 
@@ -202,14 +192,10 @@ sub pca_run :Path('/pca/run/') Args() {
 	{ 
 	    $self->run_pca($c);
 	    $self->format_pca_output($c);
-	}
-	
+	}	
     }
 
-    $ret = $c->stash->{formatted_pca_output};
-    $ret->{pop_id} = $c->stash->{pop_id};
-    $ret->{trials_names} = $trials_names;
-   
+    $ret = $c->stash->{formatted_pca_output};   
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -259,24 +245,15 @@ sub format_pca_output {
 	    my $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
 	    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
 
-	    #my $host = $c->req->base;
-	   # print STDERR "\n\n host: $host\n\n";
-	    #if ( $host !~ /localhost/)
-	    #{
-	#	$host =~ s/:\d+//; 
-	#	$host =~ s/http\w?/https/;
-	 #   }
-	  #  print STDERR "\n\n host: $host\n\n";
-	  #  my $output_link = $host . '/pca/analysis/' . $file_id;
 	    my $output_link =  '/pca/analysis/' . $file_id;
-	    #$c->controller('solGS::List')->process_trials_list_details($c);
+	    $c->controller('solGS::List')->process_trials_list_details($c);
 	    if ($pca_scores)
 	    {
 		$ret->{pca_scores} = $pca_scores;
 		$ret->{pca_variances} = $pca_variances;
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
-		#$ret->{trials_names} = $c->stash->{trials_names};
+		$ret->{trials_names} = $c->stash->{trials_names};
 		$ret->{output_link}  = $output_link;
 	    }
 
@@ -293,6 +270,7 @@ sub format_pca_output {
     }
     
 }
+
 
 sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
     my ($self, $c, $file_id) = @_;
@@ -382,6 +360,10 @@ sub create_pca_genotype_data {
 	    $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
 	    $c->stash->{genotype_file} = $c->stash->{trait_combined_geno_file};
 	    my $geno_file = $c->stash->{genotype_file};
+	    if (!-s $geno_file) 
+	    {
+		$c->controller('solGS::List')->get_trials_list_geno_data($c);
+	    }
 	}
 	else 
 	{
@@ -565,7 +547,6 @@ sub pca_input_files {
 sub run_pca {
     my ($self, $c) = @_;
     
-    my $pop_id  = $c->stash->{pop_id};
     my $file_id = $c->stash->{file_id};
     
     $self->pca_output_files($c);

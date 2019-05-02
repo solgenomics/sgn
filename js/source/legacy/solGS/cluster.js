@@ -20,7 +20,9 @@ solGS.cluster = {
 	var popDetails = solGS. getPopulationDetails();
 	
 	var comboPopsId = jQuery('#combo_pops_id').val();
-
+	
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	trainingTraitsIds = trainingTraitsIds.split(',');
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
@@ -28,6 +30,7 @@ solGS.cluster = {
 		   'combo_pops_id': comboPopsId,
 		   'training_pop_id': popDetails.training_pop_id,
 		   'selection_pop_id': popDetails.selection_pop_id,
+		   'training_traits_ids': trainingTraitsIds,
 		   'cluster_type': clusterType,
 		   'data_type': dataType
 		  },
@@ -41,8 +44,7 @@ solGS.cluster = {
 		    
 		    jQuery("#run_cluster").hide();
 		   
-		} else {
-		    
+		} else {		    
 		    jQuery("#run_cluster").show();	
 		}
 	    },
@@ -199,6 +201,9 @@ solGS.cluster = {
 	var dataType    = clusterArgs.data_type;
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
+
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	trainingTraitsIds = trainingTraitsIds.split(',');
 	
 	var popDetails  = solGS.getPopulationDetails();
 
@@ -276,6 +281,7 @@ solGS.cluster = {
             data: {'training_pop_id': popDetails.training_pop_id,
 		   'selection_pop_id': popDetails.selection_pop_id,
 		   'combo_pops_id': popDetails.combo_pops_id,
+		   'training_traits_ids': trainingTraitsIds,
 		   'cluster_pop_id': popDetails.cluster_pop_id,
 		   'list_id': listId, 
 		   'list_name': listName,
@@ -490,9 +496,9 @@ solGS.cluster = {
             idPopName     = JSON.parse(idPopName);
             modelId       = jQuery("#model_id").val();
             
-            selectedPopId   = idPopName.id;
-            selectedPopName = idPopName.name;
-            selectedPopType = idPopName.pop_type; 
+            var selectedPopId   = idPopName.id;
+            var selectedPopName = idPopName.name;
+            var selectedPopType = idPopName.pop_type; 
 	    
             jQuery("#cluster_selected_population_name").val(selectedPopName);
             jQuery("#cluster_selected_population_id").val(selectedPopId);
@@ -578,26 +584,6 @@ jQuery(document).ready( function() {
 	//checkClusterResult();
     }      
 });
-
-
-// jQuery(document).ready( function() { 
-   
-//     var url = window.location.pathname;
-    
-//     var urlMatch = ['solgs\/trait', 
-//                     'breeders_toolbox\/trial', 
-//                     'breeders\/trial\/', 
-//                     'solgs\/selection\/', 
-//                     'solgs\/model\/combined\/populations\/'];
-       
-//     urlMatch = urlMatch.join('|');
-
-//     if (url.match(urlMatch)) {
-	
-//         solGS.cluster.checkClusterResult();  
-//     } 
- 
-// });
 
 
 jQuery(document).ready( function() { 

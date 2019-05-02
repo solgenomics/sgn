@@ -17,11 +17,13 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id = $c->req->param('training_pop_id');
-   
+    my @traits_ids  = $c->req->param('training_traits_ids[]');
+    
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
-   
+    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    
     my @traits;
     if (!$selection_pop_id) 
     {    

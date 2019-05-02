@@ -98,7 +98,7 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 &>
 
 
-<& /solgs/population/gebvs_comparison.mas,
+<& /solgs/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,
    training_pop_id  => $training_pop_id,
    selection_pop_id => $selection_pop_id,
