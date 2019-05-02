@@ -341,7 +341,7 @@ $(document).ready(function() {
       var lo = new CXGN.List();
 
       $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
-      get_select_box("genotyping_protocols", "protocol_list");
+      get_select_box("genotyping_protocol", "protocol_list");
 
       $('#genotype').click(function() {
 
@@ -397,6 +397,9 @@ $(document).ready(function() {
       Accessions
     </th>
     <th>
+      Genotyping Protocol
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -434,7 +437,7 @@ $(document).ready(function() {
 
       $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select'));
       $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
-      get_select_box("genotyping_protocols", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
+      get_select_box("genotyping_protocol", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
 
       $('#genotype_qc').click(function() {
 
