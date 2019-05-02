@@ -2767,7 +2767,7 @@ jQuery(document).ready(function() {
                     var plot_polygon_current_polygon_index = generated_polygon_key_first_plot_number;
                     var plot_polygon_column_count = 0;
                     var plot_polygon_previous_template_plot_count = 0;
-                    for (var j=generated_polygon_key_first_plot_number; j<generated_polygon_key_first_plot_number + plot_polygons_plot_numbers.length; j++){
+                    for (var j=generated_polygon_key_first_plot_number; j<generated_polygon_key_first_plot_number + plot_polygons_plot_numbers.length + drone_imagery_plot_polygons_removed_numbers.length; j++){
 
                         plot_polygon_current_polygon_index = plot_polygon_previous_template_plot_count + plot_polygons_template_current_num_cols - plot_polygon_column_count - 1;
 
@@ -2795,7 +2795,7 @@ jQuery(document).ready(function() {
                                 plot_polygons_template_current_num_cols = plot_polygons_template_current.num_cols;
                                 plot_polygons_template_current_num_rows = plot_polygons_template_current.num_rows;
                                 plot_polygons_template_current_total_plot_polygons = plot_polygons_template_current.total_plot_polygons;
-                                plot_polygons_template_current_plot_polygon_index = 1;
+                                plot_polygons_template_current_plot_polygon_index = 0;
                             }
                         }
                     }
@@ -2806,7 +2806,7 @@ jQuery(document).ready(function() {
                     var plot_polygon_zigzig_polygon_index = generated_polygon_key_first_plot_number;
                     var going_left = 1;
                     var plot_polygon_previous_template_plot_count = 0;
-                    for (var j=generated_polygon_key_first_plot_number; j<generated_polygon_key_first_plot_number + plot_polygons_plot_numbers.length; j++){
+                    for (var j=generated_polygon_key_first_plot_number; j<generated_polygon_key_first_plot_number + plot_polygons_plot_numbers.length + drone_imagery_plot_polygons_removed_numbers.length; j++){
 
                         if (going_left == 0) {
                             plot_polygon_current_polygon_index = plot_polygon_previous_template_plot_count + plot_polygon_column_count;
@@ -2814,7 +2814,6 @@ jQuery(document).ready(function() {
                         if (going_left == 1) {
                             plot_polygon_current_polygon_index = plot_polygon_previous_template_plot_count + plot_polygons_template_current_num_cols - plot_polygon_column_count - 1;
                         }
-                        console.log(plot_polygon_current_polygon_index);
 
                         if (drone_imagery_plot_polygons_removed_numbers.includes(plot_polygon_current_polygon_index.toString())) {
                             console.log("Skipping "+plot_polygon_current_polygon_index);
@@ -2846,7 +2845,7 @@ jQuery(document).ready(function() {
                                 plot_polygons_template_current_num_cols = plot_polygons_template_current.num_cols;
                                 plot_polygons_template_current_num_rows = plot_polygons_template_current.num_rows;
                                 plot_polygons_template_current_total_plot_polygons = plot_polygons_template_current.total_plot_polygons;
-                                plot_polygons_template_current_plot_polygon_index = 1;
+                                plot_polygons_template_current_plot_polygon_index = 0;
                             }
                         }
                     }

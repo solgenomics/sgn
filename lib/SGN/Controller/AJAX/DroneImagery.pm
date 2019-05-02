@@ -1582,7 +1582,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
                                 $drone_run_band_table_html .= '</div></div></div>';
                             }
-                            if (!$d->{vegetative_index_tgi_stitched_image} && !$d->{vegetative_index_vari_stitched_image} && !$d->{vegetative_index_ndvi_stitched_image} && !$d->{vegetative_index_ndre_stitched_image}) {
+                            if ( (!$d->{vegetative_index_tgi_stitched_image} && !$d->{vegetative_index_vari_stitched_image} && !$d->{vegetative_index_ndvi_stitched_image} && !$d->{vegetative_index_ndre_stitched_image} ) || $d->{threshold_background_removed_stitched_image} ) {
 
                                 if ($d->{threshold_background_removed_stitched_image}) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{threshold_background_removed_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{threshold_background_removed_stitched_image_username}.'</br><b>Date</b>: '.$d->{threshold_background_removed_stitched_image_modified_date}.'<br/><b>Background Removed Threshold</b>: '.$d->{threshold_background_removed_stitched_image_threshold}.'</div><div class="col-sm-3">'.$d->{threshold_background_removed_stitched_image}.'</div><div class="col-sm-6">';
