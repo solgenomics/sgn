@@ -114,7 +114,7 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
         ];
     }
 
-    $c->stash->{rest} = { data => \@result, recordsTotal => $total_count, recordsFiltered => $total_count };
+    $c->stash->{rest} = { data => \@result, recordsTotal => $total_count, recordsFiltered => scalar(@result) };
 }
 
 1;

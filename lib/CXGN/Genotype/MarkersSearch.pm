@@ -71,12 +71,12 @@ has 'reference_genome_name' => (
 );
 
 has 'limit' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw'
 );
 
 has 'offset' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw'
 );
 
