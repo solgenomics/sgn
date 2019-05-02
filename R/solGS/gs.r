@@ -148,10 +148,14 @@ if (datasetInfo == 'combined populations') {
          
      } else {
 
-         phenoTrait <- getAdjMeans(phenoData, trait)
+         phenoTrait <- getAdjMeans(phenoData,
+                                   traitName=trait,
+                                   calcAverages=TRUE)
 
      }
 }
+
+colnames(phenoTrait)  <- c('genotypes', trait)
 
 if (is.null(filteredGenoData)) {
  

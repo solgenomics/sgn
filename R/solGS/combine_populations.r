@@ -97,7 +97,9 @@ for (popPhenoFile in allPhenoFiles) {
     
      phenoData <- data.frame(phenoData)
     
-     phenoTrait <- getAdjMeans(phenoData, traitName)
+     phenoTrait <- getAdjMeans(phenoData,
+                               traitName=traitName,
+                               calcAverages=TRUE)
 
      popIdFile <- basename(popPhenoFile)
      popId     <- str_extract(popIdFile, "\\d+")
@@ -107,13 +109,9 @@ for (popPhenoFile in allPhenoFiles) {
      colnames(phenoTrait)[2] <- newTraitName
 
      if (cnt == 1 ) {
-         print('no need to combine, yet')       
-         combinedPhenoPops <- phenoTrait
-         
+         combinedPhenoPops <- phenoTrait    
      } else {
-         print('combining...phenotypes')
-       
-         combinedPhenoPops <- full_join(combinedPhenoPops, phenoTrait, by='genotypes')           
+           combinedPhenoPops <- full_join(combinedPhenoPops, phenoTrait, by='genotypes')           
      }    
  }
 
