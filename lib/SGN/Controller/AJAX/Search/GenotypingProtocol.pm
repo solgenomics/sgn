@@ -50,7 +50,7 @@ sub genotyping_protocol_search_GET : Args(0) {
 
     my @result;
     foreach (@$protocol_search_result){
-        my $num_markers = scalar keys %{$_->{markers}};
+        my $num_markers = $_->{marker_count};
         my @trimmed;
         foreach (@{$_->{header_information_lines}}){
             $_ =~ tr/<>//d;
