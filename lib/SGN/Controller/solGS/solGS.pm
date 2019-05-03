@@ -448,61 +448,54 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 
 sub population : Path('/solgs/population') Args(1) {
     my ($self, $c, $pop_id) = @_;
-      
-    my $list_reference = $c->req->param('list_reference');
-    $c->stash->{list_reference} = $list_reference;
 
-    if ($list_reference) 
-    {
-        $pop_id = $c->req->param('model_id');
-
-        $c->stash->{model_id}   = $c->req->param('model_id'),
-        $c->stash->{list_name} = $c->req->param('list_name'),
+    if (!$pop_id)
+    {	 
+	$c->stash->{message} = "You can not access this page with out population id.";
+	$c->stash->{template} = "/generic_message.mas"; 
     }
 
-    if ($pop_id )
-    {   
-        if($pop_id =~ /list/) 
-        {
-            $c->stash->{list_reference} = 1;
-            $list_reference = 1;
-        }
+    $c->stash->{pop_id} = $pop_id; 
 
-        $c->stash->{pop_id} = $pop_id; 
-       
-        $self->phenotype_file($c); 
-        $self->genotype_file($c); 
+    if ($pop_id =~ /dataset/) 
+    {
+	my $dataset_id = $pop_id;
+	$dataset_id =~ s/\w+_//g;
+	$c->stash->{dataset_id} = $dataset_id;
+    }
+    elsif ($pop_id =~ /list/) 
+    {
+	my $list_id = $pop_id;
+	$list_id =~ s/\w+_//g;
+	$c->stash->{list_id} = $list_id;
+    }
+    
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+    $c->stash->{phenotype_file} = $c->stash->{phenotype_file_name};
+	
+    $c->controller('solGS::Files')->genotype_file_name($c);
+    $c->stash->{genotype_file} = $c->stash->{genotype_file_name};
+  
+    if (!-s $c->stash->{phenotype_file} || !-s $c->stash->{genotype_file})
+    {	 
+	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
+	    . " and create the training population data.";
+	
+	$c->stash->{template} = "/generic_message.mas"; 
+    }
+    else 
+    {	
         $self->get_all_traits($c);  
         $self->project_description($c, $pop_id);
  
         $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
-      
-     #   if ($action && $action =~ /selecttraits/ ) {
-     #       $c->stash->{no_traits_selected} = 'none';
-     #   }
-     #   else {
-     #       $c->stash->{no_traits_selected} = 'some';
-     #   }
-
+          
         my $acronym = $self->get_acronym_pairs($c);
         $c->stash->{acronym} = $acronym;
     }
- 
-    my $pheno_data_file = $c->stash->{phenotype_file};
+
     
-    if ($list_reference) 
-    {
-	my $ret->{status} = 'failed';
-	if ( !-s $pheno_data_file )
-	{
-	    $ret->{status} = 'failed';
-            
-	    $ret = to_json($ret);
-                
-	    $c->res->content_type('application/json');
-	    $c->res->body($ret); 
-	}
-    }
 } 
 
 
@@ -597,11 +590,20 @@ sub project_description {
     my ($self, $c, $pr_id) = @_;
 
     $c->stash->{pop_id} = $pr_id;
-    $c->stash->{list_reference} = 1 if ($pr_id =~ /list/);
-
+    
     my $protocol = $self->create_protocol_url($c);
     
-    if(!$c->stash->{list_reference}) {
+    if ($c->stash->{list_id})
+    {
+        $c->controller('solGS::List')->list_population_summary($c);
+
+    }
+    elsif ($c->stash->{dataset_id})
+    {
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
+    }
+    else
+    {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
 
         while (my $row = $pr_rs->next)
@@ -614,13 +616,7 @@ sub project_description {
        
         $self->get_project_owners($c, $pr_id);       
         $c->stash->{owner} = $c->stash->{project_owners};
-
     } 
-    else 
-    {
-        $c->stash->{model_id} = $pr_id;
-        $c->controller('solGS::List')->list_population_summary($c, $pr_id);
-    }
     
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
