@@ -41,8 +41,7 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     $self->get_dataset_trials_details($c);
     my $trials_ids = $c->stash->{dataset_trials_ids};
     my $combo_pops_id = $c->stash->{dataset_combo_trials_id};
-
-    print STDERR "\n dataset id: $dataset_id - trials ids: @$trials_ids - combo pops ids: $combo_pops_id\n";
+    
     if ($trials_ids) 
     {	
 	$c->stash->{rest}{'trials_ids'} = $trials_ids;
@@ -50,6 +49,17 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     }
        
 }
+
+
+# sub get_dataset_plots :Path('/solgs/dataset/plots') Args(0) {
+#     my ($self, $c)  = @_;
+    
+#     my $dataset_id = $c->req->param('dataset_id');
+    
+#     croak "Dataset id missing." if !$dataset_id;
+#     $c->stash->{dataset_id} = $dataset_id;
+    
+# }
 
 
 sub get_dataset_trials_details {
@@ -64,13 +74,10 @@ sub get_dataset_trials_details {
     if (scalar(@$trials_ids) > 1)
     {
 	$c->stash->{pops_ids_list} = $trials_ids;
-	#$self->create_combined_pops_id($c);
-
 	$c->controller('solGS::List')->process_trials_list_details($c);
 	$c->stash->{dataset_combo_trials_id} = $c->stash->{combo_pops_id};
     }
-   
-       
+          
 }
 
 
@@ -78,8 +85,7 @@ sub get_dataset_genotypes_genotype_data {
     my ($self, $c) = @_;
     
     my $dataset_id = $c->stash->{dataset_id};
-
-    
+  
     $self->get_dataset_genotypes_list($c);
     $c->controller('solGS::List')->genotypes_list_genotype_file($c, $dataset_id);
     
@@ -131,8 +137,7 @@ sub get_dataset_plots_list {
 
     my $dataset_id = $c->stash->{dataset_id};
  
-    my $model = $self->get_model();
-    
+    my $model = $self->get_model();   
     my $plots = $model->get_dataset_plots_list($dataset_id);
 
     $c->stash->{plots_names} = $plots;
@@ -154,12 +159,11 @@ sub get_model {
 
 
 sub dataset_population_summary {
-    my ($self, $c, $dataset_id) = @_;
+    my ($self, $c) = @_;
 
-    $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
-
-    $dataset_id =  'dataset_' . $dataset_id  if $dataset_id !~ /dataset_/;
+    my $dataset_id = $c->stash->{dataset_id};
     
+    my $file_id = $self->dataset_file_id($c);
     my $tmp_dir = $c->stash->{solgs_datasets_dir};
    
     if (!$c->user)
@@ -175,7 +179,7 @@ sub dataset_population_summary {
 
 	if ($dataset_id) 
 	{
-	    $c->controller('solGS::Files')->population_metadata_file($c, $dataset_id, $tmp_dir);   
+	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
 	    my $metadata_file = $c->stash->{population_metadata_file};
        
 	    my @metadata = read_file($metadata_file);
@@ -202,10 +206,14 @@ sub dataset_population_summary {
 
 sub create_dataset_population_metadata {
     my ($self, $c) = @_;
+
+    my $dataset_id = $c->stash->{dataset_id};
+    
+    my $dataset_name = $c->model('solGS::solGS')->get_dataset_name($dataset_id);
     
     my $metadata = 'key' . "\t" . 'value';
     $metadata .= "\n" . 'user_id' . "\t" . $c->user->id;
-    $metadata .= "\n" . 'dataset_name' . "\t" . $c->{stash}->{dataset_name};
+    $metadata .= "\n" . 'dataset_name' . "\t" . $dataset_name;
     $metadata .= "\n" . 'description' . "\t" . 'Uploaded on: ' . strftime "%a %b %e %H:%M %Y", localtime;
     
     $c->stash->{dataset_metadata} = $metadata;
@@ -214,14 +222,13 @@ sub create_dataset_population_metadata {
 
 
 sub create_dataset_population_metadata_file {
-    my ($self, $c, $dataset_id) = @_;
+    my ($self, $c) = @_;
 
-    $dataset_id =  'dataset_' . $dataset_id  if $dataset_id !~ /dataset_/;
+    my $file_id = $self->dataset_file_id($c);
     
-    my $user_id = $c->user->id;
     my $tmp_dir = $c->stash->{solgs_datasets_dir};
     
-    $c->controller('solGS::Files')->population_metadata_file($c, $dataset_id, $tmp_dir);   
+    $c->controller('solGS::Files')->population_metadata_file($c, $file_id, $tmp_dir);   
     my $file = $c->stash->{population_metadata_file};
    
     $self->create_dataset_population_metadata($c);
@@ -229,10 +236,103 @@ sub create_dataset_population_metadata_file {
     
     write_file($file, $metadata);
  
-    $c->stash->{dataset_metadata_file} = $file;
- 
+    $c->stash->{dataset_metadata_file} = $file; 
   
 }
+
+
+
+sub create_dataset_pop_data_files {
+    my ($self, $c) = @_;
+
+    my $file_id = $self->dataset_file_id($c);
+
+    $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
+    my $pheno_file = $c->stash->{phenotype_file_name};
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+    
+    my $files = { pheno_file => $pheno_file, geno_file => $geno_file};
+    
+    return $files;
+
+}
+
+
+sub dataset_plots_list_phenotype_file {
+    my ($self, $c) = @_;
+
+    my $dataset_id  = $c->stash->{dataset_id};
+    my $plots_ids = $c->model('solGS::solGS')->get_dataset_plots_list($dataset_id);        
+    my $file_id = $self->dataset_file_id($c);
+    
+    $c->stash->{pop_id} = $file_id;
+    $c->controller('solGS::Files')->traits_list_file($c);    
+    my $traits_file =  $c->stash->{traits_list_file};
+  
+    my $data_dir = $c->stash->{solgs_datasets_dir};
+
+    $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
+    my $pheno_file = $c->stash->{phenotype_file_name};
+    #$c->stash->{dataset_plots_list_phenotype_file} = $pheno_file;
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+    
+    my $args = {
+	'dataset_id'     => $dataset_id,
+	'plots_ids'      => $plots_ids,
+	'traits_file'    => $traits_file,
+	#'data_dir'       => $data_dir,
+	'phenotype_file' => $pheno_file,
+	'metadata_file'  => $metadata_file,
+	'r_temp_file'    => 'dataset-phenotype-data-query',
+	'population_type' => 'plots_list'
+    };
+    
+    $c->controller('solGS::List')->submit_list_phenotype_data_query($c, $args);
+    $c->stash->{phenotype_file} = $c->stash->{dataset_plots_list_phenotype_file};
+
+}
+
+
+sub dataset_genotypes_list_genotype_file {
+    my ($self, $c) = @_;
+
+    my $dataset_id = $c->stash->{dataset_id};
+
+    my $file_id = $self->dataset_file_id($c);
+    my $data_dir  = $c->stash->{solgs_datasets_dir};
+    
+    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+    
+    my $args = {
+	'dataset_id'    => $dataset_id,
+	'data_dir'      => $data_dir,
+	'genotype_file' => $geno_file,
+	'r_temp_file'   => 'dataset-genotype-data-query',
+	'population_type' => 'dataset'
+    };
+    
+    $c->controller('solGS::List')->submit_list_genotype_data_query($c, $args);
+    
+    $c->stash->{genotype_file} = $geno_file;
+    
+}
+
+
+sub dataset_file_id {
+    my ($self, $c) = @_;
+
+    $c->stash->{data_structure} = 'dataset';
+    $c->controller('solGS::Files')->create_file_id($c);
+
+    return $c->stash->{file_id};
+    
+}
+
 
 sub begin : Private {
     my ($self, $c) = @_;
