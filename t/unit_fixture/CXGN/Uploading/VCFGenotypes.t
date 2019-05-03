@@ -226,6 +226,6 @@ is_deeply($data->[0]->{selected_protocol_hash}->{markers_array}, [{'format' => '
 $mech->get_ok('http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id='.$protocol_id.'&marker_names=S1_27861,S1_75644');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsFiltered' => 2,'recordsTotal' => 18,'data' => [['S1_27861','1','27861','T','C','.','PASS','AR2=0.876;DR2=0.897;AF=0.003','GT:AD:DP:GQ:DS:PL'],['S1_75644','1','75644','T','C','.','PASS','AR2=0.816;DR2=0.834;AF=0.023','GT:AD:DP:GQ:DS:PL']]});
+is_deeply($response, {'recordsFiltered' => 18,'recordsTotal' => 18,'data' => [['S1_27861','1','27861','T','C','.','PASS','AR2=0.876;DR2=0.897;AF=0.003','GT:AD:DP:GQ:DS:PL'],['S1_75644','1','75644','T','C','.','PASS','AR2=0.816;DR2=0.834;AF=0.023','GT:AD:DP:GQ:DS:PL']]});
 
 done_testing();
