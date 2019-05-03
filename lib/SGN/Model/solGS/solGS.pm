@@ -2113,6 +2113,36 @@ sub get_dataset_plots_list {
 }
 
 
+sub get_dataset_name {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id}); 
+   
+    return $dataset->name();
+}
+
+
+sub get_dataset_genotype_data {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my $protocol_id = $self->protocol_id();
+    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+    my $geno_data  = $self->structure_genotype_data($dataref);
+   
+    return $geno_data;
+}
+
+
+
+
 sub people_schema {
     my $self = shift;
     return $self->context->dbic_schema("CXGN::People::Schema");
