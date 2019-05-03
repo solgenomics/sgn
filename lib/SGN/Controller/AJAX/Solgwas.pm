@@ -475,6 +475,30 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $cmd3->is_cluster(1);
     $cmd3->wait;
 
+    my $log10_cmd = "awk -F\"\t\" '{a = -log(\$9)/log(10); printf(\"%0.4f\n\", a)} afpGWAStest1.mlma > log10_afpGWAStest1.txt";
+    system($log10_cmd);
+    # my $cmd4 = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+    # # To test, copied the test.* gcta files to export temp_base
+    # # Hardcoding gcta for testing only:
+    # $cmd4->run_cluster(
+    #         "awk -F"\t" '{a = -log($16)/log(10); printf("%0.4f\n", a)}",
+    #         $c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1.mlma > log10_afpGWAStest1.txt",
+    # );
+    # $cmd4->alive;
+    # $cmd4->is_cluster(1);
+    # $cmd4->wait;
+
+    copy($c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1.mlma",$figure_path);
+
     $c->stash->{rest} = {
         figure3 => $figure3file_response,
         figure4 => $figure4file_response,

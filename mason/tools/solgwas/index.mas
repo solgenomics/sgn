@@ -18,6 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+<script src="//d3js.org/d3.v3.min.js"></script>
 
 <& /page/page_title.mas, title=>"SolGWAS" &>
 
@@ -293,6 +294,57 @@ jQuery(document).ready(function() {
             alert("An error occurred, the service may temporarily be unavailable");
           }
         });
+
+        var margin = {top: 20, right: 20, bottom: 30, left: 40},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        var x = d3.scale.linear()
+            .range([0, width]);
+
+        var y = d3.scale.linear()
+            .range([height, 0]);
+
+        var svg = d3.select("#Solgwas_output").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.tsv("/documents/tempfiles/solgwas_files/afpGWAStest1.mlma", function(error, data) {
+          if (error) throw error;
+
+          // Coerce the data to numbers.
+          data.forEach(function(d) {
+            d.bp = +d.bp;
+            d.p = +d.p;
+          });
+
+          // Compute the scales’ domains.
+          x.domain(d3.extent(data, function(d) { return d.bp; })).nice();
+          y.domain(d3.extent(data, function(d) { return d.p; })).nice();
+
+          // Add the x-axis.
+          svg.append("g")
+              .attr("class", "x axis")
+              .attr("transform", "translate(0," + height + ")")
+              .call(d3.svg.axis().scale(x).orient("bottom"));
+
+          // Add the y-axis.
+          svg.append("g")
+              .attr("class", "y axis")
+              .call(d3.svg.axis().scale(y).orient("left"));
+
+          // Add the points!
+          svg.selectAll(".point")
+              .data(data)
+            .enter().append("circle")
+              .attr("class", "point")
+              .attr("r", 4.5)
+              .attr("cx", function(d) { return x(d.bp); })
+              .attr("cy", function(d) { return y(d.p); });
+        });
+
       }
     };
   });
@@ -307,6 +359,23 @@ jQuery(document).ready(function() {
 
 <!-- STYLE -->
 <style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.point {
+  fill: steelblue;
+  stroke: #000;
+}
+
 
 h1 {
   display:none;
