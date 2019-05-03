@@ -167,23 +167,29 @@ sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
     $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
-   
+
+    my $dir; 
     if ($pop_id =~ /list/) 
     {
-	my $tmp_dir = $c->stash->{solgs_lists_dir};
-	my $file = catfile($tmp_dir, 'phenotype_data_' . $pop_id . '.txt');
-	$c->stash->{phenotype_file_name} = $file;
+	$dir = $c->stash->{solgs_lists_dir};
+    } 
+    elsif ($pop_id =~ /dataset/) 
+    {
+	$dir = $c->stash->{solgs_datasets_dir};	
     }
     else
     {
-	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
-			   file      => 'phenotype_data_' . $pop_id . '.txt',
-			   stash_key => 'phenotype_file_name',
-			   cache_dir => $c->stash->{solgs_cache_dir}
-	};
-    
-	$self->cache_file($c, $cache_data);
+	$dir = $c->stash->{solgs_cache_dir};
     }
+   
+    my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
+		       file      => 'phenotype_data_' . $pop_id . '.txt',
+		       stash_key => 'phenotype_file_name',
+		       cache_dir => $dir
+    };
+    
+    $self->cache_file($c, $cache_data);
+    
 }
 
 
@@ -231,23 +237,29 @@ sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
     $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
-    
+ 
+    my $dir; 
     if ($pop_id =~ /list/) 
     {
-	my $tmp_dir = $c->stash->{solgs_lists_dir};
-	my $file = catfile($tmp_dir, 'genotype_data_' . $pop_id . '.txt');
-	$c->stash->{genotype_file_name} = $file;
+	$dir = $c->stash->{solgs_lists_dir};
+    } 
+    elsif ($pop_id =~ /dataset/) 
+    {
+	$dir = $c->stash->{solgs_datasets_dir};	
     }
     else
     {
-	my $cache_data = { key       => 'genotype_data_' . $pop_id, 
-			   file      => 'genotype_data_' . $pop_id . '.txt',
-			   stash_key => 'genotype_file_name',
-			   cache_dir => $c->stash->{solgs_cache_dir}
-	};
-    
-	$self->cache_file($c, $cache_data);
+	$dir = $c->stash->{solgs_cache_dir};
     }
+
+    my $cache_data = { key       => 'genotype_data_' . $pop_id, 
+		       file      => 'genotype_data_' . $pop_id . '.txt',
+		       stash_key => 'genotype_file_name',
+		       cache_dir => $dir
+    };
+ 
+    
+    $self->cache_file($c, $cache_data);
 }
 
 
@@ -404,12 +416,12 @@ sub traits_list_file {
 
 
 sub population_metadata_file {
-    my ($self, $c, $pop_id, $dir) = @_;
-
+    my ($self, $c, $dir, $file_id) = @_;
+    
     my $user_id = $c->user->id;
     
-    my $cache_data = {key       => "metadata_${user_id}_${pop_id}",
-                      file      => "metadata_${user_id}_${pop_id}",
+    my $cache_data = {key       => "metadata_${user_id}_${file_id}",
+                      file      => "metadata_${user_id}_${file_id}",
                       stash_key => 'population_metadata_file',
 		      cache_dir => $dir,
     };
