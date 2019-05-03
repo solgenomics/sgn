@@ -67,6 +67,13 @@ sub run {
 	} elsif ($self->data_type =~ /genotype/) {
 	    $self->genotypes_list_genotype_data();	
 	}   
+    } elsif ($self->population_type =~ /dataset/) {
+	
+	if ($self->data_type =~ /phenotype/) {
+	    $self->plots_list_phenotype_data();
+	} elsif ($self->data_type =~ /genotype/) {
+	    $self->dataset_genotype_data();	
+	}   
     }
    
 }
@@ -140,12 +147,11 @@ sub plots_list_phenotype_data {
     my $self= shift;
 
     my $args = retrieve($self->args_file);
-    
-    #my $model_id    = $args->{model_id};
-    #my $plots_names = $args->{plots_names};
+
+    my $list_id = $args->{list_id};
     my $plots_ids   = $args->{plots_ids};
     my $traits_file = $args->{traits_file};
-    my $data_dir    = $args->{list_data_dir};
+    #my $data_dir    = $args->{data_dir};
     my $pheno_file  = $args->{phenotype_file};
     my $metadata_file = $args->{metadata_file};
    
@@ -158,6 +164,23 @@ sub plots_list_phenotype_data {
     write_file($pheno_file, $pheno_data);
     write_file($metadata_file, join("\t", @$metadata));
       
+}
+
+
+sub dataset_genotype_data {
+    my $self = shift;
+    
+    my $args = retrieve($self->args_file);
+    
+    my $dataset_id    = $args->{dataset_id};
+    my $data_dir      = $args->{list_data_dir};
+    my $geno_file     = $args->{genotype_file};
+
+    my $model = $self->get_model();
+   
+    my $geno_data = $model->get_dataset_genotype_data($dataset_id);
+    write_file($geno_file, $geno_data);
+
 }
 
 
