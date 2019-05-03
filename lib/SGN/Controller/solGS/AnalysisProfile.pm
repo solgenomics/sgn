@@ -467,18 +467,26 @@ sub structure_output_details {
 	my $geno_file;
 	my $pop_name;
 
-	if ($pop_id =~ /list/) {
-	    my $tmp_dir = $c->stash->{solgs_lists_dir};;	   
-
-	    my $files   = $c->controller('solGS::List')->create_list_pop_data_files($c, $tmp_dir, $pop_id);
+	if ($pop_id =~ /list/) 
+	{
+	    my $files   = $c->controller('solGS::List')->create_list_pop_data_files($c);
 	    $pheno_file = $files->{pheno_file};
 	    $geno_file  = $files->{geno_file};
 
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
-
-	    $c->controller('solGS::List')->list_population_summary($c, $pop_id);	    
+	    $c->controller('solGS::List')->list_population_summary($c);	    
 	    $pop_name = $c->stash->{project_name};
-	} 
+	}
+	elsif ($pop_id =~ /dataset/) 
+	{	    
+	    my $files   = $c->controller('solGS::Dataset')->create_dataset_pop_data_files($c,);
+	    $pheno_file = $files->{pheno_file};
+	    $geno_file  = $files->{geno_file};
+
+	    $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
+	    $c->controller('solGS::Dataset')->dataset_population_summary($c);	    
+	    $pop_name = $c->stash->{project_name};
+	}	
 	else 
 	{	    
 	    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);	
@@ -550,6 +558,7 @@ sub structure_output_details {
 		$training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 		if ($training_pop_id =~ /list/)
 		{
+		   
 		   $c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
 		   $training_pop_name   = $c->stash->{project_name};   
 		}
@@ -705,10 +714,20 @@ sub run_analysis {
 		my $list_id = $pop_id;
 		$list_id =~ s/list_//;
 		$c->stash->{list_id} = $list_id;
-        
+		$c->stash->
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
 		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
+	    }
+	    elsif ($pop_id =~ /dataset/)		
+	    {
+		my $dataset_id = $pop_id;
+		$dataset_id =~ s/dataset_//;
+		$c->stash->{dataset_id} = $dataset_id;
+
+		$c->controller('solGS::Dataset')->dataset_plots_list_phenotype_file($c);
+		$c->controller('solGS::Dataset')->dataset_genotypes_list_genotype_file($c);
+		$c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
 	    }
 	    else
 	    {
