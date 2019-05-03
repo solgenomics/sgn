@@ -140,21 +140,6 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
 }
 
 
-# sub solgs_login_message :Path('/solgs/login/message') Args(0) {
-#     my ($self, $c) = @_;
-
-#     my $page = $c->req->param('page');
-
-#     my $message = "This is a private data. If you are the owner, "
-# 	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
-
-#     $c->stash->{message} = $message;
-
-#     $c->stash->{template} = "/generic_message.mas"; 
-   
-# }
-
-
 sub get_trial_id :Path('/solgs/get/trial/id') Args(0) {
     my ($self, $c) = @_;
     
@@ -236,6 +221,7 @@ sub transform_uniqueids_genotypes{
     
 }
 
+
 sub get_genotypes_list_details {
     my ($self, $c) = @_;
 
@@ -264,21 +250,19 @@ sub get_genotypes_list_details {
 
 
 sub create_list_pop_data_files {
-    my ($self, $c, $dir, $file_id) = @_;
+    my ($self, $c) = @_;
 
-    $file_id = $c->stash->{file_id} if !$file_id;
+    my $file_id = $self->list_file_id($c);
 
-    $file_id = 'list_' . $file_id if $file_id !~ /list|dataset/;
-    
-    my $pheno_name = "phenotype_data_${file_id}.txt";
-    my $geno_name  = "genotype_data_${file_id}.txt";  
-    my $pheno_file = catfile($dir, $pheno_name);
-    my $geno_file  = catfile($dir, $geno_name);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
+    my $pheno_file = $c->stash->{phenotype_file_name};
 
-    write_file($pheno_file);
-    write_file($geno_file);
-    
-    my $files = { pheno_file => $pheno_file, geno_file => $geno_file};
+    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+        
+    my $files = { pheno_file => $pheno_file, 
+		  geno_file => $geno_file
+    };
     
     return $files;
 
@@ -302,10 +286,8 @@ sub create_list_population_metadata_file {
     
     my $user_id = $c->user->id;
     my $tmp_dir = $c->stash->{solgs_lists_dir};
-              
-    #my $file = catfile ($tmp_dir, "metadata_${user_id}_list_${list_pop_id}");
-
-    $c->controller('solGS::Files')->population_metadata_file($c, $list_pop_id, $tmp_dir);   
+   
+    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir,  $list_pop_id);   
     my $file = $c->stash->{population_metadata_file}; 
    
     $self->create_list_population_metadata($c);
@@ -482,22 +464,24 @@ sub user_selection_population_file {
 
 
 sub get_list_elements_names {
-    my ($self, $c) = @_;
+    my ($self, $c, $list_id) = @_;
 
-    my $list_id = $c->stash->{list_id};
+    $list_id = $c->stash->{list_id} if !$list_id;
 
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
     my $names = $list->elements;
    
     $c->stash->{list_elements_names} = $names;
+    return $names;
 
 }
 
 
 sub get_plots_list_elements_ids {
-    my ($self, $c) = @_;
+    my ($self, $c, $list_id) = @_;
 
-    my $list = $c->stash->{list_id};
+    my $list_id = $c->stash->{list_id} if !$list_id;
+    
     my $plots;
     if ($c->stash->{plots_names}) 
     {
@@ -517,6 +501,8 @@ sub get_plots_list_elements_ids {
 
     $c->stash->{list_elements_ids} = \@plots_ids;
 
+    return \@plots_ids;
+
 }
 
 
@@ -534,15 +520,19 @@ sub map_plots_genotypes {
 	my $genotypes_rs = $c->model('solGS::solGS')->get_genotypes_from_plots($plots);
 	
 	my @genotypes;
+	my @genotypes_ids;
 	while (my $genotype = $genotypes_rs->next) 
 	{
 	    my $name = $genotype->uniquename;
+	    my $genotypes_ids = $genotype->id;
 	    push @genotypes, $name;
 	}
 
 	@genotypes = uniq(@genotypes); 
+	@genotypes_ids = uniq(@genotypes);
 	
 	$c->stash->{genotypes_list} = \@genotypes;
+	$c->stash->{genotypes_ids} = \@genotypes_ids;
     }	    
         
 }
@@ -600,6 +590,96 @@ sub transform_plots_genotypes_names {
     
 }
     
+sub plots_list_phenotype_file {
+    my ($self, $c) = @_;
+
+    my $model_id = $c->stash->{model_id};
+    my $list     = $c->stash->{list}; 
+    my $list_id  = $c->stash->{list_id};
+ 
+    my $dataset_id  = $c->stash->{dataset_id};
+    my $plots_names = $c->stash->{plots_list};
+    my $plots_ids   = $c->stash->{plots_ids};
+
+    if (!$plots_ids)
+    {	
+	$self->get_plots_list_elements_ids($c);
+	$plots_ids = $c->stash->{list_elements_ids};
+    }
+    
+    $c->stash->{pop_id} = $dataset_id ? 'dataset_' . $dataset_id : 'list_' . $list_id;
+    my $file_id = $c->stash->{pop_id};
+    $c->controller('solGS::Files')->traits_list_file($c);    
+    my $traits_file =  $c->stash->{traits_list_file};
+  
+    my $data_dir = $c->stash->{solgs_lists_dir};
+
+    my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $file_id);
+    my $pheno_file = $temp_data_files->{pheno_file};
+    $c->stash->{plots_list_phenotype_file} = $pheno_file;
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+    
+     my $args = {
+	'list_id'        => $list_id,
+	'plots_ids'      => $plots_ids,
+	'traits_file'    => $traits_file,
+#	'data_dir'       => $data_dir,
+	'phenotype_file' => $pheno_file,
+	'metadata_file'  => $metadata_file,
+	'r_temp_file'    => 'plots-phenotype-data-query',
+	'population_type' => 'plots_list'
+	    
+    };
+
+    $self->submit_list_phenotype_data_query($c, $args);
+    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
+}
+
+
+sub submit_list_phenotype_data_query {
+    my ($self, $c, $args) = @_;
+
+    $c->stash->{r_temp_file} = $args->{r_temp_file};
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+     
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+    
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
+    $c->stash->{report_file} = $args_file;
+  
+    nstore $args, $args_file 
+		or croak "data query script: $! serializing data query details to $args_file ";
+	
+    my $cmd = 'mx-run solGS::Cluster ' 
+	. ' --data_type phenotype '
+	. ' --population_type ' . $args->{population_type}
+	. ' --args_file ' . $args_file;
+
+     my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file
+     };
+    
+    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $config,
+	'background_job'=> $background_job,
+	'temp_dir' => $temp_dir,
+    };
+    
+    $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
+   
+}
+
 
 sub genotypes_list_genotype_file {
     my ($self, $c, $pop_id) = @_;
@@ -633,6 +713,8 @@ sub genotypes_list_genotype_file {
 	'genotypes_ids'  => $genotypes_ids,
 	'list_data_dir'  => $data_dir,
 	'genotype_file'  => $geno_file,
+	'r_temp_file'    => 'genotypes-list-genotype-data-query',
+	'population_type' => 'genotypes_list'
     };
     
     $self->submit_list_genotype_data_query($c, $args);
@@ -645,7 +727,7 @@ sub genotypes_list_genotype_file {
 sub submit_list_genotype_data_query {
     my ($self, $c, $args) = @_;
 
-    $c->stash->{r_temp_file} = 'genotypes-list-genotype-data-query';
+    $c->stash->{r_temp_file} = $args->{r_temp_file};
     $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
@@ -674,7 +756,7 @@ sub submit_list_genotype_data_query {
 	
     my $cmd = 'mx-run solGS::Cluster ' 
 	. ' --data_type genotype '
-	. ' --population_type genotypes_list '
+	. ' --population_type ' . $args->{population_type}
 	. ' --args_file ' . $args_file;
     
 
@@ -687,100 +769,15 @@ sub submit_list_genotype_data_query {
     
     $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
   
-}
-
-
-sub plots_list_phenotype_file {
-    my ($self, $c) = @_;
-
-    my $model_id = $c->stash->{model_id};
-    my $list     = $c->stash->{list}; 
-    my $list_id  = $c->stash->{list_id};
- 
-    my $dataset_id  = $c->stash->{dataset_id};
-    my $plots_names = $c->stash->{plots_list};
-    my $plots_ids   = $c->stash->{plots_ids};
-
-    if (!$plots_ids)
-    {
-	#$self->get_list_elements_names($c);
-	#$plots_names = $c->stash->{list_elements_names};
-	
-	$self->get_plots_list_elements_ids($c);
-	$plots_ids = $c->stash->{list_elements_ids};
-    }
-    
-    $c->stash->{pop_id} = $dataset_id ? 'dataset_' . $dataset_id : 'list_' . $list_id;
-    my $file_id = $c->stash->{pop_id};
-    $c->controller('solGS::Files')->traits_list_file($c);    
-    my $traits_file =  $c->stash->{traits_list_file};
-  
-    my $data_dir = $c->stash->{solgs_lists_dir};
-
-    $c->stash->{r_temp_file} = 'plots-phenotype-data-query';
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
-     
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $background_job = $c->stash->{background_job};
-
-    my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $file_id);
-    my $pheno_file = $temp_data_files->{pheno_file};
-    $c->stash->{plots_list_phenotype_file} = $pheno_file;
-
-    $c->controller('solGS::Files')->phenotype_metadata_file($c);
-    my $metadata_file = $c->stash->{phenotype_metadata_file};
-    
-    my $status;
-
-     my $args = {
-	'list_id'        => $list_id,
-	#'plots_names'    => $plots_names,
-	'plots_ids'      => $plots_ids,
-	'traits_file'    => $traits_file,
-	'list_data_dir'  => $data_dir,
-	'phenotype_file' => $pheno_file,
-	'metadata_file'  => $metadata_file
-    };
-    
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
-    $c->stash->{report_file} = $args_file;
-  
-    nstore $args, $args_file 
-		or croak "data query script: $! serializing data query details to $args_file ";
-	
-    my $cmd = 'mx-run solGS::Cluster ' 
-	. ' --data_type phenotype '
-	. ' --population_type plots_list '
-	. ' --args_file ' . $args_file;
-
-     my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
-     };
-    
-    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
-
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
-    };
-    
-    $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
-    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
-
 }
 
 
 sub list_population_summary {
-    my ($self, $c, $list_pop_id) = @_;
-    
+    my ($self, $c, $file_id) = @_;
+
+    $file_id =  $self->list_file_id($c) if !$file_id;	
     my $tmp_dir = $c->stash->{solgs_lists_dir};
+    my $list_id = $c->stash->{list_id};
    
     if (!$c->user)
     {
@@ -793,9 +790,9 @@ sub list_population_summary {
 	my $user_name = $c->user->id; 
         my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c);
 
-	if ($list_pop_id) 
+	if ($file_id) 
 	{
-	    $c->controller('solGS::Files')->population_metadata_file($c, $list_pop_id, $tmp_dir);   
+	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
 	    my $metadata_file = $c->stash->{population_metadata_file}; 
        
 	    my @metadata = read_file($metadata_file);
@@ -808,7 +805,7 @@ sub list_population_summary {
 	    ($list_name)       = grep {/list_name/} @metadata;      
 	    ($key, $list_name) = split(/\t/, $list_name); 
 	   
-	    $c->stash(project_id          => $list_pop_id,
+	    $c->stash(project_id          => $list_id,
 		      project_name        => $list_name,
 		      prediction_pop_name => $list_name,
 		      project_desc        => $desc,
@@ -945,6 +942,17 @@ sub register_trials_list  {
 	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
 	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
     }
+    
+}
+
+
+sub list_file_id {
+    my ($self, $c) = @_;
+
+    $c->stash->{data_structure} = 'list';
+    $c->controller('solGS::Files')->create_file_id($c);
+
+    return $c->stash->{file_id};
     
 }
 
