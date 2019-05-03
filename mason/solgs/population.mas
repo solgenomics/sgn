@@ -9,7 +9,6 @@ $project_desc
 $stocks_no
 $markers_no
 $traits_no
-$list_reference=>''
 $owner=>''
 $protocol
 $acronym
@@ -19,6 +18,7 @@ $acronym
 <%perl>
 
 #my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
+
 
 </%perl>
 
@@ -47,7 +47,6 @@ $acronym
     traits_no    => $traits_no,
     owner        => $owner,
     protocol     => $protocol,
-    list_reference => $list_reference
  &>
 
 </&>
@@ -68,12 +67,11 @@ $acronym
      pop_id             => $pop_id,
      traits_form        => $traits_form,
      all_traits_file    => $all_traits_file,
-     list_reference => $list_reference
 &>
 
 </&>
 
-% if ($pop_id !~ /list/)
+% if ($pop_id !~ /list|dataset/)
 % {
 
 <& /solgs/anova/analysis.mas,
