@@ -46,6 +46,7 @@
                                 <option value="plots">Plots</option>
                                 <option value="plants">Plants</option>
                                 <option value="subplots">Subplots</option>
+                                <option value="tissue_samples">Tissue Samples</option>
                             </select>
                         </div>
                     </div>

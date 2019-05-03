@@ -58,7 +58,7 @@ sub upload_genotype_verify_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -67,7 +67,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -81,12 +81,64 @@ sub upload_genotype_verify_POST : Args(0) {
     }
 
     #archive uploaded file
-    my $upload = $c->req->upload('upload_genotype_vcf_file_input');
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "genotype_vcf_upload";
+    my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
+    my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
+    my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
+
+    if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
+        $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
+        $c->detach();
+    }
+    if (defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) {
+        $c->stash->{rest} = { error => 'To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.' };
+        $c->detach();
+    }
+
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $upload_original_name;
+    my $upload_tempfile;
+    my $subdirectory;
+    my $parser_plugin;
+    my $include_lab_numbers;
+    if ($upload_vcf) {
+        $upload_original_name = $upload_vcf->filename();
+        $upload_tempfile = $upload_vcf->tempname;
+        $subdirectory = "genotype_vcf_upload";
+        $parser_plugin = 'VCF';
+    }
+
+    my $archived_intertek_marker_info_file;
+    if ($upload_intertek_genotypes) {
+        $upload_original_name = $upload_intertek_genotypes->filename();
+        $upload_tempfile = $upload_intertek_genotypes->tempname;
+        $subdirectory = "genotype_intertek_upload";
+        $parser_plugin = 'IntertekCSV';
+        $include_lab_numbers = 1;
+
+        my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
+        my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_inteterk_marker_info_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_inteterk_marker_info_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        $archived_intertek_marker_info_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_intertek_marker_info_file);
+        if (!$archived_intertek_marker_info_file) {
+            push @error_status, "Could not save file $upload_inteterk_marker_info_original_name in archive.";
+            return (\@success_status, \@error_status);
+        } else {
+            push @success_status, "File $upload_inteterk_marker_info_original_name saved in archive.";
+        }
+        unlink $upload_inteterk_marker_info_tempfile;
+    }
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -167,12 +219,13 @@ sub upload_genotype_verify_POST : Args(0) {
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
+        filename_intertek_marker_info => $archived_intertek_marker_info_file,
         observation_unit_type_name => $obs_type,
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
         igd_numbers_included => $include_igd_numbers
     });
-    $parser->load_plugin('VCF');
+    $parser->load_plugin($parser_plugin);
     my $parsed_data = $parser->parse();
     my $parse_errors;
     if (!$parsed_data) {
@@ -217,6 +270,7 @@ sub upload_genotype_verify_POST : Args(0) {
         protocol_description=>$protocol_description,
         organism_id=>$organism_id,
         igd_numbers_included=>$include_igd_numbers,
+        lab_numbers_included=>$include_lab_numbers,
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
         archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format

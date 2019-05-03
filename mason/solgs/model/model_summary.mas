@@ -37,7 +37,7 @@ $model_data
    
 % foreach my $model (@$model_data)
 %{
-    
+%
   <tr style="background-color:#ccccff">
     <td>
    <%  $model->[0] %>

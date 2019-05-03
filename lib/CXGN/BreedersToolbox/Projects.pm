@@ -6,6 +6,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
+use Encode;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -242,22 +243,56 @@ sub get_all_locations {
  }
 
 
+ sub get_all_locations_by_breeding_program {
+     my $self = shift;
+
+    my $q = "SELECT geo.description,
+    breeding_program.name
+    FROM nd_geolocation AS geo
+    LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+    LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
+    GROUP BY 1,2 ORDER BY 1";
+
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute();
+    my @locations;
+
+    while (my @location_data = $h->fetchrow_array()) {
+        foreach my $d (@location_data) {
+            $d = Encode::encode_utf8($d);
+        }
+     	my ($name, $prog) = @location_data;
+         push(@locations, {
+             properties => {
+                 Name => $name,
+                 Program => $prog
+             }
+         });
+     }
+     
+     my $json = JSON->new();
+     $json->canonical(); # output sorted JSON
+     return $json->encode(\@locations);
+}
+
+
 sub get_location_geojson {
     my $self = shift;
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
-	my $q = "SELECT geo.nd_geolocation_id,
-	geo.description,
-	abbreviation.value,
-    country_name.value,
-	country_code.value,
-	breeding_program.name,
-	location_type.value,
-	latitude,
-    longitude,
-	altitude,
-    count(distinct(projectprop.project_id))
+	my $q = "SELECT A,B,C,D,E,string_agg(F, ' & '),G,H,I,J,K FROM
+(SELECT geo.nd_geolocation_id as A,
+ geo.description AS B,
+ abbreviation.value AS C,
+    country_name.value AS D,
+ country_code.value AS E,
+ breeding_program.name AS F,
+ location_type.value AS G,
+ latitude AS H,
+    longitude AS I,
+ altitude AS J,
+    count(distinct(projectprop.project_id)) AS K
 FROM nd_geolocation AS geo
 LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
 LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
@@ -267,7 +302,7 @@ LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = 
 LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
 LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
 GROUP BY 1,2,3,4,5,6,7
-ORDER BY 2";
+ORDER BY 2) AS T1 group by 1,2,3,4,5,7,8,9,10,11";
 
 
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
@@ -278,7 +313,7 @@ ORDER BY 2";
 	    $d = Encode::encode_utf8($d);
 	}
 	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = @location_data;
- 
+
         my $lat = $latitude ? $latitude + 0 : undef;
         my $long = $longitude ? $longitude + 0 : undef;
         my $alt = $altitude ? $altitude + 0 : undef;
@@ -295,7 +330,7 @@ ORDER BY 2";
                 Latitude => $lat,
                 Longitude => $long,
                 Altitude => $alt,
-                Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+                Trials => '<a href="/search/trials?location_id='.$id.'">'.$trial_count.' trials</a>'
             },
             geometry => {
                 type => "Point",
@@ -370,9 +405,10 @@ sub new_breeding_program {
 	    name => $name,
 	});
     if ($rs->count() > 0) {
-	return "A breeding program with name '$name' already exists.";
-    }
+	return { error => "A breeding program with name '$name' already exists." };
 
+    }
+    my $project_id;
     eval {
 
 		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
@@ -388,6 +424,7 @@ sub new_breeding_program {
 	    });
 
 	$row->insert();
+    $project_id = $row->project_id();
 
 	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
 	    {
@@ -398,8 +435,14 @@ sub new_breeding_program {
 	$prop_row->insert();
 
     };
+
+
+
     if ($@) {
-	return "An error occurred while generating a new breeding program. ($@)";
+        return { error => "An error occurred while generating a new breeding program. ($@)" };
+    } else {
+        print STDERR "The new breeding program $name was created with id $project_id\n";
+        return { success => "The new breeding program $name was created.", id => $project_id };
     }
 
 }

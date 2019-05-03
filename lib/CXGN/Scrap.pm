@@ -159,7 +159,7 @@ sub get_arguments {
 
 sub jsan_use {
   shift;
-  push @{ $c->stash->{js_classes} }, @_
+  push @{ $c->stash->{jsan_classes} }, @_
 }
 
 # =head2 jsan_render_includes

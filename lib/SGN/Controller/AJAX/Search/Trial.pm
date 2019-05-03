@@ -19,14 +19,13 @@ sub search : Path('/ajax/search/trials') Args(0) {
     my $self = shift;
     my $c    = shift;
 
-    my @location_names;
-    my $nd_geolocation = $c->req->param('nd_geolocation');
-    if ($nd_geolocation && $nd_geolocation ne 'not_provided'){
-        push @location_names, $nd_geolocation;
+    my @location_ids;
+    my $location_id = $c->req->param('location_id');
+    if ($location_id && $location_id ne 'not_provided'){
+        #print STDERR "location id: " . $location_id . "\n";
+        push @location_ids, $location_id;
     }
 
-    print STDERR "location: " . $nd_geolocation . "\n";
-    #print STDERR Dumper $c->req->params();
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $field_trials_only = $c->req->param('field_trials_only') || 1;
     my $trial_design_list = $c->req->param('trial_design') ? [$c->req->param('trial_design')] : [];
@@ -35,7 +34,7 @@ sub search : Path('/ajax/search/trials') Args(0) {
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
-        location_list=>\@location_names,
+        location_id_list=>\@location_ids,
         field_trials_only=>$field_trials_only,
         trial_design_list=>$trial_design_list
     });

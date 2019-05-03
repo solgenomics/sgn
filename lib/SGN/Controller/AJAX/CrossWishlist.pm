@@ -762,7 +762,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 $server_endpoint."/$previously_saved_metadata_id"
             );
             if ($delete_resp->is_success) {
-                print STDERR "Deleted metadata file $previously_saved_metadata_id\n";
+                print STDERR "Deleted metadata file on ONA $previously_saved_metadata_id\n";
             }
             else {
                 print STDERR "ERROR: Did not delete metadata file\n";
@@ -774,7 +774,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 $server_endpoint."/$previously_saved_germplasm_info_metadata_id"
             );
             if ($delete_resp->is_success) {
-                print STDERR "Deleted metadata file $previously_saved_germplasm_info_metadata_id\n";
+                print STDERR "Deleted metadata file on ONA $previously_saved_germplasm_info_metadata_id\n";
             }
             else {
                 print STDERR "ERROR: Did not delete metadata file\n";
@@ -799,6 +799,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $message_hash = decode_json $message;
             #print STDERR Dumper $message_hash;
             if ($message_hash->{id}){
+
+                my $q = "DELETE from metadata.md_files WHERE filetype like 'cross_wishlist_%' AND file_id != $cross_wishlist_file_id;";
+                my $h = $schema->storage->dbh()->prepare($q);
+                $h->execute();
 
                 my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $cross_wishlist_file_id});
                 $file_row->update({comment => $message_hash->{id}});
@@ -828,6 +832,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $message_hash = decode_json $message;
             #print STDERR Dumper $message_hash;
             if ($message_hash->{id}){
+
+                my $q = "DELETE from metadata.md_files WHERE filetype like 'cross_wishlist_germplasm_info_%' AND file_id != $germplasm_info_file_id;";
+                my $h = $schema->storage->dbh()->prepare($q);
+                $h->execute();
 
                 my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $germplasm_info_file_id});
                 $file_row->update({comment => $message_hash->{id}});

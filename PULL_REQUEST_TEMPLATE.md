@@ -22,3 +22,4 @@ Checklist <!-- Put an `x` in all the boxes that apply, or check them once submit
     - [ ] The user manual in `/docs` has been updated.
   - [ ] Any new Perl has been documented using **perldoc**.
   - [ ] Any new JavaScript has been documented using **JSDoc**.
+  - [ ] Any new _legacy_ JavaScript has been moved from `/js` to `/js/source/legacy`.

@@ -1,0 +1,54 @@
+
+<%args>
+$data => 'Default'
+</%args>
+
+
+<& /page/page_title.mas, title=>"<b>Quality Control Genotyping using the Intertek QC KASP marker sets of 20 or 40</b>" &>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<div>
+<p>
+    <ul>
+        
+    <li>The intertek quality control marker sets can be used in 2 ways:</li>
+    <ol>1. <b>Storing new fingerprint of your germplasm </b> that has been genotyped using the qc marker sets as a new protocol. This requires two files for the storage: <em>Intertek grid file</em> which has allele calls for each genotype. Download sample file <a href="docs/intertek_grid.csv" title="sample grid file"> here.</a> The second file is a <em>Map file</em> which has all the SNP information. Download sample file <a href="docs/SNP_file.csv" title="sample SNP file"> here.</a> </ol><br/>
+    <ol>2.<b> Run genotype quality control</b> with the qc markers by comparing with existing protocol in the database. This requries just the <a href="docs/intertek_grid.csv" title="sample grid file">grid file</a>
+    </ol><br/>
+    <li>The steps below will guide you through uploading a new fingerprint or performing a quality control.</li>
+    </ul>
+    </p>
+</div>
+<!--<div id= "header" class="container-fluid">
+    <div id="tabs"> 
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#upload" aria-controls="upload" role="tab" data-toggle="tab">1. Upload QC data</a></li>
+        <li role="presentation"><a href="#run" aria-controls="run" role="tab" data-toggle="tab">2. Run</a></li>
+        <li role="presentation"><a href="#results" aria-controls="results" role="tab" data-toggle="tab">3. Results</a></li>
+      </ul>
+  </div>
+</div> 
+      <br/>
+    <div>  -->
+<ul>
+      <p>
+      <li><font size="2" color="green"> Upload QC assay</font> </li>
+      <li><font size="2" color="green">Only CSV file format is supported </font></li>
+  </ul>
+</div>
+  <br/><br/><br/><br/>
+  <center>
+        <button class="btn btn-primary" name="upload_genotyping_data_link">Upload Genotyping Data (VCF or Intertek Format)</button>
+        <button class="btn btn-primary" name="upload_genotyping_data_qc_link">Run Genotype Quality Control</button>
+    </center>
+     
+    
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_qc_dialogs.mas &>
+
+<script>
+jQuery(document).ready(function(){
+    //alert('Hello');
+});
+</script>

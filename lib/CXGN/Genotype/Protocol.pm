@@ -4,6 +4,20 @@ package CXGN::Genotype::Protocol;
 
 CXGN::Genotype::Protocol - an object to handle genotyping protocols (breeding data)
 
+To get info for a specific protocol:
+
+my $protocol = CXGN::Genotype::Protocol->new({
+    bcs_schema => $schema,
+    nd_protocol_id => $protocol_id
+});
+And then use Moose attributes to retrieve markers, refrence name, etc
+
+----------------
+
+To get a list of protocols and their info:
+my $protocol_list = CXGN::Genotype::Protocol::list($schema);
+This can take search params in, like protocol_ids, accessions, etc
+
 =head1 USAGE
 
 =head1 DESCRIPTION
@@ -192,7 +206,7 @@ sub list {
     $h->execute();
     
     my @results;
-    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $full_count) = $h->fetchrow_array()) {
+    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $sample_count) = $h->fetchrow_array()) {
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : {};
         my $marker_set = $protocol->{markers} || {};
         my $marker_names = $protocol->{marker_names} || [];
@@ -213,6 +227,50 @@ sub list {
             sample_observation_unit_type_name => $sample_observation_unit_type_name,
             project_name => $project_name,
             project_id => $project_id,
+            create_date => $create_date,
+            observation_unit_count => $sample_count
+        };
+    }
+    #print STDERR Dumper \@results;
+    return \@results;
+}
+
+#class method
+sub list_simple {
+    my $schema = shift;
+    my @where_clause;
+
+    my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
+        FROM nd_protocol
+        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
+        ORDER BY nd_protocol.nd_protocol_id ASC;";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+
+    my @results;
+    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json) = $h->fetchrow_array()) {
+        my $protocol = $protocolprop_json ? decode_json $protocolprop_json : {};
+        my $marker_set = $protocol->{markers} || {};
+        my $marker_names = $protocol->{marker_names} || [];
+        my $header_information_lines = $protocol->{header_information_lines} || [];
+        my $reference_genome_name = $protocol->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        my $species_name = $protocol->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        my $sample_observation_unit_type_name = $protocol->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        my $protocol_description = $protocol_description || 'Not set. Please reload these genotypes using new genotype format!';
+        $create_date = $create_date || 'Not set. Please reload these genotypes using new genotype format!';
+        push @results, {
+            protocol_id => $protocol_id,
+            protocol_name => $protocol_name,
+            protocol_description => $protocol_description,
+            markers => $marker_set,
+            marker_names => $marker_names,
+            header_information_lines => $header_information_lines,
+            reference_genome_name => $reference_genome_name,
+            species_name => $species_name,
+            sample_observation_unit_type_name => $sample_observation_unit_type_name,
             create_date => $create_date
         };
     }

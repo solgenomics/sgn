@@ -3,16 +3,17 @@ package SGN::Controller::solGS::TraitsGebvs;
 use Moose;
 use namespace::autoclean;
 
+use Array::Utils qw(:all);
 use Cache::File;
-
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
-
 use JSON;
+use List::MoreUtils qw /uniq/;
+use String::CRC;
 use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -33,7 +34,7 @@ sub combine_gebvs_of_traits {
     }
    
     my $index_file  = $c->stash->{selection_index_file};
-
+    
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
 
     if (scalar(@files_no) > 1 ) 
@@ -63,6 +64,8 @@ sub combine_gebvs_of_traits {
     {
         $c->stash->{combined_gebvs_files} = 0;           
     }
+
+   
 }
 
 
@@ -71,9 +74,9 @@ sub combine_gebvs_of_traits {
 sub get_gebv_files_of_traits {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
-    $c->stash->{model_id} = $pop_id;
-    my $pred_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{corre_pop_id};
+    $c->stash->{model_id} = $training_pop_id;
+    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     
     my $dir = $c->stash->{solgs_cache_dir};
     
@@ -81,9 +84,9 @@ sub get_gebv_files_of_traits {
     my $valid_gebv_files;
     my $pred_gebv_files;
    
-    if ($pred_pop_id && $pred_pop_id != $pop_id) 
+    if ($selection_pop_id && $selection_pop_id != $training_pop_id) 
     {
-        $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $pop_id, $pred_pop_id);
+        $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
         $pred_gebv_files = $c->stash->{prediction_pop_analyzed_traits_files};
         
         foreach (@$pred_gebv_files)
@@ -97,7 +100,7 @@ sub get_gebv_files_of_traits {
     {
         $c->controller('solGS::solGS')->analyzed_traits($c);
         my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
-
+	
         foreach my $tr_file (@analyzed_traits_files) 
         {
             $gebv_files .= $tr_file;
@@ -113,10 +116,10 @@ sub get_gebv_files_of_traits {
         }
     }
    
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
+    #my $pred_file_suffix;
+    my $pred_file_suffix =  $selection_pop_id ? '_' . $selection_pop_id : 0; 
     
-    my $name = "gebv_files_of_traits_${pop_id}${pred_file_suffix}";
+    my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
    
@@ -124,7 +127,7 @@ sub get_gebv_files_of_traits {
    
     $c->stash->{gebv_files_of_traits} = $file;
 
-    my $name2 = "gebv_files_of_valid_traits_${pop_id}${pred_file_suffix}";
+    my $name2 = "gebv_files_of_valid_traits_${training_pop_id}${pred_file_suffix}";
     my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name2);
    
     write_file($file2, $valid_gebv_files);
@@ -132,6 +135,122 @@ sub get_gebv_files_of_traits {
     $c->stash->{gebv_files_of_valid_traits} = $file2;
 
 }
+
+
+sub traits_selection_catalogue_file {
+    my ($self, $c) = @_;
+
+    my $cache_data = {key       => 'traits_selection_catalogue_file',
+                      file      => 'traits_selection_catalogue_file.txt',
+                      stash_key => 'traits_selection_catalogue_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub catalogue_traits_selection {
+    my ($self, $c, $traits_ids) = @_;
+  
+    $self->traits_selection_catalogue_file($c);
+    my $file = $c->stash->{traits_selection_catalogue_file};
+
+    my $traits_selection_id = $self->create_traits_selection_id($traits_ids);	    
+    my $ids = join(',', @$traits_ids);
+    my $entry = $traits_selection_id . "\t" . $ids;
+	 
+    if (!-s $file) 
+    {
+        my $header = 'traits_selection_id' . "\t" . 'traits_ids';
+        write_file($file, ($header, $entry));    
+    }
+    else 
+    {
+	
+        my @combo = ($entry);
+
+        my @entries = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
+        my @intersect = intersect(@combo, @entries);
+
+        unless( @intersect ) 
+        {
+            write_file($file, {append => 1}, "\n" . "$entry");
+        }
+    }
+    
+}
+
+
+sub get_traits_selection_list {
+    my ($self, $c, $id) = @_;
+
+    $id = $c->stash->{traits_selection_id} if !$id;
+    
+    $self->traits_selection_catalogue_file($c);
+    my $traits_selection_catalogue_file = $c->stash->{traits_selection_catalogue_file};
+   
+    my @combos = uniq(read_file($traits_selection_catalogue_file));
+    
+    foreach my $entry (@combos)
+    {
+        if ($entry =~ m/$id/)
+        {
+	    chomp($entry);
+            my ($traits_selection_id, $traits)  = split(/\t/, $entry);
+
+	    if ($id == $traits_selection_id)
+	    {
+		my @traits_list = split(',', $traits);
+		$c->stash->{traits_selection_list} = \@traits_list;
+	    }
+        }   
+    }     
+
+}
+
+
+sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
+    my ($self, $c) = @_;
+    
+    my @traits_ids = $c->req->param('trait_ids[]');
+   
+    my $ret->{status} = 0;
+
+    if (@traits_ids > 1) 
+    {
+	$self->catalogue_traits_selection($c, \@traits_ids);
+	
+	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);
+	$ret->{traits_selection_id} = $traits_selection_id;
+	$ret->{status} = 1;
+    }
+
+    $ret = to_json($ret);
+    
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
+sub create_traits_selection_id {
+    my ($self, $traits_ids) = @_;
+    
+    if ($traits_ids)
+    {
+	return  crc(join('', @$traits_ids));
+    }
+    else
+    {
+	return 0;
+    }
+}
+
+	
+
+#####
 
 
 sub begin : Private {
