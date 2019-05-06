@@ -80,10 +80,11 @@ solGS.dataset = {
 	    d.categories['plots'] === null) {
 	  	    
 	    this.datasetTrialsTrainingPop(datasetId);
+	    
 	} else if (d.categories['trials'] &&
 		   d.categories['plots'])  {
 
-	    this.queueDatasetTrainingPop(datasetId);
+	    this.datasetPlotsTrainingPop(datasetId);
 	}
 	   
     },
@@ -124,38 +125,11 @@ solGS.dataset = {
 
 
     datasetPlotsTrainingPop: function(datasetId) {
-
-	jQuery.ajax({  
-            type: 'POST',
-            dataType: "json",
-            url: '/solgs/dataset/plots/',
-            data: {'dataset_id': datasetId},
-            success: function(res) {
-		var trialsIds = res.trials_ids;
-		var comboPopsId = res.combo_pops_id; 
-		if (trialsIds) {
-		    var args = {
-			'combo_pops_id'   : [ comboPopsId ],
-			'combo_pops_list' : trialsIds,
-		    };
-		    
-		    if (trialsIds.length > 1) {
-			goToCombinedTrialsTrainingPopPage(args);
-		    } else {
-			goToSingleTrialTrainingPopPage(trialsIds[0])
-		    }
-		} else {
-		    Alert('No trials ids were found for this dataset')
-		}
-	    },
-	    error: function(res) {
-		Alert('Error Occurred fetching trials ids in the dataset. ' + res.responseText)	
-	    }
-	});
+	this.queueDatasetPlotsTrainingPop(datasetId);	
     },
 
-
-    queueDatasetTrainingPop: function (datasetId) {
+    
+    queueDatasetPlotsTrainingPop: function (datasetId) {
 
 	var args = this.createDatasetTrainingReqArgs(datasetId);
 	var modelId = args.training_pop_id;
@@ -172,7 +146,7 @@ solGS.dataset = {
 
 	var dataset = new CXGN.Dataset();
 	var d = dataset.getDataset(datasetId);
-	
+
 	var popId     = 'dataset_' + datasetId;
 	var popType = 'dataset_training';
 

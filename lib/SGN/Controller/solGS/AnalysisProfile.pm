@@ -714,7 +714,7 @@ sub run_analysis {
 		my $list_id = $pop_id;
 		$list_id =~ s/list_//;
 		$c->stash->{list_id} = $list_id;
-		$c->stash->
+
 		$c->controller('solGS::List')->plots_list_phenotype_file($c);
 		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
 		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
