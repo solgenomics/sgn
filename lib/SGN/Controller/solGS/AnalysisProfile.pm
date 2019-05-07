@@ -604,7 +604,7 @@ sub structure_output_details {
 	}		
     }
     elsif ($analysis_page =~ m/solgs\/populations\/combined\//) 
-    {
+    {	
 	my $combined_pops_page = $base . "solgs/populations/combined/$combo_pops_id";
 	my @combined_pops_ids = @{$c->stash->{combo_pops_list}};
 
@@ -724,7 +724,7 @@ sub run_analysis {
 		my $dataset_id = $pop_id;
 		$dataset_id =~ s/dataset_//;
 		$c->stash->{dataset_id} = $dataset_id;
-
+        
 		$c->controller('solGS::Dataset')->dataset_plots_list_phenotype_file($c);
 		$c->controller('solGS::Dataset')->dataset_genotypes_list_genotype_file($c);
 		$c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
@@ -736,9 +736,7 @@ sub run_analysis {
 	    }
 	}
 	elsif ($analysis_page =~ /solgs\/populations\/combined\//)
-	{
-	    my $combo_pops_id = $c->stash->{combo_pops_id};
-	    #$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	{	
 	    $c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
 	    
 	    $c->stash->{dependency} = $c->stash->{prerequisite_jobs};
@@ -749,11 +747,7 @@ sub run_analysis {
 	    {
 		$c->controller("solGS::solGS")->run_async($c);
 	    }
-	    #my $combined_pops_list = $c->controller("solGS::combinedTrials")->get_combined_pops_arrayref($c);
-	    #$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $combined_pops_list);
-	    #my $g_files = $c->stash->{multi_pops_geno_files};
-	    #my @geno_files = split(/\t/, $g_files);
-	    #$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
+	    
 	}
 	elsif ($analysis_page =~ /solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\//)
 	{

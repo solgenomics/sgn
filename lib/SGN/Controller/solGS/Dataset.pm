@@ -43,23 +43,13 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     my $combo_pops_id = $c->stash->{dataset_combo_trials_id};
     
     if ($trials_ids) 
-    {	
+    {
+	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
 	$c->stash->{rest}{'trials_ids'} = $trials_ids;
 	$c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
     }
        
 }
-
-
-# sub get_dataset_plots :Path('/solgs/dataset/plots') Args(0) {
-#     my ($self, $c)  = @_;
-    
-#     my $dataset_id = $c->req->param('dataset_id');
-    
-#     croak "Dataset id missing." if !$dataset_id;
-#     $c->stash->{dataset_id} = $dataset_id;
-    
-# }
 
 
 sub get_dataset_trials_details {

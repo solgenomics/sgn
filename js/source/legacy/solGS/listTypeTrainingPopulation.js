@@ -138,7 +138,7 @@ function loadTrialListTypeTrainingPop (trialsNames) {
         dataType: 'json',
         data: { 'trials_names': trialsNames},
         success: function (res) {
-            getCombinedPopsId(res.trials_ids);
+            solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
         },
         error: function(response) {
             alert('Error occured querying for trials ids');

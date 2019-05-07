@@ -108,9 +108,9 @@ solGS.dataset = {
 		    };
 		    
 		    if (trialsIds.length > 1) {
-			goToCombinedTrialsTrainingPopPage(args);
+			solGS.combinedTrials.downloadCombinedTrialsTrainingPopData(args);
 		    } else {
-			goToSingleTrialTrainingPopPage(trialsIds[0])
+			solGS.combinedTrials.downloadSingleTrialTrainingPopData(trialsIds[0])
 		    }
 		} else {
 		    Alert('No trials ids were found for this dataset')
@@ -161,7 +161,9 @@ solGS.dataset = {
 
 	return args;
 
-}
+    }
+
+    
 
 /////
 }
