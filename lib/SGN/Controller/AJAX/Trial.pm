@@ -105,7 +105,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
-    my $increment =  $c->req->param('increment');
+    my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
     my $trial_location = $c->req->param('trial_location');
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
@@ -120,6 +120,11 @@ sub generate_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
+
+    if ( !$start_number ) {
+        $c->stash->{rest} = { error => "You need to select the starting plot number."};
+        return;
+    }
 
     if ($design_type eq 'westcott'){
         if (!$westcott_check_1){
