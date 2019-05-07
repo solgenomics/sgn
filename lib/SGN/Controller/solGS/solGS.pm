@@ -166,7 +166,7 @@ sub projects_links {
 	    #$self->trial_compatibility_table($c, $has_genotype);
 	    #my $match_code = $c->stash->{trial_compatibility_code};
 	   	    
-	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 
 	    #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
@@ -251,7 +251,7 @@ sub format_trait_gs_projects {
 	   $self->trial_compatibility_table($c, $has_genotype);
 	   my $match_code = $c->stash->{trial_compatibility_code};
 
-	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
 	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
@@ -287,7 +287,7 @@ sub format_gs_projects {
 	   $self->trial_compatibility_table($c, $has_genotype);
 	   my $match_code = $c->stash->{trial_compatibility_code};
 
-	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
 	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
