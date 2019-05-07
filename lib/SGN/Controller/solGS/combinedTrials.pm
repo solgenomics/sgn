@@ -28,7 +28,7 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
     my ($self, $c) = @_;
 
     my @pops_ids = $c->req->param('trials[]');
-   
+    
     my $combo_pops_id;
     my $ret->{status} = 0;
 
@@ -38,10 +38,7 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
 	$self->create_combined_pops_id($c);
 	my $combo_pops_id = $c->stash->{combo_pops_id};
 
-	my $ids = join(',', @pops_ids);
-	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
-        $self->catalogue_combined_pops($c, $entry);
-
+        $self->catalogue_combined_pops($c, \@pops_ids);
 	$ret->{combo_pops_id} = $combo_pops_id;
 	$ret->{status} = 1;
     }
@@ -71,9 +68,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 	$self->create_combined_pops_id($c);
 	my $combo_pops_id = $c->stash->{combo_pops_id};
 	
-	my $ids = join(',', @pops_ids);
-        my $entry = "\n" . $combo_pops_id . "\t" . $ids;
-        $self->catalogue_combined_pops($c, $entry);
+        $self->catalogue_combined_pops($c, \@pops_ids);
 	
 	$self->prepare_multi_pops_data($c);
 
@@ -380,8 +375,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
                 $ret->{combo_pops_id} = $combo_pops_id; 
                 $ret->{status}        = $analysis_result;
 	  
-                my $entry = "\n" . $combo_pops_id . "\t" . $ids;
-                $self->catalogue_combined_pops($c, $entry);
+                $self->catalogue_combined_pops($c, $ids);
               }           
         }
         else 
@@ -597,23 +591,33 @@ sub combined_pops_catalogue_file {
 
 
 sub catalogue_combined_pops {
-    my ($self, $c, $entry) = @_;
+    my ($self, $c, $trials_ids) = @_;
+
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+
+    if (!$combo_pops_id) {
+	$c->stash->{pops_ids_list} = $trials_ids;
+	$self->create_combined_pops_id($c);
+	$combo_pops_id = $c->stash->{combo_pops_id};
+    }
+
+    my $entry = join(',', @$trials_ids);
+  
+    $entry  = $combo_pops_id . "\t" .  $entry;
+    my @entry = ($entry);
     
     $self->combined_pops_catalogue_file($c);
     my $file = $c->stash->{combined_pops_catalogue_file};
   
     if (! -s $file) 
     {
-        my $header = 'combo_pops_id' . "\t" . 'population_ids';
+        my $header = 'combo_pops_id' . "\t" . 'trials_ids' . "\n";
         write_file($file, ($header, $entry));    
     }
     else 
-    {
-        $entry =~ s/\n//;
-        my @combo = ($entry);
-       
+    {       
         my (@entries) = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
-        my @intersect = intersect(@combo, @entries);
+        my @intersect = intersect(@entry, @entries);
         unless( @intersect ) 
         {
             write_file($file, {append => 1}, "\n" . "$entry");
@@ -627,7 +631,8 @@ sub get_combined_pops_list {
     my ($self, $c, $id) = @_;
  
     $id = $c->stash->{combo_pops_id} if !$id;
-    
+
+    print STDERR "\nget_combined_pops_list combo pops id: $id\n";
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
    
@@ -639,7 +644,7 @@ sub get_combined_pops_list {
         {
 	    chomp($entry);
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
-
+	    print STDERR "\id $id -- $combo_pops_id\n";
 	    if ($id == $combo_pops_id)
 	    {
 		my @pops_list = split(',', $pops);
@@ -650,11 +655,6 @@ sub get_combined_pops_list {
     }     
 
 }
-
-
-
-
-
 
 
 sub combined_pops_summary {
@@ -820,8 +820,8 @@ sub combine_trait_data {
 
     unless ( $geno_cnt > 10  && $pheno_cnt > 10 ) 
     {   	
-	$self->get_combined_pops_arrayref($c);
-	my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
+	$self->get_combined_pops_list($c);
+	my $combined_pops_list = $c->stash->{combined_pops_list};
 	$c->stash->{trait_combine_populations} = $combined_pops_list;
 
 	$self->prepare_multi_pops_data($c);
@@ -878,9 +878,9 @@ sub combined_trials_desc {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
-        
-    $self->get_combined_pops_arrayref($c);
-    my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
+       
+    $self->get_combined_pops_list($c);
+    my $combined_pops_list = $c->stash->{combined_pops_list};
     
     my $desc = 'This training population is a combination of ';
     
@@ -976,8 +976,8 @@ sub count_combined_trials_members {
     }
     else
     {
-	$self->get_combined_pops_arrayref($c);
-	my $pops_ids = $c->stash->{arrayref_combined_pops_ids};
+	$self->get_combined_pops_list($c);
+	my $pops_ids = $c->stash->{combined_pops_list};
 	
 	$self->multi_pops_geno_files($c, $pops_ids);
 	my $geno_files = $c->stash->{multi_pops_geno_files};
@@ -1004,10 +1004,10 @@ sub find_common_traits {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
-   
-    $self->get_combined_pops_arrayref($c);
-    my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
-
+ 
+    $self->get_combined_pops_list($c);
+    my $combined_pops_list = $c->stash->{combined_pops_list};
+    
     my @common_traits;  
     foreach my $pop_id (@$combined_pops_list)
     {  
@@ -1050,25 +1050,12 @@ sub save_common_traits_acronyms {
 }
 
 
-sub get_combined_pops_arrayref {
-   my ($self, $c) = @_;
-   
-   my $combo_pops_id = $c->stash->{combo_pops_id};
- 
-   $self->get_combined_pops_list($c, $combo_pops_id);
-   my $pops_list = $c->stash->{combined_pops_list};
- 
-   $c->stash->{arrayref_combined_pops_ids} = $pops_list;
-
-}
-
-
 sub prepare_multi_pops_data {
    my ($self, $c) = @_;
    
-   $self->get_combined_pops_arrayref($c);
-   my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
- 
+   $self->get_combined_pops_list($c);
+   my $combined_pops_list = $c->stash->{combined_pops_list};
+  
    $self->multi_pops_phenotype_data($c, $combined_pops_list);
    $self->multi_pops_genotype_data($c, $combined_pops_list);
    $self->multi_pops_geno_files($c, $combined_pops_list);

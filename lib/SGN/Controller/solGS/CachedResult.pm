@@ -170,8 +170,11 @@ sub _check_combined_trials_data {
     my ($self, $c, $pop_id) =@_;
 
     $c->stash->{combo_pops_id} = $pop_id;
-    $c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
-    my $trials = $c->stash->{arrayref_combined_pops_ids};
+    #$c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
+    #my $trials = $c->stash->{arrayref_combined_pops_ids};
+
+    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c);
+    my $trials = $c->stash->{combined_pops_list};
     
     foreach my $trial (@$trials)
     {

@@ -935,12 +935,7 @@ sub register_trials_list  {
 
     if ($trials_ids)
     {
-	$c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-	my $combo_pops_id =  $c->stash->{combo_pops_id};
-
-	my $ids = join(',', @$trials_ids);
-	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
-	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $entry);
+	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
     }
     
 }
