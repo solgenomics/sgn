@@ -17,6 +17,8 @@ $trial_id
                 <th>Male Plot</th>
                 <th>Female Plant</th>
                 <th>Male Plant</th>
+                <th>Number of Progenies</th>
+                <th>Family Name</th>
             </tr>
         </thead>
     </table>
