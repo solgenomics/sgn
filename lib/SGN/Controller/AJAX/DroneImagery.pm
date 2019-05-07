@@ -360,7 +360,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             my $drone_run_bands = $v->{bands};
             my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
 
-            $drone_run_html .= '<div class="well well-sm"><div class="panel panel-body">';
+            $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_drone_run_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_drone_run_wrapper_'.$k.'" href="#drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" >'.$v->{drone_run_project_name}.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'.$drone_run_date.'</a></h4></div><div id="drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
+
             $drone_run_html .= '<div class="well well-sm">';
 
             $drone_run_html .= '<div class="row"><div class="col-sm-6">';
@@ -375,11 +376,11 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             }
             if ($v->{drone_run_phenotypes_indicator}) {
                 $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Phenotypes in Progress</span><br/><br/>';
-            } elsif ($v->{drone_run_processed}) {
+            } elsif ($v->{drone_run_processed} || scalar(keys %$drone_run_bands)<=1) {
                 $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
             }
             $drone_run_html .= '</div><div class="col-sm-3">';
-            if (!$v->{drone_run_processed}) {
+            if (!$v->{drone_run_processed} && scalar(keys %$drone_run_bands)>1) {
                 $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
             }
             $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Drone Run</button>';
@@ -392,7 +393,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $drone_run_html .= '<div class="panel-group"><div class="panel panel-default panel-sm"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >Loading Plot Image Summary...</a></h4></div></div></div>';
             $drone_run_html .= '</div>';
 
-            $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View All Drone Run Images (Advanced Users Only)</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
+            $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View All Drone Run Images</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
 
             my $drone_run_band_table_html = '<table class="table table-bordered"><thead><tr><th>Drone Run Band(s)</th><th>Images/Actions</th></thead><tbody>';
 
@@ -417,7 +418,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
             $drone_run_html .= '</div></div></div></div>';
 
-            $drone_run_html .= '</div></div>';
+            $drone_run_html .= '</div></div></div>';
+            $drone_run_html .= '<br/>';
         }
         $drone_run_html .= '</div></div></div></div>';
 
