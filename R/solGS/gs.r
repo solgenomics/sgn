@@ -187,7 +187,7 @@ if (length(selectionTempFile) !=0 ) {
 
   selectionFile <- grep("\\/genotype_data", selectionAllFiles, value = TRUE)
   
-  filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, value = TRUE)
+  #filteredPredGenoFile   <- grep("filtered_genotype_data_",  selectionAllFiles, value = TRUE)
 }
 
 selectionPopGEBVsFile <- grep("rrblup_selection_gebvs", outputFiles, value = TRUE)
@@ -196,15 +196,16 @@ selectionData            <- c()
 readFilteredPredGenoData <- c()
 filteredPredGenoData     <- c()
 
-if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size != 0) {
-  selectionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
-  readFilteredPredGenoData <- 1
+## if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size != 0) {
+##   selectionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
+##   readFilteredPredGenoData <- 1
 
-  selectionData           <- data.frame(selectionData)
-  rownames(selectionData) <- selectionData[, 1]
-  selectionData[, 1]      <- NULL
+##   selectionData           <- data.frame(selectionData)
+##   rownames(selectionData) <- selectionData[, 1]
+##   selectionData[, 1]      <- NULL
     
-} else if (length(selectionFile) != 0) {
+## } else
+if (length(selectionFile) != 0) {
     
   selectionData <- fread(selectionFile, na.strings = c("NA", " ", "--", "-"),)
   selectionData <- unique(selectionData, by='V1')
@@ -604,14 +605,14 @@ if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
 
 }
 
-if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
-  fwrite(filteredPredGenoData,
-         file  = filteredPredGenoFile,
-         row.names = TRUE,
-         sep   = "\t",
-         quote = FALSE,
-         )
-}
+## if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
+##   fwrite(filteredPredGenoData,
+##          file  = filteredPredGenoFile,
+##          row.names = TRUE,
+##          sep   = "\t",
+##          quote = FALSE,
+##          )
+## }
 
 ## if (!is.null(genoDataMissing)) {
 ##   write.table(genoData,
