@@ -2204,7 +2204,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args(3) {
      if(!@traits_ids)
      {	 
 	 $c->stash->{message} = "Cached output for this page does not exist anymore.\n" . 
-	     " Please go to $training_pop_name and run the analysis.";
+	     " Please go to $training_pop_page and run the analysis.";
 	 
 	 $c->stash->{template} = "/generic_message.mas"; 
      } 
