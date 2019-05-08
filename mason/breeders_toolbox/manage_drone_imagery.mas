@@ -237,6 +237,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
                 <button id="drone_imagery_standard_process_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
                 <button id="drone_imagery_standard_process_plot_polygons_clear_one" class="btn btn-danger">Clear One Polygon</button>
+                <button id="drone_imagery_standard_process_plot_polygons_get_distance" class="btn btn-default">Find Distance Between Points</button>
             </div>
 
             <div id="manage_drone_imagery_standard_process_plot_polygons_load_div">
@@ -560,6 +561,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
         <button id="drone_imagery_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
         <button id="drone_imagery_plot_polygons_clear_one" class="btn btn-danger">Remove One Polygon</button>
+        <button id="drone_imagery_plot_polygons_get_distance" class="btn btn-default">Find Distance Between Points</button>
     </div>
 
     <div id="manage_drone_imagery_plot_polygons_load_div">
@@ -1363,6 +1365,11 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_standard_process_plot_polygons_bottom_right_click').click(function(){
         alert('Now click the bottom right corner of your field on the image below.');
         drone_imagery_standard_process_plot_polygon_click_type = 'bottom_right';
+    });
+    jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_get_distance', function(){
+        alert('Click on two points in image. The distance will be returned.');
+        drone_imagery_standard_process_plot_polygon_click_type = 'get_distance';
+        return false;
     });
 
     jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_clear', function(){
@@ -2250,6 +2257,11 @@ jQuery(document).ready(function() {
         alert('Now click the bottom right corner of your field on the image below.');
         drone_imagery_plot_polygon_click_type = 'bottom_right';
     });
+    jQuery(document).on('click', '#drone_imagery_plot_polygons_get_distance', function(){
+        alert('Click on two points in image. The distance will be returned.');
+        drone_imagery_plot_polygon_click_type = 'get_distance';
+        return false;
+    });
 
     var drone_imagery_plot_polygon_current_background_toggle = 1;
     jQuery(document).on('click', '#drone_imagery_plot_polygons_switch', function(){
@@ -2497,6 +2509,9 @@ jQuery(document).ready(function() {
         drawWaypoints(plot_polygons_display_points, undefined, 0);
     }
 
+    var plot_polygons_get_distance_point_1x = '';
+    var plot_polygons_get_distance_point_1y = '';
+
     function GetCoordinatesPlotPolygonsPoint(e) {
         var PosX = 0;
         var PosY = 0;
@@ -2535,6 +2550,18 @@ jQuery(document).ready(function() {
             drone_imagery_plot_polygon_click_type = '';
             jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset').val(background_image_height-PosY);
         }
+        else if (drone_imagery_plot_polygon_click_type == 'get_distance') {
+            if (plot_polygons_get_distance_point_1x != '') {
+                var distance = Math.round(Math.sqrt(Math.pow(plot_polygons_get_distance_point_1x - PosX, 2) + Math.pow(plot_polygons_get_distance_point_1y - PosY, 2)));
+                alert('Distance='+distance+'. X1='+plot_polygons_get_distance_point_1x+'. Y1='+plot_polygons_get_distance_point_1y+'. X2='+PosX+'. Y2='+PosY);
+                plot_polygons_get_distance_point_1x = '';
+                plot_polygons_get_distance_point_1y = '';
+                drone_imagery_plot_polygon_click_type = '';
+            } else {
+                plot_polygons_get_distance_point_1x = PosX;
+                plot_polygons_get_distance_point_1y = PosY;
+            }
+        }
         else if (drone_imagery_standard_process_plot_polygon_click_type == 'top_left') {
             drone_imagery_standard_process_plot_polygon_click_type = '';
             jQuery('#drone_imagery_standard_process_plot_polygons_left_column_top_offset').val(PosY);
@@ -2552,6 +2579,18 @@ jQuery(document).ready(function() {
         else if (drone_imagery_standard_process_plot_polygon_click_type == 'bottom_right') {
             drone_imagery_standard_process_plot_polygon_click_type = '';
             jQuery('#drone_imagery_standard_process_plot_polygons_right_col_bottom_offset').val(background_image_height-PosY);
+        }
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'get_distance') {
+            if (plot_polygons_get_distance_point_1x != '') {
+                var distance = Math.round(Math.sqrt(Math.pow(plot_polygons_get_distance_point_1x - PosX, 2) + Math.pow(plot_polygons_get_distance_point_1y - PosY, 2)));
+                alert('Distance='+distance+'. X1='+plot_polygons_get_distance_point_1x+'. Y1='+plot_polygons_get_distance_point_1y+'. X2='+PosX+'. Y2='+PosY);
+                plot_polygons_get_distance_point_1x = '';
+                plot_polygons_get_distance_point_1y = '';
+                drone_imagery_plot_polygon_click_type = '';
+            } else {
+                plot_polygons_get_distance_point_1x = PosX;
+                plot_polygons_get_distance_point_1y = PosY;
+            }
         }
     }
 
