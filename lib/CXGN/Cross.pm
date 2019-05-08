@@ -266,8 +266,16 @@ sub get_crosses_in_trial {
     my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
     my $female_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
     my $male_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_property")->cvterm_id();
 
-    my $q = "SELECT stock1.stock_id, stock1.uniquename, stock_relationship1.value, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock7.stock_id, stock7.uniquename
+    my $q = "SELECT parents_table.cross_id, parents_table.cross_name, parents_table.cross_type, parents_table.female_id, parents_table.female_name, parents_table.male_id, parents_table.male_name,
+        parents_table.female_plot_id, parents_table.female_plot_name, parents_table.male_plot_id, parents_table.male_plot_name,
+        parents_table.female_plant_id, parents_table.female_plant_name, parents_table.male_plant_id, parents_table.male_plant_name, progeny_count_table.progeny_number, family_name_table.family_name
+        FROM
+        (SELECT stock1.stock_id AS cross_id, stock1.uniquename AS cross_name, stock_relationship1.value AS cross_type, stock2.stock_id AS female_id,
+        stock2.uniquename AS female_name, stock3.stock_id AS male_id, stock3.uniquename AS male_name, stock4.stock_id AS female_plot_id, stock4.uniquename AS female_plot_name,
+        stock5.stock_id AS male_plot_id, stock5.uniquename AS male_plot_name, stock6.stock_id AS female_plant_id, stock6.uniquename AS female_plant_name, stock7.stock_id AS male_plant_id, stock7.uniquename AS male_plant_name
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS stock1 ON (nd_experiment_stock.stock_id = stock1.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
@@ -282,15 +290,30 @@ sub get_crosses_in_trial {
         LEFT JOIN stock AS stock6 ON (stock_relationship5.subject_id = stock6.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship6 ON (stock1.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
         LEFT JOIN stock AS stock7 ON (stock_relationship6.subject_id = stock7.stock_id)
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ?)
+        AS parents_table
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS cross_id, stock.uniquename AS cross_name, COUNT (stock_relationship.subject_id) AS progeny_number
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progeny_count_table
+        ON (parents_table.cross_id = progeny_count_table.cross_id)
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS cross_id, array_agg(stockprop.value || ' ') AS family_name
+        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS family_name_table
+        ON (parents_table.cross_id = family_name_table.cross_id)";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id);
+    $h->execute($female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id, $offspring_of_type_id, $trial_id, $family_name_type_id, $trial_id);
 
     my @data =();
-    while(my($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) = $h->fetchrow_array()){
-        push @data, [$cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name]
+    while(my($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name]
     }
     return \@data;
 }
