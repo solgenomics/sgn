@@ -2363,11 +2363,6 @@ jQuery(document).ready(function() {
 
         plot_polygons_num_rows_generated = parseInt(num_rows_val);
         plot_polygons_num_cols_generated = parseInt(num_cols_val);
-        plot_polygons_template_dimensions.push({
-            'num_rows':plot_polygons_num_rows_generated,
-            'num_cols':plot_polygons_num_cols_generated,
-            'total_plot_polygons':plot_polygons_num_rows_generated*plot_polygons_num_cols_generated
-        });
 
         var section_width = background_image_width;
         var section_height = background_image_height;
@@ -2425,7 +2420,23 @@ jQuery(document).ready(function() {
             drone_imagery_plot_polygons_display[i] = plot_polygons_display_points;
         }
 
+        plot_polygons_template_dimensions.push({
+            'num_rows':plot_polygons_num_rows_generated,
+            'num_cols':plot_polygons_num_cols_generated,
+            'total_plot_polygons':plot_polygons_num_rows_generated*plot_polygons_num_cols_generated,
+            'plot_polygons':drone_imagery_plot_generated_polygons,
+            'plot_polygons_display':drone_imagery_plot_polygons_display
+        });
+
+        droneImageryDrawPlotPolygonActiveTemplatesTable("drone_imagery_plot_polygons_active_templates", plot_polygons_template_dimensions, drone_imagery_plot_generated_polygons, drone_imagery_plot_polygons_display);
+
         droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
+    }
+
+    function droneImageryDrawPlotPolygonActiveTemplatesTable(div_id, plot_polygons_template_dimensions, drone_imagery_plot_generated_polygons, drone_imagery_plot_polygons_display){
+        var html = '<table class="table table-bordered table-hover"><thead><tr><th>Template Number</th><th>Rows</th><th>Columns</th><th>Total Polygons</th><th>Options</th></tr></thead>';
+        html = html + '</table>';
+        jQuery('#'+div_id).html(html);
     }
 
     jQuery('input[name=drone_imagery_plot_polygons_autocomplete]').autocomplete({

@@ -97,6 +97,9 @@
             </&>
         </div>
     </div>
+
+    <div id="drone_imagery_plot_polygons_active_templates"></div>
+
     <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply">Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
 </div>
 
