@@ -353,8 +353,8 @@ sub get_cross_properties_trial {
 
 =head2 get_cross_progenies_trial
 
+#Moved this query to sub get_crosses_in_trial, will delete this section later
 
-=cut
 
 sub get_cross_progenies_trial {
     my $self = shift;
@@ -392,6 +392,7 @@ sub get_cross_progenies_trial {
 
 }
 
+=cut
 
 
 
