@@ -60,7 +60,7 @@ sub index :Path("/cview") :Args(0) {
     
     $c->stash->{template} = '/cview/index.mas';
 
-    my $map_factory = CXGN::Cview::MapFactory->new($c->dbc->dbh, $c);
+    my $map_factory = CXGN::Cview::MapFactory->new($c->dbc->dbh, $c->config);
     my @maps = $map_factory->get_system_maps();
     
     my %map_by_species;
