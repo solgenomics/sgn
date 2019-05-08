@@ -23,6 +23,7 @@ library(tibble)
 
 allArgs <- commandArgs()
 
+
 inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                    what = "character")
 
@@ -85,19 +86,19 @@ if (file.info(genoFile)$size == 0) {
 readFilteredGenoData <- c()
 filteredGenoData <- c()
 if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
-  filteredGenoData     <- fread(filteredGenoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  filteredGenoData     <- fread(filteredGenoFile, na.strings = c("NA", "", "--", "-"),  header = TRUE)
   readFilteredGenoData <- 1
 }
 
 genoData <- c()
 if (is.null(filteredGenoData)) {
-  genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  genoData <- fread(genoFile, na.strings = c("NA", "", "--", "-"),  header = TRUE)
   genoData <- unique(genoData, by='V1')
 }
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
   formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
-                                            na.strings = c("NA", " ", "--", "-", ".")
+                                            na.strings = c("NA", "", "--", "-", ".")
                                             ))
 
 } else {
@@ -111,7 +112,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
     stop("phenotype data file is empty.")
   }
 
-  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", " ", "--", "-", "."), header = TRUE)
+  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", "", "--", "-", "."), header = TRUE)
   phenoData <- data.frame(phenoData)
 }
 
@@ -207,7 +208,7 @@ filteredPredGenoData     <- c()
 ## } else
 if (length(selectionFile) != 0) {
     
-  selectionData <- fread(selectionFile, na.strings = c("NA", " ", "--", "-"),)
+  selectionData <- fread(selectionFile, na.strings = c("NA", "", "--", "-"),)
   selectionData <- unique(selectionData, by='V1')
   
   selectionData <- filterGenoData(selectionData, maf=0.01)
