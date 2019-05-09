@@ -237,6 +237,23 @@ You can do ANOVA from two places: trial detail and training population detail. I
 
 <img src='{{"assets/images/anova-dm.png" | relative_url }}' width="522" />
 
+4.6 K-Means Clustering
+--------------
+Clustering, currently using the K-Means method, allows you to partition a dataset into groups (K number). You can do this partition based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated.
 
+There are three pathways to using this tool. 
+(1) When you have a set of clones created as a list or dataset from the search wizard:
+
+   (A) -- go to the 'Analyze' menu and select the clustering option
+  
+   (B) -- make sure you are logged in
+  
+   (C) -- select your list or dataset, click 'Go'
+  
+   (D) -- select the data type to use
+  
+   (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
+   
+   (F) -- You can download the outputs following the download links.
 
 
