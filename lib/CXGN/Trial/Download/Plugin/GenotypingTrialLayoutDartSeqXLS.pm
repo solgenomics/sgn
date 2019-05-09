@@ -50,7 +50,7 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my @header = ('Plate ID', 'Row', 'Column', 'Organism', 'Species', 'Genotype', 'Tissue', 'Comments');
+    my @header = ('PlateID', 'Row', 'Column', 'Organism', 'Species', 'Genotype', 'Tissue', 'Comments');
     my $col_count = 0;
     foreach (@header){
         $ws->write(0, $col_count, $_);
