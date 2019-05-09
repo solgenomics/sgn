@@ -243,7 +243,7 @@ Clustering, currently using the K-Means method, allows you to partition a datase
 
 There are three pathways to using this tool. 
 
-(1) When you have a set of clones created as a list or dataset from the search wizard:
+(1) When you have data in the form of a list or dataset from the search wizard:
 
    (A) -- go to the 'Analyze' menu and select the clustering option
   
@@ -267,7 +267,7 @@ There are three pathways to using this tool.
 
    (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above.
  
- 
+ <img src='{{"assets/images/kmeans-cluster.png" | relative_url }}' width="522" />
    
 
 
