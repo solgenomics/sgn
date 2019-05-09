@@ -242,6 +242,7 @@ You can do ANOVA from two places: trial detail and training population detail. I
 Clustering, currently using the K-Means method, allows you to partition a dataset into groups (K number). You can do this partition based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated.
 
 There are three pathways to using this tool. 
+
 (1) When you have a set of clones created as a list or dataset from the search wizard:
 
    (A) -- go to the 'Analyze' menu and select the clustering option
@@ -255,5 +256,18 @@ There are three pathways to using this tool.
    (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
    
    (F) -- You can download the outputs following the download links.
+   
+(2) From the trial detail page:
+
+   (A) -- Go to the 'Analysis Tools' section
+   
+   (B) -- Follow steps D to F in (1)
+   
+(3) In the solGS pipeline:
+
+   (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above.
+ 
+ 
+   
 
 
