@@ -290,8 +290,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "intertekxls") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutIntertekXLS";
     }
-    if ( ($format eq "dartseqxls") && ($what eq "layout")) {
-        $plugin = "GenotypingTrialLayoutDartSeqXLS";
+    if ( ($format eq "dartseqcsv") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
 
     my $trial_name = $trial->get_name();
