@@ -254,20 +254,34 @@ There are three pathways to using this tool.
    (D) -- select the data type to use
   
    (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
+
+   (F) -- click the 'Run Cluster' and wait for the analysis to finish, depending on the data size this may take minutes.
    
-   (F) -- You can download the outputs following the download links.
+   (G) -- You can download the outputs following the download links.
    
 (2) From the trial detail page:
 
    (A) -- Go to the 'Analysis Tools' section
    
-   (B) -- Follow steps D to F in (1)
+   (B) -- Follow steps D to G in (1)
    
 (3) In the solGS pipeline:
 
    (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above.
  
  <img src='{{"assets/images/kmeans-cluster.png" | relative_url }}' width="522" />
+
+
+4.7 Genetic Gain
+--------------
+
+You can check if there is genetic gain, by comparing the the GEBVs of a training and selection population. You can do this in the solGS pipepline once you build a model and apply the model predict the GEBVs of selection population. Once at that stage, you will a section 'Check Genetic Gain'. Selection the selection population to compare with the training population and click the 'Check Genetic Gain' button. The genetic gain will be visualized in boxplots.
+
+<img src='{{"assets/images/genetic-gain.png" | relative_url }}' width="522" />
+
+
+
+
    
 
 
