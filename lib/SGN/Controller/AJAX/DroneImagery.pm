@@ -2272,7 +2272,8 @@ sub drone_imagery_fourier_transform_GET : Args(0) {
     $archive_fourier_temp_image .= '.png';
     print STDERR $archive_fourier_temp_image."\n";
 
-    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/FourierTransform.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_fourier_temp_image.'\'');
+    my $method = 'frequency';
+    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/FourierTransform.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_fourier_temp_image.'\' --frequency_threshold_method \''.$method.'\'');
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -2934,7 +2935,27 @@ sub standard_process_apply_POST : Args(0) {
 
         my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, undef, $user_id, $user_name, $user_role, 0);
 
-        my $return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $drone_run_band_type, 0, 'denoised_stitched_image', '30', $user_id, $user_name, $user_role);
+        my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $drone_run_band_type, 0, 'denoised_stitched_image', '30', $user_id, $user_name, $user_role);
+        my $fourier_transform_return_image_id = $fourier_transform_return->{index_image_id};
+
+        my $ft_hpf30_plot_polygon_type;
+        if ($drone_run_band_type eq 'Blue (450-520nm)') {
+            $ft_hpf30_plot_polygon_type = 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1';
+        }
+        if ($drone_run_band_type eq 'Green (515-600nm)') {
+            $ft_hpf30_plot_polygon_type = 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1';
+        }
+        if ($drone_run_band_type eq 'Red (600-690nm)') {
+            $ft_hpf30_plot_polygon_type = 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1';
+        }
+        if ($drone_run_band_type eq 'Red Edge (690-750nm)') {
+            $ft_hpf30_plot_polygon_type = 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1';
+        }
+        if ($drone_run_band_type eq 'NIR (750-900nm)') {
+            $ft_hpf30_plot_polygon_type = 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+        }
+
+        my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_plot_polygon_type, $user_id, $user_name, $user_role, 0);
     }
 
     print STDERR Dumper \%selected_drone_run_band_types;
@@ -3358,7 +3379,8 @@ sub _perform_fourier_transform_calculation {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' --image_band_index $selected_channel --frequency_threshold $high_pass_filter";
+    my $method = 'frequency';
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' --image_band_index $selected_channel --frequency_threshold $high_pass_filter --frequency_threshold_method $method";
     my $status = system($cmd);
 
     my $index_image_fullpath;
@@ -4683,7 +4705,7 @@ sub _perform_phenotype_calculation {
             $temp_results_subdir = 'drone_imagery_calc_phenotypes_fourier_transform_results';
             $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_phenotypes_fourier_transform_drone_imagery', 'project_md_image')->cvterm_id();
             $calculate_phenotypes_script = 'CalculatePhenotypeFourierTransform.py';
-            $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5 --frequency_threshold 30';
+            $calculate_phenotypes_extra_args = ' --image_band_index '.$image_band_selected.' --plot_polygon_type '.$plot_polygons_type. ' --margin_percent 5 --frequency_threshold 30 --frequency_threshold_method frequency';
             $archive_file_type = 'fourier_transform_image_phenotypes';
         }
 
