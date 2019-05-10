@@ -3834,7 +3834,13 @@ sub _perform_phenotype_automated {
         'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery',
         'observation_unit_polygon_original_background_removed_tgi_mask_imagery',
         'observation_unit_polygon_original_background_removed_vari_mask_imagery',
-        'observation_unit_polygon_original_background_removed_ndvi_mask_imagery'
+        'observation_unit_polygon_original_background_removed_ndvi_mask_imagery',
+        'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1',
+        'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1',
+        'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1',
+        'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1',
+        'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1',
+        'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1'
     );
 
     my $drone_run_band_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
