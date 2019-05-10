@@ -74,6 +74,22 @@ sub index :Path :Args(0) {
     $c->stash->{static_content_path} = $c->config->{static_content_path};
 }
 
+=head2 new_index
+
+=cut
+    
+sub new_index :Path('new_index') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+    $c->stash->{template} = '/new_index.mas';
+    $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
+    $c->stash->{static_content_path} = $c->config->{static_content_path};
+
+}
+
 =head2 default
 
 Attempt to find index.pl pages, and prints standard 404 error page if
