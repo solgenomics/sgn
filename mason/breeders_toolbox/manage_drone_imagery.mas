@@ -124,6 +124,23 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_cropping_step">Save and Go to Next Step</button>
             </div>
 
+            <div class="well well-sm">
+                <form class="form-horizontal">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Previously Used Image Cropping For This Field Trial: </label>
+                                <div class="col-sm-6">
+                                    <div id="plot_polygons_standard_process_previously_saved_image_cropping_templates">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <button class="btn btn-primary" id="drone_imagery_standard_process_cropping_use_previous_cropping">Use Image Cropping</button>
+            </div>
+
             <div id="manage_drone_imagery_standard_process_crop_load_div">
                 <img src="/img/wheel.gif" />
             </div>
@@ -1223,6 +1240,8 @@ jQuery(document).ready(function() {
                 manage_drone_imagery_standard_process_rotated_stitched_image_id = response.rotated_image_id;
                 showCropImageStart(manage_drone_imagery_standard_process_rotated_stitched_image_id, 'drone_imagery_standard_process_crop_original_stitched_div', 'manage_drone_imagery_standard_process_crop_load_div');
 
+                get_select_box('drone_imagery_parameter_select','plot_polygons_standard_process_previously_saved_image_cropping_templates', {'name':'drone_imagery_standard_process_previously_saved_image_cropping_select', 'id':'drone_imagery_standard_process_previously_saved_image_cropping_select', 'empty':1, 'field_trial_id':trial_id, 'parameter':'image_cropping' });
+
                 Workflow.complete("#manage_drone_imagery_standard_process_rotate_step");
                 Workflow.focus('#manage_drone_imagery_standard_process_workflow', 3);
 
@@ -1276,6 +1295,60 @@ jQuery(document).ready(function() {
                 showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
             }
         });
+    });
+
+    jQuery(document).on('click', '#drone_imagery_standard_process_cropping_use_previous_cropping', function() {
+        var plot_polygons_use_previously_saved_cropping = jQuery('#drone_imagery_standard_process_previously_saved_image_cropping_select').val();
+        jQuery.ajax({
+            url : '/api/drone_imagery/retrieve_parameter_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_cropping,
+            success: function(response){
+                console.log(response);
+                jQuery.ajax({
+                    url : '/api/drone_imagery/crop_image?image_id='+manage_drone_imagery_standard_process_rotated_stitched_image_id+'&polygon='+JSON.stringify(response.parameter[0])+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id,
+                    beforeSend: function() {
+                        showManageDroneImagerySection('manage_drone_imagery_loading_div');
+                    },
+                    success: function(response){
+                        console.log(response);
+                        manage_drone_imagery_standard_process_cropped_image_id = response.cropped_image_id;
+                        if (response.error) {
+                            alert(response.error);
+                            return false;
+                        } else {
+                            jQuery.ajax({
+                                url : '/api/drone_imagery/denoise?image_id='+manage_drone_imagery_standard_process_cropped_image_id+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id,
+                                success: function(response){
+                                    console.log(response);
+                                    manage_drone_imagery_standard_process_denoised_image_id = response.denoised_image_id;
+                                    remove_background_current_image_id = manage_drone_imagery_standard_process_denoised_image_id;
+                                    remove_background_drone_run_band_project_id = manage_drone_imagery_standard_process_drone_run_band_project_id;
+
+                                    showRemoveBackgroundHistogramStart(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div', 'manage_drone_imagery_standard_process_remove_background_load_div');
+
+                                    Workflow.complete("#manage_drone_imagery_standard_process_cropping_step");
+                                    Workflow.focus('#manage_drone_imagery_standard_process_workflow', 4);
+
+                                    showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
+                                },
+                                error: function(response){
+                                    alert('Error standard process denoising image!');
+                                    showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
+                                }
+                            });
+                        }
+                    },
+                    error: function(response){
+                        showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
+                        alert('Error cropping image!');
+                    }
+                });
+            },
+            error: function(response){
+                alert('Error retrieving saved cropping template in standard process!');
+                showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
+            }
+        });
+        return;
     });
 
     jQuery('#drone_imagery_standard_process_remove_background_find_minimum').click(function(){
