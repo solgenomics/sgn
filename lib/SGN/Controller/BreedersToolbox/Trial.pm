@@ -314,8 +314,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         search_type => $search_type,
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
-        selected_columns => $selected_cols,
-        supported_crop => $c->config->{supportedCrop}
+        selected_columns => $selected_cols
     });
 
     my $error = $download->download();

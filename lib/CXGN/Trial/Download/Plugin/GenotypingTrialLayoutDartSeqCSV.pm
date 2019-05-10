@@ -20,7 +20,6 @@ my $download = CXGN::Trial::Download->new({
     trial_id => $c->stash->{trial_id},
     filename => $tempfile,
     format => $plugin,
-    supported_crop => $crop
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -62,18 +61,32 @@ sub download {
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $self->trial_id,, experiment_type => 'genotyping_layout'});
     my $design = $trial_layout->get_design();
     #print STDERR Dumper $design;
+
+    my $q = "SELECT common_name FROM organism WHERE species = ?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+
     my @output_array;
     foreach my $key (sort keys %$design){
         my $val = $design->{$key};
-        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+        my $notes = $val->{notes} || 'NA';
+        my $acquisition_date = $val->{acquisition_date} || 'NA';
+        my $concentration = $val->{concentration} || 'NA';
+        my $volume = $val->{volume} || 'NA';
+        my $dna_person = $val->{dna_person} || 'NA';
+        my $extraction = $val->{extraction} || 'NA';
+        my $comments = 'Notes: '.$notes.' AcquisitionDate: '.$acquisition_date.' Concentration: '.$concentration.' Volume: '.$volume.' Person: '.$dna_person.' Extraction: '.$extraction;
         my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
         my $letter = substr $val->{plot_number}, 0 , 1;
+
+        $h->execute($val->{species});
+        my ($common_name) = $h->fetchrow_array();
+
         if (!$val->{is_blank}) {
             push @output_array, [
                 $trial_name,
                 $letter,
                 $val->{col_number},
-                $self->supported_crop,
+                $common_name,
                 $val->{species},
                 $sample_name,
                 $val->{tissue_type},
