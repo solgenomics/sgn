@@ -801,12 +801,12 @@ solGS.getPopulationDetails = function () {
 
     var trainingPopId   = jQuery("#population_id").val();
     var trainingPopName = jQuery("#population_name").val();
-
+    
     if (!trainingPopId) {
 	trainingPopId   = jQuery("#training_pop_id").val();
 	trainingPopName = jQuery("#training_pop_name").val();
     }
-   
+
     var selectionPopId   = jQuery("#selection_pop_id").val();
     var selectionPopName = jQuery("#selection_pop_name").val();
 
@@ -814,7 +814,7 @@ solGS.getPopulationDetails = function () {
         trainingPopId  = jQuery("#model_id").val();
         traininPopName = jQuery("#model_name").val();
     }
-     
+  
     var  comboPopsId = jQuery("#combo_pops_id").val();
        
     return {
