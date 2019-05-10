@@ -1414,6 +1414,8 @@ jQuery(document).ready(function() {
 
                 showPlotPolygonTableStart(manage_drone_imagery_standard_process_field_trial_id, 'drone_imagery_standard_process_trial_layout_div', 'drone_imagery_standard_process_layout_table')
 
+                get_select_box('drone_imagery_parameter_select','plot_polygons_standard_process_previously_saved_plot_polygon_templates', {'name': 'plot_polygons_standard_process_template_select', 'id': 'plot_polygons_standard_process_template_select', 'empty':1, 'field_trial_id':manage_drone_imagery_standard_process_field_trial_id, 'parameter':'plot_polygons' });
+
                 Workflow.complete("#drone_imagery_standard_process_remove_background_defined_percentage_submit");
                 Workflow.focus('#manage_drone_imagery_standard_process_workflow', 5);
 
@@ -1425,6 +1427,32 @@ jQuery(document).ready(function() {
             }
         });
     }
+
+    jQuery('#plot_polygons_standard_process_use_previously_saved_template').click(function() {
+        var plot_polygons_use_previously_saved_template = jQuery('#plot_polygons_standard_process_template_select').val();
+        if (plot_polygons_use_previously_saved_template == '') {
+            alert('Please select a previously saved template before trying to apply it. If there is not a template listed, then you can create one using the templating tool above.');
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/retrieve_parameter_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_template,
+            success: function(response){
+                console.log(response);
+
+                drone_imagery_plot_polygons_display = response.parameter;
+                drone_imagery_plot_polygons = response.parameter;
+
+                draw_canvas_image(background_image_url, 0);
+                droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons, 'drone_imagery_standard_process_trial_layout_div', 'drone_imagery_standard_process_layout_table');
+                droneImageryRectangleLayoutTable(drone_imagery_plot_polygons, 'drone_imagery_standard_process_generated_polygons_div', 'drone_imagery_standard_process_generated_polygons_table', 'drone_imagery_standard_process_plot_polygons_generated_assign', 'drone_imagery_standard_process_plot_polygons_submit_bottom');
+            },
+            error: function(response){
+                alert('Error retrieving plot polygons template in standard process!');
+            }
+        });
+        return;
+    });
 
     jQuery('#drone_imagery_standard_process_plot_polygons_rectangles_apply').click(function() {
         plot_polygons_display_points = [];
