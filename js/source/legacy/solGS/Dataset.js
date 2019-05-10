@@ -31,7 +31,8 @@ solGS.dataset = {
 	if (!Array.isArray(dType)) {
 	    dType = [dType];
 	}
-        
+        console.log('dtype: ' + dType)
+	
 	var dataset = new CXGN.Dataset();
 	var allDatasets = dataset.getDatasets();
 	
@@ -39,18 +40,24 @@ solGS.dataset = {
 	var dMenu = '<option disabled>' + sp +  'DATASETS' + sp + '</option>';
 
 	var dsIds = [];
+
 	for (var i=0; i < allDatasets.length; i++) {
     	    var id = allDatasets[i][0];
     	    var name = allDatasets[i][1];
     	    var d = dataset.getDataset(id);
 
 	    for (var j=0; j<dType.length; j++) {
-    		if (d.categories[dType[j]] !== null && d.categories[dType[j]].length ) {
 
+		console.log('categories: ' + d.categories[dType[j]])
+		console.log('dType[j] '+ dType[j])
+		if (d.categories[dType[j]] !== null  && d.categories[dType[j]].length ) {
+		    console.log('categories: ' + d.categories[dType[j]])
+		    console.log('name: ' + name)
 		    if (!dsIds.includes(id)) {
+
 			if (!dType[j].match(/accessions/)) {
 			    if (d.categories['accessions'] == ''
-				|| d.categories['accessions'] == null) {
+				|| d.categories['accessions'] == null)  {
 				
 				dsIds.push(id);
 				dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
@@ -60,14 +67,15 @@ solGS.dataset = {
 			} else {
 			    dsIds.push(id);
 			    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';  
-			}	
-    		    }
-    		}	
-	    }
-	}
+			} 
+
+		    }       
+		}
+	    }       
+
+    	}	
 
 	return dMenu;
-	
     },
 
 
@@ -160,6 +168,7 @@ solGS.dataset = {
 	};  
 
 	return args;
+
 
     }
 
