@@ -1240,7 +1240,7 @@ jQuery(document).ready(function() {
                 manage_drone_imagery_standard_process_rotated_stitched_image_id = response.rotated_image_id;
                 showCropImageStart(manage_drone_imagery_standard_process_rotated_stitched_image_id, 'drone_imagery_standard_process_crop_original_stitched_div', 'manage_drone_imagery_standard_process_crop_load_div');
 
-                get_select_box('drone_imagery_parameter_select','plot_polygons_standard_process_previously_saved_image_cropping_templates', {'name':'drone_imagery_standard_process_previously_saved_image_cropping_select', 'id':'drone_imagery_standard_process_previously_saved_image_cropping_select', 'empty':1, 'field_trial_id':trial_id, 'parameter':'image_cropping' });
+                get_select_box('drone_imagery_parameter_select','plot_polygons_standard_process_previously_saved_image_cropping_templates', {'name':'drone_imagery_standard_process_previously_saved_image_cropping_select', 'id':'drone_imagery_standard_process_previously_saved_image_cropping_select', 'empty':1, 'field_trial_id':manage_drone_imagery_standard_process_field_trial_id, 'parameter':'image_cropping' });
 
                 Workflow.complete("#manage_drone_imagery_standard_process_rotate_step");
                 Workflow.focus('#manage_drone_imagery_standard_process_workflow', 3);
