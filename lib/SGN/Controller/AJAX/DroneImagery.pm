@@ -2933,6 +2933,8 @@ sub standard_process_apply_POST : Args(0) {
         my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
 
         my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, undef, $user_id, $user_name, $user_role, 0);
+
+        my $return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $drone_run_band_type, 0, 'denoised_stitched_image', '30', $user_id, $user_name, $user_role);
     }
 
     print STDERR Dumper \%selected_drone_run_band_types;
