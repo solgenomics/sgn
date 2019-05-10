@@ -3149,8 +3149,9 @@ sub drone_imagery_get_image_GET : Args(0) {
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
+    my @size = imgsize($image_fullpath);
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
 
 sub drone_imagery_remove_image : Path('/api/drone_imagery/remove_image') : ActionClass('REST') { }
