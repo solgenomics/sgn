@@ -315,12 +315,16 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
+        supported_crop => $c->config->{supportedCrop}
     });
 
     my $error = $download->download();
 
-    if ($format eq 'intertekxls' || $format eq 'dartseqxls'){
+    if ($format eq 'intertekxls'){
         $format = 'xls';
+    }
+    if ($format eq 'dartseqcsv'){
+        $format = 'csv';
     }
 
     my $file_name = $trial_id . "_" . "$what" . ".$format";

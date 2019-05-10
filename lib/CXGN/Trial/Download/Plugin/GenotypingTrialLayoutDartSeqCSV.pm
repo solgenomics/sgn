@@ -20,6 +20,7 @@ my $download = CXGN::Trial::Download->new({
     trial_id => $c->stash->{trial_id},
     filename => $tempfile,
     format => $plugin,
+    supported_crop => $crop
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -38,6 +39,7 @@ use Data::Dumper;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
+use Text::CSV;
 
 sub verify { 
     return 1;
@@ -48,13 +50,12 @@ sub download {
 
     print STDERR "DATALEVEL ".$self->data_level."\n";
 
-    open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
+    open(my $F, ">:encoding(utf8)", $self->filename()) || die "Can't open file ".$self->filename();
 
-    my @header = ('Plate ID', 'Row', 'Column', 'Organism', 'Species', 'Genotype', 'Tissue', 'Comments');
-    print $F '"';
-    print $F join '","', @header;
-    print $F '"';
-    print $F "\n";
+    my $csv = Text::CSV->new({eol => $/});
+
+    my @header = ('PlateID', 'Row', 'Column', 'Organism', 'Species', 'Genotype', 'Tissue', 'Comments');
+    $csv->print($F, \@header);
 
     my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $self->trial_id });
     my $trial_name = $trial->get_name();
@@ -66,22 +67,22 @@ sub download {
         my $val = $design->{$key};
         my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
         my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
-        push @output_array, [
-            $trial_name,
-            $val->{row_number},
-            $val->{col_number},
-            'Cassava',
-            $val->{species},
-            $sample_name,
-            $val->{tissue_type},
-            $comments
-        ];
+        my $letter = substr $val->{plot_number}, 0 , 1;
+        if (!$val->{is_blank}) {
+            push @output_array, [
+                $trial_name,
+                $letter,
+                $val->{col_number},
+                $self->supported_crop,
+                $val->{species},
+                $sample_name,
+                $val->{tissue_type},
+                $comments
+            ];
+        }
     }
     foreach my $l (@output_array){
-        print $F '"';
-        print $F join '","', @$l;
-        print $F '"';
-        print $F "\n";
+        $csv->print($F, $l);
     }
     close($F);
 }
