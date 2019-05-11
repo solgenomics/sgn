@@ -1508,6 +1508,7 @@ jQuery(document).ready(function() {
         draw_canvas_image(background_image_url, 0);
         jQuery('#drone_imagery_standard_process_generated_polygons_div').html('');
         droneImageryDrawLayoutTable(field_trial_layout_response, drone_imagery_plot_polygons, 'drone_imagery_standard_process_trial_layout_div', 'drone_imagery_standard_process_layout_table');
+        droneImageryDrawPlotPolygonActiveTemplatesTable("drone_imagery_standard_process_plot_polygons_active_templates", plot_polygons_template_dimensions);
     });
 
     jQuery(document).on('click', '#drone_imagery_standard_process_plot_polygons_clear_one', function(){
@@ -2592,7 +2593,7 @@ jQuery(document).ready(function() {
         droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
     }
 
-    function plotPolygonsTemplatePaste(posx, posy, plot_polygon_template_id, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
+    function plotPolygonsTemplatePaste(posx, posy, plot_polygon_template_id, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button, drone_imagery_plot_polygons_active_templates) {
         var plot_polygon_template_to_paste = plot_polygons_template_dimensions[plot_polygon_template_id];
 
         var plot_polygons_previous_plot_polygons = plot_polygon_template_to_paste['plot_polygons'];
@@ -2643,7 +2644,7 @@ jQuery(document).ready(function() {
             'plot_polygons_display':drone_imagery_plot_polygons_display_new
         });
 
-        droneImageryDrawPlotPolygonActiveTemplatesTable("drone_imagery_plot_polygons_active_templates", plot_polygons_template_dimensions);
+        droneImageryDrawPlotPolygonActiveTemplatesTable(drone_imagery_plot_polygons_active_templates, plot_polygons_template_dimensions);
 
         droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
     }
@@ -2806,8 +2807,13 @@ jQuery(document).ready(function() {
         }
         else if (drone_imagery_plot_polygon_click_type == 'plot_polygon_template_paste') {
             drone_imagery_plot_polygon_click_type = '';
-            
-            plotPolygonsTemplatePaste(PosX, PosY, parseInt(drone_imagery_current_plot_polygon_index_options_id), 'drone_imagery_generated_polygons_div', 'drone_imagery_generated_polygons_table', 'drone_imagery_plot_polygons_generated_assign', 'drone_imagery_plot_polygons_submit_bottom');
+
+            if (manage_drone_imagery_standard_process_field_trial_id == undefined) {
+                plotPolygonsTemplatePaste(PosX, PosY, parseInt(drone_imagery_current_plot_polygon_index_options_id), 'drone_imagery_generated_polygons_div', 'drone_imagery_generated_polygons_table', 'drone_imagery_plot_polygons_generated_assign', 'drone_imagery_plot_polygons_submit_bottom');
+            }
+            else {
+                plotPolygonsTemplatePaste(PosX, PosY, parseInt(drone_imagery_current_plot_polygon_index_options_id), 'drone_imagery_standard_process_generated_polygons_div', 'drone_imagery_standard_process_generated_polygons_table', 'drone_imagery_standard_process_plot_polygons_generated_assign', 'drone_imagery_standard_process_plot_polygons_submit_bottom');
+            }
         }
         else if (drone_imagery_standard_process_plot_polygon_click_type == 'top_left') {
             drone_imagery_standard_process_plot_polygon_click_type = '';

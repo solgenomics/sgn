@@ -43,7 +43,7 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Left-most Column Top Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_top_offset" name="drone_imagery_standard_process_plot_polygons_left_column_top_offset" type="number" value="0"/>
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_top_offset" name="drone_imagery_standard_process_plot_polygons_left_column_top_offset" type="number" value="0" placeholder="0"/>
                                     </div>
                                 </div>
                             </div>
@@ -51,7 +51,7 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Left-most Column Bottom Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" name="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" type="number" value="0"/>
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" name="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" type="number" value="0" placeholder="0"/>
                                     </div>
                                 </div>
                             </div>
@@ -61,7 +61,7 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Top-most Row Left Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_left_offset" name="drone_imagery_standard_process_plot_polygons_top_row_left_offset" type="number" placeholder="Left offset of image section" value="0" />
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_left_offset" name="drone_imagery_standard_process_plot_polygons_top_row_left_offset" type="number" placeholder="0" value="0" />
                                     </div>
                                 </div>
                             </div>
@@ -69,7 +69,7 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Top-most Row Right Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_right_offset" name="drone_imagery_standard_process_plot_polygons_top_row_right_offset" type="number" placeholder="Left offset of image section" value="0" />
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_right_offset" name="drone_imagery_standard_process_plot_polygons_top_row_right_offset" type="number" placeholder="0" value="0" />
                                     </div>
                                 </div>
                             </div>
@@ -79,7 +79,7 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Bottom-most Row Left Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" name="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" type="number" placeholder="Left offset of image section" value="0" />
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" name="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" type="number" placeholder="0" value="0" />
                                     </div>
                                 </div>
                             </div>
@@ -87,7 +87,7 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Right-most Column Bottom Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" name="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" type="number" placeholder="Right-most column bottom offset" value="0" />
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" name="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" type="number" placeholder="0" value="0" />
                                     </div>
                                 </div>
                             </div>
