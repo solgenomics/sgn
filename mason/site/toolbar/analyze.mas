@@ -1,0 +1,26 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Analyze</a>
+<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Genomes<span class="caret"></span></a> -->
+  <ul class="dropdown-menu">
+    <li class="dropdown-header">Breeder Tools</li>
+    <li><a href="/selection/index">Selection Index</a></li>
+    <!-- li><a href="/analyze/phenotypes">Analyze Phenotypes</a><li -->
+    <!-- li><a href="/barcode">Barcode Tools</a></li -->
+    <li><a href="/solgs/search">Genomic Selection</a></li>
+    <li><a href="/pca/analysis">Population Structure</a></li>
+    <li><a href="/accession_usage">Accession Usage</a></li>
+    <li><a href="/tools/trial/comparison/list">Compare Trials</a></li>
+    <li><a href="/tools/graphicalfiltering">Graphical Filtering</a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Sequence Analysis</li>
+    <li><a class="footer" href="http://www.phytozome.net/search.php?show=blast">BLAST</a></li>
+    <li><a class="footer" href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
+    <li><a class="footer" href="https://cassavabase.org/jbrowse_cassavabase/?data=data/json/hapmap_variants">HapMap Jbrowse</a></li> 
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header">Other</li>
+    <li><a href="/tools/onto/">Ontology Browser</a></li>
+    <li><a href="/tools/compose/">Compose a New Trait</a></li>
+
+  </ul>
+</li>
