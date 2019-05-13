@@ -253,7 +253,11 @@
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
                                         <div class="col-sm-5">
-                                            <input class="form-control" id="genotyping_well_tissue" name="genotyping_well_tissue" type="text" />
+                                            <select class="form-control" id="genotyping_well_tissue">
+                                                <option value="leaf">Leaf</option>
+                                                <option value="root">Root</option>
+                                                <option value="stem">Stem</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
@@ -395,6 +399,7 @@
                     <li>row (the row position of the sample in the plate e.g. A)</li>
                     <li>column (the column position of the sample in the plate e.g. 10)</li>
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
+                    <li>tissue_type (must be either leaf, root, or stem)</li>
                     </ul>
                     
                     <b>Optional fields:</b>
@@ -402,7 +407,6 @@
                     <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>
                     <li>dna_person (the name of the person who prepared the well)</li>
                     <li>notes (any additional notes on the well)</li>
-                    <li>tissue_type (free-text for what type of tissue is present in the well)</li>
                     <li>extraction (free-text for the extraction method e.g. CTAB)</li>
                     <li>concentration (concentration in ng/ul)</li>
                     <li>volume (volume in ul)</li>
@@ -466,12 +470,12 @@
                     <li>well_01A (the position of the sample in the plate in this format 01A)</li>
                     <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
                     <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
+                    <li>tissue_type (must be either leaf, root, or stem)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
                     <li>notes (any additional notes on the well)</li>
-                    <li>tissue_type (free-text for what type of tissue is present in the well)</li>
                     <li>extraction (free-text for the extraction method e.g. CTAB)</li>
                     </ul>
 
@@ -500,7 +504,10 @@
                     (Excel format not supported)
                     <br /><br />
                     <b>Header:</b>
-                    <br>
+                    <br
+
+                    <p>Note that tissue type will be set to 'leaf' if you use this upload type, since tissue type is not provided in the upload and tissue type is required for DaRT.</p>
+
                     The first row (header) must contain the following:
 
                     <table class="table table-hover table-bordered table-condensed" >
