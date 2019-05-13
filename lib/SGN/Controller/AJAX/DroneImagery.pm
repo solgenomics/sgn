@@ -1830,7 +1830,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $germplasm_name_encoded++;
         }
         foreach (@$observations){
-            $phenotype_data{$germplasm_name}->{$_->{trait_name}} = $_->{value};
+            $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
         }
     }
     foreach my $trait_name (@sorted_trait_names) {
@@ -1841,15 +1841,31 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     }
 
     my @data_matrix;
+    my @data_total;
     foreach (@$data) {
         my $germplasm_name = $_->{germplasm_uniquename};
-        push @data_matrix, $_->{obsunit_rep};
-        push @data_matrix, $germplasm_name_encoder{$germplasm_name};
+        my @row = ($_->{obsunit_rep}, $germplasm_name_encoder{$germplasm_name});
+        my @row2 = ($_->{observationunit_uniquename}, $_->{obsunit_rep}, $germplasm_name);
         foreach my $t (@sorted_trait_names) {
-            push @data_matrix, $phenotype_data{$germplasm_name}->{$t} + 0;
+            push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
+            push @row2, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
         }
+        push @data_matrix, @row;
+        push @data_total, \@row2;
     }
     #print STDERR Dumper \@data_matrix;
+    #print STDERR Dumper \@data_total;
+
+    # my $dir = $c->tempfiles_subdir('download');
+    # my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_csv_'.'XXXXX');
+    # my $file_response = CXGN::BrAPI::FileResponse->new({
+    #     absolute_file_path => $download_file_path,
+    #     absolute_file_uri => $main_production_site.$download_uri,
+    #     format => 'csv',
+    #     data => \@data_total
+    # });
+    # my @data_files = $file_response->get_datafiles();
+    # print STDERR Dumper \@data_files;
 
     my @phenotype_header = ("replicate", "germplasmName");
     foreach (@sorted_trait_names) {
@@ -1873,9 +1889,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $r_block->add_command('library(lme4)');
             $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$_}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1) )');
             $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-            $r_block->add_command('res <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+            $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+            $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
             $r_block->run_block();
-            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','res');
+            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
             print STDERR Dumper $result_matrix;
         }
     }
