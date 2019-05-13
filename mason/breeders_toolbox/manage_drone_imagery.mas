@@ -20,7 +20,7 @@
 
 <%perl>
 #my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button>";
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
@@ -973,6 +973,79 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_calculate_statistics_dialog" name="drone_imagery_calculate_statistics_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalculateStatisticsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalculateStatisticsDialog">Calculate statistics on drone phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_calculate_statistics_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_calculate_statistics_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
+                    <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in downloading" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_calculate_statistics_trait_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_trait_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Statistics" &>
+                    <& /page/page_title.mas, title=>"Select statistics to calculate" &>
+
+                    <div id ="drone_imagery_calculate_statistics_select_div">
+                    </div>
+                    <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
+                        <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. GermplasmName Variance</option>
+                    </select>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_select_step">Submit</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Statistics results" &>
+
+                    <div id ="drone_imagery_calculate_statistics_result_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -1749,6 +1822,80 @@ jQuery(document).ready(function() {
             error: function(response){
                 alert('Error downloading drone image phenotypes!');
                 jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
+
+    //
+    // Calculate statistics
+    //
+
+    var manage_drone_imagery_calculate_statistics_field_trial_id = undefined;
+    var manage_drone_imagery_calculate_statistics_trait_ids = [];
+    var manage_drone_imagery_calculate_statistics_select = '';
+
+    jQuery('#drone_imagery_calculate_statistics_link').click(function(){
+        jQuery('#drone_imagery_calculate_statistics_dialog').modal('show');
+        get_select_box('trials', 'drone_imagery_calculate_statistics_trial_select_div', { 'name' : 'drone_imagery_calculate_statistics_field_trial_id', 'id' : 'drone_imagery_calculate_statistics_field_trial_id', 'empty':1, 'multiple':0 });
+
+        manage_drone_imagery_calculate_statistics_field_trial_id = undefined;
+        manage_drone_imagery_calculate_statistics_trait_ids = [];
+    });
+
+    jQuery('#drone_imagery_calculate_statistics_field_trial_select_step').click(function(){
+        manage_drone_imagery_calculate_statistics_field_trial_id = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
+        if (manage_drone_imagery_calculate_statistics_field_trial_id == '') {
+            alert('Please select a field trial first!');
+        } else {
+            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id, 'stock_type':'plot' });
+
+            Workflow.complete("#drone_imagery_calculate_statistics_field_trial_select_step");
+            Workflow.focus('#drone_imagery_calculate_statistics_workflow', 1);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_calculate_statistics_trait_select_step').click(function(){
+        manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
+        if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
+            alert('Please select at least one observation variable!');
+            return false;
+        }
+        if (manage_drone_imagery_calculate_statistics_trait_ids.length < 1){
+            alert('Please select at least one observation variable!');
+        } else {
+            Workflow.complete("#drone_imagery_calculate_statistics_trait_select_step");
+            Workflow.focus('#drone_imagery_calculate_statistics_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_calculate_statistics_select_step').click(function(){
+        manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/calculate_statistics',
+            type : 'POST',
+            data : {
+                'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
+                'field_trial_id_list':JSON.stringify([manage_drone_imagery_calculate_statistics_field_trial_id]),
+                'statistics_select':manage_drone_imagery_calculate_statistics_select
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                
+
+                Workflow.complete("#drone_imagery_calculate_statistics_select_step");
+                Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error calculating statistics!')
             }
         });
     });

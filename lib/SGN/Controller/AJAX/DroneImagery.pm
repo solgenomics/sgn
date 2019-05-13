@@ -29,6 +29,8 @@ use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::FileResponse;
 use CXGN::Onto;
+use R::YapRI::Base;
+use R::YapRI::Data::Matrix;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -1697,7 +1699,6 @@ sub drone_imagery_analysis_query_POST : Args(0) {
 
     my %return;
 
-    my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_project_id_list=>$drone_run_project_id_list,
@@ -1786,6 +1787,100 @@ sub drone_imagery_analysis_query_POST : Args(0) {
         $return{data} = \@data_array;
     }
 
+    $c->stash->{rest} = \%return;
+}
+
+sub drone_imagery_calculate_statistics : Path('/api/drone_imagery/calculate_statistics') : ActionClass('REST') { }
+
+sub drone_imagery_calculate_statistics_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $main_production_site = $c->config->{main_production_site_url};
+
+    my $statistics_select = $c->req->param('statistics_select');
+    my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
+    my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>'plot',
+            trait_list=>$trait_id_list,
+            trial_list=>$field_trial_id_list,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    my %germplasm_name_encoder;
+    my $germplasm_name_encoded = 1;
+    my %trait_name_encoder;
+    my $trait_name_encoded = 1;
+    my %phenotype_data;
+    foreach my $obs_unit (@$data){
+        my $germplasm_name = $obs_unit->{germplasm_uniquename};
+        my $observations = $obs_unit->{observations};
+        if (!exists($germplasm_name_encoder{$germplasm_name})) {
+            $germplasm_name_encoder{$germplasm_name} = $germplasm_name_encoded;
+            $germplasm_name_encoded++;
+        }
+        foreach (@$observations){
+            $phenotype_data{$germplasm_name}->{$_->{trait_name}} = $_->{value};
+        }
+    }
+    foreach my $trait_name (@sorted_trait_names) {
+        if (!exists($trait_name_encoder{$trait_name})) {
+            $trait_name_encoder{$trait_name} = 't'.$trait_name_encoded;
+            $trait_name_encoded++;
+        }
+    }
+
+    my @data_matrix;
+    foreach (@$data) {
+        my $germplasm_name = $_->{germplasm_uniquename};
+        push @data_matrix, $_->{obsunit_rep};
+        push @data_matrix, $germplasm_name_encoder{$germplasm_name};
+        foreach my $t (@sorted_trait_names) {
+            push @data_matrix, $phenotype_data{$germplasm_name}->{$t} + 0;
+        }
+    }
+    #print STDERR Dumper \@data_matrix;
+
+    my @phenotype_header = ("replicate", "germplasmName");
+    foreach (@sorted_trait_names) {
+        push @phenotype_header, $trait_name_encoder{$_};
+    }
+    
+    my $rbase = R::YapRI::Base->new();
+    my $rmatrix = R::YapRI::Data::Matrix->new({
+        name => 'matrix1',
+        coln => scalar(@phenotype_header),
+        rown => scalar(@$data),
+        colnames => \@phenotype_header,
+        data => \@data_matrix
+    });
+
+    my @results;
+    if ($statistics_select eq 'lmer_germplasmname') {
+        foreach (@sorted_trait_names) {
+            my $r_block = $rbase->create_block('r_block');
+            $rmatrix->send_rbase($rbase, 'r_block');
+            $r_block->add_command('library(lme4)');
+            $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$_}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1) )');
+            $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+            $r_block->add_command('res <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+            $r_block->run_block();
+            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','res');
+            print STDERR Dumper $result_matrix;
+        }
+    }
+
+    my %return;
     $c->stash->{rest} = \%return;
 }
 
