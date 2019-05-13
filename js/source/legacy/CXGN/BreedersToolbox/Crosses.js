@@ -355,12 +355,6 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        var location = $("#cross_upload_location").val();
-        if (!location) {
-            alert("A location is required");
-            return;
-        }
-
         var uploadFileXlsSimple = $("#xls_crosses_simple_file").val();
         if (uploadFileXlsSimple === ''){
             var uploadFileXlsPlots = $("#xls_crosses_plots_file").val();

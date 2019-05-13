@@ -67,7 +67,6 @@ sub upload_cross_file_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
-    my $location = $c->req->param('cross_upload_location');
     my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
     my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
     my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
@@ -187,7 +186,6 @@ sub upload_cross_file_POST : Args(0) {
         phenome_schema => $phenome_schema,
         metadata_schema => $metadata_schema,
         dbh => $dbh,
-        location => $location,
         crossing_trial_id => $crossing_trial_id,
         crosses =>  $parsed_data->{crosses},
         owner_name => $user_name
