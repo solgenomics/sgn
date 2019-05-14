@@ -354,8 +354,8 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my $protocol_full = $g->{selected_protocol_hash};
             my $project_name = $g->{genotypingDataProjectName};
             my $marker_info = $protocol_full->{markers};
-            print STDERR Dumper $protocol_full;
-            print STDERR Dumper $marker_info;
+            #print STDERR Dumper $protocol_full;
+            #print STDERR Dumper $marker_info;
             my $stock_name = $g->{stock_name};
             my $stock_type_name = $g->{stock_type_name};
             my $synonym_string = join ',', @{$g->{synonyms}};
@@ -503,6 +503,9 @@ sub get_stock_extended_info : Private {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->schema,
         accession_list=>[$c->stash->{stock_row}->stock_id],
+        genotypeprop_hash_select=>[],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[]
     });
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
     $c->stash->{direct_genotypes} = $genotypes;
