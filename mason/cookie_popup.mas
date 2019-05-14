@@ -25,7 +25,9 @@
     jQuery(document).ready(function(){
 
         jQuery('#cookie_agree_submit').click( function () {
-            jQuery.cookie("cookies_approved", "1", { expires: 1000000000 } );
+            var expDate = new Date();
+            expDate.setTime(expDate.getTime() + (50000 * 60 * 1000)); //about 30 days
+            jQuery.cookie("cookies_approved", "1", { expires: expDate, path: '/' } );
             jQuery('#cookie_popup_content_div').html('<div class="panel panel-success"><div class="panel-body bg-success"><center><h3>Thank you :-)</h3></center></div></div>');
             setTimeout(function() {
                 jQuery('#cookie_popup').hide('slow');
