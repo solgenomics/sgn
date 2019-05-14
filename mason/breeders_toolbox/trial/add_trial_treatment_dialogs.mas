@@ -80,3 +80,21 @@
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function(){
+    get_select_box('years', 'new_treatment_year', {'auto_generate': 1 });
+    var treatment_date_element = jQuery("#new_treatment_date");
+    set_daterangepicker_default (treatment_date_element);
+    jQuery('input[title="planting_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            treatment_date_element.val(start.format('MM/DD/YYYY'));
+        }
+    );
+});
+</script>

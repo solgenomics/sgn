@@ -909,9 +909,7 @@ sub store {
                 });
 
                 my @treatment_project_props = (
-                    { type_id => $project_design_cvterm_id, value => 'treatment' },
-                    { type_id => $management_factor_year_cvterm_id, value => $self->get_new_treatment_year() },
-                    { type_id => $management_factor_type_cvterm_id, value => $self->get_new_treatment_type() }
+                    { type_id => $project_design_cvterm_id, value => 'treatment' }
                 );
 
                 if ($self->get_new_treatment_has_plant_entries){
@@ -922,6 +920,18 @@ sub store {
                 }
                 if ($self->get_new_treatment_has_tissue_sample_entries){
                     push @treatment_project_props, { type_id => $has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
+                }
+                if ($self->get_new_treatment_type){
+                    push @treatment_project_props, { type_id => $management_factor_type_cvterm_id, value => $self->get_new_treatment_type };
+                }
+                if ($self->get_new_treatment_year){
+                    push @treatment_project_props, { type_id => $management_factor_year_cvterm_id, value => $self->get_new_treatment_year };
+                } else {
+                    my $t = CXGN::Trial->new({
+                        bcs_schema => $chado_schema,
+                        trial_id => $self->get_trial_id
+                    });
+                    push @treatment_project_props, { type_id => $management_factor_year_cvterm_id, value => $t->get_year() };
                 }
 
                 my @treatment_nd_experiment_project = (
@@ -942,11 +952,13 @@ sub store {
                     nd_experiment_projects => \@treatment_nd_experiment_project
                 });
 
-                my $management_factor_t = CXGN::Trial->new({
-                    bcs_schema => $chado_schema,
-                    trial_id => $treatment_project->project_id()
-                });
-                $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
+                if ($self->get_new_treatment_date()) {
+                    my $management_factor_t = CXGN::Trial->new({
+                        bcs_schema => $chado_schema,
+                        trial_id => $treatment_project->project_id()
+                    });
+                    $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
+                }
             }
         }
 
