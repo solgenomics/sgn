@@ -97,7 +97,9 @@ for (popPhenoFile in allPhenoFiles) {
     
      phenoData <- data.frame(phenoData)
     
-     phenoTrait <- getAdjMeans(phenoData, traitName)
+     phenoTrait <- getAdjMeans(phenoData,
+                               traitName=traitName,
+                               calcAverages=TRUE)
 
      popIdFile <- basename(popPhenoFile)
      popId     <- str_extract(popIdFile, "\\d+")

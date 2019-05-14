@@ -290,8 +290,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "intertekxls") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutIntertekXLS";
     }
-    if ( ($format eq "dartseqxls") && ($what eq "layout")) {
-        $plugin = "GenotypingTrialLayoutDartSeqXLS";
+    if ( ($format eq "dartseqcsv") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
 
     my $trial_name = $trial->get_name();
@@ -314,13 +314,16 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         search_type => $search_type,
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
-        selected_columns => $selected_cols,
+        selected_columns => $selected_cols
     });
 
     my $error = $download->download();
 
-    if ($format eq 'intertekxls' || $format eq 'dartseqxls'){
+    if ($format eq 'intertekxls'){
         $format = 'xls';
+    }
+    if ($format eq 'dartseqcsv'){
+        $format = 'csv';
     }
 
     my $file_name = $trial_id . "_" . "$what" . ".$format";

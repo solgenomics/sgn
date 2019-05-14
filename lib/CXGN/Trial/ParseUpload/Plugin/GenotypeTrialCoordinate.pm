@@ -123,6 +123,9 @@ sub _validate_with_plugin {
         if (!$columns[7] || $columns[7] eq ''){
             push @error_messages, 'The seventh column must contain dna_person on row: '.$row;
         }
+        if (!$columns[9] || $columns[9] eq '' || ($columns[9] ne 'leaf' && $columns[9] ne 'root' && $columns[9] ne 'stem')){
+            push @error_messages, 'The tenth column must contain tissue type of either leaf, root, or stem on row: '.$row;
+        }
     }
 
     my @sample_ids = keys %seen_sample_ids;

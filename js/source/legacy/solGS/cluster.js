@@ -203,7 +203,10 @@ solGS.cluster = {
 	var dataStructureType = clusterArgs.data_structure_type;
 
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-	trainingTraitsIds = trainingTraitsIds.split(',');
+
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	}
 	
 	var popDetails  = solGS.getPopulationDetails();
 
@@ -400,7 +403,6 @@ solGS.cluster = {
 			    'k_number':  kNumber	    
 			  }
 
-	
     	this.clusterResult(clusterArgs);
     },
 
