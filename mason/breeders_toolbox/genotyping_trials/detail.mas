@@ -261,7 +261,7 @@ genotyping_raw_data_link => $raw_data_link
 
     jQuery('#genotyping_trial_check_layout_section_onswitch').click( function() {
         jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_layout_section',
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_layout_section?experiment_type=genotyping_layout',
             success: function(response){
                 var html = '';
                 if (response.has_layout == 1){
