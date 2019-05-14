@@ -66,10 +66,10 @@ jQuery(document).ready(function($) {
         });
 
         var lo = new CXGN.List();
-        $('#polycross_accession_list').html(lo.listSelect('polycross_accessions', ['accessions'], 'select'));
-        $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', ['accessions'], 'select'));
-        $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', ['accessions'], 'select'));
-        $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', ['accessions'], 'select'));
+        $('#polycross_accession_list').html(lo.listSelect('polycross_accessions', ['accessions'], 'select', undefined, undefined));
+        $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', ['accessions'], 'select', undefined, undefined));
+        $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', ['accessions'], 'select', undefined, undefined));
+        $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', ['accessions'], 'select', undefined, undefined));
 
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});

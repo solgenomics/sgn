@@ -542,7 +542,7 @@ jQuery(document).ready( function() {
     
         var list = new CXGN.List();
         
-        var listMenu = list.listSelect("cluster_genotypes", ['accessions','plots', 'trials']);
+        var listMenu = list.listSelect("cluster_genotypes", ['accessions','plots', 'trials'], undefined, undefined, undefined);
 
 	var dType = ['accessions', 'trials'];
 	var dMenu = solGS.getDatasetsMenu(dType);

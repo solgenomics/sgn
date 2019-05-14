@@ -451,7 +451,7 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 
 function create_list_start(message) {
     var lo = new CXGN.List();
-    var listhtml = lo.listSelect('paste_list', '', message, 'refresh');
+    var listhtml = lo.listSelect('paste_list', '', message, 'refresh', undefined);
     jQuery('#paste_list').html(listhtml);
     jQuery('#paste_list_list_select').change(
       function() {
