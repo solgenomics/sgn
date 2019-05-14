@@ -228,4 +228,10 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'recordsFiltered' => 18,'recordsTotal' => 18,'data' => [['S1_27861','1','27861','T','C','.','PASS','AR2=0.876;DR2=0.897;AF=0.003','GT:AD:DP:GQ:DS:PL'],['S1_75644','1','75644','T','C','.','PASS','AR2=0.816;DR2=0.834;AF=0.023','GT:AD:DP:GQ:DS:PL']]});
 
+my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90'})->stock_id();
+$mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'data' => [['<a href = "/breeders_toolbox/trial/166">Test genotype project</a>','Diversity panel genotype study','Cassava GBS v7 2018','SNP genotypes for stock (name = SRLI1_90, id = 41797)','<a href="/stock/41797/genotypes?genotypeprop_id=2157">Download</a>'],['<a href = "/breeders_toolbox/trial/167">Test genotype project2</a>','Diversity panel genotype study','Cassava GBS v7 2018','SNP genotypes for stock (name = SRLI1_90, id = 41797)','<a href="/stock/41797/genotypes?genotypeprop_id=2199">Download</a>'],['<a href = "/breeders_toolbox/trial/167">Test genotype project2</a>','Diversity panel genotype study','Cassava GBS v7 2019','SNP genotypes for stock (name = SRLI1_90, id = 41797)','<a href="/stock/41797/genotypes?genotypeprop_id=2241">Download</a>'],['<a href = "/breeders_toolbox/trial/167">Test genotype project2</a>','Diversity panel genotype study','Cassava GBS v7 2018','SNP genotypes for stock (name = SRLI1_90, id = 41797)','<a href="/stock/41797/genotypes?genotypeprop_id=2283">Download</a>']]});
+
 done_testing();
