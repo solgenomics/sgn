@@ -150,6 +150,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
     }
     elsif ($design_type eq "treatment"){
+        $c->stash->{management_factor_type} = $trial->get_management_factor_type;
+        $c->stash->{management_factor_date} = $trial->get_management_factor_date;
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     elsif ($design_type eq "genotype_data_project"){

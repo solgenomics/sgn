@@ -40,12 +40,35 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#trial_detail_page_add_treatment').click(function(){
+        get_select_box('years', 'new_treatment_year', {'auto_generate': 1 });
+        var treatment_date_element = jQuery("#new_treatment_date");
+        set_daterangepicker_default (treatment_date_element);
+        jQuery('input[title="planting_date"]').daterangepicker(
+            {
+                "singleDatePicker": true,
+                "showDropdowns": true,
+                "autoUpdateInput": false,
+            },
+            function(start){
+                treatment_date_element.val(start.format('MM/DD/YYYY'));
+            }
+        );
+
         jQuery('#trial_design_add_treatments').modal('show');
     });
 
     jQuery('#new_trial_add_treatments_continue').click(function(){
         var treatment_name = jQuery('#new_treatment_name').val();
         var treatment_unit = jQuery('#new_treatment_unit').val();
+
+        if (jQuery('#new_treatment_date') == '') {
+            alert('Please select a date.');
+            return false;
+        }
+        if (jQuery('#new_treatment_year') == '') {
+            alert('Please select a year.');
+            return false;
+        }
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/layout',
@@ -142,6 +165,11 @@ jQuery(document).ready(function () {
         design['treatments'] = trial;
         //console.log(design);
 
+        var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treatment_date = jQuery('#new_treatment_date').val();
+        var new_treatment_type = jQuery('#new_treatment_type').val();
+        new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
+
         jQuery.ajax ( {
             url: '/ajax/breeders/trial/'+<% $trial_id %>+'/add_treatment',
             type: 'POST',
@@ -149,7 +177,10 @@ jQuery(document).ready(function () {
                 'design':JSON.stringify(design),
                 'has_plant_entries':has_plant_entries,
                 'has_subplot_entries':has_subplot_entries,
-                'has_tissue_sample_entries':has_tissue_sample_entries
+                'has_tissue_sample_entries':has_tissue_sample_entries,
+                'treatment_date':new_treatment_date,
+                'treatment_year':new_treatment_year,
+                'treatment_type':new_treatment_type
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
