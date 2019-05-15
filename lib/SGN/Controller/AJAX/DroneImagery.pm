@@ -1847,8 +1847,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my @row = ($_->{obsunit_rep}, $germplasm_name_encoder{$germplasm_name});
         my @row2 = ($_->{observationunit_uniquename}, $_->{obsunit_rep}, $germplasm_name);
         foreach my $t (@sorted_trait_names) {
-            push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
-            push @row2, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
+            if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
+                push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
+                push @row2, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
+            }
         }
         push @data_matrix, @row;
         push @data_total, \@row2;
