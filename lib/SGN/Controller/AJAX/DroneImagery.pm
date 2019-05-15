@@ -3439,46 +3439,150 @@ sub _perform_fourier_transform_calculation {
     print STDERR Dumper $selected_channel;
     my $linking_table_type_id;
     if ($high_pass_filter eq '30') {
+        if ($drone_run_band_project_type eq 'RGB Color Image') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '1') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '2') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id();
+                }
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '1') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '2') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id();
+                }
+            }
+            elsif ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rgb_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                }
+                elsif ($selected_channel eq '1' || $selected_channel eq '2') {
+                    return {error => 'TGI only has one channel'};
+                }
+            }
+        }
         if ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
             if ($image_type eq 'denoised_stitched_image') {
                 if ($selected_channel eq '0') {
                     $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
                 }
+                if ($selected_channel eq '1') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '2') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id();
+                }
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '1') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '2') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id();
+                }
+            }
+            elsif ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
+                return {error => "Cannot have threshold_background_removed_tgi_stitched_drone_imagery on NRN image"};
+            }
+        }
+        if ($drone_run_band_project_type eq 'Merged 3 Bands BGR') {
+            if ($image_type eq 'denoised_stitched_image') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '1') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '2') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id();
+                }
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '1') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id();
+                }
+                if ($selected_channel eq '2') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id();
+                }
+            }
+            elsif ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
+                if ($selected_channel eq '0') {
+                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                }
+                elsif ($selected_channel eq '1' || $selected_channel eq '2') {
+                    return {error => 'TGI only has one channel'};
+                }
             }
         }
         if ($drone_run_band_project_type eq 'Blue (450-520nm)') {
+            if ($selected_channel eq '1' || $selected_channel eq '2') {
+                return {error => "For a blue image there is only the first channel!"};
+            }
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
             }
         }
         if ($drone_run_band_project_type eq 'Green (515-600nm)') {
+            if ($selected_channel eq '1' || $selected_channel eq '2') {
+                return {error => "For a green image there is only the first channel!"};
+            }
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
             }
         }
         if ($drone_run_band_project_type eq 'Red (600-690nm)') {
+            if ($selected_channel eq '1' || $selected_channel eq '2') {
+                return {error => "For a red image there is only the first channel!"};
+            }
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
             }
         }
         if ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
+            if ($selected_channel eq '1' || $selected_channel eq '2') {
+                return {error => "For a red edge image there is only the first channel!"};
+            }
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
             }
         }
         if ($drone_run_band_project_type eq 'NIR (750-900nm)') {
+            if ($selected_channel eq '1' || $selected_channel eq '2') {
+                return {error => "For a nir image there is only the first channel!"};
+            }
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+            }
+            elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
+                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
             }
         }
     }
@@ -3539,9 +3643,9 @@ sub _perform_fourier_transform_calculation {
     };
 }
 
-sub drone_imagery_calculate_rgb_vegetative_index : Path('/api/drone_imagery/calculate_rgb_vegetative_index') : ActionClass('REST') { }
+sub drone_imagery_calculate_vegetative_index : Path('/api/drone_imagery/calculate_vegetative_index') : ActionClass('REST') { }
 
-sub drone_imagery_calculate_rgb_vegetative_index_POST : Args(0) {
+sub drone_imagery_calculate_vegetative_index_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -3573,8 +3677,15 @@ sub _perform_vegetative_index_calculation {
     my $user_role = shift;
 
     my $index_script = '';
+    my $script_extra = '';
     my $linking_table_type_id;
-    if ($image_type eq 'BGR') {
+    if ($image_type eq 'BGR' || $image_type eq 'RGB') {
+        if ($image_type eq 'BGR') {
+            $script_extra = ' --image_type BGR';
+        }
+        elsif ($image_type eq 'RGB') {
+            $script_extra = ' --image_type RGB';
+        }
         if ($vegetative_index eq 'TGI') {
             $index_script = 'TGI';
             if ($view_only == 1){
@@ -3627,7 +3738,7 @@ sub _perform_vegetative_index_calculation {
     $archive_temp_image .= '.png';
     print STDERR $archive_temp_image."\n";
 
-    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/VegetativeIndex/$index_script.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image'";
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/VegetativeIndex/$index_script.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' $script_extra";
     my $status = system($cmd);
 
     my $index_image_fullpath;
