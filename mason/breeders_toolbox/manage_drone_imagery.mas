@@ -1020,7 +1020,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <div id ="drone_imagery_calculate_statistics_select_div">
                     </div>
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
-                        <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. GermplasmName Variance</option>
+                        <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
                     </select>
 
                     <br/><br/>
@@ -1888,7 +1888,12 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
-                
+                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th></tr></thead><tbody>';
+                for (var i=0; i<response.length; i++) {
+                    html = html + '<tr><td>'+response[i][0]+'</td><td>'+response[i][1]+'</td></tr>';
+                }
+                html = html + '</tbody></table>';
+                jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
 
                 Workflow.complete("#drone_imagery_calculate_statistics_select_step");
                 Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
