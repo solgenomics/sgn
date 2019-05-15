@@ -1851,7 +1851,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
                 push @row2, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
             } else {
-                print STDERR $_->{observationunit_uniquename}." : ".$t." : ".$phenotype_data{$_->{observationunit_uniquename}}->{$t}."\n";
+                print STDERR $_->{observationunit_uniquename}." : $t : $germplasm_name : NA \n";
                 push @row, 'NA';
                 push @row2, 'NA';
             }
