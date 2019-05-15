@@ -1851,6 +1851,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
                 push @row2, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
             } else {
+                print STDERR $_->{observationunit_uniquename}." : ".$t." : ".$phenotype_data{$_->{observationunit_uniquename}}->{$t}."\n";
                 push @row, 'NA';
                 push @row2, 'NA';
             }
@@ -1892,7 +1893,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $r_block = $rbase->create_block('r_block');
             $rmatrix->send_rbase($rbase, 'r_block');
             $r_block->add_command('library(lme4)');
-            $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1) )');
+            $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
             $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
             $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
             $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
