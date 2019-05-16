@@ -976,6 +976,20 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_original} = $image_original;
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id} = $image_id;
         }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_image_id} = $image_id;
+        }
         elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_username} = $_->{username};
@@ -1011,12 +1025,47 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_original} = $image_original;
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_id} = $image_id;
         }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id} = $image_id;
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_image_id} = $image_id;
+        }
+        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_image_username} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_modified_date} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_original} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_image_id} = $image_id;
         }
         else {
             die "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 1!\n";
