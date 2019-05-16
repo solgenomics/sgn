@@ -4230,7 +4230,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_vegetative_index_TGI_rgb').click(function(){
         manage_drone_imagery_vi_selected_index = 'TGI';
-        manage_drone_imagery_vi_selected_image_type = 'RGB';
+        manage_drone_imagery_vi_selected_image_type = 'BGR';
         getVegetativeIndex('calculate_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1, manage_drone_imagery_vi_selected_image_type);
     });
 
@@ -4242,7 +4242,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_vegetative_index_VARI_rgb').click(function(){
         manage_drone_imagery_vi_selected_index = 'VARI';
-        manage_drone_imagery_vi_selected_image_type = 'RGB';
+        manage_drone_imagery_vi_selected_image_type = 'BGR';
         getVegetativeIndex('calculate_vegetative_index', manage_drone_imagery_vi_rgb_denoised_stitched_image_id, manage_drone_imagery_vi_rgb_drone_run_band_project_id, manage_drone_imagery_vi_drone_run_band_type, manage_drone_imagery_vi_selected_index, 1, manage_drone_imagery_vi_selected_image_type);
     });
 
