@@ -4376,15 +4376,15 @@ jQuery(document).ready(function() {
     // Run and save Fourier Transform HPF30
     //
 
-    var manage_drone_imagery_ft_hpf30_rgb_drone_run_band_project_id = '';
-    var manage_drone_imagery_ft_hpf30_rgb_denoised_stitched_image_id = '';
+    var manage_drone_imagery_ft_hpf30_drone_run_band_project_id = '';
+    var manage_drone_imagery_ft_hpf30_image_id = '';
     var manage_drone_imagery_ft_hpf30_drone_run_band_type = '';
     var manage_drone_imagery_ft_hpf30_selected_image_type = '';
     var manage_drone_imagery_ft_hpf30_selected_channel = '';
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_fourier_transform_hpf30"]', function(){
-        manage_drone_imagery_ft_hpf30_rgb_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
-        manage_drone_imagery_ft_hpf30_rgb_denoised_stitched_image_id = jQuery(this).data('denoised_stitched_image_id');
+        manage_drone_imagery_ft_hpf30_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
+        manage_drone_imagery_ft_hpf30_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_ft_hpf30_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
         manage_drone_imagery_ft_hpf30_selected_image_type = jQuery(this).data('selected_image_type');
 
@@ -4393,7 +4393,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_fourier_transform_hpf30_channel_select').click(function(){
         manage_drone_imagery_ft_hpf30_selected_channel = jQuery('#drone_imagery_fourier_transform_hpf30_channel_select_input').val();
-        getFourierTransform(30, manage_drone_imagery_ft_hpf30_rgb_denoised_stitched_image_id, manage_drone_imagery_ft_hpf30_rgb_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_channel, manage_drone_imagery_ft_hpf30_selected_image_type);
+        getFourierTransform(30, manage_drone_imagery_ft_hpf30_image_id, manage_drone_imagery_ft_hpf30_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_channel, manage_drone_imagery_ft_hpf30_selected_image_type);
     });
 
     function getFourierTransform(high_pass_filter, image_id, drone_run_band_project_id, drone_run_band_project_type, selected_channel, selected_image_type) {
