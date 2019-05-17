@@ -1554,7 +1554,7 @@ sub get_shared_trials_GET :Args(1) {
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-       my $uniquename = $stock->get_uniquename;
+       my $uniquename = $stock->uniquename;
        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
