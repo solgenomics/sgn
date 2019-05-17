@@ -441,11 +441,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                 my $accession_info = $accession_info_hash{$accession_id};
                 my $synonyms = join(',',@{$accession_info->{synonyms}});
-                my $pedigree = $accession_stock->get_pedigree_string("Parents");
+                #my $pedigree = $accession_stock->get_pedigree_string("Parents");
+                my $pedigree = "NA";
                 my $genus = $accession_stock->get_genus || '';
                 my $species = $accession_stock->get_species || '';
                 my $variety = $accession_info->{variety};
-                my $donors = encode_json($accession_stock->donors);
+                #my $donors = encode_json($accession_stock->donors);
+                my $donors = "NA";
                 my $countryoforigin = $accession_info->{'country of origin'};
                 my $state = $accession_info->{'state'};
                 my $institute_code = $accession_info->{'institute code'};
@@ -461,7 +463,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $acquisition_date = $accession_info->{'acquisition date'};
                 my $organization = $accession_info->{organization};
                 my $population = $accession_stock->population_name || '';
-                my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+                #my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+                my $stock_descendant_hash = "NA";
                 my $descendants = $stock_descendant_hash->{descendants};
                 my @descendents_array;
                 while (my($k,$v) = each %$descendants){
@@ -484,11 +487,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                     my $accession_info = $accession_info_hash{$accession_id};
                     my $synonyms = join(',',@{$accession_info->{synonyms}});
-                    my $pedigree = $accession_stock->get_pedigree_string("Parents");
+                    #my $pedigree = $accession_stock->get_pedigree_string("Parents");
+                    my $pedigree = "NA";
                     my $genus = $accession_stock->get_genus || '';
                     my $species = $accession_stock->get_species || '';
                     my $variety = $accession_info->{variety};
-                    my $donors = encode_json($accession_stock->donors);
+                    #my $donors = encode_json($accession_stock->donors);
+                    my $donors = "NA";
                     my $countryoforigin = $accession_info->{'country of origin'};
                     my $state = $accession_info->{'state'};
                     my $institute_code = $accession_info->{'institute code'};
@@ -504,7 +509,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     my $acquisition_date = $accession_info->{'acquisition date'};
                     my $organization = $accession_info->{organization};
                     my $population = $accession_stock->population_name || '';
-                    my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+                    #my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+                    my $stock_descendant_hash = "NA";
                     my $descendants = $stock_descendant_hash->{descendants};
                     my @descendents_array;
                     while (my($k,$v) = each %$descendants){
