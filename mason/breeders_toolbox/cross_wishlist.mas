@@ -625,7 +625,7 @@ jQuery(document).ready(function($) {
             },
             dataType:'json',
             beforeSend: function() {
-                jQuery('#working_msg').html('Sending information to ONA...');
+                jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA...');
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {

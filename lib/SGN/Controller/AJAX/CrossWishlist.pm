@@ -415,7 +415,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             if (!exists($seen_info_obs_units{$plot_id})){
                 my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                 my $accession_info = $accession_info_hash{$accession_id};
-                my $synonyms = join(',',@{$accession_info->{synonyms}});
+                my $synonyms = $accession_info->{synonyms} ? join(',',@{$accession_info->{synonyms}}) : '';
                 my $pedigree = $accession_stock->get_pedigree_string("Parents");
                 my $genus = $accession_stock->get_genus || '';
                 my $species = $accession_stock->get_species || '';
