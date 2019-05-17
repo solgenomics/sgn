@@ -17,6 +17,7 @@ Adds an array of crosses. The parents used in the cross must already exist in th
 =head1 AUTHORS
 
  Jeremy D. Edwards (jde22@cornell.edu)
+ Titima Tantikanjana (tt15@cornell.edu)
 
 =cut
 
@@ -31,6 +32,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'chado_schema' => (
@@ -53,7 +55,6 @@ has 'metadata_schema' => (
 		);
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
-has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
 
@@ -61,12 +62,10 @@ sub add_crosses {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
+    my $crossing_trial_id = $self->get_crossing_trial_id();
     my @crosses;
-    my $location_lookup;
-    my $geolocation;
     my $transaction_error;
     my @added_stock_ids;
-    my $crossing_trial_id;
 
     #lookup user by name
     my $owner_name = $self->get_owner_name();
@@ -99,9 +98,8 @@ sub add_crosses {
         my $female_plant_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_plant_of', 'stock_relationship');
         my $male_plant_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_plant_of', 'stock_relationship');
 
-        #lookup location by name
-        $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
-        $geolocation = $location_lookup->get_geolocation();
+		my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project location', 'project_property')->cvterm_id();
+		my $geolocation_rs = $chado_schema->resultset("Project::Projectprop")->find({project_id => $crossing_trial_id, type_id => $project_location_cvterm_id});
 
         @crosses = @{$self->get_crosses()};
 
@@ -178,8 +176,8 @@ sub add_crosses {
 
             #create cross experiment
             $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
-                nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                type_id => $cross_experiment_type_cvterm->cvterm_id(),
+                nd_geolocation_id => $geolocation_rs->value,
+                type_id => $cross_experiment_type_cvterm->cvterm_id,
             });
 
             #create a stock of type cross
@@ -303,8 +301,6 @@ sub validate_crosses {
     my $crossing_trial_lookup;
     my $crossing_trial;
     my $trial_lookup;
-    my $geolocation = '';
-
 
     $crossing_trial_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
     $crossing_trial = $crossing_trial_lookup->get_crossing_trials($self->get_crossing_trial_id());
