@@ -263,26 +263,51 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $male_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $male_trial_id, experiment_type=>'field_layout' });
     my $male_design_layout = $male_trial_layout->get_design();
 
-    my $file_type;
-    if ($is_test_form){
-        $file_type = 'cross_wishlist_test_'.$ona_form_id;
-    } elsif ($separate_crosswishlist_by_location){
-        $file_type = 'cross_wishlist_'.$female_location_name.'_'.$ona_form_id;
-    } else {
-        $file_type = 'cross_wishlist_'.$ona_form_id;
+    my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
+    my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
+    my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
+    my $cross_wishlist_file_name;
+    my $germplasm_info_file_name;
+    my $cross_wihlist_ona_id;
+    my $germplasm_info_ona_id;
+
+    my $ua = LWP::UserAgent->new(
+        ssl_opts => { verify_hostname => 0 }
+    );
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $self->odk_crossing_data_service_username, $self->odk_crossing_data_service_password );
+    my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+    my $server_endpoint = "https://api.ona.io/api/v1/data/$ona_form_id";
+    print STDERR $server_endpoint."\n";
+    my $resp = $ua->get($server_endpoint);
+
+    my $server_endpoint2 = "https://api.ona.io/api/v1/metadata?xform=".$ona_form_id;
+    my $resp2 = $ua->get($server_endpoint2);
+    if ($resp2->is_success) {
+        my $message2 = $resp2->decoded_content;
+        my $message_hash2 = decode_json $message2;
+        foreach my $t (@$message_hash2) {
+            if (index($t->{data_value}, 'cross_wishlist') != -1) {
+                getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                $cross_wishlist_file_name = $t->{data_value};
+                $cross_wihlist_ona_id = $t->{id};
+            }
+            if (index($t->{data_value}, 'germplasm_info') != -1) {
+                getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                $germplasm_info_file_name = $t->{data_value};
+                $germplasm_info_ona_id = $t->{id};
+            }
+        }
     }
-    my $previously_saved_metadata_id;
-    my $previous_wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
+
     my @previous_file_lines;
     my %previous_file_lookup;
     my $old_header_row;
     my @old_header_row_array;
-    if ($previous_wishlist_md_file){
-        my $previous_file_path = $previous_wishlist_md_file->dirname."/".$previous_wishlist_md_file->basename;
-        #my $previous_file_path = "/home/vagrant/Downloads/cross_wishlist_Arusha_3IbEM8o.csv";
-        print STDERR "Previous cross_wishlist $previous_file_path\n";
-        open(my $fh, '<', $previous_file_path)
-            or die "Could not open file '$previous_file_path' $!";
+    if ($cross_wishlist_file_name){
+        print STDERR "Previous cross_wishlist temp file $cross_wishlist_temp_file_path\n";
+        open(my $fh, '<', $cross_wishlist_temp_file_path)
+            or die "Could not open file '$cross_wishlist_temp_file_path' $!";
         $old_header_row = <$fh>;
         @old_header_row_array = split ',', $old_header_row;
         while ( my $row = <$fh> ){
@@ -293,30 +318,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $previous_female_obs_unit_id =~ s/"//g;
             $previous_file_lookup{$previous_female_obs_unit_id} = \@previous_file_line_contents;
         }
-        $previously_saved_metadata_id = $previous_wishlist_md_file->comment;
-        $previous_wishlist_md_file->delete;
     }
     #print STDERR Dumper \@previous_file_lines;
 
-    my $germplasm_info_file_type;
-    if ($is_test_form){
-        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_test_'.$ona_form_id;
-    } elsif ($separate_crosswishlist_by_location){
-        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$female_location_name.'_'.$ona_form_id;
-    } else {
-        $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$ona_form_id;
-    }
-
-    my $previously_saved_germplasm_info_metadata_id;
-    my $previous_germplasm_info_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $germplasm_info_file_type});
     my @previous_germplasm_info_lines;
     my %seen_info_obs_units;
-    if ($previous_germplasm_info_md_file){
-        my $previous_file_path = $previous_germplasm_info_md_file->dirname."/".$previous_germplasm_info_md_file->basename;
-        #my $previous_file_path = "/home/vagrant/Downloads/germplasm_info_Arusha_C0aQzgz.csv";
-        print STDERR "PREVIOUS germplasm_info $previous_file_path\n";
-        open(my $fh, '<', $previous_file_path)
-            or die "Could not open file '$previous_file_path' $!";
+    if ($germplasm_info_file_name){
+        print STDERR "PREVIOUS germplasm_info temp file $germplasm_info_temp_file_path\n";
+        open(my $fh, '<', $germplasm_info_temp_file_path)
+            or die "Could not open file '$germplasm_info_temp_file_path' $!";
         my $header_row = <$fh>;
         while ( my $row = <$fh> ){
             chomp $row;
@@ -326,8 +336,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $previous_obs_unit_id =~ s/"//g;
             $seen_info_obs_units{$previous_obs_unit_id}++;
         }
-        $previously_saved_germplasm_info_metadata_id = $previous_germplasm_info_md_file->comment;
-        $previous_germplasm_info_md_file->delete;
     }
 
     my $plot_info_file_header = '"ObservationUnitType","ObservationUnitName","ObservationUnitID","PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","PlantName","PlantID","PlantNumber","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionNameAndPlotNumber","AccessionNameAndPlotNumberAndPlantNumber","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
@@ -654,28 +662,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename2;
     #$c->stash->{rest}->{filename} = $urlencoded_filename2;
 
-    my $archive_name;
-    if ($is_test_form){
-        $archive_name = 'cross_wishlist_test.csv';
-    } elsif ($separate_crosswishlist_by_location){
-        $archive_name = 'cross_wishlist_'.$female_location_name.'.csv';
-    } else {
-        $archive_name = 'cross_wishlist_'.$site_name.'.csv';
-    }
-
-    my $uploader = CXGN::UploadFile->new({
-       include_timestamp => 0,
-       tempfile => $file_path2,
-       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
-       archive_path => $c->config->{archive_path},
-       archive_filename => $archive_name,
-       timestamp => $timestamp,
-       user_id => $user_id,
-       user_role => $c->user->get_object->get_user_type()
-    });
-    my $uploaded_file = $uploader->archive();
-    my $md5 = $uploader->get_md5($uploaded_file);
-
     my ($file_path3, $uri3) = $c->tempfile( TEMPLATE => "download/cross_wishlist_accession_info_XXXXX");
     $file_path3 .= '.csv';
     $uri3 .= '.csv';
@@ -694,56 +680,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename3;
     #$c->stash->{rest}->{filename} = $urlencoded_filename3;
 
-    my $germplasm_info_archive_name;
-    if ($is_test_form){
-        $germplasm_info_archive_name = 'germplasm_info_test.csv';
-    } elsif ($separate_crosswishlist_by_location){
-        $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';
-    } else {
-        $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
-    }
-
-    $uploader = CXGN::UploadFile->new({
-       include_timestamp => 0,
-       tempfile => $file_path3,
-       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
-       archive_path => $c->config->{archive_path},
-       archive_filename => $germplasm_info_archive_name,
-       timestamp => $timestamp,
-       user_id => $user_id,
-       user_role => $c->user->get_object->get_user_type()
-    });
-    my $germplasm_info_uploaded_file = $uploader->archive();
-    my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
-
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
-
-    my $cross_wishlist_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $cross_wishlist_md_row->insert();
-    my $cross_wishlist_file_row = $metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($uploaded_file),
-            dirname => dirname($uploaded_file),
-            filetype => $file_type,
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $cross_wishlist_md_row->metadata_id()
-        });
-    $cross_wishlist_file_row->insert();
-    my $cross_wishlist_file_id = $cross_wishlist_file_row->file_id();
-
-    my $germplasm_info_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $germplasm_info_md_row->insert();
-    my $germplasm_info_file_row = $metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($germplasm_info_uploaded_file),
-            dirname => dirname($germplasm_info_uploaded_file),
-            filetype => $germplasm_info_file_type,
-            md5checksum => $germplasm_info_md5->hexdigest(),
-            metadata_id => $germplasm_info_md_row->metadata_id()
-        });
-    $germplasm_info_file_row->insert();
-    my $germplasm_info_file_id = $germplasm_info_file_row->file_id();
 
     $c->stash->{rest}->{success} = 'The cross wishlist file can be downloaded <a href="/cross_wishlist/file_download/'.$cross_wishlist_file_id.'">here</a>. The germplasm info file can be downloaded <a href="/cross_wishlist/file_download/'.$germplasm_info_file_id.'">here</a>.';
 
@@ -757,40 +695,39 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
         my $server_endpoint = "https://api.ona.io/api/v1/metadata";
 
-        if ($previously_saved_metadata_id){
+        if ($cross_wihlist_ona_id){
             my $delete_resp = $ua->delete(
-                $server_endpoint."/$previously_saved_metadata_id"
+                $server_endpoint."/$cross_wihlist_ona_id"
             );
             if ($delete_resp->is_success) {
-                print STDERR "Deleted metadata file on ONA $previously_saved_metadata_id\n";
+                print STDERR "Deleted cross wishlist file on ONA $cross_wihlist_ona_id, in order to replace the file.\n";
             }
             else {
-                print STDERR "ERROR: Did not delete metadata file\n";
+                print STDERR "ERROR: Did not delete cross wishlist file on ONA $cross_wihlist_ona_id, in order to replace the file.\n";
                 #print STDERR Dumper $delete_resp;
             }
         }
-        if ($previously_saved_germplasm_info_metadata_id){
+        if ($germplasm_info_ona_id){
             my $delete_resp = $ua->delete(
-                $server_endpoint."/$previously_saved_germplasm_info_metadata_id"
+                $server_endpoint."/$germplasm_info_ona_id"
             );
             if ($delete_resp->is_success) {
-                print STDERR "Deleted metadata file on ONA $previously_saved_germplasm_info_metadata_id\n";
+                print STDERR "Deleted germplasm info file on ONA $germplasm_info_ona_id, in order to replace the file.\n";
             }
             else {
-                print STDERR "ERROR: Did not delete metadata file\n";
+                print STDERR "ERROR: Did not delete cross wishlist file $germplasm_info_ona_id, in order to replace the file.\n";
                 #print STDERR Dumper $delete_resp;
             }
         }
-
 
         my $resp = $ua->post(
             $server_endpoint,
             Content_Type => 'form-data',
             Content => [
-                data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
+                data_file => [ $file_path2, $file_path2, Content_Type => 'text/plain', ],
                 "xform"=>$ona_form_id,
                 "data_type"=>"media",
-                "data_value"=>$uploaded_file
+                "data_value"=>$file_path2
             ]
         );
 
@@ -799,14 +736,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $message_hash = decode_json $message;
             #print STDERR Dumper $message_hash;
             if ($message_hash->{id}){
-
-                my $q = "DELETE from metadata.md_files WHERE filetype like 'cross_wishlist_%' AND file_id != $cross_wishlist_file_id;";
-                my $h = $schema->storage->dbh()->prepare($q);
-                $h->execute();
-
-                my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $cross_wishlist_file_id});
-                $file_row->update({comment => $message_hash->{id}});
-
                 $c->stash->{rest}->{success} .= 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
             } else {
                 $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
@@ -820,10 +749,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $server_endpoint,
             Content_Type => 'form-data',
             Content => [
-                data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
+                data_file => [$file_path3, $file_path3, Content_Type => 'text/plain', ],
                 "xform"=>$ona_form_id,
                 "data_type"=>"media",
-                "data_value"=>$germplasm_info_uploaded_file
+                "data_value"=>$file_path3
             ]
         );
 
@@ -832,14 +761,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $message_hash = decode_json $message;
             #print STDERR Dumper $message_hash;
             if ($message_hash->{id}){
-
-                my $q = "DELETE from metadata.md_files WHERE filetype like 'cross_wishlist_germplasm_info_%' AND file_id != $germplasm_info_file_id;";
-                my $h = $schema->storage->dbh()->prepare($q);
-                $h->execute();
-
-                my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $germplasm_info_file_id});
-                $file_row->update({comment => $message_hash->{id}});
-
                 $c->stash->{rest}->{success} .= 'The germplasm info file is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
             } else {
                 $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';
