@@ -292,8 +292,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 $cross_wishlist_file_name =~ s/.csv//;
                 my $wishlist_file_name_loc = $cross_wishlist_file_name;
                 $wishlist_file_name_loc =~ s/cross_wishlist_//;
-                $wishlist_file_name_loc =~ s/\n\r\t\s//g;
-                print STDERR Dumper $wishlist_file_name_loc."\n";
+                print STDERR Dumper $wishlist_file_name_loc;
 
                 if ($separate_crosswishlist_by_location){
                     if ($female_location_name eq $wishlist_file_name_loc) {
@@ -311,8 +310,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 $germplasm_info_file_name =~ s/.csv//;
                 my $germplasm_info_file_name_loc = $germplasm_info_file_name;
                 $germplasm_info_file_name_loc =~ s/germplasm_info_//;
-                $germplasm_info_file_name_loc =~ s/\n\r\t\s//g;
-                print STDERR Dumper $germplasm_info_file_name_loc."\n";
+                print STDERR Dumper $germplasm_info_file_name_loc;
 
                 if ($separate_crosswishlist_by_location){
                     if ($female_location_name eq $germplasm_info_file_name_loc) {
