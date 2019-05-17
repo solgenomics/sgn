@@ -1414,8 +1414,9 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $experiment_type = $c->req->param('experiment_type') || 'field_layout';
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => $experiment_type, verify_layout=>1, verify_physical_map=>1});
     my $trial_errors = $trial_layout->generate_and_cache_layout();
     my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;

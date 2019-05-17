@@ -26,12 +26,18 @@ solGS.waitPage = function (page, args) {
   		    
     if (page.match(matchItems)) {
 
-	if (page.match(/list_/)) {
-	    askUser(page, args)
-	} else {	    
-	    checkCachedResult(page, args);
-	}
+	var multiTraitsUrls = 'solgs/traits/all/population/'
+	    + '|solgs/models/combined/trials/';
 
+	if (page.match(multiTraitsUrls)) {
+	    getTraitsSelectionId(page, args);	    
+	} else {
+	    if (page.match(/list_/)) {
+		askUser(page, args)
+	    } else {	    
+		checkCachedResult(page, args);
+	    }
+	}
     }
     else {
 
@@ -244,7 +250,7 @@ solGS.waitPage = function (page, args) {
     function getTraitsSelectionId (page, args) {
 
 	var traitIds = args.trait_id;
-	
+
 	jQuery.ajax({
 	    dataType: 'json',
 	    type    : 'POST',
@@ -252,10 +258,16 @@ solGS.waitPage = function (page, args) {
 	    url     : '/solgs/get/traits/selection/id',
 	    success : function (res){
 		var traitsSelectionId = res.traits_selection_id;
-		window.location = page + '/traits/' + traitsSelectionId;		
+		page = page  + '/traits/' + traitsSelectionId;
+		
+		if (page.match(/list_/)) {
+		    askUser(page, args)
+		} else {	    
+		    checkCachedResult(page, args);
+		}		
 	    },
 	    error: function (res, st, error) {
-		console.log('error: ' + error)
+		alert('error: ' + error)
 	    },
 			
 	});
@@ -266,17 +278,12 @@ solGS.waitPage = function (page, args) {
 
 	var matchItems = 'solgs/confirm/request'
 	    + '|solgs/trait/'
+	    + '|solgs/traits/all/population/'
+	    + '|solgs/models/combined/trials/'
 	    + '|solgs/model/combined/trials/';
-	
-	var multiTraitsUrls = 'solgs/traits/all/population/'
-	    + '|solgs/models/combined/trials/';
 
 	if (page.match(matchItems)) {
-
 	    window.location = page;
-	    
-	} else if (page.match(multiTraitsUrls)) {
-		getTraitsSelectionId(page, args);	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
@@ -794,12 +801,12 @@ solGS.getPopulationDetails = function () {
 
     var trainingPopId   = jQuery("#population_id").val();
     var trainingPopName = jQuery("#population_name").val();
-
+    
     if (!trainingPopId) {
 	trainingPopId   = jQuery("#training_pop_id").val();
 	trainingPopName = jQuery("#training_pop_name").val();
     }
-   
+
     var selectionPopId   = jQuery("#selection_pop_id").val();
     var selectionPopName = jQuery("#selection_pop_name").val();
 
@@ -807,7 +814,7 @@ solGS.getPopulationDetails = function () {
         trainingPopId  = jQuery("#model_id").val();
         traininPopName = jQuery("#model_name").val();
     }
-     
+  
     var  comboPopsId = jQuery("#combo_pops_id").val();
        
     return {

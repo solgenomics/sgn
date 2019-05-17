@@ -264,7 +264,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
-            direct_genotypes   => $c->stash->{direct_genotypes},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
@@ -354,8 +353,8 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my $protocol_full = $g->{selected_protocol_hash};
             my $project_name = $g->{genotypingDataProjectName};
             my $marker_info = $protocol_full->{markers};
-            print STDERR Dumper $protocol_full;
-            print STDERR Dumper $marker_info;
+            #print STDERR Dumper $protocol_full;
+            #print STDERR Dumper $marker_info;
             my $stock_name = $g->{stock_name};
             my $stock_type_name = $g->{stock_type_name};
             my $synonym_string = join ',', @{$g->{synonyms}};
@@ -500,17 +499,9 @@ sub get_stock_extended_info : Private {
     my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->schema,
-        accession_list=>[$c->stash->{stock_row}->stock_id],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    $c->stash->{direct_genotypes} = $genotypes;
-
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
     if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
-
 }
 
 ############## HELPER METHODS ######################3
