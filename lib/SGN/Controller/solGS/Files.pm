@@ -510,13 +510,11 @@ sub selection_population_file {
     my $tempfile = $self->create_tempfile($tmp_dir, $file);
 
     $c->stash->{prediction_pop_id} = $pred_pop_id;
-
+    $c->stash->{selection_pop_id}  = $pred_pop_id;
     $self->filtered_selection_genotype_file($c);
     my $filtered_geno_file = $c->stash->{filtered_selection_genotype_file};
 
     my $geno_files = $filtered_geno_file;  
-  
-    $c->controller('solGS::solGS')->genotype_file($c, $pred_pop_id);
     
     $self->genotype_file_name($c, $pred_pop_id);
     $geno_files .= "\t" . $c->stash->{genotype_file_name};  
