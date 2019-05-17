@@ -14,7 +14,30 @@
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Add Field Management Factor Name: </label>
                             <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" />
+                                <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="e.g. Fertilizer01_20N40P50K or Weeding01_Manual"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Field Management Factor Type: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="new_treatment_type" name="new_treatment_type">
+                                    <option value="fertilizer">Fertilizer</option>
+                                    <option value="fungicide">Fungicide</option>
+                                    <option value="herbicide">Herbicide</option>
+                                    <option value="weeding">Weeding</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Field Management Factor Year: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="new_treatment_year" name="new_treatment_year" type="text"></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Field Management Factor Date: </label>
+                            <div class="col-sm-8">
+                                <input class="form-control" id="new_treatment_date" name="new_treatment_date" title="planting_date" type="text"/>
                             </div>
                         </div>
                         <div class="form-group">
@@ -57,3 +80,21 @@
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function(){
+    get_select_box('years', 'new_treatment_year', {'auto_generate': 1 });
+    var treatment_date_element = jQuery("#new_treatment_date");
+    set_daterangepicker_default (treatment_date_element);
+    jQuery('input[title="planting_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            treatment_date_element.val(start.format('MM/DD/YYYY'));
+        }
+    );
+});
+</script>

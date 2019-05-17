@@ -216,6 +216,12 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'include_obsolete' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
 has 'minimal_info' => (
     isa => 'Bool',
     is => 'rw',
@@ -469,12 +475,14 @@ sub search {
 
     #$schema->storage->debug(1);
     my $search_query = {
-        'me.is_obsolete' => 'f',
         -and => [
             $or_conditions,
             $and_conditions,
         ],
     };
+    if (!$self->include_obsolete) {
+        $search_query->{'me.is_obsolete'} = 'f';
+    }
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
     }

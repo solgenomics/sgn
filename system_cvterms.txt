@@ -82,6 +82,8 @@ project_property	genomic selection
 project_property	project_harvest_date				00080
 project_property	marker_count
 project_property	project_planting_date				00080
+project_property	management_factor_date	For setting the date of a management factor	05/14/2019	nm529	00109
+project_property	management_factor_type	For setting whether a management factor was a fertilizer herbicide fungicide or weeding	05/14/2019	nm529	00109
 project_property	population type
 project_property	project fertilizer date
 project_property	project first harvest date					sgn database

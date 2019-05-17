@@ -1286,6 +1286,9 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
     my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
     my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
+    my $new_treatment_year = $c->req->param('treatment_year');
+    my $new_treatment_date = $c->req->param('treatment_date');
+    my $new_treatment_type = $c->req->param('treatment_type');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -1296,7 +1299,10 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
         new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
-        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_tissue_entries,
+        new_treatment_date => $new_treatment_date,
+        new_treatment_year => $new_treatment_year,
+        new_treatment_type => $new_treatment_type,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
@@ -1860,14 +1866,15 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $result = $trial->get_crosses_in_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) =@$r;
         push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_type,
         qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
         qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
         qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
         qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
         qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
-        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},];
+        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},
+        $progeny_number, $family_name];
     }
 
     $c->stash->{rest} = { data => \@crosses };
