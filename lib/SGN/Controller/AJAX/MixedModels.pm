@@ -228,4 +228,14 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 }
 
 
+sub save_blups :Path('/ajax/mixedmodels/save/blups') ActionClass('REST') {};
+
+sub save_blups_POST  {
+    my $self = shift;
+    my $c = shift;
+    my $blups_json = $c->req->param("blups");
+
+    my $blups = JSON::Any->decode($blups_json);
+
+
 1;

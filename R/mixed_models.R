@@ -43,16 +43,22 @@ model_string = paste(dependent_variable, '~', model)
 print(paste('MODEL STRING:', model_string));
 model = lmer(as.formula(model_string), data=pd)
 
+
 model_summary = summary(allEffects(model,se=T))
-adjusted_means = ls_means(model, test.effs=NULL, method.grad='simple')
+
+pdout = model;
+#adjusted_means = getAdjMeans(pd, dependent_variable)
+
+print(pdout);
+
 outfile = paste(datafile, ".results", sep="")
 print(outfile)
 print(model)
 print(model_summary)
 print(colnames(model))
 print(ranef(model))
-print(adjusted_means$Estimate)
+#print(adjusted_means$Estimate)
 sink(outfile)
-#write.table(ranef(model)$germplasmName)
-write.table(adjusted_means)
+write.table(ranef(model)$germplasmName)
+#write.table(adjusted_means)
 sink();
