@@ -1285,6 +1285,9 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
     my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
     my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
+    my $new_treatment_year = $c->req->param('treatment_year');
+    my $new_treatment_date = $c->req->param('treatment_date');
+    my $new_treatment_type = $c->req->param('treatment_type');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -1295,7 +1298,10 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
         new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
-        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_tissue_entries,
+        new_treatment_date => $new_treatment_date,
+        new_treatment_year => $new_treatment_year,
+        new_treatment_type => $new_treatment_type,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
