@@ -528,11 +528,11 @@ sub create_odk_cross_progress_tree {
     my $form_id = $self->odk_crossing_data_service_form_id;
 
     $wishlist_file_name =~ s/.csv//;
-    my $wishlist_file_name_loc = $wishlist_file_name;
-    $wishlist_file_name_loc =~ s/cross_wishlist_//;
-    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
-    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
-    print STDERR $wishlist_file_name_loc."\n";
+#    my $wishlist_file_name_loc = $wishlist_file_name;
+#    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+#    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
+#    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
+#    print STDERR $wishlist_file_name_loc."\n";
 
     my %combined;
 
@@ -716,7 +716,7 @@ sub create_odk_cross_progress_tree {
                             if (ref($crosses_cycle_hash) eq "HASH") {
                                 $planned_male_node->{state}->{opened} = JSON::true;
                                 while (my ($cycle, $crosses_hash) = each %$crosses_cycle_hash){
-                                
+
                                     while (my ($cross_name, $actions_hash) = each %$crosses_hash){
                                         if (exists($cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$crossed_female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name})){
                                             print STDERR "YES : ".$top_level." : ".$female_accession_name." : ".$planned_female_plot_name." : ".$crossed_female_plot_name." : ".$male_accession_name." : ".$cycle." : ".$cross_name."\n";
@@ -995,7 +995,7 @@ sub create_odk_cross_progress_tree {
         $top_level_contents{$top_level} = \@top_level_content_json;
     }
     #print STDERR Dumper \%summary_info;
-    
+
     print STDERR "WRITING ONA ODK SUMMARY FILES\n";
     my $dir = $self->odk_cross_progress_tree_file_dir;
     eval { make_path($dir) };
@@ -1162,7 +1162,7 @@ sub create_odk_cross_progress_tree {
             phenome_schema => $phenome_schema,
             metadata_schema => $metadata_schema,
             dbh => $bcs_schema->storage->dbh,
-            location => $wishlist_file_name_loc,
+#            location => $wishlist_file_name_loc,
             crossing_trial_id => $cross_trial_id,
             crosses => \@new_crosses,
             owner_name => $self->sp_person_username
