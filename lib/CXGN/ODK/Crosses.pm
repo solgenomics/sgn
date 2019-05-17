@@ -528,11 +528,11 @@ sub create_odk_cross_progress_tree {
     my $form_id = $self->odk_crossing_data_service_form_id;
 
     $wishlist_file_name =~ s/.csv//;
-#    my $wishlist_file_name_loc = $wishlist_file_name;
-#    $wishlist_file_name_loc =~ s/cross_wishlist_//;
-#    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
-#    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
-#    print STDERR $wishlist_file_name_loc."\n";
+    my $wishlist_file_name_loc = $wishlist_file_name;
+    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
+    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
+    print STDERR $wishlist_file_name_loc."\n";
 
     my %combined;
 
