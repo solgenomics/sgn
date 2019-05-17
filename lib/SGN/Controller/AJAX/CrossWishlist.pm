@@ -275,7 +275,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
-    $ua->credentials( 'api.ona.io:443', 'DJANGO', $self->odk_crossing_data_service_username, $self->odk_crossing_data_service_password );
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
     my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
     my $server_endpoint = "https://api.ona.io/api/v1/data/$ona_form_id";
     print STDERR $server_endpoint."\n";
