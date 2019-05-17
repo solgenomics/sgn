@@ -464,13 +464,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $organization = $accession_info->{organization};
                 my $population = $accession_stock->population_name || '';
                 #my $stock_descendant_hash = $accession_stock->get_descendant_hash();
-                my $stock_descendant_hash = "NA";
-                my $descendants = $stock_descendant_hash->{descendants};
-                my @descendents_array;
-                while (my($k,$v) = each %$descendants){
-                    push @descendents_array, $v->{name};
-                }
-                my $descendents_string = join ',', @descendents_array;
+                #my $descendants = $stock_descendant_hash->{descendants};
+                #my @descendents_array;
+                #while (my($k,$v) = each %$descendants){
+                #    push @descendents_array, $v->{name};
+                #}
+                #my $descendents_string = join ',', @descendents_array;
+                my $descendents_string = "NA";
                 my $t = time;
                 my $entry_timestamp = strftime '%F %T', localtime $t;
                 $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
@@ -510,13 +510,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     my $organization = $accession_info->{organization};
                     my $population = $accession_stock->population_name || '';
                     #my $stock_descendant_hash = $accession_stock->get_descendant_hash();
-                    my $stock_descendant_hash = "NA";
-                    my $descendants = $stock_descendant_hash->{descendants};
-                    my @descendents_array;
-                    while (my($k,$v) = each %$descendants){
-                        push @descendents_array, $v->{name};
-                    }
-                    my $descendents_string = join ',', @descendents_array;
+                    #my $descendants = $stock_descendant_hash->{descendants};
+                    #my @descendents_array;
+                    #while (my($k,$v) = each %$descendants){
+                    #    push @descendents_array, $v->{name};
+                    #}
+                    #my $descendents_string = join ',', @descendents_array;
+                    my $descendents_string = "NA";
                     my $t = time;
                     my $entry_timestamp = strftime '%F %T', localtime $t;
                     $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
