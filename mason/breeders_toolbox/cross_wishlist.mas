@@ -625,7 +625,7 @@ jQuery(document).ready(function($) {
             },
             dataType:'json',
             beforeSend: function() {
-                jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take a few minutes if the field trial has not been used in this cross wishlist previously...');
+                jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
