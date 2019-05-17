@@ -268,8 +268,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
     my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
-    my $cross_wishlist_file_name;
-    my $germplasm_info_file_name;
     my $cross_wihlist_ona_id;
     my $germplasm_info_ona_id;
 
@@ -289,14 +287,40 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         my $message_hash2 = decode_json $message2;
         foreach my $t (@$message_hash2) {
             if (index($t->{data_value}, 'cross_wishlist') != -1) {
-                getstore($t->{media_url}, $cross_wishlist_temp_file_path);
-                $cross_wishlist_file_name = $t->{data_value};
-                $cross_wihlist_ona_id = $t->{id};
+                my $cross_wishlist_file_name = $t->{data_value};
+
+                $cross_wishlist_file_name =~ s/.csv//;
+                my $wishlist_file_name_loc = $cross_wishlist_file_name;
+                $wishlist_file_name_loc =~ s/cross_wishlist_//;
+                print STDERR $wishlist_file_name_loc."\n";
+
+                if ($separate_crosswishlist_by_location){
+                    if ($female_location_name eq $wishlist_file_name_loc) {
+                        getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                        $cross_wihlist_ona_id = $t->{id};
+                    }
+                } else {
+                    getstore($t->{media_url}, $cross_wishlist_temp_file_path);
+                    $cross_wihlist_ona_id = $t->{id};
+                }
             }
             if (index($t->{data_value}, 'germplasm_info') != -1) {
-                getstore($t->{media_url}, $germplasm_info_temp_file_path);
-                $germplasm_info_file_name = $t->{data_value};
-                $germplasm_info_ona_id = $t->{id};
+                my $germplasm_info_file_name = $t->{data_value};
+
+                $germplasm_info_file_name =~ s/.csv//;
+                my $germplasm_info_file_name_loc = $germplasm_info_file_name;
+                $germplasm_info_file_name_loc =~ s/germplasm_info_//;
+                print STDERR $germplasm_info_file_name_loc."\n";
+
+                if ($separate_crosswishlist_by_location){
+                    if ($female_location_name eq $germplasm_info_file_name_loc) {
+                        getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                        $germplasm_info_ona_id = $t->{id};
+                    }
+                } else {
+                    getstore($t->{media_url}, $germplasm_info_temp_file_path);
+                    $germplasm_info_ona_id = $t->{id};
+                }
             }
         }
     }
@@ -305,7 +329,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my %previous_file_lookup;
     my $old_header_row;
     my @old_header_row_array;
-    if ($cross_wishlist_file_name){
+    if ($cross_wihlist_ona_id){
         print STDERR "Previous cross_wishlist temp file $cross_wishlist_temp_file_path\n";
         open(my $fh, '<', $cross_wishlist_temp_file_path)
             or die "Could not open file '$cross_wishlist_temp_file_path' $!";
@@ -324,7 +348,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
     my @previous_germplasm_info_lines;
     my %seen_info_obs_units;
-    if ($germplasm_info_file_name){
+    if ($germplasm_info_ona_id){
         print STDERR "PREVIOUS germplasm_info temp file $germplasm_info_temp_file_path\n";
         open(my $fh, '<', $germplasm_info_temp_file_path)
             or die "Could not open file '$germplasm_info_temp_file_path' $!";
@@ -415,7 +439,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             if (!exists($seen_info_obs_units{$plot_id})){
                 my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                 my $accession_info = $accession_info_hash{$accession_id};
-                my $synonyms = $accession_info->{synonyms} ? join(',',@{$accession_info->{synonyms}}) : '';
+                my $synonyms = join(',',@{$accession_info->{synonyms}});
                 my $pedigree = $accession_stock->get_pedigree_string("Parents");
                 my $genus = $accession_stock->get_genus || '';
                 my $species = $accession_stock->get_species || '';
@@ -663,6 +687,28 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename2;
     #$c->stash->{rest}->{filename} = $urlencoded_filename2;
 
+    my $archive_name;
+    if ($is_test_form){
+        $archive_name = 'cross_wishlist_test.csv';
+    } elsif ($separate_crosswishlist_by_location){
+        $archive_name = 'cross_wishlist_'.$female_location_name.'.csv';
+    } else {
+        $archive_name = 'cross_wishlist_'.$site_name.'.csv';
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+       include_timestamp => 0,
+       tempfile => $file_path2,
+       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
+       archive_path => $c->config->{archive_path},
+       archive_filename => $archive_name,
+       timestamp => $timestamp,
+       user_id => $user_id,
+       user_role => $c->user->get_object->get_user_type()
+    });
+    my $uploaded_file = $uploader->archive();
+    my $md5 = $uploader->get_md5($uploaded_file);
+
     my ($file_path3, $uri3) = $c->tempfile( TEMPLATE => "download/cross_wishlist_accession_info_XXXXX");
     $file_path3 .= '.csv';
     $uri3 .= '.csv';
@@ -680,6 +726,28 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $urlencoded_filename3 = $urlencode{$uri3};
     #print STDERR Dumper $urlencoded_filename3;
     #$c->stash->{rest}->{filename} = $urlencoded_filename3;
+
+    my $germplasm_info_archive_name;
+    if ($is_test_form){
+        $germplasm_info_archive_name = 'germplasm_info_test.csv';
+    } elsif ($separate_crosswishlist_by_location){
+        $germplasm_info_archive_name = 'germplasm_info_'.$female_location_name.'.csv';
+    } else {
+        $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
+    }
+
+    $uploader = CXGN::UploadFile->new({
+       include_timestamp => 0,
+       tempfile => $file_path3,
+       subdirectory => 'cross_wishlist_'.$site_name.'_'.$ona_form_id,
+       archive_path => $c->config->{archive_path},
+       archive_filename => $germplasm_info_archive_name,
+       timestamp => $timestamp,
+       user_id => $user_id,
+       user_role => $c->user->get_object->get_user_type()
+    });
+    my $germplasm_info_uploaded_file = $uploader->archive();
+    my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
 
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
@@ -725,10 +793,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $server_endpoint,
             Content_Type => 'form-data',
             Content => [
-                data_file => [ $file_path2, $file_path2, Content_Type => 'text/plain', ],
+                data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
                 "xform"=>$ona_form_id,
                 "data_type"=>"media",
-                "data_value"=>$file_path2
+                "data_value"=>$uploaded_file
             ]
         );
 
@@ -750,10 +818,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $server_endpoint,
             Content_Type => 'form-data',
             Content => [
-                data_file => [$file_path3, $file_path3, Content_Type => 'text/plain', ],
+                data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
                 "xform"=>$ona_form_id,
                 "data_type"=>"media",
-                "data_value"=>$file_path3
+                "data_value"=>$germplasm_info_uploaded_file
             ]
         );
 
