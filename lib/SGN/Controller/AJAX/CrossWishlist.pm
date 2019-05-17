@@ -400,6 +400,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         stock_id_list=>\@accession_ids,
         stock_type_id=>$accession_cvterm_id,
         stockprop_columns_view=>{'variety'=>1, 'stock_synonym'=>1, 'state'=>1, 'notes'=>1, 'organization'=>1, 'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ploidy_level'=>1, 'genome_structure'=>1},
+        include_obsolete => 1
 	});
     my ($result, $total_count) = $stock_search->search();
     my %accession_info_hash;
