@@ -44,6 +44,7 @@ use CXGN::Cross;
 use JSON;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
+use LWP::Simple;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
 
