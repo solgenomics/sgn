@@ -363,7 +363,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
     }
 
-    my $plot_info_file_header = '"ObservationUnitType","ObservationUnitName","ObservationUnitID","PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","PlantName","PlantID","PlantNumber","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionNameAndPlotNumber","AccessionNameAndPlotNumberAndPlantNumber","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
+    my $plot_info_file_header = '"ObservationUnitType","ObservationUnitName","ObservationUnitID","PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","PlantName","PlantID","PlantNumber","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionNameAndPlotNumber","AccessionNameAndPlotNumberAndPlantNumber","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionPloidyLevel","AccessionGenomeStructure","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
     my @plot_info_lines;
 
     my %accession_id_hash;
@@ -399,7 +399,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         stock_id_list=>\@accession_ids,
         stock_type_id=>$accession_cvterm_id,
-        stockprop_columns_view=>{'variety'=>1, 'stock_synonym'=>1, 'state'=>1, 'notes'=>1, 'organization'=>1, 'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1},
+        stockprop_columns_view=>{'variety'=>1, 'stock_synonym'=>1, 'state'=>1, 'notes'=>1, 'organization'=>1, 'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ploidy_level'=>1, 'genome_structure'=>1},
 	});
     my ($result, $total_count) = $stock_search->search();
     my %accession_info_hash;
@@ -453,6 +453,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $notes = $accession_info->{notes};
                 my $accession_number = $accession_info->{'accession number'};
                 my $pui = $accession_info->{'PUI'};
+                my $ploidy_level = $accession_info->{'ploidy_level'};
+                my $genome_structure = $accession_info->{'genome_structure'};
                 my $seedsource = $accession_info->{'seed source'};
                 my $storage_code = $accession_info->{'type of germplasm storage code'};
                 my $acquisition_date = $accession_info->{'acquisition date'};
@@ -468,7 +470,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $t = time;
                 my $entry_timestamp = strftime '%F %T', localtime $t;
                 $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                push @plot_info_lines, '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","","","","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+                push @plot_info_lines, '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","","","","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$ploidy_level.'","'.$genome_structure.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
 
                 $seen_info_obs_units{$plot_id}++;
             }
@@ -494,6 +496,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     my $notes = $accession_info->{notes};
                     my $accession_number = $accession_info->{'accession number'};
                     my $pui = $accession_info->{'PUI'};
+                    my $ploidy_level = $accession_info->{'ploidy_level'};
+                    my $genome_structure = $accession_info->{'genome_structure'};
                     my $seedsource = $accession_info->{'seed source'};
                     my $storage_code = $accession_info->{'type of germplasm storage code'};
                     my $acquisition_date = $accession_info->{'acquisition date'};
@@ -509,7 +513,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     my $t = time;
                     my $entry_timestamp = strftime '%F %T', localtime $t;
                     $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                    push @plot_info_lines, '"plant","'.$_.'","'.$plant_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+                    push @plot_info_lines, '"plant","'.$_.'","'.$plant_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$ploidy_level.'","'.$genome_structure.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
 
                     $seen_info_obs_units{$plant_id}++;
                 }
