@@ -683,7 +683,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
 
-    $c->stash->{rest}->{success} = 'The cross wishlist file can be downloaded <a href="/cross_wishlist/file_download/'.$cross_wishlist_file_id.'">here</a>. The germplasm info file can be downloaded <a href="/cross_wishlist/file_download/'.$germplasm_info_file_id.'">here</a>.';
+    $c->stash->{rest}->{success} = 'The cross wishlist file can be downloaded <a href="'.$uri2.'">here</a>. The germplasm info file can be downloaded <a href="'.$uri3.'">here</a>.';
 
     if ($odk_crossing_data_service_name eq 'NULL') {
         $c->detach();
