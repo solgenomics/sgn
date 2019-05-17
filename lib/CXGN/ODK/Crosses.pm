@@ -618,7 +618,7 @@ sub create_odk_cross_progress_tree {
                                     $combined{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = $cross_info;
                                     if ($cross_info->{'firstPollination'}){
                                         foreach my $first_pollination (@{$cross_info->{'firstPollination'}}){
-                                            my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femID'});
+                                            my $female_plot_name = _get_plot_name_from_barcode_id($first_pollination->{'FieldActivities/FirstPollination/femaleID'});
                                             if ($planned_female_plot_name eq $female_plot_name){
                                                 $combined{$top_level}->{'wishlist_female_plot_match'} = $female_plot_name;
                                                 $cross_combinations{$top_level}->{$female_accession_name}->{$planned_female_plot_name}->{$female_plot_name}->{$male_accession_name}->{$cycle}->{$cross_name} = 1;
@@ -856,7 +856,7 @@ sub create_odk_cross_progress_tree {
                                                             my $activity_summary = {
                                                                 femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
                                                                 maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
-                                                                femalePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
+                                                                femalePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femaleID'}),
                                                                 malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
                                                                 date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
                                                             };
