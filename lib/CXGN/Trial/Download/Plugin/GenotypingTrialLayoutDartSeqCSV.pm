@@ -65,9 +65,10 @@ sub download {
     my $q = "SELECT common_name FROM organism WHERE species = ?;";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 
-    my @output_array;
-    foreach my $key (sort keys %$design){
-        my $val = $design->{$key};
+    my @plot_design = values %$design;
+    @plot_design = sort { $a->{col_number} <=> $b->{col_number} || $a->{row_number} cmp $b->{row_number} } @plot_design;
+
+    foreach my $val (@plot_design){
         my $notes = $val->{notes} || 'NA';
         my $acquisition_date = $val->{acquisition_date} || 'NA';
         my $concentration = $val->{concentration} || 'NA';
@@ -76,15 +77,14 @@ sub download {
         my $extraction = $val->{extraction} || 'NA';
         my $comments = 'Notes: '.$notes.' AcquisitionDate: '.$acquisition_date.' Concentration: '.$concentration.' Volume: '.$volume.' Person: '.$dna_person.' Extraction: '.$extraction;
         my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
-        my $letter = substr $val->{plot_number}, 0 , 1;
 
         $h->execute($val->{species});
         my ($common_name) = $h->fetchrow_array();
 
         if (!$val->{is_blank}) {
-            push @output_array, [
+            my $o = [
                 $trial_name,
-                $letter,
+                $val->{row_number},
                 $val->{col_number},
                 $common_name,
                 $val->{species},
@@ -92,10 +92,8 @@ sub download {
                 $val->{tissue_type},
                 $comments
             ];
+            $csv->print($F, $o);
         }
-    }
-    foreach my $l (@output_array){
-        $csv->print($F, $l);
     }
     close($F);
 }
