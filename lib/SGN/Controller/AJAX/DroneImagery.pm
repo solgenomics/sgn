@@ -3890,10 +3890,10 @@ sub _perform_fourier_transform_calculation {
                 );
             }
             elsif ($image_type eq 'calculate_tgi_drone_imagery') {
-                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'calculate_vari_drone_imagery') {
-                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
                 push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
