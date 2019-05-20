@@ -2145,6 +2145,7 @@ sub drone_imagery_analysis_query_POST : Args(0) {
         }
     }
 
+    print STDERR Dumper \@drone_run_band_project_id_list;
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_band_project_id_list=>\@drone_run_band_project_id_list,

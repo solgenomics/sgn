@@ -695,12 +695,13 @@ sub get_drone_run_bands_from_field_trial {
         JOIN projectprop AS project_start_date ON (project.project_id=project_start_date.project_id AND project_start_date.type_id=$project_start_date_type_id)
         JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$project_relationship_type_id)
         JOIN project AS field_trial ON (field_trial.project_id=project_relationship.object_project_id)
+        WHERE field_trial.project_id = ?
         ORDER BY project.project_id;";
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute($self->get_trial_id());
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
