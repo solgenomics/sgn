@@ -464,12 +464,17 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my $plot_polygon_original_background_removed_vari_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery', 'project_md_image')->cvterm_id();
-    my $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-    my $plot_polygon_original_ourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-    my $plot_polygon_original_ourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-    my $plot_polygon_original_ourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-    my $plot_polygon_original_ourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-    my $plot_polygon_original_ourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+    my $plot_polygon_original_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+
     my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
     my @project_image_type_id_list = (
@@ -499,12 +504,16 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
         $plot_polygon_original_background_removed_vari_mask_images_cvterm_id,
         $plot_polygon_original_background_removed_ndvi_mask_images_cvterm_id,
         $plot_polygon_original_background_removed_ndre_mask_images_cvterm_id,
-        $plot_polygon_original_ourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id,
-        $plot_polygon_original_ourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id,
-        $plot_polygon_original_ourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id,
-        $plot_polygon_original_ourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id,
-        $plot_polygon_original_ourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id,
-        $plot_polygon_original_ourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id
+        $plot_polygon_original_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_cvterm_id,
+        $plot_polygon_original_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_cvterm_id
     );
     my $sql = join ("," , @project_image_type_id_list);
     my $q = "SELECT drone_run.project_id, project_image_type.name
