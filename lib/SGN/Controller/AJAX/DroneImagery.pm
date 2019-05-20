@@ -3425,8 +3425,8 @@ sub standard_process_apply_POST : Args(0) {
 
         my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, undef, $user_id, $user_name, $user_role, 0);
 
-        my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $drone_run_band_type, 0, 'denoised_stitched_image', '30', $user_id, $user_name, $user_role);
-        my $fourier_transform_return_image_id = $fourier_transform_return->{index_image_id};
+        my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $drone_run_band_type, 0, 'denoised_stitched_image', '30', 'frequency', $user_id, $user_name, $user_role);
+        my $fourier_transform_return_image_ids = $fourier_transform_return->{ft_image_ids};
 
         my $ft_hpf30_plot_polygon_type;
         if ($drone_run_band_type eq 'Blue (450-520nm)') {
@@ -3445,7 +3445,9 @@ sub standard_process_apply_POST : Args(0) {
             $ft_hpf30_plot_polygon_type = 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
         }
 
-        my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_plot_polygon_type, $user_id, $user_name, $user_role, 0);
+        foreach my $i (@$fourier_transform_return_image_ids) {
+            my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $i, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_plot_polygon_type, $user_id, $user_name, $user_role, 0);
+        }
     }
 
     print STDERR Dumper \%selected_drone_run_band_types;
@@ -3784,10 +3786,11 @@ sub drone_imagery_calculate_fourier_transform_POST : Args(0) {
     my $selected_channel = $c->req->param('selected_channel');
     my $image_type = $c->req->param('image_type');
     my $high_pass_filter = $c->req->param('high_pass_filter');
+    my $high_pass_filter_type = $c->req->param('high_pass_filter_type') || 'frequency';
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_fourier_transform_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $drone_run_band_project_type, $selected_channel, $image_type, $high_pass_filter, $user_id, $user_name, $user_role);
+    my $return = _perform_fourier_transform_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $drone_run_band_project_type, $selected_channel, $image_type, $high_pass_filter, $high_pass_filter_type, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -3802,6 +3805,7 @@ sub _perform_fourier_transform_calculation {
     my $selected_channel = shift;
     my $image_type = shift;
     my $high_pass_filter = shift;
+    my $high_pass_filter_type = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -3809,34 +3813,26 @@ sub _perform_fourier_transform_calculation {
     print STDERR Dumper $drone_run_band_project_type;
     print STDERR Dumper $image_type;
     print STDERR Dumper $selected_channel;
-    my $linking_table_type_id;
+    my @linking_table_type_ids;
     if ($high_pass_filter eq '30') {
         if ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '1') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '2') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id();
-                }
+                push @linking_table_type_ids, (
+                    [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()],
+                    [1, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id()],
+                    [2, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id()]
+                );
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '1') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '2') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id();
-                }
+                push @linking_table_type_ids, (
+                    [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()],
+                    [1, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id()],
+                    [2, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id()]
+                );
             }
             elsif ($image_type eq 'calculate_ndvi_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 if ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'NDVI only has one channel'};
@@ -3844,7 +3840,7 @@ sub _perform_fourier_transform_calculation {
             }
             elsif ($image_type eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 elsif ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'NDVI only has one channel'};
@@ -3853,30 +3849,22 @@ sub _perform_fourier_transform_calculation {
         }
         if ($drone_run_band_project_type eq 'Merged 3 Bands NReN') {
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '1') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '2') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id();
-                }
+                push @linking_table_type_ids, (
+                    [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()],
+                    [1, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id()],
+                    [2, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id()]
+                );
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '1') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '2') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id();
-                }
+                push @linking_table_type_ids, (
+                    [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()],
+                    [1, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id()],
+                    [2, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id()]
+                );
             }
             elsif ($image_type eq 'calculate_ndre_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 if ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'NDRE only has one channel'};
@@ -3884,7 +3872,7 @@ sub _perform_fourier_transform_calculation {
             }
             elsif ($image_type eq 'threshold_background_removed_ndre_stitched_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 elsif ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'NDRE only has one channel'};
@@ -3893,30 +3881,22 @@ sub _perform_fourier_transform_calculation {
         }
         if ($drone_run_band_project_type eq 'RGB Color Image' || $drone_run_band_project_type eq 'Merged 3 Bands BGR') {
             if ($image_type eq 'denoised_stitched_image') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '1') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '2') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id();
-                }
+                push @linking_table_type_ids, (
+                    [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()],
+                    [1, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id()],
+                    [2, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id()]
+                );
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '1') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id();
-                }
-                if ($selected_channel eq '2') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id();
-                }
+                push @linking_table_type_ids, (
+                    [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()],
+                    [1, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'project_md_image')->cvterm_id()],
+                    [2, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id()]
+                );
             }
             elsif ($image_type eq 'calculate_tgi_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 if ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'TGI only has one channel'};
@@ -3924,7 +3904,7 @@ sub _perform_fourier_transform_calculation {
             }
             elsif ($image_type eq 'calculate_vari_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 if ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'VARI only has one channel'};
@@ -3932,7 +3912,7 @@ sub _perform_fourier_transform_calculation {
             }
             elsif ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 elsif ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'TGI only has one channel'};
@@ -3940,7 +3920,7 @@ sub _perform_fourier_transform_calculation {
             }
             elsif ($image_type eq 'threshold_background_removed_vari_stitched_drone_imagery') {
                 if ($selected_channel eq '0') {
-                    $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
                 }
                 elsif ($selected_channel eq '1' || $selected_channel eq '2') {
                     return {error => 'VARI only has one channel'};
@@ -3952,10 +3932,10 @@ sub _perform_fourier_transform_calculation {
                 return {error => "For a blue image there is only the first channel!"};
             }
             if ($image_type eq 'denoised_stitched_image') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'Green (515-600nm)') {
@@ -3963,10 +3943,10 @@ sub _perform_fourier_transform_calculation {
                 return {error => "For a green image there is only the first channel!"};
             }
             if ($image_type eq 'denoised_stitched_image') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'Red (600-690nm)') {
@@ -3974,10 +3954,10 @@ sub _perform_fourier_transform_calculation {
                 return {error => "For a red image there is only the first channel!"};
             }
             if ($image_type eq 'denoised_stitched_image') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
@@ -3985,10 +3965,10 @@ sub _perform_fourier_transform_calculation {
                 return {error => "For a red edge image there is only the first channel!"};
             }
             if ($image_type eq 'denoised_stitched_image') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'NIR (750-900nm)') {
@@ -3996,15 +3976,15 @@ sub _perform_fourier_transform_calculation {
                 return {error => "For a nir image there is only the first channel!"};
             }
             if ($image_type eq 'denoised_stitched_image') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_stitched_drone_imagery') {
-                $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id();
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
     }
-    if (!$linking_table_type_id) {
-        die "Could not get fourier transform image type id\n";
+    if (scalar(@linking_table_type_ids)<1) {
+        die "Could not get fourier transform linking id\n";
     }
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -4013,50 +3993,57 @@ sub _perform_fourier_transform_calculation {
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
 
-    my $dir = $c->tempfiles_subdir('/drone_imagery_fourier_transform_hpf_image');
-    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_fourier_transform_hpf_image/imageXXXX');
-    $archive_temp_image .= '.png';
-    print STDERR $archive_temp_image."\n";
+    my @ft_image_urls;
+    my @ft_image_ids;
+    my @ft_image_fullpaths;
+    foreach my $l (@linking_table_type_ids) {
+        my $dir = $c->tempfiles_subdir('/drone_imagery_fourier_transform_hpf_image');
+        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_fourier_transform_hpf_image/imageXXXX');
+        $archive_temp_image .= '.png';
+        print STDERR $archive_temp_image."\n";
 
-    my $method = 'frequency';
-    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' --image_band_index $selected_channel --frequency_threshold $high_pass_filter --frequency_threshold_method $method";
-    my $status = system($cmd);
+        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' --image_band_index ".$l->[0]." --frequency_threshold $high_pass_filter --frequency_threshold_method $high_pass_filter_type";
+        my $status = system($cmd);
 
-    my $index_image_fullpath;
-    my $index_image_url;
-    my $index_image_id;
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    my $md5checksum = $image->calculate_md5sum($archive_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-    if ($md_image->count() > 0) {
-        print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
-        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
-        $index_image_fullpath = $image->get_filename('original_converted', 'full');
-        $index_image_url = $image->get_image_url('original');
-        $index_image_id = $image->get_image_id();
-    } else {
-        $image->set_sp_person_id($user_id);
+        my $ft_image_fullpath;
+        my $ft_image_url;
+        my $ft_image_id;
+        $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        my $md5checksum = $image->calculate_md5sum($archive_temp_image);
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
+        if ($md_image->count() > 0) {
+            print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
+            $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+            $ft_image_fullpath = $image->get_filename('original_converted', 'full');
+            $ft_image_url = $image->get_image_url('original');
+            $ft_image_id = $image->get_image_id();
+        } else {
+            $image->set_sp_person_id($user_id);
 
-        my $previous_index_images_search = CXGN::DroneImagery::ImagesSearch->new({
-            bcs_schema=>$schema,
-            project_image_type_id=>$linking_table_type_id,
-            drone_run_band_project_id_list=>[$drone_run_band_project_id]
-        });
-        my ($previous_result, $previous_total_count) = $previous_index_images_search->search();
-        print STDERR Dumper $previous_total_count;
-        foreach (@$previous_result){
-            my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
-            $previous_image->delete(); #Sets to obsolete
+            my $previous_index_images_search = CXGN::DroneImagery::ImagesSearch->new({
+                bcs_schema=>$schema,
+                project_image_type_id=>$l->[1],
+                drone_run_band_project_id_list=>[$drone_run_band_project_id]
+            });
+            my ($previous_result, $previous_total_count) = $previous_index_images_search->search();
+            print STDERR Dumper $previous_total_count;
+            foreach (@$previous_result){
+                my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+                $previous_image->delete(); #Sets to obsolete
+            }
+
+            my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $l->[1]);
+            $ft_image_fullpath = $image->get_filename('original_converted', 'full');
+            $ft_image_url = $image->get_image_url('original');
+            $ft_image_id = $image->get_image_id();
         }
-
-        my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
-        $index_image_fullpath = $image->get_filename('original_converted', 'full');
-        $index_image_url = $image->get_image_url('original');
-        $index_image_id = $image->get_image_id();
+        push @ft_image_ids, $ft_image_id;
+        push @ft_image_urls, $ft_image_url;
+        push @ft_image_fullpaths, $ft_image_fullpath;
     }
 
     return {
-        image_url => $image_url, image_fullpath => $image_fullpath, index_image_id => $index_image_id, index_image_url => $index_image_url, index_image_fullpath => $index_image_fullpath
+        image_url => $image_url, image_fullpath => $image_fullpath, ft_image_ids => \@ft_image_ids, ft_image_urls => \@ft_image_urls, ft_image_fullpaths => \@ft_image_fullpaths
     };
 }
 

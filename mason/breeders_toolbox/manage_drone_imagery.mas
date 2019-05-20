@@ -4393,10 +4393,10 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_fourier_transform_hpf30_channel_select').click(function(){
         manage_drone_imagery_ft_hpf30_selected_channel = jQuery('#drone_imagery_fourier_transform_hpf30_channel_select_input').val();
-        getFourierTransform(30, manage_drone_imagery_ft_hpf30_image_id, manage_drone_imagery_ft_hpf30_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_channel, manage_drone_imagery_ft_hpf30_selected_image_type);
+        getFourierTransform(30, manage_drone_imagery_ft_hpf30_image_id, manage_drone_imagery_ft_hpf30_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_channel, manage_drone_imagery_ft_hpf30_selected_image_type, 'frequency');
     });
 
-    function getFourierTransform(high_pass_filter, image_id, drone_run_band_project_id, drone_run_band_project_type, selected_channel, selected_image_type) {
+    function getFourierTransform(high_pass_filter, image_id, drone_run_band_project_id, drone_run_band_project_type, selected_channel, selected_image_type, high_pass_filter_type) {
         jQuery.ajax({
             type: 'POST',
             url: '/api/drone_imagery/calculate_fourier_transform',
@@ -4407,6 +4407,7 @@ jQuery(document).ready(function() {
                 'selected_channel': selected_channel,
                 'drone_run_band_project_type': drone_run_band_project_type,
                 'high_pass_filter': high_pass_filter,
+                'high_pass_filter_type': high_pass_filter_type,
                 'image_type': selected_image_type
             },
             beforeSend: function() {
