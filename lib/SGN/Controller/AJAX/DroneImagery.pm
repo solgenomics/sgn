@@ -1346,7 +1346,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 RGB Channel 1 Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image}.'</div><div class="col-sm-6">';
                                 $drone_run_band_table_html .= '</div></div></div>';
                             } else {
-                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_stitched_image" >Convert Denoised Image to Fourier Transform HPF30</button><br/><br/>';
+                                $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_stitched_image" >Fourier Transform HPF30</button><br/><br/>';
                             }
 
                             my $plot_polygon_type = '';
@@ -1396,7 +1396,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 TGI Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                     $drone_run_band_table_html .= '</div></div></div>';
                                 } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_tgi_drone_imagery" >Convert TGI Image to Fourier Transform HPF30</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_tgi_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                 }
 
                                 if ($d->{threshold_background_removed_tgi_stitched_image}) {
@@ -1423,7 +1423,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 TGI Image with Background Removed via Threshold&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                         $drone_run_band_table_html .= '</div></div></div>';
                                     } else {
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_tgi_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_tgi_stitched_drone_imagery" >Convert Thresholded TGI Image to Fourier Transform HPF30</button><br/><br/>';
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_tgi_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_tgi_stitched_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                     }
 
                                     if ($d->{denoised_background_removed_thresholded_tgi_mask_original_image}) {
@@ -1450,7 +1450,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Channel 1 with Background Removed via Thresholded TGI Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_tgi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_tgi_mask_original" >Convert Denoised Image with Background Removed via Thresholded TGI Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_tgi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_tgi_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_tgi_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-background_removed_tgi_stitched_image_id="'.$d->{threshold_background_removed_tgi_stitched_image_id}.'" >Remove Background From Original Denoised Image via Thresholded TGI Mask</button><br/><br/>';
@@ -1479,7 +1479,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Channel 1 with Background Removed via TGI Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_tgi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_tgi_mask_original" >Convert Denoised Image with Background Removed via TGI Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_tgi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_tgi_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_tgi_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-tgi_stitched_image_id="'.$d->{calculate_tgi_drone_imagery}.'" >Remove Background From Original Denoised Image via TGI Mask</button><br/><br/>';
@@ -1512,7 +1512,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 VARI Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                     $drone_run_band_table_html .= '</div></div></div>';
                                 } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_vari_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_vari_drone_imagery" >Convert VARI Image to Fourier Transform HPF30</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_vari_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_vari_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                 }
 
                                 if ($d->{threshold_background_removed_vari_stitched_image}) {
@@ -1539,7 +1539,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 VARI with Background Removed via Threshold&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                         $drone_run_band_table_html .= '</div></div></div>';
                                     } else {
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_vari_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_vari_stitched_drone_imagery" >Convert VARI Image with Background Removed via Threshold to Fourier Transform HPF30</button><br/><br/>';
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_vari_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_vari_stitched_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                     }
 
                                     if ($d->{denoised_background_removed_thresholded_vari_mask_original_image}) {
@@ -1566,7 +1566,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Channel 1 with Background Removed via Thresholded VARI Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_vari_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_vari_mask_original" >Convert Denoised Image with Background Removed via Tresholded VARI Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_vari_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_vari_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_vari_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-background_removed_vari_stitched_image_id="'.$d->{threshold_background_removed_vari_stitched_image_id}.'" >Remove Background From Original Denoised Image via Thresholded VARI Mask</button><br/><br/>';
@@ -1595,7 +1595,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Channel 1 with Background Removed via VARI Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_vari_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_vari_mask_original" >Convert Denoised Image with Background Removed via VARI Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_vari_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_vari_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_vari_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-vari_stitched_image_id="'.$d->{calculate_vari_drone_imagery}.'" >Remove Background From Original Denoised Image via VARI Mask</button><br/><br/>';
@@ -1628,7 +1628,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 NDVI&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                     $drone_run_band_table_html .= '</div></div></div>';
                                 } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_ndvi_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_ndvi_drone_imagery" >Convert NDVI Image to Fourier Transform HPF30</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_ndvi_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_ndvi_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                 }
 
                                 if ($d->{threshold_background_removed_ndvi_stitched_image}) {
@@ -1655,7 +1655,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 NDVI with Background Removed via Threshold&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                         $drone_run_band_table_html .= '</div></div></div>';
                                     } else {
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_ndvi_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_ndvi_stitched_drone_imagery" >Convert NDVI Image with Background Removed via Threshold to Fourier Transform HPF30</button><br/><br/>';
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_ndvi_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_ndvi_stitched_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                     }
 
                                     if ($d->{denoised_background_removed_thresholded_ndvi_mask_original_image}) {
@@ -1682,7 +1682,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Channel 1 with Background Removed via Thresholded NDVI Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_ndvi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_ndvi_mask_original" >Convert Denoised Image with Background Removed via Thresholded NDVI Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_ndvi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_ndvi_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_ndvi_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-background_removed_ndvi_stitched_image_id="'.$d->{threshold_background_removed_ndvi_stitched_image_id}.'" >Remove Background From Original Denoised Image via Thresholded NDVI Mask</button><br/><br/>';
@@ -1711,7 +1711,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Channel 1 with Background Removed via NDVI Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_ndvi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_ndvi_mask_original" >Convert Denoised Image with Background Removed via NDVI Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_ndvi_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_ndvi_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_ndvi_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-ndvi_stitched_image_id="'.$d->{calculate_ndvi_drone_imagery}.'" >Remove Background From Original Denoised Image via NDVI Mask</button><br/><br/>';
@@ -1744,7 +1744,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 NDRE Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                     $drone_run_band_table_html .= '</div></div></div>';
                                 } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_ndre_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_ndre_drone_imagery" >Convert NDRE Image to Fourier Transform HPF30</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_ndre_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_ndre_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                 }
 
                                 if ($d->{threshold_background_removed_ndre_stitched_image}) {
@@ -1771,7 +1771,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 NDRE Image with Background Removed via Threshold&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
                                         $drone_run_band_table_html .= '</div></div></div>';
                                     } else {
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_ndre_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_ndre_stitched_drone_imagery" >Convert NDRE Image with Background Removed via Threshold to Fourier Transform HPF30</button><br/><br/>';
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_ndre_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_ndre_stitched_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
                                     }
 
                                     if ($d->{denoised_background_removed_thresholded_ndre_mask_original_image}) {
@@ -1798,7 +1798,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Image with Background Removed via Thresholded NDRE Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_ndre_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_ndre_mask_original" >Convert Denoised Image with Background Removed via Thresholded NDRE Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_thresholded_ndre_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_thresholded_ndre_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_ndre_removed_background_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-background_removed_ndre_stitched_image_id="'.$d->{threshold_background_removed_ndre_stitched_image_id}.'" >Remove Background From Original Denoised Image via Tresholded NDRE Mask</button><br/><br/>';
@@ -1827,7 +1827,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 Denoised Image with Background Removed via NDRE Mask&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1_image}.'</div><div class="col-sm-6">';
                                             $drone_run_band_table_html .= '</div></div></div>';
                                         } else {
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_ndre_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_ndre_mask_original" >Convert Denoised Image with Background Removed via NDRE Mask to Fourier Transform HPF30</button><br/><br/>';
+                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_background_removed_ndre_mask_original_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="denoised_background_removed_ndre_mask_original" >Fourier Transform HPF30</button><br/><br/>';
                                         }
                                     } else {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_apply_ndre_mask_to_denoised_image" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'"  data-ndre_stitched_image_id="'.$d->{calculate_ndre_drone_imagery}.'" >Remove Background From Original Denoised Image via NDRE Mask</button><br/><br/>';
@@ -1961,7 +1961,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 if ($d->{threshold_background_removed_stitched_image}) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{threshold_background_removed_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{threshold_background_removed_stitched_image_username}.'</br><b>Date</b>: '.$d->{threshold_background_removed_stitched_image_modified_date}.'<br/><b>Background Removed Threshold</b>: '.$d->{threshold_background_removed_stitched_image_threshold}.'</div><div class="col-sm-3">'.$d->{threshold_background_removed_stitched_image}.'</div><div class="col-sm-6">';
 
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_stitched_drone_imagery" >Apply Fourier Transform HPF30 to Threshold Background Removed Denoised Image</button><br/><br/>';
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{threshold_background_removed_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="threshold_background_removed_stitched_drone_imagery" >Fourier Transform HPF30</button><br/><br/>';
 
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{threshold_background_removed_stitched_image_id}.'" data-assign_plot_polygons_type="'.$plot_polygon_type.'">Create/View Plot Polygons</button>';
 
@@ -3783,14 +3783,13 @@ sub drone_imagery_calculate_fourier_transform_POST : Args(0) {
     my $image_id = $c->req->param('image_id');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $drone_run_band_project_type = $c->req->param('drone_run_band_project_type');
-    my $selected_channel = $c->req->param('selected_channel');
     my $image_type = $c->req->param('image_type');
     my $high_pass_filter = $c->req->param('high_pass_filter');
     my $high_pass_filter_type = $c->req->param('high_pass_filter_type') || 'frequency';
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_fourier_transform_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $drone_run_band_project_type, $selected_channel, $image_type, $high_pass_filter, $high_pass_filter_type, $user_id, $user_name, $user_role);
+    my $return = _perform_fourier_transform_calculation($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $drone_run_band_project_type, $image_type, $high_pass_filter, $high_pass_filter_type, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -3802,7 +3801,6 @@ sub _perform_fourier_transform_calculation {
     my $image_id = shift;
     my $drone_run_band_project_id = shift;
     my $drone_run_band_project_type = shift;
-    my $selected_channel = shift;
     my $image_type = shift;
     my $high_pass_filter = shift;
     my $high_pass_filter_type = shift;
@@ -3812,7 +3810,6 @@ sub _perform_fourier_transform_calculation {
     print STDERR Dumper $high_pass_filter;
     print STDERR Dumper $drone_run_band_project_type;
     print STDERR Dumper $image_type;
-    print STDERR Dumper $selected_channel;
     my @linking_table_type_ids;
     if ($high_pass_filter eq '30') {
         if ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
@@ -3831,20 +3828,10 @@ sub _perform_fourier_transform_calculation {
                 );
             }
             elsif ($image_type eq 'calculate_ndvi_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                if ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'NDVI only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                elsif ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'NDVI only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'Merged 3 Bands NReN') {
@@ -3863,20 +3850,10 @@ sub _perform_fourier_transform_calculation {
                 );
             }
             elsif ($image_type eq 'calculate_ndre_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                if ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'NDRE only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_ndre_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                elsif ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'NDRE only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'RGB Color Image' || $drone_run_band_project_type eq 'Merged 3 Bands BGR') {
@@ -3895,42 +3872,19 @@ sub _perform_fourier_transform_calculation {
                 );
             }
             elsif ($image_type eq 'calculate_tgi_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                if ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'TGI only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'calculate_vari_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                if ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'VARI only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                elsif ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'TGI only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
             elsif ($image_type eq 'threshold_background_removed_vari_stitched_drone_imagery') {
-                if ($selected_channel eq '0') {
-                    push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
-                }
-                elsif ($selected_channel eq '1' || $selected_channel eq '2') {
-                    return {error => 'VARI only has one channel'};
-                }
+                push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id()];
             }
         }
         if ($drone_run_band_project_type eq 'Blue (450-520nm)') {
-            if ($selected_channel eq '1' || $selected_channel eq '2') {
-                return {error => "For a blue image there is only the first channel!"};
-            }
             if ($image_type eq 'denoised_stitched_image') {
                 push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
@@ -3939,9 +3893,6 @@ sub _perform_fourier_transform_calculation {
             }
         }
         if ($drone_run_band_project_type eq 'Green (515-600nm)') {
-            if ($selected_channel eq '1' || $selected_channel eq '2') {
-                return {error => "For a green image there is only the first channel!"};
-            }
             if ($image_type eq 'denoised_stitched_image') {
                 push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
@@ -3950,9 +3901,6 @@ sub _perform_fourier_transform_calculation {
             }
         }
         if ($drone_run_band_project_type eq 'Red (600-690nm)') {
-            if ($selected_channel eq '1' || $selected_channel eq '2') {
-                return {error => "For a red image there is only the first channel!"};
-            }
             if ($image_type eq 'denoised_stitched_image') {
                 push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
@@ -3961,9 +3909,6 @@ sub _perform_fourier_transform_calculation {
             }
         }
         if ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
-            if ($selected_channel eq '1' || $selected_channel eq '2') {
-                return {error => "For a red edge image there is only the first channel!"};
-            }
             if ($image_type eq 'denoised_stitched_image') {
                 push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }
@@ -3972,9 +3917,6 @@ sub _perform_fourier_transform_calculation {
             }
         }
         if ($drone_run_band_project_type eq 'NIR (750-900nm)') {
-            if ($selected_channel eq '1' || $selected_channel eq '2') {
-                return {error => "For a nir image there is only the first channel!"};
-            }
             if ($image_type eq 'denoised_stitched_image') {
                 push @linking_table_type_ids, [0, SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id()];
             }

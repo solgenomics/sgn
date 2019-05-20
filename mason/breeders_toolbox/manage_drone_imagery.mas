@@ -830,38 +830,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
-<div class="modal fade" id="drone_imagery_fourier_transform_channel_dialog" name="drone_imagery_fourier_transform_channel_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryFourierTransformChannelDialog" data-backdrop="static">
-  <div class="modal-dialog modal-xl" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryFourierTransformChannelDialog">Select the Channel to Run Fourier Transform HPF30 On</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-            <form class="form-horizontal">
-                <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Channel:</label>
-                    <div class="col-sm-7">
-                        <select class="form-control" id="drone_imagery_fourier_transform_hpf30_channel_select_input">
-                            <option value="0">Channel 1</option>
-                            <option value="1">Channel 2</option>
-                            <option value="2">Channel 3</option>
-                        </select>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="drone_imagery_fourier_transform_hpf30_channel_select">Run Fourier Transform HPF30</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="modal fade" id="drone_imagery_delete_drone_run_dialog" name="drone_imagery_delete_drone_run_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryDeleteDroneRunDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -4380,23 +4348,16 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_ft_hpf30_image_id = '';
     var manage_drone_imagery_ft_hpf30_drone_run_band_type = '';
     var manage_drone_imagery_ft_hpf30_selected_image_type = '';
-    var manage_drone_imagery_ft_hpf30_selected_channel = '';
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_fourier_transform_hpf30"]', function(){
         manage_drone_imagery_ft_hpf30_drone_run_band_project_id = jQuery(this).data('drone_run_band_project_id');
         manage_drone_imagery_ft_hpf30_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_ft_hpf30_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
         manage_drone_imagery_ft_hpf30_selected_image_type = jQuery(this).data('selected_image_type');
-
-        jQuery('#drone_imagery_fourier_transform_channel_dialog').modal("show");
+        getFourierTransform(30, manage_drone_imagery_ft_hpf30_image_id, manage_drone_imagery_ft_hpf30_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_image_type, 'frequency');
     });
 
-    jQuery('#drone_imagery_fourier_transform_hpf30_channel_select').click(function(){
-        manage_drone_imagery_ft_hpf30_selected_channel = jQuery('#drone_imagery_fourier_transform_hpf30_channel_select_input').val();
-        getFourierTransform(30, manage_drone_imagery_ft_hpf30_image_id, manage_drone_imagery_ft_hpf30_drone_run_band_project_id, manage_drone_imagery_ft_hpf30_drone_run_band_type, manage_drone_imagery_ft_hpf30_selected_channel, manage_drone_imagery_ft_hpf30_selected_image_type, 'frequency');
-    });
-
-    function getFourierTransform(high_pass_filter, image_id, drone_run_band_project_id, drone_run_band_project_type, selected_channel, selected_image_type, high_pass_filter_type) {
+    function getFourierTransform(high_pass_filter, image_id, drone_run_band_project_id, drone_run_band_project_type, selected_image_type, high_pass_filter_type) {
         jQuery.ajax({
             type: 'POST',
             url: '/api/drone_imagery/calculate_fourier_transform',
@@ -4404,7 +4365,6 @@ jQuery(document).ready(function() {
             data: {
                 'image_id': image_id,
                 'drone_run_band_project_id': drone_run_band_project_id,
-                'selected_channel': selected_channel,
                 'drone_run_band_project_type': drone_run_band_project_type,
                 'high_pass_filter': high_pass_filter,
                 'high_pass_filter_type': high_pass_filter_type,
