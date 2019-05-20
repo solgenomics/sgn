@@ -233,8 +233,7 @@ solGS.geneticGain = {
 	}
 	
 	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-	if (userUploadedSelExists == true) {
-	    
+	if (userUploadedSelExists == true) {	    
             var userSelPops = listUploadedSelPopulations();
             if (userSelPops) {
 		jQuery("#gg_select_a_population_div ul").append(userSelPops);  
@@ -477,8 +476,6 @@ jQuery(document).ready(function () {
 	if (page.match(/solgs\/selection\//)) {
 	    solGS.geneticGain.gebvsComparison();
 	} else {
-
-	    console.log('clicked check_genetic_gain')
 	    var selectedPopId   = jQuery("#gg_selected_population_id").val();
 	    var selectedPopType = jQuery("#gg_selected_population_type").val();
 	    var selectedPopName = jQuery("#gg_selected_population_name").val();

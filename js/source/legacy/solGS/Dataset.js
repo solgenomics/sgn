@@ -49,9 +49,8 @@ solGS.getDatasetsMenu = function (dType) {
 
     	var d = dataset.getDataset(id);
 	
-	for (var j=0; j<dType.length; j++ ) {
-    	    if (d.categories[dType[j]].length) {
-
+	for (var j=0; j<dType.length; j++ ) {	    	    
+    	    if (d.categories[dType[j]] !== null) {
 		if (!dsIds.includes(id)) {
 		    dsIds.push(id);
 		    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';

@@ -99,13 +99,15 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $corr_pop_id = $c->req->param('corr_population_id');
     my $pop_type    = $c->req->param('type');
     my $model_id    = $c->req->param('model_id');
-    
+    my @traits_ids  = $c->req->param('traits_ids[]');
     my $index_file  = $c->req->param('index_file');
+
     $c->stash->{selection_index_only_file} = $index_file;   
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
     $c->stash->{training_pop_id} = $model_id;
-
+    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
     #$c->controller('solGS::Files')->selection_index_file($c);
