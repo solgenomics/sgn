@@ -2094,8 +2094,6 @@ sub drone_imagery_analysis_query_POST : Args(0) {
     my $observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id();
 
-    my $drone_run_project_id_list = $c->req->param('drone_run_project_id_list') ? decode_json $c->req->param('drone_run_project_id_list') : [];
-    my $drone_run_band_project_id_list = $c->req->param('drone_run_band_project_id_list') ? decode_json $c->req->param('drone_run_band_project_id_list') : [];
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $return_format = $c->req->param('format') || 'csv';
     my $trial_name_list = $c->req->param('trial_name_list');
@@ -2126,10 +2124,30 @@ sub drone_imagery_analysis_query_POST : Args(0) {
 
     my %return;
 
+    if ($trial_name_list) {
+        my @trial_names = split ',', $trial_name_list;
+        my $trial_search = CXGN::Trial::Search->new({
+            bcs_schema=>$schema,
+            trial_name_list=>\@trial_names
+        });
+        my ($result, $total_count) = $trial_search->search();
+        foreach (@$result) {
+            push @$trial_id_list, $_->{trial_id};
+        }
+    }
+
+    my @drone_run_band_project_id_list;
+    foreach (@$trial_id_list) {
+        my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_});
+        my $drone_run_bands = $trial->get_drone_run_bands_from_field_trial();
+        foreach my $d (@$drone_run_bands) {
+            push @drone_run_band_project_id_list, $d->[0];
+        }
+    }
+
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
-        drone_run_project_id_list=>$drone_run_project_id_list,
-        drone_run_band_project_id_list=>$drone_run_band_project_id_list,
+        drone_run_band_project_id_list=>\@drone_run_band_project_id_list,
         project_image_type_id_list=>$project_image_type_id_list
     });
     my ($result, $total_count) = $images_search->search();
@@ -2146,18 +2164,6 @@ sub drone_imagery_analysis_query_POST : Args(0) {
         $project_image_type_names{$_->{drone_run_band_project_name}.$_->{project_image_type_name}}++;
     }
     my @project_image_names_list = sort keys %project_image_type_names;
-
-    if ($trial_name_list) {
-        my @trial_names = split ',', $trial_name_list;
-        my $trial_search = CXGN::Trial::Search->new({
-            bcs_schema=>$schema,
-            trial_name_list=>\@trial_names
-        });
-        my ($result, $total_count) = $trial_search->search();
-        foreach (@$result) {
-            push @$trial_id_list, $_->{trial_id};
-        }
-    }
 
     my %data_hash;
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
