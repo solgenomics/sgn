@@ -3723,14 +3723,14 @@ sub create_cluster_accesible_tmp_files {
 sub run_async {
     my ($self, $c) = @_;    
 
-    my $dependency          = $c->stash->{dependency};
-    my $dependency_type     = $c->stash->{dependency_type};
+    my $dependency          = $c->stash->{dependency} || 'none';
+    my $dependency_type     = $c->stash->{dependency_type} || 'none';
     my $background_job      = $c->stash->{background_job};
     my $dependent_job       = $c->stash->{dependent_job};
     my $temp_file_template  = $c->stash->{r_temp_file};  
     my $job_type            = $c->stash->{job_type};
     my $model_file          = $c->stash->{gs_model_args_file};
-    my $combine_pops_job_id = $c->stash->{combine_pops_job_id};
+    my $combine_pops_job_id = $c->stash->{combine_pops_job_id} || 'none';
     my $temp_dir            = $c->stash->{solgs_tempfiles_dir};
 
     $c->stash->{r_temp_file} = 'run-async';
@@ -3773,7 +3773,7 @@ sub run_async {
 	or croak "job config file: $! serializing job config to $job_config_file ";
 
     my $combine_pops_args = $c->stash->{combine_populations_args};
-    my $combine_args_file;
+    my $combine_args_file = 'none';
     
     if ($dependency_type =~ /combine_populations/) 
     {
@@ -3782,9 +3782,10 @@ sub run_async {
 	    or croak "combine pops args file: $! serializing combine pops args  to $combine_args_file ";
     }
 
+  #	
     my $cmd = 'mx-run solGS::DependentJob'
-	. ' --combine_pops_args_file '    . $combine_args_file
 	. ' --dependency_jobs '           . $dependency
+	. ' --combine_pops_args_file '    . $combine_args_file
     	. ' --dependency_type '           . $dependency_type
 	. ' --temp_dir '                  . $temp_dir 
     	. ' --temp_file_template '        . $temp_file_template
@@ -3852,7 +3853,7 @@ sub run_r_script {
         copy($r_cmd_file, $in_file)
             or die "could not copy '$r_cmd_file' to '$in_file'";
     }
-  
+
     if ($dependency_type && $background_job) 
     {
 	$c->stash->{r_commands_file}    = $in_file;

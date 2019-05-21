@@ -219,7 +219,7 @@ sub run_job {
   my $combine_done;
   my $model_job;
   
-  if ($dependency_type =~ /combine_populatons/)
+  if ($dependency_type =~ /combine_populations/)
   {
       my $combine_job = $self->run_combine_populations();
 
