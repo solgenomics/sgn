@@ -206,7 +206,6 @@ sub create_cluster_accesible_tmp_files {
 	};
 
     return $files;
-
 }
 
 
@@ -234,18 +233,35 @@ sub run_job {
       $model_job = $self->run_model();
          
   }
- 
-  if ($dependency_type =~ /selection_pop_download_data/) 
+  elsif ($dependency_type =~ /selection_pop_download_data/) 
   {
-      $self->query_genotype_data();
+      
+      my $query_job =  $self->query_genotype_data();
+     
+      if ($query_job)
+      {	  
+	  print STDERR "\n querying data...\n";
+	  sleep 30;
+	  while (1)
+	  {
+	      last if !$query_job->alive();
+	      sleep 30 if $query_job->alive();
+	      print STDERR "\n waiting for query job to complete..\n";
+	  }
+	  
+	  if ($self->r_script =~ /gs/)
+	  {
+	      print STDERR "\nrunning model\n";
+	      $model_job = $self->run_model();
+	  }
+      } 
+      else
+      {
+	  print STDERR "\nrunning model\n";
+	  $model_job = $self->run_model();
+      }
   }
-  
-  if ($self->r_script =~ /gs/) 
-  {
-       $model_job = $self->run_model();	  
-  }
-
-
+    
 }
 
 
@@ -271,7 +287,6 @@ sub run_combine_populations {
 	$job->do_not_cleanup(1);	 
 	$job->is_async(1);
 	$job->run_cluster($cmd);
-	   
     };
 
     if ($@) {
@@ -279,9 +294,6 @@ sub run_combine_populations {
     }
   
     return $job;
-
-    
-    
 }
 
 
@@ -294,40 +306,66 @@ sub query_genotype_data {
     my $selection_pop_geno_file = $gs_args->{selection_pop_geno_file};
     my $genotypes_ids  = $gs_args->{genotypes_ids};
 
+    my $job;
     if (!-s $selection_pop_geno_file)
     { 
-       my $geno_args = {
-	   'selection_pop_id' => $selection_pop_id, 
-	   'genotype_file'    => $selection_pop_geno_file,
-	   'genotypes_ids'    => $genotypes_ids
-	       
-       };
-       
-       my $args_file = SGN::Controller::solGS::Files->create_tempfile($self->temp_dir, "geno-data-args_file-${selection_pop_id}");
-       nstore $geno_args, $args_file 
-	   or croak "data queryscript: $! serializing model details to $args_file ";
-
-       my $pop_type = 'trial';
-       $pop_type    = 'list' if $selection_pop_id =~ /list/;
-
-        my $job_args = {
-	       'data_type' => 'genotype',
-	       'population_type'  => 'list',
-	       'args_file' => $args_file	     
+	my $geno_args = {
+	    'selection_pop_id' => $selection_pop_id, 
+	    'genotype_file'    => $selection_pop_geno_file,
+	    'genotypes_ids'    => $genotypes_ids	       
 	};
+	
+	my $args_file = SGN::Controller::solGS::Files->create_tempfile($self->temp_dir, "geno-data-args_file-${selection_pop_id}");
+	nstore $geno_args, $args_file 
+	    or croak "data queryscript: $! serializing model details to $args_file ";
 
-       my $query = solGS::Cluster->new($job_args);
+	my $pop_type = 'trial';
+	$pop_type    = 'list' if $selection_pop_id =~ /list/;
+	my $data_type = 'genotype';
+        #my $job_args = {
+	 #      'data_type' => 'genotype',
+	  #     'population_type'  => $pop_type,
+	   #    'args_file' => $args_file	     
+	#};
 
-       if ($selection_pop_id =~ /list/)
-       {
-	   $query->genotypes_list_genotype_data();	   
-       }
-       else
-       {
-	   $query->trial_genotype_data();
-       } 
-    } 
+       #my $query = solGS::Cluster->new($job_args);
+
+       #if ($selection_pop_id =~ /list/)
+       #{
+	#   $query->genotypes_list_genotype_data();	   
+       #}
+       #else
+       #{
+	#   $query->trial_genotype_data();
+       #} 
+    #} 
+    my $temp_template = "geno-data-query-${selection_pop_id}"; #$self->{temp_file_template};
+
+    my $cluster_files = $self->create_cluster_accesible_tmp_files($temp_template);
+    my $out_file      = $cluster_files->{out_file_temp};
+    my $err_file      = $cluster_files->{err_file_temp};
+       
+    my $temp_dir      = $self->temp_dir;
+    my $config = $self->create_cluster_config($temp_dir, $out_file, $err_file);
     
+       my $cmd = "mx-run solGS::Cluster --data_type $data_type --population_type $pop_type --args_file $args_file";
+       
+    eval
+    {
+	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);
+	$job->is_async(1);
+	$job->run_cluster($cmd);
+
+    };
+
+    if ($@) 
+    {
+	print STDERR "An error occurred! $@\n";
+    }
+    }
+    
+    return $job;    
 }
 
 
