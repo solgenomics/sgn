@@ -1158,7 +1158,7 @@ sub combine_trait_data_input {
     
     $c->stash->{combine_input_files}  = $tempfile_input;
     $c->stash->{combine_output_files} = $tempfile_output;
-    $c->stash->{combine_r_temp_file}  = "combine-pops-${trait_id}";   
+    $c->stash->{combine_r_temp_file}  = "combine-pops-${combo_pops_id}_${trait_id}";   
 }
 
 
