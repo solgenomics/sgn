@@ -46,9 +46,18 @@ solGS.waitPage = function (page, args) {
 
     function checkCachedResult(page, args) {
 
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	trainingTraitsIds = trainingTraitsIds.split(',');
+
+	if (args === undefined) {
+	    args = {'training_traits_ids' : trainingTraitsIds};
+	} else {
+	    args['training_traits_ids'] = trainingTraitsIds;
+	}
+
 	args = getArgsFromUrl(page, args);
 	args = JSON.stringify(args);
-	console.log(' check cached result: args' + args)
+	
 	jQuery.ajax({
 	    type    : 'POST',
 	    dataType: 'json',
@@ -419,6 +428,8 @@ solGS.waitPage = function (page, args) {
 
 
     function getArgsFromUrl (url, args) {
+
+	var referer = document.URL;
     
 	if (window.Prototype) {
 	    delete Array.prototype.toJSON;
@@ -437,12 +448,10 @@ solGS.waitPage = function (page, args) {
 		       };
 	    }
 	    else {
-
 		args['trait_id']      = [ urlStr[4] ];
 		args['training_pop_id'] = [ urlStr[6] ];
 		args['analysis_type'] = 'single model';
-		args['data_set_type'] = 'single population';
-		
+		args['data_set_type'] = 'single population';		
 	    }
 	} else if (url.match(/solgs\/model\/combined\/trials\//)) {
 
@@ -451,8 +460,6 @@ solGS.waitPage = function (page, args) {
 	    var traitId      = [];
 	    var populationId = [];
 	    var comboPopsId  = [];
-	    
-	    var referer      = window.location.href;
 	    
 	    if (referer.match(/solgs\/search\/trials\/trait\//)) {
 
@@ -504,10 +511,10 @@ solGS.waitPage = function (page, args) {
 	    var urlStr  = url.split(/\/+/);
 	   
 	    var dataSetType;
-
-	    if (window.location.href.match(/solgs\/model\/combined\/populations\/|solgs\/models\/combined\//)) {
+	    
+	    if (referer.match(/solgs\/model\/combined\/populations\/|solgs\/models\/combined\//)) {
 		dataSetType = 'combined populations';
-	    } else if (window.location.href.match(/solgs\/trait\/|solgs\/traits\/all\/population\//)) {
+	    } else if (referer.match(/solgs\/trait\/|solgs\/traits\/all\/population\//)) {
 		dataSetType = 'single population';
 	    }
 
