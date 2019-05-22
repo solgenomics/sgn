@@ -83,6 +83,8 @@ sub _check_cached_output {
 	my $sel_pop_id = $args->{selection_pop_id}[0];
 	my $trait_id   = $args->{trait_id}[0];
 
+	$c->stash->{selected_analyzed_traits} = $args->{training_traits_ids};
+	
 	$c->stash->{data_set_type} = $args->{data_set_type};
 
 	my $referer = $c->req->referer;
@@ -223,7 +225,7 @@ sub _check_selection_pop_all_traits_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id) =@_;
         
     #$self->check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
-
+    
     $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
     my $sel_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids}; 
     
@@ -231,7 +233,7 @@ sub _check_selection_pop_all_traits_output {
     $c->controller("solGS::solGS")->traits_with_valid_models($c);
     my $training_models_traits = $c->stash->{traits_ids_with_valid_models};
  
-    if ($sel_traits_ids) 
+    if ($sel_traits_ids->[0]) 
     {
 	if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
 	{
