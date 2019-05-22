@@ -13,4 +13,5 @@ has 'accessions' => (is => 'rw', isa => 'ArrayRef');
 
 has 'data_hash' => (is => 'rw', isa => 'HashRef');
 
-has ' 
+
+1;

@@ -22,35 +22,25 @@ sub store_analysis_json_POST {
     my $data = $c->req->param("data");
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
-      
+    
     if (my $error = $self->check_user($c)) {
 	$c->stash->{error} = $error;
 	return;
     }
-     
+    
     my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $analysis_type, 'analysis_type');
     if (! $analysis_type_row) { die "Provided analysis type does not exist in the database. Exiting." }
-
+    
     my @plots;
     my @stocks;
     my @traits;
     my %values;
-
+    
     my $analysis_type_id = $analysis_type_row->cvterm_id();    
     push @traits, $analysis_type_id;
     
-    my @lines = slurp($file);
-
-    foreach my $line (@lines) {
-	my ($acc, $value) = split /\t/, $line;
-	my $plot_name = $analysis_name."_".$acc;
-	push @plots, $plot_name;
-	push @stocks, $acc;
-        $values{$plot_name}->{$traits[0]} = $value;
-    }
-
-    my $phenotype_metadata = {};
-
+    my %values = JSON::Any->decode($data); 
+    
     $self->store_data($c, \%values);
 }
 
@@ -62,24 +52,22 @@ sub store_analysis_file_POST {
     my $file = $c->req->param("file");
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
-
-   
-
+    
     my $user_id = $c->user()->get_object()->sp_person_id();
-   
+    
     if (my $error = $self->check_user($c)) {
 	$c->stash->{error} = $error;
 	return;
     }
- 
+    
     my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $analysis_type, 'analysis_type');
     if (! $analysis_type_row) { die "Provided analysis type does not exist in the database. Exiting." }
-
+    
     my @plots;
     my @stocks;
     my @traits;
     my %values;
-
+    
     my $analysis_type_id = $analysis_type_row->cvterm_id();    
     push @traits, $analysis_type_id;
     
@@ -93,7 +81,7 @@ sub store_analysis_file_POST {
         $values{$plot_name}->{$traits[0]} = $value;
     }
 
-    $self->store_data($c, \%values);
+    $self->store_data($c, \%values, $user_id);
 
 }
 
@@ -101,7 +89,10 @@ sub store_analysis_file_POST {
 sub store_data {
     my $self = shift;
     my $c = shift;
-    my $data = shift;
+    my $values = shift;
+    my $plots = shift;
+    my $traits = shift;
+    my $user_id = shift;
     
     my $phenotype_metadata = {};
     
@@ -111,24 +102,26 @@ sub store_data {
 	    metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 	    phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 	    user_id => $user_id,
-	    stock_list => \@plots,
-	    trait_list => \@traits, 
-	    values_hash => \%values,
+	    stock_list => $plots,
+	    trait_list => $traits, 
+	    values_hash => $values,
 	    has_timestamps => 0,
 	    overwrite_values => 0,
 	    metadata_hash => $phenotype_metadata
 	});
     
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-
+    
     if ($verified_warning || $verified_error) {
 	$c->stash->{rest} = { warnings => $verified_warning, error => $verified_error };
 	return;
     }
     
     my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
-
-    if ($stored_phenotype_error) { $c->stash->{rest} = { error => $stored_phenotype_error }; }
+    
+    if ($stored_phenotype_error) { 
+	$c->stash->{rest} = { error => $stored_phenotype_error }; 
+    }
     else {
 	$c->stash->{rest} = { success => 1 };
     }
@@ -137,7 +130,7 @@ sub store_data {
 sub check_user {
     my $self = shift;
     my $c = shift;
-
+    
     my $error;
     
     if (! $c->user()) {
@@ -147,6 +140,6 @@ sub check_user {
     if (! $c->user()->check_roles("submitter") || ! $c->user()->check_roles("curator")) {
 	$error = "You have insufficient privileges to store the data in the database";
     }
-
+    
     return $error;
 }
