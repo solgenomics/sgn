@@ -1,5 +1,5 @@
 package CXGN::Trial::TrialDesign;
- 
+
 =head1 NAME
 
 CXGN::Trial::TrialDesign - a module to create a trial design using the R CRAN package Agricolae.
@@ -44,6 +44,7 @@ has 'number_of_reps' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_r
 has 'block_size' => (isa => 'Int', is => 'rw', predicate => 'has_block_size', clearer => 'clear_block_size');
 has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]', is => 'rw', predicate => 'has_greenhouse_num_plants', clearer => 'clear_greenhouse_num_plants');
 has 'maximum_block_size' => (isa => 'Int', is => 'rw', predicate => 'has_maximum_block_size', clearer => 'clear_maximum_block_size');
+has 'plot_name_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_format', clearer => 'clear_plot_name_format');
 has 'plot_name_prefix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_prefix', clearer => 'clear_plot_name_prefix');
 has 'plot_name_suffix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_suffix', clearer => 'clear_plot_name_suffix');
 has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_start_number', clearer => 'clear_plot_start_number', default => 1);
@@ -437,7 +438,7 @@ sub _get_westcott_design {
     my $westcott_check_2;
     my $westcott_check_1;
     my $westcott_col_between_check;
-    
+
     if ($self->has_stock_list()) {
       @stock_list = @{$self->get_stock_list()};
     } else {
@@ -460,22 +461,22 @@ sub _get_westcott_design {
     if ($self->has_westcott_col_between_check()) {
       $westcott_col_between_check = $self->get_westcott_col_between_check();
     }
-    
+
     $stock_data_matrix =  R::YapRI::Data::Matrix->new({
         name => 'stock_data_matrix',
         rown => 1,
         coln => scalar(@stock_list),
         data => \@stock_list,
     });
-    
+
     $r_block = $rbase->create_block('r_block');
-    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $stock_data_matrix->send_rbase($rbase, 'r_block');
     $r_block->add_command('library(devtools)');
     $r_block->add_command('library(st4gi)');
     $r_block->add_command('geno <-  stock_data_matrix[1,]');
-    $r_block->add_command('ch1 <- "'.$westcott_check_1.'"'); 
+    $r_block->add_command('ch1 <- "'.$westcott_check_1.'"');
     $r_block->add_command('ch2 <- "'.$westcott_check_2.'"');
-    $r_block->add_command('nc <- '.$westcott_col); 
+    $r_block->add_command('nc <- '.$westcott_col);
     if ($westcott_col_between_check){
         $r_block->add_command('ncb <- '.$westcott_col_between_check);
         $r_block->add_command('westcott<-cr.w(geno, ch1, ch2, nc, ncb=ncb)');
@@ -489,7 +490,7 @@ sub _get_westcott_design {
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
     @plot_numbers = $result_matrix->get_column("plot.num");
     @stock_names = $result_matrix->get_column("geno");
-    
+
     my @vector_trt = (1..scalar(@stock_list));
     my %accName;
     for (my $i=0; $i< scalar(@stock_list); $i++){
@@ -507,8 +508,8 @@ sub _get_westcott_design {
     my @col_numbers = $result_matrix->get_column("col");
     @block_numbers = $result_matrix->get_column("row");
     my $max_block = max( @block_numbers );
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max_block)}; 
-    
+    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max_block)};
+
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
       my %plot_info;
       $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
@@ -523,7 +524,7 @@ sub _get_westcott_design {
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     %westcott_design = %{_build_plot_names($self,\%westcott_design)};
-    return \%westcott_design;   
+    return \%westcott_design;
 
 }
 
@@ -546,7 +547,7 @@ sub _get_p_rep_design {
     my $block_sequence;
     my $col_in_design_number;
     my $row_in_design_number;
-    
+
     if ($self->has_stock_list()) {
       @stock_list = @{$self->get_stock_list()};
     } else {
@@ -554,13 +555,13 @@ sub _get_p_rep_design {
     }
     if ($self->has_replicated_accession_no()) {
       $number_of_replicated_accession = $self->get_replicated_accession_no();
-    } 
+    }
     if ($self->has_unreplicated_accession_no()) {
       $number_of_unreplicated_accession = $self->get_unreplicated_accession_no();
-    } 
+    }
     if ($self->has_num_of_replicated_times()) {
       $num_of_replicated_times = $self->get_num_of_replicated_times();
-    } 
+    }
     if ($self->has_sub_block_sequence()) {
       $sub_block_sequence = $self->get_sub_block_sequence();
     }
@@ -570,11 +571,11 @@ sub _get_p_rep_design {
     my ($rep_size,$number_of_reps) = split(',', $block_sequence);
     if ($self->has_col_in_design_number()) {
       $col_in_design_number = $self->get_col_in_design_number();
-    }   
+    }
     if ($self->has_row_in_design_number()) {
       $row_in_design_number = $self->get_row_in_design_number();
     }
-    
+
     $stock_data_matrix =  R::YapRI::Data::Matrix->new(
   						       {
   							name => 'stock_data_matrix',
@@ -583,7 +584,7 @@ sub _get_p_rep_design {
   							data => \@stock_list,
   						       }
   						      );
-                              
+
     my %stock_data_hash;
     my $count = 0;
     my @counts;
@@ -596,17 +597,17 @@ sub _get_p_rep_design {
     }
     my ($no_row_in_block,$no_block_in_design) = split(',', $block_sequence);
     $no_row_in_block = $no_row_in_block * $col_in_design_number;
-    
+
     $r_block = $rbase->create_block('r_block');
-    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $stock_data_matrix->send_rbase($rbase, 'r_block');
     $r_block->add_command('library(DiGGer)');
-    $r_block->add_command('library(R.methodsS3)'); 
+    $r_block->add_command('library(R.methodsS3)');
     $r_block->add_command('library(reshape)');
     $r_block->add_command('library(R.oo)');
-    $r_block->add_command('numberOfTreatments <- ' .$stock_data_matrix->{coln}); 
-    $r_block->add_command('rowsInDesign <- '.$row_in_design_number); 
+    $r_block->add_command('numberOfTreatments <- ' .$stock_data_matrix->{coln});
+    $r_block->add_command('rowsInDesign <- '.$row_in_design_number);
     $r_block->add_command('columnsInDesign <- '.$col_in_design_number);
-    $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))'); 
+    $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))');
     $r_block->add_command('treatRepPerRep <- rep(c(1,'.$num_of_replicated_times.'), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
     $r_block->add_command('treatGroup <- rep(c(1, 2), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
     $r_block->add_command('rngSeeds <- c(156, 444)');
@@ -615,11 +616,11 @@ sub _get_p_rep_design {
                                                 rowsInDesign = rowsInDesign,
                                                 columnsInDesign = columnsInDesign,
                                                 blockSequence = blockSequence,
-                                                treatRepPerRep = treatRepPerRep, 
-                                                treatGroup = treatGroup, 
-                                                rngSeeds = rngSeeds, 
+                                                treatRepPerRep = treatRepPerRep,
+                                                treatGroup = treatGroup,
+                                                rngSeeds = rngSeeds,
                                                 runSearch = runSearch )');
-    #$r_block->add_command('pRepDesign <- run(pRepDesign)');                                            
+    #$r_block->add_command('pRepDesign <- run(pRepDesign)');
     #$r_block->add_command('designBlock <- desTab(getDesign(pRepDesign), '.$block_sequence.')');  print "PARAMETER: 13\n";
     $r_block->add_command('field_map <- getDesign(pRepDesign)');
     $r_block->add_command('field_map_t <- t(field_map)');
@@ -647,7 +648,7 @@ sub _get_p_rep_design {
     $r_block->add_command('layout <- subset(layout_merge, select = c(plots, block, row_number, col_number, trt))');
     $r_block->add_command('pRepDesign <- as.matrix(layout)');
     #$r_block->run_block();
-    
+
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','pRepDesign');
      @plot_numbers = $result_matrix->get_column("plots");
      @stock_names = $result_matrix->get_column("trt");
@@ -655,7 +656,7 @@ sub _get_p_rep_design {
      my @col_numbers = $result_matrix->get_column("col_number");
      @block_numbers = $result_matrix->get_column("block");
      @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $number_of_reps)};
-     
+
      my $counting = 0;
      my %seedlot_hash;
      if($self->get_seedlot_hash){
@@ -2044,7 +2045,7 @@ sub _convert_plot_numbers {
         if ($self->has_plot_number_increment()){
           $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
         }
-        
+
         my $cheking = ($rep_numbers[$i] * $rep_plot_count) / $rep_plot_count;
         #print STDERR Dumper($cheking);
         my $new_plot;
@@ -2059,8 +2060,8 @@ sub _convert_plot_numbers {
                 $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
             }
         }
-        
-        
+
+
         else {
           $plot_number = $first_plot_number + $i;
         }
@@ -2081,6 +2082,9 @@ sub _build_plot_names {
     my $suffix = '';
     my $trial_name = $self->get_trial_name;
 
+    if ($self->has_plot_name_format()) {
+        $format = $self->get_plot_name_format();
+    }
     if ($self->has_plot_name_prefix()) {
         $prefix = $self->get_plot_name_prefix()."_";
     }
@@ -2095,7 +2099,20 @@ sub _build_plot_names {
 	my $rep_number = $design{$key}->{rep_number};
   $design{$key}->{plot_number} = $key;
 
-	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
+	if ($format eq 'NCSU') { # as used NCSU sweetpotatobreeding
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+      $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
+	    # get row and column information# make plot number combination of row and column?
+        $design{$key}->{row_number}
+        $design{$key}->{plot_name} = $prefix.$trial_name."_".$rep_number."_".$stock_name."_".$suffix;
+	}
+    elsif ($format eq 'simple') { # just trial name and plot number to make unique
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+      $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
+	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+        $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$plot_num_per_block."".$suffix;
+	}
+    elsif ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
       my $plot_num_per_block = $design{$key}->{plot_num_per_block};
       $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
 	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;

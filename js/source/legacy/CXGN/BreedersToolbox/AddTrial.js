@@ -352,6 +352,7 @@ jQuery(document).ready(function ($) {
         var rep_count = $('#rep_count').val();
         var block_size = $('#block_size').val();
         var max_block_size = $('#max_block_size').val();
+        var plot_name_format = jQuery('#plot_name_format').val();
         var plot_prefix = $('#plot_prefix').val();
         var start_number = $('#start_number').val();
         var increment = $('#increment').val();
@@ -459,6 +460,7 @@ jQuery(document).ready(function ($) {
                 'col_number': col_number,
                 'block_size': block_size,
                 'max_block_size': max_block_size,
+                'plot_name_format': plot_name_format,
                 'plot_prefix': plot_prefix,
                 'start_number': start_number,
                 'increment': increment,
@@ -1225,6 +1227,7 @@ jQuery(document).ready(function ($) {
         var rep_count = jQuery('#rep_count').val();
         var block_size = jQuery('#block_size').val();
         var max_block_size = jQuery('#max_block_size').val();
+        var plot_name_format = jQuery('#plot_name_format').val();
         var plot_prefix = jQuery('#plot_prefix').val();
         var start_number = jQuery('#start_number').val();
         var increment = jQuery('#increment').val();
@@ -1278,6 +1281,7 @@ jQuery(document).ready(function ($) {
                 'block_number': block_number,
                 'block_size': block_size,
                 'max_block_size': max_block_size,
+                'plot_name_format': plot_name_format,
                 'plot_prefix': plot_prefix,
                 'start_number': start_number,
                 'increment': increment,

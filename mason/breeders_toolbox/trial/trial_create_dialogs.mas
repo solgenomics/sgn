@@ -674,6 +674,20 @@ rect.bordered {
                                 </div>
 
                                 <div id="plot_naming_options">
+                                <div class="form-group form-group-sm" >
+                                    <label class="col-sm-7 control-label">Format: </label>
+                                    <div class="col-sm-5" >
+                                    <div id="plot_name_format" class="radio">
+                                        <label><input type="radio" value="IITA" name="plotradio" checked>trial_name + "_rep" + rep_number + "_" + accession_name + "_" + plot_number (IITA)</label>
+                                        </div>
+                                        <div class="radio">
+                                        <label><input type="radio" value="NCSU" name="plotradio">trial_name + "_" + plot_number + "_" + rep_number + "_" + accession_name (NCSU)</label>
+                                        </div>
+                                        <div class="radio disabled">
+                                        <label><input type="radio" value="simple" name="plotradio">trial_name + "_" + plot_number (Simple)</label>
+                                        </div>
+                                    </div>
+                                </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Plot prefix: </label>
                                         <div class="col-sm-5" >

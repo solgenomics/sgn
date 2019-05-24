@@ -103,6 +103,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     my $block_size =  $c->req->param('block_size');
     my $max_block_size =  $c->req->param('max_block_size');
+    my $plot_name_format =  $c->req->param('plot_name_format');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
     my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
@@ -320,6 +321,9 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_plot_number_increment($increment);
         } else {
             $trial_design->clear_plot_number_increment();
+        }
+        if ($plot_name_format) {
+            $trial_design->set_plot_name_format($plot_name_format);
         }
         if ($plot_prefix) {
             $trial_design->set_plot_name_prefix($plot_prefix);
