@@ -1530,6 +1530,34 @@ sub delete_phenotype_metadata {
     }
 }
 
+=head2 function get_all_phenotype_metadata($n)
+
+ Usage:        $trial->get_phenotype_metadata();
+ Desc:         retrieves maximally $n metadata.md_file entries for the any trial . These entries are created during StorePhenotypes.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_phenotype_metadata {
+    my $self = shift;
+    my $n = shift;
+    my @file_array;
+    my %file_info;
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping') ORDER BY file_id ASC LIMIT $n";
+    my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    $h->execute();
+    
+    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+	$file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+    }
+    foreach (keys %file_info){
+	push @file_array, $file_info{$_};
+    }
+    return \@file_array;
+}
 
 
 =head2 function delete_metadata()
