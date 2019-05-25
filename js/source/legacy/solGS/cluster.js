@@ -20,7 +20,9 @@ solGS.cluster = {
 	var popDetails = solGS. getPopulationDetails();
 	
 	var comboPopsId = jQuery('#combo_pops_id').val();
-
+	
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	trainingTraitsIds = trainingTraitsIds.split(',');
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
@@ -28,6 +30,7 @@ solGS.cluster = {
 		   'combo_pops_id': comboPopsId,
 		   'training_pop_id': popDetails.training_pop_id,
 		   'selection_pop_id': popDetails.selection_pop_id,
+		   'training_traits_ids': trainingTraitsIds,
 		   'cluster_type': clusterType,
 		   'data_type': dataType
 		  },
@@ -198,6 +201,12 @@ solGS.cluster = {
 	var dataType    = clusterArgs.data_type;
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
+
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	}
 	
 	var popDetails  = solGS.getPopulationDetails();
 
@@ -275,6 +284,7 @@ solGS.cluster = {
             data: {'training_pop_id': popDetails.training_pop_id,
 		   'selection_pop_id': popDetails.selection_pop_id,
 		   'combo_pops_id': popDetails.combo_pops_id,
+		   'training_traits_ids': trainingTraitsIds,
 		   'cluster_pop_id': popDetails.cluster_pop_id,
 		   'list_id': listId, 
 		   'list_name': listName,
@@ -393,7 +403,6 @@ solGS.cluster = {
 			    'k_number':  kNumber	    
 			  }
 
-	
     	this.clusterResult(clusterArgs);
     },
 

@@ -93,8 +93,8 @@
 
 </%perl>
 
-<script src="/js/kinetic-v5.1.0/kinetic-v5.1.0.min.js"></script>
-<& /util/import_javascript.mas, classes => [ 'tools.blast_canvas_graph', 'CXGN.Blast' , 'jqueryui'] &>
+<!-- script src="/js/kinetic-v5.1.0/kinetic-v5.1.0.min.js"></script -->
+<& /util/import_javascript.mas, classes => [ 'tools.blast_canvas_graph', 'CXGN.Blast' , 'jqueryui', 'kinetics.kinetic'] &>
 
 
 <& /page/page_title.mas, title=>"BLAST" &>

@@ -48,7 +48,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
-
+    my @traits_ids  = $c->req->param('training_traits_ids[]');
+    
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
@@ -70,6 +71,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{k_number}         = $k_number;
+    
+    $c->stash->{selected_analyzed_traits} = \@traits_ids;
     
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
@@ -131,7 +134,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $cluster_pop_id   = $c->req->param('cluster_pop_id');
-
+    
+    my @traits_ids  = $c->req->param('training_traits_ids[]');
+    
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
@@ -155,7 +160,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
     $c->stash->{k_number}         = $k_number;
-
+    
+    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    
     $c->stash->{pop_id} = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};

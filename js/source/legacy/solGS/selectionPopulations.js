@@ -16,9 +16,16 @@ jQuery(document).ready( function () {
 function checkSelectionPopulations () {
     
     var popId =  getPopulationId();
+
+    
+    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+    if (trainingTraitsIds) {
+	trainingTraitsIds = trainingTraitsIds.split(',');
+    }
    
     jQuery.ajax({
         type: 'POST',
+	data: {'trait_ids': trainingTraitsIds},
         dataType: 'json',
         url: '/solgs/check/selection/populations/' + popId,
         success: function(response) {

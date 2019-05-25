@@ -7,6 +7,7 @@ CXGN::Trial - factory object for project entries (phenotyping trials, genotyping
 
 my $trial = CXGN::Trial->new( { bcs_schema => $schema, ... , trial_id => $trial_id });
 
+
 If $trial_id is a phenotyping trial, the type of object returned will be CXGN::PhenotypingTrial.
 
 If $trial_id is a genotyping trial, the type of object returned will be CXGN::GenotypingTrial.

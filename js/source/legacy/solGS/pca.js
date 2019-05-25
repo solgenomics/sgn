@@ -58,7 +58,7 @@ jQuery(document).ready( function() {
     } 
 
     //if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
-	checkPcaResult();  
+//	checkPcaResult();  
     // }
     
 });
@@ -71,14 +71,15 @@ function checkPcaResult () {
     var popDetails = solGS.getPopulationDetails();
     var url =  window.location.pathname;
     var pcaShareId;
-     if (url.match(/pca\/analysis\//)) {	
-	 pcaShareId = url.replace(/\/pca\/analysis\//g, '');
+    
+    if (url.match(/pca\/analysis\//)) {	
+	pcaShareId = url.replace(/\/pca\/analysis\//g, '');
 
-	 if (pcaShareId.match(/list/)) {
-	     listId = pcaShareId;
-	     setListId(pcaShareId);
-	 } 
-     }
+	if (pcaShareId.match(/list/)) {
+	    listId = pcaShareId;
+	    setListId(pcaShareId);
+	} 
+    }
     
     var comboPopsId = jQuery('#combo_pops_id').val();
     
@@ -88,14 +89,15 @@ function checkPcaResult () {
 	data: {'list_id': listId,
 	       'combo_pops_id' : comboPopsId,
 	       'pca_share_id'  : pcaShareId,
-	       'training_pop_id' : popDetails.training_pop_id,
+	       'training_pop_id' : training_pop_id,
 	       'selection_pop_id': popDetails.selection_pop_id},
         url: '/pca/check/result/',
         success: function(response) {
             if (response.result) {
-		 setListId(response.list_id);
-		console.log('response.pop_id ' + response.pop_id)
-		 var url =  window.location.pathname;
+		setListId(response.list_id);
+		
+		var url =  window.location.pathname;
+		
 		if (url.match(/pca\/analysis/)) {		    		   
 
 		    var plotData = { 'scores': response.pca_scores, 
@@ -202,7 +204,7 @@ function pcaRun () {
 	    
             if (response.pca_scores) {	
 		var popId = response.pop_id;
-		console.log('popid ' + popId)
+		
 		var plotData = { 'scores': response.pca_scores, 
 				 'variances': response.pca_variances, 
 				 'pop_id': popId, 
@@ -507,7 +509,7 @@ function plotPca(plotData){
     if (id)  {
 	pcaDownload = "/download/pca/scores/population/" + id;
     }
-    console.log('dld: ' + pcaDownload)
+    
      pcaPlot.append("a")
 	.attr("xlink:href", pcaDownload)
 	.append("text")
