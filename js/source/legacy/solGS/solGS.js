@@ -47,12 +47,15 @@ solGS.waitPage = function (page, args) {
     function checkCachedResult(page, args) {
 
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-	trainingTraitsIds = trainingTraitsIds.split(',');
 
-	if (args === undefined) {
-	    args = {'training_traits_ids' : trainingTraitsIds};
-	} else {
-	    args['training_traits_ids'] = trainingTraitsIds;
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+
+	    if (args === undefined) {
+		args = {'training_traits_ids' : trainingTraitsIds};
+	    } else {
+		args['training_traits_ids'] = trainingTraitsIds;
+	    }
 	}
 
 	args = getArgsFromUrl(page, args);
