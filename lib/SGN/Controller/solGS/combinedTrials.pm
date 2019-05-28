@@ -7,6 +7,7 @@ use namespace::autoclean;
 use Algorithm::Combinatorics qw /combinations/;
 use Array::Utils qw(:all);
 use Cache::File;
+use Carp qw/ carp confess croak /;
 use CXGN::Tools::Run;
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
@@ -17,9 +18,10 @@ use File::Basename;
 use JSON;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util qw /weaken reftype/;
-use Try::Tiny;
 use String::CRC;
+use Try::Tiny;
 use URI::FromHash 'uri';
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -853,6 +855,7 @@ sub combine_data_build_model {
 	
 }
 
+
 sub r_combine_populations_args {
     my ($self, $c) = @_;
 
@@ -862,8 +865,7 @@ sub r_combine_populations_args {
     my $temp_file_template =  $c->stash->{combine_r_temp_file};
     my $r_script  =  'R/solGS/combine_populations.r';
   
-    $c->stash->{r_temp_file} = $temp_file_template;
-    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
     my $out_file      = $cluster_files->{out_file_temp};
     my $err_file      = $cluster_files->{err_file_temp}; 
     my $in_file       = $cluster_files->{in_file_temp};
@@ -876,13 +878,70 @@ sub r_combine_populations_args {
 
     my $cmd = "Rscript --slave $in_file $out_file --args $input_files $output_files";
 
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $args = {
 	'temp_file_template' => $temp_file_template,
-	'cmd' => $cmd	
+	'cmd' => $cmd,
+	'out_file' => $out_file,
+	'err_file' => $err_file,
+	'r_command_file' => $in_file,
+	'temp_dir'       => $temp_dir
     };
 
     $c->stash->{combine_populations_args} = $args;
    
+}
+
+
+sub get_combine_populations_args_file {
+    my ($self, $c) = @_;
+
+    $self->r_combine_populations_args($c);
+    my $args = $c->stash->{combine_populations_args};
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'combine_pops_args_file');   
+	
+    nstore $args, $args_file 
+	or croak "combine pops args file: $! serializing combine pops args  to $args_file ";
+
+    $c->stash->{combine_populations_args_file} = $args_file;
+    
+}
+
+
+sub combined_pops_gs_input_files {
+    my ($self, $c) = @_;
+    
+    my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+	
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $trait_abbr = $c->stash->{trait_abbr};
+    my $trait_id   = $c->stash->{trait_id};
+    
+    $c->controller('solGS::solGS')->trait_info_file($c);
+    my $trait_info_file = $c->stash->{trait_info_file};
+
+    my $dataset_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "dataset_info_${trait_id}");
+    write_file($dataset_file, 'combined populations');
+ 
+    my $selection_population_file = $c->stash->{selection_population_file};
+        	
+    my $input_files = join("\t",
+			   $combined_pops_pheno_file,
+			   $combined_pops_geno_file,
+			   $trait_info_file,
+			   $dataset_file,
+			   $selection_population_file,
+	);
+
+    my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_combo_${trait_abbr}");
+    write_file($input_file, $input_files);
+
+    $c->stash->{combined_pops_gs_input_files} = $input_file;
+       
 }
 
 
