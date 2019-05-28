@@ -3705,7 +3705,7 @@ sub run_async {
     nstore $job_config, $job_config_file 
 	or croak "job config file: $! serializing job config to $job_config_file ";
 	
-    my $cmd = 'mx-run solGS::DependentJob'
+    my $cmd = 'mx-run solGS::asyncJob'
 	. ' --prerequisite_jobs '         . $prerequisite_jobs->[0]
 	. ' --prerequisite_type '         . 'selection_pop_download_data'
 	. ' --dependent_jobs '            . $dependent_jobs->[0]
