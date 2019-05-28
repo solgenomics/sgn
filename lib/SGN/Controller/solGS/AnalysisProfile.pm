@@ -168,13 +168,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     $c->stash->{analysis_profile} = $analysis_profile;
       
     $self->parse_arguments($c);
-    $self->run_analysis($c);
     $self->structure_output_details($c);
-
-    unless ($c->stash->{Error})
-    {
-	$self->email_analysis_report($c);
-    }
+    $self->run_analysis($c);
      
     my $ret->{result} = $c->stash->{status}; 	
 
@@ -185,46 +180,116 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 
 } 
 
+sub analysis_report_job_args {
+    my ($self, $c) = @_;
+
+    my $analysis_details = $c->stash->{bg_job_output_details};
+
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir} ;
+    
+    my $temp_file_template = "analysis-status";
+    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
+    my $out_file      = $cluster_files->{out_file_temp};
+    my $err_file      = $cluster_files->{err_file_temp}; 
+    my $in_file       = $cluster_files->{in_file_temp};
+
+     my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_file,
+	'err_file' => $err_file
+     };
+
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+  
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis-report-args');
+    nstore $analysis_details, $report_file 
+	or croak "analysis_report_job_args: $! serializing output_details to $report_file";
+    
+    my $job_config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+
+    my $cmd = 'mx-run solGS::AnalysisReport '
+	. '--output_details_file ' . $report_file;
+    
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $job_config,
+	'background_job'=> $c->stash->{background_job},
+	'temp_dir' => $temp_dir,
+    };
+   
+
+    $c->stash->{analysis_report_job_args} = $job_args;
+    
+}
+
+
+sub get_analysis_report_job_args_file {
+    my ($self, $c) = @_;
+
+    $self->analysis_report_job_args($c);
+    my $analysis_job_args = $c->stash->{analysis_report_job_args};
+       
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+  
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis-report-job-args');
+    nstore $analysis_job_args, $report_file 
+	or croak "get_analysis_report_job_args_file: $! serializing output_details to $report_file";
+
+    $c->stash->{analysis_report_job_args_file} = $report_file;
+    
+}
 
 sub email_analysis_report {
     my ($self, $c) = @_;
 
-    my $output_details = $c->stash->{bg_job_output_details};
-      
-    $c->stash->{r_temp_file} = 'analysis-status';
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-   
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-  
-    my $output_details_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis_report_args');
-    nstore $output_details, $output_details_file 
-	or croak "check_analysis_status: $! serializing output_details to $output_details_file";
+    $self->analysis_report_job_args($c);
+    my $job_args = $c->stash->{analysis_report_job_args};
     
-    my $cmd = 'mx-run solGS::AnalysisReport '
-	. '--output_details_file ' . $output_details_file;
-
-
-    my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file,
-    };
-
-    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
-
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $c->stash->{background_job},
-	'temp_dir' => $temp_dir,
-	'async'    => 1,
-    };
-
     my $job = $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);	
        
 }
+
+
+# sub email_analysis_report {
+#     my ($self, $c) = @_;
+
+#     my $output_details = $c->stash->{bg_job_output_details};
+      
+#     $c->stash->{r_temp_file} = 'analysis-status';
+#     $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+#     my $out_temp_file = $c->stash->{out_file_temp};
+#     my $err_temp_file = $c->stash->{err_file_temp};
+   
+#     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+  
+#     my $output_details_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis_report_args');
+#     nstore $output_details, $output_details_file 
+# 	or croak "check_analysis_status: $! serializing output_details to $output_details_file";
+    
+#     my $cmd = 'mx-run solGS::AnalysisReport '
+# 	. '--output_details_file ' . $output_details_file;
+
+
+#     my $config_args = {
+# 	'temp_dir' => $temp_dir,
+# 	'out_file' => $out_temp_file,
+# 	'err_file' => $err_temp_file,
+#     };
+
+#     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+
+#     my $job_args = {
+# 	'cmd' => $cmd,
+# 	'config' => $config,
+# 	'background_job'=> $c->stash->{background_job},
+# 	'temp_dir' => $temp_dir,
+# 	'async'    => 1,
+#     };
+
+#     my $job = $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);	
+       
+# }
 
 
 sub parse_arguments {
@@ -300,27 +365,45 @@ sub parse_arguments {
 
 	  if ($k eq 'trait_id') 
 	  { 
-	    if (reftype($arguments->{k}) eq 'ARRAY') 
+	    if (reftype($arguments->{$k}) eq 'ARRAY') 
 	    {
-		my @selected_traits = @{ $arguments->{$k} };
-		$c->stash->{selected_traits} = \@selected_traits;
+		$c->stash->{selected_traits} = $arguments->{$k}; 
 	      
-		if (scalar(@selected_traits) == 1)
+		if (scalar(@{$arguments->{$k}}) == 1)
 		{
 		    $c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
 		}
 	    }
 	    else 
 	    {	
-		my @selected_traits = @{ $arguments->{$k} };
-		$c->stash->{selected_traits} = \@selected_traits;
+		print STDERR "\n\nparse args trait id selected traits: @{$arguments->{$k}}\n\n";
+		$c->stash->{selected_traits} = $arguments->{$k}; 
+	      
+		if (scalar(@{$arguments->{$k}}) == 1)
+		{
+		    $c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
+		}
+	    }
+	  }
+
+	  if ($k eq 'training_traits_ids')
+	  {
+	       print STDERR "\n\nparse args training_traits_ids.....\n\n";
+	      if (reftype($arguments->{$k}) eq 'ARRAY') 
+	      {
+		  my @selected_traits = @{ $arguments->{$k} };
+		    print STDERR "\n\nparse args training_traits_ids..... selectd traits: @selected_traits\n\n";
+		 
+		  $c->stash->{selected_traits} =  $arguments->{$k}; 
+		  $c->stash->{training_traits_ids} =  $arguments->{$k};		 
 	      
 		if (scalar(@selected_traits) == 1)
 		{
 		    $c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
 		}
 	    }
-	  } 
+	      
+	  }
 	  
 	  if ($k eq 'list') 
 	  {
@@ -490,7 +573,7 @@ sub structure_output_details {
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\// ) 
     {	
-	my @traits_with_valid_models;
+	#my @traits_with_valid_models;
 	my @traits_ids;
 	if ($referer =~ /solgs\/trait\/|solgs\/model\/combined\/populations\//) 
 	{
@@ -502,16 +585,22 @@ sub structure_output_details {
 	    my $traits_with_valid_models = $c->stash->{traits_with_valid_models};
 	    
 	    foreach  my $trait_abbr (@$traits_with_valid_models) {
-		$c->stash->{trait_abbr} = $trait_abbr;	    
-		$c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);
+	    	$c->stash->{trait_abbr} = $trait_abbr;	    
+	    	$c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);
 		  
-		my $trait_id = $c->stash->{trait_id};
-		push @traits_ids, $trait_id;		
+	    	my $trait_id = $c->stash->{trait_id};
+	    	push @traits_ids, $trait_id;		
 	    }
-	}
 
+	   # @traits_ids = @{$c->stash->{selected_traits}};
+			    
+	}
+	print STDERR "\n\noutput details: trait ids @traits_ids\n\n";
+	my @sel_traits = @{$c->stash->{selected_traits}};
+		print STDERR "\n\noutput details: sel traits ids @sel_traits\n\n";
 	foreach my $trait_id (@traits_ids)
-	{	    
+	{
+	    print STDERR "\n\noutput details: trait id - $trait_id\n\n";
 	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	    my $trait_id = $c->stash->{trait_id};	    
 	    my $trait_abbr = $c->stash->{trait_abbr};
@@ -738,7 +827,8 @@ sub run_analysis {
 	    {
 		my $training_pop_id   = $c->stash->{training_pop_id};                          
 		my $selection_pop_id  = $c->stash->{selection_pop_id};
-    
+
+	
 		if ($selection_pop_id =~ /list/)
 		{
 		    my $list_id = $selection_pop_id;
@@ -757,7 +847,9 @@ sub run_analysis {
 	    {
 		my $training_pop_id   = $c->stash->{training_pop_id};                          
 		my $selection_pop_id  = $c->stash->{selection_pop_id};
-		
+		print STDERR "\n\nselected traits $referer: @{$c->stash->{selected_traits}}\n\n";
+		print STDERR "\n\nselected traits training ids $referer: @{$c->stash->{training_traits_ids}}\n\n";
+		$c->stash->{selected_analyzed_traits} = $c->stash->{training_traits_ids};
 		if ($selection_pop_id =~ /list/)
 		{
 		    my $list_id = $selection_pop_id;
