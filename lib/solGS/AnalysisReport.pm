@@ -618,8 +618,8 @@ sub multi_modeling_message {
     {
 	my $analysis_page = $output_details->{analysis_profile}->{analysis_page};
 	
-    	$message .= "You can also view the summary of all the analyses in the page below."
-    	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    	$message .= "You can also view the summary of all the analyses in the page below.\n"
+    	    ."Additionally, you may find the analytical features in the page useful.\n"
     	    . $analysis_page ."\n\n";
     }
 
@@ -687,8 +687,7 @@ sub selection_prediction_message {
 		    $prediction_pop_name =~ s/^\s+|\s+$//g;
 
     		    if ($output_details->{$k}->{success})		
-    		    {	
-			
+    		    {				
     			$cnt++;	
     			if($cnt == 1) 
     			{
@@ -703,19 +702,19 @@ sub selection_prediction_message {
 			$message  = "The analysis for $trait_name failed.\n\n";
 			$message .= 'Refering page: ' . $prediction_pop_page . "\n\n";
 			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";		 
-    		    }
-
-    		    if ($cnt > 1) 
-    		    {
-    			$message .= "You can also view the summary of all the analyses in the page below."
-    			    ."\nAdditionally, you may find the analytical features in the page useful.\n"
-    			    . $output_details->{referer} . "\n\n";	
-    		    }
+    		    }    		   
     		}
     	    }
     	}
     }
 
+    if ($cnt > 1) 
+    {
+	$message .= "You can also view the summary of all the analyses in the page below.\n"
+	    ."Additionally, you may find the analytical features in the page useful.\n"
+	    . $output_details->{referer} . "\n\n";	
+    }
+    
     return  $message;
 }
 
@@ -811,7 +810,7 @@ sub combine_populations_message {
     {
 	my $combined_pops_page = $output_details->{combined_pops_page};
 	$message .= "Your combined training population is ready for analysis." 
-	    ."You can view it here:\n\n$combined_pops_page\n\n";
+	    ." You can view it here:\n\n$combined_pops_page\n\n";
     } 
  
     return  $message;

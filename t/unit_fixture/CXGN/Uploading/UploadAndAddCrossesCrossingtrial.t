@@ -32,15 +32,13 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 print STDERR $sgn_session_id."\n";
 
-my $breeding_program_id = $schema->resultset('Project::Project')->find({name =>'test'})->project_id();
-
-$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial', 'crossingtrial_program_id' => $breeding_program_id ,
+$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial', 'crossingtrial_program_name' => 'test' ,
     'crossingtrial_location' => 'test_location', 'year' => '2017', 'project_description' => 'test description' ]);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
-$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial2', 'crossingtrial_program_id' => $breeding_program_id ,
+$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial2', 'crossingtrial_program_name' => 'test' ,
     'crossingtrial_location' => 'test_location', 'year' => '2018', 'project_description' => 'test description2' ]);
 
 $response = decode_json $mech->content;
@@ -52,7 +50,6 @@ my $crossing_trial_rs = $schema->resultset('Project::Project')->find({name =>'te
 my $crossing_trial_id = $crossing_trial_rs->project_id();
 my $female_plot_id = $schema->resultset('Stock::Stock')->find({name =>'KASESE_TP2013_842'})->stock_id();
 my $male_plot_id = $schema->resultset('Stock::Stock')->find({name =>'KASESE_TP2013_1591'})->stock_id();
-
 my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 my $info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
 
@@ -62,11 +59,7 @@ my $before_adding_stockprop = $schema->resultset("Stock::Stockprop")->search({ t
 my $before_adding_stockprop_all = $schema->resultset("Stock::Stockprop")->search({})->count();
 my $before_adding_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
-$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'location' => 'test_location',
-    'cross_name' => 'test_add_cross', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id,
-    'male_plot' => $male_plot_id, 'pollination_date' => '2018/02/15', 'flower_number' => '20',
-    'fruit_number' => '15', 'seed_number' => '30']);
-
+$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id,'male_plot' => $male_plot_id]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
@@ -97,7 +90,6 @@ $response = $ua->post(
     Content => [
         "xls_crosses_simple_file" => [ $file, 'crosses_simple_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
         "cross_upload_crossing_trial" => $crossing_trial2_id,
-        "cross_upload_location" => "test_location",
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -136,7 +128,6 @@ $response = $ua->post(
     Content => [
         "xls_crosses_plots_file" => [ $file, 'crosses_plots_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
         "cross_upload_crossing_trial" => $crossing_trial2_id,
-        "cross_upload_location" => "test_location",
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -178,7 +169,6 @@ $response = $ua->post(
     Content => [
         "xls_crosses_plants_file" => [ $file, 'crosses_plants_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
         "cross_upload_crossing_trial" => $crossing_trial2_id,
-        "cross_upload_location" => "test_location",
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -203,18 +193,8 @@ $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cro
 $response = decode_json $mech->content;
 
 is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}]
+    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}, 0, undef]
 ]}, 'crosses in a trial');
-
-
-# test retrieving crossing experimental info
-$mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
-$response = decode_json $mech->content;
-
-is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, undef, "2018/02/15", undef, "20", "15", "30"]
-]}, 'crossing experiment info');
-
 
 # test uploading progenies
 my $offspring_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
@@ -283,7 +263,7 @@ $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cro
 $response = decode_json $mech->content;
 
 is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, "10", "2017/02/02", "10", "50", "15", "30"]
+    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, "10", "2017/02/02", "10", "50", undef, undef]
 ]}, 'crossing experiment info');
 
 

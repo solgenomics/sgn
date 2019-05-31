@@ -19,6 +19,7 @@ $genotyping_facility_status => undef
 $genotyping_facility_submitted => undef
 $genotyping_plate_format => '96'
 $genotyping_plate_sample_type => undef
+$raw_data_link => undef
 </%args>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
@@ -44,8 +45,15 @@ $genotyping_plate_sample_type => undef
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
                     <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
                     <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
+                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr>
                     </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <button class="btn btn-primary btn-sm" id="edit_genotyping_trial_details" style="margin:3px">Edit Plate Details</button>
                 </div>
             </div>
 
@@ -61,7 +69,7 @@ $genotyping_plate_sample_type => undef
             </div>
 
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
-            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqxls&dataLevel=plate" class="btn btn-default">Download DartSeq Formatted File</a>
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqcsv&dataLevel=plate" class="btn btn-default">Download DartSeq Formatted File</a>
 
         </div>
         <div class="col-sm-3">
@@ -88,7 +96,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                 <div class="col-sm-7">
                     <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
                 </div>
-                <div class="col-sm-2"> 
+                <div class="col-sm-2">
                     <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
 
                     <button id="generate_genotyping_trial_barcode_link" class="btn btn-primary btn-sm">Go</button>
@@ -168,7 +176,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                 <div class="col-sm-11">
 
                     <&| /page/info_section.mas, title => "<h4 style='display:inline'>Additional Files</h4>", subtitle=> "Upload and view any additional files for   this plate", id => 'genotyping_trial_additional_files_section', collapsible => 1, collapsed => 1 &>
-                    
+
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <& /breeders_toolbox/genotyping_trials/files_section.mas, trial_id => $trial_id &>
@@ -224,6 +232,16 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
     </div>
 </&>
 
+<& /breeders_toolbox/genotyping_trials/edit_genotyping_trial_details_dialog.mas,
+trial_name => $trial_name,
+breeding_program => $breeding_program_id,
+genotyping_facility => $genotyping_facility,
+genotyping_facility_status => $genotyping_facility_status,
+genotyping_facility_submitted => $genotyping_facility_submitted,
+genotyping_plate_format => $genotyping_plate_format,
+genotyping_plate_sample_type => $genotyping_plate_sample_type,
+genotyping_raw_data_link => $raw_data_link
+&>
 
 <script>
 
@@ -231,14 +249,19 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
         load_breeding_program_info(<% $trial_id %>);
         //load_genotyping_status_info(<% $plate_id %>);
     });
-    
+
+    jQuery('#edit_genotyping_trial_details').click(function(){
+        jQuery('#edit_genotyping_trial_details_dialog').modal("show");
+        edit_genotyping_trial_details();
+    });
+
     jQuery('#genotyping_custom_barcode').click(function () {
         location.href = '/tools/label_designer';
     });
 
     jQuery('#genotyping_trial_check_layout_section_onswitch').click( function() {
         jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_layout_section',
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_layout_section?experiment_type=genotyping_layout',
             success: function(response){
                 var html = '';
                 if (response.has_layout == 1){

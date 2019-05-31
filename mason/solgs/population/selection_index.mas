@@ -40,28 +40,33 @@ $project_name
   title      => "Calculate selection index"
   &> 
 
+  <div id="si_canvas">
  
-  <div id="selected_population_div" style="display:none">    
-    <input type="hidden" id="model_id" value="<% $pop_id %>" />
-    <input type="hidden" id="model_name" value="<% $project_name %>" />
-    <input type="hidden" id="default_selected_population_name" value="<% $project_name %>"/>
-    <input type="hidden" id="default_selected_population_type" value="<% $pop_type %>"/>
-    <input type="hidden" id="default_selected_population_id" value="<% $pop_id %>"/>
-    <input type="hidden" id="selected_population_name" value="" />
-    <input type="hidden" id="selected_population_id" value="" />
-    <input type="hidden" id="selected_population_type" value="" />
-  </div>
+    <div class="row">      
+      <div class="form-group col-sm-3" id="select_a_population_div" style="margin-right:35px"></div>
+      <div id="select_a_population_div_text"><p> And assign relative weights to traits.</p></div> 
+    </div>
+    
+    <div id="selection_index_form"> </div>
+    <div id="si_correlation_section" style="display:none">  
 
+      <& /solgs/model/top_genotypes.mas &> 
+	<& /solgs/population/selection_index_correlation.mas &>
+    </div>
+
+    <div id="selected_population_div" style="display:none">    
+      <input type="hidden" id="model_id" value="<% $pop_id %>" />
+      <input type="hidden" id="model_name" value="<% $project_name %>" />
+      <input type="hidden" id="default_selected_population_name" value="<% $project_name %>"/>
+      <input type="hidden" id="default_selected_population_type" value="<% $pop_type %>"/>
+      <input type="hidden" id="default_selected_population_id" value="<% $pop_id %>"/>
+      <input type="hidden" id="selected_population_name" value="" />
+      <input type="hidden" id="selected_population_id" value="" />
+      <input type="hidden" id="selected_population_type" value="" />
+    </div>
+ 
+  </div>
   
-  <div id="select_a_population_div" style="float:left; z-index:10; position:absolute;"></div>
-  <div id="select_a_population_div_text" style="float:left"><p style="padding-left: 275px"> And assign relative weights to traits.</p></div> 
-
-  <div id="selection_index_form" style="clear:both"> </div>
-  <div id="si_correlation_section" style="display:none">  
-    <& /solgs/model/top_genotypes.mas &> 
-    <& /solgs/population/selection_index_correlation.mas &>
-  </div>
-
 </&>
 
 

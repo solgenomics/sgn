@@ -55,15 +55,28 @@ sub solgs_population_search_autocomplete_GET :Args(0) {
 
     my $rs = $c->model("solGS::solGS")->project_details_by_name($term);
 
-    while (my $row = $rs->next) {  
-        push @response_list, $row->name;
+    while (my $row = $rs->next) {
+
+	$c->stash->{pop_id} = $row->id;
+
+	$c->controller('solGS::solGS')->check_population_is_training_population($c);
+
+	if ($c->stash->{is_training_population})
+	{
+	    push @response_list, $row->name;
+	}
     }
 
     $c->{stash}->{rest} = \@response_list;
 }
 
 
+sub begin : Private {
+    my ($self, $c) = @_;
 
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
+  
+}
 
 ###
 1;

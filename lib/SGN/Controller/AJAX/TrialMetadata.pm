@@ -234,6 +234,13 @@ sub trial_details_POST  {
       if ($details->{plan_to_cross}) { $trial->set_field_trial_is_planned_to_cross($details->{plan_to_cross}); }
     };
 
+    if ($details->{plate_format}) { $trial->set_genotyping_plate_format($details->{plate_format}); }
+    if ($details->{plate_sample_type}) { $trial->set_genotyping_plate_sample_type($details->{plate_sample_type}); }
+    if ($details->{facility}) { $trial->set_genotyping_facility($details->{facility}); }
+    if ($details->{facility_submitted}) { $trial->set_genotyping_facility_submitted($details->{facility_submitted}); }
+    if ($details->{facility_status}) { $trial->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
+    if ($details->{raw_data_link}) { $trial->set_raw_data_link($details->{raw_data_link}); }
+
     if ($@) {
 	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
     }
@@ -312,6 +319,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         my $subplots = $c->stash->{trial}->get_subplots();
         $total_complete_number = scalar (@$subplots);
     }
+    if ($display eq 'tissue_samples') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+        my $subplots = $c->stash->{trial}->get_subplots();
+        $total_complete_number = scalar (@$subplots);
+    }
     my $stocks_per_accession;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -324,6 +337,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        $select_clause_additional = ', accession.uniquename, accession.stock_id';
+        $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+        $order_by_additional = ' ,accession.uniquename DESC';
+    }
+    if ($display eq 'tissue_samples_accession') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
@@ -1264,6 +1285,9 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
     my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
     my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
+    my $new_treatment_year = $c->req->param('treatment_year');
+    my $new_treatment_date = $c->req->param('treatment_date');
+    my $new_treatment_type = $c->req->param('treatment_type');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -1274,7 +1298,10 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
         new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
-        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_tissue_entries,
+        new_treatment_date => $new_treatment_date,
+        new_treatment_year => $new_treatment_year,
+        new_treatment_type => $new_treatment_type,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
@@ -1393,8 +1420,9 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $experiment_type = $c->req->param('experiment_type') || 'field_layout';
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => $experiment_type, verify_layout=>1, verify_physical_map=>1});
     my $trial_errors = $trial_layout->generate_and_cache_layout();
     my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
@@ -1536,7 +1564,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
      }
 
   print "Calling Replace Function...............\n";
-  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(); 
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
@@ -1611,13 +1639,13 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
     }
 
     if (my $error = $self->privileges_denied($c)) {
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
-    if (!$plants_per_plot || $plants_per_plot > 50) {
-	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 50." };
-	return;
+    if (!$plants_per_plot || $plants_per_plot > 500) {
+        $c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 500." };
+        return;
     }
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
@@ -1819,14 +1847,15 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $result = $trial->get_crosses_in_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) =@$r;
         push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_type,
         qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
         qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
         qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
         qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
         qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
-        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},];
+        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},
+        $progeny_number, $family_name];
     }
 
     $c->stash->{rest} = { data => \@crosses };

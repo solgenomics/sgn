@@ -750,18 +750,17 @@ sub first_stock_genotype_data {
 sub genotype_data {
     my ($self, $args) = @_;
 
-    my $training_pop_id  = $args->{population_id};
-    my $selection_pop_id = $args->{prediction_id};
-    my $tr_geno_file     = $args->{tr_geno_file};
-    my $model_id         = ($args->{model_id} ? $args->{model_id} : $training_pop_id);
-
+    my $training_pop_id  = $args->{training_pop_id};
+    my $selection_pop_id = $args->{selection_pop_id};
+    my $tr_geno_file     = $args->{training_geno_file};
+   
     my @genotypes;
     my $geno_data = {};
     
     my $protocol_id = $self->protocol_id();
     
     if ($training_pop_id) 
-    {    
+    { 
         if ($selection_pop_id) 
         {   
 	    my $dataset = CXGN::Dataset->new({
@@ -803,7 +802,21 @@ sub genotype_data {
 
 	    return  $geno_data;   
 	}
-    }
+    } 
+    elsif ($selection_pop_id && !$training_pop_id) 
+    {
+	my $dataset = CXGN::Dataset->new({
+ 		people_schema => $self->people_schema,
+ 	    	schema  => $self->schema,
+ 	    	trials  => [$selection_pop_id]}
+		);	    
+
+	    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+	    $geno_data  = $self->structure_genotype_data($dataref);
+
+	    return  $geno_data;   
+
+    } 
 }
 
 
@@ -1316,40 +1329,40 @@ sub prediction_pops {
 }
 
 
-sub plots_list_phenotype_data {
-    my ($self, $plots_names) = @_;
-   
-    if (@$plots_names) 
-    {
-	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
-	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
-
-	return \$data;
-    }
-    else
-    {
-	return;
-    }
-   
-}
-
-
 # sub plots_list_phenotype_data {
-#     my ($self, $plots_ids) = @_;
-
-#     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-# 	bcs_schema  =>$self->schema,
-# 	data_level  => 'plot',
-# 	search_type =>'MaterializedViewTable',
-# 	plot_list   => $plots_ids,
-# 	);
-
-#     my @data = $phenotypes_search->get_phenotype_matrix();
-#     my $clean_data = $self->structure_phenotype_data(\@data);
+#     my ($self, $plots_names) = @_;
    
-#     return \$clean_data;
+#     if (@$plots_names) 
+#     {
+# 	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
+# 	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
 
+# 	return \$data;
+#     }
+#     else
+#     {
+# 	return;
+#     }
+   
 # }
+
+
+sub plots_list_phenotype_data {
+    my ($self, $plots_ids) = @_;
+
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	bcs_schema  =>$self->schema,
+	data_level  => 'plot',
+	search_type =>'MaterializedViewTable',
+	plot_list   => $plots_ids,
+	);
+
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    my $clean_data = $self->structure_phenotype_data(\@data);
+   
+    return \$clean_data;
+
+}
 
 
 sub project_traits {
@@ -2082,6 +2095,34 @@ sub get_genotypes_from_dataset {
     my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
    
     return \@genotypes_ids;
+}
+
+
+sub get_dataset_data {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my  $dataset_data = $dataset->get_dataset_data();
+      
+    return $dataset_data;
+}
+
+
+sub get_dataset_plots_list {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my  $plots = $dataset->retrieve_plots();
+      
+    return $plots;
 }
 
 

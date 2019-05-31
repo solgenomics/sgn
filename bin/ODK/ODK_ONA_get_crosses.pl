@@ -27,12 +27,12 @@ use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
 use CXGN::Phenome::Schema;
 
-our ($opt_u, $opt_i, $opt_r, $opt_a, $opt_d, $opt_t, $opt_n, $opt_m, $opt_o, $opt_w, $opt_x, $opt_f, $opt_l, $opt_c, $opt_D, $opt_U, $opt_p, $opt_H);
+our ($opt_u, $opt_i, $opt_r, $opt_a, $opt_d, $opt_n, $opt_m, $opt_o, $opt_f, $opt_l, $opt_c, $opt_q, $opt_y, $opt_D, $opt_U, $opt_p, $opt_H);
 
-getopts('u:i:r:a:d:t:n:m:o:w:x:f:c:D:U:p:H:');
+getopts('u:i:r:a:d:n:m:o:w:f:l:c:q:y:D:U:p:H:');
 
-if (!$opt_u || !$opt_i || !$opt_r || !$opt_a || !$opt_d ||!$opt_t || !$opt_n || !$opt_m || !$opt_o || !$opt_w || !$opt_f || !$opt_l || !$opt_D || !$opt_U || !$opt_p || !$opt_H) {
-    die "Must provide options -u (sp_person_id) -i (sp_person_username )-r (sp_role) -a (archive_path) -d (temp_files_dir) -t (temp_file_path) -n (ODK username) -m (ODK password) -o (ODK form_id) -w (cross wishlist md_file_id) -x (cross_wishlist_file_name) -f (odk cross progress tree file dir) -l (ODK URL) -c (allowed cross properties) -D (database name) -U (db user) -p (dbpass) -H (dbhost) \n";
+if (!$opt_u || !$opt_i || !$opt_r || !$opt_a || !$opt_d || !$opt_n || !$opt_m || !$opt_o || !$opt_f || !$opt_l || !$opt_c || !$opt_q || !$opt_y || !$opt_D || !$opt_U || !$opt_p || !$opt_H) {
+    die "Must provide options -u (sp_person_id) -i (sp_person_username )-r (sp_role) -a (archive_path) -d (temp_files_dir) -n (ODK username) -m (ODK password) -o (ODK form_id) -f (odk cross progress tree file dir) -l (ODK URL) -c (allowed cross properties) -q (temp cross wishlist file path for dl from ONA) -y (temp germplasm info file path for dl from ONA) -D (database name) -U (db user) -p (dbpass) -H (dbhost) \n";
 }
 
 my $bcs_schema = Bio::Chado::Schema->connect(
@@ -60,10 +60,9 @@ my $odk_crosses = CXGN::ODK::Crosses->new({
     sp_person_role=>$opt_r,
     archive_path=>$opt_a,
     temp_file_dir=>$opt_d,
-    temp_file_path=>$opt_t,
     allowed_cross_properties=>$opt_c,
-    cross_wishlist_md_file_id=>$opt_w,
-    cross_wishlist_file_name=>$opt_x,
+    cross_wishlist_temp_file_path=>$opt_q,
+    germplasm_info_temp_file_path=>$opt_y,
     odk_crossing_data_service_url=>$opt_l,
     odk_crossing_data_service_username=>$opt_n,
     odk_crossing_data_service_password=>$opt_m,
