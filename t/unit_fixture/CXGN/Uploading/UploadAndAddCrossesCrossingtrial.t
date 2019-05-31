@@ -71,8 +71,8 @@ my $after_adding_relationship = $schema->resultset("Stock::StockRelationship")->
 
 is($after_adding_cross, $before_adding_cross + 1);
 is($after_adding_stocks, $before_adding_stocks + 1);
-is($after_adding_stockprop, $before_adding_stockprop + 1);
-is($after_adding_stockprop_all, $before_adding_stockprop_all + 1);
+is($after_adding_stockprop, $before_adding_stockprop);
+is($after_adding_stockprop_all, $before_adding_stockprop_all);
 is($after_adding_relationship, $before_adding_relationship + 4);
 
 # test uploading crosses with only accession info
@@ -255,7 +255,7 @@ my $after_updating_info_stockprop = $schema->resultset("Stock::Stockprop")->sear
 my $after_updating_info_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
 is ($after_updating_info_stocks, $before_updating_info_stocks);
-is ($after_updating_info_stockprop, $before_updating_info_stockprop);
+is ($after_updating_info_stockprop, $before_updating_info_stockprop+1);
 is ($after_updating_info_relationship, $before_updating_info_relationship);
 
 # test retrieving crossing experimental info after updating
