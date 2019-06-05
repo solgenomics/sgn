@@ -29,7 +29,11 @@ $genotyping_trial_ids
 jQuery(document).ready(function() {
 
     jQuery('#folder_download_genotyping_plates_button').click( function () {
+% if ($genotyping_trial_ids) {
         jQuery('#download_genotyping_trial_layouts_dialog').modal('show');
+% } else {
+        alert('There are no genotyping layouts in this folder!');
+% }
     });
 
 });
