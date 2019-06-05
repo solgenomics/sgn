@@ -334,6 +334,10 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock->stock_id;
     my $stock_name = $stock->uniquename;
     my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
 
     my @lines = ();
     my @sorted_lines = ();
@@ -341,11 +345,16 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
         print STDERR "Exporting genotype file...\n";
         push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
 
-        my $genotypes_search = CXGN::Genotype::Search->new({
+        my %genotype_search_params = (
             bcs_schema=>$self->schema,
-            accession_list=>[$stock_id],
             markerprofile_id_list=>$genotypeprop_id
-        });
+        );
+        if ($stock_type eq 'accession') {
+            $genotype_search_params{accession_list} = [$stock_id];
+        } elsif ($stock_type eq 'tissue_sample') {
+            $genotype_search_params{tissue_sample_list} = [$stock_id];
+        }
+        my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
         my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
         foreach my $g (@$genotypes ) {
