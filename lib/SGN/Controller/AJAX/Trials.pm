@@ -63,6 +63,10 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $dir = catdir($c->config->{static_content_path}, "folder");
+    eval { make_path($dir) };
+    if ($@) {
+        print "Couldn't create $dir: $@";
+    }
     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
     my $html = '';
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
