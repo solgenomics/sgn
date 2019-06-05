@@ -92,9 +92,12 @@ $has_child_folders => undef
         <table name="folder_datatables_table" class="table table-hover table-bordered">
         <thead><tr><th>Genotyping Plate Name</th></tr></thead>
         <tbody>
+% my @genotyping_trial_ids;
 % foreach (@$genotyping_trials) {
             <tr><td><a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
+% push @genotyping_trial_ids, $_->folder_id();
 % }
+% my $genotyping_trial_ids = join ',', @genotyping_trial_ids;
         </tbody>
         </table>
 
@@ -198,7 +201,7 @@ $has_child_folders => undef
 </div>
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_ids, dialog_name => $folder_name, dialog_type => 'Folder' &>
-<& /breeders_toolbox/trial/download_genotyping_trial_layouts_dialogs.mas, trial_ids => $trial_ids &>
+<& /breeders_toolbox/genotyping_trials/download_genotyping_trial_layouts_dialogs.mas, genotyping_trial_ids => $genotyping_trial_ids &>
 
 <script>
 

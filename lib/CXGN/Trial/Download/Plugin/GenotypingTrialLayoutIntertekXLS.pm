@@ -65,14 +65,13 @@ sub download {
         $ws->write(0, $col_count, $_);
         $col_count++;
     }
-
+    my $row_count = 1;
     foreach (@trial_ids) {
         my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_ });
         my $trial_name = $trial->get_name();
         my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $_, experiment_type => 'genotyping_layout'});
         my $design = $trial_layout->get_design();
         #print STDERR Dumper $design;
-        my $row_count = 1;
         foreach my $key (sort keys %$design){
             my $val = $design->{$key};
             my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};

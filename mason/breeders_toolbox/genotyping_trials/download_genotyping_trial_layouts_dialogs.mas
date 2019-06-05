@@ -1,28 +1,27 @@
 
 <%args>
-$trial_ids
+$genotyping_trial_ids
 </%args>
 
-
 <div class="modal fade" id="download_genotyping_trial_layouts_dialog" name="download_genotyping_trial_layouts_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadGenotypingTrialLayoutsDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="downloadGenotypingTrialLayoutsDialog">Download Genotyping Plate Layouts</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="downloadGenotypingTrialLayoutsDialog">Download Genotyping Plate Layouts</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
 
-        <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
-        <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqcsv&dataLevel=plate" class="btn btn-default">Download DartSeq Formatted File</a>
+                <a href="/breeders/trials/download/layout?format=intertekxls&dataLevel=plate&genotyping_trial_id_list=<% $genotyping_trial_ids %>" class="btn btn-default">Download Intertek Formatted File</a>
+                <a href="/breeders/trials/download/layout?format=dartseqcsv&dataLevel=plate&genotyping_trial_id_list=<% $genotyping_trial_ids %>" class="btn btn-default">Download DartSeq Formatted File</a>
 
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="download_genotyping_trial_layouts_cancel_button" id="download_genotyping_trial_layouts_cancel_button" data-dismiss="modal">Close</button>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" name="download_genotyping_trial_layouts_cancel_button" id="download_genotyping_trial_layouts_cancel_button" data-dismiss="modal">Close</button>
+        </div>
     </div>
-  </div>
 </div>
 
 <script>

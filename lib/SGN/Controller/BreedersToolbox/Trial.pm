@@ -349,6 +349,8 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
 
     my $format = $c->req->param("format") || "xls";
     my $data_level = $c->req->param("dataLevel") || "plot";
+    my $genotyping_trial_id = $c->req->param("genotyping_trial_id");
+    my @genotyping_trial_id_list = $c->req->param("genotyping_trial_id_list") ? split ',', $c->req->param("genotyping_trial_id_list") : ();
 
     my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     if ($data_level eq 'plate'){
@@ -372,15 +374,18 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
 
     print STDERR "TEMPFILE : $tempfile\n";
 
-    my $download = CXGN::Trial::Download->new({
+    my $trial_download_args = {
         bcs_schema => $schema,
-        trial_id => $c->stash->{trial_id},
-        trait_list => \@trait_list,
+        trial_list => \@genotyping_trial_id_list,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
         selected_columns => $selected_cols
-    });
+    };
+    if ($genotyping_trial_id) {
+        $trial_download_args->{trial_id} = $genotyping_trial_id;
+    }
+    my $download = CXGN::Trial::Download->new($trial_download_args);
     my $error = $download->download();
 
     if ($format eq 'intertekxls'){
