@@ -451,17 +451,15 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>IntertekSNPID</td>
-                                <td>CustomerSNPID</td>
-                                <td>Reference</td>
-                                <td>Alternate</td>
-                                <td>Chromosome</td>
-                                <td>Position</td>
-                                <td>Quality</td>
-                                <td>Filter</td>
-                                <td>Info</td>
-                                <td>Format</td>
-                            </tr>
+			        <td>SampleName.LabID</td>
+				<td>All Marker Names In Separate Columns (e.g. marker name = S12_7926132)</td>
+			    </tr>
+			</tbody>
+		    </table>
+
+                    <br/>
+		    <p>The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already</\
+			     </tr>
                         </tbody>
                     </table>
 
@@ -474,15 +472,16 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>SampleName.LabID</td>
-                                <td>All Marker Names In Separate Columns (e.g. marker name = S12_7926132)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <br/>
-                    <p>The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already</p>
-
+				<td>IntertekSNPID</td>
+				<td>CustomerSNPID</td>
+                                <td>Reference</td>
+				<td>Alternate</td>
+			        <td>Chromosome</td>																                             <td>Position</td>																                                  <td>Quality</td>
+	                        <td>Filter</td>
+				<td>Info</td>
+				<td>Format</td>
+			    <tr>
+			<tbody>
                 </div>
             </div>
             <div class="modal-footer">
