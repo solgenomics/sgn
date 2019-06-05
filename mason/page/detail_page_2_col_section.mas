@@ -198,11 +198,11 @@ $sample_observation_unit_type_name => undef
 % } #End stock_related_stock_section
 % if ($info_section_id eq 'stock_images_section'){
                                 <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>0 &>
-                                    <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
+                                    <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh, additional_image_button_id=>'stock_images' &>
                                 </&>
 
                                 <&| /page/info_section.mas, title=>"Images of Related Stock(s) (" .  scalar(@$related_image_ids)  . ")", collapsible=>1, collapsed=>0 &>
-                                    <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh &>
+                                    <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh, additional_image_button_id=>'related_stock_images' &>
                                 </&>
 % } #End stock_images_section
 % if ($info_section_id eq 'stock_literature_annotation_section'){
