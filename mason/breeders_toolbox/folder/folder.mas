@@ -198,6 +198,7 @@ $has_child_folders => undef
 </div>
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_ids, dialog_name => $folder_name, dialog_type => 'Folder' &>
+<& /breeders_toolbox/trial/download_genotyping_trial_layouts_dialogs.mas, trial_ids => $trial_ids &>
 
 <script>
 
@@ -222,10 +223,6 @@ jQuery(document).ready(function() {
                 }
             });
         }
-    });
-
-    jQuery('#folder_download_genotyping_plates_button').click(function(){
-        
     });
 
 });
