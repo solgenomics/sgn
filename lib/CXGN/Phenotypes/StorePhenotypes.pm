@@ -413,6 +413,7 @@ sub store {
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
+        my %trait_and_stock_to_overwrite;
         my @overwritten_values;
 
         foreach my $plot_name (@plot_list) {
@@ -445,7 +446,8 @@ sub store {
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
+                            push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+                            push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                     }
@@ -535,6 +537,9 @@ sub store {
             }
         }
 
+        my @saved_nd_experiment_ids = keys %experiment_ids;
+        push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
+
         $success_message = 'All values in your file are now saved in the database!';
         #print STDERR Dumper \@overwritten_values;
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
@@ -584,35 +589,44 @@ sub store_stock_note {
 
 sub delete_previous_phenotypes {
     my $self = shift;
-    my $trait_cvterm_id = shift;
-    my $stock_id = shift;
+    my $trait_and_stock_to_overwrite = shift;
+    my $saved_nd_experiment_ids = shift;
+    my $stocks_sql = join ("," , @{$trait_and_stock_to_overwrite->{stocks}});
+    my $traits_sql = join ("," , @{$trait_and_stock_to_overwrite->{traits}});
+    my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
 
-    my $q = "
-        DROP TABLE IF EXISTS temp_pheno_duplicate_deletion;
-        CREATE TEMP TABLE temp_pheno_duplicate_deletion AS
-        (SELECT phenotype_id, nd_experiment_id, file_id
+    my $q_search = "
+        SELECT phenotype_id, nd_experiment_id, file_id
         FROM phenotype
         JOIN nd_experiment_phenotype using(phenotype_id)
         JOIN nd_experiment_stock using(nd_experiment_id)
         LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
-        WHERE stock.stock_id=?
-        AND phenotype.cvalue_id=?);
-        DELETE FROM phenotype WHERE phenotype_id IN (SELECT phenotype_id FROM temp_pheno_duplicate_deletion);
-        DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
-        DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
+        WHERE stock.stock_id IN ($stocks_sql)
+        AND phenotype.cvalue_id IN ($traits_sql)
+        AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql);
         ";
-    my $q2 = "SELECT phenotype_id, nd_experiment_id, file_id FROM temp_pheno_duplicate_deletion;";
 
-    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-    my $h2 = $self->bcs_schema->storage->dbh()->prepare($q2);
-    $h->execute($stock_id, $trait_cvterm_id);
-    $h2->execute();
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
+    $h->execute();
 
     my @deleted_phenotypes;
-    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h2->fetchrow_array()) {
+    my @phenos_to_delete;
+    my @nd_experiment_id_to_delete;
+    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+        push @phenos_to_delete, $phenotype_id;
+        push @nd_experiment_id_to_delete, $nd_experiment_id;
         push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
     }
+    my $phenotype_id_sql = join (",", @phenos_to_delete);
+    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
+    my $h2 = $self->bcs_schema->storage->dbh()->prepare($q_pheno_delete);
+    $h2->execute();
+    my $nd_experiment_id_sql = join (",", @nd_experiment_id_to_delete);
+    my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+    my $h3 = $self->bcs_schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+    $h3->execute();
+
     return @deleted_phenotypes;
 }
 
