@@ -458,11 +458,9 @@
 		    </table>
 
                     <br/>
-		    <p>The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already</\
-			     </tr>
-                        </tbody>
-                    </table>
-
+		    <p>The SampleName.LabID column should contain the sample name (exported_tissue_sample_name or accession_name) and it must exist in the database already
+		    </p>
+			   
                     <b>For Intertek SNP Information File:</b>
                     <br>
                     <p>The header must be:</p>
@@ -480,8 +478,9 @@
 	                        <td>Filter</td>
 				<td>Info</td>
 				<td>Format</td>
-			    <tr>
-			<tbody>
+			    </tr>
+			</tbody>
+		    </table>
                 </div>
             </div>
             <div class="modal-footer">
