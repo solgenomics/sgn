@@ -1801,14 +1801,21 @@ sub get_stock_datatables_genotype_data_GET  {
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
+    my %genotype_search_params = (
         bcs_schema=>$schema,
-        accession_list=>[$stock_id],
         genotypeprop_hash_select=>[],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[]
-    });
+    );
+    if ($stock_type eq 'accession') {
+        $genotype_search_params{accession_list} = [$stock_id];
+    } elsif ($stock_type eq 'tissue_sample') {
+        $genotype_search_params{tissue_sample_list} = [$stock_id];
+    }
+    my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
     my @result;
