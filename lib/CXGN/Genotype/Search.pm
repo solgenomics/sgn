@@ -246,7 +246,7 @@ sub get_genotype_info {
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
-        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id AND accession_of_tissue_sample.type_id = $accession_cvterm_id)
+        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
         JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN nd_experiment_protocol USING(nd_experiment_id)

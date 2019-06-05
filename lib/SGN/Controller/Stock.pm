@@ -343,7 +343,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my @sorted_lines = ();
     if ($stock_id) {
         print STDERR "Exporting genotype file...\n";
-        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "accession_name", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
+        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "source_observation_unit_name", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
 
         my %genotype_search_params = (
             bcs_schema=>$self->schema,
