@@ -66,8 +66,8 @@ $has_child_folders => undef
         </tbody>
         </table>
 
-		<br/>
-		<button class="btn btn-primary" id="trial_download_phenotypes_button">Download Phenotypes</button>
+        <br/>
+        <button class="btn btn-primary" id="trial_download_phenotypes_button">Download Phenotypes</button>
 
       </div>
     </div>
@@ -97,6 +97,9 @@ $has_child_folders => undef
 % }
         </tbody>
         </table>
+
+        <br/>
+        <button class="btn btn-primary" id="folder_download_genotyping_plates_button">Download Genotyping Plate Layouts</button>
       </div>
     </div>
 
@@ -219,6 +222,10 @@ jQuery(document).ready(function() {
                 }
             });
         }
+    });
+
+    jQuery('#folder_download_genotyping_plates_button').click(function(){
+        
     });
 
 });
