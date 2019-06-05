@@ -343,7 +343,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my @sorted_lines = ();
     if ($stock_id) {
         print STDERR "Exporting genotype file...\n";
-        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
+        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "accession_name", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
 
         my %genotype_search_params = (
             bcs_schema=>$self->schema,
@@ -364,6 +364,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my $marker_info = $protocol_full->{markers};
             #print STDERR Dumper $protocol_full;
             #print STDERR Dumper $marker_info;
+            my $accession_name = $g->{germplasmName};
             my $stock_name = $g->{stock_name};
             my $stock_type_name = $g->{stock_type_name};
             my $synonym_string = join ',', @{$g->{synonyms}};
@@ -380,7 +381,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
                 my $marker = $marker_info->{$marker_name};
                 my $marker_print = $marker ? encode_json $marker : '';
                 my $genotype_print = encode_json $genotype_full->{$marker_name};
-                push @lines, [$project_name, $protocol_name, $stock_name, $stock_type_name, $synonym_string, $marker_name, $read, $marker_print, $genotype_print];
+                push @lines, [$project_name, $protocol_name, $stock_name, $stock_type_name, $accession_name, $synonym_string, $marker_name, $read, $marker_print, $genotype_print];
             }
         }
         @sorted_lines = sort chr_sort @lines;
