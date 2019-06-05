@@ -18,6 +18,7 @@ my $plugin = "GenotypingTrialLayoutIntertekXLS";
 my $download = CXGN::Trial::Download->new({
     bcs_schema => $schema,
     trial_id => $c->stash->{trial_id},
+    trial_list => \@trial_id_list,
     filename => $tempfile,
     format => $plugin,
 });
@@ -46,6 +47,14 @@ sub verify {
 sub download { 
     my $self = shift;
 
+    my @trial_ids;
+    if ($self->trial_id) {
+        push @trial_ids, $self->trial_id;
+    }
+    if ($self->trial_list) {
+        push @trial_ids, @{$self->trial_list};
+    }
+
     print STDERR "DATALEVEL ".$self->data_level."\n";
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
@@ -56,23 +65,25 @@ sub download {
         $ws->write(0, $col_count, $_);
         $col_count++;
     }
-    my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $self->trial_id });
-    my $trial_name = $trial->get_name();
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $self->trial_id,, experiment_type => 'genotyping_layout'});
-    my $design = $trial_layout->get_design();
-    #print STDERR Dumper $design;
     my $row_count = 1;
-    foreach my $key (sort keys %$design){
-        my $val = $design->{$key};
-        my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
-        my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
-        $ws->write($row_count, 0, $sample_name);
-        $ws->write($row_count, 1, $trial_name);
-        $ws->write($row_count, 2, $val->{plot_number});
-        $ws->write($row_count, 3, $val->{source_observation_unit_name});
-        $ws->write($row_count, 4, $trial_name);
-        $ws->write($row_count, 5, $comments);
-        $row_count++;
+    foreach (@trial_ids) {
+        my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_ });
+        my $trial_name = $trial->get_name();
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $_, experiment_type => 'genotyping_layout'});
+        my $design = $trial_layout->get_design();
+        #print STDERR Dumper $design;
+        foreach my $key (sort keys %$design){
+            my $val = $design->{$key};
+            my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};
+            my $sample_name = $val->{plot_name}."|||".$val->{accession_name};
+            $ws->write($row_count, 0, $sample_name);
+            $ws->write($row_count, 1, $trial_name);
+            $ws->write($row_count, 2, $val->{plot_number});
+            $ws->write($row_count, 3, $val->{source_observation_unit_name});
+            $ws->write($row_count, 4, $trial_name);
+            $ws->write($row_count, 5, $comments);
+            $row_count++;
+        }
     }
 
 }
