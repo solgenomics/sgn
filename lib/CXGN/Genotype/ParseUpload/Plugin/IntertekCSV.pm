@@ -107,8 +107,7 @@ sub _validate_with_plugin {
 
     my @observation_units_names_trim;
     # Separates sample name from lab id
-    foreach (@observation_unit_names) {
-        my ($observation_unit_name_with_accession_name, $lab_id) = split(/\./, $_);
+    foreach my $observation_unit_name_with_accession_name (@observation_unit_names) {
         $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
         my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         push @observation_units_names_trim, $observation_unit_name;
