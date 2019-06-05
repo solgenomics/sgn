@@ -62,7 +62,7 @@ $type_name => "plot"
           function pasteTraitListMenu (div_name, menu_div, button_name) {
               var list = new CXGN.List();
               var html='';
-              html = list.listSelect(div_name, ['traits']);
+              html = list.listSelect(div_name, ['traits'], undefined, undefined, undefined);
               html = html + '<button class="btn btn-info btn-sm" type="button" id="paste_button_id" value="'+button_name+'" onclick="javascript:pasteTraitList(\''+div_name+'\')" >'+button_name+'</button>';
               jQuery('#'+menu_div).html(html);
           }

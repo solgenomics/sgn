@@ -1279,7 +1279,7 @@ function showLoadOption() {
     document.getElementById('design_label').style.display = "inline";
     document.getElementById('design_list').style.display = "inline";
     var lo = new CXGN.List();
-    $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh'));
+    $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh', undefined));
     $('#design_list_list_select').change(
       function() {
         disable_ui();
