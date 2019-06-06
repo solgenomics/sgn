@@ -15,6 +15,7 @@ use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
 use CXGN::Location;
 use Try::Tiny;
+use CXGN::Tools::Run;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -271,5 +272,57 @@ sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
 
 }
 
+sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $file_id = shift;
+    print STDERR "Deleting phenotypes from File ID: $file_id and making file obsolete\n";
+    my $dbh = $c->dbc->dbh();
+
+    my $q_search = "
+        SELECT phenotype_id, nd_experiment_id, file_id
+        FROM phenotype
+        JOIN nd_experiment_phenotype using(phenotype_id)
+        JOIN nd_experiment_stock using(nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        JOIN stock using(stock_id)
+        WHERE file_id = ?";
+
+    my $h = $dbh->prepare($q_search);
+    $h->execute($file_id);
+
+    my @deleted_phenotypes;
+    my @phenos_to_delete;
+    my @nd_experiment_id_to_delete;
+    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+        push @phenos_to_delete, $phenotype_id;
+        push @nd_experiment_id_to_delete, $nd_experiment_id;
+        push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
+    }
+    my $phenotype_id_sql = join (",", @phenos_to_delete);
+    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
+    my $h2 = $dbh->prepare($q_pheno_delete);
+    $h2->execute();
+    my $nd_experiment_id_sql = join (",", @nd_experiment_id_to_delete);
+    my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+    my $h3 = $dbh->prepare($q_nd_exp_files_delete);
+    $h3->execute();
+
+    my $h4 = $dbh->prepare("UPDATE metadata.md_metadata SET obsolete = 1 where metadata_id IN (SELECT metadata_id from metadata.md_files where file_id=?);");
+    $h4->execute($file_id);
+
+    print STDERR "DELETED ".scalar(@deleted_phenotypes)." Phenotype Values\n";
+    print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
+
+    my $basepath = $c->config->{basepath};
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $async_delete = CXGN::Tools::Run->new();
+    $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $nd_experiment_id_sql");
+
+    $c->stash->{rest} = {success => 1};
+}
 
 1;

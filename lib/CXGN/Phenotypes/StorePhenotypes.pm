@@ -7,6 +7,11 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 =head1 USAGE
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>basepath,
+    dbhost=>dbhost,
+    dbname=>dbname,
+    dbuser=>dbuser,
+    dbpass=>dbpass,
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
@@ -48,6 +53,7 @@ use CXGN::ZipFile;
 use CXGN::UploadFile;
 use CXGN::List::Transform;
 use CXGN::Stock;
+use CXGN::Tools::Run;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -65,6 +71,36 @@ has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
     is => 'rw',
     required => 1,
+);
+
+has 'basepath' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbhost' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbname' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbuser' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbpass' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
 );
 
 has 'user_id' => (
@@ -537,8 +573,10 @@ sub store {
             }
         }
 
-        my @saved_nd_experiment_ids = keys %experiment_ids;
-        push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
+        if (scalar(keys %trait_and_stock_to_overwrite) > 0) {
+            my @saved_nd_experiment_ids = keys %experiment_ids;
+            push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
+        }
 
         $success_message = 'All values in your file are now saved in the database!';
         #print STDERR Dumper \@overwritten_values;
@@ -626,6 +664,16 @@ sub delete_previous_phenotypes {
     my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
     my $h3 = $self->bcs_schema->storage->dbh()->prepare($q_nd_exp_files_delete);
     $h3->execute();
+
+    print STDERR "DELETED ".scalar(@deleted_phenotypes)." Phenotype Values\n";
+
+    my $basepath = $self->basepath;
+    my $dbhost = $self->dbhost;
+    my $dbname = $self->dbname;
+    my $dbuser = $self->dbuser;
+    my $dbpass = $self->dbpass;
+    my $async_delete = CXGN::Tools::Run->new();
+    $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $nd_experiment_id_sql");
 
     return @deleted_phenotypes;
 }

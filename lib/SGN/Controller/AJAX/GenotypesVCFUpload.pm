@@ -21,7 +21,6 @@ use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
 use Data::Dumper;
-use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::UploadFile;

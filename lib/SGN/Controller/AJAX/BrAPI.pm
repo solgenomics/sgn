@@ -2622,7 +2622,12 @@ sub observations_PUT {
         username => $username,
         user_type => $user_type,
         archive_path => $c->config->{archive_path},
-        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir}
+        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
+        basepath => $c->config->{basepath},
+        dbhost => $c->config->{dbhost},
+        dbname => $c->config->{dbname},
+        dbuser => $c->config->{dbuser},
+        dbpass => $c->config->{dbpass}
     });
 	_standard_response_construction($c, $brapi_package_result);
 }

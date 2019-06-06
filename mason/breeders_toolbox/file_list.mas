@@ -19,7 +19,7 @@ $allow_delete => 0
     <td><% $f->{create_date} %></td>
     <td>
 % if ($allow_delete){
-    <a id="delete_pheno_file_link" href="/breeders/phenotyping/delete/<% $f->{file_id} %>" >Delete</a> | 
+    <button class="btn btn-default btn-sm" id="delete_pheno_file_link" data-file_id="<% $f->{file_id} %>" >Delete</button> | 
 % }
     <a href="/breeders/phenotyping/view/<% $f->{file_id} %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{file_id} %>">Download</a></td>
   </tr>
@@ -29,7 +29,11 @@ $allow_delete => 0
 % }
 
 <script>
+
 jQuery(document).ready(function() {
+
     jQuery('.files_datatables').DataTable();
-} );
+
+});
+
 </script>

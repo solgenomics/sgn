@@ -157,6 +157,11 @@ sub observations_store {
 
     ## Store observations and return details for response
     my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$search_params->{basepath},
+        dbhost=>$search_params->{dbhost},
+        dbname=>$search_params->{dbname},
+        dbuser=>$search_params->{dbuser},
+        dbpass=>$search_params->{dbpass},
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,

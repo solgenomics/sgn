@@ -474,6 +474,11 @@ my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_33
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -637,6 +642,11 @@ my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,

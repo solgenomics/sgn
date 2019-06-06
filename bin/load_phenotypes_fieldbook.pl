@@ -6,7 +6,7 @@ load_fieldbook_phenotypes.pl - backend script for loading phenotypes into cxgn d
 
 =head1 SYNOPSIS
 
-    load_fieldbook_phenotypes.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -i [infile] -d [datalevel] -u [username]
+    load_fieldbook_phenotypes.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -b [basepath] -i [infile] -d [datalevel] -u [username]
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -14,6 +14,7 @@ load_fieldbook_phenotypes.pl - backend script for loading phenotypes into cxgn d
  -D database name (required) e.g. "cxgn_cassava"
  -U database username (required)
  -P database userpass (required)
+ -b basepath (required) e.g. "/home/me/cxgn/sgn"
  -i path to infile (required)
  -a archive path (required) e.g. /export/prod/archive/
  -d datalevel (required) must be plots or plants
@@ -22,7 +23,7 @@ load_fieldbook_phenotypes.pl - backend script for loading phenotypes into cxgn d
 
 =head1 DESCRIPTION
 
-perl bin/load_fieldbook_phenotypes.pl -D cass -H localhost -U postgres -P postgres -u nmorales -i ~/Downloads/combined_counts.csv -a /export/prod/archive/ -d plants
+perl bin/load_fieldbook_phenotypes.pl -D cass -H localhost -U postgres -P postgres -b /home/me/cxgn/sgn -u nmorales -i ~/Downloads/combined_counts.csv -a /export/prod/archive/ -d plants
 
 This script will parse and validate the input file. If there are any warnings or errors during validation it will die.
 If there are no warnings or errors during validation it will then store the data.
@@ -52,12 +53,12 @@ use CXGN::Phenotypes::ParseUpload;
 use CXGN::UploadFile;
 use File::Basename;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_i, $opt_a, $opt_d, $opt_u, $opt_o);
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_b, $opt_i, $opt_a, $opt_d, $opt_u, $opt_o);
 
-getopts('H:D:U:P:i:a:d:u:o:');
+getopts('H:D:U:P:b:i:a:d:u:o:');
 
-if (!$opt_H || !$opt_D || !$opt_U ||!$opt_P || !$opt_i || !$opt_a || !$opt_d || !$opt_u) {
-    die "Must provide options -H (hostname), -D (database name), -U (database user), -P (database password), -i (input file), -a (archive path), -d (datalevel), -u (username in db)\n";
+if (!$opt_H || !$opt_D || !$opt_U ||!$opt_P || !$opt_b || !$opt_i || !$opt_a || !$opt_d || !$opt_u) {
+    die "Must provide options -H (hostname), -D (database name), -U (database user), -P (database password), -b (basepath), -i (input file), -a (archive path), -d (datalevel), -u (username in db)\n";
 }
 
 my $schema = Bio::Chado::Schema->connect(
@@ -156,6 +157,11 @@ if ($parsed_file && !$parsed_file->{'error'}) {
 }
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$opt_b,
+    dbhost=>$opt_H,
+    dbname=>$opt_D,
+    dbuser=>$opt_U,
+    dbpass=>$opt_P,
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
