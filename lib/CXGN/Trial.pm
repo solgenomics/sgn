@@ -1816,10 +1816,6 @@ sub delete_project_entry {
 	print STDERR "Cannot delete trial with associated phenotypes.\n";
 	return;
     }
-    if (my $count = $self->get_experiment_count() > 0) {
-	print STDERR "Cannot delete trial with associated experiments ($count)\n";
-	return "Cannot delete entry because of associated experiments";
-    }
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
         return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';

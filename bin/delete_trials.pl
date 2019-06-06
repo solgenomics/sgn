@@ -91,7 +91,7 @@ foreach my $trial_id (@trial_ids) {
 }
 
 $dbh->disconnect();
-print STDERR "Done with everything.\n";
+print STDERR "Done with everything (though nd_experiment entry deletion may still be occuring asynchronously).\n";
 
 sub delete_trial { 
     my $metadata_schema = shift;
