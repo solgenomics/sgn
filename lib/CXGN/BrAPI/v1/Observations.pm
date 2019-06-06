@@ -81,7 +81,7 @@ sub observations_store {
 
     my @success_status = [];
 
-    #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
+    print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
@@ -94,6 +94,7 @@ sub observations_store {
     my $data_level = 'stocks';
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
+    print STDERR "validating request\n";
     my $validated_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
 
     if (!$validated_request || $validated_request->{'error'}) {
@@ -104,7 +105,7 @@ sub observations_store {
         push @$status, {'info' => $validated_request->{'success'} };
     }
 
-
+    print STDERR "parsing request\n";
     my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema);
     my %parsed_data;
     my @units;
@@ -120,10 +121,11 @@ sub observations_store {
         @units = @{$parsed_request->{'units'}};
         @variables = @{$parsed_request->{'variables'}};
         %parsed_data = %{$parsed_request->{'data'}};
-        #print STDERR "Parsed data is: ".Dumper(%parsed_data)."\n";
+        print STDERR "Parsed data is: ".Dumper(%parsed_data)."\n";
     }
 
     ## Archive in file
+    print STDERR "Archiving file\n";
     my $archived_request = CXGN::BrAPI::FileRequest->new({
         schema=>$schema,
         user_id => $user_id,
@@ -156,6 +158,7 @@ sub observations_store {
     $phenotype_metadata{'date'} = $timestamp;
 
     ## Store observations and return details for response
+    print STDERR "Storing observations\n";
     my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
