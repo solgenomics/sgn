@@ -1,0 +1,79 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title => "Images Search" &>
+
+<div class="container-fluid">
+    This page allows you to search images contained in the SGN databases.
+    <br />
+    All images may not have names or explicit descriptions associated with them.
+    <br /><br />
+    <div class="well">
+        <b>Search Criteria</b>
+        <br /><br />
+
+        <div class="form-horizontal" >
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Image descriptors (name, description, or filename): </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" name="description_filename_composite" placeholder="e.g. MyImageName" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Submitter (name or ID): </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" name="submitter" placeholder="e.g. JaneDoe" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Image tag: </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" name="image_tag" placeholder="e.g. TaggedGermplasm" />
+                </div>
+            </div>
+        </div>
+
+        <br />
+        <center>
+        <button class="btn btn-primary" id="image_search_submit" >Search</button>
+        </center>
+    </div>
+</div>
+<br /><br />
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table id="images_search_results" width="100%" class="table table-hover table-striped">
+            <thead>
+              <tr>
+                <th>Trial name</th>
+                <th>Description</th>
+                <th>Breeding program</th>
+                <th>Folder</th>
+                <th>Year</th>
+                <th>Location</th>
+                <th>Trial type</th>
+                <th>Design</th>
+                <th>Planting Date</th>
+                <th>Harvest Date</th>
+                <th>Download</th>
+            </tr>
+            </thead>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+});
+
+</script>
