@@ -16,8 +16,6 @@ $trial_id
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_phenotype_data_form" name="delete_phenotype_data_form">
-                    
                     <center>
                     <p3> Are you sure you want to delete assayed traits data for this trial? <br> Proceed with deletion below...</p3>
                     </center></br>
@@ -77,7 +75,7 @@ $trial_id
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_traits_form" name="delete_traits_form">
 
-                    <p3> Trait deletion was successfully...</p3>
+                    <p3>Trait deletion was successfully completed</p3>
 
                     </form>
                 </div>

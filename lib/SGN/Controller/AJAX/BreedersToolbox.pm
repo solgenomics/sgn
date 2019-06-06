@@ -276,17 +276,21 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     my $self = shift;
     my $c = shift;
     my $file_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
     print STDERR "Deleting phenotypes from File ID: $file_id and making file obsolete\n";
     my $dbh = $c->dbc->dbh();
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     my $q_search = "
         SELECT phenotype_id, nd_experiment_id, file_id
         FROM phenotype
         JOIN nd_experiment_phenotype using(phenotype_id)
         JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN nd_experiment using(nd_experiment_id)
         LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
-        WHERE file_id = ?";
+        WHERE file_id = ?
+        AND nd_experiment.type_id = $nd_experiment_type_id";
 
     my $h = $dbh->prepare($q_search);
     $h->execute($file_id);

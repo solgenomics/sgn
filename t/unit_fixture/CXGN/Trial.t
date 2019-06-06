@@ -744,7 +744,7 @@ is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 # check trial deletion - first, delete associated phenotypes
 #
-$trial->delete_phenotype_data();
+$trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass});
 
 ok($trial->phenotype_count() ==0, "phenotype data deleted");
 

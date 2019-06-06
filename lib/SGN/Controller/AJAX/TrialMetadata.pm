@@ -103,7 +103,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
 
     if ($datatype eq 'phenotypes') {
         $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-        $error .= $c->stash->{trial}->delete_phenotype_data();
+        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
     }
 
     elsif ($datatype eq 'layout') {
@@ -2066,29 +2066,29 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     my $trial = $c->stash->{trial};
 
     if (!$c->user()) {
-    	print STDERR "User not logged in... not deleting trait.\n";
-    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
-    	return;
+        print STDERR "User not logged in... not deleting trait.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+        return;
     }
 
     if ($self->privileges_denied($c)) {
-      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
-      return;
+        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+        return;
     }
 
     my $delete_trait_return_error;
     if ($pheno_ids){
-            my $phenotypes_ids = JSON::decode_json($pheno_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
+        my $phenotypes_ids = JSON::decode_json($pheno_ids);
+        $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $phenotypes_ids, [] );
     }
     if ($trait_ids){
         my $traits_ids = JSON::decode_json($trait_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
+        $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, [], $traits_ids );
     }
 
     if ($delete_trait_return_error) {
-      $c->stash->{rest} = { error => $delete_trait_return_error };
-      return;
+        $c->stash->{rest} = { error => $delete_trait_return_error };
+        return;
     }
 
     $c->stash->{rest} = { success => 1};

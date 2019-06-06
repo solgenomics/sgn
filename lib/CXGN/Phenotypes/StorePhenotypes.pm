@@ -632,17 +632,20 @@ sub delete_previous_phenotypes {
     my $stocks_sql = join ("," , @{$trait_and_stock_to_overwrite->{stocks}});
     my $traits_sql = join ("," , @{$trait_and_stock_to_overwrite->{traits}});
     my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     my $q_search = "
         SELECT phenotype_id, nd_experiment_id, file_id
         FROM phenotype
         JOIN nd_experiment_phenotype using(phenotype_id)
         JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN nd_experiment using(nd_experiment_id)
         LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
         WHERE stock.stock_id IN ($stocks_sql)
         AND phenotype.cvalue_id IN ($traits_sql)
-        AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql);
+        AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql)
+        AND nd_experiment.type_id = $nd_experiment_type_id;
         ";
 
     my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
