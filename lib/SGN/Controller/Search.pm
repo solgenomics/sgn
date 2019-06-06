@@ -161,7 +161,10 @@ sub directory_search : Path('/search/directory') Args(0) {
 #}
 
 sub images_search : Path('/search/images') Args(0) {
-    $_[1]->stash->{content} = CXGN::Search::CannedForms->image_search_form();
+    my $self = shift;
+    my $c = shift;
+    
+    #$_[1]->stash->{content} = CXGN::Search::CannedForms->image_search_form();
 }
 
 
