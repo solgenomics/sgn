@@ -117,7 +117,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <div class="well well-sm">
                 <ul>
                     <li>Here you can do a rough cropping of the stitched ortho image to focus only on the actual field experiment.</li>
-                    <li>Click on five points in the image to make a four-sided polygon.</li>
+                    <li>Click on four points in the image to make a four-sided polygon.</li>
                     <li>Only the last polygon that you draw will be used for the cropping.</li>
                 </ul>
                 <br/>
@@ -318,7 +318,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <div class="col-sm-6">
                         <input name="drone_imagery_standard_process_apply_indices_select" value="TGI" type="checkbox" checked> Triangular Greenness Index (TGI) <br/>
                         <input name="drone_imagery_standard_process_apply_indices_select" value="VARI" type="checkbox" checked> Visible Atmospheric Resistant Index (VARI) <br/>
-                        <input name="drone_imagery_standard_process_apply_indices_select" value="NDVI" type="checkbox" checked> Normalized difference vegetative index (NDVI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="NDVI" type="checkbox" checked> Normalized Difference Vegetative Index (NDVI) <br/>
+                        <input name="drone_imagery_standard_process_apply_indices_select" value="NDRE" type="checkbox" checked> Normalized Difference Red Edge Vegetative Index (NDRE) <br/>
                     </div>
                 </div>
             </form>
@@ -402,7 +403,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <div class="well well-sm">
         <ul>
             <li>Here you can do a rough cropping of the stitched ortho image to focus only on the actual field experiment.</li>
-            <li>Click on five points in the image to make a four-sided polygon.</li>
+            <li>Click on four points in the image to make a four-sided polygon.</li>
             <li>Only the last polygon that you draw will be used for the cropping.</li>
         </ul>
         <br/>

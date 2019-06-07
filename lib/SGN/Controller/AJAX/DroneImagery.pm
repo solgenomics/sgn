@@ -3665,6 +3665,62 @@ sub standard_process_apply_POST : Args(0) {
             $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', $user_id, $user_name, $user_role, 0);
         }
     }
+    if (exists($vegetative_indices_hash{'NDRE'})) {
+        if(exists($selected_drone_run_band_types{'NIR (750-900nm)'}) && exists($selected_drone_run_band_types{'Red Edge (690-750nm)'}) ) {
+            my $merged_return = _perform_image_merge($c, $bcs_schema, $metadata_schema, $drone_run_project_id, $drone_run_project_name, $selected_drone_run_band_types{'NIR (750-900nm)'}, $selected_drone_run_band_types{'Red Edge (690-750nm)'}, $selected_drone_run_band_types{'NIR (750-900nm)'}, 'NReN', $user_id, $user_name, $user_role);
+            my $merged_image_id = $merged_return->{merged_image_id};
+            my $merged_drone_run_band_project_id = $merged_return->{merged_drone_run_band_project_id};
+
+            my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+            my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+            $archive_rotate_temp_image .= '.png';
+            print STDERR $archive_rotate_temp_image."\n";
+
+            my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $merged_drone_run_band_project_id, $merged_image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image);
+            my $rotated_image_id = $rotate_return->{rotated_image_id};
+
+            $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+            my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+            $archive_temp_image .= '.png';
+            print STDERR $archive_temp_image."\n";
+
+            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $cropping_value, $user_id, $user_name, $user_role, $archive_temp_image);
+            my $cropped_image_id = $cropping_return->{cropped_image_id};
+
+            $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
+            my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
+            $archive_denoise_temp_image .= '.png';
+            print STDERR $archive_denoise_temp_image."\n";
+
+            my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
+            my $denoised_image_id = $denoise_return->{denoised_image_id};
+
+            my $index_return = _perform_vegetative_index_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, 'NDRE', 0, 'NReN', $user_id, $user_name, $user_role);
+            my $index_image_id = $index_return->{index_image_id};
+
+            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id,   $plot_polygons_value, 'observation_unit_polygon_ndre_imagery', $user_id, $user_name, $user_role, 0);
+
+            $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+            my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+            $archive_remove_background_temp_image .= '.png';
+            print STDERR $archive_remove_background_temp_image."\n";
+
+            my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $index_image_id, $merged_drone_run_band_project_id, 'threshold_background_removed_ndre_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+            my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
+
+            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_background_removed_ndre_imagery', $user_id, $user_name, $user_role, 0);
+
+            my $threshold_masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_thresholded_ndre_mask_original', $user_id, $user_name, $user_role);
+            my $threshold_masked_image_id = $threshold_masked_return->{masked_image_id};
+
+            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery', $user_id, $user_name, $user_role, 0);
+
+            my $masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $index_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_ndre_mask_original', $user_id, $user_name, $user_role);
+            my $masked_image_id = $masked_return->{masked_image_id};
+
+            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery', $user_id, $user_name, $user_role, 0);
+        }
+    }
 
     $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
