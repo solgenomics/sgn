@@ -255,7 +255,7 @@ CREATE TABLE if not exists phenome.project_md_image (
     constraint project_md_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES metadata.md_image (image_id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION,
     constraint project_md_image_type_id_fkey FOREIGN KEY (type_id) REFERENCES cvterm (cvterm_id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION
 );
-grant select,insert on table phenome.project_md_image to web_usr;
+grant select,insert,delete on table phenome.project_md_image to web_usr;
 grant usage on phenome.project_md_image_project_md_image_id_seq to web_usr;
 
 CREATE TABLE if not exists phenome.nd_experiment_md_images (
