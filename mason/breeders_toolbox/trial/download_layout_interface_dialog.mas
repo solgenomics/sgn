@@ -153,7 +153,7 @@ jQuery(document).ready(function() {
     jQuery("#trial_download_layout_button").click( function () {
         show_available_columns_TrialLayout('plots');
         var lo = new CXGN.List();
-        jQuery('#create_fieldbook_with_trait_list_TrialLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialLayout', [ 'traits' ], 'select'));
+        jQuery('#create_fieldbook_with_trait_list_TrialLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialLayout', [ 'traits' ], 'select', undefined, undefined));
         jQuery('#accession_average_performance').css("display", "inline-block");
         jQuery('#selected_columns_well').css("display", "inline-block");
         jQuery('#management_factore').css("display", "inline-block");
@@ -168,7 +168,7 @@ jQuery(document).ready(function() {
         jQuery("#create_fieldbook_data_level_TrialFieldMapLayout").prop('disabled', 'disabled');
         show_available_columns_TrialFieldMapLayout('plots');
         var lo = new CXGN.List();
-        jQuery('#create_fieldbook_with_trait_list_TrialFieldMapLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialFieldMapLayout', [ 'traits' ], 'select'));
+        jQuery('#create_fieldbook_with_trait_list_TrialFieldMapLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialFieldMapLayout', [ 'traits' ], 'select', undefined, undefined));
         jQuery('#accession_average_performance').css("display", "none");
         jQuery('#selected_columns_well').css("display", "none");
         jQuery('#create_fieldbook_dialog_TrialFieldMapLayout').modal('show');
@@ -178,7 +178,7 @@ jQuery(document).ready(function() {
     jQuery("[name='create_fieldbook_link']").click( function () {
         show_available_columns_Fieldbook('plots');
         var lo = new CXGN.List();
-        jQuery('#create_fieldbook_with_trait_list_Fieldbook').html(lo.listSelect('create_fieldbook_with_trait_list_select_Fieldbook', [ 'traits' ], 'select'));
+        jQuery('#create_fieldbook_with_trait_list_Fieldbook').html(lo.listSelect('create_fieldbook_with_trait_list_select_Fieldbook', [ 'traits' ], 'select', undefined, undefined));
         jQuery('#create_fieldbook_dialog_Fieldbook').modal('show');
         show_fieldbook_treatments_Fieldbook();
     });

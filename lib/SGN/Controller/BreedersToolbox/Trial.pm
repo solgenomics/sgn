@@ -335,7 +335,71 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $output = read_file($tempfile);
 
     $c->res->body($output);
+}
 
+sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $format = $c->req->param("format") || "xls";
+    my $data_level = $c->req->param("dataLevel") || "plot";
+    my $genotyping_trial_id = $c->req->param("genotyping_trial_id");
+    my @genotyping_trial_id_list = $c->req->param("genotyping_trial_id_list") ? split ',', $c->req->param("genotyping_trial_id_list") : ();
+
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    if ($data_level eq 'plate'){
+        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1,
+        'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+    }
+
+    my $plugin = "";
+    if ($format eq "intertekxls") {
+        $plugin = "GenotypingTrialLayoutIntertekXLS";
+    }
+    if ($format eq "dartseqcsv") {
+        $plugin = "GenotypingTrialLayoutDartSeqCSV";
+    }
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "genotyping_plate_layouts"."XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".$format";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    print STDERR "TEMPFILE : $tempfile\n";
+
+    my $trial_download_args = {
+        bcs_schema => $schema,
+        trial_list => \@genotyping_trial_id_list,
+        filename => $tempfile,
+        format => $plugin,
+        data_level => $data_level,
+        selected_columns => $selected_cols
+    };
+    if ($genotyping_trial_id) {
+        $trial_download_args->{trial_id} = $genotyping_trial_id;
+    }
+    my $download = CXGN::Trial::Download->new($trial_download_args);
+    my $error = $download->download();
+
+    if ($format eq 'intertekxls'){
+        $format = 'xls';
+    }
+    if ($format eq 'dartseqcsv'){
+        $format = 'csv';
+    }
+
+    my $file_name = "genotyping_plate_layouts.$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 }
 
 sub _parse_list_from_json {

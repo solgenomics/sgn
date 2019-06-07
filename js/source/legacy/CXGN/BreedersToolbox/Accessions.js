@@ -37,7 +37,7 @@ function enable_ui() {
 jQuery(document).ready(function ($) {
 
     jQuery('#manage_accessions_populations_new').click(function(){
-        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"] ));
+        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"], undefined, undefined, undefined ));
         jQuery('#manage_populations_add_population_dialog').modal('show');
     });
 
@@ -139,7 +139,7 @@ jQuery(document).ready(function ($) {
     jQuery(document).on("click", "a[name='manage_populations_add_accessions']", function(){
         population_id = jQuery(this).data('population_id');
         population_name = jQuery(this).data('population_name');
-        jQuery("#add_accession_to_population_list_div").html(list.listSelect("add_accession_to_population_list_div", ["accessions"] ));
+        jQuery("#add_accession_to_population_list_div").html(list.listSelect("add_accession_to_population_list_div", ["accessions"], undefined, undefined, undefined));
         jQuery('#add_accession_population_name').html(population_name);
         jQuery('#manage_populations_add_accessions_dialog').modal('show');
     });
@@ -392,7 +392,7 @@ jQuery(document).ready(function ($) {
         $('#review_found_matches_dialog').modal("hide");
         $('#review_fuzzy_matches_dialog').modal("hide");
         $('#review_absent_dialog').modal("hide");
-        $("#list_div").html(list.listSelect("list_div", ["accessions"] ));
+        $("#list_div").html(list.listSelect("list_div", ["accessions"], undefined, undefined, undefined));
     });
 
     jQuery('#accessions_upload_spreadsheet_format_info').click(function(){

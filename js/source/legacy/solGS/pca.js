@@ -14,7 +14,7 @@ jQuery(document).ready( function() {
     
         var list = new CXGN.List();
         
-        var listMenu = list.listSelect("pca_genotypes", ['accessions', 'trials']);
+        var listMenu = list.listSelect("pca_genotypes", ['accessions', 'trials'], undefined, undefined, undefined);
        
 	if (listMenu.match(/option/) != null) {
             

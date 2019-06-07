@@ -130,10 +130,10 @@ jQuery(document).ready(function() {
     var opened_already = 0;
     jQuery('#trials_download_phenotypes_button').click( function () {
         if (opened_already == 0) {
-            jQuery("#download_trials_phenotypes_traits").append(list.listSelect("download_trials_phenotypes_traits", [ 'traits' ], 'None' ));
-            jQuery("#download_trials_phenotypes_accessions").append(list.listSelect("download_trials_phenotypes_accessions", [ 'accessions' ], 'None' ));
-            jQuery("#download_trials_phenotypes_plots").append(list.listSelect("download_trials_phenotypes_plots", [ 'plots' ], 'None' ));
-            jQuery("#download_trials_phenotypes_plants").append(list.listSelect("download_trials_phenotypes_plants", [ 'plants' ], 'None' ));
+            jQuery("#download_trials_phenotypes_traits").append(list.listSelect("download_trials_phenotypes_traits", [ 'traits' ], 'None', undefined, undefined));
+            jQuery("#download_trials_phenotypes_accessions").append(list.listSelect("download_trials_phenotypes_accessions", [ 'accessions' ], 'None', undefined, undefined));
+            jQuery("#download_trials_phenotypes_plots").append(list.listSelect("download_trials_phenotypes_plots", [ 'plots' ], 'None', undefined, undefined));
+            jQuery("#download_trials_phenotypes_plants").append(list.listSelect("download_trials_phenotypes_plants", [ 'plants' ], 'None', undefined, undefined));
             opened_already = 1;
         }
         jQuery('#download_trials_phenotypes_dialog').modal("show");
