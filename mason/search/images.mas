@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title => "Image Search" &>
 
@@ -85,6 +85,10 @@ jQuery(document).ready(function () {
         if( code == 13 ) {
             jQuery('#image_search_submit').click();
         }
+    });
+
+    jQuery('#images_search_results').on( 'draw.dt', function () {
+        jQuery('a.image_search_group').colorbox();
     });
 
 });

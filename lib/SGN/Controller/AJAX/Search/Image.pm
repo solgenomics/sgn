@@ -82,14 +82,22 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     my @return;
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
-        my $thumbnail = $image->get_img_src_tag('tiny');
         my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}.") : <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {
             push @tags, $t->{name};
         }
+        my $image_id = $image->get_image_id;
+        my $image_name = $image->get_name() || '';
+        my $image_description = $image->get_description() || '';
+        my $image_img = $image->get_image_url("medium");
+        my $original_img = $image->get_image_url("large");
+        my $small_image = $image->get_image_url("tiny");
+        my $image_page = "/image/view/$image_id";
+        my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" height="30" border="0" alt="$image_description" /></a>|;
+
         push @return, [
-            $thumbnail,
+            $colorbox,
             "<a href='/image/view/".$_->{image_id}."' >".$_->{image_original_filename}."</a>",
             $_->{image_description},
             "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{image_sp_person_id}."' >".$_->{image_username}."</a>",
