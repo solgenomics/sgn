@@ -25,6 +25,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use JSON;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -387,7 +388,6 @@ sub search {
     my @result;
     my $total_count = 0;
     while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $tags, $full_count) = $h->fetchrow_array()) {
-
         push @result, {
             image_id => $image_id,
             image_name => $image_name,
@@ -403,11 +403,11 @@ sub search {
             stock_id => $stock_id,
             stock_uniquename => $stock_uniquename,
             stock_type_name => $stock_type_name,
-            tags_hash => $tags
+            tags_array => decode_json $tags
         };
         $total_count = $full_count;
     }
-    print STDERR Dumper \@result;
+    #print STDERR Dumper \@result;
     return (\@result, $total_count);
 }
 

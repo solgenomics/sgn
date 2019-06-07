@@ -8,6 +8,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 use Data::Dumper;
 use JSON;
 use CXGN::Image::Search;
+use SGN::Image;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -26,27 +27,49 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     my $params = $c->req->params() || {};
     #print STDERR Dumper $params;
 
-    my $owner_first_name;
-    my $owner_last_name;
-    if (exists($params->{image_person} ) && $params->{image_person} ) {
-        my $editor = $params->{image_person};
-        my @split = split ',' , $editor;
-        $owner_first_name = $split[0];
-        $owner_last_name = $split[1];
-        $owner_first_name =~ s/\s+//g;
-        $owner_last_name =~ s/\s+//g;
+    my @descriptors;
+    if (exists($params->{image_description_filename_composite}) && $params->{image_description_filename_composite}) {
+        push @descriptors, $params->{image_description_filename_composite};
     }
 
-    my $rows = $params->{length};
+    my @tags;
+    if (exists($params->{image_tag}) && $params->{image_tag}) {
+        push @tags, $params->{image_tag};
+    }
+
+    my @stock_name_list;
+    if (exists($params->{image_stock_uniquename}) && $params->{image_stock_uniquename}) {
+        push @stock_name_list, $params->{image_stock_uniquename};
+    }
+
+    my @first_names;
+    my @last_names;
+    if (exists($params->{image_person} ) && $params->{image_person} ) {
+        my @split = split ',' , $params->{image_person};
+        my $first_name = $split[0];
+        my $last_name = $split[1];
+        $first_name =~ s/\s+//g;
+        $last_name =~ s/\s+//g;
+        push @first_names, $first_name;
+        push @last_names, $last_name;
+    }
+
+    my $limit = $params->{length};
     my $offset = $params->{start};
-    my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
 
     my $image_search = CXGN::Image::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
+        submitter_first_name_list=>\@first_names,
+        submitter_last_name_list=>\@last_names,
+        image_name_list=>\@descriptors,
+        original_filename_list=>\@descriptors,
+        description_list=>\@descriptors,
+        stock_name_list=>\@stock_name_list,
+        tag_list=>\@tags,
         limit=>$limit,
-        offset=>$offset,
+        offset=>$offset
     });
     my ($result, $records_total) = $image_search->search();
 
@@ -55,9 +78,24 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         $draw =~ s/\D//g; # cast to int
     }
 
-    print STDERR Dumper $result;
+    #print STDERR Dumper $result;
     my @return;
     foreach (@$result){
+        my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
+        my $thumbnail = $image->get_img_src_tag('tiny');
+        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}.") : <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
+        my @tags;
+        foreach my $t (@{$_->{tags_array}}) {
+            push @tags, $t->{name};
+        }
+        push @return, [
+            $thumbnail,
+            "<a href='/image/view/".$_->{image_id}."' >".$_->{image_original_filename}."</a>",
+            $_->{image_description},
+            "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{image_sp_person_id}."' >".$_->{image_username}."</a>",
+            $associations,
+            (join ', ', @tags)
+        ];
     }
 
     #print STDERR Dumper \@return;
