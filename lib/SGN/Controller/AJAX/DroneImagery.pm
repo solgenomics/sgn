@@ -4541,15 +4541,19 @@ sub _perform_phenotype_automated {
         'observation_unit_polygon_tgi_imagery',
         'observation_unit_polygon_vari_imagery',
         'observation_unit_polygon_ndvi_imagery',
+        'observation_unit_polygon_ndre_imagery',
         'observation_unit_polygon_background_removed_tgi_imagery',
         'observation_unit_polygon_background_removed_vari_imagery',
         'observation_unit_polygon_background_removed_ndvi_imagery',
+        'observation_unit_polygon_background_removed_ndre_imagery',
         'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery',
         'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery',
         'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery',
+        'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery',
         'observation_unit_polygon_original_background_removed_tgi_mask_imagery',
         'observation_unit_polygon_original_background_removed_vari_mask_imagery',
         'observation_unit_polygon_original_background_removed_ndvi_mask_imagery',
+        'observation_unit_polygon_original_background_removed_ndre_mask_imagery',
         'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1',
         'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1',
         'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1',
@@ -4701,6 +4705,7 @@ sub _perform_phenotype_calculation {
     my $threshold_background_removed_tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'TGI with Background Removed via Threshold|ISOL:0000046')->cvterm_id;
     my $threshold_background_removed_vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'VARI with Background Removed via Threshold|ISOL:0000047')->cvterm_id;
     my $threshold_background_removed_ndvi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI with Background Removed via Threshold|ISOL:0000048')->cvterm_id;
+    my $threshold_background_removed_ndre_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDRE with Background Removed via Threshold|ISOL:0000118')->cvterm_id;
 
     my $channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 in Denoised Original Image with Background Removed via Original TGI Mask|ISOL:0000025')->cvterm_id;
     my $channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Channel 1 in Denoised Original Image with Background Removed via Thresholded TGI Mask|ISOL:0000026')->cvterm_id;
@@ -4742,6 +4747,7 @@ sub _perform_phenotype_calculation {
     my $ft_hpf30_tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 TGI From Denoised Original Image|ISOL:0000064')->cvterm_id;
     my $ft_hpf30_vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 VARI From Denoised Original Image|ISOL:0000065')->cvterm_id;
     my $ft_hpf30_ndvi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 NDVI From Denoised Original Image|ISOL:0000066')->cvterm_id;
+    my $ft_hpf30_ndre_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 NDRE From Denoised Original Image|ISOL:0000117')->cvterm_id;
 
     my $ft_hpf30_channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Original TGI Mask|ISOL:0000067')->cvterm_id;
     my $ft_hpf30_channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FT HPF 30 Channel 1 in Denoised Original Image with Background Removed via Thresholded TGI Mask|ISOL:0000068')->cvterm_id;
@@ -5323,6 +5329,42 @@ sub _perform_phenotype_calculation {
             }
         }
     }
+
+    #33 plot polygon image types currently
+    #Merged 3 Bands NRN|Channel 3 in Denoised Original Image with Background Removed via Original NDVI Mask
+    #Merged 3 Bands NRN|Channel 2 in Denoised Original Image with Background Removed via Original NDVI Mask
+    #Merged 3 Bands NRN|Channel 1 in Denoised Original Image with Background Removed via Original NDVI Mask
+    #Merged 3 Bands NRN|Channel 3 in Denoised Original Image with Background Removed via Thresholded NDVI Mask
+    #Merged 3 Bands NRN|Channel 2 in Denoised Original Image with Background Removed via Thresholded NDVI Mask
+    #Merged 3 Bands NRN|Channel 1 in Denoised Original Image with Background Removed via Thresholded NDVI Mask
+    #Merged 3 Bands NRN|NDVI with Background Removed via Threshold
+    #Merged 3 Bands NRN|NDVI From Denoised Original Image
+    #Merged 3 Bands BGR|Channel 3 in Denoised Original Image with Background Removed via Original VARI Mask
+    #Merged 3 Bands BGR|Channel 2 in Denoised Original Image with Background Removed via Original VARI Mask
+    #Merged 3 Bands BGR|Channel 1 in Denoised Original Image with Background Removed via Original VARI Mask
+    #Merged 3 Bands BGR|Channel 3 in Denoised Original Image with Background Removed via Original TGI Mask
+    #Merged 3 Bands BGR|Channel 2 in Denoised Original Image with Background Removed via Original TGI Mask
+    #Merged 3 Bands BGR|Channel 1 in Denoised Original Image with Background Removed via Original TGI Mask
+    #Merged 3 Bands BGR|Channel 3 in Denoised Original Image with Background Removed via Thresholded VARI Mask
+    #Merged 3 Bands BGR|Channel 2 in Denoised Original Image with Background Removed via Thresholded VARI Mask
+    #Merged 3 Bands BGR|Channel 1 in Denoised Original Image with Background Removed via Thresholded VARI Mask
+    #Merged 3 Bands BGR|Channel 3 in Denoised Original Image with Background Removed via Thresholded TGI Mask
+    #Merged 3 Bands BGR|Channel 2 in Denoised Original Image with Background Removed via Thresholded TGI Mask
+    #Merged 3 Bands BGR|Channel 1 in Denoised Original Image with Background Removed via Thresholded TGI Mask
+    #Merged 3 Bands BGR|VARI with Background Removed via Threshold
+    #Merged 3 Bands BGR|TGI with Background Removed via Threshold
+    #Merged 3 Bands BGR|VARI From Denoised Original Image
+    #Merged 3 Bands BGR|TGI From Denoised Original Image
+    #Red Edge (690-750nm)|FT HPF 30 Channel 1 in Denoised Original Red Edge Image
+    #Red Edge (690-750nm)|Channel 1 in Denoised Original Red Edge Image with Background Removed via Threshold
+    #NIR (750-900nm)|Channel 1 in Denoised Original NIR Image with Background Removed via Threshold
+    #Red (600-690nm)|FT HPF 30 Channel 1 in Denoised Original Red Image
+    #RED
+    #Green FT
+    #Green
+    #Blue FT
+    #Blue
+
     if (!$drone_run_band_plot_polygons_preprocess_cvterm_id) {
         die "Could not get preprocess cvterm for $plot_polygons_type\n";
     }
