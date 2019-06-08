@@ -32,6 +32,7 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
 
     my $req_page = $c->req->param('page');
     my $args     = $c->req->param('args');
+    
     my $json     = JSON->new();
     $args        = $json->decode($args);
        
@@ -44,6 +45,7 @@ sub _check_cached_output {
     my ($self, $c, $req_page, $args) = @_;
 
     $c->stash->{rest}{cached} = undef;
+    $c->stash->{training_traits_ids} = $args->{training_traits_ids};
     
     if ($req_page =~ /solgs\/population\//)
     { 
@@ -82,8 +84,6 @@ sub _check_cached_output {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
 	my $trait_id   = $args->{trait_id}[0];
-
-	$c->stash->{selected_analyzed_traits} = $args->{training_traits_ids};
 	
 	$c->stash->{data_set_type} = $args->{data_set_type};
 
@@ -106,7 +106,7 @@ sub _check_cached_output {
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $traits_ids = $args->{trait_id};
+	my $traits_ids = $args->{training_traits_ids};
 	
 	$self->_check_single_trial_model_all_traits_output($c, $tr_pop_id, $traits_ids);	
     }  
@@ -114,7 +114,7 @@ sub _check_cached_output {
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $traits     = $args->{trait_id};
+	my $traits     = $args->{training_traits_ids};
 	
 	$c->stash->{data_set_type} = $args->{data_set_type};
 	
@@ -235,9 +235,16 @@ sub _check_selection_pop_all_traits_output {
  
     if ($sel_traits_ids->[0]) 
     {
-	if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+	if (scalar(@$sel_traits_ids) == scalar(@$training_models_traits))
 	{
-	    $c->stash->{rest}{cached} = 1;
+	    if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+	    {
+		$c->stash->{rest}{cached} = 1;
+	    }
+	    else 
+	    {
+		$c->stash->{rest}{cached} = 0;
+	    }
 	}
     }
 }
