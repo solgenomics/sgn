@@ -199,9 +199,6 @@ sub analysis_report_job_args {
 	'err_file' => $err_file
      };
 
-
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-  
     my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis-report-args');
     nstore $analysis_details, $report_file 
 	or croak "analysis_report_job_args: $! serializing output_details to $report_file";
@@ -308,48 +305,26 @@ sub parse_arguments {
       {
 	  if ($k eq 'combo_pops_id') 
 	  {
-	      $c->stash->{combo_pops_id}   = @{ $arguments->{$k} }[0];
-	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];	      
+	      $c->stash->{combo_pops_id}   = @{$arguments->{$k}}[0];
+	      $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];	      
 	  }
 
 	  if ($k eq 'training_pop_id' || $k eq 'model_id') 
 	  {		 
-	      if (reftype($arguments->{k}) eq 'ARRAY')
+	      $c->stash->{pop_id}          = @{$arguments->{$k}}[0];
+	      $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];
+	      $c->stash->{model_id}        = @{$arguments->{$k}}[0];
+	      
+	      if ($data_set_type =~ /combined populations/)
 	      {
-		  $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
-		  $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
-		  $c->stash->{model_id}        = @{ $arguments->{$k} }[0];
-		  
-		  if ($data_set_type =~ /combined populations/)
-		  {
-		      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
-		  }
-	      }
-	      else 
-	      {
-		  $c->stash->{pop_id}          = @{$arguments->{$k}}[0];
-		  $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];
-		  $c->stash->{model_id}        = @{$arguments->{$k}}[0];
-		  
-		  if ($data_set_type =~ /combined populations/)
-		  {
-		      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];;
-		  }
+		  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];;
 	      }
 	  }
 	  
 	  if ($k eq 'selection_pop_id') 
 	  {
-	      if (reftype($arguments->{k}) eq 'ARRAY')
-	      {
-		  $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
-		  $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
-	      }
-	      else
-	      {
-		  $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
-		  $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
-	      }
+	      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
+	      $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
 	  }
 
 	  if ($k eq 'combo_pops_list') 
@@ -365,43 +340,26 @@ sub parse_arguments {
 
 	  if ($k eq 'trait_id') 
 	  { 
-	    if (reftype($arguments->{$k}) eq 'ARRAY') 
-	    {
-		$c->stash->{selected_traits} = $arguments->{$k}; 
-	      
-		if (scalar(@{$arguments->{$k}}) == 1)
-		{
-		    $c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
-		}
-	    }
-	    else 
-	    {	
-		print STDERR "\n\nparse args trait id selected traits: @{$arguments->{$k}}\n\n";
-		$c->stash->{selected_traits} = $arguments->{$k}; 
-	      
-		if (scalar(@{$arguments->{$k}}) == 1)
-		{
-		    $c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
-		}
-	    }
+	  	if ($arguments->{$k}->[0])
+	  	{
+		    my $scala = $arguments->{$k}->[0];
+		    print STDERR "\n count tr ids: $scala\n";
+		    if (scalar(@{$arguments->{$k}}) == 1)
+		    {
+			$c->stash->{trait_id} = $arguments->{$k}->[0];
+			$c->stash->{training_traits_ids} = [$arguments->{$k}->[0]];
+		    }
+	  	}
 	  }
 
 	  if ($k eq 'training_traits_ids')
-	  {
-	       print STDERR "\n\nparse args training_traits_ids.....\n\n";
-	      if (reftype($arguments->{$k}) eq 'ARRAY') 
-	      {
-		  my @selected_traits = @{ $arguments->{$k} };
-		    print STDERR "\n\nparse args training_traits_ids..... selectd traits: @selected_traits\n\n";
-		 
-		  $c->stash->{selected_traits} =  $arguments->{$k}; 
-		  $c->stash->{training_traits_ids} =  $arguments->{$k};		 
+	  {	     
+	      $c->stash->{training_traits_ids} = $arguments->{$k};		 
 	      
-		if (scalar(@selected_traits) == 1)
-		{
-		    $c->stash->{trait_id} = @{ $arguments->{$k} }[0]; 
-		}
-	    }
+	      if (scalar(@{$arguments->{$k}}) == 1)
+	      {
+		    $c->stash->{trait_id} = $arguments->{$k}->[0]; 
+	      }
 	      
 	  }
 	  
@@ -439,19 +397,12 @@ sub structure_output_details {
     my ($self, $c) = @_;
 
     my $analysis_data =  $c->stash->{analysis_profile};
-    my $arguments = $analysis_data->{arguments};
-    
-    $self->parse_arguments($c);
    
-    my @traits_ids;
-    
-    if ($c->stash->{selected_traits}) 
-    {
-	@traits_ids = @{$c->stash->{selected_traits}};
-    }
-   
+    my @traits_ids = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+        
     my $pop_id        = $c->stash->{pop_id}; 
     my $combo_pops_id = $c->stash->{combo_pops_id};
+   
    
     my $referer = $c->req->referer;
     my $base = $c->req->base; 
@@ -573,34 +524,8 @@ sub structure_output_details {
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\// ) 
     {	
-	#my @traits_with_valid_models;
-	my @traits_ids;
-	if ($referer =~ /solgs\/trait\/|solgs\/model\/combined\/populations\//) 
-	{
-	    push @traits_ids, $c->stash->{trait_id};
-	}
-	else 
-	{    
-	    $c->controller('solGS::solGS')->traits_with_valid_models($c);
-	    my $traits_with_valid_models = $c->stash->{traits_with_valid_models};
-	    
-	    foreach  my $trait_abbr (@$traits_with_valid_models) {
-	    	$c->stash->{trait_abbr} = $trait_abbr;	    
-	    	$c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);
-		  
-	    	my $trait_id = $c->stash->{trait_id};
-	    	push @traits_ids, $trait_id;		
-	    }
-
-	   # @traits_ids = @{$c->stash->{selected_traits}};
-			    
-	}
-	print STDERR "\n\noutput details: trait ids @traits_ids\n\n";
-	my @sel_traits = @{$c->stash->{selected_traits}};
-		print STDERR "\n\noutput details: sel traits ids @sel_traits\n\n";
 	foreach my $trait_id (@traits_ids)
 	{
-	    print STDERR "\n\noutput details: trait id - $trait_id\n\n";
 	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	    my $trait_id = $c->stash->{trait_id};	    
 	    my $trait_abbr = $c->stash->{trait_abbr};
@@ -738,184 +663,32 @@ sub run_analysis {
     
     my $analysis_profile = $c->stash->{analysis_profile};
     my $analysis_page    = $analysis_profile->{analysis_page};
+    $c->stash->{analysis_page} = $analysis_page;
+    
     my $base             = $c->req->base;
     $analysis_page       =~ s/$base//; 
     my $referer          = $c->req->referer; 
    
-    my @selected_traits = @{$c->stash->{selected_traits}} if $c->stash->{selected_traits};
- 
+    my @selected_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+     
     eval
     {
-	if ($analysis_page =~ /solgs\/traits\/all\/population\//) 
-	{  
-	    $c->controller('solGS::solGS')->build_multiple_traits_models($c);	
-	} 
-	elsif ($analysis_page =~  /solgs\/models\/combined\/trials\// )
-	{
-	    if ($c->stash->{data_set_type} =~ /combined populations/)
-	    {
-		foreach my $trait_id (@selected_traits)		
-		{
-		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   	
-		    $c->controller('solGS::combinedTrials')->combine_data_build_model($c);
-		}
-	    }
-	}
-	elsif ($analysis_page =~ /solgs\/model\/combined\/trials\// )	  
-	{
-	    my $trait_id = $c->stash->{selected_traits}->[0];
-	    my $combo_pops_id = $c->stash->{combo_pops_id};
-
-	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-	    $c->controller('solGS::combinedTrials')->combine_data_build_model($c);
-	    
-	}
-	elsif ($analysis_page =~ /solgs\/trait\//) 
-	{
-	    $c->stash->{trait_id} = $selected_traits[0];
-	    $c->controller('solGS::solGS')->build_single_trait_model($c);
-	}
-	elsif ($analysis_page =~ /solgs\/population\//)
-	{
-	    my $pop_id = $c->stash->{model_id};	  
-	  
-	    if ($pop_id =~ /list/)		
-	    {
-		my $list_id = $pop_id;
-		$list_id =~ s/list_//;
-		$c->stash->{list_id} = $list_id;
-        
-		$c->controller('solGS::List')->plots_list_phenotype_file($c);
-		$c->controller('solGS::List')->genotypes_list_genotype_file($c, $pop_id);
-		$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
-	    }
-	    else
-	    {
-		$c->controller('solGS::solGS')->phenotype_file($c);	
-		$c->controller('solGS::solGS')->genotype_file($c);
-	    }
-	}
-	elsif ($analysis_page =~ /solgs\/populations\/combined\//)
-	{
-	    my $combo_pops_id = $c->stash->{combo_pops_id};
-	    $c->controller("solGS::combinedTrials")->prepare_multi_pops_data($c);	
-	    
-	    #$c->stash->{dependency} = $c->stash->{prerequisite_jobs};
-	    #$c->stash->{dependency_type} = 'download_data';
-	    #$c->stash->{job_type}  = 'send_analysis_report';
-
-	    #if ($c->stash->{dependency})
-	    #{
-	#	$c->controller("solGS::solGS")->run_async($c);
-	    # }
-
-
-
-	    
-	    #my $combined_pops_list = $c->controller("solGS::combinedTrials")->get_combined_pops_arrayref($c);
-	    #$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $combined_pops_list);
-	    #my $g_files = $c->stash->{multi_pops_geno_files};
-	    #my @geno_files = split(/\t/, $g_files);
-	    #$c->controller('solGS::solGS')->submit_cluster_compare_trials_markers($c, \@geno_files);
-	}
-	elsif ($analysis_page =~ /solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\//)
-	{
-
-	    $c->stash->{dependency_type} = 'selection_pop_download_data';
-	    
-	    if ($referer =~ /solgs\/trait\//)
-	    {
-		my $training_pop_id   = $c->stash->{training_pop_id};                          
-		my $selection_pop_id  = $c->stash->{selection_pop_id};
-
+	my $training_pages = 'solgs\/traits\/all\/population\/'
+	    . '|solgs\/models\/combined\/trials\/'
+	    . '|solgs\/trait\/'
+	    . '|solgs\/model\/combined\/trials\/';
 	
-		if ($selection_pop_id =~ /list/)
-		{
-		    my $list_id = $selection_pop_id;
-		    $list_id =~ s/list_//;
-		    $c->stash->{list_id} = $list_id;
-		    $c->controller('solGS::List')->get_genotypes_list_details($c);		      
-		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
-		    $c->controller('solGS::List')->predict_list_selection_pop_single_pop_model($c);
-		}
-		else
-		{
-		    $c->controller('solGS::solGS')->predict_selection_pop_single_trait($c);
-		}
-	    }
-	    elsif ($referer =~ /solgs\/traits\/all\/population\//) 
-	    {
-		my $training_pop_id   = $c->stash->{training_pop_id};                          
-		my $selection_pop_id  = $c->stash->{selection_pop_id};
-		print STDERR "\n\nselected traits $referer: @{$c->stash->{selected_traits}}\n\n";
-		print STDERR "\n\nselected traits training ids $referer: @{$c->stash->{training_traits_ids}}\n\n";
-		$c->stash->{selected_analyzed_traits} = $c->stash->{training_traits_ids};
-		if ($selection_pop_id =~ /list/)
-		{
-		    my $list_id = $selection_pop_id;
-		    $list_id =~ s/list_//;
-		    $c->stash->{list_id} = $list_id;
-		    
-		    $c->controller('solGS::List')->get_genotypes_list_details($c);
-		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
-		    $c->controller('solGS::List')->predict_list_selection_pop_multi_traits($c);
-		}
-		else
-		{
-		    $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
-		}
-	    }
-	    elsif ($referer =~ /\/combined\//) 
-	    {
-		my $selection_pop_id = $c->stash->{selection_pop_id};
-		
-		if ($selection_pop_id =~ /list/) 
-		{
-		    my $list_id = $selection_pop_id;
-		    $list_id =~ s/list_//g;
-		    $c->stash->{list_id} = $list_id;
-		    
-		    $c->controller('solGS::List')->get_genotypes_list_details($c);	    
-		    $c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);		    		   
-
-		    if ($referer =~ /solgs\/model\/combined\//) 
-		    {      
-			$c->controller('solGS::List')->predict_list_selection_pop_combined_pops_model($c);
-		    }
-		    else 
-		    {
-			$c->stash->{pop_id} = $c->stash->{combo_pops_id};
-			$c->controller("solGS::solGS")->traits_with_valid_models($c);
-			my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
-
-			foreach my $trait_abbr (@traits_with_valid_models) 
-			{  
-			    $c->stash->{trait_abbr} = $trait_abbr;
-			    $c->controller("solGS::solGS")->get_trait_details_of_trait_abbr($c);
-			    
-			    my $trait_id = $c->stash->{trait_id};
-			    my $trait_name = $c->stash->{trait_name};
-			    $c->controller('solGS::List')->predict_list_selection_pop_combined_pops_model($c);
-			}
-		    }
-		}
-		else
-		{
-		    $c->controller("solGS::solGS")->traits_with_valid_models($c);
-		    my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
-
-		    foreach my $trait_abbr (@traits_with_valid_models) 
-		    {
-			$c->stash->{trait_abbr} = $trait_abbr;
-			$c->controller("solGS::solGS")->get_trait_details_of_trait_abbr($c);
-			
-			my $trait_id = $c->stash->{trait_id};			
-			my $trait_name = $c->stash->{trait_name};
-		
-			$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
-		    }
-		}
-	    }	    
+	if ($analysis_page =~ /solgs\/population\/|solgs\/populations\/combined\//)
+	{
+	    $self->create_training_data($c);
+	}
+	elsif ($analysis_page =~ /$training_pages/) 
+	{
+	    $self->predict_training_traits($c);
+	}
+	elsif ($analysis_page =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+	{
+	    $self->predict_selection_traits($c);
 	}
 	else 
 	{
@@ -939,6 +712,116 @@ sub run_analysis {
  
 }
 
+
+sub create_training_data {
+    my ($self, $c) = @_;
+
+    my $analysis_page = $c->stash->{analysis_page};
+    if ($analysis_page =~ /solgs\/population\//)
+    {
+	my $pop_id = $c->stash->{model_id};	 
+    
+	if ($pop_id =~ /list/)		
+	{
+	    my $list_id = $pop_id;
+	    $list_id =~ s/list_//;
+	    $c->stash->{list_id} = $list_id;
+ 
+	    $c->controller('solGS::List')->submit_cluster_list_type_training_pop_data_query($c);
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
+	}
+	else
+	{
+	    $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id]);
+	}
+    }
+    elsif ($analysis_page =~ /solgs\/populations\/combined\//)
+    {
+	my $trials = $c->stash->{combo_pops_list};	
+	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials);	
+    }
+
+}
+
+
+sub predict_training_traits {
+    my ($self, $c) = @_;
+    
+    my $analysis_page = $c->stash->{analysis_page};
+    my $selected_traits = $c->stash->{training_traits_ids};
+  
+    if ($analysis_page =~ /solgs\/traits\/all\/population\//) 
+    {
+	$c->controller('solGS::solGS')->build_multiple_traits_models($c, $selected_traits);	
+    } 
+    elsif ($analysis_page =~  /solgs\/models\/combined\/trials\/|solgs\/model\/combined\/trials\// )
+    {
+	if ($c->stash->{data_set_type} =~ /combined populations/)
+	{
+	    $c->controller('solGS::combinedTrials')->combine_data_build_multiple_traits_models($c, $selected_traits);
+	}
+    }
+    elsif ($analysis_page =~ /solgs\/trait\//) 
+    {
+	$c->stash->{trait_id} = $selected_traits->[0] if !$c->stash->{trait_id};
+	$c->controller('solGS::solGS')->build_single_trait_model($c);
+    }
+    
+}
+
+sub predict_selection_traits {
+    my ($self, $c) = @_;
+
+    $c->stash->{prerequisite_type} = 'selection_pop_download_data';
+    my $training_pop_id   = $c->stash->{training_pop_id};    
+    my $selection_pop_id  = $c->stash->{selection_pop_id};
+    my $referer = $c->req->referer;
+    
+    if ($selection_pop_id =~ /list/)
+    {
+	my $list_id = $selection_pop_id;
+	$list_id =~ s/list_//;
+	$c->stash->{list_id} = $list_id;
+	$c->controller('solGS::List')->get_genotypes_list_details($c);		      
+	$c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
+    }
+        
+    if ($referer =~ /solgs\/trait\//)
+    {	
+	if ($selection_pop_id =~ /list/)
+	{
+	    $c->controller('solGS::List')->predict_list_selection_pop_single_pop_model($c);
+	}
+	else
+	{
+	    $c->controller('solGS::solGS')->predict_selection_pop_single_trait($c);
+	}
+    }
+    elsif ($referer =~ /solgs\/traits\/all\/population\//) 
+    {
+	if ($selection_pop_id =~ /list/)
+	{
+	    $c->controller('solGS::List')->predict_list_selection_pop_multi_traits($c);
+	}
+	else
+	{
+	    $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
+	}
+    }
+    elsif ($referer =~ /\/combined\//) 
+    {    		
+	if ($referer =~ /solgs\/models\/combined\/trials\//) 
+	{ 
+	    $c->stash->{pop_id} = $c->stash->{combo_pops_id};
+	    $c->controller("solGS::solGS")->traits_with_valid_models($c);
+	    my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
+	    $c->stash->{training_traits_ids} = \@traits_with_valid_models;
+	}
+	
+	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);	
+    }	    
+    
+}
 
 sub update_analysis_progress {
     my ($self, $c) = @_;
