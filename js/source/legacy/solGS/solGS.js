@@ -34,7 +34,7 @@ solGS.waitPage = function (page, args) {
 	} else {
 	    if (page.match(/list_/)) {
 		askUser(page, args)
-	    } else {	    
+	    } else {
 		checkCachedResult(page, args);
 	    }
 	}
@@ -50,7 +50,7 @@ solGS.waitPage = function (page, args) {
 
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
-
+	    
 	    if (args === undefined) {
 		args = {'training_traits_ids' : trainingTraitsIds};
 	    } else {
@@ -67,14 +67,12 @@ solGS.waitPage = function (page, args) {
 	    data    : {'page': page, 'args': args },
 	    url     : '/solgs/check/cached/result/',
 	    success : function(response) {
-		if (response.cached) {
+		if (response.cached) {		     
 		    args = JSON.parse(args);
-		    console.log('cache res page ' + page)
-		    console.log('cache res trait id ' + args.trait_id)
 		    displayAnalysisNow(page, args);
 		   
 		} else {
-		    if (window.location.href.match(/solgs\/search\//)) {
+		    if (document.URL.match(/solgs\/search\//)) {
 			args = JSON.parse(args);
 			askUser(page, args);
 			
@@ -261,8 +259,8 @@ solGS.waitPage = function (page, args) {
 
     function getTraitsSelectionId (page, args) {
 
-	var traitIds = args.trait_id;
-
+	var traitIds = args.training_traits_ids;
+	
 	jQuery.ajax({
 	    dataType: 'json',
 	    type    : 'POST',
@@ -433,7 +431,13 @@ solGS.waitPage = function (page, args) {
     function getArgsFromUrl (url, args) {
 
 	var referer = document.URL;
-    
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(','); 
+	    args['training_traits_ids'] = trainingTraitsIds;	   
+	}
+		
 	if (window.Prototype) {
 	    delete Array.prototype.toJSON;
 	}
@@ -676,7 +680,7 @@ jQuery(document).ready(function (){
 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
 	 var popId    = jQuery('#population_id').val(); 
-	 console.log('traits ids: ' + traitIds)
+	 
 	 if (traitIds.length) {	  
 	     var page;
 	     var analysisType;
@@ -737,12 +741,13 @@ jQuery(document).ready(function (){
 		 }	    
 	     }
 	    
-	     var args = {'trait_id'        : traitIds, 
+	     var args = {'trait_id'        : traitIds,
+			 'training_traits_ids': traitIds,
 			 'training_pop_id' : [ popId ], 
 			 'analysis_type'   : analysisType,
 			 'data_set_type'   : dataSetType,
 			};
-
+	     
 	     solGS.waitPage(page, args);
 	     
 	 } else {
