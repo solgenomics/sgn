@@ -145,8 +145,12 @@ function listGenCorPopulations ()  {
 
 function formatGenCorInputData (popId, type, indexFile) {
     var modelDetail = getPopulationDetails();
+
+    
     var traitsIds = jQuery('#training_traits_ids').val();
-    traitsIds = traitsIds.split(',');
+    if(traitsIds) {
+	traitsIds = traitsIds.split(',');
+    }
 
     console.log('formatGenCor: traitsIds ' + traitsIds)
     var modelId  = modelDetail.population_id;

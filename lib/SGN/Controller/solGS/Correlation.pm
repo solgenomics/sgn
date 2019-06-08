@@ -106,8 +106,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
     $c->stash->{training_pop_id} = $model_id;
-    $c->stash->{selected_analyzed_traits} = \@traits_ids;
-    
+    $c->stash->{training_traits_ids} = \@traits_ids;
     $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
  
     #$c->controller('solGS::Files')->selection_index_file($c);
