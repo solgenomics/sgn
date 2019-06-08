@@ -102,7 +102,7 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $trait_id         = $c->req->param('trait_id');
-    my @selection_pop_traits = $c->req->param('selection_traits[]');
+    my @selection_pop_traits = $c->req->param('training_traits_ids[]');
     
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_pop_id}  = $training_pop_id;
@@ -110,11 +110,11 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
 
     if (@selection_pop_traits)
     {
-	$c->stash->{selection_traits} =  \@selection_pop_traits;
+	$c->stash->{training_traits_ids} =  \@selection_pop_traits;
     } 
     else 
     {
-	$c->stash->{selection_traits} = [$trait_id];
+	$c->stash->{training_traits_ids} = [$trait_id];
     }
     
     my $ret->{boxplot} = undef;
@@ -209,7 +209,7 @@ sub boxplot_id {
     my $training_pop_id    = $c->stash->{training_pop_id};
     my $trait_id           = $c->stash->{trait_id};
 
-    my $multi_traits = $c->stash->{selection_traits};
+    my $multi_traits = $c->stash->{training_traits_ids};
     if (scalar(@$multi_traits) > 1) {
 
 	$trait_id = crc(join('', @$multi_traits));
@@ -278,7 +278,7 @@ sub boxplot_input_files {
 
     my @files_list;
 
-    foreach my $trait_id (uniq(@{$c->stash->{selection_traits}}))    
+    foreach my $trait_id (uniq(@{$c->stash->{training_traits_ids}}))    
     {
 	$c->stash->{trait_id} = $trait_id;
 	$self->get_training_pop_gebv_file($c);
@@ -293,7 +293,7 @@ sub boxplot_input_files {
     my $files = join("\t", @files_list);
     
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-   
+    
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
     my $name = "boxplot_input_files_${boxplot_id}";
