@@ -150,33 +150,40 @@ function askSelectionJobQueueing (listId) {
 
 
 function createSelectionReqArgs (listId) {
-    console.log('creating selection args ' + listId)
-if (typeof(listId) == 'number') {
-    var genoList  = getListTypeSelectionPopDetail(listId);
-    var listName  = genoList.name;
-    var list      = genoList.list;
-    var modelId   = getModelId();
-    var traitId   = getTraitId();
-    
-    var dataSetType = trainingDataSetType();
-   
-    var popType = 'list_prediction';
-   
-    var selectionPopId = 'list_' + listId;
-    
-    var args = {
-	'list_name'        : listName,
-	'list_id'          : listId,
-	'analysis_type'    : 'selection prediction',
-	'data_set_type'    : dataSetType,
-	'trait_id'         : traitId,
-	'training_pop_id'  : modelId, 
-	'selection_pop_id' : selectionPopId, 
-	'population_type'  : popType,
-    };  
+  
+    if (typeof(listId) == 'number') {
+	var genoList  = getListTypeSelectionPopDetail(listId);
+	var listName  = genoList.name;
+	var list      = genoList.list;
+	var modelId   = getModelId();
+	var traitId   = getTraitId();
+	
+	var dataSetType = trainingDataSetType();
+	
+	var popType = 'list_prediction';
+	
+	var selectionPopId = 'list_' + listId;
 
-    return args;
-}
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	}
+	
+	var args = {
+	    'list_name'        : listName,
+	    'list_id'          : listId,
+	    'analysis_type'    : 'selection prediction',
+	    'data_set_type'    : dataSetType,
+	    'trait_id'         : traitId,
+	    'training_pop_id'  : modelId, 
+	    'selection_pop_id' : selectionPopId, 
+	    'population_type'  : popType,
+	    'training_traits_ids' : trainingTraitsIds
+	};  
+
+	return args;
+    }
 
 }
 
@@ -211,7 +218,7 @@ function loadGenotypesListTypeSelectionPop(args) {
     
     args = JSON.stringify(args);
     var len   = listDetail.elements_count;
-    
+   
     if (len === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
