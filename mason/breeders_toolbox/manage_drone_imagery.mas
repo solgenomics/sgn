@@ -1601,7 +1601,7 @@ jQuery(document).ready(function() {
 
         jQuery('#manage_drone_imagery_standard_process_drone_run_bands_apply_table').DataTable({
             destroy : true,
-            ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&exclude_drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&select_all=1&disable=1'
+            ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&select_all=1&disable=1'
         });
 
         Workflow.complete("#drone_imagery_standard_process_generated_polygons_div");
@@ -1639,7 +1639,8 @@ jQuery(document).ready(function() {
                     'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
                     'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
                     'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
-                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices)
+                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices),
+                    'template_drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id
                 },
                 success: function(response){
                     console.log(response);

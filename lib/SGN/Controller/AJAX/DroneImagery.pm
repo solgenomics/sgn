@@ -3389,6 +3389,7 @@ sub standard_process_apply_POST : Args(0) {
     my $apply_drone_run_band_project_ids = decode_json $c->req->param('apply_drone_run_band_project_ids');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
+    my $template_drone_run_band_project_id = $c->req->param('template_drone_run_band_project_id');
     my $vegetative_indices = decode_json $c->req->param('vegetative_indices');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -3492,7 +3493,9 @@ sub standard_process_apply_POST : Args(0) {
         my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, 'threshold_background_removed_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
         my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
 
-        my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, undef, $user_id, $user_name, $user_role, 0);
+        if ($drone_run_band_project_id != $template_drone_run_band_project_id) {
+            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, undef, $user_id, $user_name, $user_role, 0);
+        }
 
         my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $drone_run_band_type, 'denoised_stitched_image', '30', 'frequency', $user_id, $user_name, $user_role);
         my $fourier_transform_return_image_ids = $fourier_transform_return->{ft_image_ids};
@@ -4702,6 +4705,7 @@ sub _perform_phenotype_calculation {
     my $tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'TGI From Denoised Original Image|ISOL:0000022')->cvterm_id;
     my $vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'VARI From Denoised Original Image|ISOL:0000023')->cvterm_id;
     my $ndvi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI From Denoised Original Image|ISOL:0000024')->cvterm_id;
+    my $ndre_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDRE From Denoised Original Image|ISOL:0000119')->cvterm_id;
     my $threshold_background_removed_tgi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'TGI with Background Removed via Threshold|ISOL:0000046')->cvterm_id;
     my $threshold_background_removed_vari_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'VARI with Background Removed via Threshold|ISOL:0000047')->cvterm_id;
     my $threshold_background_removed_ndvi_from_denoised_original_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI with Background Removed via Threshold|ISOL:0000048')->cvterm_id;
@@ -5074,6 +5078,14 @@ sub _perform_phenotype_calculation {
                 return {error =>  "On NDVI there is only the first channel!"};
             }
         }
+        if ($plot_polygons_type eq 'observation_unit_polygon_ndre_imagery') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndre_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error =>  "On NDRE there is only the first channel!"};
+            }
+        }
 
         if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
             if ($image_band_selected eq '0') {
@@ -5326,6 +5338,22 @@ sub _perform_phenotype_calculation {
             }
             if ($image_band_selected eq '0' || $image_band_selected eq '1') {
                 return {error => "Type specifies it is third channel!"};
+            }
+        }
+        if ($plot_polygon_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_tgi_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "TGI is only first channel!"};
+            }
+        }
+        if ($plot_polygon_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
+            if ($image_band_selected eq '0') {
+                $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_vari_from_denoised_original_cvterm_id;
+            }
+            if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+                return {error => "TGI is only first channel!"};
             }
         }
     }
