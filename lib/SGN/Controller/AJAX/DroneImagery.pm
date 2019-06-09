@@ -5340,7 +5340,7 @@ sub _perform_phenotype_calculation {
                 return {error => "Type specifies it is third channel!"};
             }
         }
-        if ($plot_polygon_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1') {
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1') {
             if ($image_band_selected eq '0') {
                 $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_tgi_from_denoised_original_cvterm_id;
             }
@@ -5348,7 +5348,7 @@ sub _perform_phenotype_calculation {
                 return {error => "TGI is only first channel!"};
             }
         }
-        if ($plot_polygon_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
+        if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
             if ($image_band_selected eq '0') {
                 $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_vari_from_denoised_original_cvterm_id;
             }
