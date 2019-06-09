@@ -1283,6 +1283,10 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1} = $_->{drone_run_band_plot_polygons};
             push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
         }
+        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1} = $_->{drone_run_band_plot_polygons};
+            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
+        }
         else {
             print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 2!\n";
         }
