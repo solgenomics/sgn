@@ -1560,6 +1560,22 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
                                 if ($d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image}) {
                                     $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>FT HPF30 VARI Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_id}.'"></span></h5><b>By</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_username}.'</br><b>Date</b>: '.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_modified_date}.'</div><div class="col-sm-3">'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image}.'</div><div class="col-sm-6">';
+
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1">Create/View Plot Polygons</button>';
+
+                                    $drone_run_band_table_html .= '<hr>';
+                                    my $plot_polygon_ft_hpf30_vari_images = '';
+                                    if ($d->{plot_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_images}) {
+                                        $plot_polygon_ft_hpf30_vari_images = scalar(@{$d->{plot_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_images}})." Plot Polygons<br/><span>";
+                                        $plot_polygon_ft_hpf30_vari_images .= join '', @{$d->{plot_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_images}};
+                                        $plot_polygon_ft_hpf30_vari_images .= "</span>";
+                                        $plot_polygon_ft_hpf30_vari_images .= '<br/><br/>';
+                                        $plot_polygon_ft_hpf30_vari_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1" >Calculate Phenotypes</button>';
+                                    } else {
+                                        $plot_polygon_ft_hpf30_vari_images = 'No Plot Polygons Assigned';
+                                    }
+                                    $drone_run_band_table_html .= $plot_polygon_ft_hpf30_vari_images;
+
                                     $drone_run_band_table_html .= '</div></div></div>';
                                 } else {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{vegetative_index_vari_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="calculate_vari_drone_imagery" >Fourier Transform HPF30 VARI Channel 1</button><br/><br/>';
