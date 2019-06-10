@@ -116,8 +116,8 @@ sub check_pops_trait_data_combination {
 		my $geno_size;
 		my $died_file;
 		
-		while (1) 
-		{
+		#while (1) 
+		#{
 		    sleep 60;
 		    $pheno_size = -s $pheno_file;
 		    $geno_size  = -s $geno_file;
@@ -153,7 +153,7 @@ sub check_pops_trait_data_combination {
 			    }
 			}
 		    }	    
-		}	   	    
+		#}	   	    
 	    }
 	    else 
 	    {  
@@ -198,8 +198,8 @@ sub check_multi_pops_data_download {
 		my $geno_size;
 		my $died_file;
 		
-		while (1) 
-		{
+	#	while (1) 
+	#	{
 		    sleep 60;
 		    $pheno_size = -s $pheno_file;
 		    $geno_size  = -s $geno_file;
@@ -235,7 +235,7 @@ sub check_multi_pops_data_download {
 			    }
 			}
 		    }	    
-		}	   	    
+		#}	   	    
 	    }
 	    else 
 	    {  
@@ -277,8 +277,8 @@ sub check_selection_prediction {
 		    my $gebv_size;
 		    my $died_file;
 		    
-		    while (1) 
-		    {
+		    #while (1) 
+		    #{
 			sleep 60;
 			$gebv_size = -s $gebv_file;
 			if ($gebv_size) 
@@ -300,7 +300,7 @@ sub check_selection_prediction {
 				}
 			    }
 			}	    
-		    }	   	    
+		    #}	   	    
 		}
 	    }
 	    else 
@@ -340,8 +340,8 @@ sub check_trait_modeling {
 		    my $gebv_size;
 		    my $died_file;
 		    
-		    while (1) 
-		    {
+		    #while (1) 
+		    #{
 			sleep 60;
 			$gebv_size = -s $gebv_file;
 
@@ -364,7 +364,7 @@ sub check_trait_modeling {
 				}
 			    }
 			}	    
-		    }	   	    
+		    #}	   	    
 		}
 	    }
 	    else 
@@ -417,8 +417,8 @@ sub check_population_download {
 			my $geno_size;
 			my $died_file;
 		
-			while (1) 
-			{
+			#while (1) 
+			#{
 			    sleep 60;
 			    $pheno_size = -s $pheno_file;
 			    $geno_size  = -s $geno_file;
@@ -463,7 +463,7 @@ sub check_population_download {
 				    }
 				}
 			    }
-			}	   	    
+			#}	   	    
 		    }
 		    else 
 		    {  
