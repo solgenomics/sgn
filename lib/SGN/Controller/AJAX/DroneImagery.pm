@@ -31,6 +31,7 @@ use CXGN::BrAPI::FileResponse;
 use CXGN::Onto;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
+use CXGN::Tag;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -2770,6 +2771,15 @@ sub _perform_plot_polygon_assign {
     });
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();;
+    my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $assign_plot_polygons_type);
+    if (!$image_tag_id) {
+        my $image_tag = CXGN::Tag->new($schema->storage->dbh);
+        $image_tag->set_name($assign_plot_polygons_type);
+        $image_tag->set_description('Drone run band project type for plot polygon assignment: '.$assign_plot_polygons_type);
+        $image_tag->set_sp_person_id($user_id);
+        $image_tag_id = $image_tag->store();
+    }
+    my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
 
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
@@ -2810,6 +2820,7 @@ sub _perform_plot_polygon_assign {
             my $stock_associate = $image->associate_stock($stock_id);
             $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
             $plot_polygon_image_url = $image->get_image_url('original');
+            my $added_image_tag_id = $image->add_tag($image_tag);
         }
         push @plot_polygon_image_fullpaths, $plot_polygon_image_fullpath;
         push @plot_polygon_image_urls, $plot_polygon_image_url;
