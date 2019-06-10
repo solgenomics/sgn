@@ -46,7 +46,7 @@ sub _check_cached_output {
 
     $c->stash->{rest}{cached} = undef;
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
-    
+   
     if ($req_page =~ /solgs\/population\//)
     { 
 	my $pop_id = $args->{training_pop_id}[0];
@@ -228,11 +228,11 @@ sub _check_selection_pop_all_traits_output {
     
     $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
     my $sel_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids}; 
-    
+   
     $c->stash->{training_pop_id} = $tr_pop_id;    
     $c->controller("solGS::solGS")->traits_with_valid_models($c);
     my $training_models_traits = $c->stash->{traits_ids_with_valid_models};
- 
+   
     if ($sel_traits_ids->[0]) 
     {
 	if (scalar(@$sel_traits_ids) == scalar(@$training_models_traits))
@@ -246,6 +246,10 @@ sub _check_selection_pop_all_traits_output {
 		$c->stash->{rest}{cached} = 0;
 	    }
 	}
+    } 
+    else
+    {
+	$c->stash->{rest}{cached} = 0;	
     }
 }
 

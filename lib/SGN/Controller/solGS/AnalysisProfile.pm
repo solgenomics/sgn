@@ -342,8 +342,6 @@ sub parse_arguments {
 	  { 
 	  	if ($arguments->{$k}->[0])
 	  	{
-		    my $scala = $arguments->{$k}->[0];
-		    print STDERR "\n count tr ids: $scala\n";
 		    if (scalar(@{$arguments->{$k}}) == 1)
 		    {
 			$c->stash->{trait_id} = $arguments->{$k}->[0];
@@ -353,7 +351,7 @@ sub parse_arguments {
 	  }
 
 	  if ($k eq 'training_traits_ids')
-	  {	     
+	  {
 	      $c->stash->{training_traits_ids} = $arguments->{$k};		 
 	      
 	      if (scalar(@{$arguments->{$k}}) == 1)

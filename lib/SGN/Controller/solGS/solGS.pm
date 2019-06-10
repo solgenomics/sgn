@@ -1151,7 +1151,7 @@ sub predict_selection_pop_multi_traits {
   
     $c->stash->{pop_id} = $training_pop_id;
 
-    my @traits = @{$c->stash->{training_traits_ids}};
+    my @traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
   
     $self->traits_with_valid_models($c);
     my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
@@ -1411,12 +1411,11 @@ sub prediction_pop_analyzed_traits {
 	    if ( -s $c->stash->{rrblup_selection_gebvs_file})
 	    {
 		push @selected_files, $c->stash->{rrblup_selection_gebvs_file};
+		push @trait_ids, $trait_id;
 	    }
 	}	
     }
 
-
-    @trait_ids   = @selected_analyzed_traits if @selected_analyzed_traits;
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
   
