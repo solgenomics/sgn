@@ -1363,7 +1363,7 @@ sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;           
    
     my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-     
+  
     no warnings 'uninitialized';
   
     my $dir = $c->stash->{solgs_cache_dir};
@@ -1418,7 +1418,11 @@ sub prediction_pop_analyzed_traits {
 
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
-  
+
+    @trait_abbrs = uniq(@trait_abbrs);
+    @trait_ids   = uniq(@trait_ids);
+    @files       = uniq(@files);
+    
     $c->stash->{prediction_pop_analyzed_traits}       = \@trait_abbrs;
     $c->stash->{prediction_pop_analyzed_traits_ids}   = \@trait_ids;
     $c->stash->{prediction_pop_analyzed_traits_files} = \@files;   
@@ -1677,7 +1681,7 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
     my ($self, $c, $tr_pop_id) = @_;
 
     my @traits_ids = $c->req->param('training_traits_ids[]');
-  
+    
     $c->stash->{training_pop_id} = $tr_pop_id;
 
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);

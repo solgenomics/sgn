@@ -21,7 +21,12 @@ function checkSelectionPopulations () {
     if (trainingTraitsIds) {
 	trainingTraitsIds = trainingTraitsIds.split(',');
     }
-   
+    
+    var traitId = jQuery('#trait_id').val();
+    if (traitId && !trainingTraitsIds) {
+	trainingTraitsIds = [traitId];
+    }
+    
     jQuery.ajax({
         type: 'POST',
 	data: {'training_traits_ids': trainingTraitsIds},
