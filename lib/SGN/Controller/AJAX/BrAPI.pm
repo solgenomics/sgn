@@ -2610,7 +2610,6 @@ sub observations_PUT {
     my $dbh = $c->dbc->dbh;
     my $auth = _authenticate_user($c);
     my ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($dbh)->query_from_cookie($c->stash->{session_token});
-    print STDERR "User type is $user_type\n";
     my $p = CXGN::People::Person->new($dbh, $user_id);
     my $username = $p->get_username;
     my $clean_inputs = $c->stash->{clean_inputs};
