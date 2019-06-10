@@ -109,7 +109,7 @@ sub store_composed_term {
 		      accession => sprintf("%07d",$accession)
 		  });
 
-      my $parent_term= $schema->resultset("Cv::Cvterm")->find(
+      my $parent_term= $schema->resultset("Cv::Cvterm")->find_or_create(
         { cv_id  =>$cv->cv_id(),
           name   => 'Composed traits',
       });
