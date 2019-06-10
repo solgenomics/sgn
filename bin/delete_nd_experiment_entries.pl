@@ -6,7 +6,7 @@ delete_nd_experiment_entries.pl - script to delete nd_experiment entries. used d
 
 =head1 DESCRIPTION
 
-delete_nd_experiment_entries.pl -H [database handle] -D [database name] -U [database user] -P [database password] -i [nd_experiment_ids to delete. comma separated]
+delete_nd_experiment_entries.pl -H [database handle] -D [database name] -U [database user] -P [database password] -i [filename of tempfile with nd_experiment_ids to delete]
 
 Options:
 
@@ -14,7 +14,7 @@ Options:
  -D database name
  -U database user
  -P database password
- -i nd_experiment_ids to delete. provided as comma separated list
+ -i filename of tempfile with nd_experiment_ids to delete
 
 =head1 AUTHOR
 
@@ -34,9 +34,17 @@ print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
 my $dbh = DBI->connect($dsn, $opt_U, $opt_P);
 
+my @nd_experiment_ids;
+open (my $fh, "<", $opt_i ) || die ("\nERROR: the file $opt_i could not be found\n" );
+    while (my $line = <$fh>) {
+        chomp($line);
+        push @nd_experiment_ids, $line;
+    }
+close($fh);
+
 eval {
-    my @nd_experiment_ids = split ",", $opt_i;
-    my $q = "DELETE FROM nd_experiment WHERE nd_experiment_id IN ($opt_i)";
+    my $nd_experiment_ids_string = join ",", @nd_experiment_ids;
+    my $q = "DELETE FROM nd_experiment WHERE nd_experiment_id IN ($nd_experiment_ids_string)";
     my $h = $dbh->prepare($q);
     $h->execute();
     print STDERR "DELETED ".scalar(@nd_experiment_ids)." Nd Experiment Entries\n";

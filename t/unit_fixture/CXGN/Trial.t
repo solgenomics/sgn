@@ -479,6 +479,7 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     dbname=>$f->config->{dbname},
     dbuser=>$f->config->{dbuser},
     dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -647,6 +648,7 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     dbname=>$f->config->{dbname},
     dbuser=>$f->config->{dbuser},
     dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -744,7 +746,9 @@ is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 # check trial deletion - first, delete associated phenotypes
 #
-$trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass});
+my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, $f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+ok(!$del_ret);
+print STDERR Dumper $del_ret;
 
 ok($trial->phenotype_count() ==0, "phenotype data deleted");
 

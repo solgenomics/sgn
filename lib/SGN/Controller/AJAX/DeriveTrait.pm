@@ -271,12 +271,16 @@ project.project_id=? ) );");
     $phenotype_metadata{'date'}="$timestamp";
     my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id => $temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -394,12 +398,16 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     $phenotype_metadata{'date'}="$timestamp";
 
     for (my $i=0; $i<scalar(@$data); $i++) {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
         my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
             basepath=>$c->config->{basepath},
             dbhost=>$c->config->{dbhost},
             dbname=>$c->config->{dbname},
             dbuser=>$c->config->{dbuser},
             dbpass=>$c->config->{dbpass},
+            temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
             bcs_schema=>$schema,
             metadata_schema=>$metadata_schema,
             phenome_schema=>$phenome_schema,

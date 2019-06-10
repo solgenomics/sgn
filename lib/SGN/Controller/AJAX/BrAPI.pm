@@ -2615,6 +2615,9 @@ sub observations_PUT {
     my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
         observations => $clean_inputs->{observations},
@@ -2627,7 +2630,8 @@ sub observations_PUT {
         dbhost => $c->config->{dbhost},
         dbname => $c->config->{dbname},
         dbuser => $c->config->{dbuser},
-        dbpass => $c->config->{dbpass}
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $temp_file_nd_experiment_id
     });
 	_standard_response_construction($c, $brapi_package_result);
 }

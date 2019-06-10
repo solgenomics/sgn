@@ -12,6 +12,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     dbname=>dbname,
     dbuser=>dbuser,
     dbpass=>dbpass,
+    temp_file_nd_experiment_id=>$temp_file_nd_experiment_id, #tempfile full name for deleting nd_experiment_ids asynchronously
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
@@ -98,6 +99,12 @@ has 'dbuser' => (
 );
 
 has 'dbpass' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'temp_file_nd_experiment_id' => (
     isa => "Str",
     is => 'rw',
     required => 1
@@ -651,32 +658,17 @@ sub delete_previous_phenotypes {
     my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
     $h->execute();
 
+    my %phenotype_ids_and_nd_experiment_ids_to_delete;
     my @deleted_phenotypes;
-    my @phenos_to_delete;
-    my @nd_experiment_id_to_delete;
     while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-        push @phenos_to_delete, $phenotype_id;
-        push @nd_experiment_id_to_delete, $nd_experiment_id;
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
         push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
     }
-    my $phenotype_id_sql = join (",", @phenos_to_delete);
-    my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
-    my $h2 = $self->bcs_schema->storage->dbh()->prepare($q_pheno_delete);
-    $h2->execute();
-    my $nd_experiment_id_sql = join (",", @nd_experiment_id_to_delete);
-    my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-    my $h3 = $self->bcs_schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-    $h3->execute();
-
-    print STDERR "DELETED ".scalar(@deleted_phenotypes)." Phenotype Values\n";
-
-    my $basepath = $self->basepath;
-    my $dbhost = $self->dbhost;
-    my $dbname = $self->dbname;
-    my $dbuser = $self->dbuser;
-    my $dbpass = $self->dbpass;
-    my $async_delete = CXGN::Tools::Run->new();
-    $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $nd_experiment_id_sql");
+    my $delete_phenotype_values_error = CXGN::Trial::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    if ($delete_phenotype_values_error) {
+        die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+    }
 
     return @deleted_phenotypes;
 }
