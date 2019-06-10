@@ -209,6 +209,7 @@
 var lo = new CXGN.List();
 
 function draw_cross_grid(female_accessions, male_accessions){
+    console.log("draw cross grid");
     var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 10 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
     for(var i=0; i<male_accessions.length; i++){
         cross_grid_html = cross_grid_html + '<th>' + male_accessions[i] + '</th>';
@@ -261,10 +262,14 @@ jQuery(document).ready(function($) {
 
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
-        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], undefined, undefined, undefined ));
-        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], undefined, undefined, undefined ));
-        var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
-        var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], "Please select list with < 100 accessions", undefined, undefined ));
+        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], "Please select list with < 100 accessions", undefined, undefined ));
+        var female_accessions;
+        var male_accessions
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+            male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+        }
 
         jQuery.ajax ({
             url : '/ajax/odk/get_crossing_available_forms',
@@ -317,18 +322,24 @@ jQuery(document).ready(function($) {
             }
         });
 
-        draw_cross_grid(female_accessions, male_accessions);
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            draw_cross_grid(female_accessions, male_accessions);
+        }
     });
 
     jQuery(document).on('change', '#female_accession_list_div_list_select', function(){
-        var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
-        var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
-        draw_cross_grid(female_accessions, male_accessions);
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+            var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+            draw_cross_grid(female_accessions, male_accessions);
+        }
     });
     jQuery(document).on('change', '#male_accession_list_div_list_select', function(){
-        var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
-        var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
-        draw_cross_grid(female_accessions, male_accessions);
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+            var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+            draw_cross_grid(female_accessions, male_accessions);
+        }
     });
 
     get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
