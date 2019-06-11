@@ -148,102 +148,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <canvas id="drone_imagery_standard_process_crop_original_stitched_div"></canvas>
 
         </&>
-        <&| /util/workflow.mas:step, title=> "Thresholding" &>
-            <& /page/page_title.mas, title=>"Threshold your drone run band to remove background" &>
-
-            <div class="well">
-                <&| /page/info_section.mas, title => 'Remove Background Using Graphical Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
-
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="well well-sm">
-                                <h5>The background can be removed by placing a threshold on pixel values</h5>
-                                <ul>
-                                    <li><b>1.</b> Click on the two right-most, highest peaks in the histogram. The right most peak represents the pixels we are interested in, while the peak immediately to the left of that peak represents the soil background.</li>
-                                    <li><b>2.</b> Click on the "Find Minimum" button.</li>
-                                    <li><b>3.</b> If the image looks good with the applied threshold, click Save. Otherwise, you can start over.</li>
-                                </ul>
-                            </div>
-
-                            <div class="well well-sm">
-                                <div name="drone_imagery_remove_background_threshold_current"></div>
-                                <div name="drone_imagery_remove_background_threshold"></div>
-                            </div>
-
-                            <canvas id="drone_imagery_standard_process_remove_background_histogram_div"></canvas>
-                            <hr>
-                            <button class="btn btn-primary" id="drone_imagery_standard_process_remove_background_find_minimum">Find Minimum (Does Not Save)</button>
-                            <button class="btn btn-default" id="drone_imagery_standard_process_remove_background_start_over">Start Over</button>
-                            <button class="btn btn-primary" id="drone_imagery_standard_process_remove_background_submit">Save and Go to Next Step</button>
-                            <hr>
-                        </div>
-                    </div>
-                </&>
-            </div>
-            <div class="well">
-                <&| /page/info_section.mas, title => 'Remove Background Using User Defined Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background using a simple threshold value' &>
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">Discard Pixels with Value Lower Than: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_lower_threshold" name="drone_imagery_standard_process_remove_background_lower_threshold" type="number" max="255" min="0" placeholder="e.g. 10 (Min 0)" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">Discard Pixels with Value Higher Than: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_upper_threshold" name="drone_imagery_standard_process_remove_background_upper_threshold" type="number" max="255" min="0" placeholder="e.g. 200 (Max 255)"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button id="drone_imagery_standard_process_remove_background_defined_submit" class="btn btn-primary">Apply Threshold</button>
-                        </div>
-                    </div>
-                </&>
-            </div>
-            <div class="well">
-                <&| /page/info_section.mas, title => 'Remove Background Using Percentage Threshold', collapsible=>1, collapsed => 1, subtitle=> 'Remove the background by specifying percentage threshold value' &>
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">Discard Lowest Percent of Pixel Values: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_lower_threshold_percentage" name="drone_imagery_standard_process_remove_background_lower_threshold_percentage" type="number" max="99" min="0" placeholder="e.g. 10% of lowest pixel values (Min 0, Max 100)" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-6 control-label">Discard Highest Percent of Pixel Values: </label>
-                                        <div class="col-sm-6">
-                                            <input class="form-control" id="drone_imagery_standard_process_remove_background_upper_threshold_percentage" name="drone_imagery_standard_process_remove_background_upper_threshold_percentage" type="number" max="99" min="0" placeholder="e.g. 10% of highest pixel values (Min 0, Max 100)"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button id="drone_imagery_standard_process_remove_background_defined_percentage_submit" class="btn btn-primary">Apply Threshold</button>
-                        </div>
-                    </div>
-                </&>
-            </div>
-
-            <hr>
-
-            <div id="manage_drone_imagery_standard_process_remove_background_load_div">
-                <img src="/img/wheel.gif" />
-            </div>
-
-            <canvas id="drone_imagery_standard_process_remove_background_original"></canvas>
-
-        </&>
         <&| /util/workflow.mas:step, title=> "Plot Polygons" &>
             <& /page/page_title.mas, title=>"Define plot polygons relative to the field layout" &>
 
@@ -1306,6 +1210,10 @@ jQuery(document).ready(function() {
 
     jQuery(document).on('click', '#manage_drone_imagery_standard_process_cropping_step', function(){
         console.log(crop_points);
+        if (crop_points.length != 4) {
+            alert('Please click 4 points on the image to draw a rectangle first!');
+            return false;
+        }
         jQuery.ajax({
             url : '/api/drone_imagery/crop_image?image_id='+manage_drone_imagery_standard_process_rotated_stitched_image_id+'&polygon='+JSON.stringify(crop_points)+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id,
             beforeSend: function() {
@@ -1326,7 +1234,7 @@ jQuery(document).ready(function() {
                             remove_background_current_image_id = manage_drone_imagery_standard_process_denoised_image_id;
                             remove_background_drone_run_band_project_id = manage_drone_imagery_standard_process_drone_run_band_project_id;
 
-                            showRemoveBackgroundHistogramStart(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div', 'manage_drone_imagery_standard_process_remove_background_load_div');
+                            
 
                             Workflow.complete("#manage_drone_imagery_standard_process_cropping_step");
                             Workflow.focus('#manage_drone_imagery_standard_process_workflow', 4);
@@ -1373,7 +1281,6 @@ jQuery(document).ready(function() {
                                     remove_background_current_image_id = manage_drone_imagery_standard_process_denoised_image_id;
                                     remove_background_drone_run_band_project_id = manage_drone_imagery_standard_process_drone_run_band_project_id;
 
-                                    showRemoveBackgroundHistogramStart(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div', 'manage_drone_imagery_standard_process_remove_background_load_div');
 
                                     Workflow.complete("#manage_drone_imagery_standard_process_cropping_step");
                                     Workflow.focus('#manage_drone_imagery_standard_process_workflow', 4);
@@ -1401,39 +1308,8 @@ jQuery(document).ready(function() {
         return;
     });
 
-    jQuery('#drone_imagery_standard_process_remove_background_find_minimum').click(function(){
-        if (!removeBackgroundThresholdPeak1 || !removeBackgroundThresholdPeak2) {
-            alert('Please click on the two right-most peaks in the histogram first!');
-        } else {
-            showRemoveBackgroundHistogramMinimum(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div');
-        }
-        return false;
-    });
-
-    jQuery('#drone_imagery_standard_process_remove_background_start_over').click(function(){
-        removeBackgroundThresholdPeak1 = undefined;
-        removeBackgroundThresholdPeak2 = undefined;
-        removeBackgroundThresholdPeak1pixels = undefined;
-        removeBackgroundThresholdPeak2pixels = undefined;
-
-        showRemoveBackgroundHistogramStart(manage_drone_imagery_standard_process_denoised_image_id, 'drone_imagery_standard_process_remove_background_original', 'drone_imagery_standard_process_remove_background_histogram_div', 'manage_drone_imagery_standard_process_remove_background_load_div');
-    });
-
-    jQuery('#drone_imagery_standard_process_remove_background_submit').click(function(){
-        manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, removeBackgroundThresholdValue, '255');
-    });
-
-    jQuery('#drone_imagery_standard_process_remove_background_defined_submit').click(function(){
-        var remove_background_drone_run_band_lower_threshold = jQuery('#drone_imagery_standard_process_remove_background_lower_threshold').val();
-        var remove_background_drone_run_band_upper_threshold = jQuery('#drone_imagery_standard_process_remove_background_upper_threshold').val();
-        manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, remove_background_drone_run_band_lower_threshold, remove_background_drone_run_band_upper_threshold);
-    });
-
     jQuery('#drone_imagery_standard_process_remove_background_defined_percentage_submit').click(function(){
-        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_lower_threshold_percentage').val())/100;
-        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_upper_threshold_percentage').val())/100;
-
-        var threshold_value_return = calculateThresholdPercentageValues('drone_imagery_remove_background_original', drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage);
+        var threshold_value_return = calculateThresholdPercentageValues('drone_imagery_remove_background_original', 0.25, 0.25);
 
         manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, threshold_value_return[0], threshold_value_return[1]);
     });
