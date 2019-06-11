@@ -110,7 +110,7 @@ jQuery(document).ready(function () {
     get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']) });
 
     var lo = new CXGN.List();
-    jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits'));
+    jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits', undefined, undefined));
 
     jQuery(document).on('change', '#trait_search_list_select', function(){
         _draw_trait_search_result_table();

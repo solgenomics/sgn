@@ -15,7 +15,7 @@ jQuery(document).ready( function() {
        
     var list = new CXGN.List();
         
-    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials']);
+    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials'], undefined, undefined, undefined);
        
     if (listMenu.match(/option/) != null) {           
         jQuery("#list_type_training_pops_list").append(listMenu);

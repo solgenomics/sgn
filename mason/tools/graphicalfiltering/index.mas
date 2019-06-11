@@ -126,7 +126,7 @@ $ajaxRequestString => ""
     $('#select_div').show();
 
     // set up list
-    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], 'Choose a List:');
+    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], 'Choose a List:', undefined, undefined);
     $('#filter_list_select_container').html(filter_list_select_html);
     $('#filter_list_select>option:first-of-type').prop('disabled', true);
     

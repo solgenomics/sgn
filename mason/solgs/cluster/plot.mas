@@ -36,9 +36,10 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 </%perl>
 
-<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
 
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
+<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
+    
 <style>
 
 .axis path, .axis line {
@@ -56,7 +57,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
     <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
     <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
     <input type="hidden"  id="cluster_type" value="" />
-    <input type="hidden"  id="dataset_id" value= "<% $dataset_id %>" />
+    <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
     <input type="hidden"  id="data_structure_type" value="<% $data_structure_type %>" />
 </div>

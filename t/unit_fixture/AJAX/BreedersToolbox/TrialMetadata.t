@@ -150,5 +150,10 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'treatments'}->[0]->[1], 'test_trial_treatmentname1');
 
+my $management_factor_project_id = $schema->resultset("Project::Project")->find({name=>'test_trial_treatmentname1'})->project_id();
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$management_factor_project_id.'/plots');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'plots' => [[[38858,'test_trial22'],[38865,'test_trial29']]]});
 
 done_testing();

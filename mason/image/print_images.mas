@@ -43,6 +43,7 @@ Naama Menda <nm249@cornell.edu>
 
 <%args>
 
+$additional_image_button_id => 'Images'
 $images => undef
 $dbh    => undef
 $image_objects => undef
@@ -126,7 +127,7 @@ $m_image_html .= "</tbody></table>";    #close tabletag for the hidden figures
 
 if (@more_is) {    #html_optional_show if there are more than 3 figures
   $image_html .= html_optional_show(
-				    "Images",
+				    $additional_image_button_id,
 				    "<b>See $more more images...</b>",
 				    qq| $m_image_html |,
 				    0, #< do not show by default
