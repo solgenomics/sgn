@@ -89,39 +89,19 @@ sub store_analysis_file_POST {
 sub store_data {
     my $self = shift;
     my $c = shift;
-    my $values = shift;
-    my $plots = shift;
-    my $traits = shift;
-    my $user_id = shift;
+
+    my $a = CXGN::Analysis->new( {bcs_schema=> $c->dbic("Bio::Chado::Schema") });
+
+
     
-    my $phenotype_metadata = {};
+    my ($verified_warning, $verified_error) = $a->store_analysis();
     
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-	{
-	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-	    phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-	    user_id => $user_id,
-	    stock_list => $plots,
-	    trait_list => $traits, 
-	    values_hash => $values,
-	    has_timestamps => 0,
-	    overwrite_values => 0,
-	    metadata_hash => $phenotype_metadata
-	});
-    
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     
     if ($verified_warning || $verified_error) {
 	$c->stash->{rest} = { warnings => $verified_warning, error => $verified_error };
 	return;
     }
-    
-    my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
-    
-    if ($stored_phenotype_error) { 
-	$c->stash->{rest} = { error => $stored_phenotype_error }; 
-    }
+
     else {
 	$c->stash->{rest} = { success => 1 };
     }

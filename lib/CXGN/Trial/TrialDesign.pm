@@ -123,16 +123,16 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
-my $design;
 
 sub get_design {
-     print STDERR Dumper $design;
-     return $design;
+    my $self = shift;
+    print STDERR Dumper $self->{design};
+     return $self->{design};
 }
 
 
@@ -150,6 +150,7 @@ sub calculate_design {
     }
     
     if ($design) {
+	$self->{design} = $design;
 	return 1;
     }
     else  {

@@ -441,6 +441,14 @@ sub retrieve_plot_phenotype_POST : Args(0) {
 
 }
 
+sub view_all_uploads :Path('/ajax/phenotype/view_uploads') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $file_list = CXGN::Project->get_all_phenotype_metadata($c->dbic_schema("Bio::Chado::Schema"), 100);
+    $c->stash->{rest} = $file_list;
+}
+
 #########
 1;
 #########

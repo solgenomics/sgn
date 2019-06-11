@@ -46,6 +46,7 @@ use CXGN::PhenotypingTrial;
 use CXGN::GenotypingTrial;
 use CXGN::CrossingTrial;
 
+
 sub new {
     my $class = shift;
     my $args = shift;
@@ -70,7 +71,10 @@ sub new {
 	}
 	elsif ($name eq "crossing_trial") {
 	    # create a crossing trial
-	    $object = CXGN::CrossingTrial->new( { bcs_schema=> $schema, trial_id => $trial_id });
+	    $object = CXGN::CrossingTrial->new({ bcs_schema=> $schema, trial_id => $trial_id });
+	}
+	elsif ($name eq "analysis") {
+	    $object = CXGN::Analysis->new({ bcs_schema => $schema, trial_id => $trial_id });
 	}
 	# what about folders?
 	else {
