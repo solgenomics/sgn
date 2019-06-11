@@ -69,7 +69,6 @@ sub patch {
             'rotated_stitched_temporary_drone_imagery',
             'fourier_transform_stitched_drone_imagery',
             'contours_stitched_drone_imagery',
-            'observation_unit_polygon_imagery',
             'observation_unit_polygon_bw_background_removed_threshold_imagery',
             'observation_unit_polygon_rgb_background_removed_threshold_imagery',
             'observation_unit_polygon_blue_background_removed_threshold_imagery',
