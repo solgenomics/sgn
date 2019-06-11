@@ -42,6 +42,11 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         push @stock_name_list, $params->{image_stock_uniquename};
     }
 
+    my @project_name_list;
+    if (exists($params->{image_project_name}) && $params->{image_project_name}) {
+        push @project_name_list, $params->{image_project_name};
+    }
+
     my @first_names;
     my @last_names;
     if (exists($params->{image_person} ) && $params->{image_person} ) {
@@ -67,6 +72,7 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         original_filename_list=>\@descriptors,
         description_list=>\@descriptors,
         stock_name_list=>\@stock_name_list,
+        project_name_list=>\@project_name_list,
         tag_list=>\@tags,
         limit=>$limit,
         offset=>$offset
@@ -82,7 +88,8 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     my @return;
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
-        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}.") : <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
+        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}."): <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a><br/>" : "";
+        $associations .= "Project (".$_->{project_image_type_name}."): ".$_->{project_name};
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {
             push @tags, $t->{name};

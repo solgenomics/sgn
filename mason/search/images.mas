@@ -34,9 +34,14 @@
                     <input class="form-control" type="text" id="image_stock_uniquename" name="image_stock_uniquename" placeholder="e.g. FieldPlot100" />
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Associated project: </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="image_project_name" name="image_project_name" placeholder="e.g. DroneProject 01/01/2019" />
+                </div>
+            </div>
         </div>
 
-        <br />
         <center>
         <button class="btn btn-primary" id="image_search_submit" >Search</button>
         </center>
@@ -107,6 +112,7 @@ function _load_image_search_results() {
               d.image_person = jQuery('#image_submitter').val();
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
+              d.image_project_name = jQuery('#image_project_name').val();
             }
         }
     });
