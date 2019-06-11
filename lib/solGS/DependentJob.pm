@@ -5,13 +5,17 @@ use Moose;
 use namespace::autoclean;
 
 use CXGN::Tools::Run;
+use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Temp qw / tempfile tempdir /;
 use Try::Tiny;
 use Storable qw/ nstore retrieve /;
+
 use solGS::AnalysisReport;
+use solGS::Cluster;
 use Carp qw/ carp confess croak /;
 
+use SGN::Controller::solGS::Files;
 
 
 with 'MooseX::Getopt';
@@ -21,13 +25,19 @@ with 'MooseX::Runnable';
 has "dependency_jobs" => (
     is       => 'ro',
     isa      => 'Str',
-    required => 1, 
+    default  => 0,
     );
 
 has "dependency_type" => (
     is       => 'ro',
     isa      => 'Str',
-    required => 1, 
+    default => 0, 
+    );
+
+has "combine_pops_args_file" => (
+    is       => 'ro',
+    isa      => 'Str',
+    default => 0, 
     );
 
 has "dependent_type" => (
@@ -57,7 +67,7 @@ has "temp_dir" => (
 has "r_script"   => (
      is       => 'ro',
      isa      => 'Str',
-     required => 0, 
+     default  => 0, 
  );
 
 has "script_args" => (
@@ -69,7 +79,7 @@ has "script_args" => (
 has "gs_model_args_file" => (
     is       => 'ro',
     isa      => 'Str',
-    required => 0, 
+    default  => 0, 
     );
 
 has "job_config_file" => (
@@ -77,6 +87,7 @@ has "job_config_file" => (
     isa => 'Str',
     required => 1,
     );
+
 
 
 sub run {
@@ -91,33 +102,21 @@ sub run {
     my $job_type           = $self->dependent_type;
     my $dependency_type    = $self->dependency_type;
     my $args               = $self->script_args;
-   
+
+    my $combine_pops_args_file = $self->combine_pops_args_file;
+     
     print STDERR "\nrun dependency type: $dependency_type\n";
+    print STDERR "\nrun dependency jobs: $dependency_jobs\n";
     print STDERR "\nrun tmpdir: $temp_dir -- template $temp_file_template\n";
     print STDERR "\nrun report file: $report_file\n";
     print STDERR "\nrun gs model file: $model_file\n";
     print STDERR "\nrun dependent job : $dependent_job -- pid: $$\n";
     print STDERR "\nrun job_type : $job_type\n";       
     print STDERR "\nrun r script args : $args->[0] -- $args->[1]\n";
-    
-    sleep 60;
-
-    my $all_pre_jobs_done = $self->check_prerequisite_jobs();
-    my $all_jobs_done;
+    print STDERR "\nrun combine pops args file : $combine_pops_args_file\n";
      
-    if ($all_pre_jobs_done)
-    {
-	unless ($job_type =~ /send_analysis_report/) 
-	{ 
-	    $all_jobs_done = $self->run_dependent_job();
-	}
-    }
-   
-    if ($all_jobs_done || $job_type =~ /send_analysis_report/) 
-    {
-	  $self->send_analysis_report();	  	  
-    }
-    
+   my $job_done = $self->run_job();
+      
 }
 
 
@@ -211,16 +210,19 @@ sub create_cluster_accesible_tmp_files {
 }
 
 
-sub run_dependent_job {
+sub run_job {
   my $self = shift;
 
   my $dependency_type = $self->dependency_type;
   my $job_type        = $self->dependent_type;
+  my $combine_pops_args_file = $self->combine_pops_args_file;
  
   my $combine_done;
-  if ( $job_type =~ /combine_populations/) 
-  { 
-      my $combine_job = $self->combine_populations();
+  my $model_job;
+  
+  if ($dependency_type =~ /combine_populatons/)
+  {
+      my $combine_job = $self->run_combine_populations();
 
       sleep 30;
       while (1) 
@@ -228,50 +230,106 @@ sub run_dependent_job {
 	  last if !$combine_job->alive();
 	  sleep 30 if $combine_job->alive();
       }
-     
-      $combine_done = 1;
+      
+      $model_job = $self->run_model();
+         
   }
  
-  my $modeling_done;
-  if ($combine_done || $dependency_type =~ /combine_populations/)
+  if ($dependency_type =~ /selection_pop_download_data/) 
   {
-      sleep 30;
-      my $model_job = $self->run_model();
-     
-      while (1) 
-      {	 
-	  last if !$model_job->alive();
-	  sleep 30 if $model_job->alive();
-      } 
-      
-      $modeling_done = 1;          
-  } 
-  elsif ($dependency_type =~ /download_data/)
-  {     
-      if ($self->r_script =~ /gs/) {
-      sleep 30;
-      my $model_job = $self->run_model();
-     
-      while (1) 
-      {	 
-	  last if !$model_job->alive();
-	  sleep 30 if $model_job->alive();
-      } 
-      
-      $modeling_done = 1;  
-      } else {
-	  $self->send_analysis_report();	  
-      }        
-  } 
-  else
-  {
-      print STDERR "\nNo depedent job provided. Exiting program.\n";
-      exit();
+      $self->query_genotype_data();
   }
-    
-   return $modeling_done;
+  
+  if ($self->r_script =~ /gs/) 
+  {
+       $model_job = $self->run_model();	  
+  }
+
 
 }
+
+
+sub run_combine_populations {
+    my $self = shift;
+
+    my $args_file = $self->combine_pops_args_file;
+    my $args  = retrieve($args_file);
+    my $cmd   = $args->{cmd};
+    my $temp_template = $args->{temp_file_template};
+
+    my $cluster_files = $self->create_cluster_accesible_tmp_files($temp_template);
+    my $out_file      = $cluster_files->{out_file_temp};
+    my $err_file      = $cluster_files->{err_file_temp};
+
+    my $temp_dir      = $self->temp_dir;    
+    my $config = $self->create_cluster_config($temp_dir, $out_file, $err_file);
+
+    my $job;
+    eval 
+    {
+	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);	 
+	$job->is_async(1);
+	$job->run_cluster($cmd);
+	   
+    };
+
+    if ($@) {
+	print STDERR "An error occurred! $@\n";
+    }
+  
+    return $job;
+
+    
+    
+}
+
+
+sub query_genotype_data {
+    my $self = shift;
+   	 
+    my $gs_model_file  = $self->gs_model_args_file;
+    my $gs_args         = retrieve($gs_model_file);
+    my $selection_pop_id = $gs_args->{selection_pop_id};
+    my $selection_pop_geno_file = $gs_args->{selection_pop_geno_file};
+    my $genotypes_ids  = $gs_args->{genotypes_ids};
+
+    if (!-s $selection_pop_geno_file)
+    { 
+       my $geno_args = {
+	   'selection_pop_id' => $selection_pop_id, 
+	   'genotype_file'    => $selection_pop_geno_file,
+	   'genotypes_ids'    => $genotypes_ids
+	       
+       };
+       
+       my $args_file = SGN::Controller::solGS::Files->create_tempfile($self->temp_dir, "geno-data-args_file-${selection_pop_id}");
+       nstore $geno_args, $args_file 
+	   or croak "data queryscript: $! serializing model details to $args_file ";
+
+       my $pop_type = 'trial';
+       $pop_type    = 'list' if $selection_pop_id =~ /list/;
+
+        my $job_args = {
+	       'data_type' => 'genotype',
+	       'population_type'  => 'list',
+	       'args_file' => $args_file	     
+	};
+
+       my $query = solGS::Cluster->new($job_args);
+
+       if ($selection_pop_id =~ /list/)
+       {
+	   $query->genotypes_list_genotype_data();	   
+       }
+       else
+       {
+	   $query->trial_genotype_data();
+       } 
+    } 
+    
+}
+
 
 
 sub combine_populations {
@@ -329,7 +387,8 @@ sub run_model {
     
     my $cmd = "Rscript --slave  $script_file $script_out "
 	. " --args $input_files $output_files";
-					        
+
+
     my $job; 
     eval 
     {
@@ -375,6 +434,7 @@ sub check_analysis_status {
 
     my $temp_dir       = $self->temp_dir;
     my $report_file    = $self->analysis_report_args_file;
+
     my $output_details = retrieve($report_file);   
 
     my $cluster_files = $self->create_cluster_accesible_tmp_files('analysis-status');
@@ -393,6 +453,7 @@ sub check_analysis_status {
 	 
     	$job->is_async(1);
     	$job->run_async($cmd);
+	#$job->run_cluster($cmd)
 	   
     };
 
@@ -408,19 +469,18 @@ sub check_analysis_status {
 sub send_analysis_report {
     my $self = shift;
    
-    sleep 10;
+    #sleep 10;
     my $report_job = $self->check_analysis_status();
  
-    while (1) 
-    {	 
-	last if !$report_job->alive();
-	sleep 30 if $report_job->alive();
-    } 
+   #  while (1) 
+#     {	 
+# 	last if !$report_job->alive();
+# #	sleep 30 if $report_job->alive();
+#    } 
       
     return 1;
  
 }   
-
 
 
 

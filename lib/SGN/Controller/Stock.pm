@@ -264,7 +264,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
-            direct_genotypes   => $c->stash->{direct_genotypes},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
@@ -335,18 +334,27 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock->stock_id;
     my $stock_name = $stock->uniquename;
     my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
 
     my @lines = ();
     my @sorted_lines = ();
     if ($stock_id) {
         print STDERR "Exporting genotype file...\n";
-        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
+        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "source_observation_unit_name", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
 
-        my $genotypes_search = CXGN::Genotype::Search->new({
+        my %genotype_search_params = (
             bcs_schema=>$self->schema,
-            accession_list=>[$stock_id],
             markerprofile_id_list=>$genotypeprop_id
-        });
+        );
+        if ($stock_type eq 'accession') {
+            $genotype_search_params{accession_list} = [$stock_id];
+        } elsif ($stock_type eq 'tissue_sample') {
+            $genotype_search_params{tissue_sample_list} = [$stock_id];
+        }
+        my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
         my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
         foreach my $g (@$genotypes ) {
@@ -354,8 +362,9 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             my $protocol_full = $g->{selected_protocol_hash};
             my $project_name = $g->{genotypingDataProjectName};
             my $marker_info = $protocol_full->{markers};
-            print STDERR Dumper $protocol_full;
-            print STDERR Dumper $marker_info;
+            #print STDERR Dumper $protocol_full;
+            #print STDERR Dumper $marker_info;
+            my $accession_name = $g->{germplasmName};
             my $stock_name = $g->{stock_name};
             my $stock_type_name = $g->{stock_type_name};
             my $synonym_string = join ',', @{$g->{synonyms}};
@@ -372,7 +381,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
                 my $marker = $marker_info->{$marker_name};
                 my $marker_print = $marker ? encode_json $marker : '';
                 my $genotype_print = encode_json $genotype_full->{$marker_name};
-                push @lines, [$project_name, $protocol_name, $stock_name, $stock_type_name, $synonym_string, $marker_name, $read, $marker_print, $genotype_print];
+                push @lines, [$project_name, $protocol_name, $stock_name, $stock_type_name, $accession_name, $synonym_string, $marker_name, $read, $marker_print, $genotype_print];
             }
         }
         @sorted_lines = sort chr_sort @lines;
@@ -500,17 +509,9 @@ sub get_stock_extended_info : Private {
     my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->schema,
-        accession_list=>[$c->stash->{stock_row}->stock_id],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    $c->stash->{direct_genotypes} = $genotypes;
-
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
     if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
-
 }
 
 ############## HELPER METHODS ######################3

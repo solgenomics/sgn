@@ -68,7 +68,7 @@ jQuery('#shared_trials_2_lists').hide();
 
     var lo = new CXGN.List();
 
-    jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+    jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select', undefined, undefined));
 
     addToListMenu('c1_to_list_menu', 'c1_data', {
 		selectText: true,

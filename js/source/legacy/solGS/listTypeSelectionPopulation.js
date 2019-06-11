@@ -15,17 +15,17 @@ JSAN.use("jquery.blockUI");
 
 jQuery(document).ready( function() {
     var list = new CXGN.List();
-    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"]);
+    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
     var relevant =[]; 	
         
     if (listMenu.match(/option/) != null) {
             
-        jQuery("#list_type_selection_pops_list").append(listMenu);
-	checkPredictedListSelection();
+        jQuery("#list_type_selection_pops_list")
+	    .append(listMenu);
 
-        } else {
-            
-            jQuery("#list_type_selection_pops_list").append("<select><option>no lists found</option></select>");
+        } else {       
+            jQuery("#list_type_selection_pops_list")
+		.append("<select><option>no lists found</option></select>");
         }
                
     });
@@ -47,10 +47,10 @@ jQuery(document).ready( function() {
         if (listId) {
 	
 	    jQuery("#list_type_selection_pop_load").click(function() {
-	//	alert(listDetail.type)   
+	
 		if (listDetail.type.match(/accessions/)) {
-		    
-		    askSelectionJobQueueing(listId);
+		    checkPredictedListSelection(listId);
+		    //askSelectionJobQueueing(listId);
 		} else {
 			//TO-DO
 		//	var trialsList = listDetail.list;
@@ -64,37 +64,34 @@ jQuery(document).ready( function() {
 });
 
 
-function checkPredictedListSelection () {
-   
-    jQuery('select#list_type_selection_pops_list_select option')
-	.each(function(idx, val) {
-	    var listId = jQuery(val).val();
-	  
-	    if (!listId.match(/LISTS/)) {	
-		var args =  createSelectionReqArgs(listId);
-
-		args = JSON.stringify(args);
-
-		jQuery.ajax({
-		    type: 'POST',
-		    dataType: 'json',
-		    data: {'arguments': args},
-		    url: '/solgs/check/predicted/list/selection',                   
-		    success: function(response) { 
-			args = JSON.parse(args);
+function checkPredictedListSelection (listId) {
+  
+    var args =  createSelectionReqArgs(listId);
+ 
+    args = JSON.stringify(args);
+    
+    jQuery.ajax({
+	type: 'POST',
+	dataType: 'json',
+	data: {'arguments': args},
+	url: '/solgs/check/predicted/list/selection',                   
+	success: function(response) { 
+	    args = JSON.parse(args);
+	    
+	    if (response.output) {		    
+		displayPredictedListTypeSelectionPops(args, response.output); 
 		
-			if (response.output) {		    
-			    displayPredictedListTypeSelectionPops(args, response.output); 
-			    
-			    if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-				listSelectionIndexPopulations();
-				listGenCorPopulations();
-			    }			
-			}
-		    }
-		});
+		if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
+		    listSelectionIndexPopulations();
+		    listGenCorPopulations();
+		    solGS.geneticGain.ggSelectionPopulations();
+		    solGS.cluster.listClusterPopulations();
+		} 			
+	    } else {
+		askSelectionJobQueueing(listId);
 	    }
-	}); 
+	}
+    });
     
 }
 
@@ -127,8 +124,6 @@ function getListTypeSelectionPopDetail(listId) {
 	    listType      = list.getListType(listId);
 	    listName      = list.listNameById(listId);
 	    elemCount     = listData.elements;
-
-	    //listElementsNames = getSelectionListElementsNames(listElements);
 	}
 	
 	return {'name'          : listName,
@@ -155,6 +150,7 @@ function askSelectionJobQueueing (listId) {
 
 
 function createSelectionReqArgs (listId) {
+    console.log('creating selection args ' + listId)
 if (typeof(listId) == 'number') {
     var genoList  = getListTypeSelectionPopDetail(listId);
     var listName  = genoList.name;
@@ -195,7 +191,7 @@ function getGenotypesList(listId) {
     }
 
     var listName = list.listNameById(listId);
-    var listType;// = list.getListType(listId);
+    var listType = list.getListType(listId);
 
     return {'name'      : listName,
             'listId'      : listId,
@@ -206,23 +202,20 @@ function getGenotypesList(listId) {
 
 
 function loadGenotypesListTypeSelectionPop(args) {     
-  
-    //var args  = createSelectionReqArgs(listId);
+ 
     var listDetail = getListTypeSelectionPopDetail(args.list_id);
-    var len   = listDetail.elements_count;
-    //var popId = args.selection_pop_id;
-   
+         
     if (window.Prototype) {
 	delete Array.prototype.toJSON;
     }
     
     args = JSON.stringify(args);
-
+    var len   = listDetail.elements_count;
+    
     if (len === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
     else { 
-	//jQuery(document).ajaxStart(jQuery.blockUI).ajaxStop(jQuery.unblockUI);
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
        
@@ -270,9 +263,6 @@ function loadGenotypesListTypeSelectionPop(args) {
 
 function predictGenotypesListSelectionPop (args) {
    
-    //jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-    //jQuery.blockUI({message: 'Please wait..'});
-
     var modelId  = args.training_pop_id;
     var traitId  = args.trait_id;
     var selPopId = args.selection_pop_id;
@@ -288,7 +278,6 @@ function predictGenotypesListSelectionPop (args) {
 	    if (res.status == 'success') {
 		window.location = "/solgs/selection/" + selPopId + '/model/' + modelId + '/trait/' + traitId; 
 	    } else {
-		// alert('else')
 		window.location = window.location.href;
 	    }
 	}							
@@ -354,9 +343,6 @@ function getTraitId () {
 
 function displayPredictedListTypeSelectionPops(args, output) {
    
-    //var genoList       = getGenotypesList(listId);
-    //args = JSON.parse(args);
-  
     var listName       = args.list_name;
     var listId         = args.list_id;
     var traitId        = args.trait_id;

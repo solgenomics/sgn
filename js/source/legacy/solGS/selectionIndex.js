@@ -14,7 +14,7 @@ jQuery(document).ready( function () {
 });
 
 
-jQuery("#calculate_si").live("click", function() {        
+jQuery(document).on("click", "#calculate_si", function() {        
     var modelId        = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
     var popType        = jQuery("#si_canvas #selected_population_type").val();
@@ -59,8 +59,7 @@ function listSelectionIndexPopulations ()  {
     }
 
     getSelectionPopTraits(modelData.id, modelData.id);
-
-
+    
    jQuery(".si_dropdown dt a").click(function() {
             jQuery(".si_dropdown dd ul").toggle();
         });
@@ -135,12 +134,20 @@ function addSelectionPopulations(){
 function getSelectionPopTraits (modelId, selectedPopId) {
 
     if (modelId === selectedPopId) {selectedPopId=undefined;}
-   
+
+    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+    trainingTraitsIds = trainingTraitsIds.split(',');
+
+    console.log('selection index: traitsIds ' + trainingTraitsIds)
+    var args = {'selection_pop_id': selectedPopId,
+		'training_pop_id': modelId,
+		'training_traits_ids': trainingTraitsIds};
+
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
         url: '/solgs/selection/index/form',
-        data: {'selection_pop_id': selectedPopId, 'training_pop_id': modelId},
+        data: args,
         success: function(res) {
                 
             if (res.status == 'success') {
@@ -165,7 +172,7 @@ function getSelectionPopTraits (modelId, selectedPopId) {
 
 function  selectionIndexForm(predictedTraits) {   
   
-    var trait = '</br><div>';
+    var trait = '<div>';
     for (var i=0; i < predictedTraits.length; i++) { 
 	trait += '<div class="form-group  class="col-sm-3">'
 	    + '<div  class="col-sm-1">'
@@ -178,8 +185,10 @@ function  selectionIndexForm(predictedTraits) {
     }
     
     trait += '<div class="col-sm-12">'
-	+ '<input class="btn btn-success" type="submit" value="Calculate" name= "rank" id="calculate_si"/>'
-	+ '</div>';
+	  + '<input style="margin: 10px 0 10px 0;"' + 
+                    'class="btn btn-success" type="submit"' + 
+                    'value="Calculate" name= "rank" id="calculate_si"' + '/>'
+	  + '</div>';
     
     trait += '</div>'
         

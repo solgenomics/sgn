@@ -122,7 +122,7 @@ sub parse {
     @file_lines = read_file($filename);
     $header = shift(@file_lines);
     my $status  = $csv->parse($header);
-    my @header_row = $csv->fields();
+    @header_row = $csv->fields();
 
     ## Get column numbers (indexed from 1) of the plot_id, trait, and value.
     foreach my $header_cell (@header_row) {

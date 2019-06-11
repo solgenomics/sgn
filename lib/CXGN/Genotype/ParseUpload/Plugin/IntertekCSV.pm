@@ -19,6 +19,7 @@ sub _validate_with_plugin {
 
     my $F;
 
+    my %marker_names;
     if ($marker_info_filename) {
         # Open Marker Info File and get headers
         open($F, "<", $marker_info_filename) || die "Can't open file $marker_info_filename\n";
@@ -30,8 +31,6 @@ sub _validate_with_plugin {
             if ($csv->parse($header_row)) {
                 @header_info = $csv->fields();
             }
-
-        close($F);
 
         # Check that the columns in the marker info file are what we expect
         if ($header_info[0] ne 'IntertekSNPID'){
@@ -64,6 +63,33 @@ sub _validate_with_plugin {
         if ($header_info[9] ne 'Format'){
             push @error_messages, 'Column 10 header must be "Format" in the SNP Info File.';
         }
+
+        while (my $line = <$F>) {
+            my @line_info;
+            if ($csv->parse($line)) {
+                @line_info = $csv->fields();
+            }
+            my $intertek_snp_id = $line_info[0];
+            my $customer_snp_id = $line_info[1];
+            my $ref = $line_info[2];
+            my $alt = $line_info[3];
+
+            if (!$intertek_snp_id){
+                push @error_messages, 'Intertek snp id is required for all markers.';
+            }
+            if (!$customer_snp_id){
+                push @error_messages, 'Customer snp id is required for all markers.';
+            }
+            if (!$ref){
+                push @error_messages, 'Reference is required for all markers.';
+            }
+            if (!$alt){
+                push @error_messages, 'Alternate is required for all markers.';
+            }
+            $marker_names{$customer_snp_id} = 1;
+        }
+
+        close($F);
     }
 
     # Open GRID FILE and parse
@@ -81,6 +107,12 @@ sub _validate_with_plugin {
         my $unneeded_first_column = shift @header_info;
         my @fields = ($unneeded_first_column);
         my @markers = @header_info;
+
+        foreach (@markers) {
+            if (!exists($marker_names{$_})) {
+                push @error_messages, "Marker $_ in the SNP grid file is not found in the marker info file.";
+            }
+        }
 
         my @observation_unit_names;
         # Iterate over all rows to get the sample ID and labID
@@ -107,8 +139,8 @@ sub _validate_with_plugin {
 
     my @observation_units_names_trim;
     # Separates sample name from lab id
-    foreach (@observation_unit_names) {
-        my ($observation_unit_name_with_accession_name, $lab_id) = split(/\./, $_);
+    foreach my $observation_unit_name_with_accession_name (@observation_unit_names) {
+        #my ($observation_unit_name_with_accession_name, $lab_id) = split(/\./, $_);
         $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
         my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         push @observation_units_names_trim, $observation_unit_name;
@@ -282,28 +314,33 @@ sub _parse_with_plugin {
                 my $genotype_obj;
                 if ($ref && $alt) {
 
-                    my @vcf_genotype; # should look like the vcf genotype call e.g. 0/1 or 0/0 or ./. or missing data
                     my @gt_vcf_genotype;
+                    my @ref_calls;
+                    my @alt_calls;
                     my $gt_dosage = 0;
                     foreach my $a (@alleles){
                         my $gt_val;
                         if ($a eq $ref) {
                             $gt_val = 0;
                             push @gt_vcf_genotype, $gt_val;
+                            push @ref_calls, $a;
                         }
                         if ($a eq $alt) {
                             $gt_val = 1;
                             push @gt_vcf_genotype, $gt_val;
+                            push @alt_calls, $a;
                         }
                         $gt_dosage = $gt_dosage + $gt_val;
-                        push @vcf_genotype, $a;
                     }
 
-                    my $vcf_genotype_string = join '/', @vcf_genotype;
+                    my @vcf_genotype = (@ref_calls, @alt_calls);
+                    my $vcf_genotype_string = join ',', @vcf_genotype;
                     my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
-                    $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
-                    $genotype_obj = { 'NT' => $vcf_genotype_string };
-                    $genotype_obj = { 'DS' => "$gt_dosage"};
+                    $genotype_obj = {
+                        'GT' => $vcf_gt_genotype_string,
+                        'NT' => $vcf_genotype_string,
+                        'DS' => "$gt_dosage"
+                    };
                 } else {
                     die "There should always be a ref and alt according to validation above\n";
                 }

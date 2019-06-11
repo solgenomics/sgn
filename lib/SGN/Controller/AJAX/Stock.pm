@@ -32,6 +32,7 @@ use Scalar::Util 'reftype';
 use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::Stock::RelatedStocks;
 use CXGN::BreederSearch;
+use CXGN::Genotype::Search;
 
 use Bio::Chado::Schema;
 
@@ -1553,7 +1554,7 @@ sub get_shared_trials_GET :Args(1) {
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-       my $uniquename = $stock->get_uniquename;
+       my $uniquename = $stock->uniquename;
        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
@@ -1790,6 +1791,45 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
     $c->stash->{rest}={data=>\@stocks};
 
+}
+
+sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('datatables/genotype_data') : ActionClass('REST') { }
+
+sub get_stock_datatables_genotype_data_GET  {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
+
+    my %genotype_search_params = (
+        bcs_schema=>$schema,
+        genotypeprop_hash_select=>[],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[]
+    );
+    if ($stock_type eq 'accession') {
+        $genotype_search_params{accession_list} = [$stock_id];
+    } elsif ($stock_type eq 'tissue_sample') {
+        $genotype_search_params{tissue_sample_list} = [$stock_id];
+    }
+    my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+
+    my @result;
+    foreach (@$genotypes){
+        push @result, [
+            '<a href = "/breeders_toolbox/trial/'.$_->{genotypingDataProjectDbId}.'">'.$_->{genotypingDataProjectName}.'</a>',
+            $_->{genotypingDataProjectDescription},
+            $_->{analysisMethod},
+            $_->{genotypeDescription},
+            '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$_->{markerProfileDbId}.'">Download</a>'
+        ];
+    }
+
+    $c->stash->{rest} = {data => \@result};
 }
 
 =head2 make_stock_obsolete
