@@ -67,15 +67,15 @@ jQuery(document).ready( function() {
 function checkPredictedListSelection (listId) {
   
     var args =  createSelectionReqArgs(listId);
- 
     args = JSON.stringify(args);
-    
+   
     jQuery.ajax({
 	type: 'POST',
 	dataType: 'json',
 	data: {'arguments': args},
 	url: '/solgs/check/predicted/list/selection',                   
-	success: function(response) { 
+	success: function(response) {
+	   
 	    args = JSON.parse(args);
 	    
 	    if (response.output) {		    
@@ -168,6 +168,8 @@ function createSelectionReqArgs (listId) {
 
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
+	} else {
+	    trainingTraitsIds = [traitId];
 	}
 	
 	var args = {
@@ -175,7 +177,7 @@ function createSelectionReqArgs (listId) {
 	    'list_id'          : listId,
 	    'analysis_type'    : 'selection prediction',
 	    'data_set_type'    : dataSetType,
-	    'trait_id'         : traitId,
+	    'trait_id'         : [traitId],
 	    'training_pop_id'  : modelId, 
 	    'selection_pop_id' : selectionPopId, 
 	    'population_type'  : popType,
