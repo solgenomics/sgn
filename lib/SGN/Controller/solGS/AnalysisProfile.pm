@@ -784,38 +784,12 @@ sub predict_selection_traits {
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
     }
         
-    if ($referer =~ /solgs\/trait\//)
+    if ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/population\//)
     {	
-	if ($selection_pop_id =~ /list/)
-	{
-	    $c->controller('solGS::List')->predict_list_selection_pop_single_pop_model($c);
-	}
-	else
-	{
-	    $c->controller('solGS::solGS')->predict_selection_pop_single_trait($c);
-	}
-    }
-    elsif ($referer =~ /solgs\/traits\/all\/population\//) 
-    {
-	if ($selection_pop_id =~ /list/)
-	{
-	    $c->controller('solGS::List')->predict_list_selection_pop_multi_traits($c);
-	}
-	else
-	{
-	    $c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
-	}
+	$c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
     }
     elsif ($referer =~ /\/combined\//) 
-    {    		
-	if ($referer =~ /solgs\/models\/combined\/trials\//) 
-	{ 
-	    $c->stash->{pop_id} = $c->stash->{combo_pops_id};
-	    $c->controller("solGS::solGS")->traits_with_valid_models($c);
-	    my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
-	    $c->stash->{training_traits_ids} = \@traits_with_valid_models;
-	}
-	
+    {    			
 	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);	
     }	    
     
