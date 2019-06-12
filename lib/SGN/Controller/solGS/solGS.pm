@@ -1401,6 +1401,8 @@ sub prediction_pop_analyzed_traits {
 
     if (@selected_analyzed_traits) 
     {
+	@trait_ids=();
+	
 	foreach my $trait_id (@selected_analyzed_traits)
 	{
 	    $c->stash->{trait_id} = $trait_id;
@@ -1408,6 +1410,7 @@ sub prediction_pop_analyzed_traits {
 	    push @selected_trait_abbrs, $c->stash->{trait_abbr};
 	   
 	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+	   
 	    if ( -s $c->stash->{rrblup_selection_gebvs_file})
 	    {
 		push @selected_files, $c->stash->{rrblup_selection_gebvs_file};
@@ -1415,13 +1418,9 @@ sub prediction_pop_analyzed_traits {
 	    }
 	}	
     }
-
+  
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
-
-    @trait_abbrs = uniq(@trait_abbrs);
-    @trait_ids   = uniq(@trait_ids);
-    @files       = uniq(@files);
     
     $c->stash->{prediction_pop_analyzed_traits}       = \@trait_abbrs;
     $c->stash->{prediction_pop_analyzed_traits_ids}   = \@trait_ids;
@@ -1436,94 +1435,41 @@ sub download_prediction_urls {
     my $selection_traits_ids;
     my $selection_traits_files;
     my $download_url;
-    my $model_tr_id = $c->stash->{trait_id};
-
+    
     my $selected_model_traits = $c->stash->{training_traits_ids};
-  
-    my $page = $c->req->referer;
-    my $base = $c->req->base;
-   
-    my $data_set_type = 'combined populations' if $page =~ /combined/;
-
-    if ( $base !~ /localhost/)
-    {
-	$base =~ s/:\d+//; 
-	$base =~ s/http\w?/https/;
-    }
- 
-    $page    =~ s/$base//;
-
+    
     no warnings 'uninitialized';
 
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
         $selection_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
-	$selection_traits_files = $c->stash->{prediction_pop_analyzed_traits_files};
     } 
 
-    my @selection_traits_ids = uniq(@$selection_traits_ids) if $selection_traits_ids;
-   
-    my $selection_trait_id;
-    if ($page =~ /solgs\/model\/combined\/populations\// )
-    { 
-	($model_tr_id) = $page =~ /(\d+)$/;
-	$model_tr_id   =~ s/s+//g;
-	$selected_model_traits = [$model_tr_id];
-	($selection_trait_id) = grep {/$model_tr_id/ } @selection_traits_ids;
-	@selection_traits_ids = ($selection_trait_id);
-    }
-
-    if ($page =~ /solgs\/trait\// )
-    { 
-	$model_tr_id = (split '/', $page)[2];
-	$selected_model_traits = [$model_tr_id];
-	($selection_trait_id) = grep {/$model_tr_id/ } @selection_traits_ids;
-	@selection_traits_ids = ($selection_trait_id);
-	
-    }
-
-    if ($page =~ /(\/list\/prediction\/)/ && $page !~ /(\solgs\/traits\/all)/)
-    { 
-	($model_tr_id) = $page =~ /(\d+)$/;
-	$model_tr_id =~ s/s+//g;
-	$selected_model_traits = [$model_tr_id];
-	($selection_trait_id) = grep {/$model_tr_id/ } @selection_traits_ids;
-	@selection_traits_ids = ($selection_trait_id);
-    }
-
-    my @selected_model_traits = @$selected_model_traits if $selected_model_traits->[0];
+    my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
+    my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
   
-    @selected_model_traits = sort(@selected_model_traits);
-    @selection_traits_ids = sort(@selection_traits_ids);
-    
     if (@selected_model_traits ~~ @selection_traits_ids)
-    {   
+    {
 	foreach my $trait_id (@selection_traits_ids) 
 	{
-	    $trait_id =~ s/s+//g;
 	    $self->get_trait_details($c, $trait_id);
-
 	    my $trait_abbr = $c->stash->{trait_abbr};
-	    my $trait_name = $c->stash->{trait_name};	
-
+       
+	    my $page = $c->req->referer;
 	    if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
 	    {
-		$model_tr_id   = $trait_id;
 		$download_url .= " | " if $download_url;     
 	    }
-
-	    if ($selection_traits_files->[0] =~ $prediction_pop_id && $trait_id == $model_tr_id)
-	    {	    
-		if ($data_set_type =~ /combined populations/)
-		{
-		    $download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
-		}
-		else 
-		{
-		    $download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
-		}	      
-	    }        
+	  	    
+	    if ($page =~ /combined/)
+	    {
+		$download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
+	    }
+	    else 
+	    {
+		$download_url .= qq |<a href="/solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id">$trait_abbr</a> |;
+	    }	              
 	}
     }
     
@@ -1906,7 +1852,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my$referer = $c->req->referer;
     
    
-    if ($referer =~ /models\/combined\/trials\//) 
+    if ($referer =~ /combined\//) 
     {
 	$c->stash->{data_set_type} = 'combined populations';
 	$c->stash->{combo_pops_id} = $training_pop_id;	
@@ -1938,21 +1884,10 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 
 	    $self->first_stock_genotype_data($c, $selection_pop_id);
 	    my $selection_geno_file = $c->stash->{first_stock_genotype_file};
-
-	    my $referer = $c->req->referer;
-	    my $tr_pop_id;
-	    if ($referer =~ /models\/combined\/trials\//) 
-	    {	   
-		$tr_pop_id = "${training_pop_id}_combined";
-	    }
-	    else
-	    {
-		$tr_pop_id = $training_pop_id;
-	    }
 	    
-	    $c->controller('solGS::Files')->genotype_file_name($c, $tr_pop_id);
+	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	    my $training_geno_file = $c->stash->{genotype_file_name};
-
+	
 	    $similarity = $self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
 	} 
 
@@ -2168,8 +2103,7 @@ sub build_multiple_traits_models {
 	    foreach my $tr_id (@selected_traits)
 	    {
 		$trait_ids .= $tr_id;
-	    }
-	    
+	    }  
 	} 
     
 	if ($c->stash->{data_set_type} =~ /combined populations/)
@@ -2389,7 +2323,7 @@ sub compare_marker_set_similarity {
     my @first_geno_markers = split(/\t/, $first_markers);
     my @sec_geno_markers   = split(/\t/, $sec_markers);
 
-    if ( @first_geno_markers && @first_geno_markers) 
+    if ( @first_geno_markers && @sec_geno_markers) 
     {  
 	my $common_markers = scalar(intersect(@first_geno_markers, @sec_geno_markers));
 	my $similarity     = $common_markers / scalar(@first_geno_markers);
@@ -2458,8 +2392,7 @@ sub compare_genotyping_platforms {
     }
 
     $c->stash->{pops_with_no_genotype_match} = $not_matching_pops;
-  
-      
+        
 }
 
 
@@ -3226,10 +3159,12 @@ sub training_pop_data_query_job_args {
     foreach my $trial (@$trials)
     {
 	$self->phenotype_file($c, $trial);
-	push @queries, $c->stash->{cluster_phenotype_query_job_args};
+	my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
+	push @queries, $pheno_query if $pheno_query;
 
 	$self->genotype_file($c, $trial);
-	push @queries, $c->stash->{cluster_genotype_query_job_args};
+	my $geno_query = $c->stash->{cluster_genotype_query_job_args};
+	push @queries, $geno_query if $geno_query;
     }
 
     $c->stash->{training_pop_data_query_job_args} = \@queries;
@@ -3255,7 +3190,7 @@ sub get_training_pop_data_query_job_args_file {
 sub get_cluster_genotype_query_job_args {
     my ($self, $c, $args) = @_;
 
-    my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id};
+    my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
 
     $c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
     $self->create_cluster_accesible_tmp_files($c);
