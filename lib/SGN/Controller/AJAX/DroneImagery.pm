@@ -445,10 +445,11 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     #print STDERR Dumper $result;
 
     my $observation_unit_plot_polygon_band_base_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_only_band_base_types($schema);
+    my @observation_unit_plot_polygon_band_base_types_array = keys %$observation_unit_plot_polygon_band_base_types;
     my $observation_unit_polygon_original_background_removed_threshold_imagery_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_band_project_id_list=>[$drone_run_band_project_id],
-        project_image_type_id_list=>$observation_unit_plot_polygon_band_base_types
+        project_image_type_id_list=>\@observation_unit_plot_polygon_band_base_types_array
     });
     my ($observation_unit_polygon_original_background_removed_threshold_imagery_result, $observation_unit_polygon_original_background_removed_threshold_imagery_total_count) = $observation_unit_polygon_original_background_removed_threshold_imagery_search->search();
     #print STDERR Dumper $observation_unit_polygon_original_background_removed_threshold_imagery_result;
