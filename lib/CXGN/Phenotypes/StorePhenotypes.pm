@@ -43,6 +43,7 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
+use JSON;
 use SGN::Image;
 use CXGN::ZipFile;
 use CXGN::UploadFile;
@@ -147,11 +148,15 @@ sub create_hash_lookups {
     my $schema = $self->bcs_schema;
 
     #Find trait cvterm objects and put them in a hash
+
+    #trait list before map: Asparagine content measuring  mg per g DW|CO_331:0000796 Fructose content of raw storage roots percent|CO_331:0000292 Glucose content of raw storage roots percent|CO_331:0000293 Phenol content measuring  mg per g DW|CO_331:0000801 Starch content of raw storage roots percent|CO_331:0000291 Storage root dry matter content computing percent|CO_331:0000297 Sucrose content of raw storage roots percent|CO_331:0000294 Total Monomeric Anthocyanin content measuring  mg per g DW|CO_331:0000798
+#trait list after map:
+
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
-    print STDERR "trait list before map: @trait_list\n";
-    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra hash from trait validation
-    print STDERR "trait list after map: @trait_list\n";
+    print STDERR "trait list @trait_list\n";
+    #@trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra hash from trait validation
+    #print STDERR "trait list after map: @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -173,6 +178,7 @@ sub create_hash_lookups {
     my %check_unique_value_trait_stock;
 
     my $stock_ids_sql = join ("," , @{$self->stock_id_list});
+    print STDERR "Cvterm ids are @cvterm_ids";
     my $cvterm_ids_sql = join ("," , @cvterm_ids);
     my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
     my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
@@ -201,7 +207,7 @@ sub verify {
     my $self = shift;
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes field from trait validation
+    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra from trait validation
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -367,7 +373,7 @@ sub store {
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs trait lists so they can be handled separately
+    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra so they can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
@@ -600,15 +606,17 @@ sub store_nirs_data {
     my $self = shift;
     my $nirs_hashref = shift;
     my $nd_experiment_id = shift;
-
+    my %nirs_hash = %{$nirs_hashref};
+    print STDERR "NIRS hashref is " . Dumper($nirs_hashref);
     #convert hashref to json, store in md_json table with type 'nirs_spectra'
-    my $nirs_json = encode_json $nirs_hashref;
+    my $nirs_json = encode_json \%nirs_hash;
 
     my $json_row = $self->metadata_schema->resultset("MdJson")
         ->create({
             json_type => 'nirs_spectra',
-            json => $nirs_json
+            json => $nirs_json,
         });
+        $json_row->insert();
 
         ## Link the json to the experiment
         my $experiment_json = $self->phenome_schema->resultset("NdExperimentMdJson")

@@ -54,37 +54,22 @@ sub patch {
 --do your SQL here
 --
 
-CREATE TABLE md_json (
-    json_id integer NOT NULL,
+CREATE TABLE metadata.md_json (
+    json_id SERIAL PRIMARY KEY,
     json_type character varying(250),
     json jsonb
 );
-ALTER TABLE md_json OWNER TO postgres;
+ALTER TABLE metadata.md_json OWNER TO postgres;
 COMMENT ON TABLE md_json IS 'md_json is a table for storing variable json datasets and linking them to related data in other tables. For example storing nirs spectra (wavelength:value pairs) and linking to the relevant nd_experiment which in turn links to the plot and derived phenotype values.';
-DROP SEQUENCE IF EXISTS md_json_json_id_seq CASCADE;
-CREATE SEQUENCE md_json_json_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER TABLE md_json_json_id_seq OWNER TO postgres;
-ALTER SEQUENCE md_json_json_id_seq OWNED BY md_json.json_id;
+GRANT SELECT,UPDATE,INSERT,DELETE ON metadata.md_json TO web_usr;
 
-CREATE TABLE nd_experiment_md_json (
-    nd_experiment_md_json_id integer NOT NULL,
-    nd_experiment_id bigint,
-    json_id bigint
+CREATE TABLE phenome.nd_experiment_md_json (
+    nd_experiment_md_json_id SERIAL PRIMARY KEY,
+    nd_experiment_id integer REFERENCES public.nd_experiment (nd_experiment_id),
+    json_id integer REFERENCES metadata.md_json (json_id)
 );
-ALTER TABLE nd_experiment_md_json OWNER TO postgres;
-CREATE SEQUENCE nd_experiment_md_json_nd_experiment_md_json_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER TABLE nd_experiment_md_json_nd_experiment_md_json_id_seq OWNER TO postgres;
-ALTER SEQUENCE nd_experiment_md_json_nd_experiment_md_json_id_seq OWNED BY nd_experiment_md_json.nd_experiment_md_json_id;
+ALTER TABLE phenome.nd_experiment_md_json OWNER TO postgres;
+GRANT SELECT,UPDATE,INSERT,DELETE ON phenome.nd_experiment_md_json TO web_usr;
 
 EOSQL
 

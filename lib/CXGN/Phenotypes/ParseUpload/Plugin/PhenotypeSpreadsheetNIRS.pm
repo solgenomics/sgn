@@ -141,7 +141,7 @@ sub parse {
                         if ($worksheet->get_cell(0,$col)) {
                             $column_name = $worksheet->get_cell(0,$col)->value();
                             if (defined($column_name)) {
-                                if ($column_name ne '' && $column_name =~ /CO\d{3}:\d{7}/){
+                                if ($column_name ne '' && $column_name =~ /[A-Z0-9_]+:\d{7}/){
                                     print STDERR "Column name is a trait $column_name\n";
                                     $traits_seen{$column_name} = 1;
                                     my $value_string = '';
@@ -167,9 +167,8 @@ sub parse {
                                         }
                                     }
                                 }
-
-
-                                if ($column_name ne '' && $column_name !~ /CO\d{3}:\d{7}/){
+                                if ($column_name ne '' && $column_name !~ /[A-Z0-9_]+:\d{7}/){
+                                    print STDERR "Column name is not a trait $column_name\n";
                                     my $nir_value = '';
 
                                     if ($worksheet->get_cell($row, $col)){
