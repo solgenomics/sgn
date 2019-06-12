@@ -52,18 +52,7 @@ has "temp_dir" => (
 
 sub run {
     my $self = shift;
-    
-    my $prerequisite_jobs  = $self->prerequisite_jobs;
-    my $prerequisite_type  = $self->prerequisite_type;
-    my $dependent_jobs     = $self->dependent_jobs;    
-    my $temp_dir           = $self->temp_dir; 
-    my $report_file        = $self->analysis_report_job;
-         
-    print STDERR "\nrun prerequisite jobs: $prerequisite_jobs\n";
-    print STDERR "\nrun prerequisite type: $prerequisite_type\n";
-    print STDERR "\nrun report file: $report_file\n";
-    print STDERR "\nrun dependent job : $dependent_jobs  \n";
-        
+   
     my $jobs = $self->run_job();
     $self->send_analysis_report($jobs);
           
@@ -82,7 +71,6 @@ sub run_job {
      
 	if ($prerequisite_type =~ /combine_populations/)
 	{
-	    print STDERR "\ncombining training data...\n";
 	    $job = $self->run_combine_populations();
 
 	    foreach my $job (@$job)
@@ -93,6 +81,8 @@ sub run_job {
 		    sleep 30 if $job->alive();
 		}
 	    }
+
+	    $jobs = $self->run_model();
      	  
 	}
 	elsif ($prerequisite_type =~ /selection_pop_download_data/) 
@@ -101,22 +91,45 @@ sub run_job {
 	    
 	    if ($job)
 	    {	  
-		print STDERR "\n querying data...\n";
 		while (1)
 		{
 		    last if !$job->alive();
 		    sleep 30 if $job->alive();
-		    print STDERR "\nwaiting for query job to complete..\n";
 		}	             		
-	    }	    	   
-	} 
-              
-	$jobs = $self->run_model();
-	
+	    }
+
+	    $jobs = $self->run_model();
+	} else {
+	    $self->run_any_job();
+	}
+              	
     };
 
     return $jobs;
     
+}
+
+
+sub run_any_job {
+    my $self = shift;
+
+    my $args_file = $self->dependent_jobs;
+    my $any_jobs = retrieve($args_file);
+     
+    if (reftype $any_jobs ne 'ARRAY') 
+    {
+	$any_jobs = [$any_jobs];
+    }
+   
+    my @jobs;
+    foreach my $any_job (@$any_jobs) 
+    {	
+	my $job = $self->submit_job($any_job);
+	push @jobs, $job;
+    }
+    
+    return \@jobs;
+        
 }
 
 
@@ -126,14 +139,14 @@ sub run_combine_populations {
     my $args_file = $self->prerequisite_jobs;
     my $combine_jobs = retrieve($args_file);
      
-    if (reftype $combine_jobs ne 'ARRAY') {
+    if (reftype $combine_jobs ne 'ARRAY') 
+    {
 	$combine_jobs = [$combine_jobs];
     }
    
     my @jobs;
     foreach my $combine_job (@$combine_jobs) 
-    {
-	
+    {	
 	my $job = $self->submit_job($combine_job);
 	push @jobs, $job;
     }
@@ -155,7 +168,6 @@ sub query_genotype_data {
    
     if (!-s $genotype_file)
     {
-	print STDERR "\nthere is no genotype data and going to query now...\n";
 	$job = $self->submit_job($query_job);
     }
     
@@ -169,10 +181,11 @@ sub run_model {
     my $model_job_file = $self->dependent_jobs;
     my $model_jobs = retrieve($model_job_file);
 
-     if (reftype $model_jobs ne 'ARRAY') {
+    if (reftype $model_jobs ne 'ARRAY') 
+    {
 	$model_jobs = [$model_jobs];
     }
-    
+
     my @jobs;
     foreach my $model_job (@$model_jobs) 
     {	
@@ -190,16 +203,17 @@ sub send_analysis_report {
     my $self = shift;
     my $jobs = shift;
     
-    if (reftype $jobs ne 'ARRAY') {
+    if (reftype $jobs ne 'ARRAY') 
+    {
 	$jobs = [$jobs];
     }
     
-    foreach my $job (@$jobs) {
+    foreach my $job (@$jobs) 
+    {
 	while (1)
 	{
 	    last if !$job->alive();
 	    sleep 30 if $job->alive();
-	    print STDERR "\nwaiting for job to complete..before sending analysis report\n";
 	}
     }
      
@@ -229,7 +243,8 @@ sub submit_job {
 	print STDERR "Submitted job... $args->{cmd}\n";	   
     };
 
-    if ($@) {
+    if ($@) 
+    {
     	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
     }
 
