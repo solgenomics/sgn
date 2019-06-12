@@ -2726,8 +2726,8 @@ sub create_trait_data {
 sub get_acronym_pairs {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
-    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $dir    = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir 
@@ -2782,7 +2782,7 @@ sub analyzed_traits {
     
     my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};   
     my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-    
+
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
@@ -2810,19 +2810,21 @@ sub analyzed_traits {
             $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
 	    $trait =~ s/\.txt//;
-      
+	 
 	    my $trait_id;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
             if ($acronym_pairs)
             {
                 foreach my $r (@$acronym_pairs) 
-                {    
+                {
+		 
                     if ($r->[0] eq $trait) 
                     {
                         my $trait_name =  $r->[1];
                         $trait_name    =~ s/\n//g;                                                       
                         $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+		
 			if (@selected_analyzed_traits)
 			{
 			    if (grep($trait_id == $_,  @selected_analyzed_traits)) 
@@ -2844,7 +2846,7 @@ sub analyzed_traits {
             if ($av && $av =~ m/\d+/ && $av > 0) 
             {
 		if (@selected_analyzed_traits)
-		{
+		{		    
 		    if (grep($trait_id == $_,  @selected_analyzed_traits)) 
 		    {
 			push @si_traits, $trait;
@@ -2872,7 +2874,7 @@ sub analyzed_traits {
 	    }
         }      
     }
-        
+ 
     $c->stash->{analyzed_traits}        = \@traits;
     $c->stash->{analyzed_traits_ids}    = \@traits_ids;
     $c->stash->{analyzed_traits_files}  = \@analyzed_traits_files;
