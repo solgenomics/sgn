@@ -278,6 +278,9 @@ project_md_image	cropped_stitched_drone_imagery	Cropped stitched image	10/5/2018
 project_md_image	fourier_transform_stitched_drone_imagery	Stitched image with fourier transform applied	10/5/2018	nm529	00103
 project_md_image	contours_stitched_drone_imagery	Contours of stitched image	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_stitched_drone_imagery	Stitched image without background (soil, etc) via threshold	10/5/2018	nm529	00103
+project_md_image	threshold_background_removed_stitched_drone_imagery_rgb_channel_1	Stitched image without background (soil, etc) via threshold channel 1	10/5/2018	nm529	00103
+project_md_image	threshold_background_removed_stitched_drone_imagery_rgb_channel_2	Stitched image without background (soil, etc) via threshold channel 2	10/5/2018	nm529	00103
+project_md_image	threshold_background_removed_stitched_drone_imagery_rgb_channel_3	Stitched image without background (soil, etc) via threshold channel 3	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_tgi_stitched_drone_imagery	Vegetative index TGI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_vari_stitched_drone_imagery	Vegetative index VARI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_ndvi_stitched_drone_imagery	Vegetative index NDVI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
@@ -302,7 +305,9 @@ project_md_image	observation_unit_polygon_mir_imagery	Cropped image for an obser
 project_md_image	observation_unit_polygon_fir_imagery	Cropped image for an observation unit polygon from original fir image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_tir_imagery	Cropped image for an observation unit polygon from original tir image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_bw_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original black and white image after background removed via threshold	10/5/2018	nm529	00103
-project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original rgb image after background removed via threshold	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1	Cropped image for an observation unit polygon from original rgb image after background removed via threshold channel 1	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2	Cropped image for an observation unit polygon from original rgb image after background removed via threshold channel 2	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3	Cropped image for an observation unit polygon from original rgb image after background removed via threshold channel 3	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_blue_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original blue image after background removed via threshold	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_green_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original green image after background removed via threshold	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_red_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original red image after background removed via threshold	10/5/2018	nm529	00103

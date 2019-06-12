@@ -445,7 +445,9 @@ sub _get_all_project_md_image_observation_unit_plot_polygon_types {
     my $observation_unit_polygon_fir_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_tir_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
-    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
@@ -492,7 +494,9 @@ sub _get_all_project_md_image_observation_unit_plot_polygon_types {
         $observation_unit_polygon_fir_imagery_cvterm_id => {name=>'observation_unit_polygon_fir_imagery', channels=>[0]},
         $observation_unit_polygon_tir_imagery_cvterm_id => {name=>'observation_unit_polygon_tir_imagery', channels=>[0]},
         $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id => {name=>'observation_unit_polygon_bw_background_removed_threshold_imagery', channels=>[0]},
-        $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id => {name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery', channels=>[0,1,2]},
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1_cvterm_id => {name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', channels=>[0]},
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2_cvterm_id => {name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', channels=>[0]},
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3_cvterm_id => {name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', channels=>[0]},
         $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id => {name=>'observation_unit_polygon_blue_background_removed_threshold_imagery', channels=>[0]},
         $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id => {name=>'observation_unit_polygon_green_background_removed_threshold_imagery', channels=>[0]},
         $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id => {name=>'observation_unit_polygon_red_background_removed_threshold_imagery', channels=>[0]},
@@ -591,7 +595,9 @@ sub _get_all_project_md_image_types_excluding_band_base_types {
 sub _get_all_project_md_image_types_only_band_base_types {
     my $schema = shift;
     my $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
-    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'project_md_image')->cvterm_id();
+    my $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     my $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
@@ -602,7 +608,9 @@ sub _get_all_project_md_image_types_only_band_base_types {
     my $observation_unit_polygon_tir_background_removed_threshold_imagery_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id();
     return [
         $observation_unit_polygon_bw_background_removed_threshold_imagery_cvterm_id,
-        $observation_unit_polygon_rgb_background_removed_threshold_imagery_cvterm_id,
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1_cvterm_id,
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2_cvterm_id,
+        $observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3_cvterm_id,
         $observation_unit_polygon_blue_background_removed_threshold_imagery_cvterm_id,
         $observation_unit_polygon_green_background_removed_threshold_imagery_cvterm_id,
         $observation_unit_polygon_red_background_removed_threshold_imagery_cvterm_id,
@@ -792,7 +800,7 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
     my $project_image_type_id_list = _get_all_project_md_image_observation_unit_plot_polygon_types($schema);
-    my $sql = join ("," , @$project_image_type_id_list);
+    my $sql = join ("," , (keys %$project_image_type_id_list));
     my $q = "SELECT drone_run.project_id, project_image_type.name
         FROM project AS drone_run_band
         JOIN project_relationship AS drone_run_band_rel ON(drone_run_band.project_id=drone_run_band_rel.subject_project_id AND drone_run_band_rel.type_id=$drone_run_band_drone_run_relationship_id)
@@ -1413,8 +1421,6 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                             my $plot_polygon_type = '';
                             if ($d->{drone_run_band_project_type} eq 'Black and White Image') {
                                 $plot_polygon_type = 'observation_unit_polygon_bw_background_removed_threshold_imagery';
-                            } elsif ($d->{drone_run_band_project_type} eq 'RGB Color Image') {
-                                $plot_polygon_type = 'observation_unit_polygon_rgb_background_removed_threshold_imagery';
                             } elsif ($d->{drone_run_band_project_type} eq 'Blue (450-520nm)') {
                                 $plot_polygon_type = 'observation_unit_polygon_blue_background_removed_threshold_imagery';
 
@@ -1451,6 +1457,29 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 $plot_polygon_type = 'observation_unit_polygon_fir_background_removed_threshold_imagery';
                             } elsif ($d->{drone_run_band_project_type} eq 'Thermal IR (10400-12500nm)') {
                                 $plot_polygon_type = 'observation_unit_polygon_tir_background_removed_threshold_imagery';
+                            } elsif ($d->{drone_run_band_project_type} eq 'RGB Color Image') {
+                                $plot_polygon_type = 'observation_unit_polygon_rgb_background_removed_threshold_imagery';
+                                
+                                if ($d->{vegetative_index_tgi_stitched_image}) {
+                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>TGI Vegetative Index Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{vegetative_index_tgi_image_id}.'"></span></h5><b>By</b>: '.$d->{vegetative_index_tgi_username}.'</br><b>Date</b>: '.$d->{vegetative_index_tgi_modified_date}.'</div><div class="col-sm-3">'.$d->{vegetative_index_tgi_stitched_image}.'</div><div class="col-sm-6">';
+
+                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{vegetative_index_tgi_image_id}.'" data-assign_plot_polygons_type="observation_unit_polygon_tgi_imagery">Create/View Plot Polygons</button>';
+
+                                    $drone_run_band_table_html .= '<hr>';
+                                    my $plot_polygon_tgi_images = '';
+                                    if ($d->{plot_polygon_tgi_images}) {
+                                        $plot_polygon_tgi_images = scalar(@{$d->{plot_polygon_tgi_images}})." Plot Polygons<br/><span>";
+                                        $plot_polygon_tgi_images .= join '', @{$d->{plot_polygon_tgi_images}};
+                                        $plot_polygon_tgi_images .= "</span>";
+                                        $plot_polygon_tgi_images .= '<br/><br/>';
+                                        $plot_polygon_tgi_images .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="observation_unit_polygon_tgi_imagery" >Calculate Phenotypes</button>';
+                                    } else {
+                                        $plot_polygon_tgi_images = 'No Plot Polygons Assigned';
+                                    }
+                                    $drone_run_band_table_html .= $plot_polygon_tgi_images;
+
+                                    $drone_run_band_table_html .= '</div></div></div>';
+                                }
                             }
 
                             if ($d->{vegetative_index_tgi_stitched_image}) {
@@ -2134,12 +2163,13 @@ sub drone_imagery_analysis_query_POST : Args(0) {
     my $main_production_site = $c->config->{main_production_site_url};
 
     my $project_image_type_id_list_all = _get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my @project_image_type_id_list_array = keys %$project_image_type_id_list_all;
 
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $return_format = $c->req->param('format') || 'csv';
     my $trial_name_list = $c->req->param('trial_name_list');
     my $trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
-    my $project_image_type_id_list = $c->req->param('project_image_type_id_list') ? decode_json $c->req->param('project_image_type_id_list') : $project_image_type_id_list_all;
+    my $project_image_type_id_list = $c->req->param('project_image_type_id_list') ? decode_json $c->req->param('project_image_type_id_list') : \@project_image_type_id_list_array;
 
     my %return;
 
@@ -3236,7 +3266,7 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $drone_run_field_trial_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
     my $drone_run_band_drone_run_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $project_image_type_id_list = _get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
-    my $project_image_type_id_list_sql = join ",", @$project_image_type_id_list;
+    my $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
 
     my @where_clause;
     push @where_clause, "project_md_image.type_id in ($project_image_type_id_list_sql)";
@@ -3468,59 +3498,86 @@ sub standard_process_apply_POST : Args(0) {
         $archive_remove_background_temp_image .= '.png';
         print STDERR $archive_remove_background_temp_image."\n";
 
-        my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, 'threshold_background_removed_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
-        my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
-
         my $denoised_plot_polygon_type;
-        my $denoised_background_threshold_removed_plot_polygon_type;
-        my $ft_hpf30_plot_polygon_type;
+        my @denoised_background_threshold_removed_imagery_types;
+        my @denoised_background_threshold_removed_plot_polygon_types;
+        my @ft_hpf30_imagery_types;
+        my @ft_hpf30_plot_polygon_types;
         if ($drone_run_band_type eq 'Blue (450-520nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_blue_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_blue_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_blue_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'Green (515-600nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_green_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_green_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_green_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'Red (600-690nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_red_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_red_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_red_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'Red Edge (690-750nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_red_edge_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'NIR (750-900nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_nir_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_nir_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_nir_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'MIR (1550-1750nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_mir_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_mir_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_mir_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'FIR (2080-2350nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_fir_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_fir_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fir_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_tir_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_tir_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types = 'observation_unit_polygon_tir_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1';
         }
         if ($drone_run_band_type eq 'Black and White Image') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_bw_imagery';
-            $denoised_background_threshold_removed_plot_polygon_type = 'observation_unit_polygon_bw_background_removed_threshold_imagery';
-            $ft_hpf30_plot_polygon_type = 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+            push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery';
+            push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_bw_background_removed_threshold_imagery';
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+        }
+        if ($drone_run_band_type eq 'RGB Color Image') {
+            $denoised_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
+            push @denoised_background_threshold_removed_imagery_types, ('threshold_background_removed_stitched_drone_imagery_rgb_channel_1', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_3');
+            push @denoised_background_threshold_removed_plot_polygon_types, ('observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3');
+            push @ft_hpf30_imagery_types, 'denoised_stitched_image';
+            push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
         }
 
         my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_plot_polygon_type, $user_id, $user_name, $user_role, 0);
+
+        my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, 'threshold_background_removed_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+        my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
 
         if ($drone_run_band_project_id != $template_drone_run_band_project_id) {
             my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_type, $user_id, $user_name, $user_role, 0);
@@ -4590,10 +4647,12 @@ sub _perform_phenotype_automated {
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
         foreach my $phenotype_method (@$phenotype_types) {
-            while (my ($plot_polygons_type, $channel_array) = each %$project_image_type_id_list) {
-                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type, $time_cvterm_id, $plot_polygons_type->[0], $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
-                if ($return->{error}){
-                    print STDERR Dumper $return->{error};
+            while (my ($plot_polygons_type, $h) = each %$project_image_type_id_list) {
+                foreach my $channel (@{$h->{channels}}) {
+                    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $channel, $time_cvterm_id, $h->{name}, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+                    if ($return->{error}){
+                        print STDERR Dumper $return->{error};
+                    }
                 }
             }
         }
