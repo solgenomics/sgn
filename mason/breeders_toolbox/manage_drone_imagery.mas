@@ -3760,7 +3760,7 @@ jQuery(document).ready(function() {
                 break;
             }
         }
-        return [drone_imagery_remove_background_lower_percentage_threshold, drone_imagery_remove_background_upper_percentage_threshold];
+        return [drone_imagery_remove_background_lower_percentage_threshold*100, drone_imagery_remove_background_upper_percentage_threshold*100];
     }
 
     jQuery('#drone_imagery_remove_background_defined_percentage_submit').click(function(){

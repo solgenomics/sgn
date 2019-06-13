@@ -1040,11 +1040,6 @@ sub _perform_image_background_remove_threshold_percentage {
     print STDERR Dumper $image_url;
     print STDERR Dumper $image_fullpath;
 
-    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\'');
-
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-
     my $linking_table_type_id;
     my $drone_run_band_remove_background_threshold_type_id;
     if ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
@@ -1067,6 +1062,12 @@ sub _perform_image_background_remove_threshold_percentage {
         die "Linking table type_id not found for background remove threshold percentage: $image_type\n";
     }
 
+    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel};
+    my $image_band_index_string = '';
+    if (defined($corresponding_channel)) {
+        $image_band_index_string = "--image_band_index $corresponding_channel";
+    }
+
     my $previous_background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         project_image_type_id=>$linking_table_type_id,
@@ -1079,6 +1080,10 @@ sub _perform_image_background_remove_threshold_percentage {
         $previous_image->delete(); #Sets to obsolete
     }
 
+    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\' '.$image_band_index_string);
+
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
     my $ret = $image->process_image($archive_remove_background_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
     my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
     my $removed_background_image_url = $image->get_image_url('original');

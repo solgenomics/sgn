@@ -283,22 +283,22 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         },
         'threshold_background_removed_tgi_stitched_drone_imagery' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_tgi_threshold',
+            key => 'drone_run_band_background_removed_tgi_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_tgi_imagery'
         },
         'threshold_background_removed_vari_stitched_drone_imagery' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_vari_threshold',
+            key => 'drone_run_band_background_removed_vari_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_vari_imagery'
         },
         'threshold_background_removed_ndvi_stitched_drone_imagery' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_ndvi_threshold',
+            key => 'drone_run_band_background_removed_ndvi_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_ndvi_imagery'
         },
         'threshold_background_removed_ndre_stitched_drone_imagery' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_ndre_threshold',
+            key => 'drone_run_band_background_removed_ndre_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_ndre_imagery'
         }
     );
