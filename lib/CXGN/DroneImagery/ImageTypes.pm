@@ -38,6 +38,15 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_rgb_imagery', channels=>[0,1,2], corresponding_channel=>undef
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_rgb_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_rgb_imagery_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_rgb_imagery_channel_3', channels=>[0], corresponding_channel=>2
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_blue_imagery', channels=>[0], corresponding_channel=>0
         },
@@ -122,6 +131,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndre_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_background_removed_ndre_imagery', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
@@ -130,6 +142,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
@@ -140,6 +155,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_ndvi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_ndvi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
@@ -148,6 +166,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_ndvi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_ndre_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_ndre_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
@@ -158,6 +179,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_ndre_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_ndre_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
@@ -166,6 +190,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
@@ -176,6 +203,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
@@ -184,6 +214,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0
@@ -250,6 +283,24 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2
         },
     };
 }
@@ -366,98 +417,26 @@ sub get_all_project_md_image_types_whole_images {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_thresholded_tgi_mask_original', channels=>[0,1,2], corresponding_channel=>undef
         },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
-        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_thresholded_vari_mask_original', channels=>[0,1,2], corresponding_channel=>undef
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_thresholded_ndvi_mask_original', channels=>[0,1,2], corresponding_channel=>undef
         },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndvi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_ndvi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
-        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndre_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_thresholded_ndre_mask_original', channels=>[0,1,2], corresponding_channel=>undef
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_thresholded_ndre_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_thresholded_ndre_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_tgi_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_tgi_mask_original', channels=>[0,1,2], corresponding_channel=>undef
         },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
-        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_vari_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_vari_mask_original', channels=>[0,1,2], corresponding_channel=>undef
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndvi_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_ndvi_mask_original', channels=>[0,1,2], corresponding_channel=>undef
         },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndvi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_ndvi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
-        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndre_mask_original', 'project_md_image')->cvterm_id() => {
             name=>'denoised_background_removed_ndre_mask_original', channels=>[0,1,2], corresponding_channel=>undef
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
-        },
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_background_removed_ndre_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'denoised_background_removed_ndre_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0
