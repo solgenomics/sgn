@@ -2386,7 +2386,10 @@ sub _perform_plot_polygon_assign {
     my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
 
     my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel};
-
+    my $image_band_index_string = '';
+    if (defined($corresponding_channel)) {
+        $image_band_index_string = "--image_band_index $corresponding_channel";
+    }
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
     foreach my $stock_name (keys %$polygon_objs) {
@@ -2399,7 +2402,7 @@ sub _perform_plot_polygon_assign {
         $archive_plot_polygons_temp_image .= '.png';
         print STDERR $archive_plot_polygons_temp_image."\n";
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons' --image_band_index $corresponding_channel";
+        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons' $image_band_index_string";
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 

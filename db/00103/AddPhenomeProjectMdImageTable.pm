@@ -354,6 +354,8 @@ CREATE TABLE if not exists phenome.nd_experiment_md_images (
 );
 grant select,insert,delete on table phenome.nd_experiment_md_images to web_usr;
 grant usage on phenome.nd_experiment_md_images_nd_experiment_md_images_id_seq to web_usr;
+
+ALTER TABLE metadata.md_tag ALTER COLUMN name TYPE varchar(256);
 SQL
         $schema->storage->dbh->do($sql);
     };
