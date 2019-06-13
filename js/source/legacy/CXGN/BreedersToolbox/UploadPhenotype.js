@@ -32,7 +32,7 @@ jQuery( document ).ready( function() {
 
     jQuery('#upload_spreadsheet_phenotype_file_format').change(function(){
         var val = jQuery(this).val();
-        if (val == 'simple' || val == 'nirs'){
+        if (val == 'simple' || val == 'nirs' || val == 'scio'){
             jQuery('#upload_spreadsheet_phenotype_data_level_div').hide();
         } else {
             jQuery('#upload_spreadsheet_phenotype_data_level_div').show();

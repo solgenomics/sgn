@@ -175,8 +175,8 @@ sub _prep_upload {
     my $data_level;
     my $image_zip;
     if ($file_type eq "spreadsheet") {
-        #print STDERR "File type is Spreadsheet \n";
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs or scio
+        print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         }
@@ -185,6 +185,9 @@ sub _prep_upload {
         }
         if ($spreadsheet_format eq 'nirs'){
             $validate_type = "phenotype spreadsheet nirs";
+        }
+        if ($spreadsheet_format eq 'scio'){
+            $validate_type = "scio spreadsheet nirs";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
         $metadata_file_type = "spreadsheet phenotype file";
@@ -278,6 +281,7 @@ sub _prep_upload {
     }
 
     ## Validate and parse uploaded file
+    print STDERR "Validating file\n";
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
@@ -299,6 +303,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
+    print STDERR "Parsing file\n";
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";

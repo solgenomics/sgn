@@ -16,6 +16,7 @@ sub validate {
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
+            print STDERR "Matched type $type to name ".$p->name()."\n";
 	     $validate_result = $p->validate($filename, $timestamp_included, $data_level, $schema);
 	}
     }
