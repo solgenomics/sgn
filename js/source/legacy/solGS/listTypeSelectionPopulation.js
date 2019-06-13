@@ -15,7 +15,7 @@ JSAN.use("jquery.blockUI");
 
 jQuery(document).ready( function() {
     var list = new CXGN.List();
-    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"]);
+    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
     var relevant =[]; 	
         
     if (listMenu.match(/option/) != null) {

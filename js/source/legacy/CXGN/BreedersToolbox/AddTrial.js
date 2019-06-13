@@ -1339,14 +1339,14 @@ jQuery(document).ready(function ($) {
         $('#add_project_dialog').modal("show");
 
         //add lists to the list select and list of checks select dropdowns.
-        document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
-        document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh');
-        document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
+        document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
+        document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
+        document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
 
         //add lists to the list select and list of checks select dropdowns for CRBD.
-        document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh');
-        document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh');
-        document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh');
+        document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
+        document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
 
         //add a blank line to location select dropdown that dissappears when dropdown is opened
         $("#add_project_location").prepend("<option value=''></option>").val('');

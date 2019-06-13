@@ -235,9 +235,11 @@ sub _parse_with_plugin {
                     my @vcf_genotype = (@ref_calls, @alt_calls);
                     my $vcf_genotype_string = join ',', @vcf_genotype;
                     my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
-                    $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
-                    $genotype_obj = { 'NT' => $vcf_genotype_string };
-                    $genotype_obj = { 'DS' => "$gt_dosage"};
+                    $genotype_obj = {
+                        'GT' => $vcf_gt_genotype_string,
+                        'NT' => $vcf_genotype_string,
+                        'DS' => "$gt_dosage"
+                    };
                 } else {
                     die "There should always be a ref and alt according to validation above\n";
                 }
