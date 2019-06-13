@@ -1155,6 +1155,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_field_trial_id;
     var manage_drone_imagery_standard_process_drone_run_project_id;
     var manage_drone_imagery_standard_process_drone_run_band_project_id;
+    var manage_drone_imagery_standard_process_template_denoised_plot_polygon_type;
     var manage_drone_imagery_standard_process_rotate_stitched_image_id;
     var manage_drone_imagery_standard_process_rotate_drone_run_band_project_id;
     var manage_drone_imagery_standard_process_rotate_stitched_image_degrees;
@@ -1181,7 +1182,7 @@ jQuery(document).ready(function() {
     jQuery('#manage_drone_imagery_standard_process_drone_run_band_step').click(function(){
         var selected = [];
         jQuery('input[name="drone_run_standard_process_band_select"]:checked').each(function() {
-            selected.push(jQuery(this).val());
+            selected.push([jQuery(this).val(), jQuery(this).data('denoised_plot_polygon_type')]);
         });
         if (selected.length < 1){
             alert('Please select at least one drone run band! Preferably one with high contrast such as NIR.');
@@ -1190,7 +1191,8 @@ jQuery(document).ready(function() {
             alert('Please select only one drone run band! Preferably one with high contrast such as NIR.');
             return false;
         } else {
-            manage_drone_imagery_standard_process_drone_run_band_project_id = selected[0];
+            manage_drone_imagery_standard_process_drone_run_band_project_id = selected[0][0];
+            manage_drone_imagery_standard_process_template_denoised_plot_polygon_type = selected[0][1];
             jQuery.ajax({
                 url : '/api/drone_imagery/get_project_md_image?drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&project_image_type_name=stitched_drone_imagery',
                 beforeSend: function(){
@@ -1523,7 +1525,8 @@ jQuery(document).ready(function() {
             data: {
                 'image_id': manage_drone_imagery_standard_process_removed_background_image_id,
                 'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
-                'stock_polygons': JSON.stringify(drone_imagery_plot_polygons)
+                'stock_polygons': JSON.stringify(drone_imagery_plot_polygons),
+                'assign_plot_polygons_type': manage_drone_imagery_standard_process_template_denoised_plot_polygon_type
             },
             success: function(response){
                 console.log(response);

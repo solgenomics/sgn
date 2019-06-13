@@ -2373,6 +2373,7 @@ sub _perform_plot_polygon_assign {
         key=>'projectprop_c1'
     });
 
+    print STDERR "Plot Polygon Type: $assign_plot_polygons_type\n";
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();;
     my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $assign_plot_polygons_type);
     if (!$image_tag_id) {
@@ -2971,10 +2972,41 @@ sub get_drone_run_band_projects_GET : Args(0) {
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my @res;
         if ($drone_run_band_project_id != $exclude_drone_run_band_project_id) {
+            my $denoised_plot_polygon_type;
+            if ($drone_run_band_type eq 'Blue (450-520nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_blue_imagery';
+            }
+            elsif ($drone_run_band_type eq 'Green (515-600nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_green_imagery';
+            }
+            elsif ($drone_run_band_type eq 'Red (600-690nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_red_imagery';
+            }
+            elsif ($drone_run_band_type eq 'Red Edge (690-750nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_red_edge_imagery';
+            }
+            elsif ($drone_run_band_type eq 'NIR (750-900nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_nir_imagery';
+            }
+            elsif ($drone_run_band_type eq 'MIR (1550-1750nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_mir_imagery';
+            }
+            elsif ($drone_run_band_type eq 'FIR (2080-2350nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_fir_imagery';
+            }
+            elsif ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_tir_imagery';
+            }
+            elsif ($drone_run_band_type eq 'Black and White Image') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_bw_imagery';
+            }
+            elsif ($drone_run_band_type eq 'RGB Color Image') {
+                $denoised_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
+            }
             if ($checkbox_select_name){
                 my $checked = $select_all ? 'checked' : '';
                 my $disabled = $disable ? 'disabled' : '';
-                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' $checked $disabled>";
+                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-denoised_plot_polygon_type='$denoised_plot_polygon_type' $checked $disabled>";
             }
             my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
             push @res, (
@@ -3116,7 +3148,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'Green (515-600nm)') {
+        elsif ($drone_run_band_type eq 'Green (515-600nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_green_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_green';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_green_background_removed_threshold_imagery';
@@ -3125,7 +3157,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'Red (600-690nm)') {
+        elsif ($drone_run_band_type eq 'Red (600-690nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_red_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_red';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_red_background_removed_threshold_imagery';
@@ -3134,7 +3166,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'Red Edge (690-750nm)') {
+        elsif ($drone_run_band_type eq 'Red Edge (690-750nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_red_edge_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_red_edge';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
@@ -3143,7 +3175,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'NIR (750-900nm)') {
+        elsif ($drone_run_band_type eq 'NIR (750-900nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_nir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_nir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_nir_background_removed_threshold_imagery';
@@ -3152,7 +3184,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'MIR (1550-1750nm)') {
+        elsif ($drone_run_band_type eq 'MIR (1550-1750nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_mir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_mir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_mir_background_removed_threshold_imagery';
@@ -3161,7 +3193,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_mir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'FIR (2080-2350nm)') {
+        elsif ($drone_run_band_type eq 'FIR (2080-2350nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_fir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_fir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fir_background_removed_threshold_imagery';
@@ -3170,7 +3202,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_fir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
+        elsif ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_tir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_tir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_tir_background_removed_threshold_imagery';
@@ -3179,7 +3211,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_tir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'Black and White Image') {
+        elsif ($drone_run_band_type eq 'Black and White Image') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_bw_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_bw';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_bw_background_removed_threshold_imagery';
@@ -3188,7 +3220,7 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_bw_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1';
         }
-        if ($drone_run_band_type eq 'RGB Color Image') {
+        elsif ($drone_run_band_type eq 'RGB Color Image') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
             push @denoised_background_threshold_removed_imagery_types, ('threshold_background_removed_stitched_drone_imagery_rgb_channel_1', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_3');
             push @denoised_background_threshold_removed_plot_polygon_types, ('observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3');
@@ -3746,11 +3778,9 @@ sub _perform_fourier_transform_calculation {
             }
         }
     }
-    if (scalar(@linking_table_type_ids)<1) {
-        die "Could not get fourier transform linking id\n";
-    }
 
-    my $linking_table_type_id = CXGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
+    print STDERR "FT Linking Table Type: $image_type\n";
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
     my $image_channel_lookup = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($schema)->{$linking_table_type_id}->{corresponding_channel};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
