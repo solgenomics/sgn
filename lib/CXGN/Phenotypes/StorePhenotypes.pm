@@ -611,21 +611,32 @@ sub store_nirs_data {
     #convert hashref to json, store in md_json table with type 'nirs_spectra'
     my $nirs_json = encode_json \%nirs_hash;
 
-    my $json_row = $self->metadata_schema->resultset("MdJson")
-        ->create({
-            json_type => 'nirs_spectra',
-            json => $nirs_json,
-        });
-        $json_row->insert();
+    my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
+    my $dbh = $self->bcs_schema->storage->dbh()->prepare($insert_query);
+    $dbh->execute($nirs_json);
+    my ($json_id) = $dbh->fetchrow_array();
 
-        ## Link the json to the experiment
-        my $experiment_json = $self->phenome_schema->resultset("NdExperimentMdJson")
-            ->create({
-                nd_experiment_id => $nd_experiment_id,
-                json_id => $json_row->json_id(),
-            });
-        $experiment_json->insert();
-        print STDERR "[StorePhenotypes] Linking json to experiment id " . $nd_experiment_id . "\n";
+    my $linking_query = "INSERT INTO phenome.nd_experiment_md_json ( nd_experiment_id, json_id) VALUES (?,?);";
+
+    $dbh = $self->bcs_schema->storage->dbh()->prepare($linking_query);
+    $dbh->execute($nd_experiment_id,$json_id);
+    #while (my ($unit_id, $unit_name, $level, $accession_id, $accession_name, $location_id, $project_id) = $h->fetchrow_array()) {
+
+    # my $json_row = $self->metadata_schema->resultset("MdJson")
+    #     ->create({
+    #         json_type => 'nirs_spectra',
+    #         json => $nirs_json,
+    #     });
+    #     $json_row->insert();
+    #
+    #     ## Link the json to the experiment
+    #     my $experiment_json = $self->phenome_schema->resultset("NdExperimentMdJson")
+    #         ->create({
+    #             nd_experiment_id => $nd_experiment_id,
+    #             json_id => $json_row->json_id(),
+    #         });
+    #     $experiment_json->insert();
+        print STDERR "[StorePhenotypes] Linked json with id $json_id to nd_experiment $nd_experiment_id\n";
 }
 
 sub delete_previous_phenotypes {

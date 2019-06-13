@@ -62,6 +62,7 @@ CREATE TABLE metadata.md_json (
 ALTER TABLE metadata.md_json OWNER TO postgres;
 COMMENT ON TABLE md_json IS 'md_json is a table for storing variable json datasets and linking them to related data in other tables. For example storing nirs spectra (wavelength:value pairs) and linking to the relevant nd_experiment which in turn links to the plot and derived phenotype values.';
 GRANT SELECT,UPDATE,INSERT,DELETE ON metadata.md_json TO web_usr;
+GRANT USAGE ON md_json_json_id_seq TO web_usr;
 
 CREATE TABLE phenome.nd_experiment_md_json (
     nd_experiment_md_json_id SERIAL PRIMARY KEY,
@@ -70,6 +71,8 @@ CREATE TABLE phenome.nd_experiment_md_json (
 );
 ALTER TABLE phenome.nd_experiment_md_json OWNER TO postgres;
 GRANT SELECT,UPDATE,INSERT,DELETE ON phenome.nd_experiment_md_json TO web_usr;
+GRANT USAGE ON phenome.nd_experiment_md_json_nd_experiment_md_json_id_seq TO web_usr;
+
 
 EOSQL
 
