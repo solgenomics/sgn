@@ -105,6 +105,7 @@ function _load_image_search_results() {
         'ordering'  : false,
         'processing': true,
         'serverSide': true,
+        'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
             'data': function(d) {
