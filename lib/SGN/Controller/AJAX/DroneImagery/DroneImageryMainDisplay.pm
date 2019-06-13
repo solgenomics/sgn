@@ -190,6 +190,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my $c = shift;
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $calendar_funcs = CXGN::Calendar->new({});
 
     my $main_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($schema);
     my @main_image_types_array = keys %$main_image_types;
@@ -201,24 +202,90 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
 
-    my $observation_unit_plot_polygon_band_base_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_only_band_base_types($schema);
-    my @observation_unit_plot_polygon_band_base_types_array = keys %$observation_unit_plot_polygon_band_base_types;
-    my $observation_unit_polygon_original_background_removed_threshold_imagery_search = CXGN::DroneImagery::ImagesSearch->new({
+    my $observation_unit_plot_polygon_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my @observation_unit_plot_polygon_types_array = keys %$observation_unit_plot_polygon_types;
+    my $observation_unit_polygon_imagery_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_band_project_id_list=>[$drone_run_band_project_id],
-        project_image_type_id_list=>\@observation_unit_plot_polygon_band_base_types_array
+        project_image_type_id_list=>\@observation_unit_plot_polygon_types_array
     });
-    my ($observation_unit_polygon_original_background_removed_threshold_imagery_result, $observation_unit_polygon_original_background_removed_threshold_imagery_total_count) = $observation_unit_polygon_original_background_removed_threshold_imagery_search->search();
-    #print STDERR Dumper $observation_unit_polygon_original_background_removed_threshold_imagery_result;
+    my ($observation_unit_polygon_result, $observation_unit_polygon_total_count) = $observation_unit_polygon_imagery_search->search();
+    #print STDERR Dumper $observation_unit_polygon_result;
 
-    my $observation_unit_plot_polygon_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_excluding_band_base_types($schema);
-    my $plot_polygons_images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        drone_run_band_project_id_list=>[$drone_run_band_project_id],
-        project_image_type_id_list=>$observation_unit_plot_polygon_types
-    });
-    my ($plot_polygons_result, $plot_polygons_total_count) = $plot_polygons_images_search->search();
-    #print STDERR Dumper $plot_polygons_result;
+    my %imagery_attribute_map = (
+        'cropped_stitched_drone_imagery' => {
+            name => 'polygon',
+            key => 'drone_run_band_cropped_polygon'
+        },
+        'rotated_stitched_drone_imagery' => {
+            name => 'angle',
+            key => 'drone_run_band_rotate_angle'
+        },
+        'threshold_background_removed_stitched_drone_imagery_blue' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_green' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_red' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_red_edge' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_nir' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_mir' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_fir' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_tir' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_bw' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_rgb_channel_1' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_rgb_channel_2' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_stitched_drone_imagery_rgb_channel_3' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_threshold'
+        },
+        'threshold_background_removed_tgi_stitched_drone_imagery' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_tgi_threshold'
+        },
+        'threshold_background_removed_vari_stitched_drone_imagery' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_vari_threshold'
+        },
+        'threshold_background_removed_ndvi_stitched_drone_imagery' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_ndvi_threshold'
+        },
+        'threshold_background_removed_ndre_stitched_drone_imagery' => {
+            name => 'threshold',
+            key => 'drone_run_band_removed_background_ndre_threshold'
+        }
+    );
 
     my @return;
     my %unique_drone_runs;
@@ -258,465 +325,29 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
             $unique_drone_runs{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
         }
-        elsif ($_->{project_image_type_name} eq 'cropped_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{cropped_stitched_image_polygon} = $_->{drone_run_band_cropped_polygon};
-        }
-        elsif ($_->{project_image_type_name} eq 'rotated_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{rotated_stitched_image_angle} = $_->{drone_run_band_rotate_angle};
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_stitched_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_tgi_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_tgi_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_vari_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_vari_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_ndvi_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndvi_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_ndre_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndre_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndre_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndre_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndre_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{vegetative_index_ndre_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_stitched_image_threshold} = $_->{drone_run_band_removed_background_threshold};
-        }
-        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_tgi_stitched_image_threshold} = $_->{drone_run_band_removed_background_tgi_threshold};
-        }
-        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_vari_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_vari_stitched_image_threshold} = $_->{drone_run_band_removed_background_vari_threshold};
-        }
-        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndvi_stitched_image_threshold} = $_->{drone_run_band_removed_background_ndvi_threshold};
-        }
-        elsif ($_->{project_image_type_name} eq 'threshold_background_removed_ndre_stitched_drone_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndre_stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndre_stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndre_stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndre_stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndre_stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{threshold_background_removed_ndre_stitched_image_threshold} = $_->{drone_run_band_removed_background_ndre_threshold};
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_tgi_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_tgi_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_vari_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_vari_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_ndvi_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndvi_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_thresholded_ndre_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndre_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndre_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndre_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndre_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_thresholded_ndre_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_tgi_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_tgi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_tgi_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_tgi_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_tgi_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_tgi_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_vari_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_vari_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_vari_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_vari_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_vari_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_vari_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_ndvi_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndvi_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndvi_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndvi_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndvi_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndvi_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'denoised_background_removed_ndre_mask_original') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_image_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{denoised_background_removed_ndre_mask_original_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_2_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_3_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_2_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_stitched_image_channel_3_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1_image_id} = $image_id;
-        }
-        elsif ($_->{project_image_type_name} eq 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_image_username} = $_->{username};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_original} = $image_original;
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1_image_id} = $image_id;
-        }
         else {
-            die "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 1!\n";
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_username"} = $_->{username};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_modified_date"} = $_->{image_modified_date};
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_original"} = $image_original;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_id"} = $image_id;
+            if (exists($imagery_attribute_map{$_->{project_image_type_name}})) {
+                $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_".$imagery_attribute_map{$_->{project_image_type_name}}->{name}} = $_->{$imagery_attribute_map{$_->{project_image_type_name}}->{key}};
+            }
         }
     }
 
-    foreach (@$plot_polygons_result) {
+    foreach (@$observation_unit_polygon_result) {
         my $image_id = $_->{image_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
         my $image_original = $image->get_image_url("original");
-        if ($_->{project_image_type_name} eq 'observation_unit_polygon_tgi_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_tgi} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_tgi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_vari_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_vari} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_vari_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_ndvi_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_ndvi} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_ndvi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_ndre_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_ndre} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_ndre_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_tgi_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_tgi} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_tgi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_vari_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_vari} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_vari_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_ndvi} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_ndvi_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_background_removed_ndre_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_background_removed_ndre} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_background_removed_ndre_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_tgi_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_tgi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_vari_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_vari_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_ndvi_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_ndvi_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_ndvi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_thresholded_ndre_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_thresholded_ndre_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_thresholded_ndre_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_tgi_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_tgi_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_tgi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_vari_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_vari_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_vari_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_ndvi_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_ndvi_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_ndvi_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_original_background_removed_ndre_mask_imagery') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_original_background_removed_ndre_mask} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_original_background_removed_ndre_mask_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_nrn_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_red_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_green_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        elsif ($_->{project_image_type_name} eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
-            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1} = $_->{drone_run_band_plot_polygons};
-            push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{plot_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-        }
-        else {
-            print STDERR "ERROR: project_image_type_name: ".$_->{project_image_type_name}." not accepted 2!\n";
-        }
+        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_polygons"} = $_->{drone_run_band_plot_polygons};
+        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_images"}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
     }
 
-    foreach (@$observation_unit_polygon_original_background_removed_threshold_imagery_result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_original = $image->get_image_url("original");
-        $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_plot_polygons} = $_->{drone_run_band_plot_polygons};
-        push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{observation_unit_polygon_original_background_removed_threshold_images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-    }
+    print STDERR Dumper \%unique_drone_runs;
 
-    #print STDERR Dumper \%unique_drone_runs;
-
-    my $calendar_funcs = CXGN::Calendar->new({});
     foreach my $k (sort keys %unique_drone_runs) {
         my $v = $unique_drone_runs{$k};
 
@@ -727,41 +358,19 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
             my $d = $drone_run_bands->{$drone_run_band_project_id};
 
-            # $drone_run_band_table_html .= '<div class="panel-group" id="drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_raw_images_accordion_'.$drone_run_band_project_id.'" href="#drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'">View Raw Drone Run Images</a></h4></div><div id="drone_run_band_raw_images_accordion_one_'.$drone_run_band_project_id.'" class="panel-collapse collapse"><div class="panel-body">';
-            #
-            # $drone_run_band_table_html .= '<div class="well well-sm">';
-            #
-            # if ($d->{images}) {
-            #     $drone_run_band_table_html .= '<b>'.scalar(@{$d->{images}})." Raw Unstitched Images</b>:<br/><span>";
-            #     $drone_run_band_table_html .= join '', @{$d->{images}};
-            #     $drone_run_band_table_html .= "</span>";
-            #
-            #     my $usernames = '';
-            #     foreach (keys %{$d->{usernames}}){
-            #         $usernames .= " $_ ";
-            #     }
-            #     $drone_run_band_table_html .= '<br/><br/>';
-            #     $drone_run_band_table_html .= '<b>Uploaded By</b>: '.$usernames;
-            # } else {
-            #     $drone_run_band_table_html .= '<b>No Raw Unstitched Images</b>';
-            # }
-            # $drone_run_band_table_html .= '</div>';
-            #
-            # $drone_run_band_table_html .= '</div></div></div></div>';
-
             if ($d->{stitched_image}) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Stitched Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{stitched_image_username}.'<br/><b>Date</b>: '.$d->{stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{stitched_image}.'</div></div></div>';
 
-                if ($d->{rotated_stitched_image}) {
-                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Rotated Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{rotated_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{rotated_stitched_image_username}.'<br/><b>Date</b>: '.$d->{rotated_stitched_image_modified_date}.'<br/><b>Rotated Angle</b>: '.$d->{rotated_stitched_image_angle}.'</div><div class="col-sm-6">'.$d->{rotated_stitched_image}.'</div></div></div>';
+                if ($d->{rotated_stitched_drone_imagery}) {
+                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Rotated Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{rotated_stitched_drone_imagery_id}.'"></span></h5><b>By</b>: '.$d->{rotated_stitched_drone_imagery_username}.'<br/><b>Date</b>: '.$d->{rotated_stitched_drone_imagery_modified_date}.'<br/><b>Rotated Angle</b>: '.$d->{rotated_stitched_drone_imagery_angle}.'</div><div class="col-sm-6">'.$d->{rotated_stitched_drone_imagery}.'</div></div></div>';
 
-                    if ($d->{cropped_stitched_image}) {
-                        $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Cropped Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{cropped_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{cropped_stitched_image_username}.'<br/><b>Date</b>: '.$d->{cropped_stitched_image_modified_date}.'<br/><b>Cropped Polygon</b>: '.$d->{cropped_stitched_image_polygon}.'</div><div class="col-sm-6">'.$d->{cropped_stitched_image}.'</div></div></div>';
+                    if ($d->{cropped_stitched_drone_imagery}) {
+                        $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Cropped Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{cropped_stitched_drone_imagery_id}.'"></span></h5><b>By</b>: '.$d->{cropped_stitched_drone_imagery_username}.'<br/><b>Date</b>: '.$d->{cropped_stitched_drone_imagery_modified_date}.'<br/><b>Cropped Polygon</b>: '.$d->{cropped_stitched_drone_imagery_polygon}.'</div><div class="col-sm-6">'.$d->{cropped_stitched_drone_imagery}.'</div></div></div>';
 
-                        if ($d->{denoised_stitched_image}) {
-                            $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{denoised_stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{denoised_stitched_image_username}.'</br><b>Date</b>: '.$d->{denoised_stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{denoised_stitched_image}.'</div></div></div>';
+                        if ($d->{denoised_stitched_drone_imagery}) {
+                            $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'"></span></h5><b>By</b>: '.$d->{denoised_stitched_drone_imagery_username}.'</br><b>Date</b>: '.$d->{denoised_stitched_drone_imagery_modified_date}.'</div><div class="col-sm-6">'.$d->{denoised_stitched_drone_imagery}.'</div></div></div>';
 
-                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_add_georeference" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Add Georeferenced Points</button><br/><br/>';
+                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_add_georeference" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Add Georeferenced Points</button><br/><br/>';
 
                             if ($d->{drone_run_band_project_type} eq 'RGB Color Image' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands BGR' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands NRN' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands NReN') {
                                 if ($d->{drone_run_band_project_type} eq 'RGB Color Image') {
@@ -1493,10 +1102,10 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
                             }
                         } else {
-                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-cropped_stitched_image_id="'.$d->{cropped_stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-cropped_stitched_image="'.uri_encode($d->{cropped_stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Denoise</button><br/><br/>';
+                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-cropped_stitched_image="'.uri_encode($d->{cropped_stitched_drone_imagery_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Denoise</button><br/><br/>';
                         }
                     } else {
-                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_crop_image" data-rotated_stitched_image_id="'.$d->{rotated_stitched_image_id}.'" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Crop Rotated Image</button><br/><br/>';
+                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_crop_image" data-rotated_stitched_image_id="'.$d->{rotated_stitched_drone_imagery_id}.'" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Crop Rotated Image</button><br/><br/>';
                     }
                 } else {
                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_rotate_image" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Rotate Stitched Image</button><br/><br/>';

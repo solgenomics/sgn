@@ -305,37 +305,6 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
     };
 }
 
-sub get_all_project_md_image_types_excluding_band_base_types {
-    my $schema = shift;
-    my $plot_image_types = get_all_project_md_image_observation_unit_plot_polygon_types($schema);
-    my $base_image_types = get_all_project_md_image_types_only_band_base_types($schema);
-    my @plot_image_types;
-    foreach (keys %$plot_image_types) {
-        if (!exists($base_image_types->{$_})) {
-            push @plot_image_types, $_;
-        }
-    }
-    return \@plot_image_types;
-}
-
-sub get_all_project_md_image_types_only_band_base_types {
-    my $schema = shift;
-    return {
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_edge_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_mir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => 1,
-    };
-}
-
 sub get_all_project_md_image_types_whole_images {
     my $schema = shift;
     return {
