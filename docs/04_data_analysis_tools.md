@@ -275,7 +275,7 @@ There are three pathways to using this tool.
 4.7 Genetic Gain
 --------------
 
-You can check if there is genetic gain, by comparing the the GEBVs of a training and selection population. You can do this in the solGS pipepline once you build a model and apply the model predict the GEBVs of selection population. Once at that stage, you will a section 'Check Genetic Gain'. Selection the selection population to compare with the training population and click the 'Check Genetic Gain' button. The genetic gain will be visualized in boxplots.
+You can check for genetic gain by comparing the the GEBVs of a training and a selection population. You can do this in the solGS pipepline once you build a model and apply the model to predict the GEBVs of a selection population. Once at that stage, you will see a section 'Check Genetic Gain'. Select a selection population to compare with the training population and click the 'Check Genetic Gain' button. The genetic gain will be visualized in boxplots. You can download the boxplot(s) as well as the GEBVs data used for the plot(s).
 
 <img src='{{"assets/images/genetic-gain.png" | relative_url }}' width="522" />
 
