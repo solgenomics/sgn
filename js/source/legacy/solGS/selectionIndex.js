@@ -27,7 +27,7 @@ function listSelectionIndexPopulations ()  {
    
     var modelData = getTrainingPopulationData();
     var trainingPopIdName = JSON.stringify(modelData);
-   
+    
     var  popsList =  '<dl id="selected_population" class="si_dropdown">'
         + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
         + '<dd>'
@@ -100,20 +100,24 @@ function listSelectionIndexPopulations ()  {
        
 function addSelectionPopulations(){
       
-    var selPopsTable = jQuery("#selection_pops_list").html();  
-    var selPopsRows  = jQuery(selPopsTable).find("tr");
+    var selPopsTable = jQuery("#selection_pops_list").html();
+    var selPopsRows;
  
+    if (selPopsTable !== null) {
+	selPopsRows  = jQuery("#selection_pops_list").find("tbody > tr");
+    }
+  
     var predictedPop = [];
     var popsList = '';
-       
-    for (var i = 1; i < selPopsRows.length; i++) {
+   
+    for (var i = 0; i < selPopsRows.length; i++) {
         var row    = selPopsRows[i];
         var popRow = row.innerHTML;
        
         predictedPop = popRow.match(/\/solgs\/selection\//g);
-           
+        
         if (predictedPop) {
-            if (predictedPop.length > 1) {
+            if (predictedPop.length) {
                 var selPopsInput  = row.getElementsByTagName("input")[0];
                 var idPopName     = selPopsInput.value;
                 var idPopNameCopy = idPopName;
@@ -136,9 +140,10 @@ function getSelectionPopTraits (modelId, selectedPopId) {
     if (modelId === selectedPopId) {selectedPopId=undefined;}
 
     var trainingTraitsIds = jQuery('#training_traits_ids').val();
-    trainingTraitsIds = trainingTraitsIds.split(',');
+    if(trainingTraitsIds) {
+	trainingTraitsIds = trainingTraitsIds.split(',');
+    }
 
-    console.log('selection index: traitsIds ' + trainingTraitsIds)
     var args = {'selection_pop_id': selectedPopId,
 		'training_pop_id': modelId,
 		'training_traits_ids': trainingTraitsIds};

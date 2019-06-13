@@ -72,7 +72,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{k_number}         = $k_number;
     
-    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    $c->stash->{training_traits_ids} = \@traits_ids;
     
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
@@ -161,7 +161,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{data_type}        = $data_type;
     $c->stash->{k_number}         = $k_number;
     
-    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    $c->stash->{training_traits_ids} = \@traits_ids;
     
     $c->stash->{pop_id} = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
