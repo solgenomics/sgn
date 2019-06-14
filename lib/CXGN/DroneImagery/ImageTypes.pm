@@ -366,10 +366,10 @@ sub get_all_project_md_image_types_whole_images {
             name=>'threshold_background_removed_stitched_drone_imagery_rgb_channel_1', channels=>[0], corresponding_channel=>0
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', channels=>[0], corresponding_channel=>0
+            name=>'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery_rgb_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'threshold_background_removed_stitched_drone_imagery_rgb_channel_3', channels=>[0], corresponding_channel=>0
+            name=>'threshold_background_removed_stitched_drone_imagery_rgb_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id() => {
             name=>'threshold_background_removed_tgi_stitched_drone_imagery', channels=>[0], corresponding_channel=>0

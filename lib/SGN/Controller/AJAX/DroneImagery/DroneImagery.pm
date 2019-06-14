@@ -987,6 +987,8 @@ sub _perform_image_background_remove_threshold {
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_threshold', 'project_property')->cvterm_id();
     }
 
+    print STDERR "Background Remove Threshold Image Type: $image_type\n";
+
     my $previous_background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         project_image_type_id=>$linking_table_type_id,
@@ -1017,6 +1019,43 @@ sub _perform_image_background_remove_threshold {
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath
     };
+}
+
+sub drone_imagery_remove_background_percentage_save : Path('/api/drone_imagery/remove_background_percentage_save') : ActionClass('REST') { }
+sub drone_imagery_remove_background_percentage_save_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $image_type_list = $c->req->param('image_type_list');
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $lower_threshold_percentage = $c->req->param('lower_threshold_percentage');
+    my $upper_threshold_percentage = $c->req->param('upper_threshold_percentage');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    if (!$lower_threshold_percentage && !defined($lower_threshold_percentage)) {
+        $c->stash->{rest} = {error => 'Please give a lower threshold percentage'};
+        $c->detach();
+    }
+    if (!$upper_threshold_percentage && !defined($upper_threshold_percentage)) {
+        $c->stash->{rest} = {error => 'Please give an upper threshold percentage'};
+        $c->detach();
+    }
+
+    my @image_types = split ',', $image_type_list;
+    my @returns;
+    foreach my $image_type (@image_types) {
+        my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+        my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+        $archive_remove_background_temp_image .= '.png';
+        print STDERR $archive_remove_background_temp_image."\n";
+
+        my $return = _perform_image_background_remove_threshold_percentage($c, $schema, $image_id, $drone_run_band_project_id, $image_type, $lower_threshold_percentage, $upper_threshold_percentage, $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+        push @returns, $return;
+    }
+
+    $c->stash->{rest} = \@returns;
 }
 
 sub _perform_image_background_remove_threshold_percentage {
@@ -1062,7 +1101,8 @@ sub _perform_image_background_remove_threshold_percentage {
         die "Linking table type_id not found for background remove threshold percentage: $image_type\n";
     }
 
-    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel};
+    print STDERR "Background Remove Threshold Percentage Image Type: $image_type\n";
+    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($schema)->{$linking_table_type_id}->{corresponding_channel};
     my $image_band_index_string = '';
     if (defined($corresponding_channel)) {
         $image_band_index_string = "--image_band_index $corresponding_channel";
@@ -1080,7 +1120,9 @@ sub _perform_image_background_remove_threshold_percentage {
         $previous_image->delete(); #Sets to obsolete
     }
 
-    my $status = system($c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\' '.$image_band_index_string);
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\' '.$image_band_index_string;
+    my $status = system($cmd);
+    print STDERR Dumper $cmd;
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -1270,40 +1312,51 @@ sub get_drone_run_band_projects_GET : Args(0) {
         my @res;
         if ($drone_run_band_project_id != $exclude_drone_run_band_project_id) {
             my $denoised_plot_polygon_type;
+            my $background_removed_threshold_type;
             if ($drone_run_band_type eq 'Blue (450-520nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_blue_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_blue';
             }
             elsif ($drone_run_band_type eq 'Green (515-600nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_green_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_green';
             }
             elsif ($drone_run_band_type eq 'Red (600-690nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_red_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_red';
             }
             elsif ($drone_run_band_type eq 'Red Edge (690-750nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_red_edge_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_red_edge';
             }
             elsif ($drone_run_band_type eq 'NIR (750-900nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_nir_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_nir';
             }
             elsif ($drone_run_band_type eq 'MIR (1550-1750nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_mir_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_mir';
             }
             elsif ($drone_run_band_type eq 'FIR (2080-2350nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_fir_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_fir';
             }
             elsif ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_tir_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_tir';
             }
             elsif ($drone_run_band_type eq 'Black and White Image') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_bw_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_bw';
             }
             elsif ($drone_run_band_type eq 'RGB Color Image') {
                 $denoised_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
+                $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_rgb_channel_1,threshold_background_removed_stitched_drone_imagery_rgb_channel_2,threshold_background_removed_stitched_drone_imagery_rgb_channel_3';
             }
             if ($checkbox_select_name){
                 my $checked = $select_all ? 'checked' : '';
                 my $disabled = $disable ? 'disabled' : '';
-                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-denoised_plot_polygon_type='$denoised_plot_polygon_type' $checked $disabled>";
+                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-denoised_plot_polygon_type='$denoised_plot_polygon_type' data-background_removed_threshold_type='$background_removed_threshold_type' $checked $disabled>";
             }
             my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
             push @res, (
@@ -1534,7 +1587,9 @@ sub standard_process_apply_POST : Args(0) {
             $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery_channel_3', $user_id, $user_name, $user_role, 0);
         }
 
-        my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_plot_polygon_type, $user_id, $user_name, $user_role, 0);
+        if ($drone_run_band_type ne 'RGB Color Image') {
+            my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_plot_polygon_type, $user_id, $user_name, $user_role, 0);
+        }
 
         for my $iterator (0..(scalar(@denoised_background_threshold_removed_imagery_types)-1)) {
             $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');

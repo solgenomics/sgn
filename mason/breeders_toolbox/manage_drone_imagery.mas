@@ -23,7 +23,7 @@
 my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
 </%perl>
 
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => "glyphicon glyphicon-th", info_section_id => "manage_drone_imagery_main" &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
 
 </div>
 
@@ -1163,7 +1163,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_cropped_image_id;
     var manage_drone_imagery_standard_process_denoised_image_id;
     var manage_drone_imagery_standard_process_removed_background_image_id;
-    var manage_drone_imagery_standard_process_current_image_type = 'threshold_background_removed_stitched_drone_imagery';
+    var manage_drone_imagery_standard_process_current_threshold_background_removed_type;
     var manage_drone_imagery_standard_process_apply_drone_run_band_project_ids = [];
     var manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices = [];
 
@@ -1182,7 +1182,7 @@ jQuery(document).ready(function() {
     jQuery('#manage_drone_imagery_standard_process_drone_run_band_step').click(function(){
         var selected = [];
         jQuery('input[name="drone_run_standard_process_band_select"]:checked').each(function() {
-            selected.push([jQuery(this).val(), jQuery(this).data('denoised_plot_polygon_type')]);
+            selected.push([jQuery(this).val(), jQuery(this).data('denoised_plot_polygon_type'), jQuery(this).data('background_removed_threshold_type')]);
         });
         if (selected.length < 1){
             alert('Please select at least one drone run band! Preferably one with high contrast such as NIR.');
@@ -1193,6 +1193,7 @@ jQuery(document).ready(function() {
         } else {
             manage_drone_imagery_standard_process_drone_run_band_project_id = selected[0][0];
             manage_drone_imagery_standard_process_template_denoised_plot_polygon_type = selected[0][1];
+            manage_drone_imagery_standard_process_current_threshold_background_removed_type = selected[0][2];
             jQuery.ajax({
                 url : '/api/drone_imagery/get_project_md_image?drone_run_band_project_id='+manage_drone_imagery_standard_process_drone_run_band_project_id+'&project_image_type_name=stitched_drone_imagery',
                 beforeSend: function(){
@@ -1369,35 +1370,35 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_standard_process_remove_background_defined_percentage_submit').click(function(){
-        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_lower_threshold_percentage').val())/100;
-        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_upper_threshold_percentage').val())/100;
+        var drone_imagery_remove_background_lower_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_lower_threshold_percentage').val());
+        var drone_imagery_remove_background_upper_percentage = Number(jQuery('#drone_imagery_standard_process_remove_background_upper_threshold_percentage').val());
 
-        var threshold_value_return = calculateThresholdPercentageValues('drone_imagery_remove_background_original', drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage);
+        //var threshold_value_return = calculateThresholdPercentageValues('drone_imagery_remove_background_original', drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage);
 
-        manage_drone_imagery_standard_process_remove_background_threshold_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_image_type, manage_drone_imagery_standard_process_drone_run_band_project_id, threshold_value_return[0], threshold_value_return[1]);
+        manage_drone_imagery_standard_process_remove_background_threshold_percentage_save(manage_drone_imagery_standard_process_denoised_image_id, manage_drone_imagery_standard_process_current_threshold_background_removed_type, manage_drone_imagery_standard_process_drone_run_band_project_id, drone_imagery_remove_background_lower_percentage, drone_imagery_remove_background_upper_percentage);
     });
 
-    function manage_drone_imagery_standard_process_remove_background_threshold_save(image_id, image_type, drone_run_band_project_id, lower_threshold, upper_threshold){
+    function manage_drone_imagery_standard_process_remove_background_threshold_percentage_save(image_id, image_type, drone_run_band_project_id, lower_threshold_percentage, upper_threshold_percentage){
         jQuery.ajax({
             type: 'POST',
-            url: '/api/drone_imagery/remove_background_save',
+            url: '/api/drone_imagery/remove_background_percentage_save',
             dataType: "json",
             beforeSend: function() {
                 showManageDroneImagerySection('manage_drone_imagery_loading_div');
             },
             data: {
                 'image_id': image_id,
-                'image_type': image_type,
+                'image_type_list': image_type,
                 'drone_run_band_project_id': drone_run_band_project_id,
-                'lower_threshold': lower_threshold,
-                'upper_threshold': upper_threshold
+                'lower_threshold_percentage': lower_threshold_percentage,
+                'upper_threshold_percentage': upper_threshold_percentage
             },
             success: function(response){
                 console.log(response);
                 if(response.error) {
                     alert(response.error);
                 }
-                manage_drone_imagery_standard_process_removed_background_image_id = response.removed_background_image_id;
+                manage_drone_imagery_standard_process_removed_background_image_id = response[0]['removed_background_image_id'];
 
                 showPlotPolygonStart(manage_drone_imagery_standard_process_removed_background_image_id, drone_run_band_project_id, 'drone_imagery_standard_process_plot_polygons_original_stitched_div', 'drone_imagery_standard_process_plot_polygons_top_section', 'manage_drone_imagery_standard_process_plot_polygons_load_div');
 
@@ -1518,12 +1519,18 @@ jQuery(document).ready(function() {
     });
 
     jQuery(document).on('click', 'button[name=drone_imagery_standard_process_plot_polygons_submit_bottom]', function(){
+        var standard_process_first_plot_polygon_image_id;
+        if (manage_drone_imagery_standard_process_template_denoised_plot_polygon_type == 'observation_unit_polygon_rgb_imagery') {
+            standard_process_first_plot_polygon_image_id = manage_drone_imagery_standard_process_denoised_image_id;
+        } else {
+            standard_process_first_plot_polygon_image_id = manage_drone_imagery_standard_process_removed_background_image_id;
+        }
         jQuery.ajax({
             type: 'POST',
             url: '/api/drone_imagery/assign_plot_polygons',
             dataType: "json",
             data: {
-                'image_id': manage_drone_imagery_standard_process_removed_background_image_id,
+                'image_id': standard_process_first_plot_polygon_image_id,
                 'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
                 'stock_polygons': JSON.stringify(drone_imagery_plot_polygons),
                 'assign_plot_polygons_type': manage_drone_imagery_standard_process_template_denoised_plot_polygon_type
