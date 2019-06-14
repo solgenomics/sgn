@@ -1182,7 +1182,7 @@ jQuery(document).ready(function() {
     jQuery('#manage_drone_imagery_standard_process_drone_run_band_step').click(function(){
         var selected = [];
         jQuery('input[name="drone_run_standard_process_band_select"]:checked').each(function() {
-            selected.push([jQuery(this).val(), jQuery(this).data('denoised_plot_polygon_type'), jQuery(this).data('background_removed_threshold_type')]);
+            selected.push([jQuery(this).val(), jQuery(this).data('standard_process_plot_polygon_type'), jQuery(this).data('background_removed_threshold_type')]);
         });
         if (selected.length < 1){
             alert('Please select at least one drone run band! Preferably one with high contrast such as NIR.');

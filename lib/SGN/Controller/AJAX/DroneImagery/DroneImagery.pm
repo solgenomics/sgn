@@ -1311,52 +1311,52 @@ sub get_drone_run_band_projects_GET : Args(0) {
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my @res;
         if ($drone_run_band_project_id != $exclude_drone_run_band_project_id) {
-            my $denoised_plot_polygon_type;
+            my $standard_process_plot_polygon_type;
             my $background_removed_threshold_type;
             if ($drone_run_band_type eq 'Blue (450-520nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_blue_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_blue_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_blue';
             }
             elsif ($drone_run_band_type eq 'Green (515-600nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_green_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_green_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_green';
             }
             elsif ($drone_run_band_type eq 'Red (600-690nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_red_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_red_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_red';
             }
             elsif ($drone_run_band_type eq 'Red Edge (690-750nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_red_edge_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_red_edge';
             }
             elsif ($drone_run_band_type eq 'NIR (750-900nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_nir_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_nir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_nir';
             }
             elsif ($drone_run_band_type eq 'MIR (1550-1750nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_mir_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_mir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_mir';
             }
             elsif ($drone_run_band_type eq 'FIR (2080-2350nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_fir_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_fir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_fir';
             }
             elsif ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_tir_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_tir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_tir';
             }
             elsif ($drone_run_band_type eq 'Black and White Image') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_bw_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_bw_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_bw';
             }
             elsif ($drone_run_band_type eq 'RGB Color Image') {
-                $denoised_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
+                $standard_process_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_rgb_channel_1,threshold_background_removed_stitched_drone_imagery_rgb_channel_2,threshold_background_removed_stitched_drone_imagery_rgb_channel_3';
             }
             if ($checkbox_select_name){
                 my $checked = $select_all ? 'checked' : '';
                 my $disabled = $disable ? 'disabled' : '';
-                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-denoised_plot_polygon_type='$denoised_plot_polygon_type' data-background_removed_threshold_type='$background_removed_threshold_type' $checked $disabled>";
+                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-standard_process_plot_polygon_type='$standard_process_plot_polygon_type' data-background_removed_threshold_type='$background_removed_threshold_type' $checked $disabled>";
             }
             my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
             push @res, (
