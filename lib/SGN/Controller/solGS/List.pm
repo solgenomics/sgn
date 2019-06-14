@@ -70,9 +70,8 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
+    $c->stash->{training_traits_ids} = $args->{training_traits_ids};
     
-    $c->stash->{list_prediction} = 1;
-   
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
    
     my $ret->{output} = $c->stash->{download_prediction};
@@ -682,13 +681,21 @@ sub submit_list_phenotype_data_query {
 
 
 sub genotypes_list_genotype_file {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c) = @_;
+    
+    $self->genotypes_list_genotype_data_query_job($c);  
+    
+}
+
+
+sub genotypes_list_genotype_query_job {
+    my ($self, $c) = @_;
 
     my $list_id = $c->stash->{list_id};
     my $dataset_id = $c->stash->{dataset_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
    
-    $pop_id = $c->stash->{pop_id} || $c->stash->{model_id} if !$pop_id;
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{model_id};
 
     if ($list_id)
     {       
@@ -716,16 +723,6 @@ sub genotypes_list_genotype_file {
 	'r_temp_file'    => 'genotypes-list-genotype-data-query',
 	'population_type' => 'genotypes_list'
     };
-    
-    $self->submit_list_genotype_data_query($c, $args);
-    
-    $c->stash->{genotype_file} = $geno_file;
-    
-}
-
-
-sub submit_list_genotype_data_query {
-    my ($self, $c, $args) = @_;
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
     $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
@@ -737,8 +734,6 @@ sub submit_list_genotype_data_query {
 
     my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
     $c->stash->{report_file} = $report_file;
-
-    my $status;
 
      my $config_args = {
 	'temp_dir' => $temp_dir,
@@ -767,8 +762,134 @@ sub submit_list_genotype_data_query {
 	'temp_dir' => $temp_dir,
     };
     
-    $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
+    $c->stash->{genotype_list_genotype_query_job} = $job_args;
+    $c->stash->{genotype_file} = $geno_file;
+}
+
+
+
+sub plots_list_phenotype_query_job {
+    my ($self, $c) = @_;
+
+    my $model_id = $c->stash->{model_id};
+    my $list     = $c->stash->{list}; 
+    my $list_id  = $c->stash->{list_id};
+ 
+    my $dataset_id  = $c->stash->{dataset_id};
+    my $plots_names = $c->stash->{plots_list};
+    my $plots_ids   = $c->stash->{plots_ids};
+
+    if (!$plots_ids)
+    {	
+	$self->get_plots_list_elements_ids($c);
+	$plots_ids = $c->stash->{list_elements_ids};
+    }
+    
+    $c->stash->{pop_id} = $dataset_id ? 'dataset_' . $dataset_id : 'list_' . $list_id;
+    my $file_id = $c->stash->{pop_id};
+    $c->controller('solGS::Files')->traits_list_file($c);    
+    my $traits_file =  $c->stash->{traits_list_file};
   
+    my $data_dir = $c->stash->{solgs_lists_dir};
+
+    $c->stash->{r_temp_file} = 'plots-phenotype-data-query';
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);    
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+
+    my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $file_id);
+    my $pheno_file = $temp_data_files->{pheno_file};
+    $c->stash->{plots_list_phenotype_file} = $pheno_file;
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+   
+    my $args = {
+	'list_id'        => $list_id,
+	#'plots_names'    => $plots_names,
+	'plots_ids'      => $plots_ids,
+	'traits_file'    => $traits_file,
+	'list_data_dir'  => $data_dir,
+	'phenotype_file' => $pheno_file,
+	'metadata_file'  => $metadata_file
+    };
+    
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
+    $c->stash->{report_file} = $args_file;
+  
+    nstore $args, $args_file 
+		or croak "data query script: $! serializing data query details to $args_file ";
+	
+    my $cmd = 'mx-run solGS::Cluster ' 
+	. ' --data_type phenotype '
+	. ' --population_type plots_list '
+	. ' --args_file ' . $args_file;
+
+     my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file
+     };
+    
+    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $config,
+	'background_job'=> $background_job,
+	'temp_dir' => $temp_dir,
+    };
+
+    $c->stash->{plots_list_phenotype_query_job} = $job_args;
+    $c->stash->{phenotype_file} = $pheno_file;
+}
+
+
+sub plots_list_phenotype_file {
+    my ($self, $c) = @_;
+    
+    $self->plots_list_phenotype_query_job($c);  
+ 
+}
+
+sub list_type_training_pop_data_query_jobs {
+    my ($self, $c) = @_;
+
+    $self->plots_list_phenotype_query_job($c);
+    $self->genotypes_list_genotype_query_job($c);
+    
+    my $pheno_job = $c->stash->{plots_list_phenotype_query_job};
+    my $geno_job  = $c->stash->{genotype_list_genotype_query_job};    
+
+    $c->stash->{list_type_training_pop_data_query_jobs} = [$pheno_job, $geno_job];
+}
+
+
+sub get_list_type_training_pop_data_query_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->list_type_training_pop_data_query_jobs($c);
+    my $query_jobs = $c->stash->{list_type_training_pop_data_query_jobs};
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $queries_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'list_type_training_pop_data_query_args');	   
+    
+    nstore $query_jobs, $queries_args_file 
+	or croak "list type training pop data query job : $! serializing selection pop data query details to $queries_args_file";
+
+    $c->stash->{list_type_training_pop_data_query_jobs_file} = $queries_args_file;
+}
+
+
+sub submit_cluster_list_type_training_pop_data_query {
+    my ($self, $c) = @_;
+
+    $self->get_list_type_training_pop_data_query_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{list_type_training_pop_data_query_jobs_file};
+    $c->controller('solGS::solGS')->run_async($c);
 }
 
 
@@ -788,7 +909,7 @@ sub list_population_summary {
     else
     {
 	my $user_name = $c->user->id; 
-        my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c);
+        my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c);
 
 	if ($file_id) 
 	{

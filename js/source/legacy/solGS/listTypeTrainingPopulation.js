@@ -14,12 +14,11 @@ JSAN.use("jquery.blockUI");
 jQuery(document).ready( function() {
        
     var list = new CXGN.List();
-        
-    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials']);
 
-    var dType = ['plots', 'trials'];
-   
+    var dType = ['plots', 'trials']; 
     var dMenu = solGS.dataset.getDatasetsMenu(dType);
+
+    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials'], undefined, undefined, undefined);
        
     if (listMenu.match(/option/) != null) {           
         jQuery("#list_type_training_pops_list")

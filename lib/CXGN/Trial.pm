@@ -1044,6 +1044,77 @@ sub remove_planting_date {
 		}
 }
 
+=head2 function get_management_factor_date()
+
+	Usage:        $trial->get_management_factor_date();
+	Desc:         Field management factors are a project and are therefore instantiated with CXGN::Trial. this gets the date projectprop
+	Ret:          Returns string
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub get_management_factor_date {
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_date_cvterm_id()
+    });
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if ($row) {
+        return $calendar_funcs->display_start_date($row->value());
+    } else {
+        return;
+    }
+}
+
+sub set_management_factor_date {
+    my $self = shift;
+    my $management_factor_date = shift;
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if (my $management_factor_event = $calendar_funcs->check_value_format($management_factor_date) ) {
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $self->get_mangement_factor_date_cvterm_id()
+        });
+
+        $row->value($management_factor_event);
+        $row->update();
+    } else {
+        print STDERR "date format did not pass check while preparing to set management factor date: $management_factor_date \n";
+    }
+}
+
+sub get_mangement_factor_date_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'management_factor_date', 'project_property')->cvterm_id();
+}
+
+sub get_mangement_factor_type_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'management_factor_type', 'project_property')->cvterm_id();
+}
+
+sub get_management_factor_type {
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_type_cvterm_id()
+    });
+
+    if ($row) {
+        return $row->value();
+    } else {
+        return;
+    }
+}
+
 =head2 accessors get_phenotypes_fully_uploaded(), set_phenotypes_fully_uploaded()
 
  Usage: When a trial's phenotypes have been fully upload, the user can set a projectprop called 'phenotypes_fully_uploaded' with a value of 1

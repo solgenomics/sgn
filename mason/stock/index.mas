@@ -137,8 +137,7 @@ my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
 my $p_download_link = '<a class="btn btn-sm btn-default" style="margin:3px" target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete&">Download All Phenotypes</a>';
-my $direct_genotypes = $stockref->{direct_genotypes};
-my $g_download_link = scalar(@$direct_genotypes) > 0 ? qq|<a class="btn btn-default btn-sm" style="margin:3px" href =  "/stock/$stock_id/genotypes">Download All Genotypes</a>| : 'No genotypes available!' ;
+
 ############################
 my $map_html = $stockref->{map_html};
 my $map;
@@ -259,7 +258,7 @@ function jqueryStuff() {
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => $g_download_link, map_html => $map_html, direct_genotypes => $direct_genotypes &>
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => '<a class="btn btn-default btn-sm" style="margin:3px" href = "/stock/'.$stock_id.'/genotypes">Download All Genotypes</a>', map_html => $map_html &>
 % }
 
 % if ($type_name eq 'accession'){

@@ -15,7 +15,7 @@ JSAN.use("jquery.blockUI");
 
 jQuery(document).ready( function() {
     var list = new CXGN.List();
-    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"]);
+    var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
     var relevant =[]; 	
         
     if (listMenu.match(/option/) != null) {
@@ -67,15 +67,15 @@ jQuery(document).ready( function() {
 function checkPredictedListSelection (listId) {
   
     var args =  createSelectionReqArgs(listId);
- 
     args = JSON.stringify(args);
-    
+   
     jQuery.ajax({
 	type: 'POST',
 	dataType: 'json',
 	data: {'arguments': args},
 	url: '/solgs/check/predicted/list/selection',                   
-	success: function(response) { 
+	success: function(response) {
+	   
 	    args = JSON.parse(args);
 	    
 	    if (response.output) {		    
@@ -150,33 +150,42 @@ function askSelectionJobQueueing (listId) {
 
 
 function createSelectionReqArgs (listId) {
-    console.log('creating selection args ' + listId)
-if (typeof(listId) == 'number') {
-    var genoList  = getListTypeSelectionPopDetail(listId);
-    var listName  = genoList.name;
-    var list      = genoList.list;
-    var modelId   = getModelId();
-    var traitId   = getTraitId();
-    
-    var dataSetType = trainingDataSetType();
-   
-    var popType = 'list_prediction';
-   
-    var selectionPopId = 'list_' + listId;
-    
-    var args = {
-	'list_name'        : listName,
-	'list_id'          : listId,
-	'analysis_type'    : 'selection prediction',
-	'data_set_type'    : dataSetType,
-	'trait_id'         : traitId,
-	'training_pop_id'  : modelId, 
-	'selection_pop_id' : selectionPopId, 
-	'population_type'  : popType,
-    };  
+  
+    if (typeof(listId) == 'number') {
+	var genoList  = getListTypeSelectionPopDetail(listId);
+	var listName  = genoList.name;
+	var list      = genoList.list;
+	var modelId   = getModelId();
+	var traitId   = getTraitId();
+	
+	var dataSetType = trainingDataSetType();
+	
+	var popType = 'list_prediction';
+	
+	var selectionPopId = 'list_' + listId;
 
-    return args;
-}
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	} else {
+	    trainingTraitsIds = [traitId];
+	}
+	
+	var args = {
+	    'list_name'        : listName,
+	    'list_id'          : listId,
+	    'analysis_type'    : 'selection prediction',
+	    'data_set_type'    : dataSetType,
+	    'trait_id'         : [traitId],
+	    'training_pop_id'  : modelId, 
+	    'selection_pop_id' : selectionPopId, 
+	    'population_type'  : popType,
+	    'training_traits_ids' : trainingTraitsIds
+	};  
+
+	return args;
+    }
 
 }
 
@@ -211,7 +220,7 @@ function loadGenotypesListTypeSelectionPop(args) {
     
     args = JSON.stringify(args);
     var len   = listDetail.elements_count;
-    
+   
     if (len === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
