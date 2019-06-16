@@ -1650,18 +1650,18 @@ sub standard_process_apply_POST : Args(0) {
             my $denoised_image_id = $denoise_return->{denoised_image_id};
 
             if (exists($vegetative_indices_hash{'TGI'})) {
-                _perform_standard_process_tgi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value);
+                _perform_standard_process_tgi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'TGI', 'BGR');
             }
             if (exists($vegetative_indices_hash{'VARI'})) {
-                _perform_standard_process_vari_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value);
+                _perform_standard_process_vari_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'VARI', 'BGR');
             }
         }
         if (exists($selected_drone_run_band_types{'RGB Color Image'})) {
             if (exists($vegetative_indices_hash{'TGI'})) {
-                _perform_standard_process_tgi_calc($c, $bcs_schema, $metadata_schema, $original_rgb_denoised_image_id, $selected_drone_run_band_types{'RGB Color Image'}, $user_id, $user_name, $user_role, $plot_polygons_value);
+                _perform_standard_process_tgi_calc($c, $bcs_schema, $metadata_schema, $original_rgb_denoised_image_id, $selected_drone_run_band_types{'RGB Color Image'}, $user_id, $user_name, $user_role, $plot_polygons_value, 'TGI', 'BGR');
             }
             if (exists($vegetative_indices_hash{'VARI'})) {
-                _perform_standard_process_vari_calc($c, $bcs_schema, $metadata_schema, $original_rgb_denoised_image_id, $selected_drone_run_band_types{'RGB Color Image'}, $user_id, $user_name, $user_role, $plot_polygons_value);
+                _perform_standard_process_vari_calc($c, $bcs_schema, $metadata_schema, $original_rgb_denoised_image_id, $selected_drone_run_band_types{'RGB Color Image'}, $user_id, $user_name, $user_role, $plot_polygons_value, 'VARI', 'BGR');
             }
         }
     }
@@ -1808,7 +1808,7 @@ sub standard_process_apply_POST : Args(0) {
     $c->stash->{rest} = { data => \@result, success => 1 };
 }
 
-sub _perform_standard_process_tgi_calc {
+sub _perform_standard_process_vi_calc {
     my $c = shift;
     my $bcs_schema = shift;
     my $metadata_schema = shift;
@@ -1818,78 +1818,116 @@ sub _perform_standard_process_tgi_calc {
     my $user_name = shift;
     my $user_role = shift;
     my $plot_polygons_value = shift;
+    my $vi = shift;
+    my $bands = shift;
 
-    my $index_return = _perform_vegetative_index_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, 'TGI', 0, 'BGR', $user_id, $user_name, $user_role);
+    my %vi_map = (
+        'TGI' => {
+            imagery => {
+                ft_hpf30_tgi => 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1',
+                index_threshold_background => 'threshold_background_removed_tgi_stitched_drone_imagery',
+                original_thresholded_index_mask_background => 'denoised_background_removed_thresholded_tgi_mask_original',
+                ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1',
+                ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2',
+                ft_hpf30_original_thresholded_index_mask_background_channel_3 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3',
+                original_index_mask_background => 'denoised_background_removed_tgi_mask_original',
+                ft_hpf30_original_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1',
+                ft_hpf30_original_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_2',
+                ft_hpf30_original_index_mask_background_channel_3 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_3'
+            },
+            plot_polygon => {
+                index_plot_polygon => 'observation_unit_polygon_tgi_imagery',
+                ft_hpf30_tgi => 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1',
+                index_threshold_background => 'observation_unit_polygon_background_removed_tgi_imagery',
+                original_thresholded_index_mask_background => 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery',
+                original_thresholded_index_mask_background_channel_1 => 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1',
+                original_thresholded_index_mask_background_channel_2 => 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_2',
+                original_thresholded_index_mask_background_channel_3 => 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3',
+                ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1',
+                ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2',
+                ft_hpf30_original_thresholded_index_mask_background_channel_3 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3',
+                original_index_mask_background => 'observation_unit_polygon_original_background_removed_tgi_mask_imagery',
+                original_index_mask_background_channel_1 => 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1',
+                original_index_mask_background_channel_2 => 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_2',
+                original_index_mask_background_channel_3 => 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3',
+                ft_hpf30_original_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1',
+                ft_hpf30_original_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2',
+                ft_hpf30_original_index_mask_background_channel_3 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3'
+            }
+        }
+    );
+
+    my $index_return = _perform_vegetative_index_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $vi, 0, $bands, $user_id, $user_name, $user_role);
     my $index_image_id = $index_return->{index_image_id};
 
-    my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_tgi_imagery', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{index_plot_polygon}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_tgi_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
-    my $fourier_transform_tgi_return_image_id = $fourier_transform_tgi_return->{ft_image_id};
+    my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_tgi}, '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_return_image_id = $fourier_transform_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_tgi_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_tgi_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_tgi}, $user_id, $user_name, $user_role, 0);
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
     my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
     $archive_remove_background_temp_image .= '.png';
     print STDERR $archive_remove_background_temp_image."\n";
 
-    my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $index_image_id, $merged_drone_run_band_project_id, 'threshold_background_removed_tgi_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+    my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $index_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{index_threshold_background}, '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
     my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_background_removed_tgi_imagery', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{index_threshold_background}, $user_id, $user_name, $user_role, 0);
 
-    my $threshold_masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_thresholded_tgi_mask_original', $user_id, $user_name, $user_role);
+    my $threshold_masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{original_thresholded_index_mask_background}, $user_id, $user_name, $user_role);
     my $threshold_masked_image_id = $threshold_masked_return->{masked_image_id};
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_thresholded_index_mask_background}, $user_id, $user_name, $user_role, 0);
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_thresholded_index_mask_background_channel_1}, $user_id, $user_name, $user_role, 0);
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_2', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_thresholded_index_mask_background_channel_2}, $user_id, $user_name, $user_role, 0);
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_thresholded_index_mask_background_channel_3}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_original_thresholded_index_mask_background_channel_1}, '30', 'frequency', $user_id, $user_name, $user_role);
     my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_1_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_1_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_original_thresholded_index_mask_background_channel_1}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_original_thresholded_index_mask_background_channel_2}, '30', 'frequency', $user_id, $user_name, $user_role);
     my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_2_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_2_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_original_thresholded_index_mask_background_channel_2}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_original_thresholded_index_mask_background_channel_3}, '30', 'frequency', $user_id, $user_name, $user_role);
     my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_3_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_3_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_original_thresholded_index_mask_background_channel_3}, $user_id, $user_name, $user_role, 0);
 
-    my $masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $index_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_tgi_mask_original', $user_id, $user_name, $user_role);
+    my $masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $index_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{original_index_mask_background}, $user_id, $user_name, $user_role);
     my $masked_image_id = $masked_return->{masked_image_id};
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_index_mask_background}, $user_id, $user_name, $user_role, 0);
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_index_mask_background_channel_1}, $user_id, $user_name, $user_role, 0);
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_2', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_index_mask_background_channel_2}, $user_id, $user_name, $user_role, 0);
 
-    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', $user_id, $user_name, $user_role, 0);
+    $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{original_index_mask_background_channel_3}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_original_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_original_index_mask_background_channel_1}, '30', 'frequency', $user_id, $user_name, $user_role);
     my $fourier_transform_original_tgi_mask_channel_1_return_image_id = $fourier_transform_original_tgi_mask_channel_1_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_tgi_return_channel_1 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_tgi_return_channel_1 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_original_index_mask_background_channel_1}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_original_tgi_mask_channel_2_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_2', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_tgi_mask_channel_2_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_original_index_mask_background_channel_2}, '30', 'frequency', $user_id, $user_name, $user_role);
     my $fourier_transform_original_tgi_mask_channel_2_return_image_id = $fourier_transform_original_tgi_mask_channel_2_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_tgi_return_channel_2 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_2_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_tgi_return_channel_2 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_2_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_original_index_mask_background_channel_2}, $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_original_tgi_mask_channel_3_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_3', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_tgi_mask_channel_3_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $vi_map{$vi}->{imagery}->{ft_hpf30_original_index_mask_background_channel_3}, '30', 'frequency', $user_id, $user_name, $user_role);
     my $fourier_transform_original_tgi_mask_channel_3_return_image_id = $fourier_transform_original_tgi_mask_channel_3_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_tgi_return_channel_3 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_3_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf30_tgi_return_channel_3 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_3_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{plot_polygon}->{ft_hpf30_original_index_mask_background_channel_3}, $user_id, $user_name, $user_role, 0);
 }
 
 sub _perform_standard_process_vari_calc {
