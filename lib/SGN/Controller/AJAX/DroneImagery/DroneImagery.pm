@@ -1850,10 +1850,20 @@ sub _perform_standard_process_tgi_calc {
 
     $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', $user_id, $user_name, $user_role, 0);
 
-    # my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
-    # my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return->{ft_image_id};
-    
-    my $plot_polygon_ft_hpf30_tgi_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask', $user_id, $user_name, $user_role, 0);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_1_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', $user_id, $user_name, $user_role, 0);
+
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_2_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_2_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', $user_id, $user_name, $user_role, 0);
+
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return_image_id = $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_background_threshold_mask_channel_3_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_background_removed_thresholded_tgi_mask_channel_3_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', $user_id, $user_name, $user_role, 0);
 
     my $masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $index_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_tgi_mask_original', $user_id, $user_name, $user_role);
     my $masked_image_id = $masked_return->{masked_image_id};
@@ -1866,10 +1876,20 @@ sub _perform_standard_process_tgi_calc {
 
     $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', $user_id, $user_name, $user_role, 0);
 
-    # my $fourier_transform_original_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
-    # my $fourier_transform_original_tgi_mask_channel_1_return_image_id = $fourier_transform_original_tgi_mask_channel_1_return->{ft_image_id};
-    # 
-    # my $plot_polygon_ft_hpf30_tgi_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask', $user_id, $user_name, $user_role, 0);
+    my $fourier_transform_original_tgi_mask_channel_1_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_tgi_mask_channel_1_return_image_id = $fourier_transform_original_tgi_mask_channel_1_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_tgi_return_channel_1 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_1_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1', $user_id, $user_name, $user_role, 0);
+
+    my $fourier_transform_original_tgi_mask_channel_2_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_2', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_tgi_mask_channel_2_return_image_id = $fourier_transform_original_tgi_mask_channel_2_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_tgi_return_channel_2 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_2_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2', $user_id, $user_name, $user_role, 0);
+
+    my $fourier_transform_original_tgi_mask_channel_3_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_3', '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_original_tgi_mask_channel_3_return_image_id = $fourier_transform_original_tgi_mask_channel_3_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_tgi_return_channel_3 = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_original_tgi_mask_channel_3_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', $user_id, $user_name, $user_role, 0);
 }
 
 sub _perform_standard_process_vari_calc {
