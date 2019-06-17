@@ -218,7 +218,7 @@ sub create_dataset_population_metadata_file {
     
     my $tmp_dir = $c->stash->{solgs_datasets_dir};
     
-    $c->controller('solGS::Files')->population_metadata_file($c, $file_id, $tmp_dir);   
+    $c->controller('solGS::Files')->population_metadata_file($c,  $tmp_dir, $file_id,);   
     my $file = $c->stash->{population_metadata_file};
    
     $self->create_dataset_population_metadata($c);
