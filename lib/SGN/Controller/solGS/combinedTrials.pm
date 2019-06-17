@@ -1052,17 +1052,15 @@ sub combined_trials_desc {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
-       
     $self->get_combined_pops_list($c);
     my $combined_pops_list = $c->stash->{combined_pops_list};
-    
+   
     my $desc = 'This training population is a combination of ';
     
     my $projects_owners;
-    my $s_pop_id;
 
     foreach my $pop_id (@$combined_pops_list)
-    {  
+    {	
         my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
 
         while (my $row = $pr_rs->next)
@@ -1081,11 +1079,9 @@ sub combined_trials_desc {
              $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
         }
 	
-	$s_pop_id = $pop_id;
-	$s_pop_id =~ s/\s+//;
     }
    
-    $c->stash->{pop_id} = $s_pop_id;
+    $c->stash->{pop_id} = $combined_pops_list->[0];
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
@@ -1100,8 +1096,9 @@ sub combined_trials_desc {
     } 
     else 
     {
-	my $geno_exp  = "genotype_data_${s_pop_id}.txt";
-        my $geno_file = $c->controller('solGS::Files')->grep_file($dir, $geno_exp);
+	$c->controller('solGS::Files')->genotype_file_name($c, $combined_pops_list->[0]);
+	my $geno_file = $c->stash->{genotype_file_name};
+	
         @geno_lines   = read_file($geno_file);
         $markers_no   = scalar(split ('\t', $geno_lines[0])) - 1;
     }
@@ -1264,12 +1261,6 @@ sub combine_trait_data_input {
     my $trait_id      = $c->stash->{trait_id};
     my $trait_abbr    = $c->stash->{trait_abbr};
 
-
-    #$self->get_combined_pops_arrayref($c);
-    #my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
-    #$c->stash->{trait_combine_populations} = $combined_pops_list;
-
-    # $self->prepare_multi_pops_data($c);
     $self->get_combined_pops_list($c);
     my $combo_pops_list = $c->stash->{combined_pops_list};
     $self->multi_pops_geno_files($c, $combo_pops_list);

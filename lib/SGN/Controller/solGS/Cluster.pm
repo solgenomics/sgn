@@ -465,8 +465,7 @@ sub combined_cluster_trials_data_file {
     
     if ($cluster_type =~ /k-means/i)
     {
-	$file_name = "combined_${cluster_type}_data_file_${file_id}";
-	
+	$file_name = "combined_${cluster_type}_data_file_${file_id}";	
     }
     else
     {
