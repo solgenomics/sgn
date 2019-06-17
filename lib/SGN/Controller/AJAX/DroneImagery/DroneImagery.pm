@@ -1695,38 +1695,7 @@ sub standard_process_apply_POST : Args(0) {
             my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
             my $denoised_image_id = $denoise_return->{denoised_image_id};
 
-            my $index_return = _perform_vegetative_index_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, 'NDVI', 0, 'NRN', $user_id, $user_name, $user_role);
-            my $index_image_id = $index_return->{index_image_id};
-
-            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_ndvi_imagery', $user_id, $user_name, $user_role, 0);
-
-            $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
-            my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
-            $archive_remove_background_temp_image .= '.png';
-            print STDERR $archive_remove_background_temp_image."\n";
-
-            my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $index_image_id, $merged_drone_run_band_project_id, 'threshold_background_removed_ndvi_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
-            my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_background_removed_ndvi_imagery', $user_id, $user_name, $user_role, 0);
-
-            my $threshold_masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_thresholded_ndvi_mask_original', $user_id, $user_name, $user_role);
-            my $threshold_masked_image_id = $threshold_masked_return->{masked_image_id};
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_1', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_2', $user_id, $user_name, $user_role, 0);
-
-            my $masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $index_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_ndvi_mask_original', $user_id, $user_name, $user_role);
-            my $masked_image_id = $masked_return->{masked_image_id};
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_1', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_2', $user_id, $user_name, $user_role, 0);
+            _perform_standard_process_vi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'NDVI', 'NRN');
         }
     }
     if (exists($vegetative_indices_hash{'NDRE'})) {
@@ -1759,38 +1728,7 @@ sub standard_process_apply_POST : Args(0) {
             my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
             my $denoised_image_id = $denoise_return->{denoised_image_id};
 
-            my $index_return = _perform_vegetative_index_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, 'NDRE', 0, 'NReN', $user_id, $user_name, $user_role);
-            my $index_image_id = $index_return->{index_image_id};
-
-            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_ndre_imagery', $user_id, $user_name, $user_role, 0);
-
-            $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
-            my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
-            $archive_remove_background_temp_image .= '.png';
-            print STDERR $archive_remove_background_temp_image."\n";
-
-            my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $index_image_id, $merged_drone_run_band_project_id, 'threshold_background_removed_ndre_stitched_drone_imagery', '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
-            my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_background_removed_ndre_imagery', $user_id, $user_name, $user_role, 0);
-
-            my $threshold_masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $background_removed_threshold_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_thresholded_ndre_mask_original', $user_id, $user_name, $user_role);
-            my $threshold_masked_image_id = $threshold_masked_return->{masked_image_id};
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_1', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $threshold_masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_2', $user_id, $user_name, $user_role, 0);
-
-            my $masked_return = _perform_image_background_remove_mask($c, $bcs_schema, $denoised_image_id, $index_image_id, $merged_drone_run_band_project_id, 'denoised_background_removed_ndre_mask_original', $user_id, $user_name, $user_role);
-            my $masked_image_id = $masked_return->{masked_image_id};
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_1', $user_id, $user_name, $user_role, 0);
-
-            $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_2', $user_id, $user_name, $user_role, 0);
+            _perform_standard_process_vi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'NDRE', 'NReN');
         }
     }
 
@@ -1918,28 +1856,28 @@ sub _perform_standard_process_vi_calc {
         'NDRE' => {
             imagery => {
                 ft_hpf30_tgi => 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1',
-                index_threshold_background => 'threshold_background_removed_ndvi_stitched_drone_imagery',
-                original_thresholded_index_mask_background => 'denoised_background_removed_thresholded_ndvi_mask_original',
-                ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1',
-                ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2',
-                original_index_mask_background => 'denoised_background_removed_vari_mask_original',
-                ft_hpf30_original_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1',
-                ft_hpf30_original_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_2',
+                index_threshold_background => 'threshold_background_removed_ndre_stitched_drone_imagery',
+                original_thresholded_index_mask_background => 'denoised_background_removed_thresholded_ndre_mask_original',
+                ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1',
+                ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2',
+                original_index_mask_background => 'denoised_background_removed_ndre_mask_original',
+                ft_hpf30_original_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1',
+                ft_hpf30_original_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_2',
             },
             plot_polygon => {
-                index_plot_polygon => 'observation_unit_polygon_vari_imagery',
-                ft_hpf30_tgi => 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1',
-                index_threshold_background => 'observation_unit_polygon_background_removed_vari_imagery',
-                original_thresholded_index_mask_background => 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery',
-                original_thresholded_index_mask_background_channel_1 => 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_1',
-                original_thresholded_index_mask_background_channel_2 => 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_2',
-                ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1',
-                ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2',
-                original_index_mask_background => 'observation_unit_polygon_original_background_removed_vari_mask_imagery',
-                original_index_mask_background_channel_1 => 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_1',
-                original_index_mask_background_channel_2 => 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_2',
-                ft_hpf30_original_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1',
-                ft_hpf30_original_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2',
+                index_plot_polygon => 'observation_unit_polygon_ndre_imagery',
+                ft_hpf30_tgi => 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1',
+                index_threshold_background => 'observation_unit_polygon_background_removed_ndre_imagery',
+                original_thresholded_index_mask_background => 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery',
+                original_thresholded_index_mask_background_channel_1 => 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_1',
+                original_thresholded_index_mask_background_channel_2 => 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_2',
+                ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1',
+                ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1',
+                original_index_mask_background => 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery',
+                original_index_mask_background_channel_1 => 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_1',
+                original_index_mask_background_channel_2 => 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_2',
+                ft_hpf30_original_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1',
+                ft_hpf30_original_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2',
             }
         }
     );
