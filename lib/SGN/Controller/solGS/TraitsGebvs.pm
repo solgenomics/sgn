@@ -27,7 +27,7 @@ sub combine_gebvs_of_traits {
 
     $self->get_gebv_files_of_traits($c);  
     my $gebvs_files = $c->stash->{gebv_files_of_valid_traits};
-
+ 
     if (!-s $gebvs_files) 
     {
 	$gebvs_files = $c->stash->{gebv_files_of_traits};
@@ -36,7 +36,7 @@ sub combine_gebvs_of_traits {
     my $index_file  = $c->stash->{selection_index_file};
     
     my @files_no = map { split(/\t/) } read_file($gebvs_files);
-
+   
     if (scalar(@files_no) > 1 ) 
     {    
         if ($index_file) 
@@ -64,7 +64,6 @@ sub combine_gebvs_of_traits {
     {
         $c->stash->{combined_gebvs_files} = 0;           
     }
-
    
 }
 
@@ -87,33 +86,14 @@ sub get_gebv_files_of_traits {
     if ($selection_pop_id && $selection_pop_id != $training_pop_id) 
     {
         $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-        $pred_gebv_files = $c->stash->{prediction_pop_analyzed_traits_files};
-        
-        foreach (@$pred_gebv_files)
-        {
-	    my$gebv_file = catfile($dir, $_);
-	    $gebv_files .= $gebv_file;
-            $gebv_files .= "\t" unless (@$pred_gebv_files[-1] eq $_);
-        }     
+	$gebv_files = join("\t", @{$c->stash->{prediction_pop_analyzed_traits_files}});	
     } 
     else
     {
         $c->controller('solGS::solGS')->analyzed_traits($c);
-        my @analyzed_traits_files = @{$c->stash->{analyzed_traits_files}};
-	
-        foreach my $tr_file (@analyzed_traits_files) 
-        {
-            $gebv_files .= $tr_file;
-            $gebv_files .= "\t" unless ($analyzed_traits_files[-1] eq $tr_file);
-        }
-        
-        my @analyzed_valid_traits_files = @{$c->stash->{analyzed_valid_traits_files}};
+	$gebv_files = join("\t", @{$c->stash->{analyzed_traits_files}});     
+	$valid_gebv_files = join("\t", @{$c->stash->{analyzed_valid_traits_files}}); 
 
-        foreach my $tr_file (@analyzed_valid_traits_files) 
-        {
-            $valid_gebv_files .= $tr_file;
-            $valid_gebv_files .= "\t" unless ($analyzed_valid_traits_files[-1] eq $tr_file);
-        }
     }
    
     #my $pred_file_suffix;
@@ -163,20 +143,19 @@ sub catalogue_traits_selection {
 	 
     if (!-s $file) 
     {
-        my $header = 'traits_selection_id' . "\t" . 'traits_ids';
+        my $header = 'traits_selection_id' . "\t" . 'traits_ids' . "\n";
         write_file($file, ($header, $entry));    
     }
     else 
     {
-	
-        my @combo = ($entry);
+	my @combo = ($entry);
 
         my @entries = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
         my @intersect = intersect(@combo, @entries);
 
         unless( @intersect ) 
         {
-            write_file($file, {append => 1}, "\n" . "$entry");
+            write_file($file, {append => 1}, "\n" . $entry);
         }
     }
     
