@@ -330,7 +330,7 @@ sub _parse_with_plugin {
                             push @gt_vcf_genotype, $gt_val;
                             push @alt_calls, $a;
                         }
-
+                        print STDERR Dumper {ref => $ref, alt => $alt, a => $a};
                         if ($a eq '?' || $a eq 'Uncallable') {
                             $gt_dosage = 'NA';
                             push @gt_vcf_genotype, 'NA';
