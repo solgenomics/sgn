@@ -250,12 +250,12 @@ sub get_progeny_info {
     return \@progeny_info;
 }
 
-=head2 get_crosses_in_trial
+=head2 get_crosses_and_details_in_crossingtrial
 
 
 =cut
 
-sub get_crosses_in_trial {
+sub get_crosses_and_details_in_crossingtrial {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
@@ -353,7 +353,7 @@ sub get_cross_properties_trial {
 
 =head2 get_cross_progenies_trial
 
-#Moved this query to sub get_crosses_in_trial, will delete this section later
+#Moved this query to sub get_crosses_and_details_in_crossingtrial, will delete this section later
 
 
 sub get_cross_progenies_trial {
