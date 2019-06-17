@@ -336,6 +336,7 @@ sub _parse_with_plugin {
                             push @gt_vcf_genotype, 'NA';
                             push @alt_calls, 'NA';
                         } else {
+                            print STDERR Dumper $gt_val;
                             $gt_dosage = $gt_dosage + $gt_val;
                         }
                     }
