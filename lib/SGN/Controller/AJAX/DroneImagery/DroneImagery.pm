@@ -2148,7 +2148,6 @@ sub _perform_fourier_transform_calculation {
     my $user_name = shift;
     my $user_role = shift;
     print STDERR Dumper $high_pass_filter;
-    print STDERR Dumper $drone_run_band_project_type;
     print STDERR Dumper $image_type;
     my @linking_table_type_ids;
     if ($high_pass_filter eq '30') {
