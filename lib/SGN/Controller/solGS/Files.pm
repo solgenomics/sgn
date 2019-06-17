@@ -621,6 +621,7 @@ sub cache_file {
     unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});
+	print STDERR "\nfile: $file -- cache_dir: $cache_dir\n";
         write_file($file);
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
@@ -645,7 +646,12 @@ sub create_file_id {
     my $k_number         = $c->stash->{k_number};
 
     my $traits_ids = $c->stash->{training_traits_ids};
-    my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
+    my $traits_selection_id;
+   
+    if ($traits_ids->[0])
+    {
+	$traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
+    }
         
     my $file_id;
     my $referer = $c->req->referer;
@@ -683,7 +689,6 @@ sub create_file_id {
     $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
     $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
-    
     $c->stash->{file_id} = $file_id;
     
 }
