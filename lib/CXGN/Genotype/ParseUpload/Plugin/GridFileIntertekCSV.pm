@@ -151,6 +151,7 @@ sub _parse_with_plugin {
     my $schema = $self->get_chado_schema();
     my $stock_type = $self->get_observation_unit_type_name;
     my @error_messages;
+    my %errors;
 
     print STDERR "Reading VCF to parse\n";
 
