@@ -250,6 +250,7 @@ sub get_progeny_info {
     return \@progeny_info;
 }
 
+
 =head2 get_crosses_and_details_in_crossingtrial
 
 
@@ -351,6 +352,39 @@ sub get_cross_properties_trial {
 
 }
 
+
+=head2 get_seedlots_from_crossingtrial
+
+
+=cut
+
+sub get_seedlots_from_crossingtrial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $trial_id = $self->trial_id;
+
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock as stock1 on (nd_experiment_stock.stock_id = stock1.stock_id)
+        LEFT JOIN stock_relationship ON (stock1.stock_id = stock_relationship.subject_id) and stock_relationship.type_id = ?
+        LEFT JOIN stock as stock2 ON (stock_relationship.object_id = stock2.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare ($q);
+
+    $h->execute($collection_of_type_id, $trial_id);
+
+    my @data = ();
+    while(my($cross_id, $cross_name, $seedlot_id, $seedlot_uniquename) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $seedlot_id, $seedlot_uniquename]
+    }
+
+    return \@data;
+
+}
+
 =head2 get_cross_progenies_trial
 
 #Moved this query to sub get_crosses_and_details_in_crossingtrial, will delete this section later
@@ -369,11 +403,11 @@ sub get_cross_progenies_trial {
         (SELECT DISTINCT stock.stock_id AS cross_id, stock.uniquename AS cross_name, COUNT (stock_relationship.subject_id) AS progeny_number
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
-        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        LEFT JOIN stock_relationship ON (stock.stock`_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
         WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progeny_count_table
         LEFT JOIN
         (SELECT DISTINCT stock.stock_id AS cross_id, array_agg(stockprop.value || ' ') AS family_name
-        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        FROM `nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
         WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS family_name_table

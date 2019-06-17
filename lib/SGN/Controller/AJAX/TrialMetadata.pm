@@ -1908,6 +1908,26 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
 }
 
 
+sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_seedlots_from_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $seedlot_id, $seedlot_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, qq{<a href = "/breeders/seedlot/$seedlot_id">$seedlot_name</a>} ];
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
+}
+
+
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
