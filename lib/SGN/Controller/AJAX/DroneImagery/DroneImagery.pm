@@ -1911,15 +1911,15 @@ sub _perform_standard_process_vi_calc {
                 original_index_mask_background => 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery',
                 original_index_mask_background_channel_1 => 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_1',
                 original_index_mask_background_channel_2 => 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_2',
-                ft_hpf30_original_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1',
-                ft_hpf30_original_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2',
+                ft_hpf30_original_index_mask_background_channel_1 => 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1',
+                ft_hpf30_original_index_mask_background_channel_2 => 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2',
             }
         },
         'NDRE' => {
             imagery => {
-                ft_hpf30_tgi => 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1',
-                index_threshold_background => 'threshold_background_removed_vari_stitched_drone_imagery',
-                original_thresholded_index_mask_background => 'denoised_background_removed_thresholded_vari_mask_original',
+                ft_hpf30_tgi => 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1',
+                index_threshold_background => 'threshold_background_removed_ndvi_stitched_drone_imagery',
+                original_thresholded_index_mask_background => 'denoised_background_removed_thresholded_ndvi_mask_original',
                 ft_hpf30_original_thresholded_index_mask_background_channel_1 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1',
                 ft_hpf30_original_thresholded_index_mask_background_channel_2 => 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2',
                 original_index_mask_background => 'denoised_background_removed_vari_mask_original',
