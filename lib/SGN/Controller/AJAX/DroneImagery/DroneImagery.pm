@@ -1532,100 +1532,188 @@ sub standard_process_apply_POST : Args(0) {
         my $denoised_plot_polygon_type;
         my @denoised_background_threshold_removed_imagery_types;
         my @denoised_background_threshold_removed_plot_polygon_types;
+        my @ft_hpf20_imagery_types;
         my @ft_hpf30_imagery_types;
+        my @ft_hpf40_imagery_types;
+        my @ft_hpf20_plot_polygon_types;
         my @ft_hpf30_plot_polygon_types;
+        my @ft_hpf40_plot_polygon_types;
+        my @ft_hpf20_background_threshold_removed_imagery_types;
         my @ft_hpf30_background_threshold_removed_imagery_types;
+        my @ft_hpf40_background_threshold_removed_imagery_types;
+        my @ft_hpf20_background_threshold_removed_plot_polygon_types;
         my @ft_hpf30_background_threshold_removed_plot_polygon_types;
+        my @ft_hpf40_background_threshold_removed_plot_polygon_types;
         if ($drone_run_band_type eq 'Blue (450-520nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_blue_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_blue';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_blue_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_blue_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_blue_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'Green (515-600nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_green_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_green';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_green_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_green_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_green_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_green_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_green_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_green_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_green_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'Red (600-690nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_red_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_red';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_red_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_red_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_red_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_red_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_red_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_red_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_red_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'Red Edge (690-750nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_red_edge_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_red_edge';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_rededge_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_rededge_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'NIR (750-900nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_nir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_nir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_nir_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_nir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_nir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'MIR (1550-1750nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_mir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_mir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_mir_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_mir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_mir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_mir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'FIR (2080-2350nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_fir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_fir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fir_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_fir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_fir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_fir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_tir_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_tir';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_tir_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_tir_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_tir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_tir_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'Black and White Image') {
             $denoised_plot_polygon_type = 'observation_unit_polygon_bw_imagery';
             push @denoised_background_threshold_removed_imagery_types, 'threshold_background_removed_stitched_drone_imagery_bw';
             push @denoised_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_bw_background_removed_threshold_imagery';
+            push @ft_hpf20_imagery_types, 'calculate_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1';
             push @ft_hpf30_imagery_types, 'calculate_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1';
+            push @ft_hpf40_imagery_types, 'calculate_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1';
+            push @ft_hpf20_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1';
             push @ft_hpf30_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1';
+            push @ft_hpf40_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1';
+            push @ft_hpf20_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf20_bw_threshold_background_removed_stitched_drone_imagery_channel_1';
             push @ft_hpf30_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf30_bw_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf40_background_threshold_removed_imagery_types, 'calculate_fourier_transform_hpf40_bw_threshold_background_removed_stitched_drone_imagery_channel_1';
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1';
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1';
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, 'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1';
         }
         elsif ($drone_run_band_type eq 'RGB Color Image') {
             $original_rgb_denoised_image_id = $denoised_image_id;
             $denoised_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
             push @denoised_background_threshold_removed_imagery_types, ('threshold_background_removed_stitched_drone_imagery_rgb_channel_1', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_3');
             push @denoised_background_threshold_removed_plot_polygon_types, ('observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3');
+            push @ft_hpf20_imagery_types, ('calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3');
             push @ft_hpf30_imagery_types, ('calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3');
+            push @ft_hpf40_imagery_types, ('calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3');
+            push @ft_hpf20_plot_polygon_types, ('observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3');
             push @ft_hpf30_plot_polygon_types, ('observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3');
+            push @ft_hpf40_plot_polygon_types, ('observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3');
+            push @ft_hpf20_background_threshold_removed_imagery_types, ('calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_3');
             push @ft_hpf30_background_threshold_removed_imagery_types, ('calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3');
+            push @ft_hpf40_background_threshold_removed_imagery_types, ('calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_3');
+            push @ft_hpf20_background_threshold_removed_plot_polygon_types, ( 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3');
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, ( 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3');
+            push @ft_hpf40_background_threshold_removed_plot_polygon_types, ( 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3');
 
             my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery', $user_id, $user_name, $user_role, 0);
 
@@ -1651,15 +1739,35 @@ sub standard_process_apply_POST : Args(0) {
 
             my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
 
-            my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $ft_hpf30_imagery_types[$iterator], '30', 'frequency', $user_id, $user_name, $user_role);
-            my $fourier_transform_return_image_id = $fourier_transform_return->{ft_image_id};
+            my $fourier_transform_hpf20_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $ft_hpf20_imagery_types[$iterator], '20', 'frequency', $user_id, $user_name, $user_role);
+            my $fourier_transform_hpf20_return_image_id = $fourier_transform_hpf20_return->{ft_image_id};
 
-            my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
+            my $plot_polygon_ft_hpf20_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf20_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf20_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
 
-            my $fourier_transform_background_removed_threshold_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $ft_hpf30_background_threshold_removed_imagery_types[$iterator], '30', 'frequency', $user_id, $user_name, $user_role);
-            my $fourier_transform_background_removed_threshold_return_image_id = $fourier_transform_background_removed_threshold_return->{ft_image_id};
+            my $fourier_transform_hpf30_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $ft_hpf30_imagery_types[$iterator], '30', 'frequency', $user_id, $user_name, $user_role);
+            my $fourier_transform_hpf30_return_image_id = $fourier_transform_hpf30_return->{ft_image_id};
 
-            my $plot_polygon_ft_hpf30_background_removed_threshold_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_background_removed_threshold_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
+            my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf30_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
+
+            my $fourier_transform_hpf40_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $ft_hpf40_imagery_types[$iterator], '40', 'frequency', $user_id, $user_name, $user_role);
+            my $fourier_transform_hpf40_return_image_id = $fourier_transform_hpf40_return->{ft_image_id};
+
+            my $plot_polygon_ft_hpf40_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf40_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf40_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
+
+            my $fourier_transform_hpf20_background_removed_threshold_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $ft_hpf20_background_threshold_removed_imagery_types[$iterator], '20', 'frequency', $user_id, $user_name, $user_role);
+            my $fourier_transform_hpf20_background_removed_threshold_return_image_id = $fourier_transform_hpf20_background_removed_threshold_return->{ft_image_id};
+
+            my $plot_polygon_ft_hpf20_background_removed_threshold_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf20_background_removed_threshold_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf20_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
+
+            my $fourier_transform_hpf30_background_removed_threshold_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $ft_hpf30_background_threshold_removed_imagery_types[$iterator], '30', 'frequency', $user_id, $user_name, $user_role);
+            my $fourier_transform_hpf30_background_removed_threshold_return_image_id = $fourier_transform_hpf30_background_removed_threshold_return->{ft_image_id};
+
+            my $plot_polygon_ft_hpf30_background_removed_threshold_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf30_background_removed_threshold_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf30_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
+
+            my $fourier_transform_hpf40_background_removed_threshold_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $ft_hpf40_background_threshold_removed_imagery_types[$iterator], '40', 'frequency', $user_id, $user_name, $user_role);
+            my $fourier_transform_hpf40_background_removed_threshold_return_image_id = $fourier_transform_hpf40_background_removed_threshold_return->{ft_image_id};
+
+            my $plot_polygon_ft_hpf40_background_removed_threshold_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf40_background_removed_threshold_return_image_id, $drone_run_band_project_id, $plot_polygons_value, $ft_hpf40_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
         }
     }
 
@@ -1820,10 +1928,20 @@ sub _perform_standard_process_vi_calc {
 
     my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{index}->{(%{$vi_map{$vi}->{index}})[0]}->[0], $user_id, $user_name, $user_role, 0);
 
-    my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, (%{$vi_map{$vi}->{ft_hpf30}})[0], '30', 'frequency', $user_id, $user_name, $user_role);
-    my $fourier_transform_return_image_id = $fourier_transform_return->{ft_image_id};
+    my $fourier_transform_hpf20_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, (%{$vi_map{$vi}->{ft_hpf20}})[0], '20', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_hpf20_return_image_id = $fourier_transform_hpf20_return->{ft_image_id};
 
-    my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{ft_hpf30}->{(%{$vi_map{$vi}->{ft_hpf30}})[0]}->[0], $user_id, $user_name, $user_role, 0);
+    my $plot_polygon_ft_hpf20_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf20_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{ft_hpf20}->{(%{$vi_map{$vi}->{ft_hpf20}})[0]}->[0], $user_id, $user_name, $user_role, 0);
+
+    my $fourier_transform_hpf30_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, (%{$vi_map{$vi}->{ft_hpf30}})[0], '30', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_hpf30_return_image_id = $fourier_transform_hpf30_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf30_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf30_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{ft_hpf30}->{(%{$vi_map{$vi}->{ft_hpf30}})[0]}->[0], $user_id, $user_name, $user_role, 0);
+
+    my $fourier_transform_hpf40_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, (%{$vi_map{$vi}->{ft_hpf40}})[0], '40', 'frequency', $user_id, $user_name, $user_role);
+    my $fourier_transform_hpf40_return_image_id = $fourier_transform_hpf40_return->{ft_image_id};
+
+    my $plot_polygon_ft_hpf40_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf40_return_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{ft_hpf40}->{(%{$vi_map{$vi}->{ft_hpf40}})[0]}->[0], $user_id, $user_name, $user_role, 0);
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
     my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
