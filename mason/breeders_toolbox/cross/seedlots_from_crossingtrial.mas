@@ -6,12 +6,6 @@ $trial_id
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <table class="table table-hover table-bordered" id="seedlots_from_crossingtrial_table">
-    <thead>
-        <tr>
-            <th>Cross Name</th>
-            <th>Seedlot Name</th>
-        </tr>
-    </thead>
 </table>
 
 
@@ -24,8 +18,19 @@ jQuery(document).ready(function(){
         var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
 
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial',
-        });
 
+            columns: [
+                { title: "Cross Name", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
+                    if (row.seedlot_id === null){
+                        return 'No Seedlot'
+                    } else {
+                        return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
+                    }
+                }
+                }
+            ]
+        });
     });
 
 });

@@ -1920,7 +1920,12 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $seedlot_id, $seedlot_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, qq{<a href = "/breeders/seedlot/$seedlot_id">$seedlot_name</a>} ];
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name
+        };
     }
 
     $c->stash->{rest} = { data => \@crosses };
