@@ -263,6 +263,18 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NDRE Vegetative Index Image(s)'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded TGI Vegetative Index Image(s)'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded VARI Vegetative Index Image(s)'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded NDVI Vegetative Index Image(s)'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded NDRE Vegetative Index Image(s)'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) with Background Removed via Threshold'
         },
@@ -380,6 +392,11 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_background_removed_tgi_imagery'
                 ]
             },
+            ft_hpf30_index_threshold_background => {
+                'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1'
+                ]
+            },
             original_thresholded_index_mask_background => {
                 'denoised_background_removed_thresholded_tgi_mask_original' => [
                     'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery',
@@ -441,6 +458,11 @@ sub get_vegetative_index_image_type_term_map {
             index_threshold_background => {
                 'threshold_background_removed_vari_stitched_drone_imagery' => [
                     'observation_unit_polygon_background_removed_vari_imagery'
+                ]
+            },
+            ft_hpf30_index_threshold_background => {
+                'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1'
                 ]
             },
             original_thresholded_index_mask_background => {
@@ -506,6 +528,11 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_background_removed_ndvi_imagery'
                 ]
             },
+            ft_hpf30_index_threshold_background => {
+                'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1'
+                ]
+            },
             original_thresholded_index_mask_background => {
                 'denoised_background_removed_thresholded_ndvi_mask_original' => [
                     'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery',
@@ -555,6 +582,11 @@ sub get_vegetative_index_image_type_term_map {
             index_threshold_background => {
                 'threshold_background_removed_ndre_stitched_drone_imagery' => [
                     'observation_unit_polygon_background_removed_ndre_imagery'
+                ]
+            },
+            ft_hpf30_index_threshold_background => {
+                'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1'
                 ]
             },
             original_thresholded_index_mask_background => {

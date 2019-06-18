@@ -369,21 +369,21 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1']
         },
         'RGB Color Image' => {
-            imagery_types => ['calculate_tgi_drone_imagery', 'calculate_vari_drone_imagery', 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_tgi_imagery', 'observation_unit_polygon_vari_imagery', 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1',  'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3',
+            imagery_types => ['calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3'],
+            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1',  'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3',
             'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3']
         },
         'Merged 3 Bands BGR' => {
-            imagery_types => ['calculate_tgi_drone_imagery', 'calculate_vari_drone_imagery', 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_tgi_imagery', 'observation_unit_polygon_vari_imagery', 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1']
+            imagery_types => [],
+            observation_unit_plot_polygon_types => []
         },
         'Merged 3 Bands NRN' => {
-            imagery_types => ['calculate_ndvi_drone_imagery', 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_ndvi_imagery', 'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1']
+            imagery_types => [],
+            observation_unit_plot_polygon_types => []
         },
         'Merged 3 Bands NReN' => {
-            imagery_types => ['calculate_ndre_drone_imagery', 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_ndre_imagery', 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1']
+            imagery_types => [],
+            observation_unit_plot_polygon_types => []
         }
     );
 
@@ -603,7 +603,7 @@ sub _draw_drone_imagery_section {
     my $drone_run_project_id = shift;
     my $plot_polygon_background_to_use_image_id = shift;
 
-    my $html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$imagery_id.'"></span></h5><b>By</b>: '.$imagery_username.'</br><b>Date</b>: '.$imagery_modified_date;
+    my $html .= '<div class="well well-sm"><h5>Image ('.$plot_polygon_terms->[0].')&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$imagery_id.'"></span></h5><div class="row"><div class="col-sm-3"><b>By</b>: '.$imagery_username.'</br><b>Date</b>: '.$imagery_modified_date;
     if ($threshold_value) {
         $html .= '<br/><b>Threshold Value</b>: '.$threshold_value;
     }
