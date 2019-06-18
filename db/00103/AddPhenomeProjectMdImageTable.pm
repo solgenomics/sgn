@@ -74,6 +74,8 @@ sub patch {
             'observation_unit_polygon_rgb_imagery_channel_1',
             'observation_unit_polygon_rgb_imagery_channel_2',
             'observation_unit_polygon_rgb_imagery_channel_3',
+            'observation_unit_polygon_nrn_imagery',
+            'observation_unit_polygon_nren_imagery',
             'observation_unit_polygon_blue_imagery',
             'observation_unit_polygon_green_imagery',
             'observation_unit_polygon_red_imagery',

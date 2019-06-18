@@ -303,10 +303,12 @@ project_md_image	denoised_background_removed_thresholded_vari_mask_original	Stit
 project_md_image	denoised_background_removed_thresholded_ndvi_mask_original	Stitched image without background via thresholded ndvi mask via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	denoised_background_removed_thresholded_ndre_mask_original	Stitched image without background via thresholded ndre mask	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_bw_imagery	Cropped image for an observation unit polygon from original black and white image	10/5/2018	nm529	00103
-project_md_image	observation_unit_polygon_rgb_imagery	Cropped image for an observation unit polygon from original rgb image	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_rgb_imagery	Cropped image for an observation unit polygon from original or merged rgb image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_rgb_imagery_channel_1	Cropped image for an observation unit polygon from original or merged rgb image channel 1	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_rgb_imagery_channel_2	Cropped image for an observation unit polygon from original or merged rgb image channel 2	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_rgb_imagery_channel_3	Cropped image for an observation unit polygon from original or merged rgb image channel 3	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_nrn_imagery	Cropped image for an observation unit polygon from merged nrn image	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_nren_imagery	Cropped image for an observation unit polygon from merged nren image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_blue_imagery	Cropped image for an observation unit polygon from original blue image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_green_imagery	Cropped image for an observation unit polygon from original green image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_red_imagery	Cropped image for an observation unit polygon from original red image	10/5/2018	nm529	00103

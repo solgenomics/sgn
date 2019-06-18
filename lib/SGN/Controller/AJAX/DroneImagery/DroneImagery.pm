@@ -51,9 +51,9 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
 
     my $drone_run_band_drone_run_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
-    my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
-    my $sql = join ("," , (keys %$project_image_type_id_list));
-    my $q = "SELECT drone_run.project_id, project_image_type.name
+    my $project_image_type_id_hash = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my $sql = join ("," , (keys %$project_image_type_id_hash));
+    my $q = "SELECT drone_run.project_id, project_image_type.name, project_image_type.cvterm_id
         FROM project AS drone_run_band
         JOIN project_relationship AS drone_run_band_rel ON(drone_run_band.project_id=drone_run_band_rel.subject_project_id AND drone_run_band_rel.type_id=$drone_run_band_drone_run_relationship_id)
         JOIN project AS drone_run ON(drone_run.project_id=drone_run_band_rel.object_project_id)
@@ -66,8 +66,8 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
     $h->execute();
 
     my %unique_drone_runs;
-    while (my ($drone_run_project_id, $project_image_type_name) = $h->fetchrow_array()) {
-        $unique_drone_runs{$drone_run_project_id}->{$project_image_type_name}++;
+    while (my ($drone_run_project_id, $project_image_type_name, $project_image_type_id) = $h->fetchrow_array()) {
+        $unique_drone_runs{$drone_run_project_id}->{$project_image_type_id_hash->{$project_image_type_id}->{display_name}}++;
         $unique_drone_runs{$drone_run_project_id}->{total_plot_image_count}++;
     }
     #print STDERR Dumper \%unique_drone_runs;
@@ -738,6 +738,66 @@ sub _perform_plot_polygon_assign {
     };
 }
 
+sub drone_imagery_save_plot_polygons_template : Path('/api/drone_imagery/save_plot_polygons_template') : ActionClass('REST') { }
+sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $stock_polygons = $c->req->param('stock_polygons');
+    #print STDERR Dumper $c->req->params;
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $polygon_objs = decode_json $stock_polygons;
+    my %stock_ids;
+
+    #print STDERR Dumper $polygon_objs;
+    foreach my $stock_name (keys %$polygon_objs) {
+        my $polygon = $polygon_objs->{$stock_name};
+        my $last_point = pop @$polygon;
+        if (scalar(@$polygon) != 4){
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.' should be 4 long!'};
+            $c->detach();
+        }
+        $polygon_objs->{$stock_name} = $polygon;
+
+        my $stock = $schema->resultset("Stock::Stock")->find({uniquename => $stock_name});
+        if (!$stock) {
+            $c->stash->{rest} = {error=>'Error: Stock name '.$stock_name.' does not exist in the database!'};
+            $c->detach();
+        }
+        $stock_ids{$stock_name} = $stock->stock_id;
+    }
+
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
+    if ($previous_plot_polygons_rs->count > 1) {
+        die "There should not be more than one saved entry for plot polygons for a drone run band";
+    }
+
+    my $save_stock_polygons;
+    if ($previous_plot_polygons_rs->count > 0) {
+        $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
+    }
+    foreach my $stock_name (keys %$polygon_objs) {
+        $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
+    }
+
+    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$drone_run_band_plot_polygons_type_id,
+        project_id=>$drone_run_band_project_id,
+        rank=>0,
+        value=> encode_json($save_stock_polygons)
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub drone_imagery_fourier_transform : Path('/api/drone_imagery/fourier_transform') : ActionClass('REST') { }
 sub drone_imagery_fourier_transform_GET : Args(0) {
     my $self = shift;
@@ -1025,7 +1085,6 @@ sub drone_imagery_remove_background_percentage_save : Path('/api/drone_imagery/r
 sub drone_imagery_remove_background_percentage_save_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
     my $image_type_list = $c->req->param('image_type_list');
@@ -1311,52 +1370,41 @@ sub get_drone_run_band_projects_GET : Args(0) {
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my @res;
         if ($drone_run_band_project_id != $exclude_drone_run_band_project_id) {
-            my $standard_process_plot_polygon_type;
             my $background_removed_threshold_type;
             if ($drone_run_band_type eq 'Blue (450-520nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_blue_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_blue';
             }
             elsif ($drone_run_band_type eq 'Green (515-600nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_green_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_green';
             }
             elsif ($drone_run_band_type eq 'Red (600-690nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_red_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_red';
             }
             elsif ($drone_run_band_type eq 'Red Edge (690-750nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_red_edge_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_red_edge';
             }
             elsif ($drone_run_band_type eq 'NIR (750-900nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_nir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_nir';
             }
             elsif ($drone_run_band_type eq 'MIR (1550-1750nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_mir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_mir';
             }
             elsif ($drone_run_band_type eq 'FIR (2080-2350nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_fir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_fir';
             }
             elsif ($drone_run_band_type eq 'Thermal IR (10400-12500nm)') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_tir_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_tir';
             }
             elsif ($drone_run_band_type eq 'Black and White Image') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_bw_background_removed_threshold_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_bw';
             }
             elsif ($drone_run_band_type eq 'RGB Color Image') {
-                $standard_process_plot_polygon_type = 'observation_unit_polygon_rgb_imagery';
                 $background_removed_threshold_type = 'threshold_background_removed_stitched_drone_imagery_rgb_channel_1,threshold_background_removed_stitched_drone_imagery_rgb_channel_2,threshold_background_removed_stitched_drone_imagery_rgb_channel_3';
             }
             if ($checkbox_select_name){
                 my $checked = $select_all ? 'checked' : '';
                 my $disabled = $disable ? 'disabled' : '';
-                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-standard_process_plot_polygon_type='$standard_process_plot_polygon_type' data-background_removed_threshold_type='$background_removed_threshold_type' $checked $disabled>";
+                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-background_removed_threshold_type='$background_removed_threshold_type' $checked $disabled>";
             }
             my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
             push @res, (
@@ -1385,7 +1433,6 @@ sub standard_process_apply_POST : Args(0) {
     my $apply_drone_run_band_project_ids = decode_json $c->req->param('apply_drone_run_band_project_ids');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
-    my $template_drone_run_band_project_id = $c->req->param('template_drone_run_band_project_id');
     my $vegetative_indices = decode_json $c->req->param('vegetative_indices');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -1580,7 +1627,9 @@ sub standard_process_apply_POST : Args(0) {
             push @ft_hpf30_background_threshold_removed_imagery_types, ('calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3');
             push @ft_hpf30_background_threshold_removed_plot_polygon_types, ( 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3');
 
-            my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery_channel_1', $user_id, $user_name, $user_role, 0);
+            my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery', $user_id, $user_name, $user_role, 0);
+
+            $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery_channel_1', $user_id, $user_name, $user_role, 0);
 
             $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery_channel_2', $user_id, $user_name, $user_role, 0);
 
@@ -1600,9 +1649,7 @@ sub standard_process_apply_POST : Args(0) {
             my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $bcs_schema, $denoised_image_id, $drone_run_band_project_id, $denoised_background_threshold_removed_imagery_types[$iterator], '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
             my $background_removed_threshold_image_id = $background_removed_threshold_return->{removed_background_image_id};
 
-            if ($drone_run_band_project_id != $template_drone_run_band_project_id) {
-                my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
-            }
+            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $background_removed_threshold_image_id, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0);
 
             my $fourier_transform_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $ft_hpf30_imagery_types[$iterator], '30', 'frequency', $user_id, $user_name, $user_role);
             my $fourier_transform_return_image_id = $fourier_transform_return->{ft_image_id};
@@ -1648,6 +1695,8 @@ sub standard_process_apply_POST : Args(0) {
 
             my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
             my $denoised_image_id = $denoise_return->{denoised_image_id};
+
+            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_rgb_imagery', $user_id, $user_name, $user_role, 0);
 
             if (exists($vegetative_indices_hash{'TGI'})) {
                 _perform_standard_process_vi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'TGI', 'BGR');
@@ -1695,6 +1744,8 @@ sub standard_process_apply_POST : Args(0) {
             my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
             my $denoised_image_id = $denoise_return->{denoised_image_id};
 
+            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_nrn_imagery', $user_id, $user_name, $user_role, 0);
+
             _perform_standard_process_vi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'NDVI', 'NRN');
         }
     }
@@ -1727,6 +1778,8 @@ sub standard_process_apply_POST : Args(0) {
 
             my $denoise_return = _perform_image_denoise($c, $bcs_schema, $metadata_schema, $cropped_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
             my $denoised_image_id = $denoise_return->{denoised_image_id};
+
+            my $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, 'observation_unit_polygon_nren_imagery', $user_id, $user_name, $user_role, 0);
 
             _perform_standard_process_vi_calc($c, $bcs_schema, $metadata_schema, $denoised_image_id, $merged_drone_run_band_project_id, $user_id, $user_name, $user_role, $plot_polygons_value, 'NDRE', 'NReN');
         }
