@@ -483,11 +483,6 @@ sub rrblup_training_gebvs_file {
 }
 
 
-# sub selection_pop_all_gebvs_files {
-
-    
-# }
-
 sub rrblup_selection_gebvs_file {    
     my ($self, $c, $identifier, $trait_id) = @_;
 

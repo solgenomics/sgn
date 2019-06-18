@@ -589,101 +589,14 @@ sub transform_plots_genotypes_names {
     
 }
     
-sub plots_list_phenotype_file {
-    my ($self, $c) = @_;
-
-    my $model_id = $c->stash->{model_id};
-    my $list     = $c->stash->{list}; 
-    my $list_id  = $c->stash->{list_id};
- 
-    my $dataset_id  = $c->stash->{dataset_id};
-    my $plots_names = $c->stash->{plots_list};
-    my $plots_ids   = $c->stash->{plots_ids};
-
-    if (!$plots_ids)
-    {	
-	$self->get_plots_list_elements_ids($c);
-	$plots_ids = $c->stash->{list_elements_ids};
-    }
-    
-    $c->stash->{pop_id} = $dataset_id ? 'dataset_' . $dataset_id : 'list_' . $list_id;
-    my $file_id = $c->stash->{pop_id};
-    $c->controller('solGS::Files')->traits_list_file($c);    
-    my $traits_file =  $c->stash->{traits_list_file};
-  
-    my $data_dir = $c->stash->{solgs_lists_dir};
-
-    my $temp_data_files = $self->create_list_pop_data_files($c, $data_dir, $file_id);
-    my $pheno_file = $temp_data_files->{pheno_file};
-    $c->stash->{plots_list_phenotype_file} = $pheno_file;
-
-    $c->controller('solGS::Files')->phenotype_metadata_file($c);
-    my $metadata_file = $c->stash->{phenotype_metadata_file};
-    
-     my $args = {
-	'list_id'        => $list_id,
-	'plots_ids'      => $plots_ids,
-	'traits_file'    => $traits_file,
-#	'data_dir'       => $data_dir,
-	'phenotype_file' => $pheno_file,
-	'metadata_file'  => $metadata_file,
-	'r_temp_file'    => 'plots-phenotype-data-query',
-	'population_type' => 'plots_list'
-	    
-    };
-
-    $self->submit_list_phenotype_data_query($c, $args);
-    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
-}
-
-
-sub submit_list_phenotype_data_query {
-    my ($self, $c, $args) = @_;
-
-    $c->stash->{r_temp_file} = $args->{r_temp_file};
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
-     
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $background_job = $c->stash->{background_job};
-    
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-data-query-report-args');
-    $c->stash->{report_file} = $args_file;
-  
-    nstore $args, $args_file 
-		or croak "data query script: $! serializing data query details to $args_file ";
-	
-    my $cmd = 'mx-run solGS::Cluster ' 
-	. ' --data_type phenotype '
-	. ' --population_type ' . $args->{population_type}
-	. ' --args_file ' . $args_file;
-
-     my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
-     };
-    
-    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
-
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
-    };
-    
-    $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
-   
-}
-
 
 sub genotypes_list_genotype_file {
     my ($self, $c) = @_;
     
-    $self->genotypes_list_genotype_data_query_job($c);  
+    $self->genotypes_list_genotype_query_job($c);
+    my $args = $c->stash->{genotypes_list_genotype_query_job};
+    
+    $c->controller('solGS::solGS')->submit_job_cluster($c, $args);
     
 }
 
@@ -695,7 +608,7 @@ sub genotypes_list_genotype_query_job {
     my $dataset_id = $c->stash->{dataset_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
    
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{model_id};
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{model_id} || $c->stash->{training_pop_id};
 
     if ($list_id)
     {       
@@ -762,7 +675,7 @@ sub genotypes_list_genotype_query_job {
 	'temp_dir' => $temp_dir,
     };
     
-    $c->stash->{genotype_list_genotype_query_job} = $job_args;
+    $c->stash->{genotypes_list_genotype_query_job} = $job_args;
     $c->stash->{genotype_file} = $geno_file;
 }
 
@@ -851,8 +764,10 @@ sub plots_list_phenotype_query_job {
 sub plots_list_phenotype_file {
     my ($self, $c) = @_;
     
-    $self->plots_list_phenotype_query_job($c);  
- 
+    $self->plots_list_phenotype_query_job($c);    
+    my $args = $c->stash->{plots_list_phenotype_query_job};
+    $c->controller('solGS::solGS')->submit_job_cluster($c, $args); 
+    
 }
 
 sub list_type_training_pop_data_query_jobs {
@@ -862,7 +777,7 @@ sub list_type_training_pop_data_query_jobs {
     $self->genotypes_list_genotype_query_job($c);
     
     my $pheno_job = $c->stash->{plots_list_phenotype_query_job};
-    my $geno_job  = $c->stash->{genotype_list_genotype_query_job};    
+    my $geno_job  = $c->stash->{genotypes_list_genotype_query_job};    
 
     $c->stash->{list_type_training_pop_data_query_jobs} = [$pheno_job, $geno_job];
 }
