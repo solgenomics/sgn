@@ -571,7 +571,7 @@ sub get_vegetative_index_image_type_term_map {
             },
             ft_hpf30_original_thresholded_index_mask_background_channel_2 => {
                 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2' => [
-                    'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1'
+                    'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2'
                 ]
             },
             original_index_mask_background => {

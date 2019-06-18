@@ -470,54 +470,14 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Cropped Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{cropped_stitched_drone_imagery_id}.'"></span></h5><b>By</b>: '.$d->{cropped_stitched_drone_imagery_username}.'<br/><b>Date</b>: '.$d->{cropped_stitched_drone_imagery_modified_date}.'<br/><b>Cropped Polygon</b>: '.$d->{cropped_stitched_drone_imagery_polygon}.'</div><div class="col-sm-6">'.$d->{cropped_stitched_drone_imagery}.'</div></div></div>';
 
                         if ($d->{denoised_stitched_drone_imagery}) {
-                            $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'"></span></h5><b>By</b>: '.$d->{denoised_stitched_drone_imagery_username}.'</br><b>Date</b>: '.$d->{denoised_stitched_drone_imagery_modified_date}.'<hr>'.$d->{denoised_stitched_drone_imagery}.'</div><div class="col-sm-9">';
-
-                            my @ft_hpf30_denoised_original_image_types = keys %{$imagery_attribute_map{denoised_stitched_drone_imagery}->{structure}};
-
-                            foreach my $denoised_original_plot_polygon_term (@{$original_denoised_observation_unit_polygon_terms{$d->{drone_run_band_project_type}}}) {
-                                $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                    $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-assign_plot_polygons_type="'.$denoised_original_plot_polygon_term.'">Create/View Plot Polygons ('.$denoised_original_plot_polygon_term.')</button><br/><br/>';
-
-                                    my $plot_polygon_images = '';
-                                    if ($d->{$denoised_original_plot_polygon_term."_images"}) {
-                                        $plot_polygon_images = scalar(@{$d->{$denoised_original_plot_polygon_term."_images"}})." Plot Polygons<br/><span>";
-                                        $plot_polygon_images .= join '', @{$d->{$denoised_original_plot_polygon_term."_images"}};
-                                        $plot_polygon_images .= "</span>";
-                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$denoised_original_plot_polygon_term.'" >Calculate Phenotypes</button><br/><br/>';
-                                    } else {
-                                        $plot_polygon_images = 'No Plot Polygons Assigned';
-                                    }
-                                    $drone_run_band_table_html .= $plot_polygon_images;
-                                $drone_run_band_table_html .= '</div></div>';
-                            }
-
-                            $drone_run_band_table_html .= '</div></div></div>';
+                            $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{denoised_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_username}, $d->{denoised_stitched_drone_imagery_modified_date}, undef, $d->{denoised_stitched_drone_imagery}, $original_denoised_observation_unit_polygon_terms{$d->{drone_run_band_project_type}}, $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{denoised_stitched_drone_imagery_id});
 
                             foreach my $original_background_removed_threshold_term (keys %original_background_removed_threshold_terms) {
                                 if (exists($d->{$original_background_removed_threshold_term})) {
                                     my $plot_polygon_type = $imagery_attribute_map{$original_background_removed_threshold_term}->{observation_unit_plot_polygon_type};
 
-                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Background Removed Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{$original_background_removed_threshold_term."_id"}.'"></span></h5><b>By</b>: '.$d->{$original_background_removed_threshold_term."_username"}.'</br><b>Date</b>: '.$d->{$original_background_removed_threshold_term."_modified_date"}.'<br/><b>Background Removed Threshold</b>: '.$d->{$original_background_removed_threshold_term."_threshold"}.'<hr>'.$d->{$original_background_removed_threshold_term}.'</div><div class="col-sm-9">';
-
-                                    $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                        $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{$original_background_removed_threshold_term."_id"}.'" data-assign_plot_polygons_type="'.$plot_polygon_type.'">Create/View Plot Polygons ('.$plot_polygon_type.')</button><br/><br/>';
-
-                                        my $plot_polygon_original_background_removed_threshold_images = '';
-                                        if ($d->{$plot_polygon_type."_images"}) {
-                                            $plot_polygon_original_background_removed_threshold_images = scalar(@{$d->{$plot_polygon_type."_images"}})." Plot Polygons<br/><span>";
-                                            $plot_polygon_original_background_removed_threshold_images .= join '', @{$d->{$plot_polygon_type."_images"}};
-                                            $plot_polygon_original_background_removed_threshold_images .= "</span>";
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$plot_polygon_type.'" >Calculate Phenotypes</button><br/><br/>';
-                                        } else {
-                                            $plot_polygon_original_background_removed_threshold_images = 'No Plot Polygons Assigned';
-                                        }
-                                        $drone_run_band_table_html .= $plot_polygon_original_background_removed_threshold_images;
-                                    $drone_run_band_table_html .= '</div></div>';
-
-                                    $drone_run_band_table_html .= '</div></div></div>';
-
+                                    $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{$original_background_removed_threshold_term."_id"}, $d->{$original_background_removed_threshold_term."_username"}, $d->{$original_background_removed_threshold_term."_modified_date"}, $d->{$original_background_removed_threshold_term."_threshold"}, $d->{$original_background_removed_threshold_term}, [$plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$original_background_removed_threshold_term."_id"});
                                 } else {
-                                    print STDERR Dumper $original_background_removed_threshold_term;
                                     if ($d->{drone_run_band_project_type} eq $original_background_removed_threshold_terms{$original_background_removed_threshold_term}) {
                                         $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_drone_imagery_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-remove_background_current_image_type="'.$original_background_removed_threshold_term.'" >Remove Background From Original Denoised Image via Threshold</button><br/><br/>';
                                     }
@@ -528,24 +488,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                             foreach my $ft_hpf30_denoised_original_image_type (@{$original_denoised_imagery_terms{$d->{drone_run_band_project_type}}->{imagery_types}}) {
                                 my $ft_hpf30_denoised_plot_polygon_type = $original_denoised_imagery_terms{$d->{drone_run_band_project_type}}->{observation_unit_plot_polygon_types}->[$ft_hpf30_denoised_imagery_type_counter];
                                 if ($d->{$ft_hpf30_denoised_original_image_type}) {
-                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Fourier Transform HPF30 on Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{$ft_hpf30_denoised_original_image_type.'_id'}.'"></span></h5><b>By</b>: '.$d->{$ft_hpf30_denoised_original_image_type.'_username'}.'</br><b>Date</b>: '.$d->{$ft_hpf30_denoised_original_image_type.'_modified_date'}.'<hr>'.$d->{$ft_hpf30_denoised_original_image_type}.'</div><div class="col-sm-9">';
-
-                                    $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                        $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{$ft_hpf30_denoised_original_image_type.'_id'}.'" data-assign_plot_polygons_type="'.$ft_hpf30_denoised_plot_polygon_type.'">Create/View Plot Polygons ('.$ft_hpf30_denoised_plot_polygon_type.')</button><br/><br/>';
-
-                                        my $plot_polygon_images = '';
-                                        if ($d->{$ft_hpf30_denoised_plot_polygon_type.'_images'}) {
-                                            $plot_polygon_images = scalar(@{$d->{$ft_hpf30_denoised_plot_polygon_type.'_images'}})." Plot Polygons<br/><span>";
-                                            $plot_polygon_images .= join '', @{$d->{$ft_hpf30_denoised_plot_polygon_type.'_images'}};
-                                            $plot_polygon_images .= "</span>";
-                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$ft_hpf30_denoised_plot_polygon_type.'" >Calculate Phenotypes</button><br/><br/>';
-                                        } else {
-                                            $plot_polygon_images = 'No Plot Polygons Assigned';
-                                        }
-                                        $drone_run_band_table_html .= $plot_polygon_images;
-                                    $drone_run_band_table_html .= '</div></div>';
-
-                                    $drone_run_band_table_html .= '</div></div></div>';
+                                    $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{$ft_hpf30_denoised_original_image_type."_id"}, $d->{$ft_hpf30_denoised_original_image_type."_username"}, $d->{$ft_hpf30_denoised_original_image_type."_modified_date"}, undef, $d->{$ft_hpf30_denoised_original_image_type}, [$ft_hpf30_denoised_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$ft_hpf30_denoised_original_image_type.'_id'});
                                 } else {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$ft_hpf30_denoised_original_image_type.'" >Run Fourier Transform HPF30 ('.$ft_hpf30_denoised_original_image_type.')</button><br/><br/>';
                                 }
@@ -568,24 +511,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{NDVI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>'.$image_type_term.'&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{$image_type_term.'_id'}.'"></span></h5><b>By</b>: '.$d->{$image_type_term.'_username'}.'</br><b>Date</b>: '.$d->{$image_type_term.'_modified_date'}.'<hr>'.$d->{$image_type_term}.'</div><div class="col-sm-9">';
-
-                                                    $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                                        $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{$image_type_term.'_id'}.'" data-assign_plot_polygons_type="'.$observation_unit_plot_polygon_type.'">Create/View Plot Polygons ('.$observation_unit_plot_polygon_type.')</button><br/><br/>';
-
-                                                        my $plot_polygon_images = '';
-                                                        if ($d->{$observation_unit_plot_polygon_type.'_images'}) {
-                                                            $plot_polygon_images = scalar(@{$d->{$observation_unit_plot_polygon_type.'_images'}})." Plot Polygons<br/><span>";
-                                                            $plot_polygon_images .= join '', @{$d->{$observation_unit_plot_polygon_type.'_images'}};
-                                                            $plot_polygon_images .= "</span>";
-                                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$observation_unit_plot_polygon_type.'" >Calculate Phenotypes</button><br/><br/>';
-                                                        } else {
-                                                            $plot_polygon_images = 'No Plot Polygons Assigned';
-                                                        }
-                                                        $drone_run_band_table_html .= $plot_polygon_images;
-                                                    $drone_run_band_table_html .= '</div></div>';
-
-                                                    $drone_run_band_table_html .= '</div></div></div>';
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'});
                                                 } else {
                                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_xxxx" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$imagery_term.'" >GG ('.$imagery_term.')</button><br/><br/>';
                                                 }
@@ -600,24 +526,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{NDRE}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>'.$image_type_term.'&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{$image_type_term.'_id'}.'"></span></h5><b>By</b>: '.$d->{$image_type_term.'_username'}.'</br><b>Date</b>: '.$d->{$image_type_term.'_modified_date'}.'<hr>'.$d->{$image_type_term}.'</div><div class="col-sm-9">';
-
-                                                    $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                                        $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{$image_type_term.'_id'}.'" data-assign_plot_polygons_type="'.$observation_unit_plot_polygon_type.'">Create/View Plot Polygons ('.$observation_unit_plot_polygon_type.')</button><br/><br/>';
-
-                                                        my $plot_polygon_images = '';
-                                                        if ($d->{$observation_unit_plot_polygon_type.'_images'}) {
-                                                            $plot_polygon_images = scalar(@{$d->{$observation_unit_plot_polygon_type.'_images'}})." Plot Polygons<br/><span>";
-                                                            $plot_polygon_images .= join '', @{$d->{$observation_unit_plot_polygon_type.'_images'}};
-                                                            $plot_polygon_images .= "</span>";
-                                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$observation_unit_plot_polygon_type.'" >Calculate Phenotypes</button><br/><br/>';
-                                                        } else {
-                                                            $plot_polygon_images = 'No Plot Polygons Assigned';
-                                                        }
-                                                        $drone_run_band_table_html .= $plot_polygon_images;
-                                                    $drone_run_band_table_html .= '</div></div>';
-
-                                                    $drone_run_band_table_html .= '</div></div></div>';
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'});
                                                 } else {
                                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_xxxx" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$imagery_term.'" >GG ('.$imagery_term.')</button><br/><br/>';
                                                 }
@@ -631,24 +540,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{TGI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>'.$image_type_term.'&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{$image_type_term.'_id'}.'"></span></h5><b>By</b>: '.$d->{$image_type_term.'_username'}.'</br><b>Date</b>: '.$d->{$image_type_term.'_modified_date'}.'<hr>'.$d->{$image_type_term}.'</div><div class="col-sm-9">';
-
-                                                    $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                                        $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{$image_type_term.'_id'}.'" data-assign_plot_polygons_type="'.$observation_unit_plot_polygon_type.'">Create/View Plot Polygons ('.$observation_unit_plot_polygon_type.')</button><br/><br/>';
-
-                                                        my $plot_polygon_images = '';
-                                                        if ($d->{$observation_unit_plot_polygon_type.'_images'}) {
-                                                            $plot_polygon_images = scalar(@{$d->{$observation_unit_plot_polygon_type.'_images'}})." Plot Polygons<br/><span>";
-                                                            $plot_polygon_images .= join '', @{$d->{$observation_unit_plot_polygon_type.'_images'}};
-                                                            $plot_polygon_images .= "</span>";
-                                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$observation_unit_plot_polygon_type.'" >Calculate Phenotypes</button><br/><br/>';
-                                                        } else {
-                                                            $plot_polygon_images = 'No Plot Polygons Assigned';
-                                                        }
-                                                        $drone_run_band_table_html .= $plot_polygon_images;
-                                                    $drone_run_band_table_html .= '</div></div>';
-
-                                                    $drone_run_band_table_html .= '</div></div></div>';
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'});
                                                 } else {
                                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_xxxx" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$imagery_term.'" >GG ('.$imagery_term.')</button><br/><br/>';
                                                 }
@@ -659,24 +551,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{VARI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>'.$image_type_term.'&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{$image_type_term.'_id'}.'"></span></h5><b>By</b>: '.$d->{$image_type_term.'_username'}.'</br><b>Date</b>: '.$d->{$image_type_term.'_modified_date'}.'<hr>'.$d->{$image_type_term}.'</div><div class="col-sm-9">';
-
-                                                    $drone_run_band_table_html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-                                                        $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$d->{$image_type_term.'_id'}.'" data-assign_plot_polygons_type="'.$observation_unit_plot_polygon_type.'">Create/View Plot Polygons ('.$observation_unit_plot_polygon_type.')</button><br/><br/>';
-
-                                                        my $plot_polygon_images = '';
-                                                        if ($d->{$observation_unit_plot_polygon_type.'_images'}) {
-                                                            $plot_polygon_images = scalar(@{$d->{$observation_unit_plot_polygon_type.'_images'}})." Plot Polygons<br/><span>";
-                                                            $plot_polygon_images .= join '', @{$d->{$observation_unit_plot_polygon_type.'_images'}};
-                                                            $plot_polygon_images .= "</span>";
-                                                            $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'" data-plot_polygons_type="'.$observation_unit_plot_polygon_type.'" >Calculate Phenotypes</button><br/><br/>';
-                                                        } else {
-                                                            $plot_polygon_images = 'No Plot Polygons Assigned';
-                                                        }
-                                                        $drone_run_band_table_html .= $plot_polygon_images;
-                                                    $drone_run_band_table_html .= '</div></div>';
-
-                                                    $drone_run_band_table_html .= '</div></div></div>';
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'});
                                                 } else {
                                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_xxxx" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$imagery_term.'" >GG ('.$imagery_term.')</button><br/><br/>';
                                                 }
@@ -708,6 +583,67 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     }
 
     $c->stash->{rest} = { data => \@return };
+}
+
+sub _draw_drone_imagery_section {
+    my $d = shift;
+    my $imagery_id = shift;
+    my $imagery_username = shift;
+    my $imagery_modified_date = shift;
+    my $threshold_value = shift;
+    my $imagery = shift;
+    my $plot_polygon_terms = shift;
+    my $stitched_image_id = shift;
+    my $cropped_stitched_drone_imagery_id = shift;
+    my $denoised_stitched_drone_imagery_id = shift;
+    my $trial_id = shift;
+    my $stitched_image_original_uri_encoded = shift;
+    my $drone_run_band_project_id = shift;
+    my $drone_run_band_project_type = shift;
+    my $drone_run_project_id = shift;
+    my $plot_polygon_background_to_use_image_id = shift;
+
+    my $html .= '<div class="well well-sm"><div class="row"><div class="col-sm-3"><h5>Original Denoised Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$imagery_id.'"></span></h5><b>By</b>: '.$imagery_username.'</br><b>Date</b>: '.$imagery_modified_date;
+    if ($threshold_value) {
+        $html .= '<br/><b>Threshold Value</b>: '.$threshold_value;
+    }
+    $html .= '<hr>'.$imagery.'</div><div class="col-sm-9">';
+
+    foreach my $plot_polygon_term (@$plot_polygon_terms) {
+        $html .= _draw_plot_polygon_images_panel($d, $stitched_image_id, $cropped_stitched_drone_imagery_id, $denoised_stitched_drone_imagery_id, $trial_id, $stitched_image_original_uri_encoded, $drone_run_band_project_id, $plot_polygon_term, $drone_run_band_project_type, $drone_run_project_id, $plot_polygon_background_to_use_image_id);
+    }
+
+    $html .= '</div></div></div>';
+    return $html;
+}
+
+sub _draw_plot_polygon_images_panel {
+    my $d = shift;
+    my $stitched_image_id = shift;
+    my $cropped_stitched_drone_imagery_id = shift;
+    my $denoised_stitched_drone_imagery_id = shift;
+    my $trial_id = shift;
+    my $stitched_image_original_uri_encoded = shift;
+    my $drone_run_band_project_id = shift;
+    my $denoised_original_plot_polygon_term = shift;
+    my $drone_run_band_project_type = shift;
+    my $drone_run_project_id = shift;
+    my $plot_polygon_background_to_use_image_id = shift;
+    my $html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
+        $html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$denoised_original_plot_polygon_term.'">Create/View Plot Polygons ('.$denoised_original_plot_polygon_term.')</button><br/><br/>';
+
+        my $plot_polygon_images = '';
+        if ($d->{$denoised_original_plot_polygon_term."_images"}) {
+            $plot_polygon_images = scalar(@{$d->{$denoised_original_plot_polygon_term."_images"}})." Plot Polygons<br/><span>";
+            $plot_polygon_images .= join '', @{$d->{$denoised_original_plot_polygon_term."_images"}};
+            $plot_polygon_images .= "</span>";
+            $html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$trial_id.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$drone_run_band_project_type.'" data-plot_polygons_type="'.$denoised_original_plot_polygon_term.'" >Calculate Phenotypes</button><br/><br/>';
+        } else {
+            $plot_polygon_images = 'No Plot Polygons Assigned';
+        }
+        $html .= $plot_polygon_images;
+    $html .= '</div></div>';
+    return $html;
 }
 
 1;
