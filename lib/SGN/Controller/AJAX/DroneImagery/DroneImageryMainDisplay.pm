@@ -461,7 +461,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 elsif ($d->{drone_run_band_project_type} eq 'Merged 3 Bands NRN') {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_3_band_nrn_vegetative" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_drone_imagery_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'">Convert to Vegetative Index</button><br/><br/>';
 
-                                    foreach my $imagery_term (keys %{$vi_map_hash->{NDVI}}) {
+                                    foreach my $imagery_term (sort keys %{$vi_map_hash->{NDVI}}) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{NDVI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
@@ -476,7 +476,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 elsif ($d->{drone_run_band_project_type} eq 'Merged 3 Bands NReN') {
                                     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_3_band_nren_vegetative" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_drone_imagery_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'">Convert to Vegetative Index</button><br/><br/>';
 
-                                    foreach my $imagery_term (keys %{$vi_map_hash->{NDRE}}) {
+                                    foreach my $imagery_term (sort keys %{$vi_map_hash->{NDRE}}) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{NDRE}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
@@ -490,7 +490,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 }
 
                                 if ($d->{drone_run_band_project_type} eq 'RGB Color Image' || $d->{drone_run_band_project_type} eq 'Merged 3 Bands BGR') {
-                                    foreach my $imagery_term (keys %{$vi_map_hash->{TGI}}) {
+                                    foreach my $imagery_term (sort keys %{$vi_map_hash->{TGI}}) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{TGI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
@@ -501,7 +501,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                             }
                                         }
                                     }
-                                    foreach my $imagery_term (keys %{$vi_map_hash->{VARI}}) {
+                                    foreach my $imagery_term (sort keys %{$vi_map_hash->{VARI}}) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{VARI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {

@@ -490,8 +490,8 @@ sub patch {
             'calculate_fourier_transform_hpf20_nrn_calculate_ndvi_drone_imagery_channel_1',
             'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1',
             'calculate_fourier_transform_hpf40_nrn_calculate_ndvi_drone_imagery_channel_1',
-            'calculate_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1'
-            'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1'
+            'calculate_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1',
+            'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1',
             'calculate_fourier_transform_hpf40_nren_calculate_ndre_drone_imagery_channel_1'
         ],
         'project_property' => [

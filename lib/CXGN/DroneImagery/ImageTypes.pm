@@ -527,8 +527,14 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via TGI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via TGI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via TGI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via TGI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
@@ -782,9 +788,9 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1'
                 ]
             },
-            ft_hpf30_index_threshold_background => {
-                'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1' => [
-                    'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1'
+            ft_hpf40_index_threshold_background => {
+                'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_tgi_drone_imagery_channel_1'
                 ]
             },
             original_thresholded_index_mask_background => {
@@ -795,9 +801,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3',
                 ]
             },
+            ft_hpf20_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1'
+                ]
+            },
+            ft_hpf40_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2'
                 ]
             },
             ft_hpf30_original_thresholded_index_mask_background_channel_2 => {
@@ -805,9 +826,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2'
                 ]
             },
+            ft_hpf40_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2'
+                ]
+            },
+            ft_hpf20_original_thresholded_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_3 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3'
+                ]
+            },
+            ft_hpf40_original_thresholded_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3'
                 ]
             },
             original_index_mask_background => {
@@ -818,9 +854,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3',
                 ]
             },
+            ft_hpf20_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1'
+                ]
+            },
+            ft_hpf40_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_2'
                 ]
             },
             ft_hpf30_original_index_mask_background_channel_2 => {
@@ -828,9 +879,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2'
                 ]
             },
+            ft_hpf40_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_2'
+                ]
+            },
+            ft_hpf20_original_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_3'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_3 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_3' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3'
+                ]
+            },
+            ft_hpf40_original_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_3'
                 ]
             }
         },
@@ -860,9 +926,19 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_background_removed_vari_imagery'
                 ]
             },
+            ft_hpf20_index_threshold_background => {
+                'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_vari_drone_imagery_channel_1'
+                ]
+            },
             ft_hpf30_index_threshold_background => {
                 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1'
+                ]
+            },
+            ft_hpf40_index_threshold_background => {
+                'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_vari_drone_imagery_channel_1'
                 ]
             },
             original_thresholded_index_mask_background => {
@@ -873,9 +949,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_3',
                 ]
             },
+            ft_hpf20_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1'
+                ]
+            },
+            ft_hpf40_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_2'
                 ]
             },
             ft_hpf30_original_thresholded_index_mask_background_channel_2 => {
@@ -883,9 +974,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2'
                 ]
             },
+            ft_hpf40_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_2'
+                ]
+            },
+            ft_hpf20_original_thresholded_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_3'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_3 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_3'
+                ]
+            },
+            ft_hpf40_original_thresholded_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_3'
                 ]
             },
             original_index_mask_background => {
@@ -896,9 +1002,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_3',
                 ]
             },
+            ft_hpf20_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1'
+                ]
+            },
+            ft_hpf40_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2'
                 ]
             },
             ft_hpf30_original_index_mask_background_channel_2 => {
@@ -906,9 +1027,24 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2'
                 ]
             },
+            ft_hpf40_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_2'
+                ]
+            },
+            ft_hpf20_original_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_3'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_3 => {
                 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_3' => [
                     'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_3'
+                ]
+            },
+            ft_hpf40_original_index_mask_background_channel_3 => {
+                'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_3' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_3'
                 ]
             }
         },
@@ -938,9 +1074,19 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_background_removed_ndvi_imagery'
                 ]
             },
+            ft_hpf20_index_threshold_background => {
+                'calculate_fourier_transform_hpf20_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1'
+                ]
+            },
             ft_hpf30_index_threshold_background => {
                 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1'
+                ]
+            },
+            ft_hpf40_index_threshold_background => {
+                'calculate_fourier_transform_hpf40_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1'
                 ]
             },
             original_thresholded_index_mask_background => {
@@ -950,14 +1096,34 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_2',
                 ]
             },
+            ft_hpf20_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1'
                 ]
             },
+            ft_hpf40_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_2 => {
                 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2'
+                ]
+            },
+            ft_hpf40_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2'
                 ]
             },
             original_index_mask_background => {
@@ -967,14 +1133,34 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_2',
                 ]
             },
+            ft_hpf20_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1'
                 ]
             },
+            ft_hpf40_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_2'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_2 => {
                 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_2' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2'
+                ]
+            },
+            ft_hpf40_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_2'
                 ]
             }
         },
@@ -1004,9 +1190,19 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_background_removed_ndre_imagery'
                 ]
             },
+            ft_hpf20_index_threshold_background => {
+                'calculate_fourier_transform_hpf20_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_thresholded_ndre_drone_imagery_channel_1'
+                ]
+            },
             ft_hpf30_index_threshold_background => {
                 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1'
+                ]
+            },
+            ft_hpf40_index_threshold_background => {
+                'calculate_fourier_transform_hpf40_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_thresholded_ndre_drone_imagery_channel_1'
                 ]
             },
             original_thresholded_index_mask_background => {
@@ -1016,14 +1212,34 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_2'
                 ]
             },
+            ft_hpf20_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1'
                 ]
             },
+            ft_hpf40_original_thresholded_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_2'
+                ]
+            },
             ft_hpf30_original_thresholded_index_mask_background_channel_2 => {
                 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2'
+                ]
+            },
+            ft_hpf40_original_thresholded_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2'
                 ]
             },
             original_index_mask_background => {
@@ -1033,14 +1249,34 @@ sub get_vegetative_index_image_type_term_map {
                     'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_2',
                 ]
             },
+            ft_hpf20_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_1'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_1 => {
                 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1'
                 ]
             },
+            ft_hpf40_original_index_mask_background_channel_1 => {
+                'calculate_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_original_channel_1' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_1'
+                ]
+            },
+            ft_hpf20_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_2'
+                ]
+            },
             ft_hpf30_original_index_mask_background_channel_2 => {
                 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_2' => [
                     'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2'
+                ]
+            },
+            ft_hpf40_original_index_mask_background_channel_2 => {
+                'calculate_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_original_channel_2' => [
+                    'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_2'
                 ]
             }
         }
@@ -1366,89 +1602,257 @@ sub get_all_project_md_image_types_whole_images {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', channels=>[0], corresponding_channel=>2
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_tgi_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_vari_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nrn_threshold_background_removed_ndvi_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nren_threshold_background_removed_ndre_stitched_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_original_channel_3', channels=>[0], corresponding_channel=>2
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_original_channel_2', channels=>[0], corresponding_channel=>1
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'calculate_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'calculate_fourier_transform_hpf40_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'calculate_fourier_transform_hpf40_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0
         }
     };
 }
