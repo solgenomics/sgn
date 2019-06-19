@@ -2794,11 +2794,9 @@ sub _perform_phenotype_calculation {
     my $majority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Count|G2F:0000027')->cvterm_id;
     my $pixel_group_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Group Count|G2F:0000028')->cvterm_id;
 
-    my $tgi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'TGI|ISOL:0000017')->cvterm_id;
-    my $ndvi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI|ISOL:0000018')->cvterm_id;
-    my $vari_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'VARI|ISOL:0000019')->cvterm_id;
     my $merged_3_bands_bgr_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands BGR|ISOL:0000061')->cvterm_id;
     my $merged_3_bands_nrn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NRN|ISOL:0000062')->cvterm_id;
+    my $merged_3_bands_nren_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NReN|ISOL:0000132')->cvterm_id;
     my $rgb_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'RGB Color Image|ISOL:0000002')->cvterm_id;
     my $bw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Black and White Image|ISOL:0000003')->cvterm_id;
     my $blue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Blue (450-520nm)|ISOL:0000004')->cvterm_id;
@@ -2936,43 +2934,59 @@ sub _perform_phenotype_calculation {
     if ($drone_run_band_project_type eq 'Black and White Image') {
         $drone_run_band_project_type_cvterm_id = $bw_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Blue (450-520nm)') {
+    elsif ($drone_run_band_project_type eq 'Blue (450-520nm)') {
         $drone_run_band_project_type_cvterm_id = $blue_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Green (515-600nm)') {
+    elsif ($drone_run_band_project_type eq 'Green (515-600nm)') {
         $drone_run_band_project_type_cvterm_id = $green_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Red (600-690nm)') {
+    elsif ($drone_run_band_project_type eq 'Red (600-690nm)') {
         $drone_run_band_project_type_cvterm_id = $red_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
+    elsif ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
         $drone_run_band_project_type_cvterm_id = $red_edge_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'NIR (750-900nm)') {
+    elsif ($drone_run_band_project_type eq 'NIR (750-900nm)') {
         $drone_run_band_project_type_cvterm_id = $nir_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'MIR (1550-1750nm)') {
+    elsif ($drone_run_band_project_type eq 'MIR (1550-1750nm)') {
         $drone_run_band_project_type_cvterm_id = $mir_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'FIR (2080-2350nm)') {
+    elsif ($drone_run_band_project_type eq 'FIR (2080-2350nm)') {
         $drone_run_band_project_type_cvterm_id = $fir_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Thermal IR (10400-12500nm)') {
+    elsif ($drone_run_band_project_type eq 'Thermal IR (10400-12500nm)') {
         $drone_run_band_project_type_cvterm_id = $thermal_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'RGB Color Image') {
+    elsif ($drone_run_band_project_type eq 'RGB Color Image') {
         $drone_run_band_project_type_cvterm_id = $rgb_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Merged 3 Bands BGR') {
+    elsif ($drone_run_band_project_type eq 'Merged 3 Bands BGR') {
         $drone_run_band_project_type_cvterm_id = $merged_3_bands_bgr_cvterm_id;
     }
-    if ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
+    elsif ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
         $drone_run_band_project_type_cvterm_id = $merged_3_bands_nrn_cvterm_id;
+    }
+    elsif ($drone_run_band_project_type eq 'Merged 3 Bands NReN') {
+        $drone_run_band_project_type_cvterm_id = $merged_3_bands_nren_cvterm_id;
+    }
+
+    if (!$drone_run_band_project_type_cvterm_id) {
+        die "No drone run band project type term found: $drone_run_band_project_type\n";
     }
 
     my $drone_run_band_plot_polygons_preprocess_cvterm_id;
     #print STDERR Dumper $plot_polygons_type;
     #print STDERR Dumper $image_band_selected;
+
+    if ($plot_polygons_type eq 'observation_unit_polygon_bw_imagery') {
+        if ($image_band_selected eq '0') {
+            $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
+        }
+        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
+            return {error => "On Black and White Image there is only the first channel!"};
+        }
+    }
 
     if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
         if ($image_band_selected eq '0') {

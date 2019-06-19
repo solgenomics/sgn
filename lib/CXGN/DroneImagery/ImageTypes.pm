@@ -33,661 +33,661 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
     my $schema = shift;
     return {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_bw_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Black and White Image(s)'
+            name=>'observation_unit_polygon_bw_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Black and White Image(s)', ISOL_name=>'Black and White Denoised Original Image|ISOL:0000106'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Color Image(s)'
+            name=>'observation_unit_polygon_rgb_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Color Image(s)', ISOL_name=>'RGB Denoised Original Image|ISOL:0000102'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Red Image(s) from RGB Color Image'
+            name=>'observation_unit_polygon_rgb_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image', ISOL_name=>'Blue Image From RGB Denoised Original Image|ISOL:0000103'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image'
+            name=>'observation_unit_polygon_rgb_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image', ISOL_name=>'Green Image From RGB Denoised Original Image|ISOL:0000104'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Blue Image(s) from RGB Color Image'
+            name=>'observation_unit_polygon_rgb_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image', ISOL_name=>'Red Image From RGB Denoised Original Image|ISOL:0000105'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nrn_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_nrn_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Merged 3 Bands Image(s)'
+            name=>'observation_unit_polygon_nrn_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Merged 3 Bands Image(s)', ISOL_name=>'Merged 3 Bands NRN Denoised Image|ISOL:0000115'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nren_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_nren_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Merged 3 Bands Image(s)'
+            name=>'observation_unit_polygon_nren_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Merged 3 Bands Image(s)', ISOL_name=>'Merged 3 Bands NReN Denoised Image|ISOL:0000116'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_blue_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s)'
+            name=>'observation_unit_polygon_blue_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s)', ISOL_name=>'Blue Denoised Original Image|ISOL:0000107'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_green_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Green Image(s)'
+            name=>'observation_unit_polygon_green_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Green Image(s)', ISOL_name=>'Green Denoised Original Image|ISOL:0000108'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_red_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Image(s)'
+            name=>'observation_unit_polygon_red_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Image(s)', ISOL_name=>'Red Denoised Original Image|ISOL:0000109'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_edge_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_red_edge_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Edge Image(s)'
+            name=>'observation_unit_polygon_red_edge_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Edge Image(s)', ISOL_name=>'Red Edge Denoised Original Image|ISOL:0000110'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_nir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s)'
+            name=>'observation_unit_polygon_nir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s)', ISOL_name=>'NIR Denoised Original Image|ISOL:0000111'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_mir_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_mir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'MIR Image(s)'
+            name=>'observation_unit_polygon_mir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'MIR Image(s)', ISOL_name=>'MIR Denoised Original Image|ISOL:0000112'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'FIR Image(s)'
+            name=>'observation_unit_polygon_fir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'FIR Image(s)', ISOL_name=>'FIR Denoised Original Image|ISOL:0000113'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_tir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Thermal IR Image(s)'
+            name=>'observation_unit_polygon_tir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Thermal IR Image(s)', ISOL_name=>'Thermal IR Denoised Original Image|ISOL:0000114'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_bw_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Black and White Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_bw_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Black and White Denoised Original Image|ISOL:0000117'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Blue Image from RGB Color Denoised Original Image|ISOL:0000118'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Green Image from RGB Color Denoised Original Image|ISOL:0000119'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Red Image from RGB Color Denoised Original Image|ISOL:0000120'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_blue_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_blue_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Blue Denoised Original Image|ISOL:0000121'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_green_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Green Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_green_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Green Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Green Denoised Original Image|ISOL:0000122'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_red_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_red_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Red Denoised Original Image|ISOL:0000123'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_edge_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_red_edge_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Edge Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_red_edge_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Red Edge Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Red Edge Denoised Original Image|ISOL:0000124'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_nir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_nir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded NIR Denoised Original Image|ISOL:0000125'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_mir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_mir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'MIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_mir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'MIR Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded MIR Denoised Original Image|ISOL:0000126'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'FIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'FIR Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded FIR Denoised Original Image|ISOL:0000127'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_tir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Thermal IR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_tir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Thermal IR Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Thermal IR Denoised Original Image|ISOL:0000128'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_tgi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_tgi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'TGI Vegetative Index Image(s)', ISOL_name=>'TGI Vegetative Index Image|ISOL:0000129'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_vari_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_vari_imagery', channels=>[0], corresponding_channel=>0, display_name=>'VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_vari_imagery', channels=>[0], corresponding_channel=>0, display_name=>'VARI Vegetative Index Image(s)', ISOL_name=>'VARI Vegetative Index Image|ISOL:0000130'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndvi_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_ndvi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_ndvi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDVI Vegetative Index Image(s)', ISOL_name=>'NDVI Vegetative Index Image|ISOL:0000131'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_ndre_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_ndre_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_ndre_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDRE Vegetative Index Image(s)', ISOL_name=>'NDRE Vegetative Index Image|ISOL:0000132'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_tgi_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_background_removed_tgi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'TGI Vegetative Index Image(s) with Threshold Applied'
+            name=>'observation_unit_polygon_background_removed_tgi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'TGI Vegetative Index Image(s) with Threshold Applied', ISOL_name=>'Thresholded TGI Vegetative Index Image|ISOL:0000133'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_vari_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_background_removed_vari_imagery', channels=>[0], corresponding_channel=>0, display_name=>'VARI Vegetative Index Image(s) with Threshold Applied'
+            name=>'observation_unit_polygon_background_removed_vari_imagery', channels=>[0], corresponding_channel=>0, display_name=>'VARI Vegetative Index Image(s) with Threshold Applied', ISOL_name=>'Thresholded VARI Vegetative Index Image|ISOL:0000134'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndvi_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_background_removed_ndvi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDVI Vegetative Index Image(s) with Threshold Applied'
+            name=>'observation_unit_polygon_background_removed_ndvi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDVI Vegetative Index Image(s) with Threshold Applied', ISOL_name=>'Thresholded NDVI Vegetative Index Image|ISOL:0000135'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_background_removed_ndre_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_background_removed_ndre_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDRE Vegetative Index Image(s) with Threshold Applied'
+            name=>'observation_unit_polygon_background_removed_ndre_imagery', channels=>[0], corresponding_channel=>0, display_name=>'NDRE Vegetative Index Image(s) with Threshold Applied', ISOL_name=>'Thresholded NDRE Vegetative Index Image|ISOL:0000136'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a TGI mask', ISOL_name=>'RGB Color Image Masked with TGI Vegetative Index Image|ISOL:0000137'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a TGI mask', ISOL_name=>'Blue Image from RGB Color Image Masked with TGI Vegetative Index Image|ISOL:0000138'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a TGI mask', ISOL_name=>'Green Image from RGB Color Image Masked with TGI Vegetative Index Image|ISOL:0000139'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_tgi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a TGI mask', ISOL_name=>'Red Image from RGB Color Image Masked with TGI Vegetative Index Image|ISOL:0000140'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a VARI mask', ISOL_name=>'RGB Color Image Masked with VARI Vegetative Index Image|ISOL:0000141'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a VARI mask', ISOL_name=>'Blue Image from RGB Color Image Masked with VARI Vegetative Index Image|ISOL:0000142'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a VARI mask', ISOL_name=>'Green Image from RGB Color Image Masked with VARI Vegetative Index Image|ISOL:0000143'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_vari_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a VARI mask', ISOL_name=>'Red Image from RGB Color Image Masked with VARI Vegetative Index Image|ISOL:0000144'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Image(s) with Background Removed via a NDVI mask'
+            name=>'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Image(s) with Background Removed via a NDVI mask', ISOL_name=>'Merged 3 Channels NRN Image Masked with NDVI Vegetative Index Image|ISOL:0000145'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NRN Image with Background Removed via a NDVI mask'
+            name=>'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NRN Image with Background Removed via a NDVI mask', ISOL_name=>'NIR Image from Merged 3 Channels NRN Image Masked with NDVI Vegetative Index Image|ISOL:0000146'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Image(s) from NRN Image with Background Removed via a NDVI mask'
+            name=>'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Image(s) from NRN Image with Background Removed via a NDVI mask', ISOL_name=>'Red Image from Merged 3 Channels NRN Image Masked with NDVI Vegetative Index Image|ISOL:0000147'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Image(s) with Background Removed via a NDRE mask'
+            name=>'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Image(s) with Background Removed via a NDRE mask', ISOL_name=>'Merged 3 Channels NReN Image Masked with NDRE Vegetative Index Image|ISOL:0000148'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NReN Image with Background Removed via a NDRE mask'
+            name=>'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NReN Image with Background Removed via a NDRE mask', ISOL_name=>'NIR Image from Merged 3 Channels NReN Image Masked with NDRE Vegetative Index Image|ISOL:0000149'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Edge Image(s) from NReN Image with Background Removed via a NDRE mask'
+            name=>'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Edge Image(s) from NReN Image with Background Removed via a NDRE mask', ISOL_name=>'Red Edge Image from Merged 3 Channels NReN Image Masked with NDRE Vegetative Index Image|ISOL:0000150'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a Thresholded TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a Thresholded TGI mask', ISOL_name=>'RGB Color Image Masked with Thresholded TGI Vegetative Index Image|ISOL:0000151'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a Thresholded TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a Thresholded TGI mask', ISOL_name=>'Blue Image from RGB Color Image Masked with Thresholded TGI Vegetative Index Image|ISOL:0000152'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a Thresholded TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a Thresholded TGI mask', ISOL_name=>'Green Image from RGB Color Image Masked with Thresholded TGI Vegetative Index Image|ISOL:0000153'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a Thresholded TGI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a Thresholded TGI mask', ISOL_name=>'Red Image from RGB Color Image Masked with Thresholded TGI Vegetative Index Image|ISOL:0000154'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a Thresholded VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Image(s) with Background Removed via a Thresholded VARI mask', ISOL_name=>'RGB Color Image Masked with Thresholded VARI Vegetative Index Image|ISOL:0000155'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a Thresholded VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Image with Background Removed via a Thresholded VARI mask', ISOL_name=>'Blue Image from RGB Color Image Masked with Thresholded VARI Vegetative Index Image|ISOL:0000156'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a Thresholded VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Image with Background Removed via a Thresholded VARI mask', ISOL_name=>'Gren Image from RGB Color Image Masked with Thresholded VARI Vegetative Index Image|ISOL:0000157'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a Thresholded VARI mask'
+            name=>'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Image with Background Removed via a Thresholded VARI mask', ISOL_name=>'Red Image from RGB Color Image Masked with Thresholded VARI Vegetative Index Image|ISOL:0000158'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Image(s) with Background Removed via a Thresholded NDVI mask'
+            name=>'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Image(s) with Background Removed via a Thresholded NDVI mask', ISOL_name=>'Merged 3 Channels NRN Image Masked with Thresholded NDVI Vegetative Index Image|ISOL:0000159'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NRN Image with Background Removed via a Thresholded NDVI mask'
+            name=>'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NRN Image with Background Removed via a Thresholded NDVI mask', ISOL_name=>'NIR Image from Merged 3 Channels NRN Image Masked with Thresholded NDVI Vegetative Index Image|ISOL:0000160'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Image(s) from NRN Image with Background Removed via a Thresholded NDVI mask'
+            name=>'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Image(s) from NRN Image with Background Removed via a Thresholded NDVI mask', ISOL_name=>'Red Image from Merged 3 Channels NRN Image Masked with Thresholded NDVI Vegetative Index Image|ISOL:0000161'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Image(s) with Background Removed via a Thresholded NDRE mask'
+            name=>'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Image(s) with Background Removed via a Thresholded NDRE mask', ISOL_name=>'Merged 3 Channels NReN Image Masked with Thresholded NDRE Vegetative Index Image|ISOL:0000162'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NReN Image with Background Removed via a Thresholded NDRE mask'
+            name=>'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'NIR Image(s) from NReN Image with Background Removed via a Thresholded NDRE mask', ISOL_name=>'NIR Image from Merged 3 Channels NReN Image Masked with Thresholded NDRE Vegetative Index Image|ISOL:0000163'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Edge Image(s) from NReN Image with Background Removed via a Thresholded NDRE mask'
+            name=>'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Red Edge Image(s) from NReN Image with Background Removed via a Thresholded NDRE mask', ISOL_name=>'Red Edge Image from Merged 3 Channels NReN Image Masked with Thresholded NDRE Vegetative Index Image|ISOL:0000164'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Denoised Image|ISOL:0000165'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Denoised Image|ISOL:0000166'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Denoised Image|ISOL:0000167'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Green Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Green Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Denoised Image|ISOL:0000168'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Green Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Green Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Denoised Image|ISOL:0000169'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_green_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_green_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Green Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_green_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Green Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Denoised Image|ISOL:0000170'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Denoised Image|ISOL:0000171'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Denoised Image|ISOL:0000172'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_red_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_red_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_red_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Denoised Image|ISOL:0000173'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Edge Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Edge Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Edge Denoised Image|ISOL:0000174'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Edge Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Edge Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Edge Denoised Image|ISOL:0000175'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Edge Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Edge Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Edge Denoised Image|ISOL:0000176'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 NIR Denoised Image|ISOL:0000177'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 NIR Denoised Image|ISOL:0000178'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 NIR Denoised Image|ISOL:0000179'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 MIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 MIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 MIR Denoised Image|ISOL:0000180'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 MIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 MIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 MIR Denoised Image|ISOL:0000181'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 MIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 MIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 MIR Denoised Image|ISOL:0000182'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 FIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 FIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 FIR Denoised Image|ISOL:0000183'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 FIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 FIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 FIR Denoised Image|ISOL:0000184'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 FIR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 FIR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 FIR Denoised Image|ISOL:0000185'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thermal IR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thermal IR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Thermal IR Denoised Image|ISOL:0000186'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thermal IR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thermal IR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Thermal IR Denoised Image|ISOL:0000187'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thermal IR Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thermal IR Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Thermal IR Denoised Image|ISOL:0000188'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Black and White Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Black and White Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Black and White Denoised Image|ISOL:0000189'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Black and White Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Black and White Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Black and White Denoised Image|ISOL:0000190'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Black and White Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Black and White Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Black and White Denoised Image|ISOL:0000191'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image from Denoised RGB Color Image|ISOL:0000192'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image from Denoised RGB Color Image|ISOL:0000193'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image from Denoised RGB Color Image|ISOL:0000194'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image from Denoised RGB Color Image|ISOL:0000195'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image from Denoised RGB Color Image|ISOL:0000196'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image from Denoised RGB Color Image|ISOL:0000197'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image from Denoised RGB Color Image|ISOL:0000198'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image from Denoised RGB Color Image|ISOL:0000199'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image from Denoised RGB Color Image|ISOL:0000200'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 TGI Vegetative Index Image|ISOL:0000201'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 TGI Vegetative Index Image|ISOL:0000202'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 TGI Vegetative Index Image|ISOL:0000203'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 VARI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 VARI Vegetative Index Image|ISOL:0000204'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 VARI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 VARI Vegetative Index Image|ISOL:0000205'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 VARI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 VARI Vegetative Index Image|ISOL:0000206'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NDVI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 NDVI Vegetative Index Image|ISOL:0000207'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NDVI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 NDVI Vegetative Index Image|ISOL:0000208'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NDVI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 NDVI Vegetative Index Image|ISOL:0000209'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NDRE Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 NDRE Vegetative Index Image|ISOL:0000210'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NDRE Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 NDRE Vegetative Index Image|ISOL:0000211'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NDRE Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 NDRE Vegetative Index Image|ISOL:0000212'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded TGI Vegetative Index Image|ISOL:0000213'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded TGI Vegetative Index Image|ISOL:0000214'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded TGI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded TGI Vegetative Index Image|ISOL:0000215'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded VARI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded VARI Vegetative Index Image|ISOL:0000216'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded VARI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded VARI Vegetative Index Image|ISOL:0000217'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_vari_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded VARI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_calculate_thresholded_vari_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded VARI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded VARI Vegetative Index Image|ISOL:0000218'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded NDVI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded NDVI Vegetative Index Image|ISOL:0000219'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded NDVI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded NDVI Vegetative Index Image|ISOL:0000220'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded NDVI Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_calculate_thresholded_ndvi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded NDVI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded NDVI Vegetative Index Image|ISOL:0000221'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_thresholded_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thresholded NDRE Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded NDRE Vegetative Index Image|ISOL:0000222'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thresholded NDRE Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded NDRE Vegetative Index Image|ISOL:0000223'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_thresholded_ndre_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded NDRE Vegetative Index Image(s)'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_calculate_thresholded_ndre_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thresholded NDRE Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded NDRE Vegetative Index Image|ISOL:0000224'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Blue Denoised Image|ISOL:0000225'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Blue Denoised Image|ISOL:0000226'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Blue Denoised Image|ISOL:0000227'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Green Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Green Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Green Denoised Image|ISOL:0000228'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Green Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Green Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Green Denoised Image|ISOL:0000229'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_green_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_green_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Green Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_green_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Green Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Green Denoised Image|ISOL:0000230'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Red Denoised Image|ISOL:0000231'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Red Denoised Image|ISOL:0000232'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_red_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_red_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_red_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Red Denoised Image|ISOL:0000233'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Edge Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Red Edge Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Red Edge Denoised Image|ISOL:0000234'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Edge Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Red Edge Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Red Edge Denoised Image|ISOL:0000235'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Edge Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Red Edge Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Red Edge Denoised Image|ISOL:0000236'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded NIR Denoised Image|ISOL:0000237'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded NIR Denoised Image|ISOL:0000238'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded NIR Denoised Image|ISOL:0000239'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 MIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 MIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded MIR Denoised Image|ISOL:0000240'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 MIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 MIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded MIR Denoised Image|ISOL:0000241'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 MIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 MIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded MIR Denoised Image|ISOL:0000242'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 FIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 FIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded FIR Denoised Image|ISOL:0000243'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 FIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 FIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded FIR Denoised Image|ISOL:0000244'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 FIR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 FIR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded FIR Denoised Image|ISOL:0000245'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thermal IR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Thermal IR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Thermal IR Denoised Image|ISOL:0000246'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thermal IR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Thermal IR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Thermal IR Denoised Image|ISOL:0000247'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thermal IR Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Thermal IR Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Thermal IR Denoised Image|ISOL:0000248'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Black and White Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Black and White Denoised Image|ISOL:0000249'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Black and White Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Black and White Denoised Image|ISOL:0000250'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Black and White Image(s) with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Black and White Denoised Image|ISOL:0000251'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000252'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000253'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000254'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000255'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000256'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000257'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000258'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000259'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Threshold'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000260'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000261'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000262'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000263'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000264'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000265'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000266'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000267'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000268'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000269'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000270'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000271'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000272'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000273'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000274'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000275'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000276'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000277'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image|ISOL:0000278'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000279'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000280'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000281'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000282'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000283'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000284'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000285'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000286'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised VARI Vegetative Index Masked Image|ISOL:0000287'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000288'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000289'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000290'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000291'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000292'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000293'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000294'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000295'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image|ISOL:0000296'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NRN Image with Background Removed via NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NRN Image with Background Removed via NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image|ISOL:0000297'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NRN Image with Background Removed via NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NRN Image with Background Removed via NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image|ISOL:0000298'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NRN Image with Background Removed via NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NRN Image with Background Removed via NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image|ISOL:0000299'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Image(s) from NRN Image with Background Removed via NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Image(s) from NRN Image with Background Removed via NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image|ISOL:0000300'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Image(s) from NRN Image with Background Removed via NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Image(s) from NRN Image with Background Removed via NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image|ISOL:0000301'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Image(s) from NRN Image with Background Removed via NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Image(s) from NRN Image with Background Removed via NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image|ISOL:0000302'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image|ISOL:0000303'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image|ISOL:0000304'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image|ISOL:0000305'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image|ISOL:0000306'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image|ISOL:0000307'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image|ISOL:0000308'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NReN Image with Background Removed via NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NReN Image with Background Removed via NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image|ISOL:0000309'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NReN Image with Background Removed via NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NReN Image with Background Removed via NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image|ISOL:0000310'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NReN Image with Background Removed via NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NReN Image with Background Removed via NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image|ISOL:0000311'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Edge Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image|ISOL:0000312'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Edge Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image|ISOL:0000313'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Edge Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image|ISOL:0000314'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image|ISOL:0000315'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image|ISOL:0000316'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image|ISOL:0000317'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Edge Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image|ISOL:0000318'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Edge Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image|ISOL:0000319'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Edge Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image|ISOL:0000320'
         }
     };
 }
