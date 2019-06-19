@@ -200,7 +200,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
-    my $main_production_site = $c->config->{main_production_site_url};
 
     my $statistics_select = $c->req->param('statistics_select');
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
@@ -601,8 +600,6 @@ sub _perform_plot_polygon_assign {
     my $user_name = shift;
     my $user_role = shift;
     my $from_web_interface = shift;
-    my $main_production_site = $c->config->{main_production_site_url};
-
     print STDERR "Plot Polygon Assign Type: $assign_plot_polygons_type \n";
 
     my $polygon_objs = decode_json $stock_polygons;
@@ -788,8 +785,6 @@ sub drone_imagery_fourier_transform_GET : Args(0) {
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $main_production_site = $c->config->{main_production_site_url};
-
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
@@ -824,8 +819,6 @@ sub drone_imagery_denoise_GET : Args(0) {
     my $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
     my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
     $archive_denoise_temp_image .= '.png';
-
-    my $main_production_site = $c->config->{main_production_site_url};
 
     my $return = _perform_image_denoise($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
 
@@ -910,8 +903,6 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
         $c->detach();
     }
 
-    my $main_production_site = $c->config->{main_production_site_url};
-
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
@@ -988,8 +979,18 @@ sub _perform_image_background_remove_threshold {
     my $user_name = shift;
     my $user_role = shift;
     my $archive_remove_background_temp_image = shift;
+    print STDERR "Background Remove Threshold Image Type: $image_type\n";
 
-    my $main_production_site = $c->config->{main_production_site_url};
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
+    my $drone_run_band_remove_background_threshold_type_id;
+    my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
+    
+    if ($imagery_attribute_map->{$image_type}->{name} eq 'threshold') {
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $imagery_attribute_map->{$image_type}->{key}, 'project_property')->cvterm_id();
+    }
+    if (!$drone_run_band_remove_background_threshold_type_id) {
+        die "Remove background threshold not found: $image_type\n";
+    }
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
@@ -1001,27 +1002,6 @@ sub _perform_image_background_remove_threshold {
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
-
-    my $linking_table_type_id;
-    my $drone_run_band_remove_background_threshold_type_id;
-    if ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_tgi_threshold', 'project_property')->cvterm_id();
-    } elsif ($image_type eq 'threshold_background_removed_vari_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_vari_threshold', 'project_property')->cvterm_id();
-    } elsif ($image_type eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_ndvi_threshold', 'project_property')->cvterm_id();
-    } elsif ($image_type eq 'threshold_background_removed_ndre_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndre_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_ndre_threshold', 'project_property')->cvterm_id();
-    } else {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_threshold', 'project_property')->cvterm_id();
-    }
-
-    print STDERR "Background Remove Threshold Image Type: $image_type\n";
 
     my $previous_background_removed_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -1102,37 +1082,21 @@ sub _perform_image_background_remove_threshold_percentage {
     my $user_role = shift;
     my $archive_remove_background_temp_image = shift;
 
-    my $main_production_site = $c->config->{main_production_site_url};
-
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
 
-    my $linking_table_type_id;
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
     my $drone_run_band_remove_background_threshold_type_id;
     my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
     
-    if ($image_type eq 'threshold_background_removed_tgi_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_tgi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_tgi_threshold', 'project_property')->cvterm_id();
-    } elsif ($image_type eq 'threshold_background_removed_vari_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_vari_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_vari_threshold', 'project_property')->cvterm_id();
-    } elsif ($image_type eq 'threshold_background_removed_ndvi_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndvi_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_ndvi_threshold', 'project_property')->cvterm_id();
-    } elsif ($image_type eq 'threshold_background_removed_ndre_stitched_drone_imagery') {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_ndre_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_ndre_threshold', 'project_property')->cvterm_id();
-    } else {
-        $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
-        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_background_removed_threshold', 'project_property')->cvterm_id();
+    if ($imagery_attribute_map->{$image_type}->{name} eq 'threshold') {
+        $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $imagery_attribute_map->{$image_type}->{key}, 'project_property')->cvterm_id();
     }
-    if (!$linking_table_type_id) {
-        die "Linking table type_id not found for background remove threshold percentage: $image_type\n";
+    if (!$drone_run_band_remove_background_threshold_type_id) {
+        die "Remove background threshold not found: $image_type\n";
     }
 
-    print STDERR "Background Remove Threshold Percentage Image Type: $image_type\n";
     my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($schema)->{$linking_table_type_id}->{corresponding_channel};
     my $image_band_index_string = '';
     if (defined($corresponding_channel)) {
@@ -2086,8 +2050,6 @@ sub drone_imagery_get_image_GET : Args(0) {
     my $size = $c->req->param('size') || 'original';
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $main_production_site = $c->config->{main_production_site_url};
-
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url($size);
     my $image_fullpath = $image->get_filename('original_converted', 'full');
@@ -2103,8 +2065,6 @@ sub drone_imagery_remove_image_GET : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
-
-    my $main_production_site = $c->config->{main_production_site_url};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $resp = $image->delete(); #Sets to obsolete
@@ -2148,8 +2108,6 @@ sub _perform_image_cropping {
     my $user_name = shift;
     my $user_role = shift;
     my $archive_temp_image = shift;
-
-    my $main_production_site = $c->config->{main_production_site_url};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
@@ -2485,8 +2443,6 @@ sub drone_imagery_get_plot_polygon_images_GET : Args(0) {
     my $plot_polygons_type = $c->req->param('plot_polygons_type');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $main_production_site = $c->config->{main_production_site_url};
-
     my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -2780,8 +2736,6 @@ sub _perform_phenotype_calculation {
     my $composable_cvterm_format = shift;
 
     print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type, $image_band_selected];
-
-    my $main_production_site = $c->config->{main_production_site_url};
 
     my $non_zero_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Nonzero Pixel Count|G2F:0000014')->cvterm_id;
     my $total_pixel_sum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Total Pixel Sum|G2F:0000015')->cvterm_id;
