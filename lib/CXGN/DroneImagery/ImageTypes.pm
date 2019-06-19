@@ -530,56 +530,158 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via TGI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Thresholded TGI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via VARI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via VARI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via VARI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via VARI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via VARI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_vari_mask_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Thresholded VARI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NRN Image with Background Removed via NDVI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NRN Image with Background Removed via NDVI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NRN Image with Background Removed via NDVI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Image(s) from NRN Image with Background Removed via NDVI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Image(s) from NRN Image with Background Removed via NDVI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Image(s) from NRN Image with Background Removed via NDVI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nrn_denoised_background_removed_thresholded_ndvi_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Image(s) from NRN Image with Background Removed via Thresholded NDVI Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NReN Image with Background Removed via NDRE Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NReN Image with Background Removed via NDRE Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NReN Image with Background Removed via NDRE Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Edge Image(s) from NReN Image with Background Removed via NDRE Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 NIR Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf20_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Red Edge Image(s) from NReN Image with Background Removed via Thresholded NDRE Mask'
         }
     };
 }
