@@ -217,97 +217,6 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
     my ($observation_unit_polygon_result, $observation_unit_polygon_total_count) = $observation_unit_polygon_imagery_search->search();
     #print STDERR Dumper $observation_unit_polygon_result;
 
-    my %imagery_attribute_map = (
-        'cropped_stitched_drone_imagery' => {
-            name => 'polygon',
-            key => 'drone_run_band_cropped_polygon'
-        },
-        'rotated_stitched_drone_imagery' => {
-            name => 'angle',
-            key => 'drone_run_band_rotate_angle'
-        },
-        'threshold_background_removed_stitched_drone_imagery_blue' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_blue_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_green' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_green_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_red' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_red_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_red_edge' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_red_edge_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_nir' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_nir_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_mir' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_mir_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_fir' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_fir_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_tir' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_tir_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_bw' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_bw_background_removed_threshold_imagery'
-        },
-        'threshold_background_removed_stitched_drone_imagery_rgb_channel_1' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1'
-        },
-        'threshold_background_removed_stitched_drone_imagery_rgb_channel_2' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2'
-        },
-        'threshold_background_removed_stitched_drone_imagery_rgb_channel_3' => {
-            name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3'
-        },
-        'threshold_background_removed_tgi_stitched_drone_imagery' => {
-            name => 'threshold',
-            key => 'drone_run_band_background_removed_tgi_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_tgi_imagery'
-        },
-        'threshold_background_removed_vari_stitched_drone_imagery' => {
-            name => 'threshold',
-            key => 'drone_run_band_background_removed_vari_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_vari_imagery'
-        },
-        'threshold_background_removed_ndvi_stitched_drone_imagery' => {
-            name => 'threshold',
-            key => 'drone_run_band_background_removed_ndvi_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_ndvi_imagery'
-        },
-        'threshold_background_removed_ndre_stitched_drone_imagery' => {
-            name => 'threshold',
-            key => 'drone_run_band_background_removed_ndre_threshold',
-            observation_unit_plot_polygon_type => 'observation_unit_polygon_background_removed_ndre_imagery'
-        }
-    );
-
     my %original_background_removed_threshold_terms = (
         'threshold_background_removed_stitched_drone_imagery_blue' => 'Blue (450-520nm)',
         'threshold_background_removed_stitched_drone_imagery_green' => 'Green (515-600nm)',
@@ -339,8 +248,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         'Merged 3 Bands NReN' => ['observation_unit_polygon_nren_imagery']
     );
 
+    my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
     my $original_denoised_imagery_terms = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
-
     my $vi_map_hash = CXGN::DroneImagery::ImageTypes::get_vegetative_index_image_type_term_map();
 
     my @return;
@@ -387,8 +296,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_modified_date"} = $_->{image_modified_date};
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_original"} = $image_original;
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_id"} = $image_id;
-            if (exists($imagery_attribute_map{$_->{project_image_type_name}})) {
-                $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_".$imagery_attribute_map{$_->{project_image_type_name}}->{name}} = $_->{$imagery_attribute_map{$_->{project_image_type_name}}->{key}};
+            if (exists($imagery_attribute_map->{$_->{project_image_type_name}})) {
+                $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_".$imagery_attribute_map->{$_->{project_image_type_name}}->{name}} = $_->{$imagery_attribute_map->{$_->{project_image_type_name}}->{key}};
             }
         }
     }
@@ -428,7 +337,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
                             foreach my $original_background_removed_threshold_term (keys %original_background_removed_threshold_terms) {
                                 if (exists($d->{$original_background_removed_threshold_term})) {
-                                    my $plot_polygon_type = $imagery_attribute_map{$original_background_removed_threshold_term}->{observation_unit_plot_polygon_type};
+                                    my $plot_polygon_type = $imagery_attribute_map->{$original_background_removed_threshold_term}->{observation_unit_plot_polygon_type};
 
                                     $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$original_background_removed_threshold_term."_id"}, $d->{$original_background_removed_threshold_term."_username"}, $d->{$original_background_removed_threshold_term."_modified_date"}, $d->{$original_background_removed_threshold_term."_threshold"}, $d->{$original_background_removed_threshold_term}, [$plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$original_background_removed_threshold_term."_id"});
                                 } else {
@@ -580,19 +489,19 @@ sub _draw_plot_polygon_images_panel {
     my $trial_id = shift;
     my $stitched_image_original_uri_encoded = shift;
     my $drone_run_band_project_id = shift;
-    my $denoised_original_plot_polygon_term = shift;
+    my $plot_polygon_term = shift;
     my $drone_run_band_project_type = shift;
     my $drone_run_project_id = shift;
     my $plot_polygon_background_to_use_image_id = shift;
     my $html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-        $html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$denoised_original_plot_polygon_term.'">Create/View Plot Polygons ('.$denoised_original_plot_polygon_term.')</button><br/><br/>';
+        $html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$plot_polygon_term.'">Create/View Plot Polygons ('.$plot_polygon_term.')</button><br/><br/>';
 
         my $plot_polygon_images = '';
-        if ($d->{$denoised_original_plot_polygon_term."_images"}) {
-            $plot_polygon_images = scalar(@{$d->{$denoised_original_plot_polygon_term."_images"}})." Plot Polygons<br/><span>";
-            $plot_polygon_images .= join '', @{$d->{$denoised_original_plot_polygon_term."_images"}};
+        if ($d->{$plot_polygon_term."_images"}) {
+            $plot_polygon_images = scalar(@{$d->{$plot_polygon_term."_images"}})." Plot Polygons<br/><span>";
+            $plot_polygon_images .= join '', @{$d->{$plot_polygon_term."_images"}};
             $plot_polygon_images .= "</span>";
-            $html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$trial_id.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$drone_run_band_project_type.'" data-plot_polygons_type="'.$denoised_original_plot_polygon_term.'" >Calculate Phenotypes</button><br/><br/>';
+            $html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$trial_id.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$drone_run_band_project_type.'" data-plot_polygons_type="'.$plot_polygon_term.'" >Calculate Phenotypes</button><br/><br/>';
         } else {
             $plot_polygon_images = 'No Plot Polygons Assigned';
         }
