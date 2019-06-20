@@ -472,6 +472,7 @@ sub _perform_image_rotate {
     my $rotated_image_fullpath;
     my $rotated_image_url;
     my $rotated_image_id;
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_rotate_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
@@ -528,6 +529,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $contours_image_url;
     my $contours_image_id;
 
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_contours_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
@@ -873,6 +875,7 @@ sub _perform_image_denoise {
     my $denoised_image_fullpath;
     my $denoised_image_url;
     my $denoised_image_id;
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_denoise_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
@@ -2222,6 +2225,7 @@ sub _perform_fourier_transform_calculation {
     my $ft_image_fullpath;
     my $ft_image_url;
     my $ft_image_id;
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
@@ -2352,6 +2356,7 @@ sub _perform_vegetative_index_calculation {
     my $index_image_fullpath;
     my $index_image_url;
     my $index_image_id;
+    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
