@@ -148,8 +148,6 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $drone_run_html .= '<div class="panel-group"><div class="panel panel-default panel-sm"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >Loading Plot Image Summary...</a></h4></div></div></div>';
             $drone_run_html .= '</div>';
 
-            $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_table_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_table_wrapper_'.$k.'" href="#drone_run_band_accordion_table_wrapper_one_'.$k.'" >View All Drone Run Images</a></h4></div><div id="drone_run_band_accordion_table_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
-
             my $drone_run_band_table_html = '<table class="table table-bordered"><thead><tr><th>Drone Run Band(s)</th><th>Images/Actions</th></thead><tbody>';
 
             foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
@@ -173,7 +171,6 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
             $drone_run_html .= '</div></div></div></div>';
 
-            $drone_run_html .= '</div></div></div>';
             $drone_run_html .= '<br/>';
         }
         $drone_run_html .= '</div></div></div></div>';
