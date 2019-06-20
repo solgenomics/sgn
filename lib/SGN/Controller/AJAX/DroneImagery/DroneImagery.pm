@@ -473,10 +473,16 @@ sub _perform_image_rotate {
     my $rotated_image_url;
     my $rotated_image_id;
     my $md5checksum = $image->calculate_md5sum($archive_rotate_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-    if ($md_image->count() > 0) {
+    my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
+    my ($saved_image_id) = $h->fetchrow_array();
+
+    if ($saved_image_id) {
         print STDERR Dumper "Image $archive_rotate_temp_image has already been added to the database and will not be added again.";
-        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
         $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
         $rotated_image_url = $image->get_image_url('original');
         $rotated_image_id = $image->get_image_id();
@@ -501,6 +507,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $main_production_site = $c->config->{main_production_site_url};
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -521,18 +528,22 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $contours_image_url;
     my $contours_image_id;
 
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_contours_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-    if ($md_image->count() > 0) {
+    my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
+    my ($saved_image_id) = $h->fetchrow_array();
+
+    if ($saved_image_id) {
         print STDERR Dumper "Image $archive_contours_temp_image has already been added to the database and will not be added again.";
-        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
         $contours_image_fullpath = $image->get_filename('original_converted', 'full');
         $contours_image_url = $image->get_image_url('original');
         $contours_image_id = $image->get_image_id();
     } else {
         $image->set_sp_person_id($user_id);
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contours_stitched_drone_imagery', 'project_md_image')->cvterm_id();
 
         my $previous_contour_images_search = CXGN::DroneImagery::ImagesSearch->new({
             bcs_schema=>$schema,
@@ -652,7 +663,6 @@ sub _perform_plot_polygon_assign {
         key=>'projectprop_c1'
     });
 
-    print STDERR "Plot Polygon Type: $assign_plot_polygons_type\n";
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();;
     my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $assign_plot_polygons_type);
     if (!$image_tag_id) {
@@ -864,10 +874,16 @@ sub _perform_image_denoise {
     my $denoised_image_url;
     my $denoised_image_id;
     my $md5checksum = $image->calculate_md5sum($archive_denoise_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-    if ($md_image->count() > 0) {
+    my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
+    my ($saved_image_id) = $h->fetchrow_array();
+
+    if ($saved_image_id) {
         print STDERR Dumper "Image $archive_denoise_temp_image has already been added to the database and will not be added again.";
-        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
         $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
         $denoised_image_url = $image->get_image_url('original');
         $denoised_image_id = $image->get_image_id();
@@ -2206,12 +2222,17 @@ sub _perform_fourier_transform_calculation {
     my $ft_image_fullpath;
     my $ft_image_url;
     my $ft_image_id;
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-    if ($md_image->count() > 0) {
+    my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
+    my ($saved_image_id) = $h->fetchrow_array();
+
+    if ($saved_image_id) {
         print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
-        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
         $ft_image_fullpath = $image->get_filename('original_converted', 'full');
         $ft_image_url = $image->get_image_url('original');
         $ft_image_id = $image->get_image_id();
@@ -2331,12 +2352,17 @@ sub _perform_vegetative_index_calculation {
     my $index_image_fullpath;
     my $index_image_url;
     my $index_image_id;
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_temp_image);
-    my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-    if ($view_only == 1 && $md_image->count() > 0) {
+    my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
+    my ($saved_image_id) = $h->fetchrow_array();
+
+    if ($view_only == 1 && $saved_image_id) {
         print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
-        $image = SGN::Image->new( $schema->storage->dbh, $md_image->first->image_id, $c );
+        $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
         $index_image_fullpath = $image->get_filename('original_converted', 'full');
         $index_image_url = $image->get_image_url('original');
         $index_image_id = $image->get_image_id();
@@ -3100,10 +3126,16 @@ sub _perform_phenotype_calculation {
 
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             my $md5checksum = $image->calculate_md5sum($_);
-            my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum, obsolete=>'f'});
-            if ($md_image->count() > 0) {
+            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute($md5checksum, $linking_table_type_id, $drone_run_band_project_id);
+            my ($saved_image_id) = $h->fetchrow_array();
+
+            if ($saved_image_id) {
                 print STDERR Dumper "Image $_ has already been added to the database and will not be added again.";
-                $image_id = $md_image->first->image_id;
+                $image_id = $saved_image_id;
                 $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
                 $image_fullpath = $image->get_filename('original_converted', 'full');
                 $image_url = $image->get_image_url('original');
