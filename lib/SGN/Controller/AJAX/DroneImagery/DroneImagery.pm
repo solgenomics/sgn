@@ -426,9 +426,6 @@ sub _perform_image_rotate {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-
     my $linking_table_type_id;
     if ($view_only) {
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
@@ -472,7 +469,7 @@ sub _perform_image_rotate {
     my $rotated_image_fullpath;
     my $rotated_image_url;
     my $rotated_image_id;
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_rotate_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
@@ -488,6 +485,7 @@ sub _perform_image_rotate {
         $rotated_image_url = $image->get_image_url('original');
         $rotated_image_id = $image->get_image_id();
     } else {
+        $image->set_sp_person_id($user_id);
         my $ret = $image->process_image($archive_rotate_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
         $rotated_image_url = $image->get_image_url('original');
@@ -545,8 +543,6 @@ sub drone_imagery_get_contours_GET : Args(0) {
         $contours_image_url = $image->get_image_url('original');
         $contours_image_id = $image->get_image_id();
     } else {
-        $image->set_sp_person_id($user_id);
-
         my $previous_contour_images_search = CXGN::DroneImagery::ImagesSearch->new({
             bcs_schema=>$schema,
             project_image_type_id=>$linking_table_type_id,
@@ -558,6 +554,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
             $previous_image->delete(); #Sets to obsolete
         }
 
+        $image->set_sp_person_id($user_id);
         my $ret = $image->process_image($archive_contours_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $contours_image_fullpath = $image->get_filename('original_converted', 'full');
         $contours_image_url = $image->get_image_url('original');
@@ -856,9 +853,6 @@ sub _perform_image_denoise {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
 
     my $previous_denoised_images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -875,7 +869,7 @@ sub _perform_image_denoise {
     my $denoised_image_fullpath;
     my $denoised_image_url;
     my $denoised_image_id;
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $md5checksum = $image->calculate_md5sum($archive_denoise_temp_image);
     my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
@@ -891,6 +885,7 @@ sub _perform_image_denoise {
         $denoised_image_url = $image->get_image_url('original');
         $denoised_image_id = $image->get_image_id();
     } else {
+        $image->set_sp_person_id($user_id);
         my $ret = $image->process_image($archive_denoise_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $denoised_image_fullpath = $image->get_filename('original_converted', 'full');
         $denoised_image_url = $image->get_image_url('original');
@@ -2241,8 +2236,6 @@ sub _perform_fourier_transform_calculation {
         $ft_image_url = $image->get_image_url('original');
         $ft_image_id = $image->get_image_id();
     } else {
-        $image->set_sp_person_id($user_id);
-
         my $previous_index_images_search = CXGN::DroneImagery::ImagesSearch->new({
             bcs_schema=>$schema,
             project_image_type_id=>$linking_table_type_id,
@@ -2254,6 +2247,7 @@ sub _perform_fourier_transform_calculation {
             $previous_image->delete(); #Sets to obsolete
         }
 
+        $image->set_sp_person_id($user_id);
         my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $ft_image_fullpath = $image->get_filename('original_converted', 'full');
         $ft_image_url = $image->get_image_url('original');
@@ -2372,8 +2366,6 @@ sub _perform_vegetative_index_calculation {
         $index_image_url = $image->get_image_url('original');
         $index_image_id = $image->get_image_id();
     } else {
-        $image->set_sp_person_id($user_id);
-
         my $previous_index_images_search = CXGN::DroneImagery::ImagesSearch->new({
             bcs_schema=>$schema,
             project_image_type_id=>$linking_table_type_id,
@@ -2384,7 +2376,7 @@ sub _perform_vegetative_index_calculation {
             my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
             $previous_image->delete(); #Sets to obsolete
         }
-
+        $image->set_sp_person_id($user_id);
         my $ret = $image->process_image($archive_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
         $index_image_fullpath = $image->get_filename('original_converted', 'full');
         $index_image_url = $image->get_image_url('original');
