@@ -23,7 +23,8 @@ library(lme4)
 library(lmerTest)
 #library(emmeans)
 library(effects)
-library(phenoAnalysis);
+library(phenoAnalysis)
+library(stringr)
 
 pd = read.csv(datafile, sep="\t")
 source(paramfile)  # should give us dependent_variable and the model
@@ -44,12 +45,22 @@ print(paste('MODEL STRING:', model_string));
 model = lmer(as.formula(model_string), data=pd)
 
 
-model_summary = summary(allEffects(model,se=T))
+#model_summary = summary(allEffects(model,se=T))
 
-pdout = model;
-#adjusted_means = getAdjMeans(pd, dependent_variable)
+pdout = model
+print(pdout)
 
-print(pdout);
+genotypeEffectType = as.vector(str_match(model_string, '1\\|germplasmName'))
+genotypeEffectType = ifelse(is.na(genotypeEffectType), 'fixed', 'random')
+print(paste('modeling genotypes as: ', genotypeEffectType))
+
+adjusted_means = getAdjMeans(modelOut=model,
+    traitName=dependent_variable,
+    genotypeEffectType=genotypeEffectType)
+
+print(head(adjusted_means))
+
+
 
 outfile = paste(datafile, ".results", sep="")
 print(outfile)
