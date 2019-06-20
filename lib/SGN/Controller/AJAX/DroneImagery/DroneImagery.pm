@@ -1081,6 +1081,7 @@ sub _perform_image_background_remove_threshold_percentage {
     my $user_name = shift;
     my $user_role = shift;
     my $archive_remove_background_temp_image = shift;
+    print STDERR "Remove background threshold percentage $image_type\n";
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
@@ -2636,6 +2637,9 @@ sub _perform_phenotype_automated {
     while (my ($k, $v) = each %$project_image_type_id_map) {
         my $project_types = $v->{drone_run_project_types};
         foreach my $p (@$project_types) {
+            if (!$p) {
+                die "No project for ".$v->{name}."\n";
+            }
             push @{$project_observation_unit_plot_polygons_types{$p}}, $v->{name};
         }
     }
@@ -2657,13 +2661,16 @@ sub _perform_phenotype_automated {
 
             my $plot_polygon_types = $project_observation_unit_plot_polygons_types{$drone_run_band_project_type};
             foreach my $plot_polygon_type (@$plot_polygon_types) {
-                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, 1);
                 if ($return->{error}){
                     print STDERR Dumper $return->{error};
                 }
             }
         }
     }
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $drone_run_phenotype_calc_progress = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$drone_run_phenotype_calc_progress_type_id,
@@ -2697,7 +2704,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, undef);
 
     $c->stash->{rest} = $return;
 }
@@ -2735,6 +2742,7 @@ sub _perform_phenotype_calculation {
     my $allowed_composed_cvs = shift;
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
+    my $do_not_run_materialized_view_refresh = shift;
 
     print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type];
 
@@ -2804,7 +2812,8 @@ sub _perform_phenotype_calculation {
     while (my($k, $v) = each %$observation_unit_plot_polygon_types) {
         $isol_terms_map{$v->{name}} = {
             ISOL_name => $v->{ISOL_name},
-            corresponding_channel => $v->{corresponding_channel}
+            corresponding_channel => $v->{corresponding_channel},
+            channels => $v->{channels}
         };
     }
     my $drone_run_band_plot_polygons_preprocess_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $isol_terms_map{$plot_polygons_type}->{ISOL_name})->cvterm_id;;
@@ -2813,8 +2822,8 @@ sub _perform_phenotype_calculation {
     }
 
     my $image_band_selected = $isol_terms_map{$plot_polygons_type}->{corresponding_channel};
-    if (!$image_band_selected) {
-        die "Could not get corresponding_channel for $plot_polygons_type\n";
+    if (!defined($image_band_selected) && $phenotype_method eq 'zonal') {
+        return {error => "No corresponding image band for this type $plot_polygons_type!"};
     }
 
     my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();
@@ -2844,8 +2853,8 @@ sub _perform_phenotype_calculation {
         });
         my $existing_traits = $traits->{existing_traits};
         my $new_traits = $traits->{new_traits};
-        print STDERR Dumper $new_traits;
-        print STDERR Dumper $existing_traits;
+        #print STDERR Dumper $new_traits;
+        #print STDERR Dumper $existing_traits;
         my %new_trait_names;
         foreach (@$new_traits) {
             my $components = $_->[0];
@@ -3074,8 +3083,10 @@ sub _perform_phenotype_calculation {
             my ($verified_warning, $verified_error) = $store_phenotypes->verify();
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
-            my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+            if (!$do_not_run_materialized_view_refresh) {
+                my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+                my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+            }
         }
 
         my $count = 0;

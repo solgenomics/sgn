@@ -214,7 +214,7 @@ sub verify {
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     my $error_message;
-    my $warning_message;
+    my $warning_message = '';
 
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
         print STDERR "Plots or traits not valid\n";

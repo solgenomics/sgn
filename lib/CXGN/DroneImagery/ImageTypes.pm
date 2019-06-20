@@ -54,19 +54,19 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
             name=>'observation_unit_polygon_rgb_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'RGB Color Image(s)', ISOL_name=>'RGB Denoised Original Image|ISOL:0000102', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image', ISOL_name=>'Blue Image From RGB Denoised Original Image|ISOL:0000103', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_rgb_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image', ISOL_name=>'Blue Image From RGB Denoised Original Image|ISOL:0000103', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image', ISOL_name=>'Green Image From RGB Denoised Original Image|ISOL:0000104', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_rgb_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image', ISOL_name=>'Green Image From RGB Denoised Original Image|ISOL:0000104', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image', ISOL_name=>'Red Image From RGB Denoised Original Image|ISOL:0000105', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_rgb_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image', ISOL_name=>'Red Image From RGB Denoised Original Image|ISOL:0000105', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nrn_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_nrn_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NRN Merged 3 Bands Image(s)', ISOL_name=>'Merged 3 Bands NRN Denoised Image|ISOL:0000115', drone_run_project_types=>[$project_type_lookup{nrn}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nren_imagery', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_nren_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Merged 3 Bands Image(s)', ISOL_name=>'Merged 3 Bands NReN Denoised Image|ISOL:0000116', drone_run_project_types=>[$project_type_lookup{nrrn}]
+            name=>'observation_unit_polygon_nren_imagery', channels=>[0,1,2], corresponding_channel=>undef, display_name=>'NReN Merged 3 Bands Image(s)', ISOL_name=>'Merged 3 Bands NReN Denoised Image|ISOL:0000116', drone_run_project_types=>[$project_type_lookup{nren}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_blue_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s)', ISOL_name=>'Blue Denoised Original Image|ISOL:0000107', drone_run_project_types=>[$project_type_lookup{blue}]
@@ -96,13 +96,13 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
             name=>'observation_unit_polygon_bw_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Black and White Denoised Original Image|ISOL:0000117', drone_run_project_types=>[$project_type_lookup{black_and_white}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Blue Image from RGB Color Denoised Original Image|ISOL:0000118', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Blue Image from RGB Color Denoised Original Image|ISOL:0000118', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Green Image from RGB Color Denoised Original Image|ISOL:0000119', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Green Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Green Image from RGB Color Denoised Original Image|ISOL:0000119', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Red Image from RGB Color Denoised Original Image|ISOL:0000120', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Red Image(s) from RGB Color Image with Background Removed via Threshold', ISOL_name=>'Thresholded Red Image from RGB Color Denoised Original Image|ISOL:0000120', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_blue_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Blue Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Blue Denoised Original Image|ISOL:0000121', drone_run_project_types=>[$project_type_lookup{blue}]
@@ -318,31 +318,31 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
             name=>'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Black and White Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 40 Black and White Denoised Image|ISOL:0000191', drone_run_project_types=>[$project_type_lookup{black_and_white}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image from Denoised RGB Color Image|ISOL:0000192', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image from Denoised RGB Color Image|ISOL:0000192', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image from Denoised RGB Color Image|ISOL:0000193', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Blue Image from Denoised RGB Color Image|ISOL:0000193', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image from Denoised RGB Color Image|ISOL:0000194', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Blue Image from Denoised RGB Color Image|ISOL:0000194', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image from Denoised RGB Color Image|ISOL:0000195', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Green Image from Denoised RGB Color Image|ISOL:0000195', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image from Denoised RGB Color Image|ISOL:0000196', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Green Image from Denoised RGB Color Image|ISOL:0000196', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image from Denoised RGB Color Image|ISOL:0000197', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Green Image from Denoised RGB Color Image|ISOL:0000197', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image from Denoised RGB Color Image|ISOL:0000198', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 20 Red Image from Denoised RGB Color Image|ISOL:0000198', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image from Denoised RGB Color Image|ISOL:0000199', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 30 Red Image from Denoised RGB Color Image|ISOL:0000199', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image from Denoised RGB Color Image|ISOL:0000200', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image', ISOL_name=>'Fourier Transform High Pass Filter 40 Red Image from Denoised RGB Color Image|ISOL:0000200', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_calculate_tgi_drone_imagery_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 TGI Vegetative Index Image(s)', ISOL_name=>'Fourier Transform High Pass Filter 20 TGI Vegetative Index Image|ISOL:0000201', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
@@ -498,31 +498,31 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
             name=>'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Black and White Denoised Image|ISOL:0000251', drone_run_project_types=>[$project_type_lookup{black_and_white}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000252', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000252', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000253', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF30 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000253', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000254', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF40 Blue Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Blue Image From RGB Color Denoised Image|ISOL:0000254', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000255', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF20 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000255', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000256', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF30 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000256', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000257', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', channels=>[0], corresponding_channel=>1, display_name=>'Fourier Transform HPF40 Green Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Green Image From RGB Color Denoised Image|ISOL:0000257', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000258', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF20 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 20 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000258', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000259', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF30 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 30 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000259', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3', 'project_md_image')->cvterm_id() => {
-            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000260', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
+            name=>'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3', channels=>[0], corresponding_channel=>2, display_name=>'Fourier Transform HPF40 Red Image(s) from RGB Image with Background Removed via Threshold', ISOL_name=>'Fourier Transform High Pass Filter 40 Thresholded Red Image From RGB Color Denoised Image|ISOL:0000260', drone_run_project_types=>[$project_type_lookup{rgb_color_image}]
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_1', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_tgi_mask_channel_1', channels=>[0], corresponding_channel=>0, display_name=>'Fourier Transform HPF20 Blue Image(s) from RGB Image with Background Removed via TGI Mask', ISOL_name=>'Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image|ISOL:0000261', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}]
@@ -1884,62 +1884,62 @@ sub get_imagery_attribute_map {
         },
         'threshold_background_removed_stitched_drone_imagery_blue' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_blue_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_green' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_green_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_red' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_red_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_red_edge' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_red_edge_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_nir' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_nir_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_mir' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_mir_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_fir' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_fir_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_tir' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_tir_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_bw' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_bw_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_rgb_channel_1' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1'
         },
         'threshold_background_removed_stitched_drone_imagery_rgb_channel_2' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2'
         },
         'threshold_background_removed_stitched_drone_imagery_rgb_channel_3' => {
             name => 'threshold',
-            key => 'drone_run_band_removed_background_threshold',
+            key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3'
         },
         'threshold_background_removed_tgi_stitched_drone_imagery' => {

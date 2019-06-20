@@ -1606,10 +1606,12 @@ jQuery(document).ready(function() {
             success: function(response){
                 jQuery('#working_modal').modal('hide');
                 console.log(response);
-                if(response.error) {
+                if (response.error) {
                     alert(response.error);
                 }
-                location.href =response.files[0];
+                if (response.success) {
+                    alert('Drone image phenotypes stored!');
+                }
             },
             error: function(response){
                 alert('Error generating drone image phenotypes!');
