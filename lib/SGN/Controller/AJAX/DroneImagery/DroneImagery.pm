@@ -2631,7 +2631,14 @@ sub _perform_phenotype_automated {
         $in_progress_indicator = $drone_run_band_remove_background_threshold_rs->first->value();
     }
 
-    my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my $project_image_type_id_map = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my %project_observation_unit_plot_polygons_types;
+    while (my ($k, $v) = each %$project_image_type_id_map) {
+        my $project_types = $v->{drone_run_project_types};
+        foreach my $p (@$project_types) {
+            push @{$project_observation_unit_plot_polygons_types{$p}}, $v->{name};
+        }
+    }
 
     my $drone_run_band_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
@@ -2648,14 +2655,11 @@ sub _perform_phenotype_automated {
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
         foreach my $phenotype_method (@$phenotype_types) {
 
-            
-
-            while (my ($plot_polygons_type, $h) = each %$project_image_type_id_list) {
-                foreach my $channel (@{$h->{channels}}) {
-                    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $channel, $time_cvterm_id, $h->{name}, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
-                    if ($return->{error}){
-                        print STDERR Dumper $return->{error};
-                    }
+            my $plot_polygon_types = $project_observation_unit_plot_polygons_types{$drone_run_band_project_type};
+            foreach my $plot_polygon_type (@$plot_polygon_types) {
+                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+                if ($return->{error}){
+                    print STDERR Dumper $return->{error};
                 }
             }
         }
@@ -2686,16 +2690,14 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $drone_run_band_project_type = $c->req->param('drone_run_band_project_type');
     my $phenotype_method = $c->req->param('method');
-    my $image_band_selected = $c->req->param('image_band');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $plot_polygons_type = $c->req->param('plot_polygons_type');
     my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
-    #print STDERR Dumper $c->req->params();
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $image_band_selected, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
+    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format);
 
     $c->stash->{rest} = $return;
 }
@@ -2725,7 +2727,6 @@ sub _perform_phenotype_calculation {
     my $drone_run_band_project_id = shift;
     my $drone_run_band_project_type = shift;
     my $phenotype_method = shift;
-    my $image_band_selected = shift;
     my $time_cvterm_id = shift;
     my $plot_polygons_type = shift;
     my $user_id = shift;
@@ -2735,7 +2736,7 @@ sub _perform_phenotype_calculation {
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
 
-    print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type, $image_band_selected];
+    print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $plot_polygons_type];
 
     my $non_zero_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Nonzero Pixel Count|G2F:0000014')->cvterm_id;
     my $total_pixel_sum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Total Pixel Sum|G2F:0000015')->cvterm_id;
@@ -2753,379 +2754,67 @@ sub _perform_phenotype_calculation {
     my $majority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Count|G2F:0000027')->cvterm_id;
     my $pixel_group_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Group Count|G2F:0000028')->cvterm_id;
 
-    my $rgb_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'RGB Color Image|ISOL:0000002')->cvterm_id;
-    my $bw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Black and White Image|ISOL:0000003')->cvterm_id;
-    my $blue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Blue (450-520nm)|ISOL:0000004')->cvterm_id;
-    my $green_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Green (515-600nm)|ISOL:0000005')->cvterm_id;
-    my $red_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red (600-690nm)|ISOL:0000006')->cvterm_id;
-    my $red_edge_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red Edge (690-750nm)|ISOL:0000007')->cvterm_id;
-    my $nir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NIR (750-900nm)|ISOL:0000008')->cvterm_id;
-    my $mir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'MIR (1550-1750nm)|ISOL:0000009')->cvterm_id;
-    my $fir_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FIR (2080-2350nm)|ISOL:0000010')->cvterm_id;
-    my $thermal_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Thermal IR (10400-12500nm)|ISOL:0000011')->cvterm_id;
-    my $merged_3_bands_bgr_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands BGR|ISOL:0000012')->cvterm_id;
-    my $merged_3_bands_nrn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NRN|ISOL:0000013')->cvterm_id;
-    my $merged_3_bands_nren_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NReN|ISOL:0000014')->cvterm_id;
-
     my $drone_run_band_project_type_cvterm_id;
-    #print STDERR Dumper $drone_run_band_project_type;
-
     if ($drone_run_band_project_type eq 'Black and White Image') {
-        $drone_run_band_project_type_cvterm_id = $bw_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Black and White Image|ISOL:0000003')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Blue (450-520nm)') {
-        $drone_run_band_project_type_cvterm_id = $blue_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Blue (450-520nm)|ISOL:0000004')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Green (515-600nm)') {
-        $drone_run_band_project_type_cvterm_id = $green_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Green (515-600nm)|ISOL:0000005')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Red (600-690nm)') {
-        $drone_run_band_project_type_cvterm_id = $red_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red (600-690nm)|ISOL:0000006')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Red Edge (690-750nm)') {
-        $drone_run_band_project_type_cvterm_id = $red_edge_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Red Edge (690-750nm)|ISOL:0000007')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'NIR (750-900nm)') {
-        $drone_run_band_project_type_cvterm_id = $nir_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NIR (750-900nm)|ISOL:0000008')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'MIR (1550-1750nm)') {
-        $drone_run_band_project_type_cvterm_id = $mir_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'MIR (1550-1750nm)|ISOL:0000009')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'FIR (2080-2350nm)') {
-        $drone_run_band_project_type_cvterm_id = $fir_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'FIR (2080-2350nm)|ISOL:0000010')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Thermal IR (10400-12500nm)') {
-        $drone_run_band_project_type_cvterm_id = $thermal_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Thermal IR (10400-12500nm)|ISOL:0000011')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'RGB Color Image') {
-        $drone_run_band_project_type_cvterm_id = $rgb_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'RGB Color Image|ISOL:0000002')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Merged 3 Bands BGR') {
-        $drone_run_band_project_type_cvterm_id = $merged_3_bands_bgr_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands BGR|ISOL:0000012')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Merged 3 Bands NRN') {
-        $drone_run_band_project_type_cvterm_id = $merged_3_bands_nrn_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NRN|ISOL:0000013')->cvterm_id;
     }
     elsif ($drone_run_band_project_type eq 'Merged 3 Bands NReN') {
-        $drone_run_band_project_type_cvterm_id = $merged_3_bands_nren_cvterm_id;
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Merged 3 Bands NReN|ISOL:0000014')->cvterm_id;
     }
 
     if (!$drone_run_band_project_type_cvterm_id) {
         die "No drone run band project type term found: $drone_run_band_project_type\n";
     }
 
-    my $drone_run_band_plot_polygons_preprocess_cvterm_id;
-    #print STDERR Dumper $plot_polygons_type;
-    #print STDERR Dumper $image_band_selected;
-
-    if ($plot_polygons_type eq 'observation_unit_polygon_bw_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Black and White Image there is only the first channel!"};
-        }
+    my $observation_unit_plot_polygon_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my %isol_terms_map;
+    while (my($k, $v) = each %$observation_unit_plot_polygon_types) {
+        $isol_terms_map{$v->{name}} = {
+            ISOL_name => $v->{ISOL_name},
+            corresponding_channel => $v->{corresponding_channel}
+        };
     }
-
-    if ($plot_polygons_type eq 'observation_unit_polygon_tgi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $tgi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On TGI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_vari_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $vari_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On VARI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_ndvi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndvi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On NDVI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_ndre_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ndre_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On NDRE there is only the first channel!"};
-        }
-    }
-
-    if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_tgi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_tgi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On TGI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_vari_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_vari_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On VARI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_background_removed_ndvi_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $threshold_background_removed_ndvi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error =>  "On NDVI there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_tgi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_tgi_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_tgi_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_tgi_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_vari_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_vari_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_vari_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_original_vari_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_nrn_background_removed_ndvi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_ndvi_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_nren_background_removed_ndre_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_original_ndre_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_original_ndre_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_tgi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_tgi_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_background_removed_thresholded_vari_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_background_removed_thresholded_vari_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_nrn_background_removed_thresholded_ndvi_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_ndvi_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_original_nren_background_removed_thresholded_ndre_mask_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_background_removed_thresholded_ndre_mask_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_background_removed_thresholded_ndre_mask_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_bw_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_bw_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Black and White there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_rgb_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_rgb_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_2_denoised_original_rgb_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '2') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_3_denoised_original_rgb_background_removed_threshold_cvterm_id;
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_blue_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_blue_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Blue original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_green_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_green_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Green original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_red_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_red_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Red original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_red_edge_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_red_edge_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On Red original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_nir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_nir_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On NIR original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_mir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_mir_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On MIR original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_fir_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On FIR original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_tir_background_removed_threshold_imagery') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $channel_1_denoised_original_tir_background_removed_threshold_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On TIR original image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_blue_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On blue image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_green_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On green image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_red_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On red image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_red_edge_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On rededge image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_nir_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On nir image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_mir_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On mir image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_channel_1_denoised_original_tir_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "On tir image there is only the first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_tgi_drone_imagery_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_tgi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "TGI is only first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_bgr_calculate_vari_drone_imagery_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_vari_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "TGI is only first channel!"};
-        }
-    }
-    if ($plot_polygons_type eq 'observation_unit_polygon_fourier_transform_hpf30_nrn_calculate_ndvi_drone_imagery_channel_1') {
-        if ($image_band_selected eq '0') {
-            $drone_run_band_plot_polygons_preprocess_cvterm_id = $ft_hpf30_ndvi_from_denoised_original_cvterm_id;
-        }
-        if ($image_band_selected eq '1' || $image_band_selected eq '2') {
-            return {error => "TGI is only first channel!"};
-        }
-    }
-
+    my $drone_run_band_plot_polygons_preprocess_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $isol_terms_map{$plot_polygons_type}->{ISOL_name})->cvterm_id;;
     if (!$drone_run_band_plot_polygons_preprocess_cvterm_id) {
         die "Could not get preprocess cvterm for $plot_polygons_type\n";
+    }
+
+    my $image_band_selected = $isol_terms_map{$plot_polygons_type}->{corresponding_channel};
+    if (!$image_band_selected) {
+        die "Could not get corresponding_channel for $plot_polygons_type\n";
     }
 
     my $plot_polygons_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygons_type, 'project_md_image')->cvterm_id();
@@ -3135,7 +2824,6 @@ sub _perform_phenotype_calculation {
         project_image_type_id=>$plot_polygons_images_cvterm_id
     });
     my ($result, $total_count) = $images_search->search();
-    #print STDERR Dumper $result;
     print STDERR Dumper $total_count;
 
     my @header_cols;
