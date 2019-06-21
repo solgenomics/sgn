@@ -82,7 +82,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <div class="well well-sm">
                 <ul>
                     <li>Here you can do a rotation of your drone run image.</li>
-                    <li>Your image should have precise horizontal alignment.</li>
+                    <li>Your image should have precise row-to-row parallel alignment.</li>
                 </ul>
             </div>
 
