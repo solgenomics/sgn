@@ -987,6 +987,17 @@ synonym: "Min60" EXACT []
 def: "" []
 is_a: TIME:0000005
 
+[Term]
+id: TIME:0000141
+name: at pre-flowering
+synonym: "PreFLW" EXACT []
+def: "" []
+is_a: TIME:0000076
 
-
+[Term]
+id: TIME:0000142
+name: at post-flowering
+synonym: "PostFLW" EXACT []
+def: "" []
+is_a: TIME:0000076
 
