@@ -710,57 +710,236 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
 sub get_base_imagery_observation_unit_plot_polygon_term_map {
     return {
         'Blue (450-520nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_blue_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_blue_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_blue_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_blue_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_blue_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_blue_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_blue_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_blue_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_blue_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_blue_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'Green (515-600nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_green_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_green_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_green_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_green_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_green_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_green_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_green_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_green_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_green_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_green_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_green_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_green_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_green_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_green_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_green_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_green_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'Red (600-690nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_red_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_red_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_red_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_red_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_red_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_red_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_red_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_red_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_red_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_red_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_red_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_red_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_red_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_red_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_red_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_red_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'Red Edge (690-750nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_rededge_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_rededge_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_rededge_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_rededge_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_rededge_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_rededge_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_rededge_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'NIR (750-900nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_nir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_nir_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_nir_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_nir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_nir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_nir_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_nir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_nir_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_nir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_nir_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'MIR (1550-1750nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_mir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_mir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_mir_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_mir_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_mir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_mir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_mir_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_mir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_mir_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_mir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_mir_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'FIR (2080-2350nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_fir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_fir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_fir_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_fir_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_fir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_fir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_fir_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_fir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_fir_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_fir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_fir_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'Thermal IR (10400-12500nm)' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_tir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_tir_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_tir_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_tir_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_tir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_tir_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_tir_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_tir_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_tir_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_tir_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_tir_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'Black and White Image' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_bw_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bw_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_bw_threshold_background_removed_stitched_drone_imagery_channel_1'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_bw_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    30 => ['calculate_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_bw_threshold_background_removed_stitched_drone_imagery_channel_1'],
+                    40 => ['calculate_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_bw_threshold_background_removed_stitched_drone_imagery_channel_1']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_bw_denoised_stitched_image_channel_1'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_bw_denoised_background_threshold_removed_image_channel_1'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_bw_denoised_stitched_image_channel_1'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_bw_denoised_background_threshold_removed_image_channel_1']
+                }
+            }
         },
         'RGB Color Image' => {
-            imagery_types => ['calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_3'],
-            observation_unit_plot_polygon_types => ['observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3',
-            'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3']
+            imagery_types => {
+                ft_hpf => {
+                    20 => ['calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3'],
+                    '20_threshold_background' => ['calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_3'],
+                    30 => ['calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3'],
+                    '30_threshold_background' => ['calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf30_bgr_threshold_background_removed_stitched_drone_imagery_channel_3'],
+                    40 => ['calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3'],
+                    '40_threshold_background' => ['calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf40_bgr_threshold_background_removed_stitched_drone_imagery_channel_3']
+                }
+            },
+            observation_unit_plot_polygon_types => {
+                ft_hpf => {
+                    20 => ['observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3'],
+                    '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3'],
+                    30 => ['observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_stitched_image_channel_3'],
+                    '30_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_threshold_removed_image_channel_3'],
+                    40 => ['observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_stitched_image_channel_3'],
+                    '40_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_threshold_removed_image_channel_3']
+                }
+            }
         },
         'Merged 3 Bands BGR' => {
-            imagery_types => [],
-            observation_unit_plot_polygon_types => []
+            imagery_types => undef,
+            observation_unit_plot_polygon_types => undef
         },
         'Merged 3 Bands NRN' => {
-            imagery_types => [],
-            observation_unit_plot_polygon_types => []
+            imagery_types => undef,
+            observation_unit_plot_polygon_types => undef
         },
         'Merged 3 Bands NReN' => {
-            imagery_types => [],
-            observation_unit_plot_polygon_types => []
+            imagery_types => undef,
+            observation_unit_plot_polygon_types => undef
         }
     };
 }

@@ -346,15 +346,17 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 }
                             }
 
-                            my $ft_hpf30_denoised_imagery_type_counter = 0;
-                            foreach my $ft_hpf30_denoised_original_image_type (@{$original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{imagery_types}}) {
-                                my $ft_hpf30_denoised_plot_polygon_type = $original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{observation_unit_plot_polygon_types}->[$ft_hpf30_denoised_imagery_type_counter];
-                                if ($d->{$ft_hpf30_denoised_original_image_type}) {
-                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$ft_hpf30_denoised_original_image_type."_id"}, $d->{$ft_hpf30_denoised_original_image_type."_username"}, $d->{$ft_hpf30_denoised_original_image_type."_modified_date"}, undef, $d->{$ft_hpf30_denoised_original_image_type}, [$ft_hpf30_denoised_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$ft_hpf30_denoised_original_image_type.'_id'});
-                                } else {
-                                    $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$ft_hpf30_denoised_original_image_type.'" >Run Fourier Transform HPF30 ('.$ft_hpf30_denoised_original_image_type.')</button><br/><br/>';
+                            foreach my $ft_hpf_denoised_original_image_type_filter (keys %{$original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{imagery_types}->{ft_hpf}}) {
+                                my $ft_hpf30_denoised_imagery_type_counter = 0;
+                                foreach my $ft_hpf30_denoised_original_image_type (@{$original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{imagery_types}->{ft_hpf}->{$ft_hpf_denoised_original_image_type_filter}}) {
+                                    my $ft_hpf30_denoised_plot_polygon_type = $original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{observation_unit_plot_polygon_types}->{ft_hpf}->{$ft_hpf_denoised_original_image_type_filter}->[$ft_hpf30_denoised_imagery_type_counter];
+                                    if ($d->{$ft_hpf30_denoised_original_image_type}) {
+                                        $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$ft_hpf30_denoised_original_image_type."_id"}, $d->{$ft_hpf30_denoised_original_image_type."_username"}, $d->{$ft_hpf30_denoised_original_image_type."_modified_date"}, undef, $d->{$ft_hpf30_denoised_original_image_type}, [$ft_hpf30_denoised_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$ft_hpf30_denoised_original_image_type.'_id'});
+                                    } else {
+                                        $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$ft_hpf30_denoised_original_image_type.'" >Run Fourier Transform HPF30 ('.$ft_hpf30_denoised_original_image_type.')</button><br/><br/>';
+                                    }
+                                    $ft_hpf30_denoised_imagery_type_counter++;
                                 }
-                                $ft_hpf30_denoised_imagery_type_counter++;
                             }
 
                             $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_add_georeference" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Add Georeferenced Points</button><br/><br/>';

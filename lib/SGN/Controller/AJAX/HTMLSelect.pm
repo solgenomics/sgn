@@ -918,7 +918,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
 
     my $select_name = $c->request->param("selectbox_name");
     my $select_id = $c->request->param("selectbox_id");
-
+    my $selected = $c->req->param("selected");
     my $empty = $c->request->param("empty") || '';
     my $multiple =  $c->req->param("multiple") || 0;
 
@@ -956,6 +956,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         id => $select_id,
         multiple => $multiple,
         choices => \@ontology_children,
+        selected => $selected
     );
     $c->stash->{rest} = { select => $html };
 }
