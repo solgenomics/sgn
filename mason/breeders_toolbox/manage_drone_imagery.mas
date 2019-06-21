@@ -1620,6 +1620,35 @@ jQuery(document).ready(function() {
         });
     });
 
+    //
+    // Extended Standard Process
+    //
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_extended"]', function() {
+        var manage_drone_imagery_standard_process_extended_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id,
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success) {
+                    alert('Extended drone image phenotypes stored!');
+                }
+            },
+            error: function(response){
+                alert('Error generating extended drone image phenotypes!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
 
     //
     // Download Phenotypes

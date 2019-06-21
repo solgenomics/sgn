@@ -137,6 +137,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $drone_run_html .= '</div><div class="col-sm-3">';
             if (!$v->{drone_run_processed}) {
                 $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+            } elsif (!$v->{drone_run_processed_extended}) {
+                $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
             }
             $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Drone Run</button>';
 
