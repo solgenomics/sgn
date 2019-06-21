@@ -56,7 +56,9 @@ print(paste('modeling genotypes as: ', genotypeEffectType))
 
 adjusted_means = getAdjMeans(modelOut=model,
     traitName=dependent_variable,
-    genotypeEffectType=genotypeEffectType)
+    genotypeEffectType=genotypeEffectType,
+    adjMeansVariable='germplasmName')
+
 
 print(head(adjusted_means))
 
