@@ -1525,7 +1525,8 @@ jQuery(document).ready(function() {
                     'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
                     'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
                     'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
-                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices)
+                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices),
+                    'minimal_mode': 1
                 },
                 success: function(response){
                     console.log(response);
