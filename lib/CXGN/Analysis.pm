@@ -62,7 +62,23 @@ sub retrieve_analyses_by_user {
     my $schema = shift;
     my $user_id = shift;
 
+    my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_sp_person_id', 'project_property');
+    my $user_info_type_id = $project_sp_person_term->cvterm_id();
 
+    my $project_analysis_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_project', 'project_property');
+    my $analysis_info_type_id = $project_analysis_term ->cvterm_id();
+    
+    my $q = "SELECT userinfo.project_id FROM projectprop AS userinfo JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id) WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
+
+    my $h = $schema->dbc->dbh->prepare($q);
+    $h->execute($user_info_type_id, $analysis_info_type_id, $user_id);
+
+    my @analyses = ();
+    while (my $row = $rs->next()) {
+	push @analyses, CXGN::Analysis->new( { bcs_schema = $schema, $trial_id=> $row->project_id() });
+    }
+
+    return @analyses;
 }    
 
 sub create_and_store_analysis_design {
@@ -141,10 +157,25 @@ sub create_and_store_analysis_design {
 	    value=>$self->user_id(), 
 	});
 
-    # store dataset info. Copy the actuall dataset json, so that dataset 
+
+    # store project type info as projectprop, store metadata in value
+    #
+    my $analysis_project_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_project', 'project_property');
+    
+    # store dataset info. Copy the actual dataset json, so that dataset 
     # info is frozen and does not reflect future changes.
     #
     my $ds = CXGN::Dataset->new( { people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
+
+    my $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
+	{
+	    project_id => $analysis_id, 
+	    type_id => $analysis_project_term->cvterm_id(), 
+	    value => { 
+		original_dataset_id => $self->dataset_id(), 
+		dataset_json => $ds->data(), 
+	    },
+	});
 
     
     print STDERR Dumper($design);
