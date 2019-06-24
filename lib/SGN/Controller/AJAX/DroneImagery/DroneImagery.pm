@@ -1560,7 +1560,7 @@ sub standard_process_apply_POST : Args(0) {
     print STDERR Dumper \%selected_drone_run_band_types;
     print STDERR Dumper \%vegetative_indices_hash;
 
-    #_perform_minimal_vi_standard_process($c, $bcs_schema, $metadata_schema, \%vegetative_indices_hash, \%selected_drone_run_band_types, \%drone_run_band_info, $user_id, $user_name, $user_role);
+    _perform_minimal_vi_standard_process($c, $bcs_schema, $metadata_schema, \%vegetative_indices_hash, \%selected_drone_run_band_types, \%drone_run_band_info, $user_id, $user_name, $user_role);
 
     $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
@@ -1582,15 +1582,15 @@ sub standard_process_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    # my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
-    #     type_id=>$processed_minimal_vi_cvterm_id,
-    #     project_id=>$drone_run_project_id_input,
-    #     rank=>0,
-    #     value=>1
-    # },
-    # {
-    #     key=>'projectprop_c1'
-    # });
+    my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$processed_minimal_vi_cvterm_id,
+        project_id=>$drone_run_project_id_input,
+        rank=>0,
+        value=>1
+    },
+    {
+        key=>'projectprop_c1'
+    });
 
     my @result;
     $c->stash->{rest} = { data => \@result, success => 1 };
