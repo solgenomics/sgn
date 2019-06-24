@@ -124,6 +124,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_cropping_step">Save and Go to Next Step</button>
             </div>
 
+            <!--
             <div class="well well-sm">
                 <form class="form-horizontal">
                     <div class="row">
@@ -140,6 +141,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 </form>
                 <button class="btn btn-primary" id="drone_imagery_standard_process_cropping_use_previous_cropping">Use Image Cropping</button>
             </div>
+            -->
 
             <div id="manage_drone_imagery_standard_process_crop_load_div">
                 <img src="/img/wheel.gif" />
@@ -797,6 +799,39 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="drone_imagery_calculate_phenotypes_zonal_stats_trial_select">Calculate Zonal Statistics</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_minimal_vi_standard_process_dialog" name="drone_imagery_minimal_vi_standard_process_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryMinimalVIStandardProcessDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryMinimalVIStandardProcessDialog">Run Minimal Vegetative Index Standard Process</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select_div">
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <br/>
+
+            <div id="drone_imagery_minimal_vi_standard_process_week_term_div"></div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_minimal_vi_standard_process_select">Run Minimal Vegetative Index Standard Process</button>
       </div>
     </div>
   </div>
@@ -1593,7 +1628,7 @@ jQuery(document).ready(function() {
                     }
                     get_select_box('ontology_children','drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select_div', {'selectbox_id':'drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select', 'selectbox_name':'drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                    var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.time_ontology_term+"<br/></center>";
+                    var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Ontology Term Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
                     jQuery('#drone_imagery_standard_process_week_term_div').html(html);
                     if (response.time_ontology_cvterm_id) {
                         manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_cvterm_id;
@@ -1624,14 +1659,9 @@ jQuery(document).ready(function() {
             return false;
         } else {
             jQuery.ajax({
-                type: 'POST',
-                url: '/api/drone_imagery/standard_process_apply_phenotypes',
+                type: 'GET',
+                url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&phenotype_types='+JSON.stringify(selected)+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type=minimal',
                 dataType: "json",
-                data: {
-                    'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
-                    'phenotype_types': JSON.stringify(selected),
-                    'time_cvterm_id': manage_drone_imagery_standard_process_phenotype_time,
-                },
                 success: function(response){
                     console.log(response);
                     if(response.error) {
@@ -1670,7 +1700,7 @@ jQuery(document).ready(function() {
                 }
                 get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.time_ontology_term+"<br/></center>";
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
                 jQuery('#drone_imagery_week_term_div').html(html);
                 if (response.time_ontology_cvterm_id) {
                     manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_cvterm_id;
@@ -1689,10 +1719,14 @@ jQuery(document).ready(function() {
         if (manage_drone_imagery_standard_process_phenotype_time == '') {
             manage_drone_imagery_standard_process_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select').val();
         }
+        if (manage_drone_imagery_standard_process_phenotype_time == '') {
+            alert('Please select a time term!');
+            return false;
+        }
 
         jQuery.ajax({
             type: 'GET',
-            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time,
+            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type=extended',
             dataType: "json",
             beforeSend: function (){
                 jQuery('#working_modal').modal('show');
@@ -1718,8 +1752,51 @@ jQuery(document).ready(function() {
     // Minimal VI Standard Process ()
     //
 
+    var manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id;
+    var manage_drone_imagery_standard_process_minimal_vi_phenotype_time = '';
+
     jQuery(document).on('click', 'button[name=project_drone_imagery_standard_process_minimal_vi]', function(){
-        var manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id,
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
+
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                jQuery('#drone_imagery_minimal_vi_standard_process_week_term_div').html(html);
+                if (response.time_ontology_cvterm_id) {
+                    manage_drone_imagery_standard_process_minimal_vi_phenotype_time = response.time_ontology_cvterm_id;
+                }
+            },
+            error: function(response){
+                alert('Error getting time terms!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+
+        jQuery('#drone_imagery_minimal_vi_standard_process_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_minimal_vi_standard_process_select').click(function() {
+        if (manage_drone_imagery_standard_process_minimal_vi_phenotype_time == '') {
+            manage_drone_imagery_standard_process_minimal_vi_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select').val();
+        }
+        if (manage_drone_imagery_standard_process_minimal_vi_phenotype_time == '') {
+            alert('Please select a time term!');
+            return false;
+        }
+
         jQuery.ajax({
             type: 'POST',
             url: '/api/drone_imagery/standard_process_minimal_vi_apply?drone_run_project_id='+manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id,
@@ -1733,11 +1810,35 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert('Minimal vegetative index standard process complete!');
+                    alert('Minimal vegetative index standard process complete! Phenotype generation may still be occurring.');
+                    location.reload();
                 }
             },
             error: function(response){
                 alert('Error running minimal vegetative index standard process!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_minimal_vi_phenotype_time+'&standard_process_type=minimal_vi',
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success) {
+                    alert('Drone image phenotypes stored for minimal vegetative index standard process!');
+                }
+            },
+            error: function(response){
+                alert('Error generating drone image phenotypes for minial vegetative index standard process!');
                 jQuery('#working_modal').modal('hide');
             }
         });
@@ -1748,6 +1849,7 @@ jQuery(document).ready(function() {
     //
 
     var manage_drone_imagery_standard_process_extended_drone_run_project_id;
+    var manage_drone_imagery_standard_process_extended_phenotype_time = '';
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_extended"]', function() {
         manage_drone_imagery_standard_process_extended_drone_run_project_id = jQuery(this).data('drone_run_project_id');
@@ -1766,10 +1868,10 @@ jQuery(document).ready(function() {
                 }
                 get_select_box('ontology_children','drone_imagery_calculate_phenotypes_extended_standard_process_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.time_ontology_term+"<br/></center>";
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
                 jQuery('#drone_imagery_extended_standard_process_week_term_div').html(html);
                 if (response.time_ontology_cvterm_id) {
-                    manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_cvterm_id;
+                    manage_drone_imagery_standard_process_extended_phenotype_time = response.time_ontology_cvterm_id;
                 }
             },
             error: function(response){
@@ -1781,6 +1883,14 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_extended_standard_process_select').click(function(){
+        if (manage_drone_imagery_standard_process_extended_phenotype_time == '') {
+            manage_drone_imagery_standard_process_extended_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_extended_standard_process_time_select').val();
+        }
+        if (manage_drone_imagery_standard_process_extended_phenotype_time == '') {
+            alert('Please select a time term!');
+            return false;
+        }
+
         jQuery.ajax({
             type: 'GET',
             url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id,
@@ -1797,6 +1907,29 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 alert('Error running extended standard process!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time+'&standard_process_type=extended',
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success) {
+                    alert('Drone image phenotypes stored for extended standard process!');
+                }
+            },
+            error: function(response){
+                alert('Error generating drone image phenotypes for extended standard process!');
                 jQuery('#working_modal').modal('hide');
             }
         });
