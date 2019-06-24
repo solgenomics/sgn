@@ -1565,8 +1565,7 @@ jQuery(document).ready(function() {
                     'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
                     'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
                     'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
-                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices),
-                    'minimal_mode': 1
+                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices)
                 },
                 success: function(response){
                     console.log(response);
@@ -1710,6 +1709,35 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 alert('Error generating drone image phenotypes!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
+
+    //
+    // Minimal VI Standard Process ()
+    //
+
+    jQuery(document).on('click', 'button[name=project_drone_imagery_standard_process_minimal_vi]', function(){
+        var manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/drone_imagery/standard_process_minimal_vi_apply?drone_run_project_id='+manage_drone_imagery_standard_process_minimal_vi_drone_run_project_id,
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('Minimal vegetative index standard process complete!');
+                }
+            },
+            error: function(response){
+                alert('Error running minimal vegetative index standard process!');
                 jQuery('#working_modal').modal('hide');
             }
         });

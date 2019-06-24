@@ -75,6 +75,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_indicator} = $_->{drone_run_indicator};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed} = $_->{drone_run_processed};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_minimal_vi} = $_->{drone_run_processed_minimal_vi};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_extended} = $_->{drone_run_processed_extended};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_phenotypes_indicator} = $_->{drone_run_phenotypes_indicator};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
             $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
@@ -96,6 +98,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_indicator} = $_->{drone_run_indicator};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed} = $_->{drone_run_processed};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_minimal_vi} = $_->{drone_run_processed_minimal_vi};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_extended} = $_->{drone_run_processed_extended};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_phenotypes_indicator} = $_->{drone_run_phenotypes_indicator};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
             $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
@@ -137,6 +141,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $drone_run_html .= '</div><div class="col-sm-3">';
             if (!$v->{drone_run_processed}) {
                 $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+            } elsif (!$v->{drone_run_processed_minimal_vi}) {
+                $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_minimal_vi" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Minimal Vegetitative Index Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
             } elsif (!$v->{drone_run_processed_extended}) {
                 $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
             }

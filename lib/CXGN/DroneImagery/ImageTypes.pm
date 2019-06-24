@@ -711,6 +711,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
     return {
         'Blue (450-520nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_blue'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_blue_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -721,6 +722,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_blue_imagery'],
+                threshold_background => ['observation_unit_polygon_blue_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_blue_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_blue_denoised_background_threshold_removed_image_channel_1'],
@@ -733,6 +736,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'Green (515-600nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_green'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_green_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_green_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -743,6 +747,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_green_imagery'],
+                threshold_background => ['observation_unit_polygon_green_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_green_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_green_denoised_background_threshold_removed_image_channel_1'],
@@ -755,6 +761,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'Red (600-690nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_red'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_red_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_red_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -765,6 +772,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_red_imagery'],
+                threshold_background => ['observation_unit_polygon_red_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_red_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_red_denoised_background_threshold_removed_image_channel_1'],
@@ -777,6 +786,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'Red Edge (690-750nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_red_edge'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_rededge_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -787,6 +797,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_red_edge_imagery'],
+                threshold_background => ['observation_unit_polygon_red_edge_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_rededge_denoised_background_threshold_removed_image_channel_1'],
@@ -799,6 +811,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'NIR (750-900nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_nir'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_nir_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -809,6 +822,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_nir_imagery'],
+                threshold_background => ['observation_unit_polygon_nir_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_nir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_nir_denoised_background_threshold_removed_image_channel_1'],
@@ -821,6 +836,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'MIR (1550-1750nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_mir'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_mir_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -831,6 +847,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_mir_imagery'],
+                threshold_background => ['observation_unit_polygon_mir_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_mir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_mir_denoised_background_threshold_removed_image_channel_1'],
@@ -843,6 +861,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'FIR (2080-2350nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_fir'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_fir_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -853,6 +872,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_fir_imagery'],
+                threshold_background => ['observation_unit_polygon_fir_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_fir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_fir_denoised_background_threshold_removed_image_channel_1'],
@@ -865,6 +886,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'Thermal IR (10400-12500nm)' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_tir'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_tir_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -875,6 +897,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_tir_imagery'],
+                threshold_background => ['observation_unit_polygon_tir_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_tir_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_tir_denoised_background_threshold_removed_image_channel_1'],
@@ -887,6 +911,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'Black and White Image' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_bw'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_bw_threshold_background_removed_stitched_drone_imagery_channel_1'],
@@ -897,6 +922,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_bw_imagery'],
+                threshold_background => ['observation_unit_polygon_bw_background_removed_threshold_imagery'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_bw_denoised_stitched_image_channel_1'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_bw_denoised_background_threshold_removed_image_channel_1'],
@@ -909,6 +936,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
         },
         'RGB Color Image' => {
             imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_rgb_channel_1', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_2', 'threshold_background_removed_stitched_drone_imagery_rgb_channel_3'],
                 ft_hpf => {
                     20 => ['calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'calculate_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3'],
                     '20_threshold_background' => ['calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_1', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_2', 'calculate_fourier_transform_hpf20_bgr_threshold_background_removed_stitched_drone_imagery_channel_3'],
@@ -919,6 +947,8 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             },
             observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_rgb_imagery', 'observation_unit_polygon_rgb_imagery_channel_1', 'observation_unit_polygon_rgb_imagery_channel_2', 'observation_unit_polygon_rgb_imagery_channel_3'],
+                threshold_background => ['observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2', 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3'],
                 ft_hpf => {
                     20 => ['observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_stitched_image_channel_3'],
                     '20_threshold_background' => ['observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_1', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_2', 'observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_threshold_removed_image_channel_3'],
@@ -930,16 +960,31 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
             }
         },
         'Merged 3 Bands BGR' => {
-            imagery_types => undef,
-            observation_unit_plot_polygon_types => undef
+            imagery_types => {
+                threshold_background => undef
+            },
+            observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_rgb_imagery'],
+                threshold_background => undef
+            }
         },
         'Merged 3 Bands NRN' => {
-            imagery_types => undef,
-            observation_unit_plot_polygon_types => undef
+            imagery_types => {
+                threshold_background => undef
+            },
+            observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_nrn_imagery'],
+                threshold_background => undef
+            }
         },
         'Merged 3 Bands NReN' => {
-            imagery_types => undef,
-            observation_unit_plot_polygon_types => undef
+            imagery_types => {
+                threshold_background => undef
+            },
+            observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_nren_imagery'],
+                threshold_background => undef
+            }
         }
     };
 }

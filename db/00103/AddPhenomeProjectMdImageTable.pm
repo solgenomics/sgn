@@ -517,6 +517,7 @@ sub patch {
             'drone_run_standard_process_in_progress',
             'drone_run_standard_process_completed',
             'drone_run_standard_process_extended_completed',
+            'drone_run_standard_process_vi_completed',
             'drone_run_standard_process_phenotype_calculation_in_progress'
         ],
         'project_relationship' => [
