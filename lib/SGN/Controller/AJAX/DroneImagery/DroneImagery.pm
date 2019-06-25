@@ -1458,6 +1458,26 @@ sub standard_process_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
+    my $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$processed_cvterm_id,
+        project_id=>$drone_run_project_id_input,
+        rank=>0,
+        value=>0
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$processed_minimal_vi_cvterm_id,
+        project_id=>$drone_run_project_id_input,
+        rank=>0,
+        value=>0
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
     my %vegetative_indices_hash;
     foreach (@$vegetative_indices) {
         $vegetative_indices_hash{$_}++;
@@ -1572,7 +1592,7 @@ sub standard_process_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -1582,7 +1602,7 @@ sub standard_process_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_minimal_vi_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -1612,6 +1632,16 @@ sub standard_process_minimal_vi_apply_POST : Args(0) {
         project_id=>$drone_run_project_id_input,
         rank=>0,
         value=>1
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$processed_minimal_vi_cvterm_id,
+        project_id=>$drone_run_project_id_input,
+        rank=>0,
+        value=>0
     },
     {
         key=>'projectprop_c1'
@@ -1678,7 +1708,7 @@ sub standard_process_minimal_vi_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_minimal_vi_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -1708,6 +1738,16 @@ sub standard_process_extended_apply_GET : Args(0) {
         project_id=>$drone_run_project_id_input,
         rank=>0,
         value=>1
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$processed_cvterm_id,
+        project_id=>$drone_run_project_id_input,
+        rank=>0,
+        value=>0
     },
     {
         key=>'projectprop_c1'
@@ -2345,7 +2385,7 @@ sub _perform_image_cropping {
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
 
-    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons' --polygon_type rectangular_polygon";
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons' --polygon_type rectangular_square";
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
