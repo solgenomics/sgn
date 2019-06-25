@@ -41,16 +41,16 @@ sub upload_drone_imagery_POST : Args(0) {
    my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-   my $selected_trial_id = $c->req->param('upload_drone_images_field_trial_id');
+   my $selected_trial_id = $c->req->param('drone_run_field_trial_id');
    if (!$selected_trial_id) {
        $c->stash->{rest} = { error => "Please select a field trial!" };
        $c->detach();
    }
-   my $selected_drone_run_id = $c->req->param('drone_image_upload_drone_run_id');
-   my $new_drone_run_name = $c->req->param('drone_image_upload_drone_run_name');
-   my $new_drone_run_type = $c->req->param('drone_image_upload_drone_run_type');
-   my $new_drone_run_date = $c->req->param('drone_image_upload_drone_run_date');
-   my $new_drone_run_desc = $c->req->param('drone_image_upload_drone_run_desc');
+   my $selected_drone_run_id = $c->req->param('drone_run_id');
+   my $new_drone_run_name = $c->req->param('drone_run_name');
+   my $new_drone_run_type = $c->req->param('drone_run_type');
+   my $new_drone_run_date = $c->req->param('drone_run_date');
+   my $new_drone_run_desc = $c->req->param('drone_run_description');
    if (!$selected_drone_run_id && !$new_drone_run_name) {
        $c->stash->{rest} = { error => "Please select a drone run or create a new drone run!" };
        $c->detach();
@@ -76,7 +76,7 @@ sub upload_drone_imagery_POST : Args(0) {
        $c->detach();
    }
 
-   my $new_drone_run_band_numbers = $c->req->param('drone_image_upload_drone_run_band_number');
+   my $new_drone_run_band_numbers = $c->req->param('drone_run_band_number');
    my $new_drone_run_band_stitching = $c->req->param('drone_image_upload_drone_run_band_stitching');
 
    if (!$new_drone_run_band_numbers) {
@@ -90,9 +90,9 @@ sub upload_drone_imagery_POST : Args(0) {
 
    my @new_drone_run_bands;
    if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
-       my $new_drone_run_band_name = $c->req->param('drone_image_upload_drone_run_band_name');
-       my $new_drone_run_band_desc = $c->req->param('drone_image_upload_drone_run_band_desc');
-       my $new_drone_run_band_type = $c->req->param('drone_image_upload_drone_run_band_type');
+       my $new_drone_run_band_name = $c->req->param('drone_run_band_name_1');
+       my $new_drone_run_band_desc = $c->req->param('drone_run_band_description_1');
+       my $new_drone_run_band_type = $c->req->param('drone_run_band_type_1');
        if (!$new_drone_run_band_name) {
            $c->stash->{rest} = { error => "Please give a new drone run band name!" };
            $c->detach();
@@ -110,7 +110,7 @@ sub upload_drone_imagery_POST : Args(0) {
        if ($new_drone_run_band_stitching eq 'yes') {
            $upload_file = $c->req->upload('upload_drone_images_zipfile');
        } elsif ($new_drone_run_band_stitching eq 'no') {
-           $upload_file = $c->req->upload('upload_drone_images_stitched_ortho');
+           $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_1');
        }
        if (!$upload_file) {
            $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
@@ -125,9 +125,9 @@ sub upload_drone_imagery_POST : Args(0) {
        };
    } else {
        foreach (0..$new_drone_run_band_numbers-1) {
-           my $new_drone_run_band_name = $c->req->param('drone_image_upload_drone_run_band_name_'.$_);
-           my $new_drone_run_band_desc = $c->req->param('drone_image_upload_drone_run_band_desc_'.$_);
-           my $new_drone_run_band_type = $c->req->param('drone_image_upload_drone_run_band_type_'.$_);
+           my $new_drone_run_band_name = $c->req->param('drone_run_band_name_'.$_);
+           my $new_drone_run_band_desc = $c->req->param('drone_run_band_description_'.$_);
+           my $new_drone_run_band_type = $c->req->param('drone_run_band_type_'.$_);
            if (!$new_drone_run_band_name) {
                $c->stash->{rest} = { error => "Please give a new drone run band name!".$_ };
                $c->detach();
@@ -145,7 +145,7 @@ sub upload_drone_imagery_POST : Args(0) {
            if ($new_drone_run_band_stitching eq 'yes') {
                $upload_file = $c->req->upload('upload_drone_images_zipfile_'.$_);
            } elsif ($new_drone_run_band_stitching eq 'no') {
-               $upload_file = $c->req->upload('upload_drone_images_stitched_ortho_'.$_);
+               $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_'.$_);
            }
            if (!$upload_file) {
                $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };

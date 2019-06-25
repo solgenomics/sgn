@@ -62,7 +62,7 @@
                         </table>
 
                         <!-- If drone run is selected above, the drone_run_project_id is passed to controller, negating need to create new drone run -->
-                        <input id="drone_image_upload_drone_run_id" name="drone_image_upload_drone_run_id" type="hidden" />
+                        <input id="drone_run_id" name="drone_run_id" type="hidden" />
 
                         <center>
                         <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
@@ -73,13 +73,13 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Drone Run Name: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="drone_image_upload_drone_run_name" name="drone_image_upload_drone_run_name" type="text" />
+                                    <input class="form-control" id="drone_run_name" name="drone_run_name" type="text" />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Drone Run Type:</label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="drone_image_upload_drone_run_type" name="drone_image_upload_drone_run_type">
+                                    <select class="form-control" id="drone_run_type" name="drone_run_type">
                                         <option value="">Select One</option>
                                         <option value="Aerial Medium to High Res">Medium to High Resolution Aerial Drone Image(s)</option>
                                         <option value="Aerial Low Res">Low Resolution Aerial Drone Image(s)</option>
@@ -89,13 +89,13 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Drone Run Description: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="drone_image_upload_drone_run_desc" name="drone_image_upload_drone_run_desc" type="text" />
+                                    <input class="form-control" id="drone_run_description" name="drone_run_description" type="text" />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Drone Run Date:</label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="drone_image_upload_drone_run_date" name="drone_image_upload_drone_run_date" title="drone_image_upload_drone_run_date" type="text" />
+                                    <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
                             </div>
                         </div>
@@ -136,7 +136,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Number of Spectral Bands (Image Sets) To Upload:</label>
                             <div class="col-sm-9" >
-                                <select class="form-control" id="drone_image_upload_drone_run_band_number" name="drone_image_upload_drone_run_band_number">
+                                <select class="form-control" id="drone_run_band_number" name="drone_run_band_number">
                                     <option value="">Select One</option>
                                     <option value="one_bw">One Black and White Image</option>
                                     <option value="one_rgb">One RGB Color Image</option>
@@ -200,13 +200,13 @@
 
 jQuery(document).ready(function() {
 
-    get_select_box('trials', 'upload_drone_image_trial_select_div', { 'name' : 'upload_drone_images_field_trial_id', 'id' : 'upload_drone_images_field_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'upload_drone_image_trial_select_div', { 'name' : 'drone_run_field_trial_id', 'id' : 'drone_run_field_trial_id', 'empty':1, 'multiple':0 });
 
     jQuery('#upload_drone_imagery_link').click( function() {
         jQuery('#upload_drone_imagery_dialog').modal("show");
     });
 
-    jQuery(document).on('change', '#upload_drone_images_field_trial_id', function() {
+    jQuery(document).on('change', '#drone_run_field_trial_id', function() {
         var field_trial_id = jQuery(this).val();
         jQuery('#drone_image_upload_drone_runs_table').DataTable({
             destroy : true,
@@ -215,7 +215,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#upload_drone_image_field_trial_select_continue').click(function(){
-        if (jQuery('#upload_drone_images_field_trial_id').val() == ''){
+        if (jQuery('#drone_run_field_trial_id').val() == ''){
             alert('Please select a field trial first');
         } else {
             Workflow.complete('#upload_drone_image_field_trial_select_continue');
@@ -224,9 +224,9 @@ jQuery(document).ready(function() {
         return false;
     });
 
-    var drone_run_date_element = jQuery("#drone_image_upload_drone_run_date");
+    var drone_run_date_element = jQuery("#drone_run_date");
     set_daterangepicker_default (drone_run_date_element);
-    jQuery('input[title="drone_image_upload_drone_run_date"]').daterangepicker(
+    jQuery('input[title="drone_run_date"]').daterangepicker(
         {
             "singleDatePicker": true,
             "showDropdowns": true,
@@ -244,7 +244,7 @@ jQuery(document).ready(function() {
     
     jQuery('#drone_image_upload_drone_run_band_continue').click(function(){
     
-        var drone_run_band_number = jQuery('#drone_image_upload_drone_run_band_number').val();
+        var drone_run_band_number = jQuery('#drone_run_band_number').val();
         var drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
         if (drone_run_band_number == '') {
             alert('Please select the number of drone run bands you will upload');
@@ -253,20 +253,20 @@ jQuery(document).ready(function() {
         } else {
             var html = '';
             if (drone_run_band_number == 'one_bw' || drone_run_band_number == 'one_rgb') {
-                html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name: </label><div class="col-sm-9" ><input class="form-control" id="drone_image_upload_drone_run_band_name" name="drone_image_upload_drone_run_band_name" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_image_upload_drone_run_band_desc" name="drone_image_upload_drone_run_band_desc" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_image_upload_drone_run_band_type" name="drone_image_upload_drone_run_band_type"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (750-900nm)">NIR (750-900nm)</option><option value="MIR (1550-1750nm)">MIR (1550-1750nm)</option><option value="FIR (2080-2350nm)">FIR (2080-2350nm)</option><option value="Thermal IR (10400-12500nm)">Thermal IR (10400-12500nm)</option></select></div></div>';
+                html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_1" name="drone_run_band_name_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_1" name="drone_run_band_description_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_1" name="drone_run_band_type_1"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (750-900nm)">NIR (750-900nm)</option><option value="MIR (1550-1750nm)">MIR (1550-1750nm)</option><option value="FIR (2080-2350nm)">FIR (2080-2350nm)</option><option value="Thermal IR (10400-12500nm)">Thermal IR (10400-12500nm)</option></select></div></div>';
                 if (drone_run_band_unstitched == 'yes') {
                     html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
                 } else if (drone_run_band_unstitched == 'no') {
-                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="upload_drone_images_stitched_ortho" name="upload_drone_images_stitched_ortho" encoding="multipart/form-data" /></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_1" name="drone_run_band_stitched_ortho_image_1" encoding="multipart/form-data" /></div></div>';
                 }
                 html = html + '</div>';
             } else {
                 for (var i=0; i<drone_run_band_number; i++) {
-                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name: </label><div class="col-sm-9" ><input class="form-control" id="drone_image_upload_drone_run_band_name_'+i+'" name="drone_image_upload_drone_run_band_name_'+i+'" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_image_upload_drone_run_band_desc_'+i+'" name="drone_image_upload_drone_run_band_desc_'+i+'" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_image_upload_drone_run_band_type_'+i+'" name="drone_image_upload_drone_run_band_type_'+i+'"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (750-900nm)">NIR (750-900nm)</option><option value="MIR (1550-1750nm)">MIR (1550-1750nm)</option><option value="FIR (2080-2350nm)">FIR (2080-2350nm)</option><option value="Thermal IR (10400-12500nm)">Thermal IR (10400-12500nm)</option></select></div></div>';
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_'+i+'" name="drone_run_band_name_'+i+'" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_'+i+'" name="drone_run_band_description_'+i+'" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_'+i+'" name="drone_run_band_type_'+i+'"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (750-900nm)">NIR (750-900nm)</option><option value="MIR (1550-1750nm)">MIR (1550-1750nm)</option><option value="FIR (2080-2350nm)">FIR (2080-2350nm)</option><option value="Thermal IR (10400-12500nm)">Thermal IR (10400-12500nm)</option></select></div></div>';
                     if (drone_run_band_unstitched == 'yes') {
                         html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile_'+i+'" name="upload_drone_images_zipfile_'+i+'" encoding="multipart/form-data" /></div></div>';
                     } else if (drone_run_band_unstitched == 'no') {
-                        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="upload_drone_images_stitched_ortho_'+i+'" name="upload_drone_images_stitched_ortho_'+i+'" encoding="multipart/form-data" /></div></div>';
+                        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_'+i+'" name="drone_run_band_stitched_ortho_image_'+i+'" encoding="multipart/form-data" /></div></div>';
                     }
                     html = html + '</div>';
                 }
@@ -286,23 +286,23 @@ jQuery(document).ready(function() {
         if (selected.length > 1){
             alert('Only select one drone run!');
         } else {
-            if (selected.length == 0 && jQuery('#drone_image_upload_drone_run_name').val() == ''){
+            if (selected.length == 0 && jQuery('#drone_run_name').val() == ''){
                 alert('Select a drone run or create a new one!');
-            } else if (selected.length == 1 && jQuery('#drone_image_upload_drone_run_name').val() != ''){
+            } else if (selected.length == 1 && jQuery('#drone_run_name').val() != ''){
                 alert('If you selected a drone run, do not try to make a new one at the same time!');
-            } else if (selected.length == 1 && jQuery('#drone_image_upload_drone_run_name').val() == ''){
-                jQuery('#drone_image_upload_drone_run_id').val(selected[0]);
+            } else if (selected.length == 1 && jQuery('#drone_run_name').val() == ''){
+                jQuery('#drone_run_id').val(selected[0]);
                 Workflow.complete('#drone_image_upload_drone_run_continue');
                 Workflow.focus('#drone_imagery_upload_workflow', 3);
-            } else if (selected.length == 0 && jQuery('#drone_image_upload_drone_run_name').val() != '') {
-                if (jQuery('#drone_image_upload_drone_run_desc').val() == ''){
+            } else if (selected.length == 0 && jQuery('#drone_run_name').val() != '') {
+                if (jQuery('#drone_run_description').val() == ''){
                     alert('Please give a drone run description.');
-                } else if (jQuery('#drone_image_upload_drone_run_date').val() == ''){
+                } else if (jQuery('#drone_run_date').val() == ''){
                     alert('Please give a drone run date.');
-                } else if (jQuery('#drone_image_upload_drone_run_type') == ''){
+                } else if (jQuery('#drone_run_type') == ''){
                     alert('Please select a drone run type');
                 } else {
-                    jQuery('#drone_image_upload_drone_run_id').val(undefined);
+                    jQuery('#drone_run_id').val(undefined);
                     Workflow.complete('#drone_image_upload_drone_run_continue');
                     Workflow.focus('#drone_imagery_upload_workflow', 3);
                 }
@@ -312,7 +312,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#upload_drone_imagery_submit').click(function(){
-        var drone_run_band_number = jQuery('#drone_image_upload_drone_run_band_number').val();
+        var drone_run_band_number = jQuery('#drone_run_band_number').val();
         var drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
         if (drone_run_band_number == '') {
             alert('Please select the number of drone run bands you will upload');
@@ -322,13 +322,13 @@ jQuery(document).ready(function() {
             return;
         } else {
             if (drone_run_band_number == 'one_bw' || drone_run_band_number == 'one_rgb') {
-                if (jQuery('#drone_image_upload_drone_run_band_name').val() == ''){
+                if (jQuery('#drone_run_band_name_1').val() == ''){
                     alert('Give a new drone run band name!');
                     return;
-                } else if (jQuery('#drone_image_upload_drone_run_band_desc').val() == ''){
+                } else if (jQuery('#drone_run_band_description_1').val() == ''){
                     alert('Please give a drone run band description.');
                     return;
-                } else if (jQuery('#drone_image_upload_drone_run_band_type').val() == ''){
+                } else if (jQuery('#drone_run_band_type_1').val() == ''){
                     alert('Please select a drone run band type.');
                     return;
                 }
@@ -338,20 +338,20 @@ jQuery(document).ready(function() {
                         return;
                     }
                 } else if (drone_run_band_unstitched == 'no') {
-                    if (jQuery('#upload_drone_images_stitched_ortho').val() == '') {
+                    if (jQuery('#drone_run_band_stitched_ortho_image_1').val() == '') {
                         alert('Please select an image');
                         return;
                     }
                 }
             } else {
                 for (var i=0; i<drone_run_band_number; i++) {
-                    if (jQuery('#drone_image_upload_drone_run_band_name_'+i).val() == ''){
+                    if (jQuery('#drone_run_band_name_'+i).val() == ''){
                         alert('Give a new drone run band name!');
                         return;
-                    } else if (jQuery('#drone_image_upload_drone_run_band_desc_'+i).val() == ''){
+                    } else if (jQuery('#drone_run_band_description_'+i).val() == ''){
                         alert('Please give a drone run band description.');
                         return;
-                    } else if (jQuery('#drone_image_upload_drone_run_band_type_'+i).val() == ''){
+                    } else if (jQuery('#drone_run_band_type_'+i).val() == ''){
                         alert('Please select a drone run band type.');
                         return;
                     }
@@ -361,7 +361,7 @@ jQuery(document).ready(function() {
                             return;
                         }
                     } else if (drone_run_band_unstitched == 'no') {
-                        if (jQuery('#upload_drone_images_stitched_ortho_'+i).val() == '') {
+                        if (jQuery('#drone_run_band_stitched_ortho_image_'+i).val() == '') {
                             alert('Please select an image');
                             return;
                         }
