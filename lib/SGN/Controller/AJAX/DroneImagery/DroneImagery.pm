@@ -1402,14 +1402,14 @@ sub _perform_get_weeks_drone_run_after_planting {
 
     my $field_trial_rs = $schema->resultset("Project::ProjectRelationship")->search({subject_project_id=>$drone_run_project_id, type_id=>$project_relationship_type_id});
     if ($field_trial_rs->count != 1) {
-        return { error => 'There is no field trial saved to the drone run! This should not be possible, please contact us; however you can still select the time manually'};
+        return { drone_run_date => $drone_date, error => 'There is no field trial saved to the drone run! This should not be possible, please contact us; however you can still select the time manually'};
     }
     my $trial_id = $field_trial_rs->first->object_project_id;
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $planting_date = $trial->get_planting_date();
 
     if (!$planting_date) {
-        return { error => 'The planting date is not set on the field trial, so we could not get the time of this flight automaticaly; however you can still select the time manually'};
+        return { drone_run_date => $drone_date, error => 'The planting date is not set on the field trial, so we could not get the time of this flight automaticaly; however you can still select the time manually'};
     }
 
     my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
