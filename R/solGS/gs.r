@@ -20,6 +20,7 @@ library(phenoAnalysis)
 library(caret)
 library(dplyr)
 library(tibble)
+library(rlang)
 
 allArgs <- commandArgs()
 
@@ -505,28 +506,28 @@ if (length(selectionData) != 0) {
                                     )
     
     selectionPopGEBVs <- round(data.frame(selectionPopResult$g), 2)
-
+    colnames(selectionPopGEBVs) <- trait
+    selectionPopGEBVs <- rownames_to_column(selectionPopGEBVs, var="genotypes")
+       
     selectionPopPEV <- selectionPopResult$PEV
     selectionPopSE  <- sqrt(selectionPopPEV)
-    selectionPopSE  <- data.frame(round(selectionPopSE, 2))   
+    selectionPopSE  <- data.frame(round(selectionPopSE, 2))
+    colnames(selectionPopSE) <- 'SE'
     genotypesSl     <- rownames(selectionData)
-    selectionPopSE  <- selectionPopSE[rownames(selectionPopSE) %in% genotypesSl, ]
-    selectionPopSE  <- data.frame(selectionPopSE)
-    colnames(selectionPopSE) <- c('SE')
-
-    selectionPopGEBVs <- selectionPopGEBVs[rownames(selectionPopGEBVs) %in% genotypesSl, ]
-    selectionPopGEBVs <- data.frame(selectionPopGEBVs)  
-    colnames(selectionPopGEBVs) <- c(trait)
     
-    selectionPopSE    <- rownames_to_column(selectionPopSE, var="genotypes")
-    selectionPopGEBVs <- rownames_to_column(selectionPopGEBVs, var="genotypes")
-    
-    selectionPopGEBVSE <- full_join(selectionPopGEBVs, selectionPopSE)
-    
-    selectionPopGEBVs <- selectionPopGEBVs %>% arrange_(.dots = paste0('desc(', trait, ')'))
-    selectionPopGEBVs <- column_to_rownames(selectionPopGEBVs, var="genotypes")
+    selectionPopSE <- rownames_to_column(selectionPopSE, var="genotypes")
+    selectionPopSE <-  selectionPopSE %>% filter(genotypes %in% genotypesSl)
    
-    selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange_(.dots= paste0('desc(', trait, ')'))                                
+    selectionPopGEBVs <-  selectionPopGEBVs %>% filter(genotypes %in% genotypesSl)
+      
+    selectionPopGEBVSE <- inner_join(selectionPopGEBVs, selectionPopSE, by="genotypes")
+   
+    sortVar <- parse_quosure(trait)
+    selectionPopGEBVs <- selectionPopGEBVs %>% arrange(desc((!!sortVar)))    
+    selectionPopGEBVs <- column_to_rownames(selectionPopGEBVs, var="genotypes")
+ 
+    selectionPopGEBVSE <-  selectionPopGEBVSE %>% arrange(desc((!!sortVar)))
+    selectionPopGEBVSE <- column_to_rownames(selectionPopGEBVSE, var="genotypes")
 }
 
 if (!is.null(selectionPopGEBVs) & length(selectionPopGEBVsFile) != 0)  {
