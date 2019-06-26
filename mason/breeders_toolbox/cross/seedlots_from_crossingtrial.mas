@@ -27,8 +27,8 @@ jQuery(document).ready(function(){
                     } else {
                         return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
                     }
-                }
-                }
+                }},
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot("+row.cross_name+")' >Add</a>"; } },
             ]
         });
     });
