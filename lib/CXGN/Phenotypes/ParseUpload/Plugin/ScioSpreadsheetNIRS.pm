@@ -134,7 +134,7 @@ sub parse {
     for my $row ( 0 .. 9 ) { #get metadata
         my $key = $worksheet->get_cell($row,0)->value();
         my $value = $worksheet->get_cell($row,1)->value();
-        $metadata_hash{$key} = {$value};
+        $metadata_hash{$key} = $value;
     }
     for my $col (0 .. $col_max) {
         my $field = $worksheet->get_cell(10,$col)->value();
@@ -150,10 +150,9 @@ sub parse {
             if (defined($observationunit_name)){
                 if ($observationunit_name ne ''){
                     $observationunits_seen{$observationunit_name} = 1;
+                    
                     #add metadata to nirs not nested
-
-                    #$data{$observationunit_name}->{'nirs'} = (%metadata_hash);
-                    #print STDERR "Hash so far is ".Dumper($data{$observationunit_name}->{'nirs'});
+                    $data{$observationunit_name}->{'nirs'} = %metadata_hash;
 
                     for my $col (0 .. $col_max) {
                         my $column_name;
