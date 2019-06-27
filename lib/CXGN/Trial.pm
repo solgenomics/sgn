@@ -51,7 +51,7 @@ sub new {
     my $class = shift;
     my $args = shift;
 
-    my $schema = $args->{schema};
+    my $schema = $args->{bcs_schema};
     my $trial_id = $args->{trial_id};
     
     # check type of trial and return the correct object

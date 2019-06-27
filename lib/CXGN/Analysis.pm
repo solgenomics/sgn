@@ -74,8 +74,8 @@ sub retrieve_analyses_by_user {
     $h->execute($user_info_type_id, $analysis_info_type_id, $user_id);
 
     my @analyses = ();
-    while (my $row = $rs->next()) {
-	push @analyses, CXGN::Analysis->new( { bcs_schema = $schema, $trial_id=> $row->project_id() });
+    while (my ($project_id) = $h->fetchrow_array()) {
+	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, trial_id=> $project_id });
     }
 
     return @analyses;
@@ -167,7 +167,7 @@ sub create_and_store_analysis_design {
     #
     my $ds = CXGN::Dataset->new( { people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
 
-    my $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
+    $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
 	{
 	    project_id => $analysis_id, 
 	    type_id => $analysis_project_term->cvterm_id(), 

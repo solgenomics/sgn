@@ -1634,7 +1634,7 @@ sub _delete_field_layout_experiment {
 
     my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
     if ($nde_rs->count != 1){
-        die "Trial $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
+        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
     }
     while( my $r = $nde_rs->next){
         $r->delete();
@@ -2168,7 +2168,7 @@ sub create_plant_entities {
                 my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
                 $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
 
-                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
+                my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
                 my $plots = $treatment_trial->get_plots();
                 foreach my $plot (@$plots){
                     $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
