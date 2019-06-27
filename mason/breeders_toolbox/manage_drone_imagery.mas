@@ -1743,6 +1743,8 @@ jQuery(document).ready(function() {
                 alert('Error generating drone image phenotypes!');
             }
         });
+
+        location.reload();
     });
 
     //
@@ -1831,6 +1833,8 @@ jQuery(document).ready(function() {
                 alert('Error generating drone image phenotypes for minial vegetative index standard process!');
             }
         });
+
+        location.reload();
     });
 
     //
@@ -1914,6 +1918,8 @@ jQuery(document).ready(function() {
                 alert('Error generating drone image phenotypes for extended standard process!');
             }
         });
+
+        location.reload();
     });
 
     //
