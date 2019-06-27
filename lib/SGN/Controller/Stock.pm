@@ -330,9 +330,9 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
 
 sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my ($self, $c) = @_;
-    my $stock = $c->stash->{stock_row};
-    my $stock_id = $stock->stock_id;
-    my $stock_name = $stock->uniquename;
+    my $stock_row = $c->stash->{stock_row};
+    my $stock_id = $stock_row->stock_id;
+    my $stock_name = $stock_row->uniquename;
     my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 

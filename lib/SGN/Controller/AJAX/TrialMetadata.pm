@@ -103,8 +103,11 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
         $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-        $error .= $c->stash->{trial}->delete_phenotype_data();
+        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
     }
 
     elsif ($datatype eq 'layout') {
@@ -2079,38 +2082,31 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
 sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $pheno_ids = $c->req->param('pheno_id');
-    my $trait_ids = $c->req->param('traits_id');
+    my $pheno_ids = $c->req->param('pheno_id') ? JSON::decode_json($c->req->param('pheno_id')) : [];
+    my $trait_ids = $c->req->param('traits_id') ? JSON::decode_json($c->req->param('traits_id')) : [];
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial = $c->stash->{trial};
 
     if (!$c->user()) {
-    	print STDERR "User not logged in... not deleting trait.\n";
-    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
-    	return;
+        print STDERR "User not logged in... not deleting trait.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+        return;
     }
 
     if ($self->privileges_denied($c)) {
-      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
-      return;
+        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+        return;
     }
 
-    my $delete_trait_return_error;
-    if ($pheno_ids){
-            my $phenotypes_ids = JSON::decode_json($pheno_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
-    }
-    if ($trait_ids){
-        my $traits_ids = JSON::decode_json($trait_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
-    }
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $pheno_ids, $trait_ids);
 
     if ($delete_trait_return_error) {
-      $c->stash->{rest} = { error => $delete_trait_return_error };
-      return;
+        $c->stash->{rest} = { error => $delete_trait_return_error };
+    } else {
+        $c->stash->{rest} = { success => 1};
     }
-
-    $c->stash->{rest} = { success => 1};
 }
 
 sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {
