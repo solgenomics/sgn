@@ -150,9 +150,9 @@ sub parse {
             if (defined($observationunit_name)){
                 if ($observationunit_name ne ''){
                     $observationunits_seen{$observationunit_name} = 1;
-                    
-                    #add metadata to nirs not nested
-                    $data{$observationunit_name}->{'nirs'} = %metadata_hash;
+
+                    #store metadata at protocol level instead
+                    #$data{$observationunit_name}->{'nirs'} = %metadata_hash;
 
                     for my $col (0 .. $col_max) {
                         my $column_name;
