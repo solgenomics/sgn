@@ -672,7 +672,7 @@ sub _perform_plot_polygon_assign {
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();
 
-    my @found_stock_ids = keys %stock_ids;
+    my @found_stock_ids = values %stock_ids;
     my $previous_images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_band_project_id_list=>[$drone_run_band_project_id],
