@@ -186,6 +186,7 @@ sub search {
     my $drone_run_band_project_id_list = $self->drone_run_band_project_id_list;
     my $program_list = $self->program_list;
     my $program_id_list = $self->program_id_list;
+    my $stock_id_list = $self->stock_id_list;
     my $location_list = $self->location_list;
     my $location_id_list = $self->location_id_list;
     my $year_list = $self->year_list;

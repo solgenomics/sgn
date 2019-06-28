@@ -679,7 +679,7 @@ sub _perform_plot_polygon_assign {
         project_image_type_id=>$linking_table_type_id,
         stock_id_list=>\@found_stock_ids
     });
-    my ($previous_result, $previous_total_count) = $images_search->search();
+    my ($previous_result, $previous_total_count) = $previous_images_search->search();
 
     if (scalar(@$previous_result) == scalar(@found_stock_ids)) {
         print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occured. Skipping \n";
