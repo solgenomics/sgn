@@ -341,6 +341,7 @@ sub raw_drone_imagery_stitch_GET : Args(0) {
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $ret = $image->process_image($archive_stitched_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
 
+    unlink($archive_stitched_temp_image);
     $c->stash->{rest} = { data => \@image_urls };
 }
 
@@ -384,6 +385,7 @@ sub upload_drone_imagery_stitch_POST : Args(0) {
     my $uploaded_image_fullpath = $image->get_filename('original_converted', 'full');
     my $uploaded_image_url = $image->get_image_url('original');
 
+    unlink($archived_filename_with_path);
     $c->stash->{rest} = { success => 1, uploaded_image_url => $uploaded_image_url, uploaded_image_fullpath => $uploaded_image_fullpath };
 }
 
@@ -494,6 +496,8 @@ sub _perform_image_rotate {
         $rotated_image_url = $image->get_image_url('original');
         $rotated_image_id = $image->get_image_id();
     }
+
+    unlink($archive_rotate_temp_image);
     return {
         rotated_image_id => $rotated_image_id, image_url => $image_url, image_fullpath => $image_fullpath, rotated_image_url => $rotated_image_url, rotated_image_fullpath => $rotated_image_fullpath
     };
@@ -564,6 +568,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
         $contours_image_id = $image->get_image_id();
     }
 
+    unlink($archive_contours_temp_image);
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, contours_image_id => $contours_image_id, contours_image_url => $contours_image_url, contours_image_fullpath => $contours_image_fullpath, image_width => $size[0], image_height => $size[1] };
 }
 
@@ -723,6 +728,8 @@ sub _perform_plot_polygon_assign {
         }
         push @plot_polygon_image_fullpaths, $plot_polygon_image_fullpath;
         push @plot_polygon_image_urls, $plot_polygon_image_url;
+
+        unlink($archive_plot_polygons_temp_image);
     }
 
     return {
@@ -815,6 +822,7 @@ sub drone_imagery_fourier_transform_GET : Args(0) {
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'fourier_transform_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $ret = $image->process_image($archive_fourier_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
 
+    unlink($archive_fourier_temp_image);
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
 }
 
@@ -895,6 +903,7 @@ sub _perform_image_denoise {
         $denoised_image_id = $image->get_image_id();
     }
 
+    unlink($archive_denoise_temp_image);
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, denoised_image_id => $denoised_image_id, denoised_image_url => $denoised_image_url, denoised_image_fullpath => $denoised_image_fullpath
     };
@@ -951,6 +960,7 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
     my $removed_background_image_fullpath = $image->get_filename('original_converted', 'full');
     my $removed_background_image_url = $image->get_image_url('original');
 
+    unlink($archive_remove_background_temp_image);
     $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath };
 }
 
@@ -1046,6 +1056,7 @@ sub _perform_image_background_remove_threshold {
         key=>'projectprop_c1'
     });
 
+    unlink($archive_remove_background_temp_image);
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath
     };
@@ -1153,6 +1164,7 @@ sub _perform_image_background_remove_threshold_percentage {
         key=>'projectprop_c1'
     });
 
+    unlink($archive_remove_background_temp_image);
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, removed_background_image_id => $removed_background_image_id, removed_background_image_url => $removed_background_image_url, removed_background_image_fullpath => $removed_background_image_fullpath
     };
@@ -2420,6 +2432,7 @@ sub _perform_image_cropping {
         key=>'projectprop_c1'
     });
 
+    unlink($archive_temp_image);
     return {
         cropped_image_id => $cropped_image_id, image_url => $image_url, image_fullpath => $image_fullpath, cropped_image_url => $cropped_image_url, cropped_image_fullpath => $cropped_image_fullpath
     };
@@ -2511,6 +2524,7 @@ sub _perform_fourier_transform_calculation {
         $ft_image_id = $image->get_image_id();
     }
 
+    unlink($archive_temp_image);
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, ft_image_id => $ft_image_id, ft_image_url => $ft_image_url, ft_image_fullpath => $ft_image_fullpath
     };
@@ -2640,6 +2654,7 @@ sub _perform_vegetative_index_calculation {
         $index_image_id = $image->get_image_id();
     }
 
+    unlink($archive_temp_image);
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, index_image_id => $index_image_id, index_image_url => $index_image_url, index_image_fullpath => $index_image_fullpath
     };
@@ -2710,6 +2725,7 @@ sub _perform_image_background_remove_mask {
     my $masked_image_url = $image->get_image_url('original');
     my $masked_image_id = $image->get_image_id();
 
+    unlink($archive_temp_image);
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, masked_image_id => $masked_image_id, masked_image_url => $masked_image_url, masked_image_fullpath => $masked_image_fullpath
     };
@@ -2851,6 +2867,7 @@ sub _perform_image_merge {
     my $merged_image_url = $image->get_image_url('original');
     my $merged_image_id = $image->get_image_id();
 
+    unlink($archive_temp_image);
     return {
         merged_drone_run_band_project_id => $merged_drone_run_band_id, merged_image_url => $merged_image_url, merged_image_fullpath => $merged_image_fullpath, merged_image_id => $merged_image_id
     };
@@ -3404,6 +3421,8 @@ sub _perform_phenotype_calculation {
             $stocks[$count]->{image_path} = $image_fullpath;
             $stocks[$count]->{image_url} = $image_url;
             $count++;
+
+            unlink($_);
         }
     }
 
