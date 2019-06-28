@@ -670,7 +670,22 @@ sub _perform_plot_polygon_assign {
         key=>'projectprop_c1'
     });
 
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();;
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $assign_plot_polygons_type, 'project_md_image')->cvterm_id();
+
+    my @found_stock_ids = keys %stock_ids;
+    my $previous_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_band_project_id_list=>[$drone_run_band_project_id],
+        project_image_type_id=>$linking_table_type_id,
+        stock_id_list=>\@found_stock_ids
+    });
+    my ($previous_result, $previous_total_count) = $images_search->search();
+
+    if (scalar(@$previous_result) == scalar(@found_stock_ids)) {
+        print STDERR "Plot polygon assignment for $assign_plot_polygons_type on project $drone_run_band_project_id has already occured. Skipping \n";
+        return {warning => "Plot polygon assignment already occured for $assign_plot_polygons_type on project $drone_run_band_project_id."};
+    }
+
     my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $assign_plot_polygons_type);
     if (!$image_tag_id) {
         my $image_tag = CXGN::Tag->new($schema->storage->dbh);

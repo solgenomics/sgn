@@ -12,6 +12,7 @@ my $images_search = CXGN::DroneImagery::ImagesSearch->new({
     project_image_type_id_list=>$project_image_type_id_list,
     drone_run_project_id_list=>\@drone_run_project_ids,
     drone_run_band_project_id_list=>\@drone_run_band_project_ids,
+    stock_id_list=>\@stock_ids,
     location_list=>\@locations,
     program_list=>\@breeding_program_names,
     program_id_list=>\@breeding_programs_ids,
@@ -69,6 +70,11 @@ has 'program_list' => (
 );
 
 has 'program_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'stock_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -273,6 +279,11 @@ sub search {
     if ($project_image_type_id_list && scalar(@$project_image_type_id_list)>0) {
         my $sql = join ("," , @$project_image_type_id_list);
         push @where_clause, "project_image.type_id in ($sql)";
+    }
+
+    if ($stock_id_list && scalar(@$stock_id_list)>0) {
+        my $sql = join ("," , @$stock_id_list);
+        push @where_clause, "stock.stock_id in ($sql)";
     }
 
     if ($program_id_list && scalar(@$program_id_list)>0) {
