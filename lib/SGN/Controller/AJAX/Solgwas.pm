@@ -316,6 +316,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    $ds-> @$trials_ref = retrieve_genotypes();
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
+    print STDERR $newtrait . "\n";
     $newtrait =~ s/\//\_/g;
     print STDERR $newtrait . "\n";
 #    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
@@ -329,15 +330,72 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
 
     $trait_id =~ tr/ /./;
+    print STDERR $trait_id . "\n";
     $trait_id =~ tr/\//./;
+    print STDERR $trait_id . "\n";
 #    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
 #    system($clean_cmd);
 #    my $geno_filepath2 = "." . $tempfile . "_genotype_edit.txt";
+    my $geno_filepath_transpose = $tempfile . "_genotype_transpose.vcf";
     my $geno_filepath2 = $tempfile . "_genotype_edit.txt";
     my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
     system($edit_cmd);
+
 #    my $geno_filepath3 = "." . $tempfile . "_genotype_edit_subset.txt";
     my $geno_filepath3 = $tempfile . "_genotype_edit_subset.txt";
+
+# Transposition of genotype file to match vcf format
+    open (INPUT, "<$geno_filepath2") || die "Cannot open INPUT file.\n";
+    open(my $fh, '>', $geno_filepath_transpose);
+    my $data   = [];
+    my $t_data = [];
+    while(<INPUT>){
+        chomp;
+        #skip lines without anything
+        next if /^$/;
+        #split lines on tabs
+        my @s = split(/\t/);
+        #store each line, which has been split on tabs
+        #in the array reference as an array reference
+        push(@{$data}, \@s);
+    }
+
+    #loop through array reference
+    for my $row (@{$data}){
+        #go through each array reference
+        #each array element is each row of the data
+        for my $col (0 .. $#{$row}){
+            #each row of $t_data is an array reference
+            #that is being populated with the $data columns
+            push(@{$t_data->[$col]}, $row->[$col]);
+        }
+    }
+
+    for my $row (@$t_data){
+        my $line_to_print = '';
+        for my $col (@{$row}){
+            if ($col eq '0') {
+                $line_to_print .= "0\/0\t";
+            } elsif ($col eq '1') {
+                $line_to_print .= "0\/1\t";
+            } elsif ($col eq '2') {
+                $line_to_print .= "1\/1\t";
+            } elsif (index($col, "_") != -1) {
+                my @chr_pos = split /_/, $col;
+                my $chr_num;
+                ($chr_num = $chr_pos[0]) =~ s/[A-Z]//g;
+                $line_to_print .= "$chr_num\t$chr_pos[1]\t$col\tA\tC\t100\tPASS\t.\t.\t";
+            } elsif ($col eq 'row.names') {
+                my @chr_pos = split /_/, $col;
+                $line_to_print .= "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t";
+            } else {
+                $line_to_print .= "$col\t";
+            }
+        }
+        $line_to_print =~ s/\t$//;
+        print $fh "$line_to_print\n";
+    }
+    close $fh;
 
 #    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
 #    system($trim_cmd);
@@ -375,13 +433,73 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #            $curr_line .= "\n";
             print $filehandle_out "$curr_line\n";
         }
-#    }
+
     close $filehandle_in;
     close $filehandle_out;
 
+    # The following code modifying the phenotype file for gcta should be changed to not use system cmd
+    # Attempt to change the phenotype file extracted, isolate the germplasmDbId and the phenotype values
+    my $pheno_filepath2 = $tempfile . "_phenotype_mod.txt";
+    my $pheno_cut_cmd = "cut -f 18,40 " . $pheno_filepath . " > " . $pheno_filepath2;
+    system($pheno_cut_cmd);
+    # Now modify again, to give properly formatted phenotype file for gcta
+    my $pheno_filepath3 = $tempfile . "_phenotype_mod_gcta.txt";
+    open my $filehandle_in_pheno,  "<", "$pheno_filepath2"  or die "Could not open $pheno_filepath2: $!\n";
+    open my $filehandle_out_pheno, ">", "$pheno_filepath3" or die "Could not create $pheno_filepath3: $!\n";
+
+    #    foreach my $item (@column_selection) {
+            while ( my $line = <$filehandle_in_pheno> ) {
+
+                my @first_item = (split /\s+/, $line);
+                if ($first_item[0] eq "germplasmDbId") {
+                    # continue, do nothing
+                } elsif ($first_item[1] eq '') {
+                    # if the phenotype value is empty exclude (i.e., do not print) the line
+                } else {
+                    print $filehandle_out_pheno "0\t$line";
+                }
+    #            $curr_line .= "\n";
+            }
+
+        close $filehandle_in_pheno;
+        close $filehandle_out_pheno;
+
 #    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
-    my $cmd = CXGN::Tools::Run->new(
+    # my $cmd = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+    #         $pheno_filepath,
+    #         $geno_filepath3,
+    #         $trait_id,
+    #         $figure3file,
+    #         $figure4file,
+    #         $pc_check,
+    #         $kinship_check,
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
+
+    # $cmd->run_cluster(
+    #         "gcta64 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out ~/Documents/gcta_1.92.0beta/Kinship --thread-num 1 > ~/Documents/gcta_1.92.0beta/Kinship.log",
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
+
+
+    my $sort_vcf_cmd = CXGN::Tools::Run->new(
         {
             backend => $c->config->{backend},
             temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
@@ -391,27 +509,57 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             max_cluster_jobs => 1_000_000_000,
         }
     );
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
-            $pheno_filepath,
-            $geno_filepath3,
-            $trait_id,
-            $figure3file,
-            $figure4file,
-            $pc_check,
-            $kinship_check,
-    );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
 
-    $cmd->run_cluster(
-            "~/Documents/gcta_1.92.0beta/gcta64 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out ~/Documents/gcta_1.92.0beta/Kinship --thread-num 1 > ~/Documents/gcta_1.92.0beta/Kinship.log",
+    my $sorted_vcf = $tempfile . "_genotype_transpose_sorted.vcf";
+
+    $sort_vcf_cmd->run_cluster(
+    #            "plink2 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out " . $tempfile ."_Kinship --thread-num 1 > " . $tempfile . "_Kinship.log",
+#            "plink2 --vcf " . $geno_filepath_transpose . " --sort-vars -chr-set 13000 -allow-extra-chr --const-fid --out " . $tempfile,
+    #            "plink2 --vcf " . $geno_filepath_transpose . " --allow-extra-chr --const-fid --maf 0.05 --recode A --out " . $tempfile,
+        "grep '^#' " . $geno_filepath_transpose . " > " . $sorted_vcf . " && grep -v '^#' " . $geno_filepath_transpose . " | sort -k1,1V -k2,2n >> " . $sorted_vcf,
     );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    $sort_vcf_cmd->alive;
+    $sort_vcf_cmd->is_cluster(1);
+    $sort_vcf_cmd->wait;
+
+
+    my $vcf_cmd = CXGN::Tools::Run->new(
+        {
+            backend => $c->config->{backend},
+            temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
+    #         $pheno_filepath,
+    #         $geno_filepath3,
+    #         $trait_id,
+    #         $figure3file,
+    #         $figure4file,
+    #         $pc_check,
+    #         $kinship_check,
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
+
+    $vcf_cmd->run_cluster(
+#            "plink2 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out " . $tempfile ."_Kinship --thread-num 1 > " . $tempfile . "_Kinship.log",
+
+#            "plink2 --vcf " . $geno_filepath_transpose . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
+
+            "plink2 --vcf ~/Desktop/testvcf_altchr.vcf --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
+
+#            "plink2 --vcf " . $geno_filepath_transpose . " --allow-extra-chr --const-fid --maf 0.05 --recode A --out " . $tempfile,
+    );
+    $vcf_cmd->alive;
+    $vcf_cmd->is_cluster(1);
+    $vcf_cmd->wait;
 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);
@@ -436,13 +584,15 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     );
     # To test, copied the test.* gcta files to export temp_base
     # Hardcoding gcta for testing only:
-    my $bfile = "test";
-    my $grm_out = "afp2apr2019";
+#    my $bfile = "test";
+#    my $grm_out = $tempfile . "afp2apr2019";
     $cmd2->run_cluster(
             "gcta64 --bfile",
-            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
+#            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
+            $tempfile,
             "--make-grm --out",
-            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
+#            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
+            $tempfile,
     );
     $cmd2->alive;
     $cmd2->is_cluster(1);
@@ -463,20 +613,24 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $cmd3->run_cluster(
             "gcta64 --mlma",
             "--bfile",
-            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
+#            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
+            $tempfile,
             "--pheno",
-            $c->config->{cluster_shared_tempdir} . "/solgwas_files/test.phen",
+#            $c->config->{cluster_shared_tempdir} . "/solgwas_files/test.phen",
+            $pheno_filepath3,
             "--grm",
-            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
+#            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
+            $tempfile,
             "--out",
-            $c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1",
+#            $c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1",
+            $tempfile,
     );
     $cmd3->alive;
     $cmd3->is_cluster(1);
     $cmd3->wait;
 
-    my $log10_cmd = "awk -F\"\t\" '{a = -log(\$9)/log(10); printf(\"%0.4f\n\", a)} afpGWAStest1.mlma > log10_afpGWAStest1.txt";
-    system($log10_cmd);
+#    my $log10_cmd = "awk -F\"\t\" '{a = -log(\$9)/log(10); printf(\"%0.4f\n\", a)} afpGWAStest1.mlma > log10_afpGWAStest1.txt";
+#    system($log10_cmd);
     # my $cmd4 = CXGN::Tools::Run->new(
     #     {
     #         backend => $c->config->{backend},
