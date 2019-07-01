@@ -129,10 +129,10 @@ sub genotypes_list_genotype_data {
     
     my $args = retrieve($self->args_file);
     
-    my $list_pop_id   = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
-    my $genotypes     = $args->{genotypes_list};
+   # my $list_pop_id   = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
+   # my $genotypes     = $args->{genotypes_list};
     my $genotypes_ids = $args->{genotypes_ids};
-    my $data_dir      = $args->{list_data_dir};
+    my $data_dir      = $args->{data_dir};
     my $geno_file     = $args->{genotype_file};
 
     my $model = $self->get_model();
@@ -170,16 +170,22 @@ sub plots_list_phenotype_data {
 sub dataset_genotype_data {
     my $self = shift;
     
-    my $args = retrieve($self->args_file);
-    
-    my $dataset_id    = $args->{dataset_id};
-    my $data_dir      = $args->{list_data_dir};
-    my $geno_file     = $args->{genotype_file};
+    my $args = retrieve($self->args_file);   
+    my $dataset_id = $args->{dataset_id};
 
-    my $model = $self->get_model();
-   
+    if ($dataset_id)
+    {
+    my $geno_file = $args->{genotype_file};
+
+    my $model = $self->get_model();  
     my $geno_data = $model->get_dataset_genotype_data($dataset_id);
+    
     write_file($geno_file, $geno_data);
+    } 
+    elsif ($args->{genotypes_ids})
+    {
+	$self->genotypes_list_genotype_data();
+    }
 
 }
 
