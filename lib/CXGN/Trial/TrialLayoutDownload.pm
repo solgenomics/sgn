@@ -110,8 +110,15 @@ has 'design' => (
     is => 'rw',
 );
 
+subtype 'Trial',
+  as 'Ref',
+    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ },
+  message { "The string, $_, was not a valid trial object type"};
+
+
+
 has 'trial' => (
-    isa => 'CXGN::Trial',
+    isa => 'Trial',
     is => 'rw',
 );
 
