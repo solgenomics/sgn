@@ -243,11 +243,11 @@ sub analysis_report_file {
 sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
  
     my $dir; 
 
-    if ($c->{stash}->{combo_pops_id}) 
+    if (!$pop_id && $c->{stash}->{combo_pops_id}) 
     {
 	$pop_id = $pop_id . '_combined'
     }
