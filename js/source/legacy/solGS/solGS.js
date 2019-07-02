@@ -831,6 +831,15 @@ solGS.getPopulationDetails = function () {
     }
   
     var  comboPopsId = jQuery("#combo_pops_id").val();
+
+    var dataSetType;
+   
+    if (comboPopsId) {      
+        dataSetType = 'combined populations';
+	trainingPopId = comboPopsId;
+    } else {        
+        dataSetType = 'single population';
+    } 
        
     return {
 	'training_pop_id'   : trainingPopId,
@@ -839,6 +848,7 @@ solGS.getPopulationDetails = function () {
 	'selection_pop_id'  : selectionPopId,
 	'selection_pop_name': selectionPopName,
 	'combo_pops_id'     : comboPopsId,
+	'data_set_type'     : dataSetType
     };        
 }
 
