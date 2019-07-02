@@ -16,10 +16,9 @@ package CXGN::Phenotypes::ParseUpload::Plugin::ScioSpreadsheetNIRS;
 #)
 
 use Moose;
-#use File::Slurp;
-use Spreadsheet::ParseExcel;
 use JSON;
 use Data::Dumper;
+use Text::CSV;
 
 sub name {
     return "scio spreadsheet nirs";
@@ -31,63 +30,35 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
-    my @file_lines;
     my $delimiter = ',';
-    my $header;
-    my @header_row;
-    my $parser   = Spreadsheet::ParseExcel->new();
-    my $excel_obj;
-    my $worksheet;
     my %parse_result;
 
-    #modify to reflect scio format
+    my $csv = Text::CSV->new({ sep_char => ',' });
 
-    #try to open the excel file and report any errors
-    $excel_obj = $parser->parse($filename);
-    if ( !$excel_obj ) {
-        $parse_result{'error'} = $parser->error();
-        print STDERR "validate error: ".$parser->error()."\n";
+    open(my $fh, '<', $filename)
+        or die "Could not open file '$filename' $!";
+
+    if (!$fh) {
+        $parse_result{'error'} = "Could not read file.";
+        print STDERR "Could not read file.\n";
         return \%parse_result;
     }
 
-    $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
-    my ( $row_min, $row_max ) = $worksheet->row_range();
-    my ( $col_min, $col_max ) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least observationunit_name and one trait, as well as one row of phenotypes
-        $parse_result{'error'} = "No data found in spreadsheet.";
-        print STDERR "No data found in spreadsheet\n";
+    my $header_row = <$fh>;
+    my @columns;
+    if ($csv->parse($header_row)) {
+        @columns = $csv->fields();
+    } else {
+        $parse_result{'error'} = "Could not parse header row.";
+        print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
 
-    if ($worksheet->get_cell(0,0)->value() ne 'name' ) {
-        $parse_result{'error'} = "First cell must be 'name'. Is this a NIRS spreadhseet formatted by SCiO?";
-        print STDERR "First cell must be 'name'\n";
-        return \%parse_result;
+    if ( $columns[0] ne "name" ) {
+      $parse_result{'error'} = "First cell must be 'name'. Is this a NIRS spreadhseet formatted by SCiO?";
+      print STDERR "First cell must be 'name'\n";
+      return \%parse_result;
     }
-    # my @fixed_columns = qw | observationunit_name |;
-    # my $num_fixed_col = scalar(@fixed_columns);
-    #
-    # for (my $row=1; $row<$row_max; $row++) {
-    #     for (my $col=$num_fixed_col; $col<=$col_max; $col++) {
-    #         my $value_string = '';
-    #         my $value = '';
-    #         my $timestamp = '';
-    #         if ($worksheet->get_cell($row,$col)) {
-    #             $value_string = $worksheet->get_cell($row,$col)->value();
-    #             #print STDERR $value_string."\n";
-    #             if ($timestamp_included) {
-    #                 ($value, $timestamp) = split /,/, $value_string;
-    #                 if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-    #                     $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-    #                     print STDERR "value: $timestamp\n";
-    #                     return \%parse_result;
-    #                 }
-    #             }
-    #         }
-    #     }
-    # }
-
-    #if the rest of the header rows are not two caps followed by colon followed by text then return
 
     return 1;
 }
@@ -98,102 +69,122 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
-    my $composable_cvterm_format = shift // 'extended';
-    my %parse_result;
-    my @file_lines;
     my $delimiter = ',';
+    my %parse_result;
+
+    my $csv = Text::CSV->new({ sep_char => ',' });
     my $header;
     my @header_row;
     my $header_column_number = 0;
     my %header_column_info; #column numbers of key info indexed from 0;
-    my %observationunits_seen;
+    my %observation_units_seen;
     my %traits_seen;
     my @observation_units;
     my @traits;
     my %data;
-    my $parser   = Spreadsheet::ParseExcel->new();
-    my $excel_obj;
-    my $worksheet;
 
-    #try to open the excel file and report any errors
-    $excel_obj = $parser->parse($filename);
-    if ( !$excel_obj ) {
-        $parse_result{'error'} = $parser->error();
-        print STDERR "validate error: ".$parser->error()."\n";
+    open(my $fh, '<', $filename)
+        or die "Could not open file '$filename' $!";
+
+    if (!$fh) {
+        $parse_result{'error'} = "Could not read file.";
+        print STDERR "Could not read file.\n";
+        return \%parse_result;
     }
 
-    $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
-    my ( $row_min, $row_max ) = $worksheet->row_range();
-    my ( $col_min, $col_max ) = $worksheet->col_range();
-
-    #my @fixed_columns = qw | observationunit_name |;
-    #my $num_fixed_col = scalar(@fixed_columns);
     my %metadata_hash;
+    my $row_number = 0;
     my $observation_column_index;
 
-    for my $row ( 0 .. 9 ) { #get metadata
-        my $key = $worksheet->get_cell($row,0)->value();
-        my $value = $worksheet->get_cell($row,1)->value();
-        $metadata_hash{$key} = $value;
-    }
-    for my $col (0 .. $col_max) {
-        my $field = $worksheet->get_cell(10,$col)->value();
-        if ($field eq 'User_input_id') {
-            $observation_column_index = $col;
-            last;
-        }
-    }
+    while (my $row = $csv->getline ($fh)) {
+        if ( $row_number < 10 ) {
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            } else {
+                $parse_result{'error'} = "Could not parse row $row.";
+                print STDERR "Could not parse row $row.\n";
+                return \%parse_result;
+            }
 
-    for my $row ( 12 .. $row_max ) {# get data
-        #if ($worksheet->get_cell($row,0)) {
-            my $observationunit_name = $worksheet->get_cell($row,$observation_column_index)->value();
+            my $key = $columns[0];
+            my $value = $columns[1];
+            $metadata_hash{$key} = $value;
+        }
+        elsif ( $row_number = 10 ) {
+            if ($csv->parse($row)) {
+                @header_columns = $csv->fields();
+            } else {
+                $parse_result{'error'} = "Could not parse row $row.";
+                print STDERR "Could not parse row $row.\n";
+                return \%parse_result;
+            }
+            for my $i ( 0 .. scalar(@header_columns) ) {
+                if ($header_columns[$i] eq 'User_input_id') {
+                    $observation_column_index = $i;
+                    last;
+                }
+            }
+        }
+        elsif ( $row_number >= 12 )   {# get data
+          my @columns;
+          if ($csv->parse($row)) {
+              @columns = $csv->fields();
+          } else {
+              $parse_result{'error'} = "Could not parse row $row.";
+              print STDERR "Could not parse row $row.\n";
+              return \%parse_result;
+          }
+          my $num_cols = scalar(@columns);
+
+          my $observationunit_name = $columns[$observation_column_index]
             if (defined($observationunit_name)){
                 if ($observationunit_name ne ''){
                     $observationunits_seen{$observationunit_name} = 1;
 
-                    #store metadata at protocol level instead
-                    #$data{$observationunit_name}->{'nirs'} = %metadata_hash;
+                          #store metadata at protocol level instead
+                          #$data{$observationunit_name}->{'nirs'} = %metadata_hash;
 
-                    for my $col (0 .. $col_max) {
-                        my $column_name;
-                        my $seen_spectra;
-                        if ($worksheet->get_cell(10,$col)) {
-                            $column_name = $worksheet->get_cell(10,$col)->value();
-                            if (defined($column_name)) {
-                                print STDERR "Column name is $column_name\n";
-                                if ($column_name ne '' && $column_name !~ /spectrum/){ #check if not spectra, if not spectra add to {'nirs'} not nested. if have already seen spectra, last
-                                    if ($seen_spectra) {
-                                        last;
-                                    }
+                          for my $col (0 .. $num_cols-1) {
+                              my $seen_spectra;
+                              my $column_name = $header_columns[$col];
+                              if (defined($column_name)) {
+                                  print STDERR "Column name is $column_name\n";
+                                  if ($column_name ne '' && $column_name !~ /spectrum/){ #check if not spectra, if not spectra add to {'nirs'} not nested. if have already seen spectra, last
+                                      if ($seen_spectra) {
+                                          last;
+                                      }
 
-                                    my $metadata_value = '';
-                                    if ($worksheet->get_cell($row, $col)){
-                                        $metadata_value = $worksheet->get_cell($row, $col)->value();
-                                    }
-                                    $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
-                                }
-                                elsif ($column_name ne '' && $column_name =~ /spectrum/){
-                                    #if spectra, strip tex, do sum, and add to {'nirs'} nested, and set flag that have seen spectra
-                                    print STDERR "Processing $column_name\n";
-                                    my @parts = split /[_+]+/, $column_name;
-                                    my $wavelength = $parts[2] + $parts[1];
-                                    my $nir_value = '';
+                                      my $metadata_value = '';
+                                      if ($columns[$col]){
+                                          $metadata_value = $columns[$col];
+                                      }
+                                      $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
+                                  }
+                                  elsif ($column_name ne '' && $column_name =~ /spectrum/){
+                                      #if spectra, strip tex, do sum, and add to {'nirs'} nested, and set flag that have seen spectra
+                                      print STDERR "Processing $column_name\n";
+                                      my @parts = split /[_+]+/, $column_name;
+                                      my $wavelength = $parts[2] + $parts[1];
+                                      my $nir_value = '';
 
-                                    if ($worksheet->get_cell($row, $col)){
-                                        $nir_value = $worksheet->get_cell($row, $col)->value();
-                                    }
+                                      if ($columns[$col]){
+                                          $nir_value = $columns[$col]
+                                      }
 
-                                    if ( defined($nir_value) && $nir_value ne '.') {
-                                        $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
-                                    }
+                                      if ( defined($nir_value) && $nir_value ne '.') {
+                                          $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
+                                      }
 
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+
+        $row_number++;
+    }
 
     foreach my $obs (sort keys %observationunits_seen) {
         push @observation_units, $obs;
