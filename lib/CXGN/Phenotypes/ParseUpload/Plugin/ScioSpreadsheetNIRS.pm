@@ -8,7 +8,13 @@ package CXGN::Phenotypes::ParseUpload::Plugin::ScioSpreadsheetNIRS;
 #   data => {
 #       plotname1 => {
 #           varname1 => [12, '2015-06-16T00:53:26Z']
-#           varname2 => [120, '']
+#           nirs => {
+#              sampling_time => '2/11/19',
+#              spectra => {
+#                 "740" => "0.939101707",
+#                 "741" => "0.93868202",
+#              },
+#          }
 #       }
 #   },
 #   units => [plotname1],
@@ -94,62 +100,42 @@ sub parse {
 
     my %metadata_hash;
     my $row_number = 0;
+    my @header;
     my $observation_column_index;
+    my $seen_spectra = 0;
 
     while (my $row = $csv->getline ($fh)) {
+        #print STDERR "Row is ".Dumper($row)."\n";
         if ( $row_number < 10 ) {
-            my @columns;
-            if ($csv->parse($row)) {
-                @columns = $csv->fields();
-            } else {
-                $parse_result{'error'} = "Could not parse row $row.";
-                print STDERR "Could not parse row $row.\n";
-                return \%parse_result;
-            }
-
+            my @columns = @{$row};
             my $key = $columns[0];
             my $value = $columns[1];
             $metadata_hash{$key} = $value;
         }
-        elsif ( $row_number = 10 ) {
-            if ($csv->parse($row)) {
-                @header_columns = $csv->fields();
-            } else {
-                $parse_result{'error'} = "Could not parse row $row.";
-                print STDERR "Could not parse row $row.\n";
-                return \%parse_result;
-            }
-            for my $i ( 0 .. scalar(@header_columns) ) {
-                if ($header_columns[$i] eq 'User_input_id') {
+        elsif ( $row_number == 10 ) {
+            @header = @{$row};
+            for my $i ( 0 .. scalar(@header)-1 ) {
+                if ($header[$i] eq 'User_input_id') {
                     $observation_column_index = $i;
                     last;
                 }
             }
         }
         elsif ( $row_number >= 12 )   {# get data
-          my @columns;
-          if ($csv->parse($row)) {
-              @columns = $csv->fields();
-          } else {
-              $parse_result{'error'} = "Could not parse row $row.";
-              print STDERR "Could not parse row $row.\n";
-              return \%parse_result;
-          }
+          my @columns = @{$row};
           my $num_cols = scalar(@columns);
 
-          my $observationunit_name = $columns[$observation_column_index]
+          my $observationunit_name = $columns[$observation_column_index];
             if (defined($observationunit_name)){
                 if ($observationunit_name ne ''){
-                    $observationunits_seen{$observationunit_name} = 1;
+                    $observation_units_seen{$observationunit_name} = 1;
 
                           #store metadata at protocol level instead
                           #$data{$observationunit_name}->{'nirs'} = %metadata_hash;
 
                           for my $col (0 .. $num_cols-1) {
-                              my $seen_spectra;
-                              my $column_name = $header_columns[$col];
+                              my $column_name = $header[$col];
                               if (defined($column_name)) {
-                                  print STDERR "Column name is $column_name\n";
                                   if ($column_name ne '' && $column_name !~ /spectrum/){ #check if not spectra, if not spectra add to {'nirs'} not nested. if have already seen spectra, last
                                       if ($seen_spectra) {
                                           last;
@@ -163,7 +149,7 @@ sub parse {
                                   }
                                   elsif ($column_name ne '' && $column_name =~ /spectrum/){
                                       #if spectra, strip tex, do sum, and add to {'nirs'} nested, and set flag that have seen spectra
-                                      print STDERR "Processing $column_name\n";
+                                      $seen_spectra = 1;
                                       my @parts = split /[_+]+/, $column_name;
                                       my $wavelength = $parts[2] + $parts[1];
                                       my $nir_value = '';
@@ -186,7 +172,7 @@ sub parse {
         $row_number++;
     }
 
-    foreach my $obs (sort keys %observationunits_seen) {
+    foreach my $obs (sort keys %observation_units_seen) {
         push @observation_units, $obs;
     }
     foreach my $trait (sort keys %traits_seen) {
