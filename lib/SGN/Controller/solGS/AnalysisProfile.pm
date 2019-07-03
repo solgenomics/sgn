@@ -690,6 +690,12 @@ sub structure_selection_prediction_output {
 		$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
+	    elsif ($training_pop_id =~ /dataset/)
+	    {
+		
+		$c->controller('solGS::Dataset')->dataset_population_summary($c);
+		$training_pop_name   = $c->stash->{project_name};   
+	    }
 	    else
 	    {
 		$c->controller('solGS::solGS')->get_project_details($c, $training_pop_id);
@@ -701,10 +707,17 @@ sub structure_selection_prediction_output {
 	}
 	
 	if ($prediction_pop_id =~ /list/)
-	{ 
-	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);
-	    
+	{
+	    $c->stash->{list_id} = $prediction_pop_id =~ s/\w+_//r;
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);	    
 	    $c->controller('solGS::List')->list_population_summary($c, $prediction_pop_id);
+	    $prediction_pop_name = $c->stash->{prediction_pop_name}; 
+	}
+	elsif ($prediction_pop_id =~ /dataset/)
+	{
+	    $c->stash->{dataset_id} = $prediction_pop_id =~ s/\w+_//r;
+	    $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c, $prediction_pop_id);	    
+	    $c->controller('solGS::Dataset')->dataset_population_summary($c, $prediction_pop_id);
 	    $prediction_pop_name = $c->stash->{prediction_pop_name}; 
 	}
 	else 
@@ -798,27 +811,19 @@ sub create_training_data {
     my ($self, $c) = @_;
 
     my $analysis_page = $c->stash->{analysis_page};
+    
     if ($analysis_page =~ /solgs\/population\//)
     {
 	my $pop_id = $c->stash->{model_id};	 
     
 	if ($pop_id =~ /list/)		
 	{
-	    my $list_id = $pop_id;
-	    $list_id =~ s/list_//;
-	    $c->stash->{list_id} = $list_id;
- 
-	    $c->controller('solGS::List')->submit_cluster_list_type_training_pop_data_query($c);
+	    $c->controller('solGS::List')->submit_list_training_data_query($c);
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	}
 	elsif ($pop_id =~ /dataset/)                
 	{
-	     my $dataset_id = $pop_id;
-	     $dataset_id =~ s/dataset_//;
-	     $c->stash->{dataset_id} = $dataset_id;
-	     
-	     $c->controller('solGS::Dataset')->dataset_plots_list_phenotype_file($c);
-             $c->controller('solGS::Dataset')->dataset_genotypes_list_genotype_file($c);
+	     $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c); 
 	     $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
 	}
 	else
@@ -866,23 +871,29 @@ sub predict_selection_traits {
     $c->stash->{prerequisite_type} = 'selection_pop_download_data';
     my $training_pop_id   = $c->stash->{training_pop_id};    
     my $selection_pop_id  = $c->stash->{selection_pop_id};
-    my $referer = $c->req->referer;
-    
+   
+  
     if ($selection_pop_id =~ /list/)
     {
-	my $list_id = $selection_pop_id;
-	$list_id =~ s/list_//;
-	$c->stash->{list_id} = $list_id;
+	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
 	$c->controller('solGS::List')->get_genotypes_list_details($c);		      
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
+    } 
+    elsif ($selection_pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
+	$c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c, $selection_pop_id);	
     }
-        
+    
+    my $referer = $c->req->referer;
+    
     if ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/population\//)
     {	
 	$c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
     }
     elsif ($referer =~ /\/combined\//) 
-    {    			
+    {    
+	$c->stash->{data_set_type} = 'combined populations';
 	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);	
     }	    
     
