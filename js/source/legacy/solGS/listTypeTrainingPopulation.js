@@ -41,18 +41,23 @@ jQuery(document).ready( function() {
         
     jQuery("#list_type_training_pops_list_select")
 	.change(function() { 
-            var selectType = jQuery(this)
+            var selectedType = jQuery(this)
 		.find("option:selected")
 		.attr('name');
 
 	    var selectedId = jQuery(this)
-		    .find("option:selected")
-		    .val();	
-          
+		.find("option:selected")
+		.val();
+	    
+	    var selectedName = jQuery(this)
+		.find("option:selected")
+		.text();
+	    
             if (selectedId) {  	
 		jQuery("#list_type_training_pop_load").click(function() {
-		    if (typeof selectType === 'undefined'
-			|| !selectType.match(/dataset/i)) {
+		    
+		    if (typeof selectedType === 'undefined'
+			|| !selectedType.match(/dataset/i)) {
 			var listDetail = getListTypeTrainingPopDetail(selectedId);
 
 			if (listDetail.type.match(/plots/)) {
@@ -64,9 +69,7 @@ jQuery(document).ready( function() {
 			    loadTrialListTypeTrainingPop(trialsNames);		    
 			}
 		    } else {
-
-			console.log('creating training pop dataset type: ' + selectedId)
-			solGS.dataset.datasetTrainingPop(selectedId);
+			solGS.dataset.datasetTrainingPop(selectedId, selectedName);
 		    }
 		});
             }	   
@@ -105,9 +108,6 @@ function getListTypeTrainingPopDetail(listId) {
     var listData;
     var listType;
     var listName;
-    //var listElements;
-   // var listElementsNames;
-   // var listElementsIds;
 
     if (listId) {
         listData      = list.getListData(listId);
@@ -213,7 +213,7 @@ function loadPlotListTypeTrainingPop(listId) {
 		    jQuery.unblockUI();                        
                       
                 } else {                                    
-                    alert("fail: Error occured while querying for the training data.");
+                    alert("Error occured while querying for the training data.");
                     jQuery.unblockUI();   
                 }                     
             },
