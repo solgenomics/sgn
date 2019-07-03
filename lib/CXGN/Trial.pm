@@ -2179,7 +2179,7 @@ sub get_traits_assayed {
 
     $traits_assayed_q->execute($self->get_trial_id());
     while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-        push @traits_assayed, [$trait_id, $trait_name];
+        push @traits_assayed, [$trait_id, $trait_name, $count];
     }
     return \@traits_assayed;
 }

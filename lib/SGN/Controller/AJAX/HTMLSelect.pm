@@ -720,12 +720,10 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
 			my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
 			my $traits_assayed = $trial->get_traits_assayed($data_level);
 			foreach (@$traits_assayed) {
-				$unique_traits_ids{$_->[0]} = [$_->[0], $_->[1]];
+				$unique_traits_ids{$_->[0]} = [$_->[0], $_->[1]." (".$_->[2]." Phenotypes)"];
 			}
 		}
-		while ( my ($key, $value) = each %unique_traits_ids ){
-			push @traits, $value;
-		}
+        @traits = values %unique_traits_ids;
 	}
 
 	@traits = sort { $a->[1] cmp $b->[1] } @traits;
