@@ -3,17 +3,9 @@ package SGN::Controller::solGS::Dataset;
 use Moose;
 use namespace::autoclean;
 
-#use File::Basename;
-#use File::Spec::Functions qw / catfile catdir/;
-#use File::Path qw / mkpath  /;
-#use File::Temp qw / tempfile tempdir /;
-
-#use JSON;
-
-#use CXGN::List;
-
 use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
+use JSON;
 use POSIX qw(strftime);
 
 #BEGIN { extends 'Catalyst::Controller' }
@@ -37,18 +29,42 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     my $dataset_id = $c->req->param('dataset_id');
     
     croak "Dataset id missing." if !$dataset_id;
+    
     $c->stash->{dataset_id} = $dataset_id;
     $self->get_dataset_trials_details($c);
     my $trials_ids = $c->stash->{dataset_trials_ids};
     my $combo_pops_id = $c->stash->{dataset_combo_trials_id};
     
-    if ($trials_ids) 
+    if ($trials_ids->[0]) 
     {
 	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
 	$c->stash->{rest}{'trials_ids'} = $trials_ids;
 	$c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
     }
        
+}
+
+sub check_predicted_dataset_selection :Path('/solgs/check/predicted/dataset/selection') Args(0) {
+    my ($self, $c) = @_;
+    
+    my $args = $c->req->param('arguments');
+
+    my $json = JSON->new();
+    $args = $json->decode($args);
+    
+    my $training_pop_id  = $args->{training_pop_id};
+    my $selection_pop_id = $args->{selection_pop_id};
+    $c->stash->{training_traits_ids} = $args->{training_traits_ids};
+    
+    $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
+   
+    my $ret->{output} = $c->stash->{download_prediction};
+
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
 }
 
 
@@ -74,10 +90,9 @@ sub get_dataset_trials_details {
 sub get_dataset_genotypes_genotype_data {
     my ($self, $c) = @_;
     
-    my $dataset_id = $c->stash->{dataset_id};
-  
+   # my $dataset_id = $c->stash->{dataset_id};  
     $self->get_dataset_genotypes_list($c);
-    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $dataset_id);
+    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
     
 }
 
@@ -96,6 +111,39 @@ sub get_dataset_genotypes_list {
     
 }
 
+sub submit_dataset_training_data_query {
+    my ($self, $c) = @_;
+    
+    my $dataset_id = $c->stash->{dataset_id};
+   print STDERR "\n\nsubmit_dataset_training_data_query: dataset id - $dataset_id\n\n";
+   
+    my $model = $self->get_model();
+    my $data = $model->get_dataset_data($dataset_id);
+       
+    my $query_jobs_file;
+
+    if (@{$data->{categories}->{plots}})	
+    {
+
+	###### write dataset training data query job function instead...
+	$c->stash->{plots_names} = $data->{categories}->{plots};
+	$self->get_dataset_genotypes_list($c);
+   
+	$c->controller('solGS::List')->get_list_training_data_query_jobs_file($c);
+	$query_jobs_file = $c->stash->{list_training_data_query_jobs_file};
+    }
+    elsif (@{$data->{categories}->{trials}})	
+    {	
+	my $trials = $data->{categories}->{trials};
+	$c->controller('solGS::solGS')->get_training_data_query_job_args_file($c, $trials);
+	$query_jobs_file  = $c->stash->{training_data_query_job_args_file};
+    }
+    
+    $c->stash->{dependent_jobs} = $query_jobs_file;
+    $c->controller('solGS::solGS')->run_async($c);
+}
+
+
 
 sub get_dataset_phenotype_data {
     my ($self, $c) = @_;
@@ -105,12 +153,12 @@ sub get_dataset_phenotype_data {
     $self->get_dataset_plots_list($c);
 
     my $model = $self->get_model();
-
     my $data = $model->get_dataset_data($dataset_id);
 
     if (@{$data->{categories}->{plots}})	
     {
 	$c->stash->{plots_names} = $data->{categories}->{plots};
+      
 	$c->controller('solGS::List')->plots_list_phenotype_file($c);
 	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};	
     } 
@@ -182,7 +230,7 @@ sub dataset_population_summary {
 	    ($dataset_name)       = grep {/dataset_name/} @metadata;      
 	    ($key, $dataset_name) = split(/\t/, $dataset_name); 
 	   
-	    $c->stash(project_id          => $dataset_id,
+	    $c->stash(project_id          => $file_id,
 		      project_name        => $dataset_name,
 		      prediction_pop_name => $dataset_name,
 		      project_desc        => $desc,
@@ -287,30 +335,30 @@ sub dataset_plots_list_phenotype_file {
 }
 
 
-sub dataset_genotypes_list_genotype_file {
-    my ($self, $c) = @_;
+# sub dataset_genotypes_list_genotype_file {
+#     my ($self, $c) = @_;
 
-    my $dataset_id = $c->stash->{dataset_id};
+#     my $dataset_id = $c->stash->{dataset_id};
 
-    my $file_id = $self->dataset_file_id($c);
-    my $data_dir  = $c->stash->{solgs_datasets_dir};
+#     my $file_id = $self->dataset_file_id($c);
+#     my $data_dir  = $c->stash->{solgs_datasets_dir};
     
-    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
-    my $geno_file = $c->stash->{genotype_file_name};
+#     $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+#     my $geno_file = $c->stash->{genotype_file_name};
     
-    my $args = {
-	'dataset_id'    => $dataset_id,
-	'data_dir'      => $data_dir,
-	'genotype_file' => $geno_file,
-	'r_temp_file'   => 'dataset-genotype-data-query',
-	'population_type' => 'dataset'
-    };
+#     my $args = {
+# 	'dataset_id'    => $dataset_id,
+# 	'data_dir'      => $data_dir,
+# 	'genotype_file' => $geno_file,
+# 	'r_temp_file'   => 'dataset-genotype-data-query',
+# 	'population_type' => 'dataset'
+#     };
     
-    $c->controller('solGS::List')->submit_list_genotype_data_query($c, $args);
+#     $c->controller('solGS::List')->submit_list_genotype_data_query($c, $args);
     
-    $c->stash->{genotype_file} = $geno_file;
+#     $c->stash->{genotype_file} = $geno_file;
     
-}
+# }
 
 
 sub dataset_file_id {
