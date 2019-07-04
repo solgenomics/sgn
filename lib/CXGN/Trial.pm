@@ -57,6 +57,10 @@ sub new {
     # check type of trial and return the correct object
     my $trial_rs = $schema->resultset("Project::Projectprop")->search( { project_id => $trial_id },{ join => 'type' });
 
+    if ($trial_id && $trial_rs->count() == 0) {
+	die "The provided trial_id $trial_id does not exist.";
+    }
+    
     my $object;
 
     while (my $trial_row = $trial_rs->next()) { 

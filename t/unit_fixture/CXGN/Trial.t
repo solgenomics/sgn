@@ -822,7 +822,8 @@ eval {
      $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
 };
 
-ok($@, "deleted trial id");
+if ($@) { print "An error occurred: $@\n"; }
+ok($@, "deleted trial id (".$@.")");
 
 
 done_testing();
