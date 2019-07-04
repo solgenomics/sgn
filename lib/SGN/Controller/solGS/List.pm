@@ -73,7 +73,7 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
     
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
-   
+ 
     my $ret->{output} = $c->stash->{download_prediction};
 
     $ret = to_json($ret);
@@ -251,8 +251,17 @@ sub get_genotypes_list_details {
 sub create_list_pop_data_files {
     my ($self, $c) = @_;
 
-    my $file_id = $self->list_file_id($c);
-
+    my $file_id;
+   
+    if ($c->stash->{list_id})
+    {
+	$file_id = $self->list_file_id($c);
+    }
+    elsif ($c->stash->{dataset_id})
+    {
+	$file_id = $c->controller('solGS::Dataset')->dataset_file_id($c);
+    }
+	   
     $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
@@ -479,7 +488,7 @@ sub get_list_elements_names {
 sub get_plots_list_elements_ids {
     my ($self, $c, $list_id) = @_;
 
-    my $list_id = $c->stash->{list_id} if !$list_id;
+    $list_id = $c->stash->{list_id} if !$list_id;
     
     my $plots;
     if ($c->stash->{plots_names}) 
@@ -609,32 +618,34 @@ sub genotypes_list_genotype_query_job {
     my $selection_pop_id = $c->stash->{selection_pop_id};
    
     my $pop_id = $c->stash->{pop_id} || $c->stash->{model_id} || $c->stash->{training_pop_id};
-
+    my $data_dir;
+    my $pop_type;
+    
     if ($list_id)
     {       
 	$self->get_genotypes_list_details($c);
+	$data_dir =  $c->stash->{solgs_lists_dir};
+	$pop_id = 'list_' . $list_id;
+	$pop_type = 'list';
     }
     elsif ($dataset_id)
     {
 	$pop_id = 'dataset_' . $dataset_id;
+	$data_dir =  $c->stash->{solgs_datasets_dir};
+	$pop_type = 'dataset';
     }
       
     my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
    
-    my $data_dir  = $c->stash->{solgs_lists_dir};
-
     my $files = $self->create_list_pop_data_files($c, $data_dir, $pop_id);
     my $geno_file = $files->{geno_file};
     
-    my $args = {
-	'list_pop_id'    => $pop_id,
-	'genotypes_list' => $genotypes_list,	 
+    my $args = {	 
 	'genotypes_ids'  => $genotypes_ids,
-	'list_data_dir'  => $data_dir,
+	'data_dir'  => $data_dir,
 	'genotype_file'  => $geno_file,
-	'r_temp_file'    => 'genotypes-list-genotype-data-query',
-	'population_type' => 'genotypes_list'
+	'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
@@ -664,7 +675,7 @@ sub genotypes_list_genotype_query_job {
 	
     my $cmd = 'mx-run solGS::Cluster ' 
 	. ' --data_type genotype '
-	. ' --population_type ' . $args->{population_type}
+	. ' --population_type ' . $pop_type
 	. ' --args_file ' . $args_file;
     
 
@@ -722,7 +733,6 @@ sub plots_list_phenotype_query_job {
    
     my $args = {
 	'list_id'        => $list_id,
-	#'plots_names'    => $plots_names,
 	'plots_ids'      => $plots_ids,
 	'traits_file'    => $traits_file,
 	'list_data_dir'  => $data_dir,
@@ -770,7 +780,7 @@ sub plots_list_phenotype_file {
     
 }
 
-sub list_type_training_pop_data_query_jobs {
+sub get_list_training_data_query_jobs {
     my ($self, $c) = @_;
 
     $self->plots_list_phenotype_query_job($c);
@@ -779,41 +789,59 @@ sub list_type_training_pop_data_query_jobs {
     my $pheno_job = $c->stash->{plots_list_phenotype_query_job};
     my $geno_job  = $c->stash->{genotypes_list_genotype_query_job};    
 
-    $c->stash->{list_type_training_pop_data_query_jobs} = [$pheno_job, $geno_job];
+    $c->stash->{list_training_data_query_jobs} = [$pheno_job, $geno_job];
 }
 
 
-sub get_list_type_training_pop_data_query_jobs_file {
+sub get_list_training_data_query_jobs_file {
     my ($self, $c) = @_;
 
-    $self->list_type_training_pop_data_query_jobs($c);
-    my $query_jobs = $c->stash->{list_type_training_pop_data_query_jobs};
+    $self->get_list_training_data_query_jobs($c);
+    my $query_jobs = $c->stash->{list_training_data_query_jobs};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $queries_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'list_type_training_pop_data_query_args');	   
+    my $queries_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'list_training_data_query_args');	   
     
     nstore $query_jobs, $queries_args_file 
 	or croak "list type training pop data query job : $! serializing selection pop data query details to $queries_args_file";
 
-    $c->stash->{list_type_training_pop_data_query_jobs_file} = $queries_args_file;
+    $c->stash->{list_training_data_query_jobs_file} = $queries_args_file;
 }
 
 
-sub submit_cluster_list_type_training_pop_data_query {
+sub submit_list_training_data_query {
     my ($self, $c) = @_;
 
-    $self->get_list_type_training_pop_data_query_jobs_file($c);
-    $c->stash->{dependent_jobs} = $c->stash->{list_type_training_pop_data_query_jobs_file};
+    my $list_id = $c->stash->{list_id};
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_type = $list->type;
+
+    my $query_jobs_file;
+
+    if ($list_type =~ /plots/) 
+    {
+	$self->get_list_training_data_query_jobs_file($c);
+	$query_jobs_file = $c->stash->{list_training_data_query_jobs_file};
+    }
+    elsif ($list_type =~ /trials/)	
+    {
+	$self->get_trials_list_ids($c);
+	my $trials = $c->stash->{trials_ids};
+	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials);
+	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
+    }
+    
+    $c->stash->{dependent_jobs} = $query_jobs_file;
     $c->controller('solGS::solGS')->run_async($c);
 }
 
 
 sub list_population_summary {
-    my ($self, $c, $file_id) = @_;
+    my ($self, $c) = @_;
 
-    $file_id =  $self->list_file_id($c) if !$file_id;	
-    my $tmp_dir = $c->stash->{solgs_lists_dir};
     my $list_id = $c->stash->{list_id};
+    my $file_id =  $self->list_file_id($c);	
+    my $tmp_dir = $c->stash->{solgs_lists_dir};
    
     if (!$c->user)
     {
@@ -832,7 +860,8 @@ sub list_population_summary {
 	    my $metadata_file = $c->stash->{population_metadata_file}; 
        
 	    my @metadata = read_file($metadata_file);
-       
+
+	    
 	    my ($key, $list_name, $desc);
      
 	    ($desc)        = grep {/description/} @metadata;       
@@ -840,8 +869,8 @@ sub list_population_summary {
       
 	    ($list_name)       = grep {/list_name/} @metadata;      
 	    ($key, $list_name) = split(/\t/, $list_name); 
-	   
-	    $c->stash(project_id          => $list_id,
+
+	    $c->stash(project_id          => $file_id,
 		      project_name        => $list_name,
 		      prediction_pop_name => $list_name,
 		      project_desc        => $desc,
@@ -857,30 +886,28 @@ sub get_trials_list_ids {
     my ($self, $c) = @_;
 
     my $list_id = $c->stash->{list_id};
-    my $list_type = $c->stash->{list_type};
   
-    if ($list_type =~ /trials/)
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my @trials_names = @{$list->elements};
+
+    my $list_type = $list->type();	
+    my @trials_ids;
+    
+    if ( $list_type =~ /trials/)
     {
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	my @trials_names = @{$list->elements};
-
-	my $list_type = $list->type();
-	
-	my @trials_ids;
-
 	foreach my $t_name (@trials_names) 
 	{
 	    my $trial_id = $c->model("solGS::solGS")
 		->project_details_by_name($t_name)
 		->first
 		->project_id;
-		
+	    
 	    push @trials_ids, $trial_id;
 	}
+    }
 
-	$c->stash->{trials_ids} = \@trials_ids;
-	$c->stash->{pops_ids_list} = \@trials_ids;
-    }   
+    $c->stash->{trials_ids} = \@trials_ids;
+    $c->stash->{pops_ids_list} = \@trials_ids;  
     
 }
 
