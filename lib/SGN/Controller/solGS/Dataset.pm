@@ -89,8 +89,7 @@ sub get_dataset_trials_details {
 
 sub get_dataset_genotypes_genotype_data {
     my ($self, $c) = @_;
-    
-   # my $dataset_id = $c->stash->{dataset_id};  
+     
     $self->get_dataset_genotypes_list($c);
     $c->controller('solGS::List')->genotypes_list_genotype_file($c);
     
@@ -115,7 +114,6 @@ sub submit_dataset_training_data_query {
     my ($self, $c) = @_;
     
     my $dataset_id = $c->stash->{dataset_id};
-   print STDERR "\n\nsubmit_dataset_training_data_query: dataset id - $dataset_id\n\n";
    
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
@@ -124,7 +122,6 @@ sub submit_dataset_training_data_query {
 
     if (@{$data->{categories}->{plots}})	
     {
-
 	###### write dataset training data query job function instead...
 	$c->stash->{plots_names} = $data->{categories}->{plots};
 	$self->get_dataset_genotypes_list($c);
@@ -333,32 +330,6 @@ sub dataset_plots_list_phenotype_file {
     $c->stash->{phenotype_file} = $c->stash->{dataset_plots_list_phenotype_file};
 
 }
-
-
-# sub dataset_genotypes_list_genotype_file {
-#     my ($self, $c) = @_;
-
-#     my $dataset_id = $c->stash->{dataset_id};
-
-#     my $file_id = $self->dataset_file_id($c);
-#     my $data_dir  = $c->stash->{solgs_datasets_dir};
-    
-#     $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
-#     my $geno_file = $c->stash->{genotype_file_name};
-    
-#     my $args = {
-# 	'dataset_id'    => $dataset_id,
-# 	'data_dir'      => $data_dir,
-# 	'genotype_file' => $geno_file,
-# 	'r_temp_file'   => 'dataset-genotype-data-query',
-# 	'population_type' => 'dataset'
-#     };
-    
-#     $c->controller('solGS::List')->submit_list_genotype_data_query($c, $args);
-    
-#     $c->stash->{genotype_file} = $geno_file;
-    
-# }
 
 
 sub dataset_file_id {
