@@ -31,7 +31,7 @@ sub create_trial {
         $plot_info{'plot_name'} = $plot_numbers[$i];
         $greenhouse_design{$plot_numbers[$i]} = \%plot_info;
     }
-    %greenhouse_design = %{_build_plot_names($self,\%greenhouse_design)};
+    %greenhouse_design = %{$self->_build_plot_names(\%greenhouse_design)};
 
     foreach my $plot_num (keys %greenhouse_design) {
         my @plant_names;

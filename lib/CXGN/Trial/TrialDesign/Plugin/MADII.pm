@@ -195,7 +195,7 @@ sub create_design {
     
     #Row.Blk Col.Blk
     my $max = max( @block_numbers );
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max)};
+    @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max)};
     
     my %seedlot_hash;
     if($self->get_seedlot_hash){
@@ -222,7 +222,7 @@ sub create_design {
 	$madii_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     
-    %madii_design = %{_build_plot_names($self,\%madii_design)};
+    %madii_design = %{$self->_build_plot_names(\%madii_design)};
     
     #  return \%augmented_design;
     

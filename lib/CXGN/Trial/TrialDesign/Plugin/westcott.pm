@@ -92,7 +92,7 @@ sub create_design {
     my @col_numbers = $result_matrix->get_column("col");
     @block_numbers = $result_matrix->get_column("row");
     my $max_block = max( @block_numbers );
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max_block)}; 
+    @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max_block)}; 
     
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
       my %plot_info;
@@ -107,7 +107,7 @@ sub create_design {
 
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
-    %westcott_design = %{_build_plot_names($self,\%westcott_design)};
+    %westcott_design = %{$self->_build_plot_names(\%westcott_design)};
     return \%westcott_design;   
 }
 

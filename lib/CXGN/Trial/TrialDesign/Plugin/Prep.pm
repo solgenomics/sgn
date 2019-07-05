@@ -130,7 +130,7 @@ sub create_design {
      my @row_numbers = $result_matrix->get_column("row_number");
      my @col_numbers = $result_matrix->get_column("col_number");
      @block_numbers = $result_matrix->get_column("block");
-     @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $number_of_reps)};
+     @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $number_of_reps)};
      
      my $counting = 0;
      my %seedlot_hash;
@@ -158,7 +158,7 @@ sub create_design {
 
        $prep_design{$converted_plot_numbers[$i]} = \%plot_info;
      }
-     %prep_design = %{_build_plot_names($self,\%prep_design)};
+     %prep_design = %{$self->_build_plot_names(\%prep_design)};
     return \%prep_design;
 }
 
