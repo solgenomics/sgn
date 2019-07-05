@@ -459,15 +459,11 @@ sub population : Path('/solgs/population') Args(1) {
 
     if ($pop_id =~ /dataset/) 
     {
-	my $dataset_id = $pop_id;
-	$dataset_id =~ s/\w+_//g;
-	$c->stash->{dataset_id} = $dataset_id;
+	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
     }
     elsif ($pop_id =~ /list/) 
     {
-	my $list_id = $pop_id;
-	$list_id =~ s/\w+_//g;
-	$c->stash->{list_id} = $list_id;
+	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
     }
     
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
@@ -494,7 +490,6 @@ sub population : Path('/solgs/population') Args(1) {
         my $acronym = $self->get_acronym_pairs($c);
         $c->stash->{acronym} = $acronym;
     }
-
     
 } 
 
@@ -717,10 +712,20 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
-    
+
     if ($training_pop_id =~ /list/) 
     {
+	$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
 	$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
+	$c->stash->{training_pop_id} = $c->stash->{project_id};
+	$c->stash->{training_pop_name} = $c->stash->{project_name};
+	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
+	$c->stash->{training_pop_owner} = $c->stash->{owner}; 
+    }
+    elsif ($training_pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
 	$c->stash->{training_pop_id} = $c->stash->{project_id};
 	$c->stash->{training_pop_name} = $c->stash->{project_name};
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
@@ -739,7 +744,18 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
 
     if ($selection_pop_id =~ /list/) 
     {
+	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
+	
 	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
+	$c->stash->{selection_pop_id} = $c->stash->{project_id};
+	$c->stash->{selection_pop_name} = $c->stash->{project_name};
+	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+	$c->stash->{selection_pop_owner} = $c->stash->{owner}; 
+    }
+    elsif ($selection_pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -765,10 +781,11 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     my $protocol = $self->create_protocol_url($c);
     $c->stash->{protocol} = $protocol;
 
-    my $identifier    = $training_pop_id . '_' . $selection_pop_id; 
+    my $identifier    = $training_pop_id . '_' . $selection_pop_id;
+   
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-    
+   
     my @stock_rows = read_file($gebvs_file);
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
 
@@ -794,78 +811,54 @@ sub build_single_trait_model {
 
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
-   
-    my $ajaxredirect = $c->req->param('source');
-    $c->stash->{ajax_request} = $ajaxredirect;
-   
+        
+    if ($pop_id =~ /dataset/)
+    { 
+	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+    }
+    elsif ($pop_id =~ /list/)
+    {
+	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+    }
+
+    $c->stash->{pop_id}   = $pop_id;   
+    $c->stash->{trait_id} = $trait_id;
+    
     if ($pop_id && $trait_id)
     {    
-        $c->stash->{pop_id}   = $pop_id;       
-	$c->stash->{trait_id} = $trait_id;
-     
-	$self->build_single_trait_model($c);
+	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+	my $out_file = $c->stash->{rrblup_training_gebvs_file};
+
+	$self->project_description($c, $pop_id);
+	my $training_pop_name = $c->stash->{project_name};
+	my $training_pop_desc = $c->stash->{project_desc};
+	my $training_pop_page = qq | <a href="/solgs/population/$pop_id">$training_pop_name</a> |;
 	
-	$self->gs_modeling_files($c);
+	if (!-s $c->stash->{rrblup_training_gebvs_file})
+	{	 
+	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" . 
+	     " Please go to $training_pop_page and run the analysis.";
+	 
+	    $c->stash->{template} = "/generic_message.mas"; 
+	} 
+	else 
+	{	     
+	    $self->get_trait_details($c, $trait_id);	    
+	    $self->gs_modeling_files($c);
 
-        unless ($ajaxredirect eq 'heritability') 
-        {	    
-            my $script_error = $c->stash->{script_error};
-	             
-	    if ($script_error) 
-            {
-		my $trait_name   = $c->stash->{trait_name};
-                $c->stash->{message} = "$script_error can't create a prediction model for <b>$trait_name</b>. 
-                                        There is a problem with the trait dataset.";
+	    $c->controller('solGS::Files')->traits_acronym_file($c);
+	    my $acronym_file = $c->stash->{traits_acronym_file};
+		    
+	    if (!-e $acronym_file || !-s $acronym_file) 
+	    {
+		$self->get_all_traits($c);
+	    }
 
-                $c->stash->{template} = "/generic_message.mas";   
-            } 
-            else 
-	    {    
-		$c->controller('solGS::Files')->traits_acronym_file($c);
-		my $acronym_file = $c->stash->{traits_acronym_file};
-	
-		if (!-e $acronym_file || !-s $acronym_file) 
-		{
-		    $self->get_all_traits($c);
-		}
-
-		$self->project_description($c, $pop_id); 
-
-		$self->trait_phenotype_stat($c);  
- 
-		$self->get_project_owners($c, $pop_id);       
-		$c->stash->{owner} = $c->stash->{project_owners};
-                
-		$c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
-	    }	  
+	    $self->trait_phenotype_stat($c);  		   		    
+	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
     }
- 
-    if ($ajaxredirect) 
-    {
-        #my $trait_abbr = $c->stash->{trait_abbr};
-        #my $cache_dir  = $c->stash->{solgs_cache_dir};
-        #my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
-       # $gebv_file     = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
-
-	#my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
-        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-	my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
-
-        my $ret->{status} = 'failed';
-        
-        if (-s $gebv_file) 
-        {
-            $ret->{status} = 'success';
-        }
-        
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);
-        
-    }
-    
+   
 }
 
 
@@ -2569,7 +2562,6 @@ sub trait_phenotype_stat {
      
     $c->stash->{descriptive_stat} = \@desc_stat;
 }
-
 #sends an array of trait gebv data to an ajax request
 #with a population id and trait id parameters
 sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
@@ -2579,7 +2571,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     my $trait_id          = $c->req->param('trait_id');
     my $prediction_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id     = $c->req->param('combo_pops_id');
-    
+
     if ($combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
@@ -2599,9 +2591,8 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     if ($page =~ /solgs\/selection\//) 
     {   	
         my $identifier =  $pop_id . '_' . $prediction_pop_id;
-        $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-   
-        $gebv_file = $c->stash->{rrblup_selection_gebvs_file}; 
+        $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);   
+        $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
     }
     else
     { 
@@ -3301,7 +3292,7 @@ sub phenotype_file {
 	    'metadata_file'    => $metadata_file,
 	};
 	   
-	if (!$c->stash->{list_reference}) 
+	if ($pop_id !~ /list/) 
 	{
 	    #$self->submit_cluster_phenotype_query($c, $args);
 	    $self->get_cluster_phenotype_query_job_args($c, $args);
@@ -3716,8 +3707,7 @@ sub get_selection_pop_query_args {
     if ($selection_pop_id)
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id);
-	$selection_pop_geno_file = $c->stash->{genotype_file_name};
-	$pop_type = 'trial';	
+	$selection_pop_geno_file = $c->stash->{genotype_file_name};	
     }
    
     my $genotypes_ids;
@@ -3726,6 +3716,17 @@ sub get_selection_pop_query_args {
 	$c->controller('solGS::List')->get_genotypes_list_details($c);
 	$genotypes_ids = $c->stash->{genotypes_ids};
 	$pop_type = 'list';
+    }
+    elsif ($selection_pop_id =~ /dataset/)
+    {
+	#$c->controller('solGS::Dataset')->get_dataset_genotypes_list($c);
+	#$genotypes_ids = $c->stash->{genotypes_ids};
+	
+	$pop_type = 'dataset';
+    } 
+    else
+    {
+	$pop_type = 'trial';	
     }
 
     $c->stash->{population_type} = $pop_type;
@@ -3739,8 +3740,10 @@ sub get_selection_pop_query_args {
 	'selection_pop_id' => $selection_pop_id,
 	'genotype_file' => $selection_pop_geno_file,
 	'genotypes_ids'  => $genotypes_ids,
+	'dataset_id'    => $c->stash->{dataset_id},
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file,	
+	'err_file' => $err_temp_file,
+	'population_type' => $pop_type
     };
 
     $c->stash->{selection_pop_query_args} = $selection_pop_query_args;
@@ -3765,7 +3768,7 @@ sub get_cluster_query_job_args {
     my $genotype_file = $query_args->{genotype_file};
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
 
-    my $pop_type = $c->stash->{population_type};
+    my $pop_type = $query_args->{population_type};
     my $data_type = 'genotype';
     
     nstore $query_args, $args_file 
