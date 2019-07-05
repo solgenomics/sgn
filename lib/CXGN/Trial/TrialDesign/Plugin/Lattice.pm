@@ -2,6 +2,7 @@
 package CXGN::Trial::TrialDesign::Plugin::Lattice;
 
 use Moose::Role;
+use List::Util qw| max |;
 
 sub create_design {
     my $self = shift;

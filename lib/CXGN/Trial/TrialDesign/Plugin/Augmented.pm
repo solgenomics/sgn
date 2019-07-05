@@ -2,6 +2,8 @@
 package CXGN::Trial::TrialDesign::Plugin::Augmented;
 
 use Moose::Role;
+use POSIX; # for ceil function
+use List::Util qw| max |;
 
 sub create_design {
     my $self = shift;

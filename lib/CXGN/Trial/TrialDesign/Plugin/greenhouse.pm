@@ -3,7 +3,7 @@ package CXGN::Trial::TrialDesign::Plugin::greenhouse;
 
 use Moose::Role;
 
-sub create_trial { 
+sub create_design { 
 #sub _get_greenhouse_design {
     my $self = shift;
     my $order = 1;
