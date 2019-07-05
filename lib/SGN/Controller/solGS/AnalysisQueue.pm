@@ -1,4 +1,4 @@
-package SGN::Controller::solGS::AnalysisProfile;
+package SGN::Controller::solGS::AnalysisQueue;
 
 use Moose;
 use namespace::autoclean;
