@@ -276,7 +276,17 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
   
     if ($selection_pop_id =~ /list/) 
     {
+	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
 	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
+	$c->stash->{selection_pop_id} = $c->stash->{project_id};
+	$c->stash->{selection_pop_name} = $c->stash->{project_name};
+	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+	$c->stash->{selection_pop_owner} = $c->stash->{owner}; 
+    }
+     elsif ($selection_pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -808,9 +818,9 @@ sub combine_data_build_multiple_traits_models {
     $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
     $c->controller('solGS::solGS')->run_async($c);
-    
-    
+        
 }
+
 
 sub predict_selection_pop_combined_pops_model {
     my ($self, $c) = @_;
