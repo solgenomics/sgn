@@ -3385,7 +3385,8 @@ sub _perform_phenotype_calculation {
                 trait_list=>\@traits_seen,
                 values_hash=>\%zonal_stat_phenotype_data,
                 has_timestamps=>1,
-                overwrite_values=>1,
+                #overwrite_values=>1,
+                ignore_new_values=>1,
                 metadata_hash=>\%phenotype_metadata
             );
             my ($verified_warning, $verified_error) = $store_phenotypes->verify();

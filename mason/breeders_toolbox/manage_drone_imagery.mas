@@ -724,17 +724,21 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
         <h4 class="modal-title" id="droneImageryCalcPhenotypesZonalChannelDialog">Select the Channel to Calculate Zonal Statistics On</h4>
       </div>
       <div class="modal-body">
-        <div class="container-fluid">
-            <form class="form-horizontal">
-                <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
-                    <div class="col-sm-7">
-                        <div id="drone_imagery_calculate_phenotypes_zonal_stats_time_select_div">
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
+          <div class="container-fluid">
+
+              <form class="form-horizontal">
+                  <div class="form-group">
+                      <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
+                      <div class="col-sm-7">
+                          <div id="drone_imagery_calculate_phenotypes_zonal_stats_time_select_div">
+                          </div>
+                      </div>
+                  </div>
+              </form>
+              <br/>
+
+              <div id="drone_imagery_calculate_phenotypes_zonal_stats_week_term_div"></div>
+          </div>
 
       </div>
       <div class="modal-footer">
@@ -4056,13 +4060,16 @@ jQuery(document).ready(function() {
     //Calculate Phenotypes JS
     //
 
+    var manage_drone_imagery_calculate_phenotypes_drone_run_id;
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_id;
     var manage_drone_imagery_calculate_phenotypes_drone_run_band_type;
     var manage_drone_imagery_calculate_phenotypes_plot_polygons_type;
+    var manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = '';
 
     jQuery(document).on('click', 'button[name=project_drone_imagery_get_phenotypes]', function() {
         showManageDroneImagerySection('manage_drone_imagery_calculate_phenotypes_div');
 
+        manage_drone_imagery_calculate_phenotypes_drone_run_id = jQuery(this).data('drone_run_project_id');
         manage_drone_imagery_calculate_phenotypes_drone_run_band_id = jQuery(this).data('drone_run_band_project_id');
         manage_drone_imagery_calculate_phenotypes_drone_run_band_type = jQuery(this).data('drone_run_band_project_type');
         manage_drone_imagery_calculate_phenotypes_plot_polygons_type = jQuery(this).data('plot_polygons_type');
@@ -4180,12 +4187,41 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats').click(function(){
-        get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005' });
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_calculate_phenotypes_drone_run_id,
+            dataType: "json",
+            beforeSend: function (){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
+
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_week_term_div').html(html);
+                if (response.time_ontology_cvterm_id) {
+                    manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = response.time_ontology_cvterm_id;
+                }
+            },
+            error: function(response){
+                alert('Error getting time terms!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+        
         jQuery('#drone_imagery_calc_phenotypes_zonal_channel_dialog').modal('show');
     });
 
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select').click(function(){
-        var manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_time_select').val();
+        if (manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id == '') {
+            manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_time_select').val();
+        }
 
         jQuery.ajax({
             type: 'POST',

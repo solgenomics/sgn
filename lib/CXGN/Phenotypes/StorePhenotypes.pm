@@ -22,6 +22,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     values_hash=>$parsed_data,
     has_timestamps=>$timestamp_included,
     overwrite_values=>$overwrite,
+    ignore_new_values=>$ignore_new_values,
     metadata_hash=>$phenotype_metadata,
     image_zipfile_path=>$image_zip
 );
@@ -147,6 +148,12 @@ has 'has_timestamps' => (
 );
 
 has 'overwrite_values' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
+has 'ignore_new_values' => (
     isa => "Bool",
     is => 'rw',
     default => 0
@@ -423,6 +430,7 @@ sub store {
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
     my $overwrite_values = $self->overwrite_values;
+    my $ignore_new_values = $self->ignore_new_values;
     my $error_message;
     my $transaction_error;
     my $user_id = $self->user_id;
@@ -499,6 +507,11 @@ sub store {
                             push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+                    }
+                    if ($ignore_new_values) {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            next;
+                        }
                     }
 
                     my $plot_trait_uniquename = "Stock: " .
