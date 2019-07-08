@@ -58,6 +58,7 @@ sub _validate_with_plugin {
     my $cross_type_head;
     my $female_parent_head;
     my $male_parent_head;
+    my $cross_combination_head;
 
     if ($worksheet->get_cell(0,0)) {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
@@ -70,6 +71,9 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell(0,3)) {
         $male_parent_head  = $worksheet->get_cell(0,3)->value();
+    }
+    if ($worksheet->get_cell(0,4)) {
+        $cross_combination_head  = $worksheet->get_cell(0,4)->value();
     }
 
     if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
@@ -84,6 +88,9 @@ sub _validate_with_plugin {
     if (!$male_parent_head || $male_parent_head ne 'male_parent') {
         push @error_messages, "Cell D1: male_parent is missing from the header";
     }
+    if (!$cross_combination_head || $cross_combination_head ne 'cross_combination') {
+        push @error_messages, "Cell E1: cross_combination is missing from the header";
+    }
 
     my %valid_properties;
     my @properties = @{$cross_properties};
@@ -91,7 +98,7 @@ sub _validate_with_plugin {
         $valid_properties{$property} = 1;
     }
 
-    for my $column ( 4 .. $col_max ) {
+    for my $column ( 5 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         if (!$valid_properties{$header_string}){
@@ -108,6 +115,7 @@ sub _validate_with_plugin {
         my $cross_type;
         my $female_parent;
         my $male_parent;
+        my $cross_combination;
 
         if ($worksheet->get_cell($row,0)) {
             $cross_name = $worksheet->get_cell($row,0)->value();
@@ -125,8 +133,10 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,3)) {
             $male_parent =  $worksheet->get_cell($row,3)->value();
         }
-
-        for my $column ( 4 .. $col_max ) {
+        if ($worksheet->get_cell($row,4)) {
+            $cross_combination =  $worksheet->get_cell($row,4)->value();
+        }
+        for my $column ( 5 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
                 my $info_value = $worksheet->get_cell($row,$column)->value();
                 my $info_type = $worksheet->get_cell(0,$column)->value();
@@ -237,7 +247,7 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    for my $column ( 4 .. $col_max ) {
+    for my $column ( 5 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         $properties_columns{$column} = $header_string;
@@ -249,6 +259,7 @@ sub _parse_with_plugin {
         my $cross_type;
         my $female_parent;
         my $male_parent;
+        my $cross_combination;
         my $cross_stock;
 
         if ($worksheet->get_cell($row,0)) {
@@ -271,7 +282,11 @@ sub _parse_with_plugin {
             $male_parent =  $worksheet->get_cell($row,3)->value();
         }
 
-        for my $column ( 4 .. $col_max ) {
+        if ($worksheet->get_cell($row,4)) {
+            $cross_combination =  $worksheet->get_cell($row,4)->value();
+        }
+
+        for my $column ( 5 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
                 my $column_property = $properties_columns{$column};
                 $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
@@ -282,7 +297,7 @@ sub _parse_with_plugin {
             }
         }
 
-        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type);
+        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type, cross_combination=>$cross_combination);
         if ($female_parent) {
             my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
             $pedigree->set_female_parent($female_parent_individual);
