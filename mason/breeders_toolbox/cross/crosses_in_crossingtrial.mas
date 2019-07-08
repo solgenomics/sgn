@@ -10,6 +10,7 @@ $trial_id
         <thead>
             <tr>
                 <th>Cross Unique ID</th>
+                <th>Cross Combination</th>
                 <th>Cross Type</th>
                 <th>Female Parent</th>
                 <th>Male Parent</th>

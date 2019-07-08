@@ -260,6 +260,7 @@ sub get_crosses_in_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
+    my $cross_combination_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_combination", "stock_property")->cvterm_id();
     my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
     my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
     my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
@@ -269,17 +270,18 @@ sub get_crosses_in_trial {
     my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_property")->cvterm_id();
 
-    my $q = "SELECT parents_table.cross_id, parents_table.cross_name, parents_table.cross_type, parents_table.female_id, parents_table.female_name, parents_table.male_id, parents_table.male_name,
+    my $q = "SELECT parents_table.cross_id, parents_table.cross_name, parents_table.cross_combination, parents_table.cross_type, parents_table.female_id, parents_table.female_name, parents_table.male_id, parents_table.male_name,
         parents_table.female_plot_id, parents_table.female_plot_name, parents_table.male_plot_id, parents_table.male_plot_name,
         parents_table.female_plant_id, parents_table.female_plant_name, parents_table.male_plant_id, parents_table.male_plant_name, progeny_count_table.progeny_number, family_name_table.family_name
         FROM
-        (SELECT stock1.stock_id AS cross_id, stock1.uniquename AS cross_name, stock_relationship1.value AS cross_type, stock2.stock_id AS female_id,
+        (SELECT stock1.stock_id AS cross_id, stock1.uniquename AS cross_name, stockprop.value AS cross_combination, stock_relationship1.value AS cross_type, stock2.stock_id AS female_id,
         stock2.uniquename AS female_name, stock3.stock_id AS male_id, stock3.uniquename AS male_name, stock4.stock_id AS female_plot_id, stock4.uniquename AS female_plot_name,
         stock5.stock_id AS male_plot_id, stock5.uniquename AS male_plot_name, stock6.stock_id AS female_plant_id, stock6.uniquename AS female_plant_name, stock7.stock_id AS male_plant_id, stock7.uniquename AS male_plant_name
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS stock1 ON (nd_experiment_stock.stock_id = stock1.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
-        LEFT JOIN stock AS stock2 ON (stock_relationship1.subject_id = stock2.stock_id)
+        LEFT JOIN stockprop ON (stock1.stock_id = stockprop.stock_id) AND stockprop.type_id =?
+        JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
+        JOIN stock AS stock2 ON (stock_relationship1.subject_id = stock2.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship2 ON (stock1.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
         LEFT JOIN stock AS stock3 ON (stock_relationship2.subject_id = stock3.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship3 ON (stock1.stock_id = stock_relationship3.object_id) AND stock_relationship3.type_id = ?
@@ -309,11 +311,11 @@ sub get_crosses_in_trial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id, $offspring_of_type_id, $trial_id, $family_name_type_id, $trial_id);
+    $h->execute($cross_combination_type_id, $female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id, $offspring_of_type_id, $trial_id, $family_name_type_id, $trial_id);
 
     my @data =();
-    while(my($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) = $h->fetchrow_array()){
-        push @data, [$cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name]
+    while(my($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name]
     }
     return \@data;
 }
