@@ -18,6 +18,10 @@ jQuery(document).on("click", "#calculate_si", function() {
     var modelId        = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
     var popType        = jQuery("#si_canvas #selected_population_type").val();
+
+    if (modelId == selectionPopId) {
+	selectionPopId = "";
+    }
    
     selectionIndex(modelId, selectionPopId);        
 });
@@ -202,27 +206,25 @@ function  selectionIndexForm(predictedTraits) {
 
 
 function applySelectionIndex(params, legend, trainingPopId, selectionPopId) {
-   
+ 
     if (params) {                      
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
-            
-        var action;
-           
-        if (!selectionPopId) {     
-            selectionPopId = undef;      
-        }
-        
-        var action = '/solgs/calculate/selection/index/';
 
+	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	}
+       
         jQuery.ajax({
             type: 'POST',
             dataType: "json",
 	    data: { 'training_pop_id': trainingPopId,
 		    'selection_pop_id': selectionPopId,
-		    'rel_wts': params
+		    'rel_wts': params,
+		    'training_traits_ids': trainingTraitsIds
 		  },
-            url: action,
+            url: '/solgs/calculate/selection/index/',
             success: function(res){                       
                 var suc = res.status;
                 var table;
@@ -324,12 +326,8 @@ function sumElements (elements) {
 }
 
     
-function selectionIndex ( trainingPopId, predictionPopId ) {    
+function selectionIndex ( trainingPopId, selectionPopId ) {    
        
-    if (!predictionPopId) {
-        predictionPopId = jQuery("#si_canvas #default_selected_population_id").val();
-    }
-   
     var legendValues = legendParams();
     
     var legend   = legendValues.legend;
@@ -337,7 +335,7 @@ function selectionIndex ( trainingPopId, predictionPopId ) {
     var validate = legendValues.validate;
   
     if (params && validate) {
-        applySelectionIndex(params, legend, trainingPopId, predictionPopId);
+        applySelectionIndex(params, legend, trainingPopId, selectionPopId);
     }
 }
 

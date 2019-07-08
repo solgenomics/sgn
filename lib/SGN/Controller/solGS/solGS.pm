@@ -1378,31 +1378,8 @@ sub prediction_pop_analyzed_traits {
     my @trait_abbrs;
     my @selected_trait_abbrs;
     my @selected_files;
-     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    if ($training_pop_id !~ /$selection_pop_id/) 
-    {
-	my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
-                 readdir($dh); 
-   
-	closedir $dh; 
-
-	if (@files) 
-	{
-	    my @copy_files = @files;
-   
-	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
-	    @trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
-	    @trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
-	}
-
-	foreach my $trait_abbr (@trait_abbrs)
-	{
-	    $c->stash->{trait_abbr} = $trait_abbr;
-	    $self->get_trait_details_of_trait_abbr($c);
-	    push @trait_ids, $c->stash->{trait_id};
-	}
-    }
-
+    my $identifier = $training_pop_id . '_' . $selection_pop_id;
+    
     if (@selected_analyzed_traits) 
     {
 	@trait_ids=();
@@ -1414,11 +1391,38 @@ sub prediction_pop_analyzed_traits {
 	    push @selected_trait_abbrs, $c->stash->{trait_abbr};
 	   
 	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-	   
+	    my $file = $c->stash->{rrblup_selection_gebvs_file};
+	  
 	    if ( -s $c->stash->{rrblup_selection_gebvs_file})
 	    {
 		push @selected_files, $c->stash->{rrblup_selection_gebvs_file};
 		push @trait_ids, $trait_id;
+	    }
+	}	
+    } 
+    else
+    {
+	if ($training_pop_id !~ /$selection_pop_id/) 
+	{
+	    my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
+	    readdir($dh); 
+	    
+	    closedir $dh; 
+
+	    if (@files) 
+	    {
+		my @copy_files = @files;
+		
+		@trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
+		@trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
+		@trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
+	    }
+
+	    foreach my $trait_abbr (@trait_abbrs)
+	    {
+		$c->stash->{trait_abbr} = $trait_abbr;
+		$self->get_trait_details_of_trait_abbr($c);
+		push @trait_ids, $c->stash->{trait_id};
 	    }
 	}	
     }
@@ -3634,7 +3638,7 @@ sub run_async {
   
     my $referer = $c->req->referer;
    
-    $c->controller('solGS::AnalysisProfile')->get_analysis_report_job_args_file($c);
+    $c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c);
     my $report_file = $c->stash->{analysis_report_job_args_file};									  
        
     my $config_args = {
