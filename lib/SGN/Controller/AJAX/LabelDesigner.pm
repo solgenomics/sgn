@@ -14,6 +14,7 @@ use Sort::Versions;
 use Tie::UrlEncoder; our(%urlencode);
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayoutDownload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -513,7 +514,20 @@ sub get_plot_data {
         my $trial_has_plant_entries = $trial->has_plant_entries;
         my $trial_has_subplot_entries = $trial->has_subplot_entries;
         my $trial_has_tissue_sample_entries = $trial->has_tissue_sample_entries;
-        $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        #$plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+
+        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+        my $data = $trial->get_treatments();
+        my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+            schema => $schema,
+            trial_id => $trial_id,
+            data_level => 'plots',
+            treatment_project_ids => $self->data,
+            selected_columns => {"plot_name":1,"plot_id":1,"block_number":1,"plot_number":1,"rep_number":1,"row_number":1,"col_number":1,"accession_name":1,"is_a_control":1,"synonyms":1,"trial_name":1,"location_name":1,"year":1,"pedigree":1,"tier":1,"seedlot_name":1,"seed_transaction_operator":1,"num_seed_per_plot":1,"range_number":1,"plot_geo_json":1},
+            selected_trait_ids => []
+        });
+        $plot_design = $trial_layout_download->get_layout_output();
+
         my @plot_ids = keys %{$plot_design};
         if ($trial_has_plant_entries) {
             foreach my $plot_id (keys %$plot_design) {
