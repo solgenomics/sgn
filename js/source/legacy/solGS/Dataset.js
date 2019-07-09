@@ -47,12 +47,13 @@ solGS.dataset = {
 
 	    for (var j=0; j<dType.length; j++) {
 
-		if (d.categories[dType[j]] !== null  && d.categories[dType[j]].length ) {
+		if (d.categories[dType[j]] !== null  && d.categories[dType[j]].length) {
+
 		    if (!dsIds.includes(id)) {
-			if (document.URL.match(/solgs\/search/) & !dType[j].match(/accessions/)) {
-			    if (d.categories['accessions'] == ''
-				|| d.categories['accessions'] == null)  {
-				
+
+			if (document.URL.match(/solgs\/search/)) {
+			 
+			    if ( d.categories['accessions'] == 0) {
 				dsIds.push(id);
 				dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
 			    } else {
@@ -60,9 +61,8 @@ solGS.dataset = {
 			    }
 			} else {
 			    dsIds.push(id);
-			    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';  
+			    dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';		    
 			} 
-
 		    }       
 		}
 	    }       

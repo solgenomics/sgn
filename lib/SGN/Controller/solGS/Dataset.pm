@@ -132,8 +132,8 @@ sub submit_dataset_training_data_query {
     elsif (@{$data->{categories}->{trials}})	
     {	
 	my $trials = $data->{categories}->{trials};
-	$c->controller('solGS::solGS')->get_training_data_query_job_args_file($c, $trials);
-	$query_jobs_file  = $c->stash->{training_data_query_job_args_file};
+	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials);
+	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
     
     $c->stash->{dependent_jobs} = $query_jobs_file;
