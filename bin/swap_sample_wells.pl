@@ -19,12 +19,14 @@ my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
 my $dbh = DBI->connect($dsn, "postgres", $pw);
 
 print STDERR "Connecting to DBI schema...\n";
-my $bcs_schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
+my $schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
 
 
 my $file = shift;
 
 open(my $F, "<", $file) || die "Can't open file $file.\n";
+
+my $guard = $schema->txn_scope_guard();
 
 my $col_number = SGN::Model::Cvterm->get_cvterm_row('col_number')->cvterm_id();
 my $row_number = SGN::Model::Cvterm->get_cvterm_row('row_number')->cvterm_id();
@@ -38,21 +40,21 @@ while (<$F>) {
     print STDERR "Working on sample $sample_stock_id...\n";
     
     my $old_row = $old_well;
-    $old_row =~ /(\w).*/$1/;
+    $old_row =~ s/(\w).*/$1/;
 
     my $old_col = $old_well;
-    $old_col =~ /*.(\d)/$1/;
+    $old_col =~ s/.*(\d)/$1/;
 
     my $new_row = $new_well;
-    $new_row =~ /(\w).*/$1/;
+    $new_row =~ s/(\w).*/$1/;
 
     my $new_col = $new_well;
-    $new_col =~ /.*(\d)/$1/;
+    $new_col =~ s/.*(\d)/$1/;
 
     my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $sample_stock_id });
 
     if ($rs->count() != 1) {
-	print STDERR "Sample $sampel_stock_id does not exist! Skipping...\n";
+	print STDERR "Sample $sample_stock_id does not exist! Skipping...\n";
 	next();
     }
 
@@ -102,7 +104,7 @@ while (<$F>) {
 
     print STDERR "Fixing well number...\n";
 	
-    $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $well_number, value => $old_well });
+    $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $plot_number, value => $old_well });
     
     if ($rs->count() > 1) {
 	die "More than one well number associated with sample $uniquename\n";
@@ -117,8 +119,12 @@ while (<$F>) {
 
     print STDERR "Moved sample $old_uniquename to new location $uniquename.\n\n";
 }
-    
 
+print STDERR "Committing changes... ";
+
+$guard->commit();
+
+print STDERR "Done!\n";
     
     
     
