@@ -224,10 +224,15 @@ sub upload_drone_imagery_POST : Args(0) {
     }
     elsif ($new_drone_run_band_stitching eq 'yes') {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
+        my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
         if (!$upload_file) {
-            $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
+            $c->stash->{rest} = { error => "Please provide a drone image zipfile of images to stitch!" };
             $c->detach();
         }
+        # if (!$upload_panel_file) {
+        #     $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
+        #     $c->detach();
+        # }
 
         my $upload_original_name = $upload_file->filename();
         my $upload_tempfile = $upload_file->tempname;
@@ -298,7 +303,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
             my $time = DateTime->now();
             my $timestamp = $time->ymd()."_".$time->hms();
-            my $upload_original_name = $new_drone_run_name."_ImageBreed_stitched_".$m->[1];
+            my $upload_original_name = $new_drone_run_name."_ImageBreed_stitched_".$m->[1].".png";
 
             my $uploader = CXGN::UploadFile->new({
                 tempfile => $m->[3],

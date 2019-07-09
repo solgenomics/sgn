@@ -130,7 +130,7 @@
                             <ul>
                                 <li>It is possible to upload regular RGB or Black and White photos.</li>
                                 <li>For multi-spectral cameras, it is possible to upload individual spectra orthomosaicphotos.</li>
-                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile.</li>
+                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometrix calibration panel images, so that ImageBreed can produce the best orthomosaic possible.</li>
                             </ul>
                         </div>
 
@@ -287,7 +287,10 @@ jQuery(document).ready(function() {
             }
         }
         else if (drone_run_band_unstitched == 'yes') {
-            html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div></div>';
+            html = html + '<div class="well well-sm">';
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+            html = html + '</div>';
         }
 
         jQuery('#upload_drone_images_select_section').html(html);
@@ -388,6 +391,10 @@ jQuery(document).ready(function() {
         } else if (drone_run_band_unstitched == 'yes') {
             if (jQuery('#upload_drone_images_zipfile').val() == ''){
                 alert('Please select a zipfile of images');
+                return;
+            }
+            if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
+                alert('Please select a zipfile of Micasense radiocalibration panel images');
                 return;
             }
         }
