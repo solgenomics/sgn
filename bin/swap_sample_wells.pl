@@ -1,4 +1,31 @@
 
+=head1 NAME
+
+swap_sample_wells.pl - a script to swap samples in genotyping plates
+
+=head1 DESCRIPTION
+
+perl swap_sample_wells.pl -h host -D database [-t] -f file -p PW
+
+The file should have the following columns, tab delimited, no header:
+
+sample_stock_uniquename   old_well   new_well
+
+Example:
+
+iita-mas-ng-me-0011_G11 G11     H12
+...
+
+The script will try to change the well location in the uniquename as well as the properties col_number, row_number, and plot_number (which contains the well location, such as H12)
+
+=head1 AUTHORS
+
+Lukas Mueller and Guillaume Bauchet
+
+=cut
+
+
+
 use strict;
 
 use Getopt::Std;
