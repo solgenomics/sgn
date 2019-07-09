@@ -1195,6 +1195,7 @@ sub get_drone_run_projects_GET : Args(0) {
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
+    my $drone_run_camera_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
     my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
 
@@ -1203,9 +1204,10 @@ sub get_drone_run_projects_GET : Args(0) {
         $where_clause = ' WHERE field_trial.project_id = ? ';
     }
 
-    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description FROM project
+    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description, drone_run_camera_type.value FROM project
         JOIN projectprop AS project_start_date ON (project.project_id=project_start_date.project_id AND project_start_date.type_id=$project_start_date_type_id)
         LEFT JOIN projectprop AS drone_run_type ON (project.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_camera_type ON (project.project_id=drone_run_camera_type.project_id AND drone_run_camera_type.type_id=$drone_run_camera_cvterm_id)
         JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$project_relationship_type_id)
         JOIN project AS field_trial ON (field_trial.project_id=project_relationship.object_project_id)
         $where_clause
@@ -1216,7 +1218,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute($field_trial_id);
     my @result;
-    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
+    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type) = $h->fetchrow_array()) {
         my @res;
         if ($checkbox_select_name){
             push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_project_id'>";
@@ -1227,6 +1229,7 @@ sub get_drone_run_projects_GET : Args(0) {
             $drone_run_type,
             $drone_run_project_description,
             $drone_run_date_display,
+            $drone_run_camera_type,
             "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",
             $field_trial_project_description
         );

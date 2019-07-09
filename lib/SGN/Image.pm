@@ -368,41 +368,25 @@ sub upload_drone_imagery_zipfile {
     my $user_id = shift;
     my $project_id = shift;
     my $c = $self->config();
-    my $error_status;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $schema->storage->dbh;
     my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
     my $file_members = $archived_zip->file_members();
     if (!$file_members){
-        $error_status = 'Could not read your zipfile. Is is .zip format?</br></br>';
-        return $error_status;
+        return {error => 'Could not read your zipfile. Is it .zip format?</br></br>'};
     }
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
     print STDERR Dumper scalar(@$file_members);
+    my @image_files;
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
         #print STDERR Dumper $_;
         my $temp_file = $image->upload_zipfile_images($_);
-
-        #Check if image already stored in database
-        my $md5checksum = $image->calculate_md5sum($temp_file);
-        #print STDERR "MD5: $md5checksum\n";
-        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
-        #print STDERR "Count: $md_image\n";
-        if ($md_image > 0) {
-            print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
-            #$error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
-        } else {
-            $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
-            if (!$ret ) {
-                $error_status .= "Image processing for $temp_file did not work. Image not associated to project $project_id.<br/><br/>";
-            }
-        }
+        push @image_files, $temp_file;
     }
-    return $error_status;
+    return {image_files => \@image_files};
 }
 
 sub upload_zipfile_images {
