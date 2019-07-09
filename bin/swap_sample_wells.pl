@@ -66,7 +66,8 @@ while (<$F>) {
     print STDERR "Fixing stock name...\n";
     
     print STDERR "Old uniquename: $uniquename\n";
-    $uniquename =~ s/$old_well/$new_well/;
+    $uniquename =~ s/$old_well/\_N\_$new_well/;
+
 
     print STDERR "New uniquename: $uniquename\n";
     $row->update( { uniquename => $uniquename, name => $uniquename });
@@ -77,10 +78,10 @@ while (<$F>) {
     $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $col_number, value => $old_col });
 
     if ($rs->count() > 1) {
-	die "More than one col number associated with sample $uniquename\n";
+	die "More than one col number associated with sample $old_uniquename\n";
     }
     elsif ($rs->count() < 1) {
-	die "No col number $old_col associated with sample $uniquename\n";
+	die "No col number $old_col associated with sample $old_uniquename\n";
     }
 
     $row = $rs->next();
@@ -92,10 +93,10 @@ while (<$F>) {
      $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $row_number, value => $old_row });
 
     if ($rs->count() > 1) {
-	die "More than one row number associated with sample $uniquename\n";
+	die "More than one row number associated with sample $old_uniquename\n";
     }
     elsif ($rs->count() < 1) {
-	die "No row number $old_row associated with sample $uniquename\n";
+	die "No row number $old_row associated with sample $old_uniquename\n";
     }
 
     $row = $rs->next();
@@ -107,17 +108,17 @@ while (<$F>) {
     $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $plot_number, value => $old_well });
     
     if ($rs->count() > 1) {
-	die "More than one well number associated with sample $uniquename\n";
+	die "More than one well number associated with sample $old_uniquename\n";
     }
     elsif ($rs->count() < 1) {
-	die "No well number $old_well associated with sample $uniquename\n";
+	die "No well number $old_well associated with sample $old_uniquename\n";
     }
 
     $row = $rs->next();
 
     $row->update( { value => $new_well });
 
-    print STDERR "Moved sample $old_uniquename to new location $uniquename.\n\n";
+    print STDERR "Moved sample $old_uniquename ($old_well, $old_row, $old_col) to new location $uniquename ($new_well, $new_row, $new_col).\n\n";
 }
 
 print STDERR "Committing changes... ";
