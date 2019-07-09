@@ -6,11 +6,10 @@ use DBI;
 use Bio::Chado::Schema;
 use SGN::Model::Cvterm;
 
-our ($opt_H, $opt_D);
-getopts('H:D:');
+our ($opt_H, $opt_D, $opt_p, $opt_f, $opt_t);
+getopts('H:D:p:f:t');
 
-print "Password for $opt_H / $opt_D: \n";
-my $pw = <>;
+my $pw = $opt_p;
 chomp($pw);
 
 print STDERR "Connecting to database...\n";
@@ -22,40 +21,43 @@ print STDERR "Connecting to DBI schema...\n";
 my $schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
 
 
-my $file = shift;
+my $file = $opt_f;
 
 open(my $F, "<", $file) || die "Can't open file $file.\n";
 
 my $guard = $schema->txn_scope_guard();
 
-my $col_number = SGN::Model::Cvterm->get_cvterm_row('col_number')->cvterm_id();
-my $row_number = SGN::Model::Cvterm->get_cvterm_row('row_number')->cvterm_id();
-my $plot_number = SGN::Model::Cvterm-> get_cvterm_row('plot number')->cvterm_id();
-my $tissue_sample = SGN::Model::Cvterm->get_cvterm_row('tissue_sample')->cvterm_id();
+my $col_number = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+my $row_number = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+my $plot_number = SGN::Model::Cvterm-> get_cvterm_row($schema,'plot number', 'stock_property')->cvterm_id();
+my $tissue_sample = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
 
 while (<$F>) {
     chomp;
     my($sample_stock_id, $old_well, $new_well) = split /\t/;
 
-    print STDERR "Working on sample $sample_stock_id...\n";
+    print STDERR "Working on sample '$sample_stock_id'...\n";
     
     my $old_row = $old_well;
     $old_row =~ s/(\w).*/$1/;
 
     my $old_col = $old_well;
-    $old_col =~ s/.*(\d)/$1/;
+    $old_col =~ s/.*(\d+)/$1/;
 
     my $new_row = $new_well;
     $new_row =~ s/(\w).*/$1/;
 
     my $new_col = $new_well;
-    $new_col =~ s/.*(\d)/$1/;
+    $new_col =~ s/.*(\d+)/$1/;
 
     my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $sample_stock_id });
 
-    if ($rs->count() != 1) {
+    if ($rs->count() < 1) {
 	print STDERR "Sample $sample_stock_id does not exist! Skipping...\n";
 	next();
+    }
+    elsif ($rs->count() > 1) {
+	print STDERR "Warning! Several samples named $sample_stock_id exist in the database!\n";
     }
 
     my $row = $rs->next();
@@ -73,40 +75,42 @@ while (<$F>) {
     $row->update( { uniquename => $uniquename, name => $uniquename });
 
 
-    print STDERR "Fixing well location...\n";
+    print STDERR "Fixing col location...\n";
 
     $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $col_number, value => $old_col });
 
     if ($rs->count() > 1) {
-	die "More than one col number associated with sample $old_uniquename\n";
+	print STDERR "More than one col number associated with sample $old_uniquename\n";
     }
     elsif ($rs->count() < 1) {
-	die "No col number $old_col associated with sample $old_uniquename\n";
+	print STDERR  "No col number $old_col associated with sample $old_uniquename\n";
     }
-
-    $row = $rs->next();
-
-    $row->update( { value => $new_col});
-
-
+    else { 
+	$row = $rs->next();
+	
+	$row->update( { value => $new_col });
+    }
+    
     print STDERR "Fixing row number...\n";
      $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $row_number, value => $old_row });
 
     if ($rs->count() > 1) {
-	die "More than one row number associated with sample $old_uniquename\n";
+	print STDERR "More than one row number associated with sample $old_uniquename\n";
     }
     elsif ($rs->count() < 1) {
-	die "No row number $old_row associated with sample $old_uniquename\n";
+	print STDERR  "No row number $old_row associated with sample $old_uniquename\n";
     }
 
-    $row = $rs->next();
-
-    $row->update( { value => $new_row});
-
-    print STDERR "Fixing well number...\n";
+    else { 
+	$row = $rs->next();
 	
+	$row->update( { value => $new_row});
+    }
+    print STDERR "Fixing well number...\n";
+    
     $rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $stock_id, type_id => $plot_number, value => $old_well });
     
+	
     if ($rs->count() > 1) {
 	die "More than one well number associated with sample $old_uniquename\n";
     }
@@ -123,7 +127,8 @@ while (<$F>) {
 
 print STDERR "Committing changes... ";
 
-$guard->commit();
+if (!$opt_t ) { $guard->commit();}
+else { $guard->rollback(); }
 
 print STDERR "Done!\n";
     
