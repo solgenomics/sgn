@@ -643,7 +643,6 @@ sub get_combined_pops_list {
  
     $id = $c->stash->{combo_pops_id} if !$id;
 
-    print STDERR "\nget_combined_pops_list combo pops id: $id\n";
     $self->combined_pops_catalogue_file($c);
     my $combo_pops_catalogue_file = $c->stash->{combined_pops_catalogue_file};
    
@@ -655,7 +654,7 @@ sub get_combined_pops_list {
         {
 	    chomp($entry);
             my ($combo_pops_id, $pops)  = split(/\t/, $entry);
-	    print STDERR "\id $id -- $combo_pops_id\n";
+	   
 	    if ($id == $combo_pops_id)
 	    {
 		my @pops_list = split(',', $pops);
@@ -834,9 +833,6 @@ sub predict_selection_pop_combined_pops_model {
    
     my @selected_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
     
-    print STDERR "\n predict_selection_pop_multi_traits: selected_traits  @selected_traits -- tr pop id: $training_pop_id\n";
-    
-  
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
     my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
 
