@@ -788,35 +788,43 @@ sub build_model_combined_trials_trait {
 
 
 sub combine_data_build_multiple_traits_models {
-    my ($self, $c, $traits) = @_;
+    my ($self, $c) = @_;
 
+    my @selected_traits =  @{$c->stash->{training_traits_ids}};     
     my $pop_id = $c->stash->{combo_pops_id};
     $c->stash->{pop_id} = $c->stash->{combo_pops_id};
   
-    my @selected_traits;
-    foreach my $trait_id (@$traits) 
+    my @unpredicted_traits;
+    foreach my $trait_id (@selected_traits) 
     {
 	$c->stash->{trait_id} = $trait_id;	
 	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $pop_id, $trait_id);
 	my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
-	push @selected_traits, $trait_id if !-s $gebv_file;	
+	push @unpredicted_traits, $trait_id if !-s $gebv_file;	
     }
+
+    if (@unpredicted_traits)
+    {
+	$c->stash->{training_traits_ids} = \@unpredicted_traits;
+
+	$self->get_combine_populations_args_file($c);
+	my $combine_job_file = $c->stash->{combine_populations_args_file};
     
-    $c->stash->{training_traits_ids} = \@selected_traits;
+	$c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
+	$c->stash->{prerequisite_type}  = 'combine_populations';
 
-    $self->get_combine_populations_args_file($c);
-    my $combine_job_file = $c->stash->{combine_populations_args_file};
-    
-    $c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
-    $c->stash->{prerequisite_type}  = 'combine_populations';
+	$c->stash->{training_pop_id} = $pop_id;
+	$c->stash->{data_set_type} = 'combined populations';
+	$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);	
+	$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
-    $c->stash->{training_pop_id} = $pop_id;
-    $c->stash->{data_set_type} = 'combined populations';
-    $c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);	
-    $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
-
-    $c->controller('solGS::solGS')->run_async($c);
+	$c->controller('solGS::solGS')->run_async($c);
+    }
+    else
+    {
+	croak "No traits to predict: $!\n";    
+    }
         
 }
 

@@ -1162,21 +1162,19 @@ sub predict_selection_pop_multi_traits {
 
     $c->stash->{training_traits_ids} = \@traits_with_valid_models;
 
-    my @prediction_traits;
+    my @unpredicted_traits;
     foreach my $trait_id (@{$c->stash->{training_traits_ids}})
     {
 	my $identifier = $training_pop_id .'_' . $selection_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-	 
-     	if (!-s $c->stash->{rrblup_selection_gebvs_file})
-	{
-	    push @prediction_traits, $trait_id;
-	}
+
+	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
+	
     }
 
-    if (@prediction_traits)
+    if (@unpredicted_traits)
     {
-	$c->stash->{training_traits_ids} = \@prediction_traits;
+	$c->stash->{training_traits_ids} = \@unpredicted_traits;
 	
 	$self->get_selection_pop_query_args_file($c);
 	my $pre_req = $c->stash->{selection_pop_query_args_file};
@@ -2084,55 +2082,35 @@ sub get_trait_details_of_trait_abbr {
 
 
 sub build_multiple_traits_models {
-    my ($self, $c, $traits) = @_;
+    my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $prediction_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id}; 
-    
-    my @selected_traits =  @{$c->stash->{training_traits_ids}};
-      
-    my $single_trait_id;
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};    
+    my @selected_traits =  @{$c->stash->{training_traits_ids}};      
+    my $trait_id = $selected_traits[0] if scalar(@selected_traits) == 1;
    
-    if (scalar(@selected_traits) == 1)
-    {
-	$single_trait_id = $selected_traits[0];
-    }
-    else 
-    {
-	my ($traits, $trait_ids);    
-        
-	for (my $i = 0; $i <= $#selected_traits; $i++)
-	{  
-	    my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
-	    my $abbr = $self->abbreviate_term($tr);
-	    $traits .= $abbr;
-	    $traits .= "\t" unless ($i == $#selected_traits); 
-	    
-	    foreach my $tr_id (@selected_traits)
-	    {
-		$trait_ids .= $tr_id;
-	    }  
-	} 
+    my $traits;    
     
-	if ($c->stash->{data_set_type} =~ /combined populations/)
-	{
-	    my $identifier = crc($trait_ids);
-	    $c->controller('solGS::Files')->combined_gebvs_file($c, $identifier);
-	}  
+    for (my $i = 0; $i <= $#selected_traits; $i++)
+    {  
+	my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
+	my $abbr = $self->abbreviate_term($tr);
+	$traits .= $abbr;
+	$traits .= "\t" unless ($i == $#selected_traits); 	    
 	
-	my $name = "selected_traits_pop_${pop_id}";
-	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-	my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-	
-	write_file($file, $traits);
-	$c->stash->{selected_traits_file} = $file;
-
-	$name     = "trait_info_${single_trait_id}_pop_${pop_id}";
-	my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-	
-	$c->stash->{trait_file} = $file2;  
     }
+	
+    my $name = "selected_traits_pop_${pop_id}";
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
+    
+    write_file($file, $traits);
+    $c->stash->{selected_traits_file} = $file;
 
+    $name     = "trait_info_${trait_id}_pop_${pop_id}";
+    my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
+    
+    $c->stash->{trait_file} = $file2;  
+   
     $self->get_gs_modeling_jobs_args_file($c);	
     $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
     $self->run_async($c);
