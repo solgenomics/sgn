@@ -32,6 +32,7 @@ use Getopt::Std;
 use DBI;
 use Bio::Chado::Schema;
 use SGN::Model::Cvterm;
+use CXGN::Trial::TrialLayout;
 
 our ($opt_H, $opt_D, $opt_p, $opt_f, $opt_t);
 getopts('H:D:p:f:t');
