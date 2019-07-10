@@ -845,23 +845,20 @@ sub predict_training_traits {
     
     my $analysis_page = $c->stash->{analysis_page};
     my $selected_traits = $c->stash->{training_traits_ids};
+     
+    $c->stash->{training_traits_ids} = [$c->stash->{trait_id}] if !$c->stash->{training_traits_ids};
   
-    if ($analysis_page =~ /solgs\/traits\/all\/population\//) 
+    if ($analysis_page =~ /solgs\/traits\/all\/population\/|solgs\/trait\//) 
     {
-	$c->controller('solGS::solGS')->build_multiple_traits_models($c, $selected_traits);	
+	$c->controller('solGS::solGS')->build_multiple_traits_models($c);	
     } 
     elsif ($analysis_page =~  /solgs\/models\/combined\/trials\/|solgs\/model\/combined\/trials\// )
     {
 	if ($c->stash->{data_set_type} =~ /combined populations/)
 	{
-	    $c->controller('solGS::combinedTrials')->combine_data_build_multiple_traits_models($c, $selected_traits);
+	    $c->controller('solGS::combinedTrials')->combine_data_build_multiple_traits_models($c);
 	}
-    }
-    elsif ($analysis_page =~ /solgs\/trait\//) 
-    {
-	$c->stash->{trait_id} = $selected_traits->[0] if !$c->stash->{trait_id};
-	$c->controller('solGS::solGS')->build_single_trait_model($c);
-    }
+    }   
     
 }
 
