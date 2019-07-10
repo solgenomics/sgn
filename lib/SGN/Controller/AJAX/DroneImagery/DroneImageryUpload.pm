@@ -225,37 +225,12 @@ sub upload_drone_imagery_POST : Args(0) {
     elsif ($new_drone_run_band_stitching eq 'yes') {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
-        my $upload_panel_band_calibration_1 = $c->req->upload('upload_drone_images_panel_calibration_band_1');
-        my $upload_panel_band_calibration_2 = $c->req->upload('upload_drone_images_panel_calibration_band_2');
-        my $upload_panel_band_calibration_3 = $c->req->upload('upload_drone_images_panel_calibration_band_3');
-        my $upload_panel_band_calibration_4 = $c->req->upload('upload_drone_images_panel_calibration_band_4');
-        my $upload_panel_band_calibration_5 = $c->req->upload('upload_drone_images_panel_calibration_band_5');
         if (!$upload_file) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of images to stitch!" };
             $c->detach();
         }
-        # if (!$upload_panel_file) {
-        #     $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
-        #     $c->detach();
-        # }
-        if (!$upload_panel_band_calibration_1) {
-            $c->stash->{rest} = { error => "Please provide the Micasense calibration for the first band! In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel." };
-            $c->detach();
-        }
-        if (!$upload_panel_band_calibration_2) {
-            $c->stash->{rest} = { error => "Please provide the Micasense calibration for the second band! In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel." };
-            $c->detach();
-        }
-        if (!$upload_panel_band_calibration_3) {
-            $c->stash->{rest} = { error => "Please provide the Micasense calibration for the third band! In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel." };
-            $c->detach();
-        }
-        if (!$upload_panel_band_calibration_4) {
-            $c->stash->{rest} = { error => "Please provide the Micasense calibration for the fourth band! In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel." };
-            $c->detach();
-        }
-        if (!$upload_panel_band_calibration_5) {
-            $c->stash->{rest} = { error => "Please provide the Micasense calibration for the fifth band! In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel." };
+        if (!$upload_panel_file) {
+            $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
             $c->detach();
         }
 
@@ -304,7 +279,7 @@ sub upload_drone_imagery_POST : Args(0) {
             user_id => $user_id,
             user_role => $user_role
         });
-        my $archived_filename_with_path_panel = $uploader->archive();
+        my $archived_filename_with_path_panel = $uploader_panel->archive();
         my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
         if (!$archived_filename_with_path_panel) {
             $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
@@ -325,7 +300,9 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
         open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
             foreach (@$image_paths) {
-                print $fh "$_\n";
+                my $dir = $c->tempfiles_subdir('/upload_drone_imagery_calibrated_raw');
+                my $temp_file_calibrated_raw_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_calibrated_raw/fileXXXX').".tiff";
+                print $fh "$_,$temp_file_calibrated_raw_image\n";
             }
         close($fh);
         print STDERR "Drone image stitch temp file $temp_file_image_file_names\n";
@@ -344,8 +321,10 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_stitched_result_band3 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
         my $temp_file_stitched_result_band4 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
         my $temp_file_stitched_result_band5 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
+        my $temp_file_stitched_result_rgb = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
+        my $temp_file_stitched_result_rnre = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImages.py --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --do_pairwise_stitch 1000 --micasense_panel_calibration_1 '$upload_panel_band_calibration_1' --micasense_panel_calibration_2 '$upload_panel_band_calibration_2' --micasense_panel_calibration_3 '$upload_panel_band_calibration_3' --micasense_panel_calibration_4 '$upload_panel_band_calibration_4' --micasense_panel_calibration_5 '$upload_panel_band_calibration_5'";
+        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImages.py --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --do_pairwise_stitch 1000 ";
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 

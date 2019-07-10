@@ -290,11 +290,6 @@ jQuery(document).ready(function() {
             html = html + '<div class="well well-sm">';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Panel Band 1 Calibration: </label><div class="col-sm-9" ><input type="text" id="upload_drone_images_panel_calibration_band_1" name="upload_drone_images_panel_calibration_band_1" placeholder="Check your Micasense Panel"/></div></div>';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Panel Band 2 Calibration: </label><div class="col-sm-9" ><input type="text" id="upload_drone_images_panel_calibration_band_2" name="upload_drone_images_panel_calibration_band_2" placeholder="Check your Micasense Panel"/></div></div>';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Panel Band 3 Calibration: </label><div class="col-sm-9" ><input type="text" id="upload_drone_images_panel_calibration_band_3" name="upload_drone_images_panel_calibration_band_3" placeholder="Check your Micasense Panel"/></div></div>';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Panel Band 4 Calibration: </label><div class="col-sm-9" ><input type="text" id="upload_drone_images_panel_calibration_band_4" name="upload_drone_images_panel_calibration_band_4" placeholder="Check your Micasense Panel"/></div></div>';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Panel Band 5 Calibration: </label><div class="col-sm-9" ><input type="text" id="upload_drone_images_panel_calibration_band_5" name="upload_drone_images_panel_calibration_band_5" placeholder="Check your Micasense Panel"/></div></div>';
             html = html + '</div>';
         }
 
@@ -400,26 +395,6 @@ jQuery(document).ready(function() {
             }
             if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
                 alert('Please select a zipfile of Micasense radiocalibration panel images');
-                return;
-            }
-            if (jQuery('#upload_drone_images_panel_calibration_band_1').val() == '') {
-                alert('Please enter the calibration for the first band from the Micasense calibration panel. In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel.');
-                return;
-            }
-            if (jQuery('#upload_drone_images_panel_calibration_band_2').val() == '') {
-                alert('Please enter the calibration for the second band from the Micasense calibration panel. In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel.');
-                return;
-            }
-            if (jQuery('#upload_drone_images_panel_calibration_band_3').val() == '') {
-                alert('Please enter the calibration for the third band from the Micasense calibration panel. In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel.');
-                return;
-            }
-            if (jQuery('#upload_drone_images_panel_calibration_band_4').val() == '') {
-                alert('Please enter the calibration for the fourth band from the Micasense calibration panel. In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel.');
-                return;
-            }
-            if (jQuery('#upload_drone_images_panel_calibration_band_5').val() == '') {
-                alert('Please enter the calibration for the fifth band from the Micasense calibration panel. In your Micasense calibration panel, it should be listed in a small table next to the large QR barcode and the white square reflectance panel.');
                 return;
             }
         }
