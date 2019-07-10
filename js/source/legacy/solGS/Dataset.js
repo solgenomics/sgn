@@ -81,8 +81,14 @@ solGS.dataset = {
 	var dataset = new CXGN.Dataset();
 	var d = dataset.getDataset(datasetId);
 
+	var plots = d.categories['plots'];
+
+	if (plots == '') {
+	    plots = null;
+	}
+	
 	if (d.categories['trials'] &&
-	    d.categories['plots'] === null) {
+	    plots == null) {
 	  	    
 	    this.datasetTrialsTrainingPop(datasetId);
 	    
