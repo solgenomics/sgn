@@ -272,12 +272,32 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 	return;
     }
 
-    my $data = $self->get_phenotyping_data($c);
+    my @file_types = [ 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' ];
+    my $data = $self->get_file_data($c, \@file_types);
 
-    $c->stash->{phenotype_files} = $data->{phenotype_files};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
+    $c->stash->{phenotype_files} = $data->{files};
+    $c->stash->{deleted_phenotype_files} = $data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
+
+}
+
+sub manage_nirs :Path("/breeders/nirs") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = [ 'nirs spreadsheet' ];
+    my $data = $self->get_file_data($c, \@file_types);
+
+    $c->stash->{nirs_files} = $data->{files};
+    $c->stash->{deleted_nirs_files} = $data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
 
 }
 
@@ -625,7 +645,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # # get uploaded phenotype files
     # #
 
-    # my $data = $self->get_phenotyping_data($c);
+    # my $data = $self->get_file_data($c, \@file_types);
 
     # $c->stash->{phenotype_files} = $data->{file_info};
     # $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
@@ -639,54 +659,56 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
-
-sub get_phenotyping_data : Private {
+sub get_file_data : Private {
     my $self = shift;
     my $c = shift;
+    my $file_types = shift;
+    my @file_types = @{$file_types};
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
     my $file_info = [];
     my $deleted_file_info = [];
 
-     my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
+    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
 
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 
     while (my $md_row = ($metadata_rs->next())) {
-	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'!=' => 'document_browser'} } );
+        my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'in' => @file_types } } );
 
-	if (!$md_row->obsolete) {
-	    while (my $file_row = $file_rs->next()) {
-		push @$file_info, { file_id => $file_row->file_id(),
-				    basename => $file_row->basename,
-				    dirname  => $file_row->dirname,
-				    file_type => $file_row->filetype,
-				    md5checksum => $file_row->md5checksum,
-				    create_date => $md_row->create_date,
-		};
-	    }
-	}
-	else {
-	    while (my $file_row = $file_rs->next()) {
-		push @$deleted_file_info, { file_id => $file_row->file_id(),
-					    basename => $file_row->basename,
-					    dirname => $file_row->dirname,
-					    file_type => $file_row->filetype,
-					    md5checksum => $file_row->md5checksum,
-					    create_date => $md_row->create_date,
-		};
-	    }
-	}
+        if (!$md_row->obsolete) {
+            while (my $file_row = $file_rs->next()) {
+                push @$file_info, { file_id => $file_row->file_id(),
+                basename => $file_row->basename,
+                dirname  => $file_row->dirname,
+                file_type => $file_row->filetype,
+                md5checksum => $file_row->md5checksum,
+                create_date => $md_row->create_date,
+            };
+        }
     }
+    else {
+        while (my $file_row = $file_rs->next()) {
+            push @$deleted_file_info, { file_id => $file_row->file_id(),
+            basename => $file_row->basename,
+            dirname => $file_row->dirname,
+            file_type => $file_row->filetype,
+            md5checksum => $file_row->md5checksum,
+            create_date => $md_row->create_date,
+        };
+    }
+}
+}
 
-    my $data = { phenotype_files => $file_info,
-		 deleted_phenotype_files => $deleted_file_info,
-    };
-    return $data;
+my $data = { files => $file_info,
+deleted_files => $deleted_file_info,
+};
+return $data;
 
 
 }
+
 
 sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     my $self = shift;

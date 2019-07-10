@@ -177,6 +177,7 @@ sub _prep_upload {
     if ($file_type eq "spreadsheet") {
         my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs or scio
         print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
+        $metadata_file_type = "spreadsheet phenotype file";
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         }
@@ -185,12 +186,13 @@ sub _prep_upload {
         }
         if ($spreadsheet_format eq 'nirs'){
             $validate_type = "phenotype spreadsheet nirs";
+            $metadata_file_type = "nirs spreadsheet";
         }
         if ($spreadsheet_format eq 'scio'){
             $validate_type = "scio spreadsheet nirs";
+            $metadata_file_type = "nirs spreadsheet";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
-        $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
