@@ -308,7 +308,7 @@ sub upload_drone_imagery_POST : Args(0) {
         print STDERR "Drone image stitch temp file $temp_file_image_file_names\n";
 
         my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
-        open (my $fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
+        open ($fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
             foreach (@$image_paths_panel) {
                 print $fh "$_\n";
             }
