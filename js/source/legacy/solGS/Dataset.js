@@ -51,9 +51,13 @@ solGS.dataset = {
 
 		    if (!dsIds.includes(id)) {
 
-			if (document.URL.match(/solgs\/search/)) {
-			 
-			    if ( d.categories['accessions'] == 0) {
+			if (document.URL.match(/solgs\/search/)) {			  			    
+			    var accessions = d.categories['accessions'];
+			    if (accessions == null) {
+				accessions = '';
+			    }
+			  
+			    if (accessions.length < 1 ) {
 				dsIds.push(id);
 				dMenu += '<option name="dataset" value=' + id + '>' + name + '</option>';
 			    } else {
