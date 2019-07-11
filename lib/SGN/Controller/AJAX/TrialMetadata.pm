@@ -1875,9 +1875,9 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
 
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_props_hash) =@$r;
+        my ($cross_id, $cross_name, $cross_combination, $cross_props_hash) =@$r;
 
-        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>} );
+        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination );
         foreach my $key (@column_order){
           push @row, $cross_props_hash->{$key};
         }

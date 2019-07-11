@@ -309,23 +309,29 @@ sub get_cross_properties_trial {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
+    my $cross_combination_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_combination", "stock_property")->cvterm_id();
     my $cross_props_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value FROM nd_experiment_project
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop1.value, stockprop2.value FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-        LEFT JOIN stockprop ON (nd_experiment_stock.stock_id = stockprop.stock_id)
-        LEFT JOIN stock ON (stockprop.stock_id = stock.stock_id)
-        WHERE stockprop.type_id = ? AND nd_experiment_project.project_id = ?";
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stockprop AS stockprop1 ON (stock.stock_id = stockprop1.stock_id) AND stockprop1.type_id = ?
+        LEFT JOIN stockprop AS stockprop2 ON (stock.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
+        WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare ($q);
 
-    $h->execute($cross_props_typeid, $trial_id);
+    $h->execute($cross_combination_typeid, $cross_props_typeid, $trial_id);
 
     my @data = ();
-    while(my($cross_id, $cross_name, $cross_props) = $h->fetchrow_array()){
+    while(my($cross_id, $cross_name, $cross_combination, $cross_props) = $h->fetchrow_array()){
       #print STDERR Dumper $cross_props;
-        my $cross_props_hash = decode_json$cross_props;
-        push @data, [$cross_id, $cross_name, $cross_props_hash]
+        if ($cross_props){
+            my $cross_props_hash = decode_json$cross_props;
+            push @data, [$cross_id, $cross_name, $cross_combination, $cross_props_hash]
+        } else {
+            push @data, [$cross_id, $cross_name, $cross_combination, $cross_props]
+        }
     }
 
     return \@data;

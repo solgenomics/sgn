@@ -10,6 +10,7 @@ $trial_id
         <thead>
             <tr>
                 <th>Cross Unique ID</th>
+                <th>Cross Combination</th>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
 % foreach my $column_header(@column_header){
