@@ -1,0 +1,45 @@
+format-version: 1.2
+default-namespace: cxgn_treatment
+ontology: plant_treatment
+
+
+[Term]
+id: TREAT:0000001
+name: Plant treatment
+
+[Term]
+id: TREAT:0000002
+name: Post-harvest plant treatment
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000003
+name: raw root
+is_a: TREAT:0000002 ! Post-harvest plant treatment
+
+[Term]
+id: TREAT:0000004
+name: boiled root
+is_a: TREAT:0000002 ! Post-harvest plant treatment
+
+[Term]
+id: TREAT:0000005
+name: fried root
+is_a: TREAT:0000002 ! Post-harvest plant treatment
+
+
+[Term]
+id: TREAT:0000006
+name: dried root
+is_a: TREAT:0000002 ! Post-harvest plant treatment
+
+[Term]
+id: TREAT:0000007
+name: mashed root
+is_a: TREAT:0000002 ! Post-harvest plant treatment
+
+[Term]
+id: TREAT:0000008
+name: grated root
+is_a: TREAT:0000002 ! Post-harvest plant treatment
+
