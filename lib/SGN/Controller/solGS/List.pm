@@ -673,7 +673,7 @@ sub genotypes_list_genotype_query_job {
     nstore $args, $args_file 
 		or croak "data query script: $! serializing model details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
+    my $cmd = 'mx-run solGS::queryJobs ' 
 	. ' --data_type genotype '
 	. ' --population_type ' . $pop_type
 	. ' --args_file ' . $args_file;
@@ -746,7 +746,7 @@ sub plots_list_phenotype_query_job {
     nstore $args, $args_file 
 		or croak "data query script: $! serializing data query details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
+    my $cmd = 'mx-run solGS::queryJobs ' 
 	. ' --data_type phenotype '
 	. ' --population_type plots_list '
 	. ' --args_file ' . $args_file;

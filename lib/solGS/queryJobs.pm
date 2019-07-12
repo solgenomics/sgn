@@ -1,4 +1,4 @@
-package solGS::Cluster;
+package solGS::queryJobs;
 
 
 use Moose;

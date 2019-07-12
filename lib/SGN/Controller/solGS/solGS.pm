@@ -3085,7 +3085,7 @@ sub get_cluster_phenotype_query_job_args {
     nstore $args, $args_file 
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
+    my $cmd = 'mx-run solGS::queryJobs ' 
 	. ' --data_type phenotype '
 	. ' --population_type trial '
 	. ' --args_file ' . $args_file;
@@ -3191,7 +3191,7 @@ sub get_cluster_genotype_query_job_args {
     nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
+    my $cmd = 'mx-run solGS::queryJobs ' 
 	. ' --data_type genotype '
 	. ' --population_type trial '
 	. ' --args_file ' . $args_file;
@@ -3756,7 +3756,7 @@ sub get_cluster_query_job_args {
     nstore $query_args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
+    my $cmd = 'mx-run solGS::queryJobs ' 
 	. ' --data_type ' . $data_type
 	. ' --population_type ' . $pop_type
 	. ' --args_file ' . $args_file;
