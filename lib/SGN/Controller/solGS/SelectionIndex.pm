@@ -50,19 +50,21 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     my ($self, $c) = @_;
 
     my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $training_pop_id = $c->req->param('training_pop_id'); 
-    my $training_traits_ids = $c->req->param('training_traits_ids');
+    my $training_pop_id = $c->req->param('training_pop_id');
+   
+    my @training_traits_ids = $c->req->param('training_traits_ids[]');
         
     my $traits_wts = $c->req->param('rel_wts');
     my $json = JSON->new();
     my $rel_wts = $json->decode($traits_wts);
-  
+
     $c->stash->{pop_id} = $training_pop_id;
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
 
-    $c->stash->{training_traits_ids} = $training_traits_ids;
+    $c->stash->{training_traits_ids} = \@training_traits_ids;
+   
     my @traits = keys (%$rel_wts);    
     @traits    = grep {$_ ne 'rank'} @traits;
    

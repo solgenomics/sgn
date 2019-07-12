@@ -15,13 +15,10 @@ jQuery(document).ready( function () {
 
 
 jQuery(document).on("click", "#calculate_si", function() {        
-    var modelId        = jQuery("#si_canvas #model_id").val();
+    var modelId = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
-    var popType        = jQuery("#si_canvas #selected_population_type").val();
+    var popType = jQuery("#si_canvas #selected_population_type").val();
 
-    if (modelId == selectionPopId) {
-	selectionPopId = "";
-    }
    
     selectionIndex(modelId, selectionPopId);        
 });
@@ -215,7 +212,8 @@ function applySelectionIndex(params, legend, trainingPopId, selectionPopId) {
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
-       
+
+	if (trainingPopId == selectionPopId) { selectionPopId = "";}
         jQuery.ajax({
             type: 'POST',
             dataType: "json",

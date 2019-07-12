@@ -1365,7 +1365,7 @@ sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;           
    
     my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-  
+    
     no warnings 'uninitialized';
   
     my $dir = $c->stash->{solgs_cache_dir};
@@ -1398,32 +1398,32 @@ sub prediction_pop_analyzed_traits {
 	    }
 	}	
     } 
-    else
-    {
-	if ($training_pop_id !~ /$selection_pop_id/) 
-	{
-	    my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
-	    readdir($dh); 
+    # else
+    # {
+    # 	if ($training_pop_id !~ /$selection_pop_id/) 
+    # 	{
+    # 	    my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
+    # 	    readdir($dh); 
 	    
-	    closedir $dh; 
+    # 	    closedir $dh; 
 
-	    if (@files) 
-	    {
-		my @copy_files = @files;
+    # 	    if (@files) 
+    # 	    {
+    # 		my @copy_files = @files;
 		
-		@trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
-		@trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
-		@trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
-	    }
+    # 		@trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
+    # 		@trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
+    # 		@trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
+    # 	    }
 
-	    foreach my $trait_abbr (@trait_abbrs)
-	    {
-		$c->stash->{trait_abbr} = $trait_abbr;
-		$self->get_trait_details_of_trait_abbr($c);
-		push @trait_ids, $c->stash->{trait_id};
-	    }
-	}	
-    }
+    # 	    foreach my $trait_abbr (@trait_abbrs)
+    # 	    {
+    # 		$c->stash->{trait_abbr} = $trait_abbr;
+    # 		$self->get_trait_details_of_trait_abbr($c);
+    # 		push @trait_ids, $c->stash->{trait_id};
+    # 	    }
+    # 	}	
+    # }
   
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
