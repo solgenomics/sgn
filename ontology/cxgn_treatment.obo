@@ -2,6 +2,45 @@ format-version: 1.2
 default-namespace: cxgn_treatment
 ontology: plant_treatment
 
+[Term]
+id: TREAT:0000009
+name: grated boiled root
+is_a: TREAT:0000008 ! grated root
+
+[Term]
+id: TREAT:0000010
+name: grated dried root
+is_a: TREAT:0000008 ! grated root
+
+[Term]
+id: TREAT:0000011
+name: grated fried root
+is_a: TREAT:0000008 ! grated root
+
+[Term]
+id: TREAT:0000012
+name: mashed boiled root
+is_a: TREAT:0000007 ! mashed root
+
+[Term]
+id: TREAT:0000013
+name: mashed dried root
+is_a: TREAT:0000007 ! mashed root
+
+[Term]
+id: TREAT:0000014
+name: mashed fried root
+is_a: TREAT:0000007 ! mashed root
+
+[Term]
+id: TREAT:0000015
+name: mashed raw root
+is_a: TREAT:0000007 ! mashed root
+
+[Term]
+id: TREAT:0000016
+name: grated raw root
+is_a: TREAT:0000008 ! grated root
 
 [Term]
 id: TREAT:0000001
@@ -26,7 +65,6 @@ is_a: TREAT:0000002 ! Post-harvest plant treatment
 id: TREAT:0000005
 name: fried root
 is_a: TREAT:0000002 ! Post-harvest plant treatment
-
 
 [Term]
 id: TREAT:0000006
