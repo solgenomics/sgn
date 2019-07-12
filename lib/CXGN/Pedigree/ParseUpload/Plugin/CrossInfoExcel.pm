@@ -51,8 +51,8 @@ sub _validate_with_plugin {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
     }
 
-    if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
-        push @error_messages, "Cell A1: cross_name is missing from the header";
+    if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
+        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
     }
 
     my %valid_properties;
@@ -80,9 +80,9 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross name missing";
+            push @error_messages, "Cell A$row_name: cross unique id missing";
         } elsif ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Duplicate cross name at cell A$row_name".": $cross_name";
+            push @error_messages, "Duplicate cross unique id at cell A$row_name".": $cross_name";
         } else {
             $seen_cross_names{$cross_name}++;
         }
@@ -106,7 +106,7 @@ sub _validate_with_plugin {
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',\@crosses)->{'missing'}};
 
     if (scalar(@crosses_missing) > 0){
-        push @error_messages, "The following crosses are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+        push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 
