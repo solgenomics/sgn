@@ -376,7 +376,7 @@ if (length(selectionData) == 0) {
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Additive genetic variance',  trModel$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat('Heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat('SNP heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
   combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
 
