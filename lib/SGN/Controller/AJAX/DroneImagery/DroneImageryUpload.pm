@@ -300,9 +300,9 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
         open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
             foreach (@$image_paths) {
-                my $dir = $c->tempfiles_subdir('/upload_drone_imagery_calibrated_raw');
-                my $temp_file_calibrated_raw_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_calibrated_raw/fileXXXX').".tiff";
-                print $fh "$_,$temp_file_calibrated_raw_image\n";
+                my $dir = $c->tempfiles_subdir('/upload_drone_imagery_temp_raw');
+                my $temp_file_raw_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_temp_raw/fileXXXX').".png";
+                print $fh "$_,$temp_file_raw_image\n";
             }
         close($fh);
         print STDERR "Drone image stitch temp file $temp_file_image_file_names\n";
@@ -323,8 +323,10 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_stitched_result_band5 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
         my $temp_file_stitched_result_rgb = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
         my $temp_file_stitched_result_rnre = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
+        my $temp_file_image_paths_to_stitch1 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".txt";
+        my $temp_file_image_paths_to_stitch2 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".txt";
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImages.py --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --do_pairwise_stitch 1000 ";
+        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImages.py --cpp_path '".$c->config->{rootpath}."/DroneImageScripts/cpp' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --temp_file_with_image_paths_to_stitch '$temp_file_image_paths_to_stitch1' --temp_file_with_image_paths_to_stitch2 '$temp_file_image_paths_to_stitch2' ";
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
