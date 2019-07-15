@@ -116,6 +116,7 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
 sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0){
     my $self = shift;
     my $c = shift;
+    my $params = $c->req->params() || {};
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $round = Math::Round::Var->new(0.01);
@@ -143,6 +144,18 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
+    my $limit = $c->req->param('length');
+    my $offset = $c->req->param('start');
+
+    my $limit_clause = '';
+    my $offset_clause = '';
+    if (defined($limit)) {
+        $limit_clause = ' LIMIT '.$limit;
+    }
+    if (defined($offset)) {
+        $offset_clause = ' OFFSET '.$offset;
+    }
+
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
@@ -166,7 +179,9 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
             AND accession.type_id=?
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
-        $order_by_additional;");
+        $order_by_additional
+        $limit_clause
+        $offset_clause;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);

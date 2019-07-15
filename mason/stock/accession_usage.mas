@@ -100,8 +100,14 @@ jQuery(document).ready(function(){
      'ajax':'ajax/accession_usage_male'
   });
 
-  jQuery('#accession_usage_phenotypes').DataTable( {
-      "ajax": '/ajax/accession_usage_phenotypes?display=plots_accession'
+  var stock_table = jQuery('#accession_usage_phenotypes').DataTable({
+      'destroy' : true,
+      'searching' : false,
+      'ordering'  : false,
+      'processing': true,
+      'serverSide': true,
+      'lengthMenu': [10,20,50,100,1000,5000],
+      'ajax': { 'url':  '/ajax/accession_usage_phenotypes?display=plots_accession' }
   });
 
 });
