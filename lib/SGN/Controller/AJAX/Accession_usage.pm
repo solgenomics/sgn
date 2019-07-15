@@ -122,26 +122,9 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
     my $display = $c->req->param('display');
-    my $select_clause_additional = '';
-    my $group_by_additional = '';
-    my $order_by_additional = '';
-    my $stock_type_id;
-    my $rel_type_id;
 
-    if ($display eq 'plots_accession') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $order_by_additional = ' ,accession.uniquename DESC';
-    }
-    if ($display eq 'plants_accession') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $order_by_additional = ' ,accession.uniquename DESC';
-    }
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     my $limit = $c->req->param('length');
@@ -162,8 +145,10 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
         to_char(avg(phenotype.value::real), 'FM999990.990'),
         to_char(max(phenotype.value::real), 'FM999990.990'),
         to_char(min(phenotype.value::real), 'FM999990.990'),
-        to_char(stddev(phenotype.value::real), 'FM999990.990')
-        $select_clause_additional
+        to_char(stddev(phenotype.value::real), 'FM999990.990'),
+        accession.uniquename,
+        accession.stock_id,
+        count(cvterm.cvterm_id) OVER() AS full_count
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
@@ -177,9 +162,9 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC
-        $order_by_additional
+        ,accession.uniquename DESC
         $limit_clause
         $offset_clause;");
 
@@ -188,8 +173,9 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
 
     my @phenotype_data;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
-
+    my $total_count;
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $full_count) = $h->fetchrow_array()) {
+        $total_count = $full_count;
         if (looks_like_number($average)){
             my $cv = 0;
             if ($stddev && $average != 0) {
@@ -205,7 +191,12 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
             push @phenotype_data, \@return_array;
         }
     }
-    $c->stash->{rest} = { data => \@phenotype_data };
+    my $draw = $c->req->param('draw');
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
+
+    $c->stash->{rest} = { data => \@phenotype_data, draw => $draw, recordsTotal => $total_count,  recordsFiltered => $total_count };
 }
 
 
