@@ -127,14 +127,17 @@ __PACKAGE__->config(
             }
         }
 
-        # save longest pedigree string
-        my $pedigree_strings = get_all_pedigrees($schema, \%design);
-        my %pedigree_strings = %{$pedigree_strings};
+        #parse only defined fields
+        #only retrieve pedigree if not already populated
 
-        foreach my $key ( sort { length($pedigree_strings{$b}) <=> length($pedigree_strings{$a}) } keys %pedigree_strings) {
-            $longest_hash{'pedigree_string'} = $pedigree_strings{$key};
-            last;
-        }
+        # save longest pedigree string
+        # my $pedigree_strings = get_all_pedigrees($schema, \%design);
+        # my %pedigree_strings = %{$pedigree_strings};
+        #
+        # foreach my $key ( sort { length($pedigree_strings{$b}) <=> length($pedigree_strings{$a}) } keys %pedigree_strings) {
+        #     $longest_hash{'pedigree_string'} = $pedigree_strings{$key};
+        #     last;
+        # }
 
         #print STDERR "Dumped data is: ".Dumper(%longest_hash);
         $c->stash->{rest} = {
@@ -223,12 +226,12 @@ __PACKAGE__->config(
        my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
 
        # if needed retrieve pedigrees in bulk
-       my $pedigree_strings;
-       foreach my $element (@$label_params) {
-           if ($element->{'value'} =~ m/{pedigree_string}/ ) {
-               $pedigree_strings = get_all_pedigrees($schema, $design);
-           }
-       }
+       # my $pedigree_strings;
+       # foreach my $element (@$label_params) {
+       #     if ($element->{'value'} =~ m/{pedigree_string}/ ) {
+       #         $pedigree_strings = get_all_pedigrees($schema, $design);
+       #     }
+       # }
 
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
@@ -265,7 +268,7 @@ __PACKAGE__->config(
                 $design_info{'year'} = $year;
                 $design_info{'genotyping_facility'} = $genotyping_facility;
                 $design_info{'genotyping_project_name'} = $genotyping_project_name;
-                $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
+                # $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
                 #print STDERR "Design info: " . Dumper(%design_info);
 
                 if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
@@ -395,7 +398,7 @@ __PACKAGE__->config(
                my %design_info = %{$design{$key}};
                $design_info{'trial_name'} = $trial_name;
                $design_info{'year'} = $year;
-               $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
+               # $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
 
                my $zpl = $zpl_template;
                $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
@@ -432,29 +435,29 @@ sub process_field {
     }
 }
 
-sub get_all_pedigrees {
-    my $schema = shift;
-    my $design = shift;
-    my %design = %{$design};
-
-    # collect all unique accession ids for pedigree retrieval
-    my %accession_id_hash;
-    foreach my $key (keys %design) {
-        $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
-    }
-    my @accession_ids = keys %accession_id_hash;
-
-    # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
-    my $stock = CXGN::Stock->new ( schema => $schema);
-    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
-    my %pedigree_strings;
-    foreach my $row (@$pedigree_rows) {
-        my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
-        my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
-        $pedigree_strings{$progeny} = $string;
-    }
-    return \%pedigree_strings;
-}
+# sub get_all_pedigrees {
+#     my $schema = shift;
+#     my $design = shift;
+#     my %design = %{$design};
+#
+#     # collect all unique accession ids for pedigree retrieval
+#     my %accession_id_hash;
+#     foreach my $key (keys %design) {
+#         $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
+#     }
+#     my @accession_ids = keys %accession_id_hash;
+#
+#     # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
+#     my $stock = CXGN::Stock->new ( schema => $schema);
+#     my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
+#     my %pedigree_strings;
+#     foreach my $row (@$pedigree_rows) {
+#         my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+#         my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
+#         $pedigree_strings{$progeny} = $string;
+#     }
+#     return \%pedigree_strings;
+# }
 
 sub get_plot_data {
     my $c = shift;
@@ -514,19 +517,57 @@ sub get_plot_data {
         my $trial_has_plant_entries = $trial->has_plant_entries;
         my $trial_has_subplot_entries = $trial->has_subplot_entries;
         my $trial_has_tissue_sample_entries = $trial->has_tissue_sample_entries;
-        #$plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+        # $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
 
-        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
-        my $data = $trial->get_treatments();
+        my $treatments = $trial->get_treatments();
+        my @treatments = @{$treatments};
+        print STDERR "treatments are @treatments\n";
+        my @treatment_ids = map { $_->[0] } @{$treatments};
+        print STDERR "treatment ids are @treatment_ids\n";
         my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
             schema => $schema,
             trial_id => $trial_id,
             data_level => 'plots',
-            treatment_project_ids => $self->data,
-            selected_columns => {"plot_name":1,"plot_id":1,"block_number":1,"plot_number":1,"rep_number":1,"row_number":1,"col_number":1,"accession_name":1,"is_a_control":1,"synonyms":1,"trial_name":1,"location_name":1,"year":1,"pedigree":1,"tier":1,"seedlot_name":1,"seed_transaction_operator":1,"num_seed_per_plot":1,"range_number":1,"plot_geo_json":1},
+            treatment_project_ids => \@treatment_ids,
+            selected_columns => {'plot_name' => 1,'plot_id' => 1,'block_number' => 1,'plot_number' => 1,'rep_number' => 1,'row_number' => 1,'col_number' => 1,'accession_name' => 1,'is_a_control' => 1,'synonyms' => 1,'trial_name' => 1,'location_name' => 1,'year' => 1,'pedigree' => 1,'tier' => 1,'seedlot_name' => 1,'seed_transaction_operator' => 1,'num_seed_per_plot' => 1,'range_number' => 1,'plot_geo_json' => 1},
             selected_trait_ids => []
         });
-        $plot_design = $trial_layout_download->get_layout_output();
+        my $plot_layout = $trial_layout_download->get_layout_output();
+
+        # map array of arrays into hash
+        my $outer_array = $plot_layout->{'output'};
+        my @keys;
+        my %mapped_design;
+        foreach my $inner_array (@{$outer_array}) {
+            if (scalar @keys > 0) {
+                my %detail_hash;
+                @detail_hash{@keys} = @{$inner_array};
+
+                my @applied_treatments;
+                foreach my $key (keys %detail_hash) {
+                    if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
+                        my $treatment = $key;
+                        $treatment =~ s/ManagementFactor://;
+                        push @applied_treatments, $treatment;
+                        delete($detail_hash{$key});
+                    }
+                    elsif ( $key =~ /ManagementFactor/ ) {
+                        delete($detail_hash{$key});
+                    }
+                }
+                $detail_hash{'ManagementFactor'} = join(",", @applied_treatments);
+
+                my $plot_number = $detail_hash{'plot_number'};
+                $mapped_design{$plot_number} = \%detail_hash;
+            }
+            else {
+                @keys = @{$inner_array};
+            }
+        }
+        $plot_design = \%mapped_design;
+        print STDERR "Mapped design hash is ".Dumper(%mapped_design);
+
+        # retrieve at plant and subplot and Tissue sample level only when specified
 
         my @plot_ids = keys %{$plot_design};
         if ($trial_has_plant_entries) {
@@ -595,6 +636,8 @@ sub get_plot_data {
 
 sub arraystostrings {
     my $hash = shift;
+
+    print STDERR "Design type is ".ref($hash)." and content is ".Dumper($hash);
     while (my ($key, $val) = each %$hash){
         while (my ($prop, $value) = each %$val){
             if (ref $value eq 'ARRAY'){
