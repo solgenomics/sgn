@@ -253,10 +253,6 @@ jQuery(document).ready(function($) {
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot) {
 
         var progenyNumber = $("#progeny_number").val();
-//        var pollinationDate = $("#pollination_date").val();
-//        var flowerNumber = $("#flower_number").val();
-//        var fruitNumber = $("#fruit_number").val();
-//        var seedNumber = $("#seed_number").val();
         var prefix = $("#prefix").val();
         var suffix = $("#suffix").val();
         var maternal;

@@ -605,15 +605,7 @@ sub add_individual_cross {
   my $prefix = $c->req->param('prefix');
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
-#  my $tag_number = $c->req->param('tag_number');
-#  my $pollination_date = $c->req->param('pollination_date');
-#  my $number_of_bags = $c->req->param('bag_number');
-#  my $number_of_flowers = $c->req->param('flower_number');
-#  my $number_of_fruits = $c->req->param('fruit_number');
-#  my $number_of_seeds = $c->req->param('seed_number');
   my $visible_to_role = $c->req->param('visible_to_role');
-
-  #print STDERR Dumper "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type Number of Flowers: $number_of_flowers";
 
     if ($female_plot_id){
         my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
@@ -743,25 +735,6 @@ if ($progeny_number) {
     $progeny_add->add_progeny();
 
 }
-
-#    my @cross_props = (
-#        ['Pollination Date',$pollination_date],
-#        ['Number of Flowers',$number_of_flowers],
-#        ['Number of Fruits',$number_of_fruits],
-#        ['Number of Seeds',$number_of_seeds]
-#    );
-
-#    foreach (@cross_props){
-#        if ($_->[1]){
-#            my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
-#                chado_schema => $chado_schema,
-#                cross_name => $cross_name,
-#                key => $_->[0],
-#                value => $_->[1]
-#            });
-#        $cross_add_info->add_info();
-#        }
-#    }
   };
     if ($@) {
         $c->stash->{rest} = { error => "An error occurred: $@"};
