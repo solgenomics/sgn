@@ -6,6 +6,7 @@ $locations => undef
 $preferred_species => undef
 $editable_stock_props => {}
 </%args>
+Hello world
 
 <& homepage/carousel.mas &>
 
