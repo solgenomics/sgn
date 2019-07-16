@@ -50,6 +50,7 @@ sub store_analysis_file_POST {
     my $self = shift;
     my $c = shift;
     my $file = $c->req->param("file");
+    my $dir = $c->req->param("dir"); # the dir under tempfiles/
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
     
@@ -70,7 +71,8 @@ sub store_analysis_file_POST {
     
     my $analysis_type_id = $analysis_type_row->cvterm_id();    
     push @traits, $analysis_type_id;
-    
+
+    my $fullpath = $c->tempfiles_base()."/".$dir."/".$file;
     my @lines = slurp($file);
 
     foreach my $line (@lines) {

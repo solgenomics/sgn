@@ -25,6 +25,7 @@ library(lmerTest)
 library(effects)
 library(phenoAnalysis)
 library(stringr)
+library(dplyr)
 
 pd = read.csv(datafile, sep="\t")
 source(paramfile)  # should give us dependent_variable and the model
@@ -59,19 +60,17 @@ adjusted_means = getAdjMeans(modelOut=model,
     genotypeEffectType=genotypeEffectType,
     adjMeansVariable='germplasmName')
 
-
 print(head(adjusted_means))
-
-
 
 outfile = paste(datafile, ".results", sep="")
 print(outfile)
 print(model)
-print(model_summary)
+#print(model_summary)
 print(colnames(model))
 print(ranef(model))
-#print(adjusted_means$Estimate)
+print(adjusted_means)
 sink(outfile)
-write.table(ranef(model)$germplasmName)
-#write.table(adjusted_means)
+#write.table(ranef(model)$germplasmName)
+
+write.table(select(adjusted_means, 'germplasmName', dependent_variable), row.names = F)
 sink();
