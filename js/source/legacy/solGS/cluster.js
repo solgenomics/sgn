@@ -56,25 +56,8 @@ solGS.cluster = {
 	
     },
 
-
-    getSelectName: function(selectId, dataStructureType) {
-	var selectName;
- 	if (dataStructureType == 'list') {
-	    
-	    var genoList = this.getClusterGenotypesListData(selectId);
-	    var selectName = genoList.name;
-	   
-	    //	dataStructureType = genoList.listType + ' list';
-	} else if (dataStructureType == 'dataset') {
-	    var dataset = solGS.getDatasetData(selectId);
-	    var selectName = dataset.name;
-	}
-
-	return selectName;
-    },
-
-
-    loadClusterGenotypesList: function(selectId, dataStructureType) {     
+    
+    loadClusterGenotypesList: function(selectId, selectName, dataStructureType) {     
 
 	if ( selectId.length === 0) {       
             alert('The list is empty. Please select a list with content.' );
@@ -87,8 +70,9 @@ solGS.cluster = {
 		clusterTable = this.getClusterPopsTable(tableId);
 		jQuery("#list_cluster_populations").append(clusterTable).show();		
             }
+	    console.log('loadClusterGenotypesList id' + selectId)
 	    
-	    var addRow = this.selectRow(selectId, dataStructureType);
+	    var addRow = this.selectRow(selectId, selectName, dataStructureType);
 	    var tdId = '#list_cluster_page_' + selectId;
 	    var addedRow = jQuery(tdId).doesExist();
 	    
@@ -131,11 +115,9 @@ solGS.cluster = {
      },
     
     
-    selectRow: function(selectId, dataStructureType) {
+    selectRow: function(selectId, selectName, dataStructureType) {
 
-	var selectName = this.getSelectName(selectId, dataStructureType);
 	var rowId = this.selectRowId(selectId);
-
 	var clusterTypeOpts = this.createClusterTypeSelect();
 
 	var dataTypeOpts;
@@ -157,11 +139,14 @@ solGS.cluster = {
 	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
 	
 	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
+
+	var onClickVal =  '<a href="#" onclick="solGS.cluster.runCluster('
+	    + selectId + ",'" + selectName + "'" +  ",'" + dataStructureType
+	    + "'" + ');return false;">';
 	
 	var row = '<tr name="' + dataStructureType + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
-            + '<a href="#"  onclick="solGS.cluster.runCluster('
-	    + selectId + ",'" + dataStructureType + "'" + '); return false;">' 
+            + onClickVal
             + selectName + '</a>'
             + '</td>'
 	    + '<td>' + dataStructureType + '</td>'
@@ -169,8 +154,7 @@ solGS.cluster = {
 	    + '<td>' + dataTypeOpts + '</td>'
 	    + '<td>' + kNum + '</td>'
             + '<td id="list_cluster_page_' + selectId +  '">'
-            + '<a href="#" onclick="solGS.cluster.runCluster('
-	    + selectId + ",'" + dataStructureType + "'" + ');return false;">' 
+            + onClickVal
             + '[ Run Cluster ] </a>'                                     
             + '</td>'
 	    + '<tr>';
@@ -204,7 +188,8 @@ solGS.cluster = {
 	var dataType    = clusterArgs.data_type;
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
-
+	var selectName = clusterArgs.select_name;
+	
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
 	if (trainingTraitsIds) {
@@ -222,7 +207,6 @@ solGS.cluster = {
 	    } else if (popType.match(/selection/)) {
 		popDetails['selection_pop_id'] = popId;
 		popDetails['cluster_pop_id'] = popId;
-		//popDetails['training_pop_id'] = null;
 	    }
 	}
 
@@ -236,12 +220,7 @@ solGS.cluster = {
 	    } else if (popType.match(/selection/)) {
 		popDetails['selection_pop_id'] = popId;
 		popDetails['cluster_pop_id'] = popId;
-	//	popDetails['training_pop_id'] = null;
-	//	popDetails['combo_pops_id'] = null;
 	    }
-	   // popDetails['combo_pops_id'] = popId;
-
-	    
 	    
 	}
 
@@ -251,6 +230,10 @@ solGS.cluster = {
 	var datasetId;
 	var datasetName;
 	var dataStructure = dataStructureType;
+
+	if (popDetails == undefined) {
+	    popDetails = {};
+	}
 	
 	if (dataStructureType == 'list') {
 	    var genoList = this.getClusterGenotypesListData(selectId);
@@ -259,14 +242,13 @@ solGS.cluster = {
 	    listId   = selectId;
 	   
 	    popDetails['training_pop_id'] = 'list_' + listId;
-	    popDetails['cluster_pop_id'] = 'list_' + listId;;
+	    popDetails['cluster_pop_id'] = 'list_' + listId;
 	
 	} else if (dataStructureType == 'dataset') {
-	    datasetId = selectId;
-	    popDetails['training_pop_id'] = 'dataset_' + datasetId;
-	     popDetails['training_pop_id'] = 'dataset_' + datasetId;
-	    var dataset = solGS.getDatasetData(selectId);
-	    datasetName = dataset.name;
+	    datasetId = selectId;	  
+	    popDetails['cluster_pop_id'] = 'dataset_' + selectId;
+	    popDetails['training_pop_id'] = 'dataset_' + selectId;
+	    datasetName = selectName;
 	}
 	
 	if (listId
@@ -392,14 +374,15 @@ solGS.cluster = {
 	return clusterTable;
     },
 
-    runCluster: function(selectId, dataStructureType) {
-	
+    runCluster: function(selectId, selectName, dataStructureType) {
+
 	var clusterOpts = solGS.cluster.clusteringOptions(selectId);
 	var clusterType = clusterOpts.cluster_type;
 	var kNumber     = clusterOpts.k_number;
 	var dataType    = clusterOpts.data_type;
 	
 	var clusterArgs = { 'select_id': selectId,
+			    'select_name': selectName,
 			    'data_structure_type':  dataStructureType,
 			    'cluster_type':  clusterType,
 			    'data_type': dataType,
@@ -409,7 +392,7 @@ solGS.cluster = {
     	this.clusterResult(clusterArgs);
     },
 
-    registerClusterType: function(selectId, dataStructureType) {
+    registerClusterType: function(selectId) {
 	var analysisRowId = this.selectRowId(selectId);
 	var clusterType = jQuery('input[name=analysis_select]:checked', '#' + analysisRowId).val();
 	return clusterType;
@@ -539,8 +522,8 @@ jQuery.fn.doesExist = function(){
     
 jQuery(document).ready( function() {
     
-    var url = window.location.pathname;
-    
+    var url = document.URL;
+ 
     if (url.match(/cluster\/analysis/)) {
     
         var list = new CXGN.List();
@@ -548,12 +531,12 @@ jQuery(document).ready( function() {
         var listMenu = list.listSelect("cluster_genotypes", ['accessions','plots', 'trials'], undefined, undefined, undefined);
 
 	var dType = ['accessions', 'trials'];
-	var dMenu = solGS.getDatasetsMenu(dType);
+	
+	var dMenu = solGS.dataset.getDatasetsMenu(dType);
 	
 	if (listMenu.match(/option/) != null) {         
             jQuery("#cluster_genotypes_list").append(listMenu);
 	    jQuery("#cluster_genotypes_list_select").append(dMenu);
-	    
         } else {            
             jQuery("#cluster_genotypes_list").append("<select><option>no lists found - Log in</option></select>");
         }
@@ -564,7 +547,7 @@ jQuery(document).ready( function() {
 
 jQuery(document).ready( function() { 
      
-    var url = window.location.pathname;
+    var url = document.URL;
     
     if (url.match(/cluster\/analysis/)) {  
         
@@ -572,16 +555,18 @@ jQuery(document).ready( function() {
      
         jQuery("#cluster_genotypes_list_select").change(function() {        
             var selectId = jQuery(this).find("option:selected").val();
+	    var selectName = jQuery(this).find("option:selected").text();
             var dataStructureType  = jQuery(this).find("option:selected").attr('name');
 
 	    if (typeof dataStructureType == 'undefined') {
 		dataStructureType = 'list';
+	    } else {
+		dataStructureType = 'dataset';
 	    }
 	    
             if (selectId) {                
                 jQuery("#cluster_go_btn").click(function() {
-		   
-		    solGS.cluster.loadClusterGenotypesList(selectId, dataStructureType);
+		    solGS.cluster.loadClusterGenotypesList(selectId, selectName, dataStructureType);
                 });
             }
         });
@@ -607,7 +592,7 @@ jQuery(document).ready( function() {
 	var clusterOpts = solGS.cluster.clusteringOptions(clusterOptsId);
 	var clusterType = clusterOpts.cluster_type;
 	var kNumber     = clusterOpts.k_number;
-	var dataType    =  clusterOpts.data_type;
+	var dataType    = clusterOpts.data_type;
 	
 	var clusterArgs = { 'select_id': clusterOptsId,
 			    'data_structure_type':  dataStructureType,
