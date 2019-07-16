@@ -558,11 +558,9 @@ jQuery(document).ready( function() {
 	    var selectName = jQuery(this).find("option:selected").text();
             var dataStructureType  = jQuery(this).find("option:selected").attr('name');
 
-	    if (typeof dataStructureType == 'undefined') {
+	    if (dataStructureType == undefined) {
 		dataStructureType = 'list';
-	    } else {
-		dataStructureType = 'dataset';
-	    }
+	    } 
 	    
             if (selectId) {                
                 jQuery("#cluster_go_btn").click(function() {
