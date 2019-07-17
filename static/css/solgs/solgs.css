@@ -8,10 +8,9 @@
 
 .button {
     position: relative;
-    margin-top: 10px;
     margin-right: 10px;  
     width: auto;
-    height: 30px;
+    height: 25px;
     font-size: 12px;
     color: #ffffff;
     border: 1px solid #ffffff;
@@ -93,42 +92,75 @@
 }
 
 
-/* SI and correlation dropdown */       
-.si_dropdown dd, .si_dropdown dt, 
-.si_dropdown ul, .corre_dropdown dd, 
-.corre_dropdown dt, .corre_dropdown ul {
+/* SI, cluster, correlation dropdown */       
+.si_dropdown dd,
+.si_dropdown dt, 
+.gg_dropdown ul,
+.gg_dropdown dd,
+.gg_dropdown dt, 
+.si_dropdown ul,
+.corre_dropdown dd, 
+.corre_dropdown dt,
+.corre_dropdown ul,
+.cluster_dropdown dd, 
+.cluster_dropdown dt,
+.cluster_dropdown ul {
     margin:0px; 
     padding:0px;
- }
-.si_dropdown dd, .corre_dropdown dd,  { 
+}
+
+.si_dropdown dd,
+.gg_dropdown dd,
+.corre_dropdown dd,
+.cluster_dropdown dd { 
     position:relative; 
 }
-.si_dropdown a, .si_dropdown a:visited, 
-.corre_dropdown a, .corre_dropdown a:visited { 
+
+.si_dropdown a, .si_dropdown a:visited,
+.gg_dropdown a, .gg_dropdown a:visited, 
+.corre_dropdown a, .corre_dropdown a:visited,
+.cluster_dropdown a, .cluster_dropdown a:visited { 
     color:#816c5b; 
     text-decoration:none; 
     outline:none;
 }
-.si_dropdown a:hover, .corre_dropdown a:hover { 
+.si_dropdown a:hover,
+.gg_dropdown a:hover,
+.corre_dropdown a:hover,
+.cluster_dropdown a:hover { 
     color: #5d4617;
 }
-.si_dropdown dt a:hover, .si_dropdown dt a:focus, 
-.corre_dropdown dt a:hover, .corre_dropdown dt a:focus { 
+
+.si_dropdown dt a:hover, .si_dropdown dt a:focus,
+.gg_dropdown dt a:hover, .gg_dropdown dt a:focus, 
+.corre_dropdown dt a:hover, .corre_dropdown dt a:focus,
+.cluster_dropdown dt a:hover, .cluster_dropdown dt a:focus { 
     color: ##5d4617; 
     border: 1px solid #5d4617;
 }
-.si_dropdown dt a, .corre_dropdown dt a {
+
+.si_dropdown dt a,
+.gg_dropdown dt a,
+.corre_dropdown dt a,
+.cluster_dropdown dt a {
     background:#ccccff url(/static/documents/img/glyphicons_expand.png) no-repeat scroll right center; 
     display:block; 
     padding-right:10px;
     width:250px;
 }
-.si_dropdown dt a span, .corre_dropdown dt a span {
+.si_dropdown dt a span,
+.gg_dropdown dt a span,
+.corre_dropdown dt a span,
+.cluster_dropdown dt a span {
     cursor:pointer; 
     display:block; 
     padding:2px;
 }
-.si_dropdown dd ul, .corre_dropdown dd ul { 
+
+.si_dropdown dd ul,
+.gg_dropdown dd ul,
+.corre_dropdown dd ul,
+.cluster_dropdown dd ul { 
     background:#ccccff none repeat scroll 0 0;
     border:1px solid #ccccff; 
     color: #C5C0B0;
@@ -141,14 +173,25 @@
     min-width:250px; 
     list-style:none;
 }
-.si_dropdown span.value, .corre_dropdown span.value { 
+.si_dropdown span.value,
+.gg_dropdown span.value,
+.corre_dropdown span.value,
+.cluster_dropdown span.value { 
     display:none;
 }
-.si_dropdown dd ul li a, .corre_dropdown dd ul li a { 
+
+.si_dropdown dd ul li a,
+.gg_dropdown dd ul li a,
+.corre_dropdown dd ul li a,
+.cluster_dropdown dd ul li a, { 
     padding:5px; 
     display:block;
 }
-.si_dropdown dd ul li a:hover, .corre_dropdown dd ul li a:hover { 
+
+.si_dropdown dd ul li a:hover,
+.gg_dropdown dd ul li a:hover,
+.corre_dropdown dd ul li a:hover,
+.cluster_dropdown dd ul li a:hover { 
     background-color:#efefef;
 }
                
@@ -166,8 +209,7 @@
 #list_type_selection_pop_load input, 
 #list_type_training_pop_load input,
 #pca_go_btn input,
-#cluster_go_btn input
-{
+#cluster_go_btn input {
     color: #ffffff;
     border: 1px solid #ffffff;
     background: #5cb85c;

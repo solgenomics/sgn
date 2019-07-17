@@ -1,12 +1,11 @@
 <%args>
 $stock_id
 $map_html => undef
-$direct_genotypes => {}
 </%args>
 
 % print $map_html;
 
-<table class="table table-hover table-bordered">
+<table class="table table-hover table-bordered" id="stock_direct_genotypes_datatable">
     <thead>
         <tr>
             <th>Genotyping Data Project Name</th>
@@ -16,13 +15,19 @@ $direct_genotypes => {}
             <th>Download</th>
         </tr>
     </thead>
-    <tbody>
-
-% foreach (@$direct_genotypes){
-        <tr>
-            <td><a href="/breeders_toolbox/trial/<% $_->{genotypingDataProjectDbId} %>"><% $_->{genotypingDataProjectName} %></a></td><td><% $_->{genotypingDataProjectDescription} %></td><td><% $_->{analysisMethod} %></td><td><% $_->{genotypeDescription} %></td><td><a href="/stock/<% $stock_id %>/genotypes?genotypeprop_id=<% $_->{markerProfileDbId} %>">Download</a></td>
-        </tr>
-% }
-
-    </tbody>
 </table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#stock_genotypes_section_onswitch').one("click", function() {
+        var stock_genotypes_table = jQuery('#stock_direct_genotypes_datatable').DataTable({
+            'ajax': '/stock/<% $stock_id %>/datatables/genotype_data',
+            "scrollX": true
+        });
+    });
+
+});
+
+</script>

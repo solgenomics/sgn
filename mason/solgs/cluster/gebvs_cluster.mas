@@ -1,0 +1,47 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/cluster/gebvs_cluster.mas - gebvs cluster analysis template
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id
+$pop_name
+$pop_type
+
+</%args>
+
+
+<div class="row">  
+  <div class="form-group col-sm-3"
+       id="cluster_select_a_population_div"
+       style="margin-right:25px">
+  </div>
+  
+  <& /solgs/cluster/cluster_options.mas &>
+    
+</div>
+  
+<div id="cluster_selected_population_div" style="display:none">    
+    <input type="hidden" id="model_id" value="<% $pop_id %>" />
+    <input type="hidden" id="model_name" value="<% $pop_name %>" />
+    <input type="hidden" id="population_id" value="<% $pop_id %>" />
+    <input type="hidden" id="default_cluster_selected_population_name" value="<% $pop_name %>"/>
+    <input type="hidden" id="default_cluster_selected_population_id" value="<% $pop_id %>"/>
+    <input type="hidden" id="default_cluster_selected_population_type" value="<% $pop_type %>"/>
+    <input type="hidden" id="cluster_selected_population_name" value="" />
+    <input type="hidden" id="cluster_selected_population_id" value="" />
+    <input type="hidden" id="cluster_selected_population_type" value="" />
+ </div>
+
+

@@ -63,8 +63,6 @@ $combo_pops_id => ''
   </div>
   
   <br/>
-  <br/>
-
 </div>
 
 <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 

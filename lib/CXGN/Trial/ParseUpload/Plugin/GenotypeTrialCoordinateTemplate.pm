@@ -248,7 +248,7 @@ sub _parse_with_plugin {
         $design{$key}->{ncbi_taxonomy_id} = 'NA';
         $design{$key}->{dna_person} = $dna_person;
         $design{$key}->{notes} = $notes;
-        $design{$key}->{tissue_type} = 'NA';
+        $design{$key}->{tissue_type} = 'leaf'; #Set to leaf by default because DaRT requires this and this info not in upload file
         $design{$key}->{extraction} = 'NA';
         $design{$key}->{concentration} = 'NA';
         $design{$key}->{volume} = 'NA';

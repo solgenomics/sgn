@@ -91,6 +91,7 @@ $locations
                                         </div>
                                     </div>
                                 </div><br/><br/>
+                                <!--
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">Location of cross: </label>
                                     <div class="col-sm-10">
@@ -110,6 +111,7 @@ $locations
                                         </select>
                                     </div>
                                 </div><br/><br/>
+                                -->
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">Cross Name: </label>
                                     <div class="col-sm-10">
@@ -272,10 +274,10 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Additional cross info" &>
-                                <& /page/page_title.mas, title=>"If you know more information about the cross, you can add it" &>
-
+                                <& /page/page_title.mas, title=>"If you would like to add auto-generated progeny names for this cross, you can add it here" &>
                                 <h3>Optional:</h3>
                                 <table>
+                                <!--
                                     <tr>
                                         <td>
                                             <div class="form-group">
@@ -342,6 +344,7 @@ $locations
                                             </div>
                                         </td>
                                     </tr>
+                                    -->
                                     <tr>
                                         <td>
                                             <div class="form-group">

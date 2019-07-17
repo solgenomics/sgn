@@ -172,6 +172,9 @@ has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
 
 sub validate_design {
@@ -179,7 +182,7 @@ sub validate_design {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
-    my %design = %{$self->get_design};
+    my %design = %{$self->get_design}; 
     my $error = '';
 
     if ($self->get_is_genotyping && $design_type ne 'genotyping_plate') {
@@ -372,6 +375,9 @@ sub store {
     my $notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property')->cvterm_id();
     my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $project_design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property')->cvterm_id();
+    my $management_factor_year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property')->cvterm_id();
+    my $management_factor_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_date', 'project_property')->cvterm_id();
+    my $management_factor_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_type', 'project_property')->cvterm_id();
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
     my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
@@ -915,6 +921,18 @@ sub store {
                 if ($self->get_new_treatment_has_tissue_sample_entries){
                     push @treatment_project_props, { type_id => $has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
                 }
+                if ($self->get_new_treatment_type){
+                    push @treatment_project_props, { type_id => $management_factor_type_cvterm_id, value => $self->get_new_treatment_type };
+                }
+                if ($self->get_new_treatment_year){
+                    push @treatment_project_props, { type_id => $management_factor_year_cvterm_id, value => $self->get_new_treatment_year };
+                } else {
+                    my $t = CXGN::Trial->new({
+                        bcs_schema => $chado_schema,
+                        trial_id => $self->get_trial_id
+                    });
+                    push @treatment_project_props, { type_id => $management_factor_year_cvterm_id, value => $t->get_year() };
+                }
 
                 my @treatment_nd_experiment_project = (
                     { nd_experiment_id => $nd_experiment->nd_experiment_id }
@@ -933,6 +951,14 @@ sub store {
                     project_relationship_subject_projects => \@treatment_relationships,
                     nd_experiment_projects => \@treatment_nd_experiment_project
                 });
+
+                if ($self->get_new_treatment_date()) {
+                    my $management_factor_t = CXGN::Trial->new({
+                        bcs_schema => $chado_schema,
+                        trial_id => $treatment_project->project_id()
+                    });
+                    $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
+                }
             }
         }
 

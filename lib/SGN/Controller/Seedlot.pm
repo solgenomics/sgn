@@ -7,6 +7,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 use CXGN::Stock::Seedlot;
 use Data::Dumper;
+use JSON;
 
 sub seedlots :Path('/breeders/seedlots') :Args(0) { 
     my $self = shift;
@@ -23,7 +24,7 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
     $c->stash->{crossing_trials} = $projects->get_crossing_trials();
-    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{locations} = decode_json($projects->get_location_geojson());
     $c->stash->{programs} = $breeding_programs;
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
 }

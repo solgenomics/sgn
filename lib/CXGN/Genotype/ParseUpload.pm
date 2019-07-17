@@ -20,6 +20,16 @@ has 'filename' => (
     required => 1,
 );
 
+has 'filename_intertek_marker_info' => (
+    is => 'ro',
+    isa => 'Str|Undef',
+);
+
+has 'nd_protocol_id' => (
+    is => 'ro',
+    isa => 'Int|Undef',
+);
+
 has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample
     isa => 'Str',
     is => 'ro',
@@ -29,7 +39,7 @@ has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sam
 has 'organism_id' => (
     isa => 'Int',
     is => 'ro',
-    required => 1,
+    required => 0,
 );
 
 has 'create_missing_observation_units_as_accessions' => (

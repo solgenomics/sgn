@@ -26,7 +26,7 @@ $gs_traits_index => undef
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTraits",  
-  "solGS.searchTrials", "jquery.dataTables",  "solGS.combineTrials", 
+  "solGS.searchTrials", "jquery.dataTables", "solGS.Dataset", "solGS.combineTrials", 
   "solGS.ajaxAutocomplete"] &>
 
 <div class="container">

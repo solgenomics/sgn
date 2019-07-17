@@ -1189,6 +1189,24 @@ sub merge {
 
     # move object relationships
     #
+
+    # TO DO: do not move parents if target already has parents.
+    #
+    # my $female_parent_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'female_parent')->cvterm_id();
+    # my $male_parent_id   = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'male_parent')->cvterm_id();
+    
+    # my $female_parent_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $female_parent_id });
+    # my $male_parent_rs   = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $male_parent_id });
+    
+    # if ($female_parent_rs->count() > 0) { 
+    # 	print STDERR "The target $stock_id already had a female parent... not moving any other objects.\n";
+    # 	return;
+    # }
+    # if ($male_parent_rs ->count() > 0) { 
+    # 	print STDERR "The target $stock_id already had a male parent... not moving any other objects.\n";
+    # 	return;
+    # }
+
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
 	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });

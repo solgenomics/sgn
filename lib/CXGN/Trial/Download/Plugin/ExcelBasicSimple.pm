@@ -153,6 +153,21 @@ sub download {
                     }
                 }
             }
+        } elsif ($self->data_level eq 'tissue_samples') {
+
+            my @ordered_plots = sort { $a <=> $b} keys(%design);
+            for(my $n=0; $n<@ordered_plots; $n++) {
+                my %design_info = %{$design{$ordered_plots[$n]}};
+                my $tissue_sample_plant_names = $design_info{plants_tissue_sample_names};
+                foreach my $s (sort keys %$tissue_sample_plant_names){
+                    my $tissue_sample_names = $tissue_sample_plant_names->{$s};
+
+                    foreach (sort @$tissue_sample_names) {
+                        $ws->write($line, 0, $_);
+                        $line++;
+                    }
+                }
+            }
         }
     }
 

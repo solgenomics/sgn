@@ -1,0 +1,40 @@
+{
+  "name": "@solgenomics/cxgn_js",
+  "version": "0.0.0",
+  "description": "node package containing all importable CXGN/SGN JavaScript files.",
+  "main": "webpack.config.js",
+  "scripts": {
+    "reset": "npm config set engine-strict true; rm -r build/ || true && npm install .",
+    "build": "npm run reset && webpack --config build.webpack.config.js",
+    "build-watch": "npm run reset && webpack --config build.webpack.config.js -w",
+    "reset-test": "npm config set engine-strict true; rm -r build_test/ || true && npm install .",
+    "build-test": "npm run reset-test && webpack --config test.webpack.config.js"
+  },
+  "private": true,
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.3.3",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/polyfill": "^7.2.5",
+    "babel-loader": "^8.0.5",
+    "deepmerge": "^2.2.1",
+    "del": "^3.0.0",
+    "jsdom": "^13.2.0",
+    "loader-utils": "^1.2.3",
+    "nock": "^10.0.6",
+    "node-fetch": "^2.3.0",
+    "source-map-support": "^0.5.10",
+    "tape": "^4.10.1",
+    "uglifyjs-webpack-plugin": "^1.2.7",
+    "webpack": "^4.29.5",
+    "webpack-command": "^0.4.2"
+  },
+  "dependencies": {
+    "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git"
+  },
+  "engines": {
+    "node": ">=10.6.0",
+    "npm": ">=6.1.0"
+  }
+}

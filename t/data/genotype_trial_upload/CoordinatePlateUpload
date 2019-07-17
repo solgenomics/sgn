@@ -1,7 +1,7 @@
 date,plate_id,plate_name,sample_id,well_A01,well_01A,tissue_id,dna_person,notes,tissue_type,extraction
-2018-02-06,18DNA00001,Plate test,18DNA00001_A01,A01,01A,test_accession1,Trevor_Rife,,Leaf,CTAB
-2018-02-06,18DNA00001,Plate test,18DNA00001_B01,B01,01B,test_accession1,Trevor_Rife,,Leaf,CTAB
-2018-02-06,18DNA00001,Plate test,18DNA00001_C01,C01,01C,test_accession2,Trevor_Rife,,Leaf,CTAB
-2018-02-06,18DNA00001,Plate test,18DNA00001_D01,D01,01D,test_accession2,Trevor_Rife,,Leaf,CTAB
-2018-02-06,18DNA00001,Plate test,18DNA00001_B04,B04,04B,BLANK_18DNA00001_B04,Trevor_Rife,,Leaf,CTAB
-2018-02-06,18DNA00001,Plate test,18DNA00001_C04,C04,04C,BLANK_18DNA00001_C04,Trevor_Rife,,Leaf,CTAB
+2018-02-06,18DNA00001,Plate test,18DNA00001_A01,A01,01A,test_accession1,Trevor_Rife,,leaf,CTAB
+2018-02-06,18DNA00001,Plate test,18DNA00001_B01,B01,01B,test_accession1,Trevor_Rife,,leaf,CTAB
+2018-02-06,18DNA00001,Plate test,18DNA00001_C01,C01,01C,test_accession2,Trevor_Rife,,leaf,CTAB
+2018-02-06,18DNA00001,Plate test,18DNA00001_D01,D01,01D,test_accession2,Trevor_Rife,,leaf,CTAB
+2018-02-06,18DNA00001,Plate test,18DNA00001_B04,B04,04B,BLANK_18DNA00001_B04,Trevor_Rife,,leaf,CTAB
+2018-02-06,18DNA00001,Plate test,18DNA00001_C04,C04,04C,BLANK_18DNA00001_C04,Trevor_Rife,,leaf,CTAB

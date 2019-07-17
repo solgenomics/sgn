@@ -41,7 +41,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/usr/login', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 

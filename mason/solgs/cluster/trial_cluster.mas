@@ -1,0 +1,22 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/cluster/trial_cluster.mas - trial data cluster analysis template
+
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+</%args>
+
+<div class="row">
+  <& /solgs/cluster/cluster_options.mas &>
+</div>
+

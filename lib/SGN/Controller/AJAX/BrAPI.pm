@@ -2147,7 +2147,10 @@ sub maps_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
-	my $brapi_package_result = $brapi_module->list();
+	my $brapi_package_result = $brapi_module->list({
+        config => $c->config
+    });
+
 	_standard_response_construction($c, $brapi_package_result);
 }
 

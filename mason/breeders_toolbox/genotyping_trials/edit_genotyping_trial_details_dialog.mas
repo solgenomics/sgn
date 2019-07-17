@@ -1,0 +1,131 @@
+
+<%args>
+$trial_name
+$breeding_program
+$genotyping_facility => undef
+$genotyping_facility_status => undef
+$genotyping_facility_submitted => undef
+$genotyping_plate_format => undef
+$genotyping_plate_sample_type => undef
+$genotyping_raw_data_link => undef
+</%args>
+
+<div class="modal fade" id="edit_genotyping_trial_details_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDetailsEditDialog">
+<div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content ui-front">
+        <div class="modal-header texkkt-center">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="genotypingTrialDetailsEditDialog">Edit Trial Details</h4>
+        </div>
+        <div class="modal-body" id="genotyping_trial_details_edit_body">
+            <div class="container-fluid">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_name">Trial Name: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_trial_name" title="name" type="text" value="<%$trial_name%>" aria-describedby="edit_genotyping_trial_name_status"/>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_trial_breeding_program">Breeding Program: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <select class="form-control" id="edit_genotyping_trial_breeding_program" title="breeding_program" value="<%$breeding_program%>"></select>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_format">Plate Format: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_plate_format" title="plate_format" type="text" value="<%$genotyping_plate_format%>"/>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_plate_sample_type">Plate Sample Type: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_plate_sample_type" title="plate_sample_type" type="text" value="<%$genotyping_plate_sample_type%>"/>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_facility">Genotyping Facility: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_facility" title="facility" type="text" value="<%$genotyping_facility%>"/>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_facility_submitted">Submitted to Genotyping Facility: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_facility_submitted" title="facility_submitted" type="text" value="<%$genotyping_facility_submitted%>"/>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_facility_status">Genotyping Facility Status: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_facility_status" title="facility_status" type="text" value="<%$genotyping_facility_status%>"/>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_genotyping_raw_data_link">Raw Data Link: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <input class="form-control col-sm-8" id="edit_genotyping_raw_data_link" title="raw_data_link" type="text" value="<%$genotyping_raw_data_link%>"/>
+                      </div>
+                    </div>
+                </div>
+              </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_genotyping_trial_details_cancel_button">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save_genotyping_trial_details">Save Changes</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="genotyping_trial_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="genotypingTrialLayoutDartSeqXLSrialDetailsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingTrialDetailsSavedDialog">Details Saved</h4>
+            </div>
+            <div class="modal-body" id="genotyping_trial_details_saved_body">
+              <ul class="list-group" id="genotyping_trial_details_saved_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="genotyping_trial_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_trial_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="genotypingTrialDetailsErrorDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingTrialDetailsErrorDialog">Error Saving Trial Details</h4>
+            </div>
+            <div class="modal-body" id="genotyping_trial_details_error_body">
+              <ul class="list-group" id="genotyping_trial_details_error_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="genotyping_trial_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -146,6 +146,10 @@ after 'setup_finalize' => sub {
 
     # update the symlinks used to serve static files
     $self->_update_static_symlinks;
+    
+    if(! $ENV{SGN_WEBPACK_WATCH}){
+        system("cd js && npm run build && cd -");
+    }
 };
 
 __PACKAGE__->setup;

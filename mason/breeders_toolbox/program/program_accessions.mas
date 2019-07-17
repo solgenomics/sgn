@@ -9,6 +9,7 @@ $program_id
 <thead>
   <tr>
     <th>Accession name</th>
+    <th>Description</th>
   </tr>
 </thead>
 

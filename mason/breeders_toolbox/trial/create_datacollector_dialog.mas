@@ -51,7 +51,7 @@ jQuery(document).ready(function() {
   jQuery('#create_DataCollector_link').click( function () {
     jQuery('#download_datacollector_dialog').modal("show");
     var list = new CXGN.List();
-    jQuery("#trait_list_dc").html(list.listSelect("trait_list_dc", [ 'traits' ]));
+    jQuery("#trait_list_dc").html(list.listSelect("trait_list_dc", [ 'traits' ], undefined, undefined, undefined));
   });
   
   jQuery('#create_DataCollector_submit_button').click( function () {

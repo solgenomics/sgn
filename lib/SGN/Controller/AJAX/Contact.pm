@@ -52,6 +52,8 @@ sub submit_contact_form_POST : Args(0) {
     my $req = HTTP::Request->new(POST => $server_endpoint);
     $req->header('content-type' => 'application/json');
 
+    $body .= "\n\nSent from website: $website_name";
+    $body .= "\n\nPlease remember to include the contact person's email in any replies which are directed to them. Please include the github.reply email address as a recipient in all messages, so that they are logged with the open ticket.";
     my $post_data = { "title"=>$title, "body"=> $body, "labels"=>[$website_name] };
     $req->content( encode_json $post_data);
 

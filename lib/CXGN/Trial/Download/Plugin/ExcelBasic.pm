@@ -113,6 +113,9 @@ sub download {
     } elsif ($self->data_level eq 'plants_subplots') {
         $num_col_before_traits = 11;
         @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+    } elsif ($self->data_level eq 'tissue_samples') {
+        $num_col_before_traits = 11;
+        @column_headers = ("tissue_sample_name", "plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     }
 
     my $num_col_b = $num_col_before_traits;
@@ -274,6 +277,44 @@ sub download {
                     my $plant_names = $subplot_plant_names->{$s};
 
                     foreach (sort @$plant_names) {
+                        $ws->write($line, 0, $_);
+                        $ws->write($line, 1, $s);
+                        $ws->write($line, 2, $design_info{plot_name});
+                        $ws->write($line, 3, $design_info{accession_name});
+                        $ws->write($line, 4, $design_info{plot_number});
+                        $ws->write($line, 5, $design_info{block_number});
+                        $ws->write($line, 6, $design_info{is_a_control});
+                        $ws->write($line, 7, $design_info{rep_number});
+                        $ws->write($line, 8, $planting_date);
+                        $ws->write($line, 9, $harvest_date);
+                        $ws->write($line, 10, $trial_name);
+
+                        if (scalar(@predefined_columns) > 0) {
+                            my $pre_col_ind = $num_col_b;
+                            foreach (@$submitted_predefined_columns) {
+                                foreach my $header_predef_col (keys %{$_}) {
+                                    if ($_->{$header_predef_col}) {
+                                        $ws->write($line, $pre_col_ind, $_->{$header_predef_col});
+                                        $pre_col_ind++;
+                                    }
+                                }
+                            }
+                        }
+
+                        $line++;
+                    }
+                }
+            }
+        } elsif ($self->data_level eq 'tissue_samples') {
+
+            my @ordered_plots = sort { $a <=> $b} keys(%design);
+            for(my $n=0; $n<@ordered_plots; $n++) {
+                my %design_info = %{$design{$ordered_plots[$n]}};
+                my $tissue_sample_plant_names = $design_info{plants_tissue_sample_names};
+                foreach my $s (sort keys %$tissue_sample_plant_names){
+                    my $tissue_sample_names = $tissue_sample_plant_names->{$s};
+
+                    foreach (sort @$tissue_sample_names) {
                         $ws->write($line, 0, $_);
                         $ws->write($line, 1, $s);
                         $ws->write($line, 2, $design_info{plot_name});
