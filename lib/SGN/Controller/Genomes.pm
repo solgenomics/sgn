@@ -41,6 +41,26 @@ sub list_genomes : Path( '/genomes' ) Args(0) {
     );
 }
 
+=head2 sequenced_accessions
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub sequenced_accessions :Path('/genomes/sequenced_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/genomes/sequenced_accessions.mas';
+}
+
+
+
 =head2 view_genome_data
 
 Public path: /organism/<organism id or name>/genome
@@ -240,5 +260,7 @@ sub _annotation_cvterms {
     my @terms = $t->all;
     return [ @terms, map $_->recursive_children, @terms ];
 }
+
+
 
 1;

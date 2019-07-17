@@ -4,8 +4,13 @@
 
 <& /page/page_title.mas, title=> "Sequenced Accessions" &>
 
+<div id="sequenced_accessions_div">
+</div>
 
+<script>
+  var sequenced_accessions = window.jsMod['sequenced_accessions'].init("sequenced_accessions_div");
+</script>
+  
 
-  <div id="sequenced_accessions_table">[loading...]</div>
-
+  
  

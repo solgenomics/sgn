@@ -418,14 +418,13 @@ sub get_sequencing_project_info {
     my $self = shift;
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
-    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$type_id, stock_id => $self->stock_id() });
+    my @values = $self->_retrieve_stockpropd($type_id);
 
-    my $value;
-    if ($stockprop) {
-	$value = $stockprop->value();
+    my @info;
+    foreach my $v (@values) { 
+	push @info,  JSON::Any->decode($v);
     }
-
-    return JSON::Any->decode($value);
+    return @info;
 }
 
 =head2 set_sequencing_project_info
