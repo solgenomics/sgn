@@ -38,6 +38,13 @@ sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) {
     $c->stash->{template} = '/stock/ethz_cass_sync.mas';
 }
 
+
+sub solcode_project_page :Path('/projects/solcode/') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/projects/solcode.mas';
+}
+
 sub varitome_project_page :Path('/projects/varitome/') Args(0) { 
     my $self = shift;
     my $c = shift;

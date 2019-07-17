@@ -150,6 +150,8 @@ sub _parse_with_plugin {
     my $protocol_id = $self->get_nd_protocol_id();
     my $schema = $self->get_chado_schema();
     my $stock_type = $self->get_observation_unit_type_name;
+    my @error_messages;
+    my %errors;
 
     print STDERR "Reading VCF to parse\n";
 
@@ -218,26 +220,33 @@ sub _parse_with_plugin {
                     my @alt_calls;
                     my $gt_dosage = 0;
                     foreach my $a (@alleles){
-                        my $gt_val;
                         if ($a eq $ref) {
-                            $gt_val = 0;
-                            push @gt_vcf_genotype, $gt_val;
+                            push @gt_vcf_genotype, 0;
                             push @ref_calls, $a;
+                            $gt_dosage = $gt_dosage + 0;
                         }
-                        if ($a eq $alt) {
-                            $gt_val = 1;
-                            push @gt_vcf_genotype, $gt_val;
+                        elsif ($a eq $alt) {
+                            push @gt_vcf_genotype, 1;
                             push @alt_calls, $a;
+                            $gt_dosage = $gt_dosage + 1;
                         }
-                        $gt_dosage = $gt_dosage + $gt_val;
+                        elsif ($a eq '?' || $a eq 'Uncallable') {
+                            $gt_dosage = 'NA';
+                            push @gt_vcf_genotype, 'NA';
+                            push @alt_calls, 'NA';
+                        } else {
+                            push @error_messages, "Allele Call Does Not Match Ref or Alt for Sample: $sample_id_with_lab_id Marker: $marker_name Alt: $alt Ref: $ref Allele: $a";
+                        }
                     }
 
                     my @vcf_genotype = (@ref_calls, @alt_calls);
                     my $vcf_genotype_string = join ',', @vcf_genotype;
                     my $vcf_gt_genotype_string = join '/', @gt_vcf_genotype;
-                    $genotype_obj = { 'GT' => $vcf_gt_genotype_string };
-                    $genotype_obj = { 'NT' => $vcf_genotype_string };
-                    $genotype_obj = { 'DS' => "$gt_dosage"};
+                    $genotype_obj = {
+                        'GT' => $vcf_gt_genotype_string,
+                        'NT' => $vcf_genotype_string,
+                        'DS' => "$gt_dosage"
+                    };
                 } else {
                     die "There should always be a ref and alt according to validation above\n";
                 }
@@ -247,6 +256,12 @@ sub _parse_with_plugin {
         }
 
     close($F);
+
+    if (scalar(@error_messages)>0) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
+    }
 
     my %parsed_data = (
         protocol_info => \%protocolprop_info,

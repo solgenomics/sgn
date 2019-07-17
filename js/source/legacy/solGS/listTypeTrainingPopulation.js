@@ -1,7 +1,7 @@
 
 /**
 
-reference population upload from lists.
+For training population made from list of plots and trial.
 
 Isaak Y Tecle 
 iyt2@cornell.edu
@@ -14,13 +14,21 @@ JSAN.use("jquery.blockUI");
 jQuery(document).ready( function() {
        
     var list = new CXGN.List();
-        
-    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials']);
+
+    var dType = ['plots', 'trials']; 
+    var dMenu = solGS.dataset.getDatasetsMenu(dType);
+
+    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials'], undefined, undefined, undefined);
        
     if (listMenu.match(/option/) != null) {           
-        jQuery("#list_type_training_pops_list").append(listMenu);
+        jQuery("#list_type_training_pops_list")
+	    .append(listMenu);
+	
+	jQuery("#list_type_training_pops_list_select")
+	    .append(dMenu);
     } else {
-        jQuery("#list_type_training_pops_list").append("<select><option>no lists found</option></select>");
+        jQuery("#list_type_training_pops_list")
+	    .append("<select><option>no lists or datasets found</option></select>");
     }
                
 });
@@ -33,23 +41,38 @@ jQuery(document).ready( function() {
         
     jQuery("#list_type_training_pops_list_select")
 	.change(function() { 
-        
-	    var listId = jQuery(this).find("option:selected").val();
-          
-            if (listId) {  
-		var listDetail = getListTypeTrainingPopDetail(listId);
+            var selectedType = jQuery(this)
+		.find("option:selected")
+		.attr('name');
+
+	    var selectedId = jQuery(this)
+		.find("option:selected")
+		.val();
+	    
+	    var selectedName = jQuery(this)
+		.find("option:selected")
+		.text();
+	    
+            if (selectedId) {  	
 		jQuery("#list_type_training_pop_load").click(function() {
 		    
-		    if (listDetail.type.match(/plots/)) {
-			askTrainingJobQueueing(listId);
-		    } else {
-			var trialsList = listDetail.list;
-			var trialsNames = listDetail.list_elements_names;
+		    if (typeof selectedType === 'undefined'
+			|| !selectedType.match(/dataset/i)) {
+			var listDetail = getListTypeTrainingPopDetail(selectedId);
+
+			if (listDetail.type.match(/plots/)) {
+			    askTrainingJobQueueing(selectedId);
+			} else {
+			    var trialsList = listDetail.list;
+			    var trialsNames = listDetail.list_elements_names;
 			
-			loadTrialListTypeTrainingPop(trialsNames);		    
+			    loadTrialListTypeTrainingPop(trialsNames);		    
+			}
+		    } else {
+			solGS.dataset.datasetTrainingPop(selectedId, selectedName);
 		    }
 		});
-            }
+            }	   
 	});       
 });
 
@@ -85,9 +108,6 @@ function getListTypeTrainingPopDetail(listId) {
     var listData;
     var listType;
     var listName;
-    //var listElements;
-   // var listElementsNames;
-   // var listElementsIds;
 
     if (listId) {
         listData      = list.getListData(listId);
@@ -117,7 +137,7 @@ function loadTrialListTypeTrainingPop (trialsNames) {
         dataType: 'json',
         data: { 'trials_names': trialsNames},
         success: function (res) {
-            getCombinedPopsId(res.trials_ids);
+            solGS.combinedTrials.getCombinedPopsId(res.trials_ids);
         },
         error: function(response) {
             alert('Error occured querying for trials ids');
@@ -165,7 +185,6 @@ function createTrainingReqArgs (listId) {
 function loadPlotListTypeTrainingPop(listId) {     
   
     var args  = createTrainingReqArgs(listId);
-    var len   = args.list.length;
     var popId = args.training_pop_id;
 
     if (window.Prototype) {
@@ -174,7 +193,7 @@ function loadPlotListTypeTrainingPop(listId) {
     
     args = JSON.stringify(args);
 
-    if (len === 0) {       
+    if ( args.list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
     else {  
@@ -194,7 +213,7 @@ function loadPlotListTypeTrainingPop(listId) {
 		    jQuery.unblockUI();                        
                       
                 } else {                                    
-                    alert("fail: Error occured while querying for the training data.");
+                    alert("Error occured while querying for the training data.");
                     jQuery.unblockUI();   
                 }                     
             },

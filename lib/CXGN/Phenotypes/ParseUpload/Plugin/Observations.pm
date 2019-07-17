@@ -125,7 +125,7 @@ sub parse {
 
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
         my $variable_db_id = $obs->{'observationVariableDbId'};
-        my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : '';
+        my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : undef;
         my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
