@@ -1043,6 +1043,17 @@ sub _update_stockprop {
     $self->_store_stockprop($type,$value);
 }
 
+=head2 _retrieve_stockprop
+
+ Usage:
+ Desc:
+ Ret:          a string with all stockprops, separated by commas
+ Args:         a stockprop type string
+ Side Effects:
+ Example:
+
+=cut
+
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
@@ -1062,6 +1073,48 @@ sub _retrieve_stockprop {
     my $res = join ',', @results;
     return $res;
 }
+
+=head2 _retrieve_stockprops
+
+ Usage:
+ Desc:
+ Ret:          a list of elements [ stockprop_id, value ]
+ Args:         $stockprop_type_string
+ Side Effects:
+ Example:
+
+=cut
+
+sub _retrieve_stockprops {
+    my $self = shift;
+    my $type = shift;
+    
+    my @results;
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, [ $r->stockprop_id(), $r->value() ];
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+    
+    return @results;
+}
+
+=head2 _remove_stockprop
+
+ Usage:
+ Desc:
+ Ret:          1 if successful, 0 if not
+ Args:         $type_string, $value
+ Side Effects:
+ Example:
+
+=cut
 
 sub _remove_stockprop {
     my $self = shift;
@@ -1083,6 +1136,41 @@ sub _remove_stockprop {
     }
 
 }
+
+=head2 _remove_stockprop_by_id
+
+ Usage:
+ Desc:
+ Ret:
+ Args:         $type_string, $stockprop_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub _remove_stockprop_by_id {
+    my $self = shift;
+    my $type = shift;
+    my $stockprop_id = shift;
+    
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id(), stockprop_id=> $stockprop_id } );
+
+    if ($rs->count() == 1) {
+        $rs->first->delete();
+        return 1;
+    }
+    elsif ($rs->count() == 0) {
+        return 0;
+    }
+    else {
+        print STDERR "Error removing stockprop from stock ".$self->stock_id().". Please check this manually.\n";
+        return 0;
+    }
+
+}
+
+
 
 sub _retrieve_organismprop {
     my $self = shift;
