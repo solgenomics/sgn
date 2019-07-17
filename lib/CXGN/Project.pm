@@ -3379,6 +3379,8 @@ sub delete_assayed_trait {
     my $temp_file_nd_experiment_id = shift;
     my $pheno_ids = shift;
     my $trait_ids = shift;
+
+    my $trial_id = $self->get_trial_id();
     my $schema = $self->bcs_schema;
     my $phenome_schema = $self->phenome_schema;
     my ($error, @nd_expt_ids);
