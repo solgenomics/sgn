@@ -132,42 +132,31 @@ use CXGN::CrossingTrial;
 sub new {
     my $class = shift;
     my $args = shift;
-
     my $schema = $args->{bcs_schema};
     my $trial_id = $args->{trial_id};
-    
-    # check type of trial and return the correct object
+
     my $trial_rs = $schema->resultset("Project::Projectprop")->search( { project_id => $trial_id },{ join => 'type' });
 
     if ($trial_id && $trial_rs->count() == 0) {
-	die "The provided trial_id $trial_id does not exist.";
+        die "The provided trial_id $trial_id does not exist.";
     }
-    
+
     my $object;
-
     while (my $trial_row = $trial_rs->next()) { 
-	print STDERR "Got a row...\n";
-	print STDERR "Trial: ".$trial_row->value()."\n";
-	my $name = $trial_row->type()->name();
-	print STDERR "$trial_id, ".$trial_row->type()->name()."\n";
-
-	if ($name eq "genotyping_trial") {
-	    # create a genotyping trial object
-	    $object = CXGN::GenotypingTrial->new({ bcs_schema=> $schema, trial_id => $trial_id });
-	}
-	elsif ($name eq "crossing_trial") {
-	    # create a crossing trial
-	    $object = CXGN::CrossingTrial->new({ bcs_schema=> $schema, trial_id => $trial_id });
-	}
-	elsif ($name eq "analysis") {
-	    $object = CXGN::Analysis->new({ bcs_schema => $schema, trial_id => $trial_id });
-	}
-	# what about folders?
-	else {
-	    # create a phenotyping trial object
-	    $object = CXGN::PhenotypingTrial->new({ bcs_schema=> $schema, trial_id => $trial_id });
-	}
-    }	   
+        my $name = $trial_row->type()->name();
+        if ($name eq "genotyping_trial") {
+            $object = CXGN::GenotypingTrial->new($args);
+        }
+        elsif ($name eq "crossing_trial") {
+            $object = CXGN::CrossingTrial->new($args);
+        }
+        elsif ($name eq "analysis") {
+            $object = CXGN::Analysis->new($args);
+        }
+        else {
+            $object = CXGN::PhenotypingTrial->new($args);
+        }
+    }
     return $object;
 }
 
