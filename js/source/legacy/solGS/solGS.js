@@ -295,7 +295,7 @@ solGS.waitPage = function (page, args) {
 	if (page.match(matchItems)) {
 	    window.location = page;
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
-	    retrievePopsData(args.combo_pops_list);  
+	    solGS.combinedTrials.displayCombinedTrialsTrainingPopPage(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
 	    if (page.match(/solgs\/population\/list_/)) {
 		var listId = args.list_id;
@@ -831,6 +831,15 @@ solGS.getPopulationDetails = function () {
     }
   
     var  comboPopsId = jQuery("#combo_pops_id").val();
+
+    var dataSetType;
+   
+    if (comboPopsId) {      
+        dataSetType = 'combined populations';
+	trainingPopId = comboPopsId;
+    } else {        
+        dataSetType = 'single population';
+    } 
        
     return {
 	'training_pop_id'   : trainingPopId,
@@ -839,6 +848,7 @@ solGS.getPopulationDetails = function () {
 	'selection_pop_id'  : selectionPopId,
 	'selection_pop_name': selectionPopName,
 	'combo_pops_id'     : comboPopsId,
+	'data_set_type'     : dataSetType
     };        
 }
 

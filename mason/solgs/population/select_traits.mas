@@ -56,7 +56,7 @@ ROW
 % if ($trait_rows) {
  <div id="traits_selection_div">
 
-  <table id="population_traits_list">
+  <table  class="table-condensed" id="population_traits_list">
    <% $trait_rows %>
      <tr>
        <td>
