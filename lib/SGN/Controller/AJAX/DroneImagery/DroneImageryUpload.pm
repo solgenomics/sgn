@@ -327,11 +327,24 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_stitched_result_rnre = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
 
         my $cmd;
+        my @stitched_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
             $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesMicasense.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --work_megapix $stitching_work_pix";
+
+            @stitched_bands = (
+                ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
+                ["Band 2", "Green", "Green (515-600nm)", $temp_file_stitched_result_band2],
+                ["Band 3", "Red", "Red (600-690nm)", $temp_file_stitched_result_band3],
+                ["Band 4", "NIR", "NIR (780-3000nm)", $temp_file_stitched_result_band4],
+                ["Band 5", "RedEdge", "Red Edge (690-750nm)", $temp_file_stitched_result_band5]
+            );
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
             $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb' --work_megapix $stitching_work_pix";
+
+            @stitched_bands = (
+                ["Color Image", "RGB Color Image", "RGB Color Image", $temp_file_stitched_result_rgb],
+            );
         }
         else {
             die "Camera info not supported for stitching: $new_drone_run_camera_info\n";
@@ -339,17 +352,10 @@ sub upload_drone_imagery_POST : Args(0) {
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
-        my @micasense_bands = (
-            ["1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
-            ["2", "Green", "Green (515-600nm)", $temp_file_stitched_result_band2],
-            ["3", "Red", "Red (600-690nm)", $temp_file_stitched_result_band3],
-            ["4", "NIR", "NIR (780-3000nm)", $temp_file_stitched_result_band4],
-            ["5", "RedEdge", "Red Edge (690-750nm)", $temp_file_stitched_result_band5]
-        );
-        foreach my $m (@micasense_bands) {
+        foreach my $m (@stitched_bands) {
             my $project_rs = $schema->resultset("Project::Project")->create({
                 name => $new_drone_run_name."_".$m->[1],
-                description => $new_drone_run_desc.". Band ".$m->[0]." ".$m->[1].". Orthomosaic stitched by ImageBreed.",
+                description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by ImageBreed.",
                 projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
                 project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
             });
