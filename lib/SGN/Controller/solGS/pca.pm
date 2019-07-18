@@ -21,8 +21,6 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 
     $c->stash->{pop_id} = $id;
 
-    my $referer = $c->req->referer;
-
     unless($id =~ /dataset|list/) 
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $id); 
@@ -131,9 +129,7 @@ sub pca_run :Path('/pca/run/') Args() {
     my $data_structure =  $c->req->param('data_structure');
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
-    
-    my $referer     = $c->req->referer;
-    
+       
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -143,17 +139,16 @@ sub pca_run :Path('/pca/run/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
     
-    my $list_type;
     if ($list_id)
     {
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	$list_type = $list->type;
-	$c->stash->{list_type} = $list_type;	
+	$c->stash->{list_type} =  $list->type;	
     }
     
     my $pop_id;
-    my $file_id;
-   
+    my $file_id;     
+    my $referer     = $c->req->referer;
+    
     if ($referer =~ /solgs\/selection\//)
     {
 	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
@@ -177,28 +172,6 @@ sub pca_run :Path('/pca/run/') Args() {
     {
 	$c->stash->{pop_id} = $training_pop_id;
 	$file_id = $training_pop_id;
-	$pop_id  = $training_pop_id;
-    }
-
-    if ($data_type =~ /genotype/)
-    {
-	if ($list_id) 
-	{
-	    $file_id = 'list_' . $list_id if $list_id !~ /list/;
-
-	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
-	    if ($list_type =~ /trial/)
-	    {
-		$c->controller('solGS::List')->get_trials_list_ids($c);
-		$c->stash->{pops_ids_list} = $c->stash->{trials_ids};	    
-		$c->controller('solGS::List')->process_trials_list_details($c);
-	    }		
-	}
-	elsif ($dataset_id)
-	{
-	    $c->stash->{analysis_tempfiles_dir} = $c->stash->{solgs_datasets_dir};
-	
-	}
     }
     
     $c->stash->{file_id} = $file_id;
