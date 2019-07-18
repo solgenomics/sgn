@@ -41,10 +41,10 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         green => 'Green (515-600nm)',
         red => 'Red (600-690nm)',
         red_edge => 'Red Edge (690-750nm)',
-        nir => 'NIR (750-900nm)',
-        mir => 'MIR (1550-1750nm)',
-        fir => 'FIR (2080-2350nm)',
-        tir => 'Thermal IR (10400-12500nm)'
+        nir => 'NIR (780-3000nm)',
+        mir => 'MIR (3000-50000nm)',
+        fir => 'FIR (50000-1000000nm)',
+        tir => 'Thermal IR (9000-14000nm)'
     );
     return {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_imagery', 'project_md_image')->cvterm_id() => {
@@ -809,7 +809,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             }
         },
-        'NIR (750-900nm)' => {
+        'NIR (780-3000nm)' => {
             imagery_types => {
                 threshold_background => ['threshold_background_removed_stitched_drone_imagery_nir'],
                 ft_hpf => {
@@ -834,7 +834,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             }
         },
-        'MIR (1550-1750nm)' => {
+        'MIR (3000-50000nm)' => {
             imagery_types => {
                 threshold_background => ['threshold_background_removed_stitched_drone_imagery_mir'],
                 ft_hpf => {
@@ -859,7 +859,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             }
         },
-        'FIR (2080-2350nm)' => {
+        'FIR (50000-1000000nm)' => {
             imagery_types => {
                 threshold_background => ['threshold_background_removed_stitched_drone_imagery_fir'],
                 ft_hpf => {
@@ -884,7 +884,7 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             }
         },
-        'Thermal IR (10400-12500nm)' => {
+        'Thermal IR (9000-14000nm)' => {
             imagery_types => {
                 threshold_background => ['threshold_background_removed_stitched_drone_imagery_tir'],
                 ft_hpf => {

@@ -225,6 +225,8 @@ sub upload_drone_imagery_POST : Args(0) {
     elsif ($new_drone_run_band_stitching eq 'yes') {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
+        my $stitching_work_pix = $c->req->param('upload_drone_images_stitching_work_pix');
+
         if (!$upload_file) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of images to stitch!" };
             $c->detach();
@@ -324,7 +326,7 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_stitched_result_rgb = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
         my $temp_file_stitched_result_rnre = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImages.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' ";
+        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImages.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --work_megapix $stitching_work_pix";
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
@@ -332,7 +334,7 @@ sub upload_drone_imagery_POST : Args(0) {
             ["1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
             ["2", "Green", "Green (515-600nm)", $temp_file_stitched_result_band2],
             ["3", "Red", "Red (600-690nm)", $temp_file_stitched_result_band3],
-            ["4", "NIR", "NIR (750-900nm)", $temp_file_stitched_result_band4],
+            ["4", "NIR", "NIR (780-3000nm)", $temp_file_stitched_result_band4],
             ["5", "RedEdge", "Red Edge (690-750nm)", $temp_file_stitched_result_band5]
         );
         foreach my $m (@micasense_bands) {
