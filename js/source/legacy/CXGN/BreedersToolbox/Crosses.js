@@ -314,10 +314,22 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents +
-                '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&prefix=' + prefix +
-                '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&female_plot=' + female_plot +
-                '&male_plot=' + male_plot + '&cross_combination' + cross_combination,
+            data:{
+                'cross_name': crossName,
+                'cross_type': crossType,
+                'maternal': maternal,
+                'paternal': paternal,
+                'maternal_parents': maternal_parents,
+                'paternal_parents': paternal_parents,
+                'progeny_number': progenyNumber,
+                'prefix': prefix,
+                'suffix': suffix,
+                'visible_to_role': visibleToRole,
+                'crossing_trial_id': crossing_trial_id,
+                'female_plot': female_plot,
+                'male_plot': male_plot,
+                'cross_combination': cross_combination,
+            },  
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
