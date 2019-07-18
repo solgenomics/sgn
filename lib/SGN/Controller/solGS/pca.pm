@@ -179,7 +179,7 @@ sub pca_run :Path('/pca/run/') Args() {
    
     if (!$self->check_pca_output($c)) 
     {
-	$self->create_pca_genotype_data($c);
+	$self->create_pca_data($c);
 	
 	if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
 	{	  
@@ -340,6 +340,23 @@ sub format_pca_scores {
 }
 
 
+sub create_pca_data {
+    my ($self, $c) = @_;
+
+    my $data_type = $c->stash->{data_type};
+    
+    if ($data_type =~ /genotype/)
+    {
+	$self->create_pca_genotype_data($c);
+    }
+    elsif ($data_type =~ /phenotype/)
+    {
+	$self->create_pca_phenotype_data($c);
+    }    
+    
+}
+
+
 sub create_pca_genotype_data {    
     my ($self, $c) = @_;
    
@@ -454,6 +471,27 @@ sub pca_list_genotype_data {
     }
 
 }
+
+
+sub create_pca_phenotype_data {
+    my ($self, $c) = @_;
+    
+    my $data_structure = $c->stash->{data_structure};
+
+    if ($data_structure =~ /list/) 
+    {
+	$self->pca_list_phenotype_data($c);	
+    }
+    elsif ($data_structure =~ /dataset/)
+    {
+	$self->pca_dataset_phenotype_data($c);	
+    }
+    else
+    {
+	$self->pca_trials_phenotype_data($c);
+    }
+}
+
 
 
 sub pca_scores_file {
