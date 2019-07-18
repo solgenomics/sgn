@@ -137,11 +137,11 @@ sub new {
 
     my $trial_rs = $schema->resultset("Project::Projectprop")->search( { project_id => $trial_id },{ join => 'type' });
 
+    my $object;
     if ($trial_id && $trial_rs->count() == 0) {
-        die "The provided trial_id $trial_id does not exist.";
+        $object = CXGN::PhenotypingTrial->new($args);
     }
 
-    my $object;
     while (my $trial_row = $trial_rs->next()) { 
         my $name = $trial_row->type()->name();
         if ($name eq "genotyping_trial") {

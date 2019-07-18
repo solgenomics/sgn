@@ -73,7 +73,7 @@ sub BUILD {
     }
 
     if (!$row) {
-	warn "The trial ".$self->get_trial_id()." does not exist";
+        die "The trial ".$self->get_trial_id()." does not exist";
     }
 }
 
