@@ -2,7 +2,7 @@
 package CXGN::Trial::TrialDesign::Plugin::westcott;
 
 use Moose::Role;
-
+use List::Util qw | max |;
 
 sub create_design {
     my $self = shift;
