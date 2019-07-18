@@ -122,7 +122,7 @@ $locations
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Cross Combination (optional): </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" type="text" id="dialog_cross_combination" name="dialog_cross_combination"/>
+                                        <input class="form-control" type="text" id="dialog_cross_combination" name="dialog_cross_combination" placeholder="e.g. female_name/male_name"/>
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
