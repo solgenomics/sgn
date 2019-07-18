@@ -263,9 +263,10 @@ sub add_cross_POST :Args(0) {
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
     my $female_plot_id = $c->req->param('female_plot');
     my $male_plot_id = $c->req->param('male_plot');
+    my $cross_combination = $c->req->param('cross_combination');
     $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
-    #print STDERR "Female Plot=".Dumper($female_plot)."\n";
+    print STDERR "CROSS COMBINATION=".Dumper($cross_combination)."\n";
 
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a cross.\n";
@@ -334,7 +335,7 @@ sub add_cross_POST :Args(0) {
     else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $cross_combination);
         if (!$success) {
             return;
         }
@@ -595,6 +596,7 @@ sub add_individual_cross {
     my $male_plot;
     my $maternal = shift;
     my $paternal = shift;
+    my $cross_combination = shift;
 
     my $owner_name = $c->user()->get_object()->get_username();
     my @progeny_names;
@@ -665,7 +667,7 @@ sub add_individual_cross {
     }
 
     #objects to store cross information
-    my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type);
+    my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type, cross_combination => $cross_combination,);
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
     $cross_to_add->set_female_parent($female_individual);
 
@@ -686,6 +688,7 @@ sub add_individual_cross {
 
     $cross_to_add->set_cross_type($cross_type);
     $cross_to_add->set_name($cross_name);
+    $cross_to_add->set_cross_combination($cross_combination);
 
     eval {
         #create array of pedigree objects to add, in this case just one pedigree
