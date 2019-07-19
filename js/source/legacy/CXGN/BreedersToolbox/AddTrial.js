@@ -399,6 +399,9 @@ jQuery(document).ready(function ($) {
         var treatments = []
         if (design_type == 'splitplot'){
             var count = jQuery('#create_trial_with_treatment_additional_count').val();
+            if (count == 0) {
+                count = 4; //Interface starts with 4 inputs and user can add additional ones..
+            }
             var int_count = parseInt(count);
             for(var i=1; i<=int_count; i++){
                 var treatment_value = jQuery('#create_trial_with_treatment_name_input'+i).val();

@@ -2272,8 +2272,7 @@ sub _get_splitplot_design {
     @rep_numbers = $result_matrix->get_column("block");
     @stock_names = $result_matrix->get_column("accessions");
     @treatments = $result_matrix->get_column("treatments");
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
-    #print STDERR Dumper \@converted_plot_numbers;
+    @converted_plot_numbers = @plot_numbers;
 
     if ($plot_layout_format eq "zigzag") {
         if (!$fieldmap_col_number){
@@ -2359,7 +2358,6 @@ sub _get_splitplot_design {
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
         $plot_info{'plot_number'} = $converted_plot_numbers[$i];
-        $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
         if ($fieldmap_row_numbers[$i]){
             $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
             $plot_info{'col_number'} = $col_number_fieldmaps[$i];
@@ -2370,7 +2368,6 @@ sub _get_splitplot_design {
         $plot_info{'treatments'} = $treatment_plots{$converted_plot_numbers[$i]};
         $splitplot_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
-    #print STDERR Dumper \%splitplot_design;
     %splitplot_design = %{_build_plot_names($self,\%splitplot_design)};
 
     while(my($plot,$val) = each(%splitplot_design)){
