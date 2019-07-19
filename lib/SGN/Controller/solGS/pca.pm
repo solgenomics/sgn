@@ -475,21 +475,30 @@ sub pca_list_genotype_data {
 
 sub create_pca_phenotype_data {
     my ($self, $c) = @_;
-    
-    my $data_structure = $c->stash->{data_structure};
 
+    my $data_structure = $c->stash->{data_structure};
+    my $referer = $c->req->referer;
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+    
     if ($data_structure =~ /list/) 
     {
-	$self->pca_list_phenotype_data($c);	
+	$c->controller('solGS::List')->list_phenotype_data($c);	
     }
-    elsif ($data_structure =~ /dataset/)
+    elsif ($data_structure =~ /dataset/) 
     {
-	$self->pca_dataset_phenotype_data($c);	
+	$c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);	
     }
-    else
+    elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
     {
-	$self->pca_trials_phenotype_data($c);
+	$c->controller('solGS::solGS')->phenotype_file($c);
     }
+    elsif ($combo_pops_id) 
+    {
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
+    }
+
 }
 
 
