@@ -8,16 +8,25 @@ Version: 2.0
 
 This object was re-factored from CXGN::Chado::Stock and moosified.
 
-Functions such as 'get_obsolete' , 'store' , and 'exists_in_database' are required , and do not use standard DBIC syntax.
+CXGN::Stock should be used for all appropriate stock related queries.
 
-=head1 AUTHOR
+The stock table stores different types of objects, such as accessions, 
+plots, populations, tissue_samples, etc. 
 
-Naama Menda <nm249@cornell.edu>
-Lukas Mueller <lam87@cornell.edu>
+CXGN::Stock is the parent object for different flavors of objects 
+representing these derived types, such as CXGN::Stock::Seedlot, or 
+CXGN::Stock::TissueSample. (Currently there is no CXGN::Stock::Plot, but
+that should probably be added in the future, along with a factory
+object that instantiates the correct object given the stock_id).
+
+=head1 AUTHORS
+
+ Naama Menda <nm249@cornell.edu>
+ Lukas Mueller <lam87@cornell.edu>
 
 =cut
 
-package CXGN::Stock ;
+package CXGN::Stock;
 
 use Moose;
 
@@ -33,16 +42,50 @@ use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
 use Try::Tiny;
 
+=head2 accessor schema()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects: provides access to Bio::Chado::Schema
+ Example:
+
+=cut
+
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1
 );
 
+=head2 accessor phenome_schema()
+
+ Usage:
+ Desc:         provides access the the CXGN::People::Schema, needed for 
+               certain user related functions
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
     is => 'rw',
 );
+
+=head2 accessor check_name_exists()
+
+ Usage:
+ Desc:
+ Ret:          1 if exists, 0 if not
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'check_name_exists' => (
     isa => 'Bool',
@@ -50,15 +93,48 @@ has 'check_name_exists' => (
     default => 1
 );
 
+=head2 accessor stock()
+
+ Usage:
+ Desc:         DBIx::Class object for this stock row
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'stock' => (
     isa => 'Bio::Chado::Schema::Result::Stock::Stock',
     is => 'rw',
 );
 
+=head2 accessor stock_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'stock_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
 );
+
+=head2 accessor is_saving()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'is_saving' => (
     isa => 'Bool',
@@ -66,7 +142,18 @@ has 'is_saving' => (
     default => 0
 );
 
-# Returns the stock_owners as [sp_person_id, sp_person_id2, ..]
+
+=head2 accessor owners()
+
+ Usage:
+ Desc:
+ Ret:          the stock_owners as [sp_person_id, sp_person_id2, ..]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'owners' => (
     isa => 'Maybe[ArrayRef[Int]]',
     is => 'rw',
@@ -74,40 +161,128 @@ has 'owners' => (
     builder  => '_retrieve_stock_owner',
 );
 
+=head2 accessor organism()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organism' => (
     isa => 'Bio::Chado::Schema::Result::Organism::Organism',
     is => 'rw',
 );
+
+=head2 accessor organism_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'organism_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
 );
 
+=head2 accessor species()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'species' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor genus()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'genus' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor organism_common_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organism_common_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor organism_abbreviation()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'organism_abbreviation' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor organism_comment()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organism_comment' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor type()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'type' => (
     isa => 'Str',
@@ -115,20 +290,66 @@ has 'type' => (
     default => 'accession',
 );
 
+=head2 accessor type_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'type_id' => (
     isa => 'Int',
     is => 'rw',
 );
+
+=head2 accessor name()
+
+ Usage:        this should be set to the same value as uniquename,
+               which is used as the canonical name in the database.
+               (synonyms are stored as stockprops, see synonyms()).
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'name' => (
     isa => 'Str',
     is => 'rw',
 );
 
+=head2 accessor uniquename()
+
+ Usage:         
+ Desc:         the canonical name of the accession.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'uniquename' => (
     isa => 'Str',
     is => 'rw',
 );
+
+=head2 accessor description()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'description' => (
     isa => 'Maybe[Str]',
@@ -136,36 +357,113 @@ has 'description' => (
     default => '',
 );
 
+=head2 accessor is_obsolete()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
 );
 
+=head2 accessor organization_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organization_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor population_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'population_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor populations()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'populations' => (
     isa => 'Maybe[ArrayRef[ArrayRef]]',
     is => 'rw'
 );
+
+=head2 accessor sp_person_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'sp_person_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
+=head2 accessor user_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'user_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor modification_note()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'modification_note' => (
     isa => 'Maybe[Str]',
@@ -209,7 +507,7 @@ sub _retrieve_stock_owner {
     $self->owners(\@owners);
 }
 
-=head2 store
+=head2 store()
 
  Usage: $self->store
  Desc:  store a new stock or update an existing stock
@@ -324,7 +622,7 @@ sub store {
 
 =head2 Class functions
 
-=head2 exists_in_database
+=head2 exists_in_database()
 
  Usage: $self->exists_in_database()
  Desc:  check if the uniquename exists in the stock table
@@ -374,7 +672,7 @@ sub exists_in_database {
 }
 
 
-=head2 all_sequenced_stocks
+=head2 all_sequenced_stocks()
 
  Usage:        @sequenced_stocks = CXGN::Stock->sequenced_stocks();
  Desc:
@@ -403,9 +701,9 @@ sub all_sequenced_stocks {
 =head2 Object methods
 
 
-=head2 get_sequencing_project_info
+=head2 get_sequencing_project_info()
 
- Usage:        @sequenced_stocks = CXGN::Stock->sequenced_stocks();
+ Usage:        my @seq_projects = $stock->get_sequencing_project_infos();
  Desc:
  Ret:
  Args:
@@ -414,21 +712,26 @@ sub all_sequenced_stocks {
 
 =cut
 
-sub get_sequencing_project_info { 
+sub get_sequencing_project_infos { 
     my $self = shift;
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
-    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$type_id, stock_id => $self->stock_id() });
+    my @stockprops = $self->_retrieve_stockprops("sequencing_project_info");
 
-    my $value;
-    if ($stockprop) {
-	$value = $stockprop->value();
+    my @hashes = ();
+    foreach my $sp (@stockprops) { 
+	my $json = $stockprop->value();
+	my $hash;
+	eval { 
+	    $hash = JSON::Any->jsonToObj($json);
+	};
+	if ($@) { print STDERR "Warning: $json is not valid json in stockprop ".$stockprop->stockprop_id().".!\n"; }
+	push @hashes, [ $sp->stockprop_id(), $hash ];
     }
 
-    return JSON::Any->decode($value);
+    return @hashes;
 }
 
-=head2 set_sequencing_project_info
+=head2 set_sequencing_project_info()
 
  Usage:         $s->set_sequencing_project_info($info_hash)
  Desc:          creates a sequencing project info in the stockprop
@@ -444,16 +747,36 @@ sub set_sequencing_project_info {
     my $self = shift;
     my $info = shift;
 
-    #need to check keys in info...
+    my @errors = ();
+    my @warnings = ();
+    # check keys in the info hash...
+    if (!exists($info->{year})) {
+	push @errors, "Need year for sequencing project";
+    }
+    if (!exists($info->{organization})) {
+	push @errors, "Need organization for sequencing project";
+    }
+    if (!exists($info->{website})) {
+	push @errors, "Need website for sequencing project";
+    }
+    if (!exists($info->{publication})) {
+	push @warnings, "Need publication for sequencing project";
+    }
+    if (!exists($info->{project_url})) {
+	push @warnings, "Need project url for sequencing project";
+    }
+    if (!exists($info->{jbrowse_link})) {
+	push @warnings, "Need jbrowse link for sequencing project";
+    }
 
-    my $info_json = JSON::Any->encode($info);
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
-    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->create({ type_id=>$type_id, stock_id => $self->stock_id(), value=> $info_json });
+    if (@errors) {
+	die join("\n", @errors);
+    }
 
-    return $stockprop->stockprop_id();
+    $self->_store_stockprop("sequencing_project_info", JSON::Any->encode($info);
 }
     
-=head2 delete_sequencing_project_info
+=head2 delete_sequencing_project_info()
 
  Usage:
  Desc:
@@ -480,7 +803,7 @@ sub delete_sequencing_project_info {
     }
 }
 
-=head2 get_organism
+=head2 get_organism()
 
  Usage: $self->get_organism
  Desc:  find the organism object of this stock
@@ -501,7 +824,7 @@ sub get_organism {
 }
 
 
-=head2 get_species
+=head2 get_species()
 
  Usage: $self->get_species
  Desc:  find the species name of this stock , if one exists
@@ -523,7 +846,7 @@ sub get_species {
     }
 }
 
-=head2 get_genus
+=head2 get_genus()
 
  Usage: $self->get_genus
  Desc:  find the genus name of this stock , if one exists
@@ -545,7 +868,7 @@ sub get_genus {
     }
 }
 
-=head2 get_species_authority
+=head2 get_species_authority()
 
  Usage: $self->get_species_authority
  Desc:  find the species_authority of this stock , if one exists
@@ -561,7 +884,7 @@ sub get_species_authority {
     return $self->_retrieve_organismprop('species authority');
 }
 
-=head2 get_subtaxa
+=head2 get_subtaxa()
 
  Usage: $self->get_subtaxa
  Desc:  find the subtaxa of this stock , if one exists
@@ -577,7 +900,7 @@ sub get_subtaxa {
     return $self->_retrieve_organismprop('subtaxa');
 }
 
-=head2 get_subtaxa_authority
+=head2 get_subtaxa_authority()
 
  Usage: $self->get_subtaxa_authority
  Desc:  find the subtaxa_authority of this stock , if one exists
@@ -593,7 +916,7 @@ sub get_subtaxa_authority {
     return $self->_retrieve_organismprop('subtaxa authority');
 }
 
-=head2 set_species
+=head2 set_species()
 
 Usage: $self->set_species
  Desc:  set organism_id for the stock using organism.species name
@@ -617,7 +940,7 @@ sub set_species {
     }
 }
 
-=head2 function get_image_ids
+=head2 function get_image_ids()
 
   Synopsis:     my @images = $self->get_image_ids()
   Arguments:    none
@@ -639,7 +962,7 @@ sub get_image_ids {
     return @ids;
 }
 
-=head2 associate_allele
+=head2 associate_allele()
 
  Usage: $self->associate_allele($allele_id, $sp_person_id)
  Desc:  store a stock-allele link in phenome.stock_allele
@@ -675,7 +998,7 @@ sub associate_allele {
     return $id;
 }
 
-=head2 associate_owner
+=head2 associate_owner()
 
  Usage: $self->associate_owner($owner_sp_person_id, $sp_person_id)
  Desc:  store a stock-owner link in phenome.stock_owner
@@ -713,7 +1036,7 @@ sub associate_owner {
     return $id;
 }
 
-=head2 get_trait_list
+=head2 get_trait_list()
 
  Usage:
  Desc:         gets the list of traits that have been measured
@@ -752,7 +1075,7 @@ sub get_trait_list {
     return @traits;
 }
 
-=head2 get_trials
+=head2 get_trials()
 
  Usage:
  Desc:          gets the list of trails this stock was used in
@@ -789,7 +1112,7 @@ sub get_trials {
     return @trials;
 }
 
-=head2 get_ancestor_hash
+=head2 get_ancestor_hash()
 
  Usage:
  Desc:          gets a multi-dimensional hash of this stock's ancestors
@@ -836,7 +1159,7 @@ sub get_ancestor_hash {
   return \%pedigree;
 }
 
-=head2 get_descendant_hash
+=head2 get_descendant_hash()
 
  Usage:
  Desc:          gets a multi-dimensional hash of this stock's descendants
@@ -879,7 +1202,7 @@ sub get_descendant_hash {
   }
 }
 
-=head2 get_pedigree_rows
+=head2 get_pedigree_rows()
 
  Usage:
  Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
@@ -968,7 +1291,7 @@ sub get_pedigree_rows {
     return $pedigree_rows;
 }
 
-=head2 get_pedigree_string
+=head2 get_pedigree_string()
 
  Usage:
  Desc:          get the properly formatted pedigree string of the given level (Parents, Grandparents, or Great-Grandparents) for this stock
@@ -1044,6 +1367,17 @@ sub _update_stockprop {
     $self->_store_stockprop($type,$value);
 }
 
+=head2 _retrieve_stockprop
+
+ Usage:
+ Desc:         Retrieves stockprops as a comma separated string
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
@@ -1062,6 +1396,36 @@ sub _retrieve_stockprop {
 
     my $res = join ',', @results;
     return $res;
+}
+
+=head2 _retrieve_stockprops
+
+ Usage:
+ Desc:         Retrieves stockprop as a list of [stockprop_id, value]
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub _retrieve_stockprops {
+    my $self = shift;
+    my $type = shift;
+    my @results;
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, [ $r->stockprop_id(), $r->value() ];
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
+    return @results;
 }
 
 sub _remove_stockprop {
@@ -1167,7 +1531,7 @@ sub _retrieve_populations {
 }
 ###
 
-=head2 _new_metadata_id
+=head2 _new_metadata_id()
 
 Usage: my $md_id = $self->_new_metatada_id($sp_person_id)
 Desc:  Store a new md_metadata row with a $sp_person_id
@@ -1197,7 +1561,7 @@ sub _new_metadata_id {
     return $metadata_id;
 }
 
-=head2 merge
+=head2 merge()
 
  Usage:         $s->merge(221, 1);
  Desc:          merges stock $s with stock_id 221. Optional delete boolean
