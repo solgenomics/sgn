@@ -415,7 +415,6 @@ sub cluster_list_phenotype_data {
     my ($self, $c) = @_;
     
     my $list_id       = $c->stash->{list_id};
-    my $list_type     = $c->stash->{list_type};
     my $pop_id        = $c->stash->{pop_id};
     my $data_structure = $c->stash->{data_structure};
     my $data_set_type  = $c->stash->{data_set_type};
@@ -435,16 +434,7 @@ sub cluster_list_phenotype_data {
     }	   
     else
     {
-	if ($list_type eq 'plots')
-	{
-	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
-	    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
-	} 
-	elsif ( $list_type eq 'trials') 
-	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);	    
-	    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-	}
+	$c->controller('solGS::List')->list_phenotype_data($c);
     }
     
 }
