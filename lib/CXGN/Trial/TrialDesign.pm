@@ -86,8 +86,7 @@ has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_
 my $design;
 
 sub get_design {
-     print STDERR Dumper $design;
-  return $design;
+    return $design;
 }
 
 sub calculate_design {
@@ -117,7 +116,6 @@ sub calculate_design {
     }
     elsif ($self->get_design_type() eq "westcott") {
       $design = _get_westcott_design($self);
-      print STDERR Dumper $design;
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -2391,7 +2389,6 @@ sub _get_splitplot_design {
         $val->{subplots_plant_names} = \%subplot_plants_hash;
     }
     $splitplot_design{'treatments'} = \%treatment_subplot_hash;
-    #print STDERR Dumper \%splitplot_design;
     return \%splitplot_design;
 }
 
