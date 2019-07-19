@@ -546,14 +546,9 @@ sub exists_list_action : Path('/list/exists') Args(0) {
 	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
     }
 
-    my $list_id = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
+    my $list_info = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
+	$c->stash->{rest} = $list_info;
 
-    if ($list_id) {
-	$c->stash->{rest} = { list_id => $list_id };
-    }
-    else {
-	$c->stash->{rest} = { list_id => undef };
-    }
 }
 
 sub exists_item_action : Path('/list/exists_item') :Args(0) {

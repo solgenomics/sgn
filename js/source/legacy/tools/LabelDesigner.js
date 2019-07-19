@@ -264,9 +264,9 @@ $(document).ready(function($) {
     $(document).on("change", "#source_select", function() {
         var data_type = $('#source_select :selected').parent().attr('label');
 
-        updateFields(data_type, this.value, '');
+        // updateFields(data_type, this.value, '');
 
-        if (data_type == 'Field Trials'){
+        if (data_type == 'Field Trials') {
             jQuery.ajax({
                 url: '/ajax/breeders/trial/'+this.value+'/has_data_levels',
                 method: 'GET',
@@ -296,9 +296,45 @@ $(document).ready(function($) {
                     alert('There was a problem checking the data levels available for your field trial. Please contact us.');
                 }
             });
-        } else {
-            jQuery('#label_designer_data_level_select_div').html('');
-            jQuery('#label_designer_data_level_div').hide();
+        } else if (data_type == 'Genotyping Plates') {
+
+            jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="plate">Plate</option></select>');
+
+        } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
+
+            var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">List Items</option>';
+            // Check list type, if Plot, Plant, or Tissue Sample add details option
+
+            jQuery.ajax({
+                url: '/list/exists',
+                data: { 'name': this.text },
+                beforeSend: function() {
+                    disable_ui();
+                },
+                complete: function() {
+                    enable_ui();
+                    jQuery('#page_format').focus();
+                },
+                success: function(response) {
+                    jQuery('#label_designer_data_level_select_div').html('<option value="plants">List Items</option>');
+                    if (response.list_type == 'plots') {
+                        html = html + '<option value="plots">Plot Details</option>';
+                    } else if (response.list_type == 'subplots') {
+                        html = html + '<option value="subplots">Subplot Details</option>';
+                    } else if (response.list_type == 'plants') {
+                        html = html + '<option value="plants">Plant Details</option>';
+                    } else if (response.list_type == 'tissue_samples') {
+                        html = html + '<option value="tissue_samples">Tissue Sample Details</option>';
+                    }
+                },
+                error: function(response) {
+                    alert('There was a problem checking the data levels available for your field trial. Please contact us.');
+                }
+            });
+            html = html + '</select>';
+            jQuery('#label_designer_data_level_select_div').html(html);
+            // jQuery('#label_designer_data_level_select_div').html('');
+            // jQuery('#label_designer_data_level_div').hide();
         }
     });
 
