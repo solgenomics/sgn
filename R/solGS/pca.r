@@ -13,6 +13,7 @@ library(data.table)
 library(genoDataFilter)
 library(tibble)
 library(dplyr)
+library(stringr)
 
 allArgs <- commandArgs()
 
@@ -47,7 +48,6 @@ if (is.null(loadingsFile))
 
 genoData <- c()
 genoMetaData <- c()
-
 filteredGenoFile <- c()
 
 if (length(inputFiles) > 1 ) {   
@@ -58,21 +58,25 @@ if (length(inputFiles) > 1 ) {
     genoData$trial <- NULL
  
 } else {
-    genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
-    genoData     <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
-    genoData     <- unique(genoData, by='V1')
- 
-   filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, value = TRUE)
+    if (!is.na(str_match(inputFiles, 'genotype_data'))) {
+        genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
+        genoData     <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
+        genoData     <- unique(genoData, by='V1')
+        
+        filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, value = TRUE)
 
-    if (!is.null(genoData)) { 
-
-        genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')
-    
-    } else {
-        genoData <- fread(filteredGenoFile)
+        if (!is.null(genoData)) { 
+            genoData <- data.frame(genoData)
+            genoData <- column_to_rownames(genoData, 'V1')          
+        } else {
+            genoData <- fread(filteredGenoFile)
+        }
+    } else if (!is.na(str_match(inputFiles, 'phenotype_data'))) {
+       #prepare phenodata
+        
     }
 }
+
 
 if (is.null(genoData)) {
   stop("There is no genotype dataset.")
