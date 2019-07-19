@@ -70,26 +70,31 @@ solGS.pca = {
     },
 
 
-    loadPcaGenotypesList: function(selectId, selectName, dataStructureType) {     
-	console.log('selectId ' + selectId + ' name ' + selectName + ' type ' + dataStructureType)
+    loadPcaPops: function(selectId, selectName, dataStructure) {
+	   console.log('IN  loadpcapops')
+	console.log('selectId ' + selectId + ' name ' + selectName + ' type ' + dataStructure)
 
 	if ( selectId.length === 0) {       
             alert('The list is empty. Please select a list with content.' );
 	} else {
 	              
-            var pcaTable = jQuery("#pca_populations_table").doesExist();
+            var pcaTable = jQuery("#pca_pops_table").doesExist();
             
             if (pcaTable == false) {
                 pcaTable = this.createTable();
-		jQuery("#list_pca_populations").append(pcaTable).show();                           
+		jQuery("#pca_pops_section").append(pcaTable).show();                           
             }
 	    var onClickVal =  '<a href="#" onclick="solGS.pca.pcaRun('
-		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructureType
+		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 		+ "'" + ');return false;">';
-		
-	    var addRow = '<tr  name="' + dataStructureType + '"' + ' id="' + selectId +  '">'
+
+	    var dataType = ['genotype'];
+	    var dataTypeOpts = this.createDataTypeSelect(dataType);
+	    
+	    var addRow = '<tr  name="' + dataStructure + '"' + ' id="' + selectId +  '">'
                 + '<td>' + selectName + '</td>'
-		+ '<td>' + dataStructureType + '</td>'
+		+ '<td>' + dataStructure + '</td>'
+		+ '<td>' + dataTypeOpts + '</td>'
                 + '<td id="list_pca_page_' + selectId +  '">' + onClickVal + '[ Run PCA ]' + '</a></td>'          
                 + '<tr>';
 
@@ -97,49 +102,49 @@ solGS.pca = {
 	    var addedRow = jQuery(tdId).doesExist();
 
 	    if (addedRow == false) {
-                jQuery("#pca_populations_table tr:last").after(addRow);
+                jQuery("#pca_pops_table tr:last").after(addRow);
 	    }                                                        
 	}
 
     },
 
-    pcaRun: function (selectId, selectName, dataStructureType) {
+    pcaRun: function (selectId, selectName, dataStructure) {
 
 	var popDetails  = solGS.getPopulationDetails();
+	var dataType    = jQuery('#'+selectId + ' #data_type_select').val();
+
 	var listId;
-	if (dataStructureType.match(/list/)) {
+	var datasetId;
+	
+	if (dataStructure == 'list') {
 	    listId = selectId;
 	    popDetails['training_pop_id'] = 'list_' + selectId;
-	} else if (dataStructureType.match(/dataset/)) {
+	} else if (dataStructure == 'dataset') {
 	    popDetails['training_pop_id'] = 'dataset_' + selectId;
 	    datasetId = selectId;
 	}
-	
-	var listName;
-	var listType;
-	
-	if (listId) {
-	    var genoList = this.getPcaGenotypesListData(listId);
-	    listName = genoList.name;
-	    listType = genoList.listType;
-	}
-	
+
 	if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
 	    jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));					 
 	    jQuery("#pca_message").html("Running PCA... please wait...");
 	    jQuery("#run_pca").hide();
 	}  
 
+	var pcaArgs = {
+	    'training_pop_id': popDetails.training_pop_id,
+	    'selection_pop_id': popDetails.selection_pop_id,
+	    'combo_pops_id': popDetails.combo_pops_id,
+	    'list_id': listId, 
+	    'data_type': dataType,
+	    'data_structure': dataStructure,
+	    'dataset_id': datasetId,
+	    'dataset_name': selectName
+	};
+	
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'training_pop_id': popDetails.training_pop_id,
-		   'selection_pop_id': popDetails.selection_pop_id,
-		   'combo_pops_id': popDetails.combo_pops_id,
-		   'list_id': listId, 
-		   'list_name': listName, 
-		   'list_type': listType,
-		  },
+            data: pcaArgs,
             url: '/pca/run',
             success: function(response) {
 		
@@ -150,7 +155,7 @@ solGS.pca = {
 				     'variances': response.pca_variances, 
 				     'pop_id': popId, 
 				     'list_id': listId,
-				     'list_name': listName,
+				     'list_name': selectName,
 				     'trials_names': response.trials_names,
 				     'output_link' : response.output_link
 				   };
@@ -174,15 +179,31 @@ solGS.pca = {
 
 
     createTable: function () {
-	var pcaTable ='<table id="pca_populations_table" class="table table-striped"><tr>'
+	var pcaTable ='<table id="pca_pops_table" class="table table-striped"><tr>'
             + '<th>Population</th>'
             + '<th>Data structure type</th>'
+	    + '<th>Data type</th>'
             + '<th>Run PCA</th>'
             +'</tr>'
             + '</td></tr></table>';
 	
 	return pcaTable;
     },
+
+     createDataTypeSelect: function(opts) {
+	var dataTypeGroup = '<select class="form-control" id="data_type_select">';
+
+	for (var i=0; i < opts.length; i++) {
+	    
+	    dataTypeGroup += '<option value="'
+		+ opts[i] + '">'
+		+ opts[i]
+		+ '</option>';
+	}
+	  dataTypeGroup +=  '</select>';
+	
+	return dataTypeGroup;
+     },
     
 
     getPcaGenotypesListData: function(listId) {   
@@ -440,19 +461,19 @@ solGS.pca = {
             .style("fill", "#954A09")
 
 
-	var shareLink;
-	if (plotData.output_link)  {
-	    shareLink = plotData.output_link;
-	}
+	// var shareLink;
+	// if (plotData.output_link)  {
+	//     shareLink = plotData.output_link;
+	// }
 
-	pcaPlot.append("a")
-	    .attr("xlink:href", shareLink)
-	    .append("text")
-	    .text("[Share plot]")
-	    .attr("y", pad.top + height + 100)
-            .attr("x", pad.left)
-            .attr("font-size", 14)
-            .style("fill", "#954A09")
+	// pcaPlot.append("a")
+	//     .attr("xlink:href", shareLink)
+	//     .append("text")
+	//     .text("[Share plot]")
+	//     .attr("y", pad.top + height + 100)
+        //     .attr("x", pad.left)
+        //     .attr("font-size", 14)
+        //     .style("fill", "#954A09")
 	
 	if (trialsNames && Object.keys(trialsNames).length > 1) {
 	    var trialsIds = jQuery.unique(trials);
@@ -523,23 +544,23 @@ solGS.pca = {
 
 jQuery(document).ready( function() {
     
-    var url = window.location.pathname;
-    
+    var url = document.URL;
+      console.log('url '+ url)
     if (url.match(/pca\/analysis/)) {
     
         var list = new CXGN.List();
-        var listMenu = list.listSelect("pca_genotypes", ['accessions', 'trials'], undefined, undefined, undefined);
+        var listMenu = list.listSelect("pca_pops", ['accessions', 'trials'], undefined, undefined, undefined);
 
 	var dType = ['accessions', 'trials'];	
 	var dMenu = solGS.dataset.getDatasetsMenu(dType);
 	
 	if (listMenu.match(/option/) != null) {
             
-            jQuery("#pca_genotypes_list").append(listMenu);
-	    jQuery("#pca_genotypes_list_select").append(dMenu);
+            jQuery("#pca_pops_list").append(listMenu);
+	    jQuery("#pca_pops_list_select").append(dMenu);
 
         } else {            
-            jQuery("#pca_genotypes_list").append("<select><option>no lists found - Log in</option></select>");
+            jQuery("#pca_pops_list").append("<select><option>no lists found - Log in</option></select>");
         }
     }
                
@@ -558,35 +579,36 @@ jQuery(document).ready( function() {
 jQuery(document).ready( function() { 
      
     var url = document.URL;
-    
+    console.log('url '+ url)
     if (url.match(/pca\/analysis/)) {  
         var selectId;
 	var selectName;
-        var dataStructureType;
+        var dataStructure;
 	
-        jQuery("<option>", {value: '', selected: true}).prependTo("#pca_genotypes_list_select");
+        jQuery("<option>", {value: '', selected: true}).prependTo("#pca_pops_list_select");
         
-        jQuery("#pca_genotypes_list_select").change(function() {        
+        jQuery("#pca_pops_list_select").change(function() {        
             selectId = jQuery(this).find("option:selected").val();
             selectName = jQuery(this).find("option:selected").text();    
-            dataStructureType  = jQuery(this).find("option:selected").attr('name');
-	    console.log('dataStructureType ' + dataStructureType)
+            dataStructure  = jQuery(this).find("option:selected").attr('name');
+	    console.log('dataStructureType ' + dataStructure)
 
-	    if (dataStructureType == undefined) {
-		dataStructureType = 'list';
+	    if (dataStructure == undefined) {
+		dataStructure = 'list';
 	    }
 	    
-	    console.log('dataStructureType ' + dataStructureType)
+	    console.log('dataStructureType ' + dataStructure)
             if (selectId) {                
                 jQuery("#pca_go_btn").click(function() {
-                    solGS.pca.loadPcaGenotypesList(selectId, selectName, dataStructureType);
+		    console.log('calling loadpcapops')
+                    solGS.pca.loadPcaPops(selectId, selectName, dataStructure);
                 });
             }
         });
     } 
 
-    //if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
-//	checkPcaResult();  
+    // if (url.match(/pca\/analysis\/|solgs\/trait\/|breeders\/trial\/|solgs\/selection\//)) {
+    // 	checkPcaResult();  
     // }
     
 });
