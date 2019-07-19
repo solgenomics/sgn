@@ -1,4 +1,5 @@
 
+
 <%args>
 
 </%args>
@@ -36,7 +37,7 @@ Currently, databases for tomato, potato, and pepper are available, generated fro
   
   <li><a target="_blank" href="http://solcyc.solgenomics.net/organism-summary?object=PET"><b>Petunia</b> <i>Petunia hybrida</i> (PetCyc)</a></li>
 
-  <li><a target="_blank" href="http://solcyc.solgenomics.net/organism-summary?object=K326"><b>Tobacco</b> <i>Nicotiana tabacum</i> (K326Cyc)</a> <span class="tier">TIER 1</span></li>
+  <li><a target="_blank" href="http://solcyc.solgenomics.net/organism-summary?object=TobaccoCyc"><b>Tobacco</b> <i>Nicotiana tabacum</i> (K326Cyc)</a> <span class="tier">TIER 1</span></li>
   
   <li><a target="_blank" href="http://solcyc.solgenomics.net/organism-summary?object=NATT"><i>Nicotiana attenuata</i> (NattCyc)</a> <span class="tier">TIER 1</span></li>
 
