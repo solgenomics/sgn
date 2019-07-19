@@ -3181,7 +3181,7 @@ sub get_observation_units_direct {
     my @obs;
     my $obs_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, "stock_type")->cvterm_id();
     my $experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $nd_experiment_type, "experiment_type")->cvterm_id();
-    my $q = "SELECT stock.uniquename, stock.stock_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? AND stock.type_id=? AND nd_experiment.type_id=?;";
+    my $q = "SELECT stock.uniquename, stock.stock_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? AND stock.type_id=? AND nd_experiment.type_id=? ORDER BY stock.uniquename ASC;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($self->get_trial_id(), $obs_cvterm_id, $experiment_type_cvterm_id);
     while (my ($uniquename, $stock_id) = $h->fetchrow_array()) {
