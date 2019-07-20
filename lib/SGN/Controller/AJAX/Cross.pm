@@ -1161,7 +1161,7 @@ sub upload_family_names_POST : Args(0) {
         foreach my $cross_name(keys %family_name_hash){
             my $family_name = $family_name_hash{$cross_name};
 
-            my $family_name_add = CXGN::Pedigree::AddCrossInfo->new({
+            my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
                 chado_schema => $chado_schema,
                 dbh => $dbh,
                 cross_name => $cross_name,
