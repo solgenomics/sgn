@@ -509,8 +509,8 @@ my @splitplot_management_factors;
 foreach (@$trial_management_factors) {
     push @splitplot_management_factors, $_->[0];
     my $trial = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$_->[0]});
-    my $plant_entries = $trial->get_observation_units_direct('plant', 'treatment_experiment');
-    my $subplot_entries = $trial->get_observation_units_direct('subplot', 'treatment_experiment');
+    my $plant_entries = $trial->get_observation_units_direct('plant', ['treatment_experiment']);
+    my $subplot_entries = $trial->get_observation_units_direct('subplot', ['treatment_experiment']);
     is(scalar(@$plant_entries), 400);
     is(scalar(@$subplot_entries), 200);
 }
