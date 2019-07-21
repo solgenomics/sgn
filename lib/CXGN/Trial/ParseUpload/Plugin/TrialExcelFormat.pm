@@ -211,7 +211,7 @@ sub _validate_with_plugin {
     if (!$plot_name || $plot_name eq '' ) {
         push @error_messages, "Cell A$row_name: plot name missing.";
     }
-    elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
+    elsif ($plot_name =~ /\s/ ) {
         push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
     }
     else {
