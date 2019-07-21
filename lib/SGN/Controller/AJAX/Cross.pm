@@ -1064,6 +1064,7 @@ sub upload_family_names_POST : Args(0) {
     my $c = shift;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $upload = $c->req->upload('family_name_upload_file');
     my $parser;
@@ -1163,9 +1164,11 @@ sub upload_family_names_POST : Args(0) {
 
             my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
                 chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
                 dbh => $dbh,
                 cross_name => $cross_name,
                 family_name => $family_name,
+                owner_name => $user_name,
             });
 
             $family_name_add->add_family_name();
