@@ -353,12 +353,14 @@ sub get_cross_progenies_trial {
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
     my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
 
-    my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_combination, progeny_count_table.progeny_number, family_name_table.family_name
+    my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_combination, cross_table.family_id, cross_table.family_name, progeny_count_table.progeny_number
         FROM
-        (SELECT stock.stock_id AS cross_id, stock.uniquename AS cross_name, stockprop.value AS cross_combination
+        (SELECT stock.stock_id AS cross_id, stock.uniquename AS cross_name, stockprop.value AS cross_combination, stock2.stock_id AS family_id, stock2.uniquename AS family_name
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
+        LEFT JOIN stock AS stock2 ON (stock_relationship.object_id = stock2.stock_id) AND stock2.type_id = ?
         WHERE nd_experiment_project.project_id = ?) AS cross_table
         LEFT JOIN
         (SELECT DISTINCT stock.stock_id AS cross_id, COUNT (stock_relationship.subject_id) AS progeny_number
@@ -366,23 +368,15 @@ sub get_cross_progenies_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
         WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progeny_count_table
-        ON (cross_table.cross_id = progeny_count_table.cross_id)
-        LEFT JOIN
-        (SELECT DISTINCT stock.stock_id AS cross_id, array_agg(stock2.uniquename || ' ') AS family_name
-        FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
-        LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
-        LEFT JOIN stock AS stock2 ON (stock_relationship.object_id = stock2.stock_id) AND stock2.type_id = ?
-        WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS family_name_table
-        ON (progeny_count_table.cross_id = family_name_table.cross_id)";
+        ON (cross_table.cross_id = progeny_count_table.cross_id)";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($cross_combination_type_id, $trial_id, $offspring_of_type_id, $trial_id, $member_of_type_id, $family_name_type_id, $trial_id);
+    $h->execute($cross_combination_type_id, $member_of_type_id, $family_name_type_id, $trial_id, $offspring_of_type_id, $trial_id);
 
     my @data =();
-    while(my($cross_id, $cross_name, $cross_combination, $progeny_number, $family_name) = $h->fetchrow_array()){
-        push @data, [$cross_id, $cross_name, $cross_combination, $progeny_number, $family_name]
+    while(my($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number]
     }
 
     return \@data;
