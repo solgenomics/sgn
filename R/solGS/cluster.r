@@ -164,16 +164,18 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
       
-        pheno <-  extractPhenotype(inputFiles, metaFile)
+        ## pheno <-  extractPhenotype(inputFiles, metaFile)
 
-        phenoData <- cleanMetaCols(metaDataFile=metaFile,
-                                   phenoData=pheno,
-                                   keepMetaCols=c('germplasmName'))
+        ## phenoData <- cleanMetaCols(metaDataFile=metaFile,
+        ##                            phenoData=pheno,
+        ##                            keepMetaCols=c('germplasmName'))
                 
-        phenoData <- summarizeTraits(phenoData)
+        ## phenoData <- summarizeTraits(phenoData)
 
-        clusterNa   <- phenoData %>% filter_all(any_vars(is.na(.)))
-        clusterData <- column_to_rownames(phenoData, 'germplasmName')
+        ## clusterNa   <- phenoData %>% filter_all(any_vars(is.na(.)))
+        ## clusterData <- column_to_rownames(phenoData, 'germplasmName')
+        clusterData <- cleanAveragePhenotypes(inputFiles, metaFile)
+        print(head(clusterData))
            
     }
 
