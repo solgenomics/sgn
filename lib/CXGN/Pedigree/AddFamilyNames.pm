@@ -79,12 +79,12 @@ sub add_family_name {
         $organism_id = $cross_stock->organism_id();
 
         #check if family_name already exists
-        my $family_name_rs = $schema->resultset("Stock::Stock")->search({
+        my $family_name_rs = $chado_schema->resultset("Stock::Stock")->find({
             uniquename => $family_name,
             type_id => $family_name_cvterm_id,
         });
 
-        if ($family_name_rs->count() > 0){
+        if ($family_name_rs){
             #create relationship between family_name and cross
             $family_name_rs->find_or_create_related('stock_relationship_objects', {
                 type_id => $member_of_cvterm_id,
@@ -92,7 +92,8 @@ sub add_family_name {
                 subject_id => $cross_stock->stock_id(),
             });
         } else {
-            my $new_family_name_rs = $chado_schema->resultset("Stock::Stock")->create({
+            my $new_family_name_rs;
+            $new_family_name_rs = $chado_schema->resultset("Stock::Stock")->create({
                 organism_id => $organism_id,
                 name       => $family_name,
                 uniquename => $family_name,
@@ -107,7 +108,7 @@ sub add_family_name {
             });
 
             #add new stock_id to an array for phenome schema
-            $new_family_name_id = $new_family_name_rs->stock_id();
+            my $new_family_name_id = $new_family_name_rs->stock_id();
             push @added_family_name_ids, $new_family_name_id;
         }
     };
