@@ -34,7 +34,7 @@ __PACKAGE__->config(
         my %longest_hash;
         print STDERR "Data type is $data_type and id is $value\n";
 
-        my ($trial_num, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design) = get_plot_data($c, $schema, $data_type, $value);
+        my ($trial_num, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design) = get_data($c, $schema, $data_type, $data_level, $value);
 
        #if plant ids exist, use plant design
        my $design = $plot_design;
@@ -170,7 +170,7 @@ __PACKAGE__->config(
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
 
-       my ($trial_num, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design) = get_plot_data($c, $schema, $data_type, $value);
+       my ($trial_num, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design) = get_data($c, $schema, $data_type, $value);
 
        #if plant ids or names are used in design params, use plant design
 
@@ -459,15 +459,17 @@ sub process_field {
 #     return \%pedigree_strings;
 # }
 
-sub get_plot_data {
+sub get_data {
     my $c = shift;
     my $schema = shift;
     my $data_type = shift;
+    my $data_level = shift;
     my $value = shift;
     my $num_trials = 1;
     my ($trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design);
 
     # print STDERR "Data type is $data_type and value is $value\n";
+    # use data level as well as type to determine and enact correct retrieval
 
     if ($data_type =~ m/Plant List/) {
     }

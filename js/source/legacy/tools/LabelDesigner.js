@@ -304,10 +304,11 @@ $(document).ready(function($) {
 
             var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">List Items</option>';
             // Check list type, if Plot, Plant, or Tissue Sample add details option
+            var name = $('#source_select :selected').text();
 
             jQuery.ajax({
                 url: '/list/exists',
-                data: { 'name': this.text },
+                data: { 'name': name },
                 beforeSend: function() {
                     disable_ui();
                 },
@@ -326,13 +327,13 @@ $(document).ready(function($) {
                     } else if (response.list_type == 'tissue_samples') {
                         html = html + '<option value="tissue_samples">Tissue Sample Details</option>';
                     }
+                    html = html + '</select>';
+                    jQuery('#label_designer_data_level_select_div').html(html);
                 },
                 error: function(response) {
                     alert('There was a problem checking the data levels available for your field trial. Please contact us.');
                 }
             });
-            html = html + '</select>';
-            jQuery('#label_designer_data_level_select_div').html(html);
             // jQuery('#label_designer_data_level_select_div').html('');
             // jQuery('#label_designer_data_level_div').hide();
         }

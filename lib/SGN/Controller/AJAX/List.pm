@@ -539,7 +539,7 @@ sub delete_list_action :Path('/list/delete') Args(0) {
 sub exists_list_action : Path('/list/exists') Args(0) {
     my $self =shift;
     my $c = shift;
-    my $name = $c->req->param("name");
+    my $name = $c->req->param("name") || undef;
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
@@ -547,6 +547,8 @@ sub exists_list_action : Path('/list/exists') Args(0) {
     }
 
     my $list_info = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
+
+    print STDERR "List info is ".Dumper($list_info);
 	$c->stash->{rest} = $list_info;
 
 }
