@@ -212,7 +212,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A$row_name: plot name missing.";
     }
     elsif ($plot_name =~ /\s/ ) {
-        push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
+        push @error_messages, "Cell A$row_name: plot name must not contain spaces.";
     }
     else {
         $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
