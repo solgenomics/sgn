@@ -29,10 +29,10 @@ print "<b>Number of unique parents in added crosses</b>: $number_of_unique_paren
 <table border ="1">
 <%perl>
 my %upload_data = %{$upload_data_ref};
-print "<tr><th>cross_name</th><th>maternal_parent</th><th>paternal_parent</th><th>trial</th><th>location</th><th>number_of_progeny</th><th>prefix</th><th>suffix</th><th>number_of_flowers</th><th>number_of_seeds</th></tr>";
+print "<tr><th>cross_unique_id</th><th>maternal_parent</th><th>paternal_parent</th><th>trial</th><th>location</th><th>number_of_progeny</th><th>prefix</th><th>suffix</th><th>number_of_flowers</th><th>number_of_seeds</th></tr>";
 foreach my $key (sort { $a <=> $b} keys %upload_data) {
   my %cross = %{$upload_data{$key}};
-  print "<tr><td>".$cross{'cross_name'}."</td><td>".$cross{'maternal_parent'}."</td><td>".$cross{'paternal_parent'}."</td><td>".$cross{'cross_trial'}."</td><td>".$cross{'cross_location'}."</td>";
+  print "<tr><td>".$cross{'cross_unique_id'}."</td><td>".$cross{'maternal_parent'}."</td><td>".$cross{'paternal_parent'}."</td><td>".$cross{'cross_trial'}."</td><td>".$cross{'cross_location'}."</td>";
   if ($cross{'number_of_progeny'}) {
     print "<td>".$cross{'number_of_progeny'}."</td>";
   }
@@ -80,7 +80,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
       height: 250
     });
 
-    jQuery("#view_uploaded_data_link").click( function () { 
+    jQuery("#view_uploaded_data_link").click( function () {
       autoOpen: false,
      jQuery("#display_uploaded_data_dialog" ).dialog("open");
     })
@@ -93,7 +93,7 @@ foreach my $key (sort { $a <=> $b} keys %upload_data) {
       height: 300
     });
 
-    function submit_cross_upload() { 
+    function submit_cross_upload() {
     }
 
 </script>
