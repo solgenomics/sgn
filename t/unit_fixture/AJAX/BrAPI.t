@@ -247,10 +247,10 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=1, pageSize=1','code' => 'info'},{'code' => 'info','message' => 'Loading CXGN::BrAPI::v1::Traits'},{'code' => '200','message' => 'Traits list result constructed'}],'datafiles' => [],'pagination' => {'pageSize' => 1,'totalPages' => 245,'currentPage' => 1,'totalCount' => 245}},'result' => {'data' => [{'observationVariables' => ['amylopectin content ug/g in percentage|CO_334:0000121'],'description' => 'Estimation of amylopectin content of cassava roots in percentage(%).','traitDbId' => '70761','defaultValue' => '','traitId' => 'CO_334:0000121','name' => 'amylopectin content ug/g in percentage'}]}}, 'traits');
 
-$mech->get_ok('http://localhost:3010/brapi/v1/maps?pageSize=1&page=1&access_token='.$access_token );
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'currentPage' => 1,'pageSize' => 1,'totalPages' => 1},'status' => [{'code' => 'info','message' => 'BrAPI base call found with page=1, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v1::GenomeMaps','code' => 'info'},{'code' => '200','message' => 'Maps list result constructed'}]},'result' => {'data' => [{'markerCount' => '0','species' => 'Solanum lycopersicum','name' => 'Tomato Pachytene Chromosomes','unit' => 'cM','type' => 'Genetic','linkageGroupCount' => 12,'comments' => 'This map shows the pachytene chromosomes of tomato. It is only for illustrative purposes and does not contain any markers. <br /><br />Images courtesy of Prof. Stephen Stack, Colorado State University.','mapDbId' => 'pachy'}]}}, 'maps');
+# $mech->get_ok('http://localhost:3010/brapi/v1/maps?pageSize=1&page=1&access_token='.$access_token );
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+# is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'currentPage' => 1,'pageSize' => 1,'totalPages' => 1},'status' => [{'code' => 'info','message' => 'BrAPI base call found with page=1, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v1::GenomeMaps','code' => 'info'},{'code' => '200','message' => 'Maps list result constructed'}]},'result' => {'data' => [{'markerCount' => '0','species' => 'Solanum lycopersicum','name' => 'Tomato Pachytene Chromosomes','unit' => 'cM','type' => 'Genetic','linkageGroupCount' => 12,'comments' => 'This map shows the pachytene chromosomes of tomato. It is only for illustrative purposes and does not contain any markers. <br /><br />Images courtesy of Prof. Stephen Stack, Colorado State University.','mapDbId' => 'pachy'}]}}, 'maps');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/locations?pageSize=1&page=1&access_token='.$access_token );
 $response = decode_json $mech->content;
