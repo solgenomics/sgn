@@ -471,168 +471,184 @@ sub get_data {
     # print STDERR "Data type is $data_type and value is $value\n";
     # use data level as well as type to determine and enact correct retrieval
 
-    if ($data_type =~ m/Plant List/) {
-    }
-    elsif ($data_type =~ m/Plot List/) {
-        # get items from list, get trial id from plot id. Or, get plot data one by one
-        my $plot_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
-        my @plot_list = map { $_->[1] } @$plot_data;
-        my $t = CXGN::List::Transform->new();
-        my $acc_t = $t->can_transform("plots", "plot_ids");
-        my $plot_id_hash = $t->transform($schema, $acc_t, \@plot_list);
-        my @plot_ids = @{$plot_id_hash->{transform}};
-        my $trial_rs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({
-            stock_id => { -in => \@plot_ids }
-        })->search_related('nd_experiment')->search_related('nd_experiment_projects');
-        my %trials = ();
-        while (my $row = $trial_rs->next()) {
-            print STDERR "Looking at id ".$row->project_id()."\n";
-            my $id = $row->project_id();
-            $trials{$id} = 1;
-        }
-        $num_trials = scalar keys %trials;
-        print STDERR "Count is $num_trials\n";
-        $trial_id = $trial_rs->first->project_id();
-        my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
-        #print STDERR "Full Design is: ".Dumper($full_design);
-        # reduce design hash, removing plots that aren't in list
-        my %full_design = %{$full_design};
+    if ($data_level eq "List Items") {
+        my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
+        my @list_items = map { $_->[1] } $list_data;
 
-        foreach my $i (0 .. $#plot_ids) {
-            foreach my $key (keys %full_design) {
-                if ($full_design{$key}->{'plot_id'} eq $plot_ids[$i]) {
-                    print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
-                    $plot_design->{$key} = $full_design{$key};
-                    $plot_design->{$key}->{'list_order'} = $i;
-                }
-            }
-        }
-
-    }
-    elsif ($data_type =~ m/Genotyping Plate/) {
+    elsif ($data_level eq "Plate") {
         $trial_id = $value;
         $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
     }
-    elsif ($data_type =~ m/Field Trials/) {
-        $trial_id = $value;
-        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
-        my $trial_has_plant_entries = $trial->has_plant_entries;
-        my $trial_has_subplot_entries = $trial->has_subplot_entries;
-        my $trial_has_tissue_sample_entries = $trial->has_tissue_sample_entries;
-        # $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
-
-        my $treatments = $trial->get_treatments();
-        my @treatments = @{$treatments};
-        print STDERR "treatments are @treatments\n";
-        my @treatment_ids = map { $_->[0] } @{$treatments};
-        print STDERR "treatment ids are @treatment_ids\n";
-        my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-            schema => $schema,
-            trial_id => $trial_id,
-            data_level => 'plots',
-            treatment_project_ids => \@treatment_ids,
-            selected_columns => {'plot_name' => 1,'plot_id' => 1,'block_number' => 1,'plot_number' => 1,'rep_number' => 1,'row_number' => 1,'col_number' => 1,'accession_name' => 1,'is_a_control' => 1,'synonyms' => 1,'trial_name' => 1,'location_name' => 1,'year' => 1,'pedigree' => 1,'tier' => 1,'seedlot_name' => 1,'seed_transaction_operator' => 1,'num_seed_per_plot' => 1,'range_number' => 1,'plot_geo_json' => 1},
-            selected_trait_ids => []
-        });
-        my $plot_layout = $trial_layout_download->get_layout_output();
-
-        # map array of arrays into hash
-        my $outer_array = $plot_layout->{'output'};
-        my @keys;
-        my %mapped_design;
-        foreach my $inner_array (@{$outer_array}) {
-            if (scalar @keys > 0) {
-                my %detail_hash;
-                @detail_hash{@keys} = @{$inner_array};
-
-                my @applied_treatments;
-                foreach my $key (keys %detail_hash) {
-                    if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
-                        my $treatment = $key;
-                        $treatment =~ s/ManagementFactor://;
-                        push @applied_treatments, $treatment;
-                        delete($detail_hash{$key});
-                    }
-                    elsif ( $key =~ /ManagementFactor/ ) {
-                        delete($detail_hash{$key});
-                    }
-                }
-                $detail_hash{'ManagementFactor'} = join(",", @applied_treatments);
-
-                my $plot_number = $detail_hash{'plot_number'};
-                $mapped_design{$plot_number} = \%detail_hash;
-            }
-            else {
-                @keys = @{$inner_array};
-            }
-        }
-        $plot_design = \%mapped_design;
-        print STDERR "Mapped design hash is ".Dumper(%mapped_design);
-
-        # retrieve at plant and subplot and Tissue sample level only when specified
-
-        my @plot_ids = keys %{$plot_design};
-        if ($trial_has_plant_entries) {
-            foreach my $plot_id (keys %$plot_design) {
-                my @plant_ids = @{$plot_design->{$plot_id}->{'plant_ids'}};
-                my @plant_names = @{$plot_design->{$plot_id}->{'plant_names'}};
-                my @plant_index_numbers = @{$plot_design->{$plot_id}->{'plant_index_numbers'}};
-                my %plant_tissue_samples = %{$plot_design->{$plot_id}->{'plants_tissue_sample_names'}};
-                for (my $i=0; $i < scalar(@plant_ids); $i++) {
-                    my $plant_id = $plant_ids[$i];
-                    my $plant_name = $plant_names[$i];
-                    foreach my $property (keys %{$plot_design->{$plot_id}}) { $plant_design->{$plant_id}->{$property} = $plot_design->{$plot_id}->{$property}; }
-                    $plant_design->{$plant_id}->{'plant_id'} = $plant_id;
-                    $plant_design->{$plant_id}->{'plant_name'} = $plant_name;
-                    $plant_design->{$plant_id}->{'plant_index_number'} = $plant_index_numbers[$i];
-                    $plant_design->{$plant_id}->{'plant_tissue_samples'} = $plant_tissue_samples{$plant_name};
-                }
-            }
-        }
-        if ($trial_has_subplot_entries) {
-            foreach my $plot_id (keys %$plot_design) {
-                my @subplot_ids = @{$plot_design->{$plot_id}->{'subplot_ids'}};
-                my @subplot_names = @{$plot_design->{$plot_id}->{'subplot_names'}};
-                my @subplot_index_numbers = @{$plot_design->{$plot_id}->{'subplot_index_numbers'}};
-                my %subplot_plants = %{$plot_design->{$plot_id}->{'subplots_plant_names'}};
-                my %subplot_tissue_samples = %{$plot_design->{$plot_id}->{'subplots_tissue_sample_names'}};
-                for (my $i=0; $i < scalar(@subplot_ids); $i++) {
-                    my $subplot_id = $subplot_ids[$i];
-                    my $subplot_name = $subplot_names[$i];
-                    foreach my $property (keys %{$plot_design->{$plot_id}}) { $subplot_design->{$subplot_id}->{$property} = $plot_design->{$plot_id}->{$property}; }
-                    $subplot_design->{$subplot_id}->{'subplot_id'} = $subplot_id;
-                    $subplot_design->{$subplot_id}->{'subplot_name'} = $subplot_name;
-                    $subplot_design->{$subplot_id}->{'subplot_index_number'} = $subplot_index_numbers[$i];
-                    $subplot_design->{$subplot_id}->{'subplot_plant_names'} = $subplot_plants{$subplot_name};
-                    $subplot_design->{$subplot_id}->{'subplot_tissue_sample_names'} = $subplot_tissue_samples{$subplot_name};
-                }
-            }
-        }
-        if ($trial_has_tissue_sample_entries) {
-            foreach my $plot_id (keys %$plot_design) {
-                my @tissue_sample_ids = @{$plot_design->{$plot_id}->{'tissue_sample_ids'}};
-                my @tissue_sample_names = @{$plot_design->{$plot_id}->{'tissue_sample_names'}};
-                my @tissue_sample_index_numbers = @{$plot_design->{$plot_id}->{'tissue_sample_index_numbers'}};
-                for (my $i=0; $i < scalar(@tissue_sample_ids); $i++) {
-                    my $tissue_sample_id = $tissue_sample_ids[$i];
-                    foreach my $property (keys %{$plot_design->{$plot_id}}) { $tissue_sample_design->{$tissue_sample_id}->{$property} = $plot_design->{$plot_id}->{$property}; }
-                    $tissue_sample_design->{$tissue_sample_id}->{'tissue_sample_id'} = $tissue_sample_id;
-                    $tissue_sample_design->{$tissue_sample_id}->{'tissue_sample_name'} = $tissue_sample_names[$i];
-                    $tissue_sample_design->{$tissue_sample_id}->{'tissue_sample_index_number'} = $tissue_sample_index_numbers[$i];
-                }
-            }
-        }
+    elsif ($data_level eq "Plot") {
     }
-    # elsif ($data_type =~ m/Field Trial Plots/) {
-    #     $trial_id = $value;
-    #     $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
-    # }
+    elsif ($data_level eq "Plant") {
+    }
+    elsif ($data_level eq "Subplot") {
+    }
+    elsif ($data_level eq "Tissue Sample") {
+    }
 
-    #turn arrays into comma separated strings
-    $plot_design = arraystostrings($plot_design);
-    $plant_design = arraystostrings($plant_design);
-    $subplot_design = arraystostrings($subplot_design);
-    $tissue_sample_design = arraystostrings($tissue_sample_design);
+
+    # elsif ($data_type =~ m/Plot List/) {
+    #     # get items from list, get trial id from plot id. Or, get plot data one by one
+    #     my $plot_data = SGN::Controller::AJAX::List->retrieve_list($c, $value);
+    #     my @plot_list = map { $_->[1] } @$plot_data;
+    #     my $t = CXGN::List::Transform->new();
+    #     my $acc_t = $t->can_transform("plots", "plot_ids");
+    #     my $plot_id_hash = $t->transform($schema, $acc_t, \@plot_list);
+    #     my @plot_ids = @{$plot_id_hash->{transform}};
+    #     my $trial_rs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({
+    #         stock_id => { -in => \@plot_ids }
+    #     })->search_related('nd_experiment')->search_related('nd_experiment_projects');
+    #     my %trials = ();
+    #     while (my $row = $trial_rs->next()) {
+    #         print STDERR "Looking at id ".$row->project_id()."\n";
+    #         my $id = $row->project_id();
+    #         $trials{$id} = 1;
+    #     }
+    #     $num_trials = scalar keys %trials;
+    #     print STDERR "Count is $num_trials\n";
+    #     $trial_id = $trial_rs->first->project_id();
+    #     my $full_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+    #     #print STDERR "Full Design is: ".Dumper($full_design);
+    #     # reduce design hash, removing plots that aren't in list
+    #     my %full_design = %{$full_design};
+    #
+    #     foreach my $i (0 .. $#plot_ids) {
+    #         foreach my $key (keys %full_design) {
+    #             if ($full_design{$key}->{'plot_id'} eq $plot_ids[$i]) {
+    #                 print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
+    #                 $plot_design->{$key} = $full_design{$key};
+    #                 $plot_design->{$key}->{'list_order'} = $i;
+    #             }
+    #         }
+    #     }
+    #
+    # }
+    # elsif ($data_type =~ m/Genotyping Plate/) {
+    #     $trial_id = $value;
+    #     $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'genotyping_layout' })->get_design();
+    # }
+    # elsif ($data_type =~ m/Field Trials/) {
+    #     $trial_id = $value;
+    #     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    #     my $trial_has_plant_entries = $trial->has_plant_entries;
+    #     my $trial_has_subplot_entries = $trial->has_subplot_entries;
+    #     my $trial_has_tissue_sample_entries = $trial->has_tissue_sample_entries;
+    #     # $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+    #
+    #     my $treatments = $trial->get_treatments();
+    #     my @treatments = @{$treatments};
+    #     print STDERR "treatments are @treatments\n";
+    #     my @treatment_ids = map { $_->[0] } @{$treatments};
+    #     print STDERR "treatment ids are @treatment_ids\n";
+    #     my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    #         schema => $schema,
+    #         trial_id => $trial_id,
+    #         data_level => 'plots',
+    #         treatment_project_ids => \@treatment_ids,
+    #         selected_columns => {'plot_name' => 1,'plot_id' => 1,'block_number' => 1,'plot_number' => 1,'rep_number' => 1,'row_number' => 1,'col_number' => 1,'accession_name' => 1,'is_a_control' => 1,'synonyms' => 1,'trial_name' => 1,'location_name' => 1,'year' => 1,'pedigree' => 1,'tier' => 1,'seedlot_name' => 1,'seed_transaction_operator' => 1,'num_seed_per_plot' => 1,'range_number' => 1,'plot_geo_json' => 1},
+    #         selected_trait_ids => []
+    #     });
+    #     my $plot_layout = $trial_layout_download->get_layout_output();
+    #
+    #     # map array of arrays into hash
+    #     my $outer_array = $plot_layout->{'output'};
+    #     my @keys;
+    #     my %mapped_design;
+    #     foreach my $inner_array (@{$outer_array}) {
+    #         if (scalar @keys > 0) {
+    #             my %detail_hash;
+    #             @detail_hash{@keys} = @{$inner_array};
+    #
+    #             my @applied_treatments;
+    #             foreach my $key (keys %detail_hash) {
+    #                 if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
+    #                     my $treatment = $key;
+    #                     $treatment =~ s/ManagementFactor://;
+    #                     push @applied_treatments, $treatment;
+    #                     delete($detail_hash{$key});
+    #                 }
+    #                 elsif ( $key =~ /ManagementFactor/ ) {
+    #                     delete($detail_hash{$key});
+    #                 }
+    #             }
+    #             $detail_hash{'ManagementFactor'} = join(",", @applied_treatments);
+    #
+    #             my $plot_number = $detail_hash{'plot_number'};
+    #             $mapped_design{$plot_number} = \%detail_hash;
+    #         }
+    #         else {
+    #             @keys = @{$inner_array};
+    #         }
+    #     }
+    #     $plot_design = \%mapped_design;
+    #     print STDERR "Mapped design hash is ".Dumper(%mapped_design);
+    #
+    #     # retrieve at plant and subplot and Tissue sample level only when specified
+    #
+    #     my @plot_ids = keys %{$plot_design};
+    #     if ($trial_has_plant_entries) {
+    #         foreach my $plot_id (keys %$plot_design) {
+    #             my @plant_ids = @{$plot_design->{$plot_id}->{'plant_ids'}};
+    #             my @plant_names = @{$plot_design->{$plot_id}->{'plant_names'}};
+    #             my @plant_index_numbers = @{$plot_design->{$plot_id}->{'plant_index_numbers'}};
+    #             my %plant_tissue_samples = %{$plot_design->{$plot_id}->{'plants_tissue_sample_names'}};
+    #             for (my $i=0; $i < scalar(@plant_ids); $i++) {
+    #                 my $plant_id = $plant_ids[$i];
+    #                 my $plant_name = $plant_names[$i];
+    #                 foreach my $property (keys %{$plot_design->{$plot_id}}) { $plant_design->{$plant_id}->{$property} = $plot_design->{$plot_id}->{$property}; }
+    #                 $plant_design->{$plant_id}->{'plant_id'} = $plant_id;
+    #                 $plant_design->{$plant_id}->{'plant_name'} = $plant_name;
+    #                 $plant_design->{$plant_id}->{'plant_index_number'} = $plant_index_numbers[$i];
+    #                 $plant_design->{$plant_id}->{'plant_tissue_samples'} = $plant_tissue_samples{$plant_name};
+    #             }
+    #         }
+    #     }
+    #     if ($trial_has_subplot_entries) {
+    #         foreach my $plot_id (keys %$plot_design) {
+    #             my @subplot_ids = @{$plot_design->{$plot_id}->{'subplot_ids'}};
+    #             my @subplot_names = @{$plot_design->{$plot_id}->{'subplot_names'}};
+    #             my @subplot_index_numbers = @{$plot_design->{$plot_id}->{'subplot_index_numbers'}};
+    #             my %subplot_plants = %{$plot_design->{$plot_id}->{'subplots_plant_names'}};
+    #             my %subplot_tissue_samples = %{$plot_design->{$plot_id}->{'subplots_tissue_sample_names'}};
+    #             for (my $i=0; $i < scalar(@subplot_ids); $i++) {
+    #                 my $subplot_id = $subplot_ids[$i];
+    #                 my $subplot_name = $subplot_names[$i];
+    #                 foreach my $property (keys %{$plot_design->{$plot_id}}) { $subplot_design->{$subplot_id}->{$property} = $plot_design->{$plot_id}->{$property}; }
+    #                 $subplot_design->{$subplot_id}->{'subplot_id'} = $subplot_id;
+    #                 $subplot_design->{$subplot_id}->{'subplot_name'} = $subplot_name;
+    #                 $subplot_design->{$subplot_id}->{'subplot_index_number'} = $subplot_index_numbers[$i];
+    #                 $subplot_design->{$subplot_id}->{'subplot_plant_names'} = $subplot_plants{$subplot_name};
+    #                 $subplot_design->{$subplot_id}->{'subplot_tissue_sample_names'} = $subplot_tissue_samples{$subplot_name};
+    #             }
+    #         }
+    #     }
+    #     if ($trial_has_tissue_sample_entries) {
+    #         foreach my $plot_id (keys %$plot_design) {
+    #             my @tissue_sample_ids = @{$plot_design->{$plot_id}->{'tissue_sample_ids'}};
+    #             my @tissue_sample_names = @{$plot_design->{$plot_id}->{'tissue_sample_names'}};
+    #             my @tissue_sample_index_numbers = @{$plot_design->{$plot_id}->{'tissue_sample_index_numbers'}};
+    #             for (my $i=0; $i < scalar(@tissue_sample_ids); $i++) {
+    #                 my $tissue_sample_id = $tissue_sample_ids[$i];
+    #                 foreach my $property (keys %{$plot_design->{$plot_id}}) { $tissue_sample_design->{$tissue_sample_id}->{$property} = $plot_design->{$plot_id}->{$property}; }
+    #                 $tissue_sample_design->{$tissue_sample_id}->{'tissue_sample_id'} = $tissue_sample_id;
+    #                 $tissue_sample_design->{$tissue_sample_id}->{'tissue_sample_name'} = $tissue_sample_names[$i];
+    #                 $tissue_sample_design->{$tissue_sample_id}->{'tissue_sample_index_number'} = $tissue_sample_index_numbers[$i];
+    #             }
+    #         }
+    #     }
+    # }
+    # # elsif ($data_type =~ m/Field Trial Plots/) {
+    # #     $trial_id = $value;
+    # #     $design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
+    # # }
+    #
+    # #turn arrays into comma separated strings
+    # $plot_design = arraystostrings($plot_design);
+    # $plant_design = arraystostrings($plant_design);
+    # $subplot_design = arraystostrings($subplot_design);
+    # $tissue_sample_design = arraystostrings($tissue_sample_design);
     return ($num_trials, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design);
 }
 
