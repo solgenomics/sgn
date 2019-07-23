@@ -14,6 +14,7 @@ library(genoDataFilter)
 library(tibble)
 library(dplyr)
 library(stringr)
+library(phenoAnalysis)
 
 allArgs <- commandArgs()
 
@@ -49,16 +50,19 @@ if (is.null(loadingsFile))
 genoData <- c()
 genoMetaData <- c()
 filteredGenoFile <- c()
+phenoData <- c()
+pcF <- grepl("genotype_data", inputFiles)
+dataType <- ifelse(isTRUE(pcF), 'genotype', 'phenotype')
 
-if (length(inputFiles) > 1 ) {   
-    allGenoFiles <- inputFiles
-    genoData <- combineGenoData(allGenoFiles)
-    
-    genoMetaData   <- genoData$trial
-    genoData$trial <- NULL
- 
-} else {
-    if (!is.na(str_match(inputFiles, 'genotype_data'))) {
+if (dataType == 'genotype') {
+    if (length(inputFiles) > 1 ) {   
+        allGenoFiles <- inputFiles
+        genoData <- combineGenoData(allGenoFiles)
+        
+        genoMetaData   <- genoData$trial
+        genoData$trial <- NULL
+        
+    } else {
         genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
         genoData     <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
         genoData     <- unique(genoData, by='V1')
@@ -71,34 +75,42 @@ if (length(inputFiles) > 1 ) {
         } else {
             genoData <- fread(filteredGenoFile)
         }
-    } else if (!is.na(str_match(inputFiles, 'phenotype_data'))) {
-       #prepare phenodata
-        
     }
+} else if (dataType == 'phenotype') {
+   
+    phenoDataFile <- grep("phenotype_data", inputFiles,  value = TRUE)
+    metaFile <- grep("meta", inputFiles,  value = TRUE)
+
+    ##  genoMetaData   <- genoData$trial
+    ##    genoData$trial <- NULL
+     
+    phenData <- cleanAveragePhenotypes(inputFiles, metaFile) 
+    phenoDataNotScaled <- na.omit(phenData)
+    
+    phenoData <- scale(phenoDataNotScaled, center=TRUE, scale=TRUE)    
 }
 
-
-if (is.null(genoData)) {
-  stop("There is no genotype dataset.")
+if (is.null(genoData) && is.null(phenoData)) {
+  stop("There is no data to run PCA.")
   q("no", 1, FALSE)
-}
-
+} 
 
 genoDataMissing <- c()
-if (is.null(filteredGenoFile) == TRUE) {
-    ##genoDataFilter::filterGenoData
-    
-    genoData <- filterGenoData(genoData, maf=0.01)
-    genoData <- column_to_rownames(genoData, 'rn')
+if (dataType == 'genotype') {
+    if (is.null(filteredGenoFile) == TRUE) {
+        ##genoDataFilter::filterGenoData       
+        genoData <- filterGenoData(genoData, maf=0.01)
+        genoData <- column_to_rownames(genoData, 'rn')
 
-    message("No. of geno missing values, ", sum(is.na(genoData)) )
-    if (sum(is.na(genoData)) > 0) {
-        genoDataMissing <- c('yes')
-        genoData <- na.roughfix(genoData)
+        message("No. of geno missing values, ", sum(is.na(genoData)) )
+        if (sum(is.na(genoData)) > 0) {
+            genoDataMissing <- c('yes')
+            genoData <- na.roughfix(genoData)
+        }
     }
-}
 
-genoData <- data.frame(genoData)
+    genoData <- data.frame(genoData)
+}
 ## nCores <- detectCores()
 ## message('no cores: ', nCores)
 ## if (nCores > 1) {
@@ -107,8 +119,15 @@ genoData <- data.frame(genoData)
 ##   nCores <- 1
 ## }
 
-pcsCnt <- 10
-pca    <- prcomp(genoData, retx=TRUE)
+pcaData <- c()
+if (!is.null(genoData)) {
+    pcaData <- genoData
+} else if(!is.null(phenoData)) {
+    pcaData <- phenoData
+}
+  
+pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)
+pca    <- prcomp(pcaData, retx=TRUE)
 pca    <- summary(pca)
 
 scores   <- data.frame(pca$x)
