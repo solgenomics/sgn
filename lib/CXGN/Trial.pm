@@ -46,6 +46,7 @@ use CXGN::GenotypingTrial;
 use CXGN::CrossingTrial;
 use CXGN::Analysis;
 use CXGN::ManagementFactor;
+use CXGN::GenotypeDataProject;
 use Data::Dumper;
 
 sub new {
@@ -78,7 +79,7 @@ sub new {
             $object = CXGN::ManagementFactor->new($args);
         }
         elsif ($val eq "genotype_data_project") {
-            $object = CXGN::ManagementFactor->new($args);
+            $object = CXGN::GenotypeDataProject->new($args);
         }
         else {
             $object = CXGN::PhenotypingTrial->new($args);
