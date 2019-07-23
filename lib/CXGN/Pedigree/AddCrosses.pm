@@ -84,6 +84,9 @@ sub add_crosses {
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_parent', 'stock_relationship');
 
+		#get cvterm for cross_combination
+		my $cross_combination_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_combination', 'stock_property');
+
         #get cvterm for cross_experiment
         my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type');
 
@@ -114,6 +117,7 @@ sub add_crosses {
             my $population_stock;
             my $cross_type = $pedigree->get_cross_type();
             my $cross_name = $pedigree->get_name();
+			my $cross_combination = $pedigree->get_cross_combination();
             my $crossing_trial_id;
             my $female_plot_name;
             my $male_plot_name;
@@ -252,6 +256,11 @@ sub add_crosses {
                     object_id => $cross_stock->stock_id(),
                     subject_id => $male_plant->stock_id(),
                 });
+            }
+
+            #link cross to cross_combination
+			if ($cross_combination) {
+				$cross_stock->create_stockprops({$cross_combination_cvterm->name() => $cross_combination});
             }
 
             #link the stock of type cross to the experiment

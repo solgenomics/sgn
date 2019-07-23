@@ -3,22 +3,21 @@
 
 =head1 NAME
 
- AddFamilyNameCvterm
+ AddCrossCombinationCvterm
 
 =head1 SYNOPSIS
 
-mx-run AddFamilyNameCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddCrossCombinationCvterm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds family_name cvterm
+This patch adds cross_combination cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
-Titima Tantikanjana <tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -30,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFamilyNameCvterm;
+package AddCrossCombinationCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'family_name' stock_property cvterm
+This patch adds the 'cross_combination' stock_property cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -63,7 +62,7 @@ sub patch {
 
     my $terms = {
         'stock_property' => [
-            'family_name',
+            'cross_combination',
         ]
     };
 

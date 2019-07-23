@@ -971,6 +971,77 @@ sub remove_planting_date {
 		}
 }
 
+=head2 function get_management_factor_date()
+
+	Usage:        $trial->get_management_factor_date();
+	Desc:         Field management factors are a project and are therefore instantiated with CXGN::Trial. this gets the date projectprop
+	Ret:          Returns string
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub get_management_factor_date {
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_date_cvterm_id()
+    });
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if ($row) {
+        return $calendar_funcs->display_start_date($row->value());
+    } else {
+        return;
+    }
+}
+
+sub set_management_factor_date {
+    my $self = shift;
+    my $management_factor_date = shift;
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if (my $management_factor_event = $calendar_funcs->check_value_format($management_factor_date) ) {
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $self->get_mangement_factor_date_cvterm_id()
+        });
+
+        $row->value($management_factor_event);
+        $row->update();
+    } else {
+        print STDERR "date format did not pass check while preparing to set management factor date: $management_factor_date \n";
+    }
+}
+
+sub get_mangement_factor_date_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'management_factor_date', 'project_property')->cvterm_id();
+}
+
+sub get_mangement_factor_type_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'management_factor_type', 'project_property')->cvterm_id();
+}
+
+sub get_management_factor_type {
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_type_cvterm_id()
+    });
+
+    if ($row) {
+        return $row->value();
+    } else {
+        return;
+    }
+}
+
 =head2 accessors get_phenotypes_fully_uploaded(), set_phenotypes_fully_uploaded()
 
  Usage: When a trial's phenotypes have been fully upload, the user can set a projectprop called 'phenotypes_fully_uploaded' with a value of 1
@@ -2918,6 +2989,9 @@ sub get_plants {
     foreach (@$output) {
         push @plants, [$_->[1], $_->[0]];
     }
+    if (scalar(@plants) == 0) {
+        @plants = @{$self->get_observation_units_direct('plant')};
+    }
     return \@plants;
 }
 
@@ -3023,7 +3097,30 @@ sub get_plots {
     foreach (@$output) {
         push @plots, [$_->[1], $_->[0]];
     }
+    if (scalar(@plots) == 0) {
+        @plots = @{$self->get_observation_units_direct('plot')};
+    }
     return \@plots;
+}
+
+sub get_observation_units_direct {
+    my $self = shift;
+    my $stock_type = shift;
+    my $nd_experiment_types = shift || ['field_layout','treatment_experiment','genotyping_layout'];
+    my $schema = $self->bcs_schema;
+    my @obs;
+    my $obs_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, "stock_type")->cvterm_id();
+    my @nd_experiment_type_ids;
+    foreach (@$nd_experiment_types) {
+        push @nd_experiment_type_ids, SGN::Model::Cvterm->get_cvterm_row($schema, $_, "experiment_type")->cvterm_id();
+    }
+    my $q = "SELECT stock.uniquename, stock.stock_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? AND stock.type_id=? AND nd_experiment.type_id in (".(join ',',@nd_experiment_type_ids).") ORDER BY stock.uniquename ASC;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id(), $obs_cvterm_id);
+    while (my ($uniquename, $stock_id) = $h->fetchrow_array()) {
+        push @obs, [$stock_id, $uniquename];
+    }
+    return \@obs;
 }
 
 =head2 get_plots_per_accession
@@ -3092,6 +3189,10 @@ sub get_subplots {
     foreach (@$output) {
         push @subplots, [$_->[1], $_->[0]];
     }
+    if (scalar(@subplots) == 0) {
+        @subplots = @{$self->get_observation_units_direct('subplot')};
+    }
+    print STDERR Dumper \@subplots;
     return \@subplots;
 }
 
@@ -3120,6 +3221,9 @@ sub get_tissue_samples {
     my $header = shift @$output;
     foreach (@$output) {
         push @tissues, [$_->[1], $_->[0]];
+    }
+    if (scalar(@tissues) == 0) {
+        @tissues = @{$self->get_observation_units_direct('tissue_sample')};
     }
     return \@tissues;
 }
