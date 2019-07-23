@@ -285,7 +285,8 @@ $locations
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
+                                <td>cross_combination</td>
                                 <td>cross_type</td>
                                 <td>female_parent</td>
                                 <td>male_parent</td>
@@ -298,7 +299,8 @@ $locations
 
                     <b>Required columns:</b>
                     <ul>
-                        <li><b>cross_name</b> (must not conflict with an existing cross name)</li>
+                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
                         <li><b>female_parent</b> (accession names must exist in the database)</li>
                         <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
@@ -343,7 +345,8 @@ $locations
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
+                                <td>cross_combination</td>
                                 <td>cross_type</td>
                                 <td>female_parent</td>
                                 <td>male_parent</td>
@@ -358,7 +361,8 @@ $locations
 
                     <b>Required columns:</b>
                     <ul>
-                        <li><b>cross_name</b> (must not conflict with an existing cross name)</li>
+                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
                         <li><b>female_parent</b> (accession names must exist in the database)</li>
                         <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
@@ -405,7 +409,8 @@ $locations
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
+                                <td>cross_combination</td>
                                 <td>cross_type</td>
                                 <td>female_parent</td>
                                 <td>male_parent</td>
@@ -420,7 +425,8 @@ $locations
 
                     <b>Required columns:</b>
                     <ul>
-                        <li><b>cross_name</b> (must not conflict with an existing cross name)</li>
+                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
                         <li><b>female_parent</b> (accession names must exist in the database)</li>
                         <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>

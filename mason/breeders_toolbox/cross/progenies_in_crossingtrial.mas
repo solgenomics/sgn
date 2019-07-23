@@ -8,7 +8,8 @@ $trial_id
 <table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
     <thead>
         <tr>
-            <th>Cross Name</th>
+            <th>Cross Unique ID</th>
+            <th>Cross Combination</th>
             <th>Number of Progenies</th>
             <th>Family Name</th>
         </tr>

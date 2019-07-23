@@ -15,6 +15,7 @@ use CXGN::List::Transform;
 use CXGN::List::Validate;
 use CXGN::List;
 use JSON;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
