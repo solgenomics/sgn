@@ -7,6 +7,7 @@ use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialDesignStore;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Dataset;
+use DateTime;
 
 BEGIN { extends 'CXGN::Project' };
 
@@ -189,11 +190,31 @@ sub store_analysis_values {
     my $values = shift;
     my $plots = shift;
     my $traits = shift;
-    
-    my $phenotype_metadata = {};
+    my $traits = shift;
+    my $operator = shift;
+    my $basepath = shift;
+    my $dbhost = shift;
+    my $dbname = shift;
+    my $dbuser = shift;
+    my $dbpass = shift;
+    my $tempfile_path = shift;
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = 'none';
+    $phenotype_metadata{'archived_file_type'} = 'analysis_values';
+    $phenotype_metadata{'operator'} = $operator;
+    $phenotype_metadata{'date'} = $timestamp;
     
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 	{
+        basepath=>$basepath,
+        dbhost=>$dbhost,
+        dbname=>$dbname,
+        dbuser=>$dbuser,
+        dbpass=>$dbpass,
+        temp_file_nd_experiment_id=>$tempfile_path,
 	    bcs_schema => $self->bcs_schema(),
 	    metadata_schema => $metadata_schema,
 	    phenome_schema => $phenome_schema,
@@ -203,7 +224,7 @@ sub store_analysis_values {
 	    values_hash => $values,
 	    has_timestamps => 0,
 	    overwrite_values => 0,
-	    metadata_hash => $phenotype_metadata
+	    metadata_hash => \%phenotype_metadata
 	});
     
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
