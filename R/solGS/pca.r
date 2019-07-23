@@ -51,8 +51,8 @@ genoData <- c()
 genoMetaData <- c()
 filteredGenoFile <- c()
 phenoData <- c()
-pcF <- grepl("genotype_data", inputFiles)
-dataType <- ifelse(isTRUE(pcF), 'genotype', 'phenotype')
+pcF <- grepl("genotype", inputFiles)
+dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
 
 if (dataType == 'genotype') {
     if (length(inputFiles) > 1 ) {   
