@@ -44,7 +44,9 @@ package CXGN::Trial;
 use CXGN::PhenotypingTrial;
 use CXGN::GenotypingTrial;
 use CXGN::CrossingTrial;
-
+use CXGN::Analysis;
+use CXGN::ManagementFactor;
+use Data::Dumper;
 
 sub new {
     my $class = shift;
@@ -61,7 +63,9 @@ sub new {
 
     while (my $trial_row = $trial_rs->next()) { 
         my $name = $trial_row->type()->name();
-        if ($name eq "genotyping_trial") {
+        my $val = $trial_row->value();
+        #print STDERR Dumper [$name, $val];
+        if ($val eq "genotyping_plate") {
             $object = CXGN::GenotypingTrial->new($args);
         }
         elsif ($name eq "crossing_trial") {
@@ -69,6 +73,12 @@ sub new {
         }
         elsif ($name eq "analysis") {
             $object = CXGN::Analysis->new($args);
+        }
+        elsif ($val eq "treatment") {
+            $object = CXGN::ManagementFactor->new($args);
+        }
+        elsif ($val eq "genotype_data_project") {
+            $object = CXGN::ManagementFactor->new($args);
         }
         else {
             $object = CXGN::PhenotypingTrial->new($args);
