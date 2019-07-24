@@ -64,10 +64,14 @@ if (dataType == 'genotype') {
         
     } else {
         genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
-        genoData     <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
+        genoData     <- fread(genoDataFile,
+                              na.strings = c("NA", " ", "--", "-", "."))
+        
         genoData     <- unique(genoData, by='V1')
         
-        filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, value = TRUE)
+        filteredGenoFile <- grep("filtered_genotype_data_",
+                                 genoDataFile,
+                                 value = TRUE)
 
         if (!is.null(genoData)) { 
             genoData <- data.frame(genoData)
@@ -77,18 +81,37 @@ if (dataType == 'genotype') {
         }
     }
 } else if (dataType == 'phenotype') {
-   
-    phenoDataFile <- grep("phenotype_data", inputFiles,  value = TRUE)
-    metaFile <- grep("meta", inputFiles,  value = TRUE)
 
-    ##  genoMetaData   <- genoData$trial
-    ##    genoData$trial <- NULL
-     
-    phenData <- cleanAveragePhenotypes(inputFiles, metaFile) 
-    phenoDataNotScaled <- na.omit(phenData)
+    metaFile <- grep("meta", inputFiles,  value = TRUE)
+    phenoFiles <- grep("phenotype_data", inputFiles,  value = TRUE)
+
+    if (length(phenoFiles) > 1 ) {
+        
+        phenoData <- combinePhenoData(phenoFiles, metaDataFile = metaFile)
+        phenoData <- summarizeTraits(phenoData, groupBy=c('studyDbId', 'germplasmName'))
+        
+        if (all(is.na(phenoData$locationName))) {        
+            phenoData$locationName <- 'location'
+        }
+        
+        phenoData <- na.omit(phenoData)
+        genoMetaData <- phenoData$studyDbId
     
-    phenoData <- scale(phenoDataNotScaled, center=TRUE, scale=TRUE)    
+        phenoData <- phenoData %>% mutate(germplasmName= paste0(germplasmName, '_', studyDbId))
+        dropCols = c('replicate', 'blockNumber', 'locationName', 'studyDbId', 'studyYear')
+        phenoData <- phenoData %>% select(-dropCols)
+        phenoData <- column_to_rownames(phenoData, var="germplasmName")       
+    } else {   
+        phenoDataFile <- grep("phenotype_data", inputFiles,  value = TRUE)
+  
+        phenData <- cleanAveragePhenotypes(inputFiles, metaFile)       
+        phenoData <- na.omit(phenoData)
+    }
+    
+    phenoData <- scale(phenoData, center=TRUE, scale=TRUE)
+    phenoData <- round(phenoData, 3)
 }
+
 
 if (is.null(genoData) && is.null(phenoData)) {
   stop("There is no data to run PCA.")
@@ -125,7 +148,7 @@ if (!is.null(genoData)) {
 } else if(!is.null(phenoData)) {
     pcaData <- phenoData
 }
-  
+
 pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)
 pca    <- prcomp(pcaData, retx=TRUE)
 pca    <- summary(pca)
@@ -135,8 +158,8 @@ scores   <- scores[, 1:pcsCnt]
 scores   <- round(scores, 3)
 
 if (!is.null(genoMetaData)) {
-   scores$trial <- genoMetaData
-   scores       <- scores %>% select(trial, everything()) %>% data.frame
+    scores$trial <- genoMetaData
+    scores       <- scores %>% select(trial, everything()) %>% data.frame
 } else {
   scores$trial <- 1000
   scores <- scores %>% select(trial, everything()) %>% data.frame
