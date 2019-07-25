@@ -11,65 +11,6 @@ var solGS = solGS || function solGS () {};
 
 solGS.pca = {
 
-    checkPcaResult: function () {
-
-    var listId = jQuery('#list_id').val();
-  
-    var popDetails = solGS.getPopulationDetails();
-    var url =  window.location.pathname;
-    var pcaShareId;
-    
-    if (url.match(/pca\/analysis\//)) {	
-	pcaShareId = url.replace(/\/pca\/analysis\//g, '');
-
-	if (pcaShareId.match(/list/)) {
-	    listId = pcaShareId;
-	    this.setListId(pcaShareId);
-	} 
-    }
-    
-    var comboPopsId = jQuery('#combo_pops_id').val();
-    
-    jQuery.ajax({
-        type: 'POST',
-        dataType: 'json',
-	data: {'list_id': listId,
-	       'combo_pops_id' : comboPopsId,
-	       'pca_share_id'  : pcaShareId,
-	       'training_pop_id' : training_pop_id,
-	       'selection_pop_id': popDetails.selection_pop_id},
-        url: '/pca/check/result/',
-        success: function(response) {
-            if (response.result) {
-		solGS.pca.setListId(response.list_id);
-		
-		var url =  window.location.pathname;
-		
-		if (url.match(/pca\/analysis/)) {		    		   
-
-		    var plotData = { 'scores': response.pca_scores, 
-				     'variances': response.pca_variances, 
-				     'pop_id': response.pop_id, 
-				     'list_id': response.list_id,
-				     'list_name': response.list_name,
-				     'trials_names': response.trials_names,
-				     'output_link' : response.output_link
-				   };
-		    
-		    splGS.pca.plotPca(plotData);  
-		} else {
-		    solGS.pca.pcaRun();
-		}
-	    } else { 
-		jQuery("#run_pca").show();	
-            }
-	},
-	
-    });
-    
-    },
-
-
     loadPcaPops: function(selectId, selectName, dataStructure) {
 	   console.log('IN  loadpcapops')
 	console.log('selectId ' + selectId + ' name ' + selectName + ' type ' + dataStructure)
@@ -88,7 +29,7 @@ solGS.pca = {
 		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 		+ "'" + ');return false;">';
 
-	    var dataType = ['genotype'];
+	    var dataType = ['genotype', 'phenotype'];
 	    var dataTypeOpts = this.createDataTypeSelect(dataType);
 	    
 	    var addRow = '<tr  name="' + dataStructure + '"' + ' id="' + selectId +  '">'
@@ -549,7 +490,7 @@ jQuery(document).ready( function() {
     if (url.match(/pca\/analysis/)) {
     
         var list = new CXGN.List();
-        var listMenu = list.listSelect("pca_pops", ['accessions', 'trials'], undefined, undefined, undefined);
+        var listMenu = list.listSelect("pca_pops", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
 
 	var dType = ['accessions', 'trials'];	
 	var dMenu = solGS.dataset.getDatasetsMenu(dType);
