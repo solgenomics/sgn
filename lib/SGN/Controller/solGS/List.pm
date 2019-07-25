@@ -962,17 +962,18 @@ sub process_trials_list_details {
     my ($self, $c) = @_;
 
     my $pops_ids = $c->stash->{pops_ids_list} || $c->stash->{trials_ids} ||  [$c->stash->{pop_id}];
-
+    my $data_str = $c->stash->{data_structure};
+   
     my %pops_names = ();
 
     foreach my $p_id (@$pops_ids)
     {
-	if ($p_id =~ /list/) 
+	if ($data_str =~ /list/) 
 	{
 	    $c->controller('solGS::List')->list_population_summary($c, $p_id);
 	    $pops_names{$p_id} = $c->stash->{project_name};  
 	}
-	elsif ($p_id =~ /dataset/)
+	elsif ($data_str =~ /dataset/)
 	{
 	    $c->controller('solGS::Dataset')->dataset_population_summary($c, $p_id);
 	    $pops_names{$p_id} = $c->stash->{project_name};    
