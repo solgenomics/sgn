@@ -29,12 +29,6 @@ loadingsFile     <- grep("pca_loadings", outputFiles, value = TRUE)
 varianceFile     <- grep("pca_variance", outputFiles, value = TRUE)
 combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
 
-message("pca scores file: ", scoresFile)
-message("pca loadings file: ", loadingsFile)
-message("pca variance file: ", varianceFile)
-message("combined data file: ", combinedDataFile)
-
-
 if (is.null(scoresFile))
 {
   stop("Scores output file is missing.")
@@ -47,10 +41,11 @@ if (is.null(loadingsFile))
   q("no", 1, FALSE)
 }
 
-genoData <- c()
-genoMetaData <- c()
+genoData         <- c()
+genoMetaData     <- c()
 filteredGenoFile <- c()
-phenoData <- c()
+phenoData        <- c()
+
 pcF <- grepl("genotype", inputFiles)
 dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
 
@@ -97,14 +92,14 @@ if (dataType == 'genotype') {
         phenoData <- na.omit(phenoData)
         genoMetaData <- phenoData$studyDbId
     
-        phenoData <- phenoData %>% mutate(germplasmName= paste0(germplasmName, '_', studyDbId))
+        phenoData <- phenoData %>% mutate(germplasmName = paste0(germplasmName, '_', studyDbId))
         dropCols = c('replicate', 'blockNumber', 'locationName', 'studyDbId', 'studyYear')
         phenoData <- phenoData %>% select(-dropCols)
         phenoData <- column_to_rownames(phenoData, var="germplasmName")       
     } else {   
         phenoDataFile <- grep("phenotype_data", inputFiles,  value = TRUE)
   
-        phenData <- cleanAveragePhenotypes(inputFiles, metaFile)       
+        phenoData <- cleanAveragePhenotypes(inputFiles, metaFile)       
         phenoData <- na.omit(phenoData)
     }
     
