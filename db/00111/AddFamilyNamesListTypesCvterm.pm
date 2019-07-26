@@ -3,22 +3,24 @@
 
 =head1 NAME
 
- AddFamilyNameCvterm
+ AddFamilyNamesListTypesCvterm.pm
 
 =head1 SYNOPSIS
 
-mx-run AddFamilyNameCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run ThisPackageName [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds family_name cvterm
+This patch adds family_names as list_types cvterm
+
+
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
-Titima Tantikanjana <tt15@cornell.edu>
+ Titima Tantikanjana<tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -30,7 +32,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFamilyNameCvterm;
+package AddFamilyNamesListTypesCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,14 +41,14 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'family_name' stock_property cvterm
+Add cvterm for family_names list types
 
 has '+prereq' => (
 	default => sub {
         [],
     },
 
-);
+  );
 
 sub patch {
     my $self=shift;
@@ -59,22 +61,22 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
 
-    print STDERR "INSERTING CV TERMS...\n";
+    print STDERR "INSERTING CVTERMS...\n";
 
     my $terms = {
-        'stock_property' => [
-            'family_name',
-        ]
+        'list_types' => [
+            'family_names',
+        ],
     };
 
-	foreach my $t (keys %$terms){
-		foreach (@{$terms->{$t}}){
-			$schema->resultset("Cv::Cvterm")->create_with({
-				name => $_,
-				cv => $t
-			});
-		}
-	}
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
 
 
     print "You're done!\n";

@@ -14,6 +14,7 @@ is(ref($fix->config()), "HASH", 'hashref check');
 BEGIN {use_ok('CXGN::Trial::TrialCreate');}
 BEGIN {use_ok('CXGN::Trial::TrialLayout');}
 BEGIN {use_ok('CXGN::Trial::TrialDesign');}
+BEGIN {use_ok('CXGN::Trial::TrialLayoutDownload');}
 BEGIN {use_ok('CXGN::Trial::TrialLookup');}
 ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
@@ -423,5 +424,117 @@ for (my $i=0; $i<scalar(@stock_names_westcott); $i++){
     }
 }
 ok(scalar(@accessions) == 100, "check accession names");
+
+#create splitplot trial design_type
+
+my @stock_names_splitplot;
+for (my $i = 1; $i <= 100; $i++) {
+    push(@stock_names_splitplot, "test_stock_for_splitplot_trial".$i);
+}
+foreach my $stock_name (@stock_names_splitplot) {
+    my $accession_stock = $chado_schema->resultset('Stock::Stock')
+	->create({
+	    organism_id => $organism->organism_id,
+	    name       => $stock_name,
+	    uniquename => $stock_name,
+	    type_id     => $accession_cvterm->cvterm_id,
+		 });
+};
+ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
+ok($trial_design->set_trial_name("test_splitplot_trial_1"), "set trial name");
+ok($trial_design->set_stock_list(\@stock_names_splitplot), "set stock list");
+ok($trial_design->set_treatments(["management_factor_1", "management_factor_2"]), "set treatment/management_factor list");
+ok($trial_design->set_number_of_blocks(2), "set number of blocks");
+ok($trial_design->set_plot_layout_format("serpentine"), "set serpentine");
+ok($trial_design->set_design_type("splitplot"), "set design type");
+ok($trial_design->set_num_plants_per_plot(4), "set num plants per plot");
+ok($trial_design->calculate_design(), "calculate design");
+ok(my $design = $trial_design->get_design(), "retrieve design");
+
+print STDERR Dumper $design;
+
+$ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
+
+ok(my $trial_create = CXGN::Trial::TrialCreate->new({
+    chado_schema => $chado_schema,
+    dbh => $dbh,
+    user_name => "johndoe", #not implemented
+    design => $design,	
+    program => "test",
+    trial_year => "2015",
+    trial_description => "test description",
+    trial_location => "test_location_for_trial",
+    trial_name => "test_splitplot_trial_1",
+    trial_type=>$ayt_cvterm_id,
+    design_type => "splitplot",
+    trial_has_subplot_entries => 2,
+    trial_has_plant_entries => 4,
+    operator => "janedoe"
+						    }), "create trial object");
+
+$save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
+
+ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
+    schema => $chado_schema,
+    trial_name => "test_splitplot_trial_1",
+						    }), "create trial lookup object");
+ok(my $trial = $trial_lookup->get_trial());
+ok(my $trial_id = $trial->project_id());
+
+my $trial_obj = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$trial_id});
+ok(my $trial_management_factors = $trial_obj->get_treatments());
+print STDERR Dumper $trial_management_factors;
+is(scalar(@$trial_management_factors), 2);
+ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+    experiment_type => 'field_layout'
+						    }), "create trial layout object");
+
+ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names1");
+
+%stocks = map { $_ => 1 } @stock_names_splitplot;
+my @accessions;
+for (my $i=0; $i<scalar(@stock_names_splitplot); $i++){
+    foreach my $acc (@$accession_names) {
+        if ($acc->{accession_name} eq $stock_names_splitplot[$i]){
+            push @accessions, $acc->{accession_name};
+        }
+    }
+}
+ok(scalar(@accessions) == 100, "check accession names");
+
+my @splitplot_management_factors;
+foreach (@$trial_management_factors) {
+    push @splitplot_management_factors, $_->[0];
+    my $trial = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$_->[0]});
+    my $plant_entries = $trial->get_observation_units_direct('plant', ['treatment_experiment']);
+    my $subplot_entries = $trial->get_observation_units_direct('subplot', ['treatment_experiment']);
+    is(scalar(@$plant_entries), 400);
+    is(scalar(@$subplot_entries), 200);
+}
+
+my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+    data_level => 'subplots',
+    treatment_project_ids => \@splitplot_management_factors,
+    selected_columns => {"subplot_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
+});
+my $output = $trial_layout_download->get_layout_output();
+#print STDERR Dumper $output;
+is(scalar(@{$output->{output}}), 401);
+
+my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $chado_schema,
+    trial_id => $trial_id,
+    data_level => 'plants',
+    treatment_project_ids => \@splitplot_management_factors,
+    selected_columns => {"plant_name"=>1,"plot_name"=>1,"plot_number"=>1,"block_number"=>1}
+});
+my $output = $trial_layout_download->get_layout_output();
+#print STDERR Dumper $output;
+is(scalar(@{$output->{output}}), 801);
 
 done_testing();

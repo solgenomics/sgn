@@ -3,22 +3,22 @@
 
 =head1 NAME
 
- AddFamilyNameCvterm
+ UpdateFamilyNameCvterm.pm
 
 =head1 SYNOPSIS
 
-mx-run AddFamilyNameCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run ThisPackageName [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds family_name cvterm
+This patch updates the cvterm family_name by changing from cv = stock_property to cv = stock_type.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
-Titima Tantikanjana <tt15@cornell.edu>
+ Titima Tantikanjana<tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -30,23 +30,25 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFamilyNameCvterm;
+package UpdateFamilyNameCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
+use SGN::Model::Cvterm;
 use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
+
 has '+description' => ( default => <<'' );
-This patch adds the 'family_name' stock_property cvterm
+This patch updates the cvterm family_name by changing from cv = stock_property to cv = stock_type.
 
 has '+prereq' => (
 	default => sub {
-        [],
+        ['AddFamilyNameCvterm'],
     },
 
-);
+  );
 
 sub patch {
     my $self=shift;
@@ -59,23 +61,11 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
 
-    print STDERR "INSERTING CV TERMS...\n";
 
-    my $terms = {
-        'stock_property' => [
-            'family_name',
-        ]
-    };
+    my $family_name_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_property');
+    my $stock_type_cv = $schema->resultset("Cv::Cv")->find({ name => 'stock_type' });
 
-	foreach my $t (keys %$terms){
-		foreach (@{$terms->{$t}}){
-			$schema->resultset("Cv::Cvterm")->create_with({
-				name => $_,
-				cv => $t
-			});
-		}
-	}
-
+    $family_name_cvterm->update( { cv_id => $stock_type_cv->cv_id  } );
 
     print "You're done!\n";
 }
