@@ -497,30 +497,94 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # $cmd->alive;
     # $cmd->is_cluster(1);
     # $cmd->wait;
-
-
-    my $sort_vcf_cmd = CXGN::Tools::Run->new(
-        {
-            backend => $c->config->{backend},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
-            queue => $c->config->{'web_cluster_queue'},
-            do_cleanup => 0,
-            # don't block and wait if the cluster looks full
-            max_cluster_jobs => 1_000_000_000,
-        }
-    );
-
+    my $vcf_header = $tempfile . "_vcfheader.txt";
+    my $vcf_content = $tempfile . "_vcfcontent.txt";
+    my $vcf_sorted_content = $tempfile . "_vcfsortedcontent.txt";
     my $sorted_vcf = $tempfile . "_genotype_transpose_sorted.vcf";
 
-    $sort_vcf_cmd->run_cluster(
-    #            "plink2 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out " . $tempfile ."_Kinship --thread-num 1 > " . $tempfile . "_Kinship.log",
-#            "plink2 --vcf " . $geno_filepath_transpose . " --sort-vars -chr-set 13000 -allow-extra-chr --const-fid --out " . $tempfile,
-    #            "plink2 --vcf " . $geno_filepath_transpose . " --allow-extra-chr --const-fid --maf 0.05 --recode A --out " . $tempfile,
-        "grep '^#' " . $geno_filepath_transpose . " > " . $sorted_vcf . " && grep -v '^#' " . $geno_filepath_transpose . " | sort -k1,1V -k2,2n >> " . $sorted_vcf,
-    );
-    $sort_vcf_cmd->alive;
-    $sort_vcf_cmd->is_cluster(1);
-    $sort_vcf_cmd->wait;
+    # my $get_vcf_header = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+
+    my $get_vcf_header = "grep '^#' " . $geno_filepath_transpose . " > " . $vcf_header;
+    system($get_vcf_header);
+
+    # $get_vcf_header->run_cluster(
+    #     "grep '^#' " . $geno_filepath_transpose . " > " . $vcf_header,
+    # );
+    # $get_vcf_header->alive;
+    # $get_vcf_header->is_cluster(1);
+    # $get_vcf_header->wait;
+
+    my $get_vcf_content = "grep -v '^#' " . $geno_filepath_transpose . " > " . $vcf_content;
+    system($get_vcf_content);
+
+    # my $get_vcf_content = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+
+    # $get_vcf_content->run_cluster(
+    #     "grep -v '^#' " . $geno_filepath_transpose . " > " . $vcf_content,
+    # );
+    # $get_vcf_content->alive;
+    # $get_vcf_content->is_cluster(1);
+    # $get_vcf_content->wait;
+
+    my $sort_vcf_cmd = "sort -k1,1V -k2,2n " . $vcf_content . " > " . $vcf_sorted_content;
+    system($sort_vcf_cmd);
+    #
+    # my $sort_vcf_cmd = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+    #
+    # $sort_vcf_cmd->run_cluster(
+    #     "sort -k1,1V -k2,2n " . $vcf_content . " > " . $vcf_sorted_content,
+    # );
+    # $sort_vcf_cmd->alive;
+    # $sort_vcf_cmd->is_cluster(1);
+    # $sort_vcf_cmd->wait;
+
+    my $assemble_sorted_vcf_cmd = "cat " . $vcf_header . " " . $vcf_sorted_content . " > " . $sorted_vcf;
+    system($sort_vcf_cmd);
+
+    # my $assemble_sorted_vcf_cmd = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+    #
+    # $assemble_sorted_vcf_cmd->run_cluster(
+    #     "cat " . $vcf_header . " " . $vcf_sorted_content . " > " . $sorted_vcf,
+    # );
+    # $assemble_sorted_vcf_cmd->alive;
+    # $assemble_sorted_vcf_cmd->is_cluster(1);
+    # $assemble_sorted_vcf_cmd->wait;
 
 
     my $vcf_cmd = CXGN::Tools::Run->new(
