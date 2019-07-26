@@ -965,25 +965,11 @@ sub process_trials_list_details {
     my $data_str = $c->stash->{data_structure};
    
     my %pops_names = ();
-
+      
     foreach my $p_id (@$pops_ids)
     {
-	if ($data_str =~ /list/) 
-	{
-	    $c->controller('solGS::List')->list_population_summary($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}
-	elsif ($data_str =~ /dataset/)
-	{
-	    $c->controller('solGS::Dataset')->dataset_population_summary($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};    
-	}
-	else
-	{
-	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}  
-	my $name = $c->stash->{project_name};
+	my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+	$pops_names{$p_id} = $c->stash->{project_name};  
     }    
 
     if (scalar(@$pops_ids) > 1 )

@@ -37,84 +37,6 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 }
 
 
-# sub check_result :Path('/pca/check/result/') Args() {
-#     my ($self, $c) = @_;
-
-#     my $training_pop_id  = $c->req->param('training_pop_id');
-#     my $selection_pop_id = $c->req->param('selection_pop_id');
-#     my $list_id          = $c->req->param('list_id');
-#     my $combo_pops_id    = $c->req->param('combo_pops_id');
-#     my $pca_share_id     = $c->req->param('pca_share_id');
-#     my $file_id;
-
-#     my $referer = $c->req->referer;
-  
-#     if ($referer =~ /solgs\/selection\//)
-#     {
-# 	if ($training_pop_id && $selection_pop_id) 
-# 	{
-# 	    my @pops_ids = ($training_pop_id, $selection_pop_id);
-# 	    $c->stash->{pops_ids_list} = \@pops_ids;
-# 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-# 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-# 	    $file_id = $c->stash->{combo_pops_id};
-# 	}
-#     } 
-#     elsif ($list_id)
-#     {
-# 	$c->stash->{pop_id} = $list_id;
-		
-# 	$list_id =~ s/list_//;		   	
-# 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-
-# 	my $list_type =  $list->type();
-# 	$c->stash->{list_id}   = $list_id;
-# 	$c->stash->{list_type} = $list_type;
-# 	$c->stash->{list_name} = $list->name();
-	 
-# 	if ($list_type =~ /trials/)
-# 	{
-# 	    $c->controller('solGS::List')->get_trials_list_ids($c);
-# 	    $c->stash->{pops_ids_list} =  $c->stash->{trials_ids};
-# 	    $c->controller('solGS::List')->process_trials_list_details($c);
-	    
-# 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
-# 	    $c->stash->{pop_id} =  $c->stash->{combo_pops_id};
-# 	    $file_id = $c->stash->{combo_pops_id};
-# 	}	
-#     }
-#     elsif ($referer =~ /solgs\/model\/combined\/populations\//  && $combo_pops_id)
-#     {
-# 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-#         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-# 	$file_id = $combo_pops_id;
-
-# 	$c->controller('solGS::List')->process_trials_list_details($c);
-#     }
- 
-#     else 
-#     {
-# 	$c->stash->{pop_id} = $training_pop_id;
-# 	$file_id = $training_pop_id;	
-#     }
-
-#     $file_id = $pca_share_id if !$file_id;
-#     $c->stash->{file_id} = $file_id ;
-#     my $ret->{result} = 0;
-    
-#     if ($self->check_pca_output($c))
-#     {
-# 	$ret = $c->stash->{formatted_pca_output};
-#     }
-
-#     $ret = to_json($ret);
-       
-#     $c->res->content_type('application/json');
-#     $c->res->body($ret);    
-
-# }
-
-
 sub pca_run :Path('/pca/run/') Args() {
     my ($self, $c) = @_;
     
@@ -138,45 +60,23 @@ sub pca_run :Path('/pca/run/') Args() {
     $c->stash->{dataset_name}     = $dataset_name;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
+
+    $c->controller('solGS::Files')->create_file_id($c);    
+    my $file_id = $c->stash->{file_id};
     
     if ($list_id)
     {
+	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
+	$c->controller('solGS::List')->get_trials_list_ids($c);
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	$c->stash->{list_type} =  $list->type;	
+	$c->stash->{list_type} =  $list->type;
+	$c->stash->{list_name} =  $list->name;	
+    }
+    elsif ($dataset_id)
+    {
+	$c->controller('solGS::Dataset')->get_dataset_trials_details($c);	
     }
     
-    #my $pop_id;
-   # my $file_id;     
-    #my $referer     = $c->req->referer;
-    
-    # if ($referer =~ /solgs\/selection\//)
-    # {
-    # 	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
-    # 	$c->controller('solGS::List')->register_trials_list($c);
-    # 	$combo_pops_id =  $c->stash->{combo_pops_id};
-    # 	$c->stash->{pop_id} =  $combo_pops_id;
-    # 	$file_id = $combo_pops_id;
-    # }
-    # elsif ($referer =~ /pca\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
-    # {
-    # 	 $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-    # 	 $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-    # 	 $c->stash->{pop_id} = $combo_pops_id;
-    # 	 $c->stash->{combo_pops_id} = $combo_pops_id;
-    # 	 $file_id = $combo_pops_id;
-    # 	 $c->stash->{data_set_type} = 'combined_populations';
-	 
-    # 	 $c->controller('solGS::List')->process_trials_list_details($c);
-    # } 
-    # else 
-    # {
-    # 	$c->stash->{pop_id} = $training_pop_id;
-    # 	$file_id = $training_pop_id;
-    # }
-    $c->controller('solGS::Files')->create_file_id($c);
-    
-    my $file_id = $c->stash->{file_id};
-
     my $ret->{status} = 'PCA analysis failed';
    
     if (!$self->check_pca_output($c)) 
@@ -252,14 +152,14 @@ sub format_pca_output {
 	    my $output_link =  '/pca/analysis/' . $file_id;
 	 
 	    $c->controller('solGS::List')->process_trials_list_details($c);
-		  
+	    my $trial_names =  $c->stash->{trials_names};
 	    if ($pca_scores)
 	    {
 		$ret->{pca_scores} = $pca_scores;
 		$ret->{pca_variances} = $pca_variances;
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
-		$ret->{trials_names} = $c->stash->{trials_names};
+		$ret->{trials_names} = $trial_names;
 		$ret->{output_link}  = $output_link;
 	    }
 
