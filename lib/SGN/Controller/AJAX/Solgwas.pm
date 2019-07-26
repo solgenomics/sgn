@@ -566,7 +566,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # $sort_vcf_cmd->wait;
 
     my $assemble_sorted_vcf_cmd = "cat " . $vcf_header . " " . $vcf_sorted_content . " > " . $sorted_vcf;
-    system($sort_vcf_cmd);
+    system($assemble_sorted_vcf_cmd);
 
     # my $assemble_sorted_vcf_cmd = CXGN::Tools::Run->new(
     #     {
