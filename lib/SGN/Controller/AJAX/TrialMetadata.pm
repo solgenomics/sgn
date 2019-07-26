@@ -1847,15 +1847,14 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $result = $trial->get_crosses_in_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_type,
+        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $cross_type,
         qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
         qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
         qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
         qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
         qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
-        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},
-        $progeny_number, $family_name];
+        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -1876,9 +1875,9 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
 
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_props_hash) =@$r;
+        my ($cross_id, $cross_name, $cross_combination, $cross_props_hash) =@$r;
 
-        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>} );
+        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination );
         foreach my $key (@column_order){
           push @row, $cross_props_hash->{$key};
         }
@@ -1900,8 +1899,8 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $progeny_number, $family_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number, $family_name];
+        my ($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };

@@ -59,7 +59,8 @@ my $before_adding_stockprop = $schema->resultset("Stock::Stockprop")->search({ t
 my $before_adding_stockprop_all = $schema->resultset("Stock::Stockprop")->search({})->count();
 my $before_adding_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
-$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id,'male_plot' => $male_plot_id]);
+$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id,'male_plot' => $male_plot_id]);
+
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
@@ -193,7 +194,7 @@ $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cro
 $response = decode_json $mech->content;
 
 is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}, 0, undef]
+    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'UG120001xUG120002', 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}]
 ]}, 'crosses in a trial');
 
 # test uploading progenies
@@ -263,7 +264,7 @@ $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cro
 $response = decode_json $mech->content;
 
 is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, "10", "2017/02/02", "10", "50", undef, undef]
+    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'UG120001xUG120002', "10", "2017/02/02", "10", "50", undef, undef]
 ]}, 'crossing experiment info');
 
 

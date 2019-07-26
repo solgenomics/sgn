@@ -48,6 +48,34 @@
 
 </&>
 
+<&| /page/info_section.mas, title => 'Accession Phenotype Performace', collapsible=>1, collapsed=>0 &>
+
+<div class="well">
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            <table id="accession_usage_phenotypes" class='table table-bordered table-hover'>
+                <thead>
+                    <tr>
+                        <th>Accession</th>
+                        <th>Observation Variable</th>
+                        <th>Mean</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Std Dev</th>
+                        <th>CV</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</&>
+
 <script>
 
 jQuery(document).ready(function(){
@@ -70,6 +98,16 @@ jQuery(document).ready(function(){
 
      'ordering' : false,
      'ajax':'ajax/accession_usage_male'
+  });
+
+  var stock_table = jQuery('#accession_usage_phenotypes').DataTable({
+      'destroy' : true,
+      'searching' : false,
+      'ordering'  : false,
+      'processing': true,
+      'serverSide': true,
+      'lengthMenu': [10,20,50,100,1000,5000],
+      'ajax': { 'url':  '/ajax/accession_usage_phenotypes?display=plots_accession' }
   });
 
 });

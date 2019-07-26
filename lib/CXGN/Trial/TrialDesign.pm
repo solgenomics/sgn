@@ -86,8 +86,7 @@ has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_
 my $design;
 
 sub get_design {
-     print STDERR Dumper $design;
-  return $design;
+    return $design;
 }
 
 sub calculate_design {
@@ -117,7 +116,6 @@ sub calculate_design {
     }
     elsif ($self->get_design_type() eq "westcott") {
       $design = _get_westcott_design($self);
-      print STDERR Dumper $design;
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -2082,7 +2080,7 @@ sub _build_plot_names {
     my $trial_name = $self->get_trial_name;
 
     if ($self->has_plot_name_prefix()) {
-        $prefix = $self->get_plot_name_prefix()."_";
+        $prefix = $self->get_plot_name_prefix()."-";
     }
     if ($self->has_plot_name_suffix()) {
         $suffix = $self->get_plot_name_suffix();
@@ -2099,10 +2097,10 @@ sub _build_plot_names {
       my $plot_num_per_block = $design{$key}->{plot_num_per_block};
       $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
 	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
-        $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$plot_num_per_block."".$suffix;
+        $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-".$stock_name."".$suffix;
 	}
     elsif ($self->get_design_type() eq "greenhouse") {
         $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
@@ -2272,73 +2270,7 @@ sub _get_splitplot_design {
     @rep_numbers = $result_matrix->get_column("block");
     @stock_names = $result_matrix->get_column("accessions");
     @treatments = $result_matrix->get_column("treatments");
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
-    #print STDERR Dumper \@converted_plot_numbers;
-
-    if ($plot_layout_format eq "zigzag") {
-        if (!$fieldmap_col_number){
-            for (1..$number_of_reps){
-                for my $s (1..(scalar(@stock_list))){
-                    for (1..scalar(@$treatments)){
-                        push @col_number_fieldmaps, $s;
-                    }
-                }
-            }
-        } else {
-            for (1..$fieldmap_row_number){
-                for my $s (1..$fieldmap_col_number){
-                    for (1..scalar(@$treatments)){
-                        push @col_number_fieldmaps, $s;
-                    }
-                }
-            }
-        }
-    }
-    elsif ($plot_layout_format eq "serpentine") {
-        if (!$fieldmap_row_number)  {
-            for my $rep (1 .. $number_of_reps){
-                if ($rep % 2){
-                    for my $s (1..(scalar(@stock_list))){
-                        for (1..scalar(@$treatments)){
-                            push @col_number_fieldmaps, $s;
-                        }
-                    }
-                } else {
-                    for my $s (reverse 1..(scalar(@stock_list))){
-                        for (1..scalar(@$treatments)){
-                            push @col_number_fieldmaps, $s;
-                        }
-                    }
-                }
-            }
-        } else {
-            for my $rep (1 .. $fieldmap_row_number){
-                if ($rep % 2){
-                    for my $s (1..$fieldmap_col_number){
-                        for (1..scalar(@$treatments)){
-                            push @col_number_fieldmaps, $s;
-                        }
-                    }
-                } else {
-                    for my $s (reverse 1..$fieldmap_col_number){
-                        for (1..scalar(@$treatments)){
-                            push @col_number_fieldmaps, $s;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
-        @fieldmap_row_numbers = sort(@rep_numbers);
-    }
-    elsif ($plot_layout_format && $fieldmap_row_number){
-        @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
-        @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
-    }
-    #print STDERR Dumper \@fieldmap_row_numbers;
-    #print STDERR Dumper \@col_number_fieldmaps;
+    @converted_plot_numbers = @plot_numbers;
 
     my %subplot_plots;
     my %treatment_plots;
@@ -2359,18 +2291,12 @@ sub _get_splitplot_design {
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
         $plot_info{'plot_number'} = $converted_plot_numbers[$i];
-        $plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
-        if ($fieldmap_row_numbers[$i]){
-            $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
-            $plot_info{'col_number'} = $col_number_fieldmaps[$i];
-        }
         push @{$subplot_plots{$converted_plot_numbers[$i]}}, $subplots_numbers[$i];
         $plot_info{'subplots_names'} = $subplot_plots{$converted_plot_numbers[$i]};
         push @{$treatment_plots{$converted_plot_numbers[$i]}}, $treatments[$i];
         $plot_info{'treatments'} = $treatment_plots{$converted_plot_numbers[$i]};
         $splitplot_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
-    #print STDERR Dumper \%splitplot_design;
     %splitplot_design = %{_build_plot_names($self,\%splitplot_design)};
 
     while(my($plot,$val) = each(%splitplot_design)){
@@ -2394,7 +2320,6 @@ sub _get_splitplot_design {
         $val->{subplots_plant_names} = \%subplot_plants_hash;
     }
     $splitplot_design{'treatments'} = \%treatment_subplot_hash;
-    #print STDERR Dumper \%splitplot_design;
     return \%splitplot_design;
 }
 

@@ -25,7 +25,7 @@ has 'output_details_file' => (
 sub run {
  my $self = shift;   
 
- my $output_details = retrieve($self->output_details_file);
+ my $output_details = retrieve($self->output_details_file); 
  $self->check_analysis_status($output_details);
 
 }
@@ -45,6 +45,7 @@ sub check_success {
     my ($self, $output_details) = @_;
     
     my $analysis_profile = $output_details->{analysis_profile};
+    my $type = $analysis_profile->{analysis_type};
   
     if ( $analysis_profile->{analysis_type} =~ /population download/ ) 
     {	
@@ -66,9 +67,11 @@ sub check_success {
 	$output_details = $self->check_multi_pops_data_download($output_details);
     }
     elsif ( $analysis_profile->{analysis_type} =~ /selection prediction/ ) 
-    {	
-	if ($output_details->{data_set_type} =~ /combined populations/) 
-	{	
+    {
+	my $st_type = $output_details->{data_set_type};
+
+	if ($output_details->{data_set_type} =~ /combined/) 
+	{
 	  # $output_details = $self->check_combined_pops_trait_modeling($output_details);
 	   $output_details = $self->check_selection_prediction($output_details);
 	}

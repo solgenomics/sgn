@@ -72,11 +72,10 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{k_number}         = $k_number;
     
-    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    $c->stash->{training_traits_ids} = \@traits_ids;
     
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
-    #my $file_id = $c->stash->{file_id};
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -161,12 +160,13 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{data_type}        = $data_type;
     $c->stash->{k_number}         = $k_number;
     
-    $c->stash->{selected_analyzed_traits} = \@traits_ids;
-    
-    $c->stash->{pop_id} = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    $c->stash->{training_traits_ids} = \@traits_ids;
+   
+    my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id = $c->stash->{file_id};
   
+    $c->stash->{pop_id} = $cluster_pop_id || $pop_id;
+   
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
  
@@ -177,8 +177,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	my $no_cluster_data;
 
 	if ($data_type =~ /genotype/i) 
-	{
-	    $c->stash->{pop_id} = $cluster_pop_id;
+	{	  
 	    $self->create_cluster_genotype_data($c);
 	 
 	    my $geno_files = $c->stash->{genotype_files_list};
@@ -191,7 +190,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	} 
 	elsif ($data_type =~ /phenotype/i)
 	{
-	    $c->stash->{pop_id} = $cluster_pop_id;
 	    $self->create_cluster_phenotype_data($c);
 	    
 	    if (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
@@ -465,8 +463,7 @@ sub combined_cluster_trials_data_file {
     
     if ($cluster_type =~ /k-means/i)
     {
-	$file_name = "combined_${cluster_type}_data_file_${file_id}";
-	
+	$file_name = "combined_${cluster_type}_data_file_${file_id}";	
     }
     else
     {

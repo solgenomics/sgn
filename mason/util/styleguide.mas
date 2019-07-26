@@ -64,7 +64,7 @@
   &lt;div id="select_div_id"&gt;&lt;/div&gt;
   &lt;script type="text/javascript"&gt;
     var list_obj = new CXGN.List();
-    var listhtml = list_obj.listSelect('select_div_id', ['accessions'], "Select an Accession List");
+    var listhtml = list_obj.listSelect('select_div_id', ['accessions'], "Select an Accession List", undefined, undefined);
     jQuery('#select_div_id').html(listhtml);
   &lt;/script&gt;
 </pre>
@@ -73,7 +73,7 @@
 <div id="select_div_id"></div>
 <script type="text/javascript">
   var lo = new CXGN.List();
-  var listhtml = lo.listSelect('select_div_id', ['accessions'], "Select an Accession List");
+  var listhtml = lo.listSelect('select_div_id', ['accessions'], "Select an Accession List", undefined, undefined);
   jQuery('#select_div_id').html(listhtml);
 </script>
 <hr>

@@ -51,21 +51,23 @@ solGS.geneticGain = {
 	var trainingPopId   = jQuery('#gg_canvas #training_pop_id').val();
 	var trainingPopName = jQuery('#gg_canvas #training_pop_name').val();
 	var selectionPopId  = jQuery('#gg_canvas #selection_pop_id').val();
-	var selectionTraits = jQuery('#gg_canvas').find('#selection_traits_ids').val();
+	var trainingTraitsIds = jQuery('#gg_canvas').find('#training_traits_ids').val();
 	var traitId         = jQuery('#trait_id').val();
 
 	if(document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
-	    selectionTraits = selectionTraits.split(',');
+	    if (trainingTraitsIds) {
+		trainingTraitsIds = trainingTraitsIds.split(',');
+	    }
 	}
 	
 	var ggArgs = { 
 	    'training_pop_id'  : trainingPopId,
 	    'training_pop_name' : trainingPopName,
 	    'selection_pop_id' : selectionPopId,
-	    'selection_traits' : selectionTraits,
+	    'training_traits_ids' : trainingTraitsIds,
 	    'trait_id'         : traitId
 	}
-
+	
 	return ggArgs;
 
     },
@@ -287,11 +289,8 @@ solGS.geneticGain = {
 	    url : '/solgs/selection/population/predicted/traits',
 	    success: function (res) {
 		if (res.selection_traits) {
-		    
-		    var selectionTraits = res.selection_traits.join(',');		    
-		    jQuery('#gg_canvas #selection_traits_ids').val(selectionTraits);
-
 		    var ggArgs = solGS.geneticGain.getGeneticGainArgs();
+		    jQuery('#gg_canvas #selection_traits_ids').val(ggArgs.training_traits_ids);
 		    solGS.geneticGain.plotGeneticGainBoxplot(ggArgs);
 		    
 		} else {

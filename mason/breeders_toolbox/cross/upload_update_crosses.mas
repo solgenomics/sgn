@@ -83,7 +83,7 @@
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
                                 <td>progeny_name</td>
                             </tr>
                         </tbody>
@@ -92,7 +92,7 @@
                         Required columns:
                     </b>
                     <br>
-                        <b>-cross_name</b> (must exist in the database)
+                        <b>-cross_unique_id</b> (must exist in the database)
                     <br>
                         <b>-progeny_name</b> (accession names must not already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
                     <br>
@@ -208,7 +208,7 @@
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
                                 <td>At least one column of experimental info listed below</td>
                             </tr>
                         </tbody>
@@ -217,7 +217,7 @@
                         Required columns:
                     </b>
                     <br>
-                        <b>-cross_name</b> (must exist in the database, must not have duplicate cross name in the upload file)
+                        <b>-cross_unique_id</b> (must exist in the database, must not have duplicate cross unique id in the upload file)
                     <br>
                         <b>-At least one of the following columns:</b> (all of the experimental info of a cross must be in a single row)
                     <br>
@@ -341,7 +341,7 @@
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
                                 <td>family_name</td>
                             </tr>
                         </tbody>
@@ -350,7 +350,7 @@
                         Required columns:
                     </b>
                     <br>
-                        <b>-cross_name</b> (must exist in the database)
+                        <b>-cross_unique_id</b> (must exist in the database)
                     <br>
                         <b>-family_name</b>
                     <br>

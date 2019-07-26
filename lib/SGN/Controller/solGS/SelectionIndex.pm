@@ -18,11 +18,11 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id = $c->req->param('training_pop_id');
     my @traits_ids  = $c->req->param('training_traits_ids[]');
-    
+   
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
-    $c->stash->{selected_analyzed_traits} = \@traits_ids;
+    $c->stash->{training_traits_ids} = \@traits_ids;
     
     my @traits;
     if (!$selection_pop_id) 
@@ -50,26 +50,21 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     my ($self, $c) = @_;
 
     my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $training_pop_id = $c->req->param('training_pop_id');   
-    
+    my $training_pop_id = $c->req->param('training_pop_id');
+   
+    my @training_traits_ids = $c->req->param('training_traits_ids[]');
+        
     my $traits_wts = $c->req->param('rel_wts');
     my $json = JSON->new();
     my $rel_wts = $json->decode($traits_wts);
-  
+
     $c->stash->{pop_id} = $training_pop_id;
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
+    $c->stash->{selection_pop_id} = $selection_pop_id;
 
-    if ($selection_pop_id =~ /\d+/ && $training_pop_id != $selection_pop_id)
-    {
-        $c->stash->{selection_pop_id} = $selection_pop_id;       
-    }
-    else
-    {
-        $selection_pop_id = undef;
-        $c->stash->{selection_pop_id} = $selection_pop_id;
-    }
-
+    $c->stash->{training_traits_ids} = \@training_traits_ids;
+   
     my @traits = keys (%$rel_wts);    
     @traits    = grep {$_ ne 'rank'} @traits;
    
@@ -118,7 +113,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
 sub calc_selection_index {
     my ($self, $c) = @_;
 
-    my $training_pop_id      = $c->stash->{training_pop_id};
+    my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
 
     my $input_files = join("\t", 
@@ -126,8 +121,8 @@ sub calc_selection_index {
                            $c->stash->{gebv_files_of_traits}
         );
    
-    $c->controller('solGS::Files')->gebvs_selection_index_file($c, $selection_pop_id);
-    $c->controller('solGS::Files')->selection_index_file($c, $selection_pop_id);
+    $c->controller('solGS::Files')->gebvs_selection_index_file($c);
+    $c->controller('solGS::Files')->selection_index_file($c);
 
     my $output_files = join("\t",
                             $c->stash->{gebvs_selection_index_file},
@@ -145,7 +140,7 @@ sub calc_selection_index {
     $name = "input_selection_index_${training_pop_id}${pred_file_suffix}";
     my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($input_file, $input_files);
-    
+  
     $c->stash->{output_files} = $output_file;
     $c->stash->{input_files}  = $input_file;   
     $c->stash->{r_temp_file}  = "selection_index_${training_pop_id}${pred_file_suffix}";  
