@@ -374,13 +374,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     for my $row (@$t_data){
         my $line_to_print = '';
         for my $col (@{$row}){
-            if ($col eq '0') {
-                $line_to_print .= "0\/0\t";
-            } elsif ($col eq '1') {
-                $line_to_print .= "0\/1\t";
-            } elsif ($col eq '2') {
-                $line_to_print .= "1\/1\t";
-            } elsif (index($col, "_") != -1) {
+            if (index($col, "_") != -1) {
                 my @chr_pos = split /_/, $col;
                 my $chr_num;
                 ($chr_num = $chr_pos[0]) =~ s/[A-Z]//g;
@@ -389,7 +383,16 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
                 my @chr_pos = split /_/, $col;
                 $line_to_print .= "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t";
             } else {
-                $line_to_print .= "$col\t";
+                my $col_num = $col + 0.0;
+                if ($col_num < 0.5) {
+                    $line_to_print .= "0\/0\t";
+                } elsif (($col_num >= 0.5) && ($col_num <= 1.5)) {
+                    $line_to_print .= "0\/1\t";
+                } elsif (($col_num > 1.5) && ($col_num <= 2.0)) {
+                    $line_to_print .= "1\/1\t";
+                } else {
+                    $line_to_print .= "$col\t";
+                }
             }
         }
         $line_to_print =~ s/\t$//;
