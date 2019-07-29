@@ -25,6 +25,9 @@
                                     <option value="fungicide">Fungicide</option>
                                     <option value="herbicide">Herbicide</option>
                                     <option value="weeding">Weeding</option>
+                                    <option value="pruning">Pruning</option>
+                                    <option value="hormone treatment">Hormone treatment</option>
+                                    <option value="light treatment">Light treatment</option>
                                 </select>
                             </div>
                         </div>
