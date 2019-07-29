@@ -620,7 +620,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
 #            "plink2 --vcf " . $geno_filepath_transpose . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
 
-            "plink2 --vcf ~/Desktop/testvcf_altchr.vcf --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
+            "plink2 --vcf " . $sorted_vcf . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
 
 #            "plink2 --vcf " . $geno_filepath_transpose . " --allow-extra-chr --const-fid --maf 0.05 --recode A --out " . $tempfile,
     );
