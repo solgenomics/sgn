@@ -137,9 +137,19 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my @traits_ids  = $c->req->param('training_traits_ids[]');
     
     my $list_id     = $c->req->param('list_id');
-    my $list_type   = $c->req->param('list_type');
-    my $list_name   = $c->req->param('list_name');
 
+    my $list_type;   
+    my $list_name;
+
+    if ($list_id) 
+    {
+	$list_id =~ s/list_//;		   	
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+
+	$list_type = $list->type();
+	$list_name = $list->name();
+    }
+  
     my $dataset_id     =  $c->req->param('dataset_id');
     my $data_structure =  $c->req->param('data_structure');
     my $k_number       =  $c->req->param('k_number'); 
@@ -415,7 +425,6 @@ sub cluster_list_phenotype_data {
     my ($self, $c) = @_;
     
     my $list_id       = $c->stash->{list_id};
-    my $list_type     = $c->stash->{list_type};
     my $pop_id        = $c->stash->{pop_id};
     my $data_structure = $c->stash->{data_structure};
     my $data_set_type  = $c->stash->{data_set_type};
@@ -435,16 +444,7 @@ sub cluster_list_phenotype_data {
     }	   
     else
     {
-	if ($list_type eq 'plots')
-	{
-	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
-	    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
-	} 
-	elsif ( $list_type eq 'trials') 
-	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);	    
-	    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-	}
+	$c->controller('solGS::List')->list_phenotype_data($c);
     }
     
 }
@@ -749,13 +749,12 @@ sub run_cluster {
 
     $self->cluster_input_files($c);
     my $input_file = $c->stash->{cluster_input_files};
+    
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
    
     $c->stash->{input_files}  = $input_file;
-    $c->stash->{output_files} = $output_file;
-       
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
-    $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";
-    
+    $c->stash->{output_files} = $output_file;   
+    $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";  
     $c->stash->{r_script}     = 'R/solGS/cluster.r';
     $c->controller("solGS::solGS")->run_r_script($c);
     

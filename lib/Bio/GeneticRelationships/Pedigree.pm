@@ -39,6 +39,7 @@ subtype 'CrossType',
 
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);
 has 'cross_type' => (isa =>'CrossType', is => 'rw', predicate => 'has_cross_type', required => 1,);
+has 'cross_combination' => (isa =>'Str', is => 'rw', predicate => 'has_cross_combination');
 has 'female_parent' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_female_parent');
 has 'male_parent' => (isa =>'Bio::GeneticRelationships::Individual', is => 'rw', predicate => 'has_male_parent');
 has 'selection_name' => (isa => 'Str',is => 'rw', predicate => 'has_selection_name');
