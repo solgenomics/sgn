@@ -224,8 +224,6 @@ solGS.cluster = {
 	    
 	}
 
-	var listName;
-	var listType;
 	var listId;
 	var datasetId;
 	var datasetName;
@@ -236,11 +234,7 @@ solGS.cluster = {
 	}
 	
 	if (dataStructureType == 'list') {
-	    var genoList = this.getClusterGenotypesListData(selectId);
-	    listName = genoList.name;
-	    listType = genoList.listType;
-	    listId   = selectId;
-	   
+	    listId   = selectId;	   
 	    popDetails['training_pop_id'] = 'list_' + listId;
 	    popDetails['cluster_pop_id'] = 'list_' + listId;
 	
@@ -272,8 +266,6 @@ solGS.cluster = {
 		   'training_traits_ids': trainingTraitsIds,
 		   'cluster_pop_id': popDetails.cluster_pop_id,
 		   'list_id': listId, 
-		   'list_name': listName,
-		   'list_type': listType,
 		   'cluster_type': clusterType,
 		   'data_structure': dataStructure,
 		   'dataset_id': datasetId,
@@ -558,11 +550,9 @@ jQuery(document).ready( function() {
 	    var selectName = jQuery(this).find("option:selected").text();
             var dataStructureType  = jQuery(this).find("option:selected").attr('name');
 
-	    if (typeof dataStructureType == 'undefined') {
+	    if (dataStructureType == undefined) {
 		dataStructureType = 'list';
-	    } else {
-		dataStructureType = 'dataset';
-	    }
+	    } 
 	    
             if (selectId) {                
                 jQuery("#cluster_go_btn").click(function() {
