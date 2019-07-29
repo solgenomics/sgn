@@ -325,8 +325,24 @@ jQuery(document).ready(function() {
                     alert('Please select a drone run type');
                 } else {
                     jQuery('#drone_run_id').val('');
-                    Workflow.complete('#drone_image_upload_drone_run_continue');
-                    Workflow.focus('#drone_imagery_upload_workflow', 3);
+                    jQuery.ajax({
+                        url : '/api/drone_imagery/upload_drone_imagery_check_drone_name?drone_run_name='+jQuery('#drone_run_name').val(),
+                        success: function(response){
+                            console.log(response);
+
+                            if (response.success) {
+                                Workflow.complete('#drone_image_upload_drone_run_continue');
+                                Workflow.focus('#drone_imagery_upload_workflow', 3);
+                            }
+                            else if (response.error) {
+                                alert("Error: " + response.error);
+                            }
+                            return false;
+                        },
+                        error: function(response){
+                            alert('Error checking drone run name!');
+                        }
+                    });
                 }
             }
         }

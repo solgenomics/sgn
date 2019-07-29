@@ -161,7 +161,7 @@ function manageDroneImageryDroneRunBandDisplay(project_drone_run_band_id){
         },
         error: function(response){
             jQuery("#working_modal").modal("hide");
-            alert('Error getting drone run band summary images!')
+            alert('Error getting drone run band summary images!');
         }
     });
 }

@@ -34,6 +34,24 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
 );
 
+sub upload_drone_imagery_check_drone_name : Path('/api/drone_imagery/upload_drone_imagery_check_drone_name') : ActionClass('REST') { }
+sub upload_drone_imagery_check_drone_name_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $drone_name = $c->req->param('drone_run_name');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $project_rs = $schema->resultset("Project::Project")->search({name=>$drone_name});
+    if ($project_rs->count > 0) {
+        $c->stash->{rest} = { error => "Please use a globally unique drone run name! The name you specified has already ben used." };
+        $c->detach();
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+        $c->detach();
+    }
+}
+
 sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : ActionClass('REST') { }
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
