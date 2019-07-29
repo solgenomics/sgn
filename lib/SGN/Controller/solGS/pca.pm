@@ -82,6 +82,7 @@ sub pca_run :Path('/pca/run/') Args() {
     if (!$self->check_pca_output($c)) 
     {
 	$self->create_pca_data($c);
+
 	my $pca_data = $c->stash->{genotype_files_list} ||
 	    $c->stash->{genotype_file} ||
 	    $c->stash->{phenotype_files_list} ||
@@ -252,13 +253,13 @@ sub create_pca_data {
     my ($self, $c) = @_;
 
     my $data_type = $c->stash->{data_type};
-    
-    if ($data_type =~ /genotype/)
-    {
+   
+    if ($data_type =~ /genotype/i)
+    { 
 	$self->create_pca_genotype_data($c);
     }
-    elsif ($data_type =~ /phenotype/)
-    {
+    elsif ($data_type =~ /phenotype/i)
+    { 
 	$self->create_pca_phenotype_data($c);
     }    
     
@@ -304,6 +305,7 @@ sub pca_trials_genotype_data {
     }
     else 
     {
+	$c->stash->{pop_id} = $c->stash->{training_pop_id};
 	$c->controller('solGS::solGS')->genotype_file($c);
     }
     
@@ -517,12 +519,12 @@ sub pca_input_files {
     my $files;
     my $data_type = $c->stash->{data_type};
     
-    if ($data_type =~ /genotype/)
+    if ($data_type =~ /genotype/i)
     {
-	$self->pca_geno_input_files($c);
+	$self->pca_geno_input_files($c);	
 	$files = $c->stash->{pca_geno_input_files};
     }
-    elsif ($data_type =~ /phenotype/)
+    elsif ($data_type =~ /phenotype/i)
     {	
 	$self->pca_pheno_input_files($c);
 	$files = $c->stash->{pca_pheno_input_files};
@@ -541,7 +543,7 @@ sub pca_geno_input_files {
     my $data_type = $c->stash->{data_type};
     my $files;
     
-    if ($data_type =~ /genotype/)
+    if ($data_type =~ /genotype/i)
     {
 	my $geno_files = $c->stash->{genotype_files_list};
 	if ($geno_files->[0]) 
@@ -564,7 +566,7 @@ sub pca_pheno_input_files {
     my $data_type = $c->stash->{data_type};
     my $files;
     
-    if ($data_type =~ /phenotype/)
+    if ($data_type =~ /phenotype/i)
     {
 	my $pheno_files = $c->stash->{phenotype_files_list};
 	if ($pheno_files->[0]) 
