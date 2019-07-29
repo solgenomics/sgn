@@ -409,8 +409,8 @@ sub studies_observation_variables {
 					decimalPlaces=>undef,
 					xref=>'',
 					validValues=> {
-						min=>$trait->minimum + 0,
-						max=>$trait->maximum + 0,
+						min=>$trait->minimum ? $trait->minimum + 0 : 0,
+						max=>$trait->maximum ? $trait->maximum + 0 : 0,
 						categories=>\@brapi_categories
 					}
 				},
