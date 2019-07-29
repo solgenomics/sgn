@@ -7,6 +7,12 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 =head1 USAGE
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>basepath,
+    dbhost=>dbhost,
+    dbname=>dbname,
+    dbuser=>dbuser,
+    dbpass=>dbpass,
+    temp_file_nd_experiment_id=>$temp_file_nd_experiment_id, #tempfile full name for deleting nd_experiment_ids asynchronously
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
@@ -48,6 +54,7 @@ use CXGN::ZipFile;
 use CXGN::UploadFile;
 use CXGN::List::Transform;
 use CXGN::Stock;
+use CXGN::Tools::Run;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -65,6 +72,42 @@ has 'phenome_schema' => (
     isa => 'CXGN::Phenome::Schema',
     is => 'rw',
     required => 1,
+);
+
+has 'basepath' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbhost' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbname' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbuser' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'dbpass' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
+);
+
+has 'temp_file_nd_experiment_id' => (
+    isa => "Str",
+    is => 'rw',
+    required => 1
 );
 
 has 'user_id' => (
@@ -413,6 +456,7 @@ sub store {
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
+        my %trait_and_stock_to_overwrite;
         my @overwritten_values;
 
         foreach my $plot_name (@plot_list) {
@@ -445,7 +489,8 @@ sub store {
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
+                            push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+                            push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                     }
@@ -535,6 +580,11 @@ sub store {
             }
         }
 
+        if (scalar(keys %trait_and_stock_to_overwrite) > 0) {
+            my @saved_nd_experiment_ids = keys %experiment_ids;
+            push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
+        }
+
         $success_message = 'All values in your file are now saved in the database!';
         #print STDERR Dumper \@overwritten_values;
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
@@ -584,35 +634,42 @@ sub store_stock_note {
 
 sub delete_previous_phenotypes {
     my $self = shift;
-    my $trait_cvterm_id = shift;
-    my $stock_id = shift;
+    my $trait_and_stock_to_overwrite = shift;
+    my $saved_nd_experiment_ids = shift;
+    my $stocks_sql = join ("," , @{$trait_and_stock_to_overwrite->{stocks}});
+    my $traits_sql = join ("," , @{$trait_and_stock_to_overwrite->{traits}});
+    my $saved_nd_experiment_ids_sql = join (",", @$saved_nd_experiment_ids);
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    my $q = "
-        DROP TABLE IF EXISTS temp_pheno_duplicate_deletion;
-        CREATE TEMP TABLE temp_pheno_duplicate_deletion AS
-        (SELECT phenotype_id, nd_experiment_id, file_id
+    my $q_search = "
+        SELECT phenotype_id, nd_experiment_id, file_id
         FROM phenotype
         JOIN nd_experiment_phenotype using(phenotype_id)
         JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN nd_experiment using(nd_experiment_id)
         LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
-        WHERE stock.stock_id=?
-        AND phenotype.cvalue_id=?);
-        DELETE FROM phenotype WHERE phenotype_id IN (SELECT phenotype_id FROM temp_pheno_duplicate_deletion);
-        DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
-        DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
+        WHERE stock.stock_id IN ($stocks_sql)
+        AND phenotype.cvalue_id IN ($traits_sql)
+        AND nd_experiment_id NOT IN ($saved_nd_experiment_ids_sql)
+        AND nd_experiment.type_id = $nd_experiment_type_id;
         ";
-    my $q2 = "SELECT phenotype_id, nd_experiment_id, file_id FROM temp_pheno_duplicate_deletion;";
 
-    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-    my $h2 = $self->bcs_schema->storage->dbh()->prepare($q2);
-    $h->execute($stock_id, $trait_cvterm_id);
-    $h2->execute();
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
+    $h->execute();
 
+    my %phenotype_ids_and_nd_experiment_ids_to_delete;
     my @deleted_phenotypes;
-    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h2->fetchrow_array()) {
+    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
         push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
     }
+    my $delete_phenotype_values_error = CXGN::Trial::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    if ($delete_phenotype_values_error) {
+        die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+    }
+
     return @deleted_phenotypes;
 }
 

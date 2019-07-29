@@ -56,19 +56,19 @@ has 'status' => (
 
 sub observations_store {
     my $self = shift;
-    my $search_params = shift;
-    my $observations = $search_params->{observations} ? $search_params->{observations} : ();
+    my $params = shift;
+    my $observations = $params->{observations} ? $params->{observations} : ();
 
     #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
-    my $user_id = $search_params->{user_id};
-    my $username = $search_params->{username};
-    my $user_type = $search_params->{user_type};
-    my $archive_path = $search_params->{archive_path};
-    my $tempfiles_subdir = $search_params->{tempfiles_subdir};
+    my $user_id = $params->{user_id};
+    my $username = $params->{username};
+    my $user_type = $params->{user_type};
+    my $archive_path = $params->{archive_path};
+    my $tempfiles_subdir = $params->{tempfiles_subdir};
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -157,6 +157,12 @@ sub observations_store {
 
     ## Store observations and return details for response
     my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$params->{basepath},
+        dbhost=>$params->{dbhost},
+        dbname=>$params->{dbname},
+        dbuser=>$params->{dbuser},
+        dbpass=>$params->{dbpass},
+        temp_file_nd_experiment_id=>$params->{temp_file_nd_experiment_id},
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
