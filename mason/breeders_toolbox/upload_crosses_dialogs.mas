@@ -296,14 +296,30 @@ $locations
                             </tr>
                         </tbody>
                     </table>
-
+                    <style>
+                        ul.a {text-indent};
+                        ul.b {text-indent};
+                    </style>
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
-                        <li><b>female_parent</b> (accession names must exist in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
+                            <ul class="a">
+                                <li><b>cross type description:</b></li>
+                                <ul class="b">
+                                    <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                                    <li><b>self:</b> A self pollinated individual plant.</li>
+                                    <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
+                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                                    <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                                </ul>
+                            </ul>
+                        </li>
+                        <li><b>female_parent</b> (accession names or population names must exist in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names or population names must exist in the database)</li>
                     </ul>
 
                     <b>Optional columns (dates must be in the format YYYY/MM/DD):</b>
@@ -358,12 +374,28 @@ $locations
                             </tr>
                         </tbody>
                     </table>
-
+                    <style>
+                        ul.a {text-indent};
+                        ul.b {text-indent};
+                    </style>
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
+                            <ul class="a">
+                                <li><b>cross type description:</b></li>
+                                <ul class="b">
+                                    <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                                    <li><b>self:</b> A self pollinated individual plant.</li>
+                                    <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
+                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                                    <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                                </ul>
+                            </ul>
+                        </li>
                         <li><b>female_parent</b> (accession names must exist in the database)</li>
                         <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
                         <li><b>female_plot</b> (Plot names must exist in the database)</li>
@@ -422,12 +454,28 @@ $locations
                             </tr>
                         </tbody>
                     </table>
-
+                    <style>
+                        ul.a {text-indent};
+                        ul.b {text-indent};
+                    </style>
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
+                            <ul class="a">
+                                <li><b>cross type description:</b></li>
+                                <ul class="b">
+                                    <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                                    <li><b>self:</b> A self pollinated individual plant.</li>
+                                    <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
+                                    <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                                    <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                                </ul>
+                            </ul>
+                        </li>
                         <li><b>female_parent</b> (accession names must exist in the database)</li>
                         <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
                         <li><b>female_plant</b> (Plant names must exist in the database)</li>
