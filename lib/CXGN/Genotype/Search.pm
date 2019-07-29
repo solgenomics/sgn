@@ -127,12 +127,12 @@ has 'marker_score_search_hash_list' => (
 );
 
 has 'limit' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw',
 );
 
 has 'offset' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw',
 );
 
