@@ -207,7 +207,7 @@ solGS.pca = {
 	var height = 300;
 	var width  = 500;
 	var pad    = {left:40, top:20, right:40, bottom:20}; 
-	var totalH = height + pad.top + pad.bottom + 200;
+	var totalH = height + pad.top + pad.bottom + 100;
 	var totalW = width + pad.left + pad.right + 400;
 	
 	var svg = d3.select("#pca_canvas")
