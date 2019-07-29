@@ -302,7 +302,7 @@ $(document).ready(function($) {
 
         } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
 
-            var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">List Items</option>';
+            var html = '<select class="form-control" id="label_designer_data_level" ><option value="list">List Items</option>';
             // Check list type, if Plot, Plant, or Tissue Sample add details option
             var name = $('#source_select :selected').text();
 
@@ -317,7 +317,7 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    jQuery('#label_designer_data_level_select_div').html('<option value="plants">List Items</option>');
+                    jQuery('#label_designer_data_level_select_div').html('<option value="list">List Items</option>');
                     if (response.list_type == 'plots') {
                         html = html + '<option value="plots">Plot Details</option>';
                     } else if (response.list_type == 'subplots') {
@@ -476,6 +476,7 @@ $(document).ready(function($) {
         var design_json = JSON.stringify(design);
 
         var labels_to_download = jQuery('#label_designer_labels_to_print').val();
+        var data_level = jQuery('#label_designer_data_level').val();
 
         //send to server to build pdf file
         jQuery.ajax({
@@ -487,7 +488,8 @@ $(document).ready(function($) {
                 'data_type' : data_type,
                 'value': value,
                 'design_json': design_json,
-                'labels_to_download': labels_to_download
+                'labels_to_download': labels_to_download,
+                'data_level': data_level
             },
             beforeSend: function() {
                 console.log("Downloading "+download_type+" file . . . ");
@@ -515,6 +517,8 @@ $(document).ready(function($) {
 });
 
 function updateFields(data_type, value, data_level){
+
+    console.log("running update fields");
     if (data_type.match(/List/)) {
         jQuery('#sort_order').val('list_order');
     }
