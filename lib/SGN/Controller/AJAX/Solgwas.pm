@@ -620,7 +620,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
 #            "plink2 --vcf " . $geno_filepath_transpose . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
 
-            "plink2 --vcf " . $sorted_vcf . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
+            $solgwas_tmp_output . "/../../plink2 --vcf " . $sorted_vcf . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
 
 #            "plink2 --vcf " . $geno_filepath_transpose . " --allow-extra-chr --const-fid --maf 0.05 --recode A --out " . $tempfile,
     );
@@ -654,10 +654,10 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    my $bfile = "test";
 #    my $grm_out = $tempfile . "afp2apr2019";
     $cmd2->run_cluster(
-            "gcta64 --bfile",
+            $solgwas_tmp_output . "/../../gcta64 --bfile",
 #            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
             $tempfile,
-            "--make-grm --out",
+            "--chr 4 --make-grm --out",
 #            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
             $tempfile,
     );
@@ -678,7 +678,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # To test, copied the test.* gcta files to export temp_base
     # Hardcoding gcta for testing only:
     $cmd3->run_cluster(
-            "gcta64 --mlma",
+            $solgwas_tmp_output . "/../../gcta64 --mlma",
             "--bfile",
 #            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
             $tempfile,
