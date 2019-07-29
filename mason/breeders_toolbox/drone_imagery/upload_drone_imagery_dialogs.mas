@@ -412,9 +412,11 @@ jQuery(document).ready(function() {
         json: true,
         post: function () {
             jQuery('#working_modal').modal("show");
+            jQuery('#working_msg').html("It can take a very long time to assemble the orthophotomosaic depending on the number of images uploaded. Times range from 15 minutes to 5 days depending on the number of images, not including upload time.");
         },
         complete: function (response) {
             console.log(response);
+            jQuery('#working_msg').html("");
 
             jQuery('#working_modal').modal("hide");
             if (response.error) {
