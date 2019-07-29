@@ -26,7 +26,7 @@ my $list_id = $pop_id if $pop_id =~ /list/;
 my $combo_pops_id;
 
 if ($c->req->referer =~ /solgs\/selection\// || $data_set_type =~ /combined_populations/) {
-$combo_pops_id =  $pop_id
+$combo_pops_id =  $pop_id;
 }
 
 $pop_id = undef if $list_id || $combo_pops_id;
