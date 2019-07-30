@@ -13,7 +13,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates materialized views so that the materialized_phenotype table includes tissue samples that were phenotyped, and the genotype materialized view includes tissue samples that were genotyped
+This patch updates materialized views so that the genotype materialized view includes tissue samples that were genotyped
 
 =head1 AUTHOR
 
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch updates materialized views so that the materialized_phenotype table includes tissue samples that were phenotyped, and the genotype materialized view includes tissue samples that were genotyped
+This patch updates materialized views so that the genotype materialized view includes tissue samples that were genotyped
 
 sub patch {
     my $self=shift;
