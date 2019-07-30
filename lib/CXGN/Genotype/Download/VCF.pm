@@ -160,6 +160,15 @@ sub download {
         push @all_marker_objects, values %$markers;
     }
 
+    # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+    if (scalar(@all_marker_objects) == 0) {
+        my @representative_markerprofiles = values %unique_stocks;
+        my $represenative_markerprofile = $representative_markerprofiles[0];
+        foreach my $o (keys %$represenative_markerprofile) {
+            push @all_marker_objects, {name => $o};
+        }
+    }
+
     my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
     my @accession_ids = keys %unique_germplasm;
     my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
@@ -194,14 +203,16 @@ sub download {
 
         foreach my $m (@all_marker_objects) {
             my $name = $m->{name};
-            my $format = $m->{format};
+            my $format = $m->{format} || 'DS'; #OLD GENOTYPING PROTCOLS ONLY HAVE DS
             my @format = split ':', $format;
-            my %format_check = map {$_ => 1} @format;
-            if (!exists($format_check{'NT'})) {
-                push @format, 'NT';
-            }
-            if (!exists($format_check{'DS'})) {
-                push @format, 'DS';
+            if (scalar(@format) > 1) { #ONLY ADD NT FOR NOT OLD GENOTYPING PROTOCOLS
+                my %format_check = map {$_ => 1} @format;
+                if (!exists($format_check{'NT'})) {
+                    push @format, 'NT';
+                }
+                if (!exists($format_check{'DS'})) {
+                    push @format, 'DS';
+                }
             }
             $format = join ':', @format;
             my @row = ($m->{chrom}, $m->{pos}, $name, $m->{ref}, $m->{alt}, $m->{qual}, $m->{filter}, $m->{info}, $format);

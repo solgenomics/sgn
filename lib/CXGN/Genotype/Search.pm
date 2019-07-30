@@ -199,14 +199,31 @@ sub get_genotype_info {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "project.project_id in ($sql)";
     }
+    my $stock_obs_type = 'accession';
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
         my $protocol_sql = join ("," , @$protocol_id_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
+
+        foreach (@$protocol_id_list) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $_
+            });
+            if ($protocol->sample_observation_unit_type_name eq 'tissue_sample' ) {
+                $stock_obs_type = 'tissue_sample';
+            }
+        }
     }
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
-        push @where_clause, "stock.stock_id in ($accession_sql)";
-        push @where_clause, "stock.type_id = $accession_cvterm_id";
+        if ($stock_obs_type eq 'accession') {
+            push @where_clause, "stock.stock_id in ($accession_sql)";
+            push @where_clause, "stock.type_id = $accession_cvterm_id";
+        }
+        elsif ($stock_obs_type eq 'tissue_sample') {
+            push @where_clause, "accession_of_tissue_sample.stock_id in ($accession_sql)";
+            push @where_clause, "accession_of_tissue_sample.type_id = $accession_cvterm_id";
+        }
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -266,7 +283,7 @@ sub get_genotype_info {
         LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id = $vcf_map_details_cvterm_id)
         JOIN genotype USING(genotype_id)
         LEFT JOIN genotypeprop AS igd_number_genotypeprop ON(igd_number_genotypeprop.genotype_id = genotype.genotype_id AND igd_number_genotypeprop.type_id = $igd_genotypeprop_cvterm_id)
-        JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id = $vcf_snp_genotyping_cvterm_id)
+        JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id IN ($vcf_snp_genotyping_cvterm_id))
         JOIN project USING(project_id)
         $where_clause
         ORDER BY stock.stock_id, genotype_values.genotypeprop_id ASC
