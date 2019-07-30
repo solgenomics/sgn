@@ -143,11 +143,18 @@ sub download {
     my %unique_germplasm;
     foreach (@$genotypes) {
         $unique_protocols{$_->{analysisMethodDbId}}++;
-        $unique_stocks{$_->{stock_name}} = $_->{selected_genotype_hash};
+        my $sample_name;
+        if ($_->{stock_type_name} eq 'tissue_sample') {
+            $sample_name = $_->{stock_name}."|||".$_->{germplasmName};
+        }
+        elsif ($_->{stock_type_name} eq 'accession') {
+            $sample_name = $_->{stock_name};
+        }
+        $unique_stocks{$sample_name} = $_->{selected_genotype_hash};
         $unique_germplasm{$_->{germplasmDbId}}++;
     }
     my @protocol_ids = keys %unique_protocols;
-    my @sorted_stock_ids = sort keys %unique_stocks;
+    my @sorted_stock_names = sort keys %unique_stocks;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -190,7 +197,7 @@ sub download {
 
     my $tsv = Text::CSV->new({ sep_char => "\t", eol => $/ });
     my @header = ("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT");
-    push @header, @sorted_stock_ids;
+    push @header, @sorted_stock_names;
 
     my $F;
     open($F, ">:encoding(utf8)", $filename) || die "Can't open file $filename\n";
@@ -216,7 +223,7 @@ sub download {
             }
             $format = join ':', @format;
             my @row = ($m->{chrom}, $m->{pos}, $name, $m->{ref}, $m->{alt}, $m->{qual}, $m->{filter}, $m->{info}, $format);
-            foreach my $s (@sorted_stock_ids) {
+            foreach my $s (@sorted_stock_names) {
                 my $g = $unique_stocks{$s}->{$name};
                 my @geno;
                 foreach my $fr (@format) {
