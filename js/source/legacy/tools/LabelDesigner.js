@@ -341,8 +341,8 @@ $(document).ready(function($) {
 
     jQuery(document).on('change', '#label_designer_data_level', function(){
         var data_type = $('#source_select :selected').parent().attr('label');
-        var value = jQuery('#source_select').val();
-        updateFields(data_type, value, this.value);
+        var source_id = jQuery('#source_select').val();
+        updateFields(data_type, source_id, this.value);
     });
 
     var page_format_select = d3.select("#page_format");
@@ -463,9 +463,10 @@ $(document).ready(function($) {
         }
         var download_type = $(this).val();
         var data_type = $('#source_select :selected').parent().attr('label');
-        var value = $("#source_select").val();
-        //console.log("Id is "+data_type+" and value is "+value);
-        if (!value || value == 'Please select a trial' || value == 'Select a plot list') {
+        var source_id = $("#source_select").val();
+        var source_name = $("#source_select :selected").text();
+        console.log("Id is "+source_id+" and name is "+source_name);
+        if (!source_id || source_id == 'Please select a trial' || source_id == 'Select a plot list') {
             alert("No data source selected. Please select a data source before downloading");
             return;
         }
@@ -486,7 +487,8 @@ $(document).ready(function($) {
             data: {
                 'download_type': download_type,
                 'data_type' : data_type,
-                'value': value,
+                'source_id': source_id,
+                'source_name': source_name,
                 'design_json': design_json,
                 'labels_to_download': labels_to_download,
                 'data_level': data_level
@@ -516,7 +518,7 @@ $(document).ready(function($) {
     });
 });
 
-function updateFields(data_type, value, data_level){
+function updateFields(data_type, source_id, data_level){
 
     console.log("running update fields");
     if (data_type.match(/List/)) {
@@ -529,7 +531,7 @@ function updateFields(data_type, value, data_level){
         method: 'POST',
         data: {
             data_type: data_type,
-            value: value,
+            source_id: source_id,
             data_level: data_level
         },
         beforeSend: function() {

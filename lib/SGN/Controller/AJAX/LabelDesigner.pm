@@ -29,12 +29,12 @@ __PACKAGE__->config(
         my $c = shift;
         my $schema = $c->dbic_schema('Bio::Chado::Schema');
         my $data_type = $c->req->param("data_type");
-        my $value = $c->req->param("value");
+        my $source_id = $c->req->param("source_id");
         my $data_level = $c->req->param("data_level");
         my %longest_hash;
         #print STDERR "Data type is $data_type and id is $value\n";
 
-        my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $value);
+        my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots, plants, subplots or tissues from more than one trial. This is not supported. Please select a different data source." };
@@ -99,10 +99,10 @@ __PACKAGE__->config(
        my $c = shift;
        my $schema = $c->dbic_schema('Bio::Chado::Schema');
        my $download_type = $c->req->param("download_type");
-    #    my $trial_id = $c->req->param("trial_id");
        my $data_type = $c->req->param("data_type");
        my $data_level = $c->req->param("data_level");
-       my $value = $c->req->param("value");
+       my $source_id = $c->req->param("source_id");
+       my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
        my $labels_to_download = $c->req->param("labels_to_download") || 10000000000;
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
@@ -111,9 +111,7 @@ __PACKAGE__->config(
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
 
-       my ($trial_num, $design, $trial_id) = get_data($c, $schema, $data_type, $data_level, $value);
-       print STDERR "trial id is $trial_id\n";
-
+       my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
        # my ($trial_num, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design) = get_data($c, $schema, $data_type, $value);
        #
@@ -141,14 +139,9 @@ __PACKAGE__->config(
            return;
        }
 
-        my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
-        if (!$trial_name) {
-            $c->stash->{rest} = { error => "Trial with id $trial_id does not exist. Can't create labels." };
-            return;
-        }
        my %design = %{$design};
        if (!$design) {
-           $c->stash->{rest} = { error => "Trial $trial_name does not have a valid field design. Can't create labels." };
+           $c->stash->{rest} = { error => "$source_name is not linked to a valid field design. Can't create labels." };
            return;
        }
 
@@ -180,7 +173,7 @@ __PACKAGE__->config(
 
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
-       my $file_prefix = $trial_name;
+       my $file_prefix = $source_name;
        $file_prefix =~ s/[^a-zA-Z0-9-_]//g;
 
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
@@ -277,6 +270,7 @@ __PACKAGE__->config(
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
                                    my $elementx = $elementx - ($width/2);
+                                   print STDERR "Drawing QR Code with $elementx, $elementy, and $jpeg_uri and $jpeg_location\n";
                                    $gfx->image($image, $elementx, $elementy, $width, $height);
 
                               }
@@ -549,7 +543,6 @@ sub get_data {
     my $data_level = shift;
     my $id = shift;
     my $num_trials = 1;
-    my $trial_id;
     my $design;
 
     print STDERR "starting to get data,level is $data_level and type is $data_type\n";
@@ -560,69 +553,54 @@ sub get_data {
         my @list_items = map { $_->[1] } $list_data;
     }
     elsif ($data_level eq "plate") {
-        $trial_id = $id;
-        $design = get_trial_design($c, $schema, $trial_id, 'plate');
+        $design = get_trial_design($c, $schema, $id, 'plate');
     }
     elsif ($data_level eq "plots") {
         if ($data_type =~ m/Field Trials/) {
-            $trial_id = $id;
-            $design = get_trial_design($c, $schema, $trial_id, 'plots');
+            $design = get_trial_design($c, $schema, $id, 'plots');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $trial_id = $id;
-            #get design using trial id
+            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'plots');
             $design = filter_by_list_items($design, $list_ids);
         }
     }
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
-            print STDERR "Data type is $data_type and level is $data_level\n";
-            $trial_id = $id;
             $design = get_trial_design($c, $schema, $id, 'plants');
             print STDERR "Design is ".Dumper($design);
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $trial_id = $id;
-            #get design using trial id
+            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'plants');
             $design = filter_by_list_items($design, $list_ids);
         }
     }
     elsif ($data_level eq "subplots") {
         if ($data_type =~ m/Field Trials/) {
-            $trial_id = $id;
             $design = get_trial_design($c, $schema, $id, 'subplots');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $trial_id = $id;
-            #get design using trial id
+            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'subplots');
             $design = filter_by_list_items($design, $list_ids);
         }
     }
     elsif ($data_level eq "tissue_samples") {
         if ($data_type =~ m/Field Trials/) {
-            $trial_id = $id;
             $design = get_trial_design($c, $schema, $id, 'field_trial_tissue_samples');
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            $trial_id = $id;
-            #get design using trial id
+            my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'field_trial_tissue_samples');
             $design = filter_by_list_items($design, $list_ids);
         }
     }
-    print STDERR "trial id is $trial_id\n";
-    return $num_trials, $design, $trial_id;
+    return $num_trials, $design;
 }
 
 # sub arraystostrings {
