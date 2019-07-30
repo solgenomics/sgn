@@ -375,7 +375,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             value => $dl_token,
             expires => '+1m',
         };
-        $c->res->header('Content-Disposition', qq[attachment; filename="$tempfile"]);
+        $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
         my $output = read_file($tempfile);
         $c->res->body($output);
     }

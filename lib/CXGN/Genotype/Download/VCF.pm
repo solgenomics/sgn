@@ -195,8 +195,16 @@ sub download {
         foreach my $m (@all_marker_objects) {
             my $name = $m->{name};
             my $format = $m->{format};
-            my @row = ($m->{chrom}, $m->{pos}, $name, $m->{ref}, $m->{alt}, $m->{qual}, $m->{filter}, $m->{info}, $format);
             my @format = split ':', $format;
+            my %format_check = map {$_ => 1} @format;
+            if (!exists($format_check{'NT'})) {
+                push @format, 'NT';
+            }
+            if (!exists($format_check{'DS'})) {
+                push @format, 'DS';
+            }
+            $format = join ':', @format;
+            my @row = ($m->{chrom}, $m->{pos}, $name, $m->{ref}, $m->{alt}, $m->{qual}, $m->{filter}, $m->{info}, $format);
             foreach my $s (@sorted_stock_ids) {
                 my $g = $unique_stocks{$s}->{$name};
                 my @geno;

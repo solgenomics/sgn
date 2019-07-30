@@ -746,7 +746,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         value => $dl_token,
         expires => '+1m',
     };
-    $c->res->header('Content-Disposition', qq[attachment; filename="$tempfile"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
     my $output = read_file($tempfile);
     $c->res->body($output);
 }
