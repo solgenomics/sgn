@@ -683,6 +683,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     print STDERR "Collecting download parameters ...  ".localtime()."\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $format = $c->req->param("format") || "list_id";
+    my $download_format = $c->req->param("download_format") || 'VCF';
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -724,7 +725,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $tempfile = $tempfile.".vcf";
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
-        'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
+        $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
             bcs_schema=>$schema,
             filename=>$tempfile,  #file path to write to

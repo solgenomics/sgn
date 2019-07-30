@@ -49,6 +49,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use JSON;
 use CXGN::Stock::Accession;
+use CXGN::Genotype::Protocol;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',

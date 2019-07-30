@@ -7,7 +7,7 @@ CXGN::Genotype::DownloadFactory - an object factory to handle downloading genoty
 =head1 USAGE
 
 my $geno = CXGN::Genotype::DownloadFactory->instantiate(
-    'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
+    'VCF',    #can be either 'VCF' or 'DosageMatrix'
     {
         bcs_schema=>$schema,
         filename=>$filename,  #file path to write to
