@@ -120,6 +120,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
+    my $plant_spacing_width = $c->req->param('plant_spacing_width')
+    my $plant_spacing_length = $c->req->param('plant_spacing_length')
 
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
@@ -450,12 +452,15 @@ sub generate_experimental_design_POST : Args(0) {
     #check if field size can fit the design_json
     if ($field_size && $plot_width && $plot_length){
         my $num_plots = scalar( keys %{decode_json $design_array[0]} );
+        my $plant_unit_size = $plant_spacing_width * $plant_spacing_length
+        #my $plot_unit_size = $plant_unit_size * $number_of_plants_per_plot
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
             $warning_message = "The generated design would require atleast $total_area square meters, which is larger than the $field_size hectare ($field_size_m square meters) field size you indicated.";
         } else {
             $warning_message = "The generated design would require atleast $total_area square meters and your field size is $field_size hectare ($field_size_m square meters).";
+            #$warning_message = "The generated design would require atleast $total_area square meters, the plant surface area is $plant_unit_size, the plot surface area is  $plot_unit_size and your field size is $field_size hectare ($field_size_m square meters).";
         }
     }
 
@@ -509,6 +514,8 @@ sub save_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
+    my $plant_spacing_width = $c->req->param('plant_spacing_width')
+    my $plant_spacing_length = $c->req->param('plant_spacing_length')
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('field_trial_is_planned_to_be_genotyped') || 'No';
     my $field_trial_is_planned_to_cross = $c->req->param('field_trial_is_planned_to_cross') || 'No';
     my @add_project_trial_source = $c->req->param('add_project_trial_source[]');
@@ -801,6 +808,8 @@ sub upload_trial_file_POST : Args(0) {
     my $field_size = $c->req->param('trial_upload_field_size');
     my $plot_width = $c->req->param('trial_upload_plot_width');
     my $plot_length = $c->req->param('trial_upload_plot_length');
+    my $plant_spacing_width = $c->req->param('trial_upload_plant_spacing_width')
+    my $plant_spacing_length = $c->req->param('trial_upload_plant_spacing_length')
     my $field_trial_is_planned_to_be_genotyped = $c->req->param('upload_trial_trial_will_be_genotyped');
     my $field_trial_is_planned_to_cross = $c->req->param('upload_trial_trial_will_be_crossed');
     my @add_project_trial_source = $c->req->param('upload_trial_trial_source_select');
@@ -944,6 +953,13 @@ sub upload_trial_file_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
+        if ($plant_spacing_width){
+            $trial_info_hash{plant_spacing_width} = $plant_spacing_width;
+        }
+        if ($plant_spacing_length){
+            $trial_info_hash{plant_spacing_length} = $plant_spacing_length;
+        }
+        
 
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         $save = $trial_create->save_trial();
