@@ -719,7 +719,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @accession_ids = @{$accession_id_hash->{transform}};
     }
 
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "gt_download_XXXXX", UNLINK=> 0);
+    my $dir = $c->tempfiles_subdir('genotype_download');
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
     $tempfile = $tempfile.".vcf";
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
