@@ -474,6 +474,12 @@ my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_33
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -637,6 +643,12 @@ my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -734,7 +746,9 @@ is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 # check trial deletion - first, delete associated phenotypes
 #
-$trial->delete_phenotype_data();
+my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, $f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+ok(!$del_ret);
+print STDERR Dumper $del_ret;
 
 ok($trial->phenotype_count() ==0, "phenotype data deleted");
 
@@ -822,7 +836,8 @@ eval {
      $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
 };
 
-ok($@, "deleted trial id");
+if ($@) { print "An error occurred: $@\n"; }
+ok($@, "deleted trial id (".$@.")");
 
 
 done_testing();

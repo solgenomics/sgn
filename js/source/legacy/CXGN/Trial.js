@@ -100,7 +100,7 @@ function open_create_DataCollector_dialog() {
     //jQuery('#working').dialog("open");
     jQuery('#working_modal').modal("show");
     var list = new CXGN.List();
-    jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ]));
+    jQuery("#trait_list_dc").html(list.listSelect("trait_list", [ 'traits' ], undefined, undefined, undefined));
     //jQuery('#working').dialog("close");
     jQuery('#working_modal').modal("hide");
     jQuery('#create_DataCollector_dialog').dialog("open");
@@ -412,8 +412,6 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#delete_phenotype_data_by_trial_id').click(function() {
         jQuery('#delete_phenotype_data_dialog').modal("show");
-	//    var trial_id = get_trial_id();
-	//    delete_phenotype_data_by_trial_id(trial_id);
 	});
 
     jQuery('#delete_layout_data_by_trial_id').click(

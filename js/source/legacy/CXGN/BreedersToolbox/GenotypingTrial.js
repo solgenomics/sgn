@@ -100,7 +100,7 @@ jQuery(document).ready(function ($) {
 
     jQuery('#genotyping_trial_dialog').on('show.bs.modal', function (e) {
         var l = new CXGN.List();
-        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots', 'plants', 'tissue_samples' ]);
+        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots', 'plants', 'tissue_samples' ], undefined, undefined, undefined);
         jQuery('#accession_select_box_span').html(html);
     })
 

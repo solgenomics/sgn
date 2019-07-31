@@ -32,6 +32,7 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
 
     my $req_page = $c->req->param('page');
     my $args     = $c->req->param('args');
+    
     my $json     = JSON->new();
     $args        = $json->decode($args);
        
@@ -44,7 +45,8 @@ sub _check_cached_output {
     my ($self, $c, $req_page, $args) = @_;
 
     $c->stash->{rest}{cached} = undef;
-    
+    $c->stash->{training_traits_ids} = $args->{training_traits_ids} || $args->{trait_id};
+       
     if ($req_page =~ /solgs\/population\//)
     { 
 	my $pop_id = $args->{training_pop_id}[0];
@@ -82,7 +84,7 @@ sub _check_cached_output {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
 	my $trait_id   = $args->{trait_id}[0];
-
+	
 	$c->stash->{data_set_type} = $args->{data_set_type};
 
 	my $referer = $c->req->referer;
@@ -104,7 +106,7 @@ sub _check_cached_output {
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $traits_ids = $args->{trait_id};
+	my $traits_ids = $args->{training_traits_ids};
 	
 	$self->_check_single_trial_model_all_traits_output($c, $tr_pop_id, $traits_ids);	
     }  
@@ -112,7 +114,7 @@ sub _check_cached_output {
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $traits     = $args->{trait_id};
+	my $traits     = $args->{training_traits_ids};
 	
 	$c->stash->{data_set_type} = $args->{data_set_type};
 	
@@ -170,8 +172,11 @@ sub _check_combined_trials_data {
     my ($self, $c, $pop_id) =@_;
 
     $c->stash->{combo_pops_id} = $pop_id;
-    $c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
-    my $trials = $c->stash->{arrayref_combined_pops_ids};
+    #$c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
+    #my $trials = $c->stash->{arrayref_combined_pops_ids};
+
+    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c);
+    my $trials = $c->stash->{combined_pops_list};
     
     foreach my $trial (@$trials)
     {
@@ -223,21 +228,26 @@ sub _check_selection_pop_all_traits_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id) =@_;
         
     #$self->check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
-
+    
     $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
     my $sel_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids}; 
-    
+
     $c->stash->{training_pop_id} = $tr_pop_id;    
     $c->controller("solGS::solGS")->traits_with_valid_models($c);
     my $training_models_traits = $c->stash->{traits_ids_with_valid_models};
- 
-    if ($sel_traits_ids) 
+   
+    $c->stash->{rest}{cached} = 0;	
+    if ($sel_traits_ids->[0]) 
     {
-	if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+	if (scalar(@$sel_traits_ids) == scalar(@$training_models_traits))
 	{
-	    $c->stash->{rest}{cached} = 1;
+	    if (sort(@$sel_traits_ids) ~~ sort(@$training_models_traits))
+	    {
+		$c->stash->{rest}{cached} = 1;
+	    }
 	}
-    }
+    } 
+  
 }
 
 

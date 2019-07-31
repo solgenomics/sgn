@@ -480,7 +480,7 @@ CXGN.List.prototype = {
         if (list_type == 'accessions' || list_type == 'crosses'){
             jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
         }
-        if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(list_type) >= 0){
+        if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples', 'family_names'].indexOf(list_type) >= 0){
             jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')" title="Will display whether the items in your list are synonyms or actual uniquenames.">Find Synonyms</button>');
             jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" title="Will display if the items in your list are uniquenames in the database or whether they look very similar to other accessions in the database.">Fuzzy Search</button>');
         }
@@ -491,7 +491,7 @@ CXGN.List.prototype = {
                 jQuery('#availableSeedlotButtonDiv').html('')
             }
 
-            if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples'].indexOf(jQuery('#type_select').val()) >= 0){
+            if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples', 'family_names'].indexOf(jQuery('#type_select').val()) >= 0){
                 jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')" title="Will display whether the items in your list are synonyms or actual uniquenames.">Find Synonyms</button>');
                 jQuery('#fuzzySearchStockListDiv').html('<br/><button id="fuzzySearchStockListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+jQuery('#type_select').val()+'\')" title="Will display if the items in your list are uniquenames in the database or whether they look very similar to other accessions in the database.">Fuzzy Search</button>');
             } else {
@@ -649,7 +649,7 @@ CXGN.List.prototype = {
            provided text as description
     */
 
-    listSelect: function(div_name, types, empty_element, refresh) {
+    listSelect: function(div_name, types, empty_element, refresh, hide_public_lists) {
         var lists = new Array();
         var public_lists = new Array();
 
@@ -682,9 +682,11 @@ CXGN.List.prototype = {
         for (var n=0; n<lists.length; n++) {
             html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
         }
-        html += '<option disabled>--------PUBLIC LISTS BELOW--------</option>';
-        for (var n=0; n<public_lists.length; n++) {
-            html += '<option value='+public_lists[n][0]+'>'+public_lists[n][1]+'</option>';
+        if (hide_public_lists == undefined) {
+            html += '<option disabled>--------PUBLIC LISTS BELOW--------</option>';
+            for (var n=0; n<public_lists.length; n++) {
+                html += '<option value='+public_lists[n][0]+'>'+public_lists[n][1]+'</option>';
+            }
         }
 
         if (refresh) {
@@ -1065,9 +1067,9 @@ function pasteListMenu (div_name, menu_div, button_name, list_type) {
         button_name = 'paste';
     }
     if (list_type){
-        html = lo.listSelect(div_name, [list_type]);
+        html = lo.listSelect(div_name, [list_type], undefined, undefined, undefined);
     }else {
-        html = lo.listSelect(div_name);
+        html = lo.listSelect(div_name, undefined, undefined, undefined, undefined);
     }
     html = html + '<button class="btn btn-info btn-sm" type="button" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" >'+button_name+'</button>';
 
@@ -1097,7 +1099,7 @@ function pasteList(div_name) {
 function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
     var types = types.split(",");
-    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh'));
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh', undefined));
     //console.log("List options refreshed!");
 }
 
@@ -1151,7 +1153,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_addition_type" value="'+addition_type+'" /><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
     html += '<input class="btn btn-primary btn-sm" id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /></div></div><br />';
 
-    html += '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;">'+lo.listSelect(dataDiv, [ type ]);
+    html += '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;">'+lo.listSelect(dataDiv, [ type ], undefined, undefined, 1);
 
     html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input class="btn btn-primary btn-sm" id="'+dataDiv+'_button" type="button" value="add to list" /></div></div>';
 
@@ -1242,7 +1244,7 @@ function getData(id, selectText) {
 /* deprecated */
 function addTextToListMenu(div) {
     var lo = new CXGN.List();
-    var html = lo.listSelect(div);
+    var html = lo.listSelect(div, undefined, undefined, undefined, undefined);
     html = html + '<input id="'+div+'_button" type="button" value="add to list" />';
 
     document.write(html);
@@ -1258,7 +1260,7 @@ function addTextToListMenu(div) {
 /* deprecated */
 function addSelectToListMenu(div) {
     var lo = new CXGN.List();
-    var html = lo.listSelect(div);
+    var html = lo.listSelect(div, undefined, undefined, undefined, undefined);
     html = html + '<input id="'+div+'_button" type="button" value="add to list" />';
 
     document.write(html);

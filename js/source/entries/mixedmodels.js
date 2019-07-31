@@ -102,19 +102,43 @@ export function init(main_div){
 	<hr />
 	4. Results
     
-        BLUPs
+        BLUPs 	     <button id="store_blups_button" class="btn btn-primary" data-toggle="modal" data-target="#save_blup_dialog">Save BLUPs</button>
         <div id="mixed_models_results_div">
 	[ go throught steps 1-3 first ]
 </div>
-	     <button id="store_blups_button">Save BLUPs</button>
-    </div>`
 
+    </div>
 
-	
+<div id="save_blup_dialog" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+        <h4 class="modal-title">Save analysis results</h4>
+      </div>
+      <div class="modal-body">
+	<label for="analysis_name">Analysis name</label> <input id="analysis_name"></input><br />
+	<label for="analysis_description">Analysis description</label>
+        <textarea rows="4" cols="30" id="analysis_description"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" id="save_blups_button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->`
+
     var mm = $(main_div);
     
     get_select_box("datasets", "mixed_model_dataset_select", {});
-  
+
+    $('#save_blups_button').click( function() {
+	var name = $('#analysis_name').val();
+	var file = $('#tempfile').html();
+	alert("Everything worked! Woohoo!" + file + " " +name);
+    });
+    
      $('#mixed_model_analysis_prepare_button').click( function() { 
        var dataset_id=$('#available_datasets').val();
        $.ajax({
@@ -448,7 +472,14 @@ export function init(main_div){
 	    }
 	});
     }
-    };
+
+    function store_blup_file() {
+	
+	
+
+
+    }
+};
 
 
 

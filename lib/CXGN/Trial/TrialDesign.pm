@@ -123,16 +123,16 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
-my $design;
 
 sub get_design {
-     print STDERR Dumper $design;
-     return $design;
+    my $self = shift;
+    print STDERR Dumper $self->{design};
+     return $self->{design};
 }
 
 
@@ -150,6 +150,7 @@ sub calculate_design {
     }
     
     if ($design) {
+	$self->{design} = $design;
 	return 1;
     }
     else  {
@@ -235,7 +236,7 @@ sub _build_plot_names {
     my $trial_name = $self->get_trial_name;
 
     if ($self->has_plot_name_prefix()) {
-        $prefix = $self->get_plot_name_prefix()."_";
+        $prefix = $self->get_plot_name_prefix()."-";
     }
     if ($self->has_plot_name_suffix()) {
         $suffix = $self->get_plot_name_suffix();
@@ -252,10 +253,10 @@ sub _build_plot_names {
 	    my $plot_num_per_block = $design{$key}->{plot_num_per_block};
 	    $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
 	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$plot_num_per_block."".$suffix;
+        $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-".$stock_name."".$suffix;
 	}
     elsif ($self->get_design_type() eq "greenhouse") {
         $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;

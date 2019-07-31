@@ -51,7 +51,7 @@ sub create_design {
     if ($self->has_fieldmap_row_number()) {
       $fieldmap_row_number = $self->get_fieldmap_row_number();
       my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
-      $fieldmap_col_number = _validate_field_colNumber($colNumber);
+      $fieldmap_col_number = $self->_validate_field_colNumber($colNumber);
 
       #if (isint($colNumber)){
         #$fieldmap_col_number = $colNumber;
@@ -100,7 +100,7 @@ sub create_design {
 
         @rep_numbers = $result_matrix->get_column("r");
         @stock_names = $result_matrix->get_column("trt");
-        @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
+        @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@rep_numbers, $number_of_reps)};
         #print STDERR Dumper \@converted_plot_numbers;
 
         #generate col_number
@@ -174,7 +174,7 @@ sub create_design {
 
     #print STDERR Dumper \%crd_design;
 
-    %crd_design = %{_build_plot_names($self,\%crd_design)};
+    %crd_design = %{$self->_build_plot_names(\%crd_design)};
     return \%crd_design;
 }
 

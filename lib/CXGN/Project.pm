@@ -1,11 +1,17 @@
 
 =head1 NAME
 
-CXGN::Trial - helper class for trials
+CXGN::Project - helper class for projects
+
+=head1 DESCRIPTION
+
+CXGN::Project is the root object for information stored in the project table, such as trials, genotyping trials, breeding programs, folders, etc.
+
+It should rarely be necessary to be instantiated on its own. Use the CXGN::Trial factory object to generate the appropriate object from a project_id.
 
 =head1 SYNOPSYS
 
- my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+ my $project = CXGN::Project->new( { bcs_schema => $schema, trial_id => $trial_id });
  $trial->set_description("yield trial with promising varieties");
  etc.
 
@@ -67,7 +73,7 @@ sub BUILD {
     }
 
     if (!$row) {
-	die "The trial ".$self->get_trial_id()." does not exist";
+        die "The trial ".$self->get_trial_id()." does not exist";
     }
 }
 
@@ -275,61 +281,6 @@ sub set_location {
 
 # CLASS METHOD!
 
-=head2 class method get_all_locations()
-
- Usage:        my $locations = CXGN::Trial::get_all_locations($schema)
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_all_locations {
-    my $schema = shift;
-	my $location_id = shift;
-    my @locations;
-
-	my %search_params;
-	if ($location_id){
-		$search_params{'nd_geolocation_id'} = $location_id;
-	}
-
-    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( \%search_params, {order_by => { -asc => 'nd_geolocation_id' }} );
-    while (my $s = $loc->next()) {
-        my $loc_props = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { nd_geolocation_id => $s->nd_geolocation_id() }, {join=>'type', '+select'=>['me.value', 'type.name'], '+as'=>['value', 'cvterm_name'] } );
-
-		my %attr;
-        $attr{'geodetic datum'} = $s->geodetic_datum();
-
-        my $country = '';
-        my $country_code = '';
-        my $location_type = '';
-        my $abbreviation = '';
-        my $address = '';
-
-        while (my $sp = $loc_props->next()) {
-            if ($sp->get_column('cvterm_name') eq 'country_name') {
-                $country = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'country_code') {
-                $country_code = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'location_type') {
-                $location_type = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
-                $abbreviation = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'geolocation address') {
-                $address = $sp->get_column('value');
-            } else {
-                $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
-            }
-        }
-
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address],
-    }
-
-    return \@locations;
-}
 
 
 =head2 function get_breeding_programs()
@@ -828,30 +779,6 @@ sub set_breeding_program {
 	return {};
 }
 
-# CLASS METHOD!
-
-=head2 class method get_all_project_types()
-
- Usage:        my @cvterm_ids = CXGN::Trial::get_all_project_types($schema)
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_all_project_types {
-    ##my $class = shift;
-    my $schema = shift;
-    my $project_type_cv_id = $schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id }, {order_by=>'me.cvterm_id'} );
-    my @cvterm_ids;
-    if ($rs->count() > 0) {
-	@cvterm_ids = map { [ $_->cvterm_id(), $_->name(), $_->definition ] } ($rs->all());
-    }
-    return @cvterm_ids;
-}
 
 =head2 accessors get_name(), set_name()
 
@@ -1042,6 +969,77 @@ sub remove_planting_date {
 		} else {
 			print STDERR "date format did not pass check while preparing to delete planting date: $planting_date  \n";
 		}
+}
+
+=head2 function get_management_factor_date()
+
+	Usage:        $trial->get_management_factor_date();
+	Desc:         Field management factors are a project and are therefore instantiated with CXGN::Trial. this gets the date projectprop
+	Ret:          Returns string
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub get_management_factor_date {
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_date_cvterm_id()
+    });
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if ($row) {
+        return $calendar_funcs->display_start_date($row->value());
+    } else {
+        return;
+    }
+}
+
+sub set_management_factor_date {
+    my $self = shift;
+    my $management_factor_date = shift;
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    if (my $management_factor_event = $calendar_funcs->check_value_format($management_factor_date) ) {
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $self->get_mangement_factor_date_cvterm_id()
+        });
+
+        $row->value($management_factor_event);
+        $row->update();
+    } else {
+        print STDERR "date format did not pass check while preparing to set management factor date: $management_factor_date \n";
+    }
+}
+
+sub get_mangement_factor_date_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'management_factor_date', 'project_property')->cvterm_id();
+}
+
+sub get_mangement_factor_type_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'management_factor_type', 'project_property')->cvterm_id();
+}
+
+sub get_management_factor_type {
+    my $self = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_type_cvterm_id()
+    });
+
+    if ($row) {
+        return $row->value();
+    } else {
+        return;
+    }
 }
 
 =head2 accessors get_phenotypes_fully_uploaded(), set_phenotypes_fully_uploaded()
@@ -1355,42 +1353,81 @@ sub _set_projectprop {
 #
 sub delete_phenotype_data {
     my $self = shift;
+    my $basepath = shift;
+    my $dbhost = shift;
+    my $dbname = shift;
+    my $dbuser = shift;
+    my $dbpass = shift;
+    my $temp_file_nd_experiment_id = shift;
 
     my $trial_id = $self->get_trial_id();
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    eval {
-	$self->bcs_schema->txn_do(
-	    sub {
-		#print STDERR "\n\nDELETING PHENOTYPES...\n\n";
+    my $q_search = "
+        SELECT phenotype_id, nd_experiment_id, file_id
+        FROM phenotype
+        JOIN nd_experiment_phenotype using(phenotype_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        JOIN stock using(stock_id)
+        WHERE project_id = $trial_id
+        AND nd_experiment.type_id = $nd_experiment_type_id;
+        ";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
+    $h->execute();
 
-		# delete phenotype data associated with trial
-		#
-		#my $trial = $self->bcs_schema()->resultset("Project::Project")->search( { project_id => $trial_id });
-
-		my $q = "SELECT nd_experiment_id FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) WHERE project_id =?";
-
-		my $h = $self->bcs_schema()->storage()->dbh()->prepare($q);
-
-		$h->execute($trial_id);
-		my @nd_experiment_ids = ();
-		while (my ($id) = $h->fetchrow_array()) {
-		    push @nd_experiment_ids, $id;
-		}
-		print STDERR "GOING TO REMOVE ".scalar(@nd_experiment_ids)." EXPERIMENTS...\n";
-		$self->_delete_phenotype_experiments(@nd_experiment_ids);
-	    });
-    };
-
-
-
-    if ($@) {
-	print STDERR "ERROR DELETING PHENOTYPE DATA $@\n";
-	return "Error deleting phenotype data for trial $trial_id. $@\n";
+    my %phenotype_ids_and_nd_experiment_ids_to_delete;
+    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
     }
-    return '';
-
+    return delete_phenotype_values_and_nd_experiment_md_values($dbhost, $dbname, $dbuser, $dbpass, $temp_file_nd_experiment_id, $basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
 }
 
+#Class function
+sub delete_phenotype_values_and_nd_experiment_md_values {
+    my $dbhost = shift;
+    my $dbname = shift;
+    my $dbuser = shift;
+    my $dbpass = shift;
+    my $temp_file_nd_experiment_id = shift;
+    my $basepath = shift;
+    my $schema = shift;
+    my $phenotype_ids_and_nd_experiment_ids_to_delete = shift;
+
+    my $coderef = sub {
+        my $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
+        my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
+        my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
+        $h2->execute();
+        my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
+        my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+        my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+        $h3->execute();
+
+        open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
+            foreach (@{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}}) {
+                print $fh "$_\n";
+            }
+        close($fh);
+
+        my $async_delete = CXGN::Tools::Run->new();
+        $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+
+        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (nd_experiment entries may still be in deletion in asynchronous process.)\n";
+    };
+
+    my $error;
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        print STDERR "ERROR: $_\n";
+        $error =  $_;
+    };
+    return $error;
+}
 
 =head2 function delete_field_layout()
 
@@ -1602,46 +1639,6 @@ sub delete_metadata {
 }
 
 
-sub _delete_phenotype_experiments {
-    my $self = shift;
-    my @nd_experiment_ids = @_;
-
-    # retrieve the associated phenotype ids (they won't be deleted by the cascade)
-    #
-    my $phenotypes_deleted = 0;
-    my $nd_experiments_deleted = 0;
-
-    foreach my $nde_id (@nd_experiment_ids) {
-	my $nd_exp_phenotype_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->search( { nd_experiment_id => $nde_id }, { join => 'phenotype' });
-	if ($nd_exp_phenotype_rs->count() > 0) {
-	    print STDERR "Deleting experiments ... \n";
-	    while (my $pep = $nd_exp_phenotype_rs->next()) {
-		my $phenotype_rs = $self->bcs_schema()->resultset("Phenotype::Phenotype")->search( { phenotype_id => $pep->phenotype_id() } );
-		print STDERR "DELETING ".$phenotype_rs->count(). " phenotypes\n";
-		$phenotype_rs->delete_all();
-		$phenotypes_deleted++;
-	    }
-	}
-	print STDERR "Deleting linking table entries...\n";
-	$nd_exp_phenotype_rs->delete_all();
-    }
-
-
-    # delete the experiments
-    #
-    #print STDERR "Deleting experiments...\n";
-    foreach my $nde_id (@nd_experiment_ids) {
-	my $delete_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ nd_experiment_id => $nde_id });
-
-	$nd_experiments_deleted++;
-
-	$delete_rs->delete_all();
-    }
-    return { phenotypes_deleted => $phenotypes_deleted,
-	     nd_experiments_deleted => $nd_experiments_deleted
-    };
-}
-
 sub _delete_field_layout_experiment {
     my $self = shift;
 
@@ -1707,7 +1704,7 @@ sub _delete_field_layout_experiment {
 
     my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
     if ($nde_rs->count != 1){
-        die "Trial $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
+        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
     }
     while( my $r = $nde_rs->next){
         $r->delete();
@@ -1758,10 +1755,6 @@ sub delete_project_entry {
 	print STDERR "Cannot delete trial with associated phenotypes.\n";
 	return;
     }
-    if (my $count = $self->get_experiment_count() > 0) {
-	print STDERR "Cannot delete trial with associated experiments ($count)\n";
-	return "Cannot delete entry because of associated experiments";
-    }
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
         return 'This field trial has been linked to genotyping trials already, and cannot be easily deleted.';
@@ -1801,18 +1794,20 @@ sub delete_project_entry {
 
 sub phenotype_count {
     my $self = shift;
-
     my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
 
-    my $phenotype_experiment_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProject")->search(
-    	{
-    	    project_id => $self->get_trial_id(), 'nd_experiment.type_id' => $phenotyping_experiment_type_id},
-    	{
-    	    join => 'nd_experiment'
-    	}
-    	);
-
-     return $phenotype_experiment_rs->count();
+    my $q = "SELECT count(phenotype_id)
+        FROM phenotype
+        JOIN nd_experiment_phenotype using(phenotype_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN project using(project_id)
+        WHERE nd_experiment.type_id = $phenotyping_experiment_type_id
+        AND project_id = ?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    my ($count) = $h->fetchrow_array();
+    return $count;
 }
 
 
@@ -2241,7 +2236,7 @@ sub create_plant_entities {
                 my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
                 $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
 
-                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
+                my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
                 my $plots = $treatment_trial->get_plots();
                 foreach my $plot (@$plots){
                     $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
@@ -2994,6 +2989,9 @@ sub get_plants {
     foreach (@$output) {
         push @plants, [$_->[1], $_->[0]];
     }
+    if (scalar(@plants) == 0) {
+        @plants = @{$self->get_observation_units_direct('plant')};
+    }
     return \@plants;
 }
 
@@ -3099,7 +3097,30 @@ sub get_plots {
     foreach (@$output) {
         push @plots, [$_->[1], $_->[0]];
     }
+    if (scalar(@plots) == 0) {
+        @plots = @{$self->get_observation_units_direct('plot')};
+    }
     return \@plots;
+}
+
+sub get_observation_units_direct {
+    my $self = shift;
+    my $stock_type = shift;
+    my $nd_experiment_types = shift || ['field_layout','treatment_experiment','genotyping_layout'];
+    my $schema = $self->bcs_schema;
+    my @obs;
+    my $obs_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, "stock_type")->cvterm_id();
+    my @nd_experiment_type_ids;
+    foreach (@$nd_experiment_types) {
+        push @nd_experiment_type_ids, SGN::Model::Cvterm->get_cvterm_row($schema, $_, "experiment_type")->cvterm_id();
+    }
+    my $q = "SELECT stock.uniquename, stock.stock_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? AND stock.type_id=? AND nd_experiment.type_id in (".(join ',',@nd_experiment_type_ids).") ORDER BY stock.uniquename ASC;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id(), $obs_cvterm_id);
+    while (my ($uniquename, $stock_id) = $h->fetchrow_array()) {
+        push @obs, [$stock_id, $uniquename];
+    }
+    return \@obs;
 }
 
 =head2 get_plots_per_accession
@@ -3168,6 +3189,10 @@ sub get_subplots {
     foreach (@$output) {
         push @subplots, [$_->[1], $_->[0]];
     }
+    if (scalar(@subplots) == 0) {
+        @subplots = @{$self->get_observation_units_direct('subplot')};
+    }
+    print STDERR Dumper \@subplots;
     return \@subplots;
 }
 
@@ -3196,6 +3221,9 @@ sub get_tissue_samples {
     my $header = shift @$output;
     foreach (@$output) {
         push @tissues, [$_->[1], $_->[0]];
+    }
+    if (scalar(@tissues) == 0) {
+        @tissues = @{$self->get_observation_units_direct('tissue_sample')};
     }
     return \@tissues;
 }
@@ -3431,11 +3459,11 @@ sub suppress_plot_phenotype {
 
 =head2 delete_assayed_trait
 
- Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
- 				if ($delete_trait_return_error) {
-   					$c->stash->{rest} = { error => $delete_trait_return_error };
-   					return;
- 				}
+Usage:        	my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $phenotypes_ids, [] );
+                if ($delete_trait_return_error) {
+                    $c->stash->{rest} = { error => $delete_trait_return_error };
+                    return;
+                }
 
  Desc:         Delete Assayed Traits
  Ret:
@@ -3446,58 +3474,48 @@ sub suppress_plot_phenotype {
 =cut
 
 sub delete_assayed_trait {
-	my $self = shift;
-	my $pheno_ids = shift;
-	my $trait_ids = shift;
+    my $self = shift;
+    my $basepath = shift;
+    my $dbhost = shift;
+    my $dbname = shift;
+    my $dbuser = shift;
+    my $dbpass = shift;
+    my $temp_file_nd_experiment_id = shift;
+    my $pheno_ids = shift;
+    my $trait_ids = shift;
+
     my $trial_id = $self->get_trial_id();
-	my $schema = $self->bcs_schema;
-	my $phenome_schema = $self->phenome_schema;
-	my ($error, @nd_expt_ids);
-	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
-
-	my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id, 'nd_experiment_projects.project_id' => $trial_id };
-	if (scalar(@$trait_ids) > 0){
-		$search_params->{'me.observable_id'} = { '-in' => $trait_ids };
-	}
-	if (scalar(@$pheno_ids) > 0){
-		$search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
-	}
-	#$schema->storage->debug(1);
-	if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
-		my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
-		$search_params,
-		{
-			join => { 'nd_experiment_phenotypes' => {'nd_experiment' => 'nd_experiment_projects'} },
-			'+select' => ['nd_experiment.nd_experiment_id'],
-			'+as' => ['nd_expt_id'],
-		});
-		while ( my $res = $delete_pheno_id_rs->next()){
-			#print STDERR $res->phenotype_id." : ".$res->observable_id."\n";
-			my $nd_expt_id = $res->get_column('nd_expt_id');
-			push @nd_expt_ids, $nd_expt_id;
-			$res->delete;
-		}
-        #print STDERR Dumper(\@nd_expt_ids);
-		my $delete_nd_expt_md_files_id_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search({
-			nd_experiment_id => { '-in' => \@nd_expt_ids },
-		});
-		while (my $res = $delete_nd_expt_md_files_id_rs->next()){
-			$res->delete;
-		}
-
-		my $delete_nd_expt_id_rs = $schema->resultset("NaturalDiversity::NdExperiment")->search({
-			nd_experiment_id => { '-in' => \@nd_expt_ids },
-		});
-		while (my $res = $delete_nd_expt_id_rs->next()){
-			$res->delete;
-		}
-	}
-	else {
-		$error = "List of trait or phenotype ids was not provided for deletion.";
-	}
-
-	return $error;
-
+    my $schema = $self->bcs_schema;
+    my $phenome_schema = $self->phenome_schema;
+    my ($error, @nd_expt_ids);
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id, 'nd_experiment_projects.project_id' => $trial_id };
+    if (scalar(@$trait_ids) > 0){
+        $search_params->{'me.observable_id'} = { '-in' => $trait_ids };
+    }
+    if (scalar(@$pheno_ids) > 0){
+        $search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
+    }
+    #$schema->storage->debug(1);
+    if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
+        my %phenotype_ids_and_nd_experiment_ids_to_delete;
+        my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
+        $search_params,
+        {
+            join => { 'nd_experiment_phenotypes' => {'nd_experiment' => 'nd_experiment_projects'} },
+            '+select' => ['nd_experiment.nd_experiment_id'],
+            '+as' => ['nd_expt_id'],
+        });
+        while ( my $res = $delete_pheno_id_rs->next()){
+            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $res->get_column('nd_expt_id');
+            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $res->phenotype_id;
+        }
+        return delete_phenotype_values_and_nd_experiment_md_values($dbhost, $dbname, $dbuser, $dbpass, $temp_file_nd_experiment_id, $basepath, $schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    }
+    else {
+        $error = "List of trait or phenotype ids was not provided for deletion.";
+    }
+    return $error;
 }
 
 1;

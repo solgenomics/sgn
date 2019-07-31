@@ -110,8 +110,7 @@ has 'organism_comment' => (
 
 has 'type' => (
     isa => 'Str',
-    is => 'rw',
-    default => 'accession',
+    is => 'rw'
 );
 
 has 'type_id' => (
@@ -222,7 +221,7 @@ sub _retrieve_stock_owner {
 sub store {
     my $self = shift;
     my %return;
-   
+
     my $stock = $self->stock;
     my $schema = $self->schema();
 
@@ -232,9 +231,12 @@ sub store {
         $exists= $self->exists_in_database();
     }
 
-    if (!$self->type_id) {
+    # If provided set type_id based on supplied type, otherwise get existing type_id from db
+    if ($self->type()) {
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
         $self->type_id($type_id);
+    } else {
+        $self->type_id($stock->type_id);
     }
 
     if (!$self->organism_id){
@@ -1002,7 +1004,7 @@ sub _store_population_relationship {
     my $schema = $self->schema;
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
-    
+
     print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
     my $population = $schema->resultset("Stock::Stock")->find_or_create({
         uniquename => $self->population_name(),
@@ -1194,15 +1196,15 @@ sub merge {
     #
     # my $female_parent_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'female_parent')->cvterm_id();
     # my $male_parent_id   = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'male_parent')->cvterm_id();
-    
+
     # my $female_parent_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $female_parent_id });
     # my $male_parent_rs   = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $male_parent_id });
-    
-    # if ($female_parent_rs->count() > 0) { 
+
+    # if ($female_parent_rs->count() > 0) {
     # 	print STDERR "The target $stock_id already had a female parent... not moving any other objects.\n";
     # 	return;
     # }
-    # if ($male_parent_rs ->count() > 0) { 
+    # if ($male_parent_rs ->count() > 0) {
     # 	print STDERR "The target $stock_id already had a male parent... not moving any other objects.\n";
     # 	return;
     # }

@@ -127,7 +127,7 @@ sub create_design {
     @block_numbers = $result_matrix->get_column("block");
     @rep_numbers = $result_matrix->get_column("replication");
     @stock_names = $result_matrix->get_column("trt");
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@rep_numbers, $number_of_reps)};
+    @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@rep_numbers, $number_of_reps)};
     
     if ($plot_layout_format eq "zigzag") {
 	if (!$fieldmap_col_number){
@@ -188,7 +188,7 @@ sub create_design {
 	}
 	$alpha_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
-    %alpha_design = %{_build_plot_names($self,\%alpha_design)};
+    %alpha_design = %{$self->_build_plot_names(\%alpha_design)};
     return \%alpha_design;
 }
 

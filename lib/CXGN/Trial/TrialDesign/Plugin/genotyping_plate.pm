@@ -4,7 +4,6 @@ package CXGN::Trial::TrialDesign::Plugin::genotyping_plate;
 use Moose::Role;
 
 sub create_design {
-    sub _get_genotyping_plate {
     my $self = shift;
     my %gt_design;
     my @stock_list;

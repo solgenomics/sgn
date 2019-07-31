@@ -30,7 +30,7 @@ jQuery(document).ready(function($) {
 
     jQuery('#create_new_trait_file_link').click(function() {
         var list = new CXGN.List();
-        var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list');
+        var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list', undefined, undefined);
         jQuery('#select_list_div').html(trait_lists);
         if (document.getElementById("html_select_traits_for_trait_file")) {
             show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);

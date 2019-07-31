@@ -208,7 +208,7 @@ sub create_design {
     
     
     
-    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers, \@block_numbers, $max)};
+    @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max)};
     
     my %seedlot_hash;
     if($self->get_seedlot_hash){
@@ -235,7 +235,7 @@ sub create_design {
 	$madiii_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     
-    %madiii_design = %{_build_plot_names($self,\%madiii_design)};
+    %madiii_design = %{$self->_build_plot_names(\%madiii_design)};
     
     #  return \%augmented_design;
     
