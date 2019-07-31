@@ -212,8 +212,18 @@ sub download {
 
         foreach my $m (@all_marker_objects) {
             my $name = $m->{name};
-            my $format = $m->{format} || 'DS'; #OLD GENOTYPING PROTCOLS ONLY HAVE DS
-            my @format = split ':', $format;
+            my $format = $m->{format};
+            my @format;
+            if (!$format) {
+                my $first_g = $unique_stocks{$sorted_stock_names[0]}->{$name};
+                foreach my $k (sort keys %$first_g) {
+                    if (defined($first_g->{$k})) {
+                        push @format, $k;
+                    }
+                }
+            } else {
+                @format = split ':', $format;
+            }
             if (scalar(@format) > 1) { #ONLY ADD NT FOR NOT OLD GENOTYPING PROTOCOLS
                 my %format_check = map {$_ => 1} @format;
                 if (!exists($format_check{'NT'})) {
