@@ -97,9 +97,10 @@ sub trial_details {
 			my $children = $folder->children();
 			foreach (@$children) {
 				push @folder_studies, {
-					studyDbId=>qq|$_->folder_id|,
+					studyDbId=>$_->folder_id,
 					studyName=>$_->name,
-					locationDbId=>qq|$_->location_id|
+					locationDbId=>$_->location_id,
+                    locationName=>$_->location_name
 				};
 			}
             my $folder_id = $folder->folder_id;
