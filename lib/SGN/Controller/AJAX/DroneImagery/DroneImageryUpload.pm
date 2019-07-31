@@ -249,7 +249,7 @@ sub upload_drone_imagery_POST : Args(0) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of images to stitch!" };
             $c->detach();
         }
-        if (!$upload_panel_file) {
+        if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
             $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
             $c->detach();
         }
@@ -285,37 +285,6 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         my $image_paths = $zipfile_return->{image_files};
 
-        my $upload_original_name_panel = $upload_panel_file->filename();
-        my $upload_tempfile_panel = $upload_panel_file->tempname;
-        $time = DateTime->now();
-        $timestamp = $time->ymd()."_".$time->hms();
-
-        my $uploader_panel = CXGN::UploadFile->new({
-            tempfile => $upload_tempfile_panel,
-            subdirectory => "drone_imagery_upload_panel",
-            archive_path => $c->config->{archive_path},
-            archive_filename => $upload_original_name_panel,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
-        });
-        my $archived_filename_with_path_panel = $uploader_panel->archive();
-        my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
-        if (!$archived_filename_with_path_panel) {
-            $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
-            $c->detach();
-        }
-        unlink $upload_tempfile_panel;
-        print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
-
-        $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-        my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
-        if ($zipfile_return_panel->{error}) {
-            $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
-            $c->detach();
-        }
-        my $image_paths_panel = $zipfile_return_panel->{image_files};
-
         my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_to_stitch');
         my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
         open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
@@ -326,14 +295,6 @@ sub upload_drone_imagery_POST : Args(0) {
             }
         close($fh);
         print STDERR "Drone image stitch temp file $temp_file_image_file_names\n";
-
-        my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
-        open ($fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
-            foreach (@$image_paths_panel) {
-                print $fh "$_\n";
-            }
-        close($fh);
-        print STDERR "Drone image stitch temp file panel $temp_file_image_file_names_panel\n";
 
         $dir = $c->tempfiles_subdir('/upload_drone_imagery_stitched_result');
         my $temp_file_stitched_result_band1 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
@@ -347,6 +308,45 @@ sub upload_drone_imagery_POST : Args(0) {
         my $cmd;
         my @stitched_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
+            my $upload_original_name_panel = $upload_panel_file->filename();
+            my $upload_tempfile_panel = $upload_panel_file->tempname;
+            $time = DateTime->now();
+            $timestamp = $time->ymd()."_".$time->hms();
+
+            my $uploader_panel = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile_panel,
+                subdirectory => "drone_imagery_upload_panel",
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name_panel,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role
+            });
+            my $archived_filename_with_path_panel = $uploader_panel->archive();
+            my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
+            if (!$archived_filename_with_path_panel) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
+                $c->detach();
+            }
+            unlink $upload_tempfile_panel;
+            print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
+
+            $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+            my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
+            if ($zipfile_return_panel->{error}) {
+                $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
+                $c->detach();
+            }
+            my $image_paths_panel = $zipfile_return_panel->{image_files};
+
+            my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
+            open ($fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
+                foreach (@$image_paths_panel) {
+                    print $fh "$_\n";
+                }
+            close($fh);
+            print STDERR "Drone image stitch temp file panel $temp_file_image_file_names_panel\n";
+
             $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesMicasense.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --work_megapix $stitching_work_pix";
 
             @stitched_bands = (
