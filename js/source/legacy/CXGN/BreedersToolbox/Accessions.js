@@ -371,7 +371,7 @@ jQuery(document).ready(function ($) {
             }
             if (response.success) {
                 fullParsedData = response.full_data;
-                doFuzzySearch = 1;
+                doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').attr('checked');;
                 review_verification_results(doFuzzySearch, response, response.list_id);
             }
         }
@@ -646,13 +646,13 @@ function process_fuzzy_options(accession_list_id) {
                         infoToAdd.push(fullParsedData[accession_name]);
                         speciesNames.push(fullParsedData[accession_name]['species']);
                     }
-                    for (var i=0; i<accessionListFound.length; i++){
-                        var accession_name = accessionListFound[i];
-                        infoToAdd.push(fullParsedData[accession_name]);
-                        speciesNames.push(fullParsedData[accession_name]['species']);
+                    for (var accession_name in accessionListFound) {
+                        if (accessionListFound.hasOwnProperty(accession_name)) {
+                            infoToAdd.push(fullParsedData[accession_name]);
+                            speciesNames.push(fullParsedData[accession_name]['species']);
+                        }
                     }
                 }
-
                 populate_review_absent_dialog(accessionList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {

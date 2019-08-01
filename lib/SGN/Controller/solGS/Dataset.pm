@@ -147,20 +147,21 @@ sub get_dataset_phenotype_data {
     
     my $dataset_id = $c->stash->{dataset_id};
 
-    $self->get_dataset_plots_list($c);
+    #$self->get_dataset_plots_list($c);
 
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
 
-    if (@{$data->{categories}->{plots}})	
+    if ($data->{categories}->{plots}->[0])	
     {
 	$c->stash->{plots_names} = $data->{categories}->{plots};
       
 	$c->controller('solGS::List')->plots_list_phenotype_file($c);
 	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};	
     } 
-    elsif (@{$data->{categories}->{trials}})
+    elsif ($data->{categories}->{trials}->[0])
     {
+	my $trials = $data->{categories}->{trials};
 	$c->stash->{pops_ids_list} = $data->{categories}->{trials};
 	$c->controller('solGS::List')->get_trials_list_pheno_data($c);	
     }    

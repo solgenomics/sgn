@@ -616,7 +616,7 @@ sub cache_file {
     unless (-s $file > 1)
     {      
         $file = catfile($cache_dir, $cache_data->{file});
-	print STDERR "\nfile: $file -- cache_dir: $cache_dir\n";
+
         write_file($file);
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
@@ -670,6 +670,9 @@ sub create_file_id {
     elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
     {
 	$file_id =  $selection_pop_id ? $training_pop_id . '_' . $selection_pop_id : $training_pop_id;
+    }else 
+    {
+	$file_id = $training_pop_id;
     }
 
     if ($data_structure =~ /list/) 

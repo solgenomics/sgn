@@ -899,6 +899,14 @@ sub upload_trial_file_POST : Args(0) {
         return;
     }
 
+    my $return_warnings;
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
+            $return_warnings=$return_warnings.$warning_string."<br>";
+        }
+    }
+
     print STDERR "Check 4: ".localtime()."\n";
 
     #print STDERR Dumper $parsed_data;
@@ -956,7 +964,7 @@ sub upload_trial_file_POST : Args(0) {
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
-        $c->stash->{rest} = {error => $save->{'error'}};
+        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
 
@@ -964,7 +972,7 @@ sub upload_trial_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {success => "1"};
+        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
         return;
     }
 

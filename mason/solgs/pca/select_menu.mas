@@ -20,9 +20,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <div class="fileupload-buttonbar">
    
   <div class="list_upload" id="list_label">
-    <label for="pca_genotypes_list">Select</label>
+    <label for="pca_pops_list">Select</label>
   </div> 
-  <div class="list_upload" id="pca_genotypes_list">      
+  <div class="list_upload" id="pca_pops_list">      
   </div>
   <div class="list_upload" id="pca_go_btn">
     <input type="button" value="Go" />
@@ -36,8 +36,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <br>
   <br>
    
-    <!-- The container for the list of kcluster populations -->
-    <div class="sub_infosectioncontent" id="list_pca_populations" style="display:none"></div>
+    <!-- The container for the list of pca populations -->
+    <div class="sub_infosectioncontent" id="pca_pops_section" style="display:none"></div>
     <br> 
 
 </div>

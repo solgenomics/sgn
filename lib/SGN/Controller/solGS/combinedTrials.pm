@@ -541,9 +541,9 @@ sub multi_pops_phenotype_data {
     if (@$pop_ids)
     {
         foreach my $pop_id (@$pop_ids)        
-        { 
+        {
             $c->stash->{pop_id} = $pop_id;
-            $c->controller('solGS::solGS')->phenotype_file($c);
+            $c->controller('solGS::solGS')->phenotype_file($c, $pop_id);
 	    push @job_ids, $c->stash->{r_job_id};
         }
 	
@@ -572,7 +572,7 @@ sub multi_pops_genotype_data {
         foreach my $pop_id (@$pop_ids)        
         {
             $c->stash->{pop_id} = $pop_id;
-            $c->controller('solGS::solGS')->genotype_file($c);	    
+            $c->controller('solGS::solGS')->genotype_file($c, $pop_id);	    
 	    push @job_ids, $c->stash->{r_job_id};
         }
 
