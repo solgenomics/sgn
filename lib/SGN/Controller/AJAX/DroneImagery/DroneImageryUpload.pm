@@ -279,6 +279,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
         my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
         my $zipfile_return = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
+        print STDERR Dumper $zipfile_return;
         if ($zipfile_return->{error}) {
             $c->stash->{rest} = { error => "Problem saving images!".$zipfile_return->{error} };
             $c->detach();
@@ -333,6 +334,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
             $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
             my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
+            print STDERR Dumper $zipfile_return_panel;
             if ($zipfile_return_panel->{error}) {
                 $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
                 $c->detach();
