@@ -8,14 +8,15 @@ $editable_stock_props => {}
 </%args>
 
       <div style="border:0px solid;text-align:center;">
-      <span style="font-face:arial;font-size:48pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span>
+            <!-- span style="font-face:arial;font-size:48pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span -->
+	    <img src="/img/Breedbase_HighRes.png" width="400" />
       </div>
 
       <div>
 	<h3>What is Breedbase?</h3>
 	Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect phenotypic information using tablets, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analysis and predictions.
 	<h3>How can I use Breedbase?</h3>
-	Breedbase is a web application that does only require a browser. To get your Breedbase instance, contact the <a href="/contact/form">Breedbase development team</a>.
+	Breedbase is a web application that only requires a browser. To get your Breedbase instance, contact the <a href="/contact/form">Breedbase development team</a>.
 	<h3>What crops are using Breedbase?</h3>
 	There are a number of instances running for diverse crops, including Cassava (https://cassavabase.org/), sweet potato (https://sweetpotatobase.org/), banana (https://musabase.org/), rice (https://ricebase.org/), tomato and other Solanaceae (https://solgenomics.net/) and many others.
       </div>
