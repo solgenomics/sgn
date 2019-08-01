@@ -3068,52 +3068,68 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 
 
 sub get_cluster_phenotype_query_job_args {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
 
-    my $pop_id = $args->{population_id};
-    
-    $c->stash->{r_temp_file} = "phenotype-data-query-${pop_id}";
-    $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-   
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $background_job = $c->stash->{background_job};
-   
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "pheno-data-args_file-${pop_id}");
-    
-    nstore $args, $args_file 
-		or croak "data query script: $! serializing phenotype data query details to $args_file ";
+    my @queries;
+    foreach my $trial_id (@$trials)
+    {
+     	my $args = $self->phenotype_trial_query_args($c, $trial_id);
+   	
+	$c->stash->{r_temp_file} = "phenotype-data-query-${trial_id}";
+	$self->create_cluster_accesible_tmp_files($c);
+	my $out_temp_file = $c->stash->{out_file_temp};
+	my $err_temp_file = $c->stash->{err_file_temp};
 	
-    my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type phenotype '
-	. ' --population_type trial '
-	. ' --args_file ' . $args_file;
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	my $background_job = $c->stash->{background_job};
+	
+	my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "pheno-data-args_file-${trial_id}");
+	
+	nstore $args, $args_file 
+	    or croak "data query script: $! serializing phenotype data query details to $args_file ";
+	
+	my $cmd = 'mx-run solGS::queryJobs ' 
+	    . ' --data_type phenotype '
+	    . ' --population_type trial '
+	    . ' --args_file ' . $args_file;
 
-    my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
-     };
+	my $config_args = {
+	    'temp_dir' => $temp_dir,
+	    'out_file' => $out_temp_file,
+	    'err_file' => $err_temp_file
+	};
+	
+	my $config = $self->create_cluster_config($c, $config_args);
+
+	print STDERR "\ncluster_phenotyp_query_job_args popid: $trial_id - cmd: $cmd\n";
+	my $job_args = {
+	    'cmd' => $cmd,
+	    'config' => $config,
+	    'background_job'=> $background_job,
+	    'temp_dir' => $temp_dir,
+	};
+
+	push @queries, $job_args;
+    }
     
-    my $config = $self->create_cluster_config($c, $config_args);
-    
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
-    };
-    
-    $c->stash->{cluster_phenotype_query_job_args} = $job_args;
+    $c->stash->{cluster_phenotype_query_job_args} = \@queries;
   
 }
 
 
 sub get_pheno_data_query_job_args_file {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
 
-    $self->get_cluster_phenotype_query_job_args($c, $args);
+    # my @queries;
+    # foreach my $trial (@$trials)
+    # {
+    #  	my $pheno_args =  $self->phenotype_trial_query_args($c, $trial);
+    # 	$self->get_cluster_phenotype_query_job_args($c, $pheno_args);
+    #  	my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
+    #  	push @queries, $pheno_query if $pheno_query;
+    # }
+    
+    $self->get_cluster_phenotype_query_job_args($c, $trials);
     my $pheno_query_args = $c->stash->{cluster_phenotype_query_job_args};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -3127,11 +3143,20 @@ sub get_pheno_data_query_job_args_file {
 
 
 sub get_geno_data_query_job_args_file {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
 
-    $self->get_cluster_genotype_query_job_args($c, $args);
+    #my @queries;
+    
+    # foreach my $trial (@$trials)
+    # {
+    # 	my $pheno_args =  $self->phenotype_trial_query_args($c, $trial);
+    # 	$self->get_cluster_phenotype_query_job_args($c, $pheno_args);
+    # 	my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
+    # 	push @queries, $pheno_query if $pheno_query;
+    # }
+    $self->get_cluster_genotype_query_job_args($c, $trials);
     my $geno_query_args = $c->stash->{cluster_genotype_query_job_args};
-
+ 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $geno_query_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'genotype_data_query_args_file');	   
    
@@ -3143,18 +3168,18 @@ sub get_geno_data_query_job_args_file {
 
 
 sub submit_cluster_phenotype_query {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
     
-    $self->get_pheno_data_query_job_args_file($c, $args); 
+    $self->get_pheno_data_query_job_args_file($c, $trials); 
     $c->stash->{dependent_jobs} =  $c->stash->{pheno_data_query_job_args_file};
     $self->run_async($c);
 }
 
 
 sub submit_cluster_genotype_query {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
  
-    $self->get_geno_data_query_job_args_file($c, $args);   
+    $self->get_geno_data_query_job_args_file($c, $trials);   
     $c->stash->{dependent_jobs} =  $c->stash->{geno_data_query_job_args_file};  
     $self->run_async($c);
 }
@@ -3176,17 +3201,19 @@ sub training_pop_data_query_job_args {
     
     foreach my $trial (@$trials)
     {
-	my $pheno_args =  $self->phenotype_trial_query_args($c, $trial);
-	$self->get_cluster_phenotype_query_job_args($c, $pheno_args);
+	#my $pheno_args =  $self->phenotype_trial_query_args($c, $trial);
+	$self->get_cluster_phenotype_query_job_args($c, $trials);
 	my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
-	push @queries, $pheno_query if $pheno_query;
+	push @queries, @$pheno_query if $pheno_query;
 
-	my $geno_args =  $self->genotype_trial_query_args($c, $trial);
-	$self->get_cluster_genotype_query_job_args($c, $geno_args);
+	#my $geno_args =  $self->genotype_trial_query_args($c, $trial);
+	$self->get_cluster_genotype_query_job_args($c, $trials);
 	my $geno_query = $c->stash->{cluster_genotype_query_job_args};
-	push @queries, $geno_query if $geno_query;
+	push @queries, @$geno_query if $geno_query;
     }
 
+    print STDERR "\ntraining_pop_data_query_job_args queries @queries\n";
+    
     $c->stash->{training_pop_data_query_job_args} = \@queries;
 }
 
@@ -3208,45 +3235,53 @@ sub get_training_pop_data_query_job_args_file {
 
 
 sub get_cluster_genotype_query_job_args {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
 
-    my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
+    my @queries;
 
-    $c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
-    $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-   
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $background_job = $c->stash->{background_job};
+    foreach my $trial_id (@$trials) {
 
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
-
-    nstore $args, $args_file 
-		or croak "data queryscript: $! serializing model details to $args_file ";
+	#my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
+	my $args = $self->genotype_trial_query_args($c, $trial_id);
 	
-    my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type genotype '
-	. ' --population_type trial '
-	. ' --args_file ' . $args_file;
+	$c->stash->{r_temp_file} = "genotype-data-query-${trial_id}";
+	$self->create_cluster_accesible_tmp_files($c);
+	my $out_temp_file = $c->stash->{out_file_temp};
+	my $err_temp_file = $c->stash->{err_file_temp};
+	
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	my $background_job = $c->stash->{background_job};
+
+	my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${trial_id}");
+
+	nstore $args, $args_file 
+	    or croak "data queryscript: $! serializing model details to $args_file ";
+	
+	my $cmd = 'mx-run solGS::queryJobs ' 
+	    . ' --data_type genotype '
+	    . ' --population_type trial '
+	    . ' --args_file ' . $args_file;
 
 
-    my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
-     };
+	my $config_args = {
+	    'temp_dir' => $temp_dir,
+	    'out_file' => $out_temp_file,
+	    'err_file' => $err_temp_file
+	};
+	
+	my $config = $self->create_cluster_config($c, $config_args);
+
+	my $job_args = {
+	    'cmd' => $cmd,
+	    'config' => $config,
+	    'background_job'=> $background_job,
+	    'temp_dir' => $temp_dir,
+	};
+
+	push @queries, $job_args;
+    }
     
-    my $config = $self->create_cluster_config($c, $config_args);
-
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
-    };
-    
-    $c->stash->{cluster_genotype_query_job_args} = $job_args;
+    $c->stash->{cluster_genotype_query_job_args} = \@queries;
 }
 
 
@@ -3297,8 +3332,8 @@ sub phenotype_file {
     {  	   	 
 	if ($pop_id !~ /list/) 
 	{
-	    my $args = $self->phenotype_trial_query_args($c);
-	    $self->submit_cluster_phenotype_query($c, $args);
+	    #my $args = $self->phenotype_trial_query_args($c);
+	    $self->submit_cluster_phenotype_query($c, [$pop_id]);
 	}	    
     }
 

@@ -937,7 +937,8 @@ sub get_trials_list_pheno_data {
 
     my $trials_ids = $c->stash->{pops_ids_list};
 
-    $c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
+    #$c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
+    $c->controller('solGS::solGS')->submit_cluster_phenotype_query($c, $trials_ids);
     $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
     my @pheno_files = split("\t", $c->stash->{multi_pops_pheno_files});
     $c->stash->{phenotype_files_list} = \@pheno_files;
@@ -950,7 +951,8 @@ sub get_trials_list_geno_data {
 
     my $trials_ids = $c->stash->{pops_ids_list};
 
-    $c->controller('solGS::combinedTrials')->multi_pops_genotype_data($c, $trials_ids);
+    #$c->controller('solGS::combinedTrials')->multi_pops_genotype_data($c, $trials_ids);
+    $c->controller('solGS::solGS')->submit_cluster_genotype_query($c, $trials_ids);
     $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
     my @geno_files = split("\t", $c->stash->{multi_pops_geno_files});
     $c->stash->{genotype_files_list} = \@geno_files;
