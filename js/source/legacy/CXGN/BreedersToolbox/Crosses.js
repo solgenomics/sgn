@@ -9,6 +9,7 @@ Dialogs for adding and uploading crosses
 =head1 AUTHOR
 
 Jeremy D. Edwards <jde22@cornell.edu>
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
@@ -66,10 +67,10 @@ jQuery(document).ready(function($) {
         });
 
         var lo = new CXGN.List();
-        $('#polycross_accession_list').html(lo.listSelect('polycross_accessions', ['accessions'], 'select'));
-        $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', ['accessions'], 'select'));
-        $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', ['accessions'], 'select'));
-        $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', ['accessions'], 'select'));
+        $('#polycross_accession_list').html(lo.listSelect('polycross_accessions', ['accessions'], 'select', undefined, undefined));
+        $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', ['accessions'], 'select', undefined, undefined));
+        $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', ['accessions'], 'select', undefined, undefined));
+        $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', ['accessions'], 'select', undefined, undefined));
 
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
@@ -102,25 +103,25 @@ jQuery(document).ready(function($) {
             source: '/ajax/stock/stock_autocomplete'
         });
 
-        $("#pollination_date_checkbox").change(function() {
-            $("#get_pollination_date").toggle(this.checked); // show if it is checked, otherwise hide
-        });
+//        $("#pollination_date_checkbox").change(function() {
+//            $("#get_pollination_date").toggle(this.checked); // show if it is checked, otherwise hide
+//        });
 
-        $("#flower_number_checkbox").change(function() {
-            $("#get_flower_number").toggle(this.checked); // show if it is checked, otherwise hide
-        });
+//        $("#flower_number_checkbox").change(function() {
+//            $("#get_flower_number").toggle(this.checked); // show if it is checked, otherwise hide
+//        });
 
-        $("#fruit_number_checkbox").change(function() {
-            $("#get_fruit_number").toggle(this.checked); // show if it is checked, otherwise hide
-        });
+//        $("#fruit_number_checkbox").change(function() {
+//            $("#get_fruit_number").toggle(this.checked); // show if it is checked, otherwise hide
+//        });
 
         $("#use_folders_checkbox").change(function() {
             $("#folder_section").toggle(this.checked); // show if it is checked, otherwise hide
         });
 
-        $("#seed_number_checkbox").change(function() {
-            $("#get_seed_number").toggle(this.checked); // show if it is checked, otherwise hide
-        });
+//        $("#seed_number_checkbox").change(function() {
+//            $("#get_seed_number").toggle(this.checked); // show if it is checked, otherwise hide
+//        });
 
         $("#create_progeny_checkbox").change(function() {
             $("#create_progeny_number").toggle(this.checked); // show if it is checked, otherwise hide
@@ -160,15 +161,11 @@ jQuery(document).ready(function($) {
             }
 
         var visibleToRole = $("#visible_to_role").val();
-        var location = $("#location").val();
-            if (!location) {
-                alert("A location is required");
-                return;
-        }
         var female_plot = $("#female_plot").val();
         var male_plot = $("#male_plot").val();
+        var cross_combination = $("#dialog_cross_combination").val();
 
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination);
 
     });
 
@@ -254,13 +251,9 @@ jQuery(document).ready(function($) {
     });
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination) {
 
         var progenyNumber = $("#progeny_number").val();
-        var pollinationDate = $("#pollination_date").val();
-        var flowerNumber = $("#flower_number").val();
-        var fruitNumber = $("#fruit_number").val();
-        var seedNumber = $("#seed_number").val();
         var prefix = $("#prefix").val();
         var suffix = $("#suffix").val();
         var maternal;
@@ -321,11 +314,22 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents +
-                '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&pollination_date=' + pollinationDate +
-                '&flower_number=' + flowerNumber+ '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix +
-                '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&location=' + location + '&female_plot=' + female_plot +
-                '&male_plot=' + male_plot,
+            data:{
+                'cross_name': crossName,
+                'cross_type': crossType,
+                'maternal': maternal,
+                'paternal': paternal,
+                'maternal_parents': maternal_parents,
+                'paternal_parents': paternal_parents,
+                'progeny_number': progenyNumber,
+                'prefix': prefix,
+                'suffix': suffix,
+                'visible_to_role': visibleToRole,
+                'crossing_trial_id': crossing_trial_id,
+                'female_plot': female_plot,
+                'male_plot': male_plot,
+                'cross_combination': cross_combination,
+            },  
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -352,12 +356,6 @@ jQuery(document).ready(function($) {
         var crossing_trial_id = $("#cross_upload_crossing_trial").val();
         if (!crossing_trial_id) {
             alert("A crossing experiment is required");
-            return;
-        }
-
-        var location = $("#cross_upload_location").val();
-        if (!location) {
-            alert("A location is required");
             return;
         }
 

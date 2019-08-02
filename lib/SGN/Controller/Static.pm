@@ -24,12 +24,25 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
+sub list_all_uploads :Path('/breeders/list_all_uploads') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/breeders_toolbox/complete_upload_list.mas';
+    
+}
 
 sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
     my $self = shift;
     my $c = shift;
     #This mason component is in cassbase git repo.
     $c->stash->{template} = '/stock/ethz_cass_sync.mas';
+}
+
+
+sub solcode_project_page :Path('/projects/solcode/') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/projects/solcode.mas';
 }
 
 sub varitome_project_page :Path('/projects/varitome/') Args(0) { 

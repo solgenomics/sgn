@@ -25,7 +25,7 @@ has 'output_details_file' => (
 sub run {
  my $self = shift;   
 
- my $output_details = retrieve($self->output_details_file);
+ my $output_details = retrieve($self->output_details_file); 
  $self->check_analysis_status($output_details);
 
 }
@@ -45,6 +45,7 @@ sub check_success {
     my ($self, $output_details) = @_;
     
     my $analysis_profile = $output_details->{analysis_profile};
+    my $type = $analysis_profile->{analysis_type};
   
     if ( $analysis_profile->{analysis_type} =~ /population download/ ) 
     {	
@@ -66,9 +67,11 @@ sub check_success {
 	$output_details = $self->check_multi_pops_data_download($output_details);
     }
     elsif ( $analysis_profile->{analysis_type} =~ /selection prediction/ ) 
-    {	
-	if ($output_details->{data_set_type} =~ /combined populations/) 
-	{	
+    {
+	my $st_type = $output_details->{data_set_type};
+
+	if ($output_details->{data_set_type} =~ /combined/) 
+	{
 	  # $output_details = $self->check_combined_pops_trait_modeling($output_details);
 	   $output_details = $self->check_selection_prediction($output_details);
 	}
@@ -618,8 +621,8 @@ sub multi_modeling_message {
     {
 	my $analysis_page = $output_details->{analysis_profile}->{analysis_page};
 	
-    	$message .= "You can also view the summary of all the analyses in the page below."
-    	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    	$message .= "You can also view the summary of all the analyses in the page below.\n"
+    	    ."Additionally, you may find the analytical features in the page useful.\n"
     	    . $analysis_page ."\n\n";
     }
 
@@ -687,8 +690,7 @@ sub selection_prediction_message {
 		    $prediction_pop_name =~ s/^\s+|\s+$//g;
 
     		    if ($output_details->{$k}->{success})		
-    		    {	
-			
+    		    {				
     			$cnt++;	
     			if($cnt == 1) 
     			{
@@ -711,8 +713,8 @@ sub selection_prediction_message {
 
     if ($cnt > 1) 
     {
-	$message .= "You can also view the summary of all the analyses in the page below."
-	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+	$message .= "You can also view the summary of all the analyses in the page below.\n"
+	    ."Additionally, you may find the analytical features in the page useful.\n"
 	    . $output_details->{referer} . "\n\n";	
     }
     
@@ -811,7 +813,7 @@ sub combine_populations_message {
     {
 	my $combined_pops_page = $output_details->{combined_pops_page};
 	$message .= "Your combined training population is ready for analysis." 
-	    ."You can view it here:\n\n$combined_pops_page\n\n";
+	    ." You can view it here:\n\n$combined_pops_page\n\n";
     } 
  
     return  $message;

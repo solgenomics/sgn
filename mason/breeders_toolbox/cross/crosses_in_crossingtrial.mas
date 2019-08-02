@@ -9,7 +9,8 @@ $trial_id
     <table class="table table-hover table-bordered" id="crosses_in_crossingtrial_table">
         <thead>
             <tr>
-                <th>Cross Name</th>
+                <th>Cross Unique ID</th>
+                <th>Cross Combination</th>
                 <th>Cross Type</th>
                 <th>Female Parent</th>
                 <th>Male Parent</th>

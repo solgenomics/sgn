@@ -753,15 +753,14 @@ sub genotype_data {
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     my $tr_geno_file     = $args->{training_geno_file};
-    #my $model_id         = ($args->{model_id} ? $args->{model_id} : $training_pop_id);
-
+   
     my @genotypes;
     my $geno_data = {};
     
     my $protocol_id = $self->protocol_id();
     
     if ($training_pop_id) 
-    {    
+    { 
         if ($selection_pop_id) 
         {   
 	    my $dataset = CXGN::Dataset->new({
@@ -803,7 +802,21 @@ sub genotype_data {
 
 	    return  $geno_data;   
 	}
-    }
+    } 
+    elsif ($selection_pop_id && !$training_pop_id) 
+    {
+	my $dataset = CXGN::Dataset->new({
+ 		people_schema => $self->people_schema,
+ 	    	schema  => $self->schema,
+ 	    	trials  => [$selection_pop_id]}
+		);	    
+
+	    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+	    $geno_data  = $self->structure_genotype_data($dataref);
+
+	    return  $geno_data;   
+
+    } 
 }
 
 
@@ -846,7 +859,7 @@ sub structure_genotype_data {
 		$geno_data .= "\n";
 	    }
 	}
-    print STDERR scalar(@stocks)."\n";
+   ### print STDERR scalar(@stocks)."\n";
     }
 
     return \$geno_data;
@@ -2111,6 +2124,36 @@ sub get_dataset_plots_list {
       
     return $plots;
 }
+
+
+sub get_dataset_name {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id}); 
+   
+    return $dataset->name();
+}
+
+
+sub get_dataset_genotype_data {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id =>$dataset_id});
+
+    my $protocol_id = $self->protocol_id();
+    my $dataref = $dataset->retrieve_genotypes($protocol_id);
+    my $geno_data  = $self->structure_genotype_data($dataref);
+   
+    return $geno_data;
+}
+
+
 
 
 sub people_schema {

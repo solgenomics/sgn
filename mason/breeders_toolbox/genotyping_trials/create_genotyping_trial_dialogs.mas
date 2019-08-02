@@ -39,6 +39,7 @@
                                         <select class="form-control" id="genotyping_trial_facility_select">
                                             <option value="none">None</option>
                                             <option value="igd">Cornell IGD</option>
+                                            <option value="dart">DArT</option>
                                             <option value="intertek">Intertek</option>
                                             <option value="bgi">BGI</option>
                                         </select>

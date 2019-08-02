@@ -21,7 +21,6 @@ use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
 use Data::Dumper;
-use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::UploadFile;
@@ -115,7 +114,6 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_intertek_genotypes->tempname;
         $subdirectory = "genotype_intertek_upload";
         $parser_plugin = 'IntertekCSV';
-        $include_lab_numbers = 1;
 
         my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
         my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();

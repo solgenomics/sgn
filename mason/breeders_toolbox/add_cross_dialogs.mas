@@ -34,7 +34,7 @@ $locations
 
                             <ul>
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
-                                <li>Each cross has a globally unique cross name.</li>
+                                <li>Each cross has a globally unique cross id.</li>
                                 <li>Supported cross types are: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
@@ -82,18 +82,20 @@ $locations
                                         <a id="cross_type_info">Descriptions of cross types</a>
                                     </p>
                                 </&>
-
+                                <!--
                                 <h3>Required:</h3>
+                                -->
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Crossing Experiment: </label>
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                    <div class="col-sm-9">
                                         <div id="upload_crosses_select_crossingtrial_4" name="upload_crosses_select_crossingtrial_4" >
                                         </div>
                                     </div>
-                                </div><br/><br/>
+                                </div><br/><br/><br/>
+                                <!--
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Location of cross: </label>
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 control-label">Location of cross: </label>
+                                    <div class="col-sm-9">
                                         <select class="form-control" id="location" name="location">
                                             <option value="">Select Location</option>
 <%perl>
@@ -110,15 +112,22 @@ $locations
                                         </select>
                                     </div>
                                 </div><br/><br/>
+                                -->
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Cross Name: </label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" type="text" id="cross_name" name="cross_name"/>
+                                    <label class="col-sm-3 control-label">Cross Unique ID: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" type="text" id="cross_name" name="cross_name" />
                                     </div>
                                 </div><br/><br/>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">Cross Type: </label>
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 control-label">Cross Combination (optional): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" type="text" id="dialog_cross_combination" name="dialog_cross_combination" placeholder="e.g. female_name/male_name"/>
+                                    </div>
+                                </div><br/><br/>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Cross Type: </label>
+                                    <div class="col-sm-9">
                                         <select class="form-control" id="cross_type">
                                             <option value="">Select a cross type</option>
                                             <option value="biparental">biparental</option>
@@ -272,10 +281,10 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Additional cross info" &>
-                                <& /page/page_title.mas, title=>"If you know more information about the cross, you can add it" &>
-
+                                <& /page/page_title.mas, title=>"If you would like to add auto-generated progeny names for this cross, you can add it here" &>
                                 <h3>Optional:</h3>
                                 <table>
+                                <!--
                                     <tr>
                                         <td>
                                             <div class="form-group">
@@ -342,6 +351,7 @@ $locations
                                             </div>
                                         </td>
                                     </tr>
+                                    -->
                                     <tr>
                                         <td>
                                             <div class="form-group">
