@@ -412,10 +412,10 @@ jQuery(document).ready(function() {
                 alert('Please select a zipfile of images');
                 return;
             }
-            if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
-                alert('Please select a zipfile of Micasense radiocalibration panel images');
-                return;
-            }
+            // if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
+            //    alert('Please select a zipfile of Micasense radiocalibration panel images');
+            //    return;
+            // }
         }
 
         upload_drone_imagery_form();
