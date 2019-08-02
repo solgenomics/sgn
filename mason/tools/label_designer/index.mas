@@ -6,71 +6,43 @@
 
 <&| /util/workflow.mas , id=> "label_designer_workflow"&>
 
-    <&| /util/workflow.mas:step, title=>"Select a Data Source" &>
-
+    <&| /util/workflow.mas:step, title=>"Intro" &>
+    <& /page/page_title.mas, title=>"This workflow will guide you through the steps to design a custom label" &>
+    <br/>
+    <p>SGN databases provide an interactive design tool for creating breeding labels. To access the Label Desginer, click on <b>Label Designer</b> in the <b>Manage</b> menu.
+    </p>
+    <p>To design a label, first select a data source.</p>
+    <p>Then select a page size and label format. If you don not see your page or label size as an option then select <b>Custom</b> and enter the dimensions in pixels.</p>
+    <p>Once you have selected a data source, page format, and label size, scroll down and begin adding elements to your label. For example, to add a 2D Barcode encoding plot_name:</p>
+    <p>Once your design is finished you can modify additional settings, save your design for later use, or download labels:
+To modify additional settings:</p>
+<p>To start, select a data source:</p>
+    <br/><br/>
+    <div class="col-md-3">
+    </div>
     <div class="col-md-2">
         <label><b>Data Source:</b></label>
     </div>
     <div class="col-md-4" id="data_source">
     </div>
-    <div class="col-md-2">
-        <label> Detail Level:</label>
-    </div>
-    <div class="col-md-4">
-        <div id="label_designer_data_level_select_div"></div>
-    </div>
-    <br>
+    <div class="col-md-3">
+    </div><br/><br/><br/>
 
-    <br><br><br>
-    <div class="col-md-12 text-center">
-        <button class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next Step</button>
-    </div>
     </&>
-    <&| /util/workflow.mas:step, title=>"Select Layout" &>
+    <&| /util/workflow.mas:step, title=>"Set Data Level and Layout" &>
         <& /tools/label_designer/select_layout.mas &>
         <div class="col-md-12 text-center">
             <button class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next Step</button>
         </div>
     </&>
-    <&| /util/workflow.mas:step, title=>"Design Label" &>
+    <&| /util/workflow.mas:step, title=>"Design Your Label" &>
         <& /tools/label_designer/design_label.mas &>
         <div class="col-md-12 text-center">
-            <button class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next Step</button>
+            <button class="btn btn-primary" type="button" class="btn btn-default" id="complete_design" onclick="Workflow.complete(this);">Next Step</button>
         </div>
     </&>
-    <&| /util/workflow.mas:step, title=>"Additional Options" &>
-        <div class="col-md-4">
-            <center>
-            <br>
-                <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
-            </center>
-        </div>
-        <div class="col-md-4">
-            <center>
-                <label>Save label design:</label>
-                <div class="input-group" id="save_design_div">
-                    <input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input>
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
-                    </span>
-                </div>
-            </center>
-        </div>
-        <div class="col-md-12 text-center">
-            <button class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next Step</button>
-        </div>
-    </&>
-    <&| /util/workflow.mas:step, title=>"Download Labels" &>
-      <div class="col-md-4">
-          <center>
-              <br>
-              <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;">Download pdf</button>
-              <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none;">Download zpl file</button>
-          </center>
-          &nbsp
-          &nbsp
-      </div>
+    <&| /util/workflow.mas:step, title=>"More Options, Save, And Download" &>
+        <& /tools/label_designer/save_and_download.mas &>
       </&>
 </&>
-
 <& /tools/label_designer/label_designer_modals.mas &>

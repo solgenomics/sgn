@@ -3,13 +3,12 @@
     <div class="col-md-8" id="d3-draw-area"></div>
     <div class="col-md-2"></div>
 </div>
-
 <div class="col-md-12">
     <center>
         <h4>Add Elements:</h4>
     </center>
 </div>
-<div class="col-md-12"  style="margin-bottom:20px;">
+<div class="col-md-12" style="margin-bottom:20px;">
     <div class="col-md-3" id="d3-add-type-div">
         <center>
             <label>Type:</label><br>

@@ -1,71 +1,86 @@
 <div class="col-md-12"  style="margin-bottom:20px;">
-    <div class="col-md-2" id="design_label">
-    <label>Load Saved Design:</label>
-    </div>
-    <div class="col-md-4" id="design_list">
-    </div><br>
     <div class="col-md-2">
-        <p>OR</p>
+        <label> Data Source:</label>
     </div>
     <div class="col-md-4">
-        <button class="btn btn-primary" id="create_new_design" type="button" class="btn btn-default" >Create New Design</button>
+        <b id="selected_data_source"></b>
+    </div>
+    <div class="col-md-2">
+        <label> Detail Level:</label>
+    </div>
+    <div class="col-md-4">
+        <div id="label_designer_data_level_select_div"></div>
     </div>
 </div>
 
-<div id="format_options" class="col-md-12" style="display:none;margin-bottom:20px;" >
-    <div class="col-md-2">
-        <label>Page Format:</label>
-    </div>
-    <div class="col-md-4">
-        <select class="form-control" id="page_format" ></select>
-    </div>
-    <div class="col-md-2">
-        <label>Label Format:</label>
-    </div>
-    <div class="col-md-4">
-        <select class="form-control" id="label_format"></select>
-    </div>
-</div>
-<div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
-    <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
-        <div class="col-md-12">
-            <div class="col-md-6">
-                <center>
-                    <label>Page Width:</label><br>
-                    <input class="form-control" placeholder="In pixels" type="number" id="page_width" style="max-width: 100%;">
-                </center>
-            </div>
-            <div class="col-md-6">
-                <center>
-                    <label>Page Height:</label><br>
-                    <input class="form-control" placeholder="In pixels" type="number" id="page_height" style="max-width: 100%;">
-                </center>
-            </div>
-        </div>
-        <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
-    </div>
-    <div class="col-md-6" id="d3-label-custom-dimensions-div" style="visibility:hidden">
-        <div class="col-md-12">
-            <div class="col-md-5">
-                <center>
-                    <label>Label Width:</label><br>
-                    <input class="form-control" placeholder="In pixels" type="number" id="label_width" style="max-width: 100%;">
-                </center>
-            </div>
-            <div class="col-md-5">
-                <center>
-                    <label>Label Height:</label><br>
-                    <input class="form-control" placeholder="In pixels" type="number" id="label_height" style="max-width: 100%;">
-                </center>
-            </div>
-            <div class="col-md-2">
-                <br>
-                <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
-            </div>
-        </div>
-        <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
-    </div>
-</div>
+
+
+<ul class="nav nav-pills">
+   <li><a data-toggle="pill" href="#load_saved">Load a Saved Design</a></li>
+   <li><a data-toggle="pill" href="#select_new">Select a New Layout</a></li>
+ </ul>
+
+ <div class="tab-content">
+   <div id="load_saved" class="tab-pane fade">
+     <div class="col-md-4" id="design_list"></div>
+   </div>
+   <div id="select_new" class="tab-pane fade">
+       <div id="format_options" class="col-md-12" style="margin-bottom:20px;" >
+           <div class="col-md-2">
+               <label>Page Format:</label>
+           </div>
+           <div class="col-md-4">
+               <select class="form-control" id="page_format" ></select>
+           </div>
+           <div class="col-md-2">
+               <label>Label Format:</label>
+           </div>
+           <div class="col-md-4">
+               <select class="form-control" id="label_format"></select>
+           </div>
+       </div>
+       <div class="col-md-12" id="d3-custom-dimensions-div" style="display:none;">
+           <div class="col-md-6" id="d3-page-custom-dimensions-div" style="visibility:hidden">
+               <div class="col-md-12">
+                   <div class="col-md-6">
+                       <center>
+                           <label>Page Width:</label><br>
+                           <input class="form-control" placeholder="In pixels" type="number" id="page_width" style="max-width: 100%;">
+                       </center>
+                   </div>
+                   <div class="col-md-6">
+                       <center>
+                           <label>Page Height:</label><br>
+                           <input class="form-control" placeholder="In pixels" type="number" id="page_height" style="max-width: 100%;">
+                       </center>
+                   </div>
+               </div>
+               <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
+           </div>
+           <div class="col-md-6" id="d3-label-custom-dimensions-div" style="visibility:hidden">
+               <div class="col-md-12">
+                   <div class="col-md-5">
+                       <center>
+                           <label>Label Width:</label><br>
+                           <input class="form-control" placeholder="In pixels" type="number" id="label_width" style="max-width: 100%;">
+                       </center>
+                   </div>
+                   <div class="col-md-5">
+                       <center>
+                           <label>Label Height:</label><br>
+                           <input class="form-control" placeholder="In pixels" type="number" id="label_height" style="max-width: 100%;">
+                       </center>
+                   </div>
+                   <div class="col-md-2">
+                       <br>
+                       <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
+                   </div>
+               </div>
+               <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
+           </div>
+       </div>
+   </div>
+ </div>
 
 <script>
 jQuery("#create_new_design").on( "click", function() {

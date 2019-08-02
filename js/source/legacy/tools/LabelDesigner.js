@@ -255,6 +255,10 @@ $(document).ready(function($) {
         saveLabelDesign();
     });
 
+    $('#complete_design').click(function() {
+        $("#d3-draw-area").prependTo("#save_and_download");
+    });
+
     getDataSourceSelect();
 
     $("#edit_additional_settings").on("click", function() {
@@ -262,6 +266,10 @@ $(document).ready(function($) {
     });
 
     $(document).on("change", "#source_select", function() {
+
+        var name = jQuery('#source_select :selected').text();
+        jQuery('#selected_data_source').text(name);
+
         var data_type = $('#source_select :selected').parent().attr('label');
 
         // updateFields(data_type, this.value, '');
@@ -798,6 +806,7 @@ function getDataSourceSelect() {
             id: 'source_select',
             default: 'Select a data source',
             live_search: 1,
+            workflow_trigger: 1,
         });
 }
 
@@ -1319,8 +1328,8 @@ function fillInPlaceholders(match, placeholder) { // replace placeholders with a
 }
 
 function showLoadOption() {
-    document.getElementById('design_label').style.display = "inline";
-    document.getElementById('design_list').style.display = "inline";
+    // document.getElementById('design_label').style.display = "inline";
+    // document.getElementById('design_list').style.display = "inline";
     var lo = new CXGN.List();
     $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh', undefined));
     $('#design_list_list_select').change(

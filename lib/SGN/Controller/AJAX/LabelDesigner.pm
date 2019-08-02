@@ -42,7 +42,13 @@ __PACKAGE__->config(
        }
 
        my %design = %{$design};
-
+       # print STDERR "A plot before undef deletion is ".Dumper($design{(keys %design)[rand keys %design]});
+       #delete any undefined fields
+       foreach my $key (keys %design) {
+           my %plot = %{$design{$key}};
+           delete $design{$key}{$_} for grep { !defined $plot{$_} } keys %plot;
+       }
+       # print STDERR "A plot after undef deletion is ".Dumper($design{(keys %design)[rand keys %design]});
        #get all fields in this trials design
        my $random_plot = $design{(keys %design)[rand keys %design]};
        my %reps;
@@ -223,9 +229,9 @@ __PACKAGE__->config(
                            my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
                            my $filled_value = $element{'value'};
-                           print STDERR "Filled value b4: $filled_value";
+                           # print STDERR "Filled value b4: $filled_value";
                            $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
-                           print STDERR "\tFilled value after: $filled_value\n";
+                           # print STDERR "\tFilled value after: $filled_value\n";
                            #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
                            #print STDERR "Writing to the PDF . . .\n";
                            if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
@@ -270,7 +276,6 @@ __PACKAGE__->config(
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
                                    my $elementx = $elementx - ($width/2);
-                                   print STDERR "Drawing QR Code with $elementx, $elementy, and $jpeg_uri and $jpeg_location\n";
                                    $gfx->image($image, $elementx, $elementy, $width, $height);
 
                               }
@@ -468,20 +473,20 @@ sub get_trial_design {
     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
     # $plot_design = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout' })->get_design();
     my $trial_name = $schema->resultset("Project::Project")->search({ project_id => $trial_id })->first->name();
-    my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
-    my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
-
-    my ($genotyping_facility, $genotyping_project_name);
-    if ($type eq "plate") { # for genotyping plates, get "Genotyping Facility" and "Genotyping Project Name"
-        my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
-        my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
-        $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
-        $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
-                project_id => $trial_id
-            })->search_related('nd_experiment')->search_related('nd_experimentprops',{
-                'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
-            })->first->value();
-    }
+    # my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
+    # my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
+    #
+    # my ($genotyping_facility, $genotyping_project_name);
+    # if ($type eq "plate") { # for genotyping plates, get "Genotyping Facility" and "Genotyping Project Name"
+    #     my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+    #     my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+    #     $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
+    #     $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+    #             project_id => $trial_id
+    #         })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+    #             'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+    #         })->first->value();
+    # }
 
     my $treatments = $trial->get_treatments();
     # # my @treatments = @{$treatments};
@@ -513,6 +518,8 @@ sub get_trial_design {
                 if ( $key =~ /ManagementFactor/ && $detail_hash{$key} ) {
                     my $treatment = $key;
                     $treatment =~ s/ManagementFactor://;
+                    $treatment =~ s/$trial_name//;
+                    $treatment =~ s/^_//;
                     push @applied_treatments, $treatment;
                     delete($detail_hash{$key});
                 }
@@ -520,19 +527,15 @@ sub get_trial_design {
                     delete($detail_hash{$key});
                 }
             }
-            $detail_hash{'ManagementFactor'} = join(",", @applied_treatments);
-
-            # my $plot_number = $detail_hash{'plot_number'};
+            $detail_hash{'management_factor'} = join(",", @applied_treatments);
             $mapped_design{$i} = \%detail_hash;
-            $mapped_design{$i}->{'trial_name'} = $trial_name;
-            $mapped_design{$i}->{'trial_name'} = $trial_name;
 
         }
         else {
             @keys = @{$inner_array};
         }
     }
-    print STDERR "Mapped design hash is ".Dumper(%mapped_design);
+    # print STDERR "Mapped design hash is ".Dumper(%mapped_design);
     return \%mapped_design;
 }
 
@@ -545,7 +548,7 @@ sub get_data {
     my $num_trials = 1;
     my $design;
 
-    print STDERR "starting to get data,level is $data_level and type is $data_type\n";
+    # print STDERR "starting to get data,level is $data_level and type is $data_type\n";
     # use data level as well as type to determine and enact correct retrieval
 
     if ($data_level eq "list") {
@@ -569,7 +572,7 @@ sub get_data {
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
             $design = get_trial_design($c, $schema, $id, 'plants');
-            print STDERR "Design is ".Dumper($design);
+            # print STDERR "Design is ".Dumper($design);
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
