@@ -372,16 +372,22 @@ sub upload_drone_imagery_zipfile {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $schema->storage->dbh;
 
-    my $zipfile_image_temp_path = $self->config()->get_conf("basepath") . $self->config()->get_conf("tempfiles_subdir") . "/temp_images/photos";
-    make_path($zipfile_image_temp_path);
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        return {error => 'Could not read your zipfile. Is it .zip format?</br></br>'};
+    }
 
-    my $archived_zip = CXGN::ZipFile->new({
-        archived_zipfile_path=>$image_zip,
-        extract_directory=>$zipfile_image_temp_path
-    });
-    my $image_files = $archived_zip->extract_files_into_tempdir();
-
-    return {image_files => $image_files};
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+    print STDERR Dumper scalar(@$file_members);
+    my @image_files;
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        #print STDERR Dumper $_;
+        my $temp_file = $image->upload_zipfile_images($_);
+        push @image_files, $temp_file;
+    }
+    return {image_files => \@image_files};
 }
 
 sub upload_zipfile_images {
