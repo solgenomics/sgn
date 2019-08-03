@@ -677,7 +677,7 @@ sub exists_in_database {
  Usage:        @sequenced_stocks = CXGN::Stock->sequenced_stocks();
  Desc:
  Ret:
- Args:
+ Args:         
  Side Effects:
  Example:
 
@@ -686,122 +686,20 @@ sub exists_in_database {
 sub all_sequenced_stocks {
     my $class = shift;
     my $schema = shift;
-
+    
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequencing_project_info', 'stock_property')->cvterm_id();
-    my $stockprops = $schema->resultset("Stock::Stockprop")->find({ type_id=>$type_id });
+    print STDERR "type_id = $type_id\n";
 
+    my $sp_rs = $schema->resultset("Stock::Stockprop")->search({ type_id => $type_id });
+    
     my @sequenced_stocks = ();
-    foreach my $s ($stockprops->next()) {
-	push @sequenced_stocks, CXGN::Stock->new({ schema => $schema, stock_id=>$s->stock_id() });
+    while (my $row = $sp_rs->next()) {
+	push @sequenced_stocks, CXGN::Stock->new({ schema => $schema, stock_id=>$row->stock_id() });
     }
 
     return @sequenced_stocks;
 }
 
-=head2 Object methods
-
-
-=head2 get_sequencing_project_info()
-
- Usage:        my @seq_projects = $stock->get_sequencing_project_infos();
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_sequencing_project_infos { 
-    my $self = shift;
-
-    my @stockprops = $self->_retrieve_stockprops("sequencing_project_info");
-
-    my @hashes = ();
-    foreach my $sp (@stockprops) { 
-	my $json = $stockprop->value();
-	my $hash;
-	eval { 
-	    $hash = JSON::Any->jsonToObj($json);
-	};
-	if ($@) { print STDERR "Warning: $json is not valid json in stockprop ".$stockprop->stockprop_id().".!\n"; }
-	push @hashes, [ $sp->stockprop_id(), $hash ];
-    }
-
-    return @hashes;
-}
-
-=head2 set_sequencing_project_info()
-
- Usage:         $s->set_sequencing_project_info($info_hash)
- Desc:          creates a sequencing project info in the stockprop
-                keys: name, people, institution, year, status, funding.
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub set_sequencing_project_info {
-    my $self = shift;
-    my $info = shift;
-
-    my @errors = ();
-    my @warnings = ();
-    # check keys in the info hash...
-    if (!exists($info->{year})) {
-	push @errors, "Need year for sequencing project";
-    }
-    if (!exists($info->{organization})) {
-	push @errors, "Need organization for sequencing project";
-    }
-    if (!exists($info->{website})) {
-	push @errors, "Need website for sequencing project";
-    }
-    if (!exists($info->{publication})) {
-	push @warnings, "Need publication for sequencing project";
-    }
-    if (!exists($info->{project_url})) {
-	push @warnings, "Need project url for sequencing project";
-    }
-    if (!exists($info->{jbrowse_link})) {
-	push @warnings, "Need jbrowse link for sequencing project";
-    }
-
-    if (@errors) {
-	die join("\n", @errors);
-    }
-
-    $self->_store_stockprop("sequencing_project_info", JSON::Any->encode($info);
-}
-    
-=head2 delete_sequencing_project_info()
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub delete_sequencing_project_info {
-    my $self = shift;
-    my $stockprop_id = shift;
-
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
-    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$type_id, stock_id => $self->stock_id(), stockprop_id=>$stockprop_id });
-
-    if (!$stockprop) {
-	return 0;
-    }
-    else {
-	$stockprop->delete();
-	return 1;
-    }
-}
 
 =head2 get_organism()
 
