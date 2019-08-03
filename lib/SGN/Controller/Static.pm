@@ -24,6 +24,12 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
+sub list_all_uploads :Path('/breeders/list_all_uploads') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/breeders_toolbox/complete_upload_list.mas';
+    
+}
 
 sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
     my $self = shift;

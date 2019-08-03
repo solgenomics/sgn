@@ -130,6 +130,12 @@ my $parsed_data = {
 my @traits = ( 'dry matter content|CO_334:0000092' );
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$fix->config->{basepath},
+    dbhost=>$fix->config->{dbhost},
+    dbname=>$fix->config->{dbname},
+    dbuser=>$fix->config->{dbuser},
+    dbpass=>$fix->config->{dbpass},
+    temp_file_nd_experiment_id=>$fix->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$fix->bcs_schema,
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,
@@ -182,6 +188,12 @@ my %phenotype_metadata;
 $phenotype_metadata{'operator'}='janedoe';
 $phenotype_metadata{'date'}="2017-02-16_03:10:59";
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$fix->config->{basepath},
+    dbhost=>$fix->config->{dbhost},
+    dbname=>$fix->config->{dbname},
+    dbuser=>$fix->config->{dbuser},
+    dbpass=>$fix->config->{dbpass},
+    temp_file_nd_experiment_id=>$fix->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$fix->bcs_schema,
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,

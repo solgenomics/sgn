@@ -70,8 +70,7 @@ solGS.cluster = {
 		clusterTable = this.getClusterPopsTable(tableId);
 		jQuery("#list_cluster_populations").append(clusterTable).show();		
             }
-	    console.log('loadClusterGenotypesList id' + selectId)
-	    
+	   	    
 	    var addRow = this.selectRow(selectId, selectName, dataStructureType);
 	    var tdId = '#list_cluster_page_' + selectId;
 	    var addedRow = jQuery(tdId).doesExist();
@@ -224,8 +223,6 @@ solGS.cluster = {
 	    
 	}
 
-	var listName;
-	var listType;
 	var listId;
 	var datasetId;
 	var datasetName;
@@ -236,11 +233,7 @@ solGS.cluster = {
 	}
 	
 	if (dataStructureType == 'list') {
-	    var genoList = this.getClusterGenotypesListData(selectId);
-	    listName = genoList.name;
-	    listType = genoList.listType;
-	    listId   = selectId;
-	   
+	    listId   = selectId;	   
 	    popDetails['training_pop_id'] = 'list_' + listId;
 	    popDetails['cluster_pop_id'] = 'list_' + listId;
 	
@@ -250,7 +243,7 @@ solGS.cluster = {
 	    popDetails['training_pop_id'] = 'dataset_' + selectId;
 	    datasetName = selectName;
 	}
-	
+
 	if (listId
 	    || datasetId
 	    || popDetails.training_pop_id
@@ -272,8 +265,6 @@ solGS.cluster = {
 		   'training_traits_ids': trainingTraitsIds,
 		   'cluster_pop_id': popDetails.cluster_pop_id,
 		   'list_id': listId, 
-		   'list_name': listName,
-		   'list_type': listType,
 		   'cluster_type': clusterType,
 		   'data_structure': dataStructure,
 		   'dataset_id': datasetId,
@@ -283,11 +274,10 @@ solGS.cluster = {
 		  },
             url: '/cluster/result',
             success: function(res) {
-		if (res.result === 'success') {
-
+		if (res.result == 'success') {
 		    jQuery("#cluster_canvas .multi-spinner-container").hide();
-		    var resultName = listName || datasetName;
-		    solGS.cluster.plotClusterOutput(res, resultName);
+		  
+		    solGS.cluster.plotClusterOutput(res);
 				    
 		    jQuery("#cluster_message").empty();
 		    
@@ -316,13 +306,13 @@ solGS.cluster = {
     },
 
 
-    plotClusterOutput: function(res, resultName) {
+    plotClusterOutput: function(res) {
 	
 	var plot = '<img  src= "' + res.kcluster_plot + '">';
 	var filePlot  = res.kcluster_plot.split('/').pop();
 
 	var popDetails = solGS.getPopulationDetails();
-	resultName = resultName || popDetails.population_name;
+	var resultName = res.result_name || popDetails.population_name;
 	
 	var plotType = 'K-means plot';
 	
@@ -558,11 +548,9 @@ jQuery(document).ready( function() {
 	    var selectName = jQuery(this).find("option:selected").text();
             var dataStructureType  = jQuery(this).find("option:selected").attr('name');
 
-	    if (typeof dataStructureType == 'undefined') {
+	    if (dataStructureType == undefined) {
 		dataStructureType = 'list';
-	    } else {
-		dataStructureType = 'dataset';
-	    }
+	    } 
 	    
             if (selectId) {                
                 jQuery("#cluster_go_btn").click(function() {

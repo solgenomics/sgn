@@ -26,6 +26,12 @@ has 'editable_stock_props' => (
     required => 1,
 );
 
+has 'do_fuzzy_search' => (
+    is => 'ro',
+    isa => 'Bool',
+    default => 1
+);
+
 has 'parse_errors' => (
 		       is => 'ro',
 		       isa => 'HashRef',

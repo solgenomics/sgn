@@ -771,6 +771,26 @@ sub plots_list_phenotype_query_job {
 }
 
 
+sub list_phenotype_data {
+    my ($self, $c) = @_;
+
+    my $list_id = $c->stash->{list_id};
+    $list_id =~ s/\w+_//g;
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_type =  $list->type();
+
+    if ($list_type eq 'plots')
+    {
+	$self->plots_list_phenotype_file($c);
+	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
+    } 
+    elsif ( $list_type eq 'trials') 
+    {
+	$self->get_trials_list_ids($c);	    
+	$self->get_trials_list_pheno_data($c);
+    }
+}
+
 sub plots_list_phenotype_file {
     my ($self, $c) = @_;
     
@@ -942,22 +962,14 @@ sub process_trials_list_details {
     my ($self, $c) = @_;
 
     my $pops_ids = $c->stash->{pops_ids_list} || $c->stash->{trials_ids} ||  [$c->stash->{pop_id}];
-
+    my $data_str = $c->stash->{data_structure};
+   
     my %pops_names = ();
-
+      
     foreach my $p_id (@$pops_ids)
     {
-	if ($p_id =~ /list/) 
-	{
-	    $c->controller('solGS::List')->list_population_summary($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}
-	else
-	{
-	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
-	    $pops_names{$p_id} = $c->stash->{project_name};  
-	}  
-	my $name = $c->stash->{project_name};
+	my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+	$pops_names{$p_id} = $c->stash->{project_name};  
     }    
 
     if (scalar(@$pops_ids) > 1 )

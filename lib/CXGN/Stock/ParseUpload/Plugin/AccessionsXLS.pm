@@ -152,6 +152,7 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $do_fuzzy_search = $self->get_do_fuzzy_search();
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
@@ -390,45 +391,59 @@ sub _parse_with_plugin {
     my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
-    my $found_accessions;
-    my $fuzzy_accessions;
-    my $absent_accessions;
+    my $found_accessions = [];
+    my $fuzzy_accessions = [];
+    my $absent_accessions = [];
     my $found_synonyms = [];
     my $fuzzy_synonyms = [];
     my $absent_synonyms = [];
     my $found_organisms;
     my $fuzzy_organisms;
     my $absent_organisms;
+    my %return_data;
 
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
 
-    my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
-    #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
-    print STDERR "DoFuzzySearch 2".localtime()."\n";
+    if ($do_fuzzy_search) {
+        my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
 
-    $found_accessions = $fuzzy_search_result->{'found'};
-    $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
-    $absent_accessions = $fuzzy_search_result->{'absent'};
+        $found_accessions = $fuzzy_search_result->{'found'};
+        $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+        $absent_accessions = $fuzzy_search_result->{'absent'};
 
-    if (scalar @synonyms_list > 0){
-        my $fuzzy_synonyms_result = $fuzzy_accession_search->get_matches(\@synonyms_list, $max_distance, 'accession');
-        $found_synonyms = $fuzzy_synonyms_result->{'found'};
-        $fuzzy_synonyms = $fuzzy_synonyms_result->{'fuzzy'};
-        $absent_synonyms = $fuzzy_synonyms_result->{'absent'};
-        #print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
+        if (scalar @synonyms_list > 0){
+            my $fuzzy_synonyms_result = $fuzzy_accession_search->get_matches(\@synonyms_list, $max_distance, 'accession');
+            $found_synonyms = $fuzzy_synonyms_result->{'found'};
+            $fuzzy_synonyms = $fuzzy_synonyms_result->{'fuzzy'};
+            $absent_synonyms = $fuzzy_synonyms_result->{'absent'};
+        }
+
+        if (scalar @organism_list > 0){
+            my $fuzzy_organism_result = $fuzzy_organism_search->get_matches(\@organism_list, $max_distance);
+            $found_organisms = $fuzzy_organism_result->{'found'};
+            $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
+            $absent_organisms = $fuzzy_organism_result->{'absent'};
+        }
+
+        if ($fuzzy_search_result->{'error'}){
+            $return_data{error_string} = $fuzzy_search_result->{'error'};
+        }
+    } else {
+        my $validator = CXGN::List::Validate->new();
+        my $absent_accessions = $validator->validate($schema, 'accessions', \@accession_list)->{'missing'};
+        my %accessions_missing_hash = map { $_ => 1 } @$absent_accessions;
+
+        foreach (@accession_list){
+            if (!exists($accessions_missing_hash{$_})){
+                push @$found_accessions, { unique_name => $_,  matched_string => $_};
+                push @$fuzzy_accessions, { unique_name => $_,  matched_string => $_};
+            }
+        }
     }
 
-    if (scalar @organism_list > 0){
-        my $fuzzy_organism_result = $fuzzy_organism_search->get_matches(\@organism_list, $max_distance);
-        $found_organisms = $fuzzy_organism_result->{'found'};
-        $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
-        $absent_organisms = $fuzzy_organism_result->{'absent'};
-        #print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
-    }
-
-    my %return_data = (
+    %return_data = (
         parsed_data => \%parsed_entries,
         found_accessions => $found_accessions,
         fuzzy_accessions => $fuzzy_accessions,
@@ -440,10 +455,6 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
-
-    if ($fuzzy_search_result->{'error'}){
-        $return_data{error_string} = $fuzzy_search_result->{'error'};
-    }
 
     $self->_set_parsed_data(\%return_data);
     return 1;
