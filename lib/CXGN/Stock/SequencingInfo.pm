@@ -9,7 +9,7 @@ The stockprop of type "sequencing_project_info" is stored as JSON. This class ma
 
 =head1 EXAMPLE
 
-  my $si = CXGN::Stock::SequencingInfo->new( { schema => $schema, $stock_id => $stock_id });
+  my $si = CXGN::Stock::SequencingInfo->new( { schema => $schema, $stockprop_id => $stock_id });
 
 =head1 AUTHOR
 
@@ -57,9 +57,13 @@ use SGN::Model::Cvterm;
     
 has 'schema' => (isa => 'Ref', is => 'rw', required => 1);
 
+has 'stockprop_id' => (isa => 'Maybe[Int]', is => 'rw');
+
 has 'stock_id' => (isa => 'Int', is => 'rw');
 
-has 'stockprop_id' => (isa => 'Maybe[Int]', is => 'rw');
+has 'type_id' => (isa => 'Int', is => 'rw');
+
+has 'type' => (isa => 'Str', is => 'ro', default => "sequencing_project_info" );
 
 has 'organization' => (isa => 'Maybe[Str]', is => 'rw');
 
@@ -83,6 +87,20 @@ has 'blast_db_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link blast_db_id | ] } );
 
+
+sub BUILD {
+    my $self = shift;
+    my $args = shift;
+
+    $self->stockprop_id($args->{stockprop_id});
+    $self->schema($args->{schema});
+
+    print STDERR "TYPE ".$self->type()."\n";
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_property')->cvterm_id();
+    $self->type_id($type_id);
+
+    $self->_load_object();
+}
 
 sub from_json {
     my $self = shift;
@@ -213,8 +231,13 @@ sub get_sequencing_project_infos {
 sub store {
     my $self = shift;
 
+    if (!$self->stock_id()) {
+	die "Need a stock_id to save SequencingInfo object.";
+    }
+    
     if ($self->stockprop_id()) {
 	# update
+	print STDERR "updating stockprop...\n";
 	my $row = $self->schema()->resultset("Stock::Stockprop")->find( { stockprop_id => $self->stockprop_id() } );
 	if ($row) {
 	    $row->value($self->to_json());
@@ -223,8 +246,19 @@ sub store {
     }
     else { 
 	# insert
-	my $row = $self->schema()->resultset("Stock::Stockprop")->create( { stock_id => $self->stock_id(), "stock.type" => "sequencing_project_info", value => $self->to_json() });
+	print STDERR "inserting stockprop...\n";
+	my $row = $self->schema()->resultset("Stock::Stockprop")->create( 
+	    { 
+		stock_id => $self->stock_id(), 
+		type_id => $self->type_id(), 
+		value => $self->to_json() 
+	    });
+
+	$self->stockprop_id($row->stockprop_id());
+	$self->stock_id($row->stock_id());
+	return $row->stockprop_id();
     }
+    
 }
     
 =head2 method delete()
@@ -240,12 +274,17 @@ sub store {
 
 sub delete {
     my $self = shift;
-    my $stockprop_id = shift;
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'sequencing_project_info', 'stock_property')->cvterm_id();
-    my $stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$type_id, stock_id => $self->stock_id(), stockprop_id=>$stockprop_id });
+    my $stockprop;
+    
+    eval { 
+	$stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$self->type_id(), stock_id => $self->stock_id(), stockprop_id=>$self->stockprop_id() });
 
+    };
+    if ($@) { die "Delete failed!\n"; }
+    
     if (!$stockprop) {
+	print STDERR "No such stockprop associated with such type or stock. Not deleting.\n";
 	return 0;
     }
     else {
@@ -253,6 +292,48 @@ sub delete {
 	return 1;
     }
 }
+
+=head2 _load_object
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:   requires stockprop_id and schema to be set
+ Example:
+
+=cut
+
+sub _load_object {
+    my $self= shift;
+   
+    my @results;
+
+    if ($self->stockprop_id()) { 
+	eval { 
+	    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $self->type(), 'stock_property')->cvterm_id();
+	    my $rs = $self->schema->resultset("Stock::Stockprop")->search({ stockprop_id => $self->stockprop_id(), type_id => $stockprop_type_id } );
+
+	    if ($rs->count() == 0) { die "No stockprops could be retrieved." }
+	    
+	    my $row = $rs->next(); # should only be one
+	    
+	    $self->type_id($stockprop_type_id);
+	    $self->stock_id($row->stock_id());
+	    $self->from_json($row->value());
+	    
+	};
+	
+	if ($@) {
+	    print STDERR "Cvterm with stockprop_id ".$self->stockprop_id()." does not exit does not exist in this database\n";
+	};
+    }
+
+    return @results;
+}
+
+
+
 
 =head2 _retrieve_stockprops
 
