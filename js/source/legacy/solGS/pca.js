@@ -56,6 +56,7 @@ solGS.pca = {
 
 	var listId;
 	var datasetId;
+	var datasetName;
 	
 	if (dataStructure == 'list') {
 	    listId = selectId;
@@ -63,6 +64,7 @@ solGS.pca = {
 	} else if (dataStructure == 'dataset') {
 	    popDetails['training_pop_id'] = 'dataset_' + selectId;
 	    datasetId = selectId;
+	    datasetName = selectName;
 	}
 
 	if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
@@ -79,7 +81,7 @@ solGS.pca = {
 	    'data_type': dataType,
 	    'data_structure': dataStructure,
 	    'dataset_id': datasetId,
-	    'dataset_name': selectName
+	    'dataset_name': datasetName
 	};
 	
 	jQuery.ajax({
