@@ -35,13 +35,6 @@ has "analysis_report_job" => (
    # required => 1, 
     );
 
-has "temp_dir" => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1, 
-    );
-
-
 
 
 sub run {
