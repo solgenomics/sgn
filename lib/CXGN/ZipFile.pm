@@ -86,6 +86,7 @@ sub file_members {
     return \@ret_members;
 }
 
+#warning: will copy files out of zipfile and file will lose metadata such as EXIF image data. Use something like SGN::Image::upload_drone_imagery_zipfile if metadata needed.
 sub extract_files_into_tempdir {
     my $self = shift;
     my $dest = $self->extract_directory();
