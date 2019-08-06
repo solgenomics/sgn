@@ -846,6 +846,7 @@ sub store {
     #preparing insertion of new genotypes and genotype props
     my $genotypeprop_observation_units = $self->genotype_info;
     my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
+    #my $new_genotypeprop_sql = "SELECT jsonb_insert(value, '{}', ?::jsonb) FROM genotypeprop WHERE genotype_id = ? AND type_id = ?;";
     my $h_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
     my %nd_experiment_ids;
     my $stock_relationship_schema = $schema->resultset("Stock::StockRelationship");
