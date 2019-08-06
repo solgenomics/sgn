@@ -264,10 +264,7 @@ jQuery(document).ready(function() {
             alert('Please select the camera type used.');
             return false;
         }
-        if (drone_run_band_unstitched == 'yes' && drone_run_camera_info != 'micasense_5') {
-            alert('Image Stitching currently only working with Micasense 5 Band Images. Please use other software to stitch your images before continuing here!');
-            return false;
-        }
+
         var html = '';
         if (drone_run_band_unstitched == 'no') {
             if (drone_run_band_number == '') {
@@ -289,7 +286,11 @@ jQuery(document).ready(function() {
         else if (drone_run_band_unstitched == 'yes') {
             html = html + '<div class="well well-sm">';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+
+            if (drone_run_camera_info == 'micasense_5') {
+                html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+            }
+
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Working Image Scale (Megapixels): </label><div class="col-sm-9" ><select class="form-control" id="upload_drone_images_stitching_work_pix" name="upload_drone_images_stitching_work_pix" disabled><option value="0.6">0.6</option><option value="0.4">0.4</option><option value="1.0">1.0</option><option value="2.0">2.0</option></select></div></div>';
             html = html + '</div>';
         }
@@ -361,10 +362,6 @@ jQuery(document).ready(function() {
         }
         if (drone_run_camera_info == '') {
             alert('Please select the camera type used.');
-            return false;
-        }
-        if (drone_run_band_unstitched == 'yes' && drone_run_camera_info != 'micasense_5') {
-            alert('Image Stitching currently only working with Micasense 5 Band Images. Please use other software to stitch your images before continuing here!');
             return false;
         }
 
