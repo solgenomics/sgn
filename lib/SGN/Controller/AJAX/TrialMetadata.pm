@@ -102,8 +102,11 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
         $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-        $error .= $c->stash->{trial}->delete_phenotype_data();
+        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
     }
 
     elsif ($datatype eq 'layout') {
@@ -1285,6 +1288,9 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
     my $new_treatment_has_subplot_entries = $c->req->param('has_subplot_entries');
     my $new_treatment_has_tissue_entries = $c->req->param('has_tissue_sample_entries');
+    my $new_treatment_year = $c->req->param('treatment_year');
+    my $new_treatment_date = $c->req->param('treatment_date');
+    my $new_treatment_type = $c->req->param('treatment_type');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -1295,7 +1301,10 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		design => $design,
         new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
         new_treatment_has_subplot_entries => $new_treatment_has_subplot_entries,
-        new_treatment_has_tissue_sample_entries => $new_treatment_has_subplot_entries,
+        new_treatment_has_tissue_sample_entries => $new_treatment_has_tissue_entries,
+        new_treatment_date => $new_treatment_date,
+        new_treatment_year => $new_treatment_year,
+        new_treatment_type => $new_treatment_type,
         operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
@@ -1414,8 +1423,9 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $experiment_type = $c->req->param('experiment_type') || 'field_layout';
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => 'field_layout', verify_layout=>1, verify_physical_map=>1});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, experiment_type => $experiment_type, verify_layout=>1, verify_physical_map=>1});
     my $trial_errors = $trial_layout->generate_and_cache_layout();
     my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
@@ -1840,14 +1850,14 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $result = $trial->get_crosses_in_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_type,
+        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $cross_type,
         qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
         qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
         qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
         qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
         qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
-        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},];
+        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -1868,9 +1878,9 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
 
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_props_hash) =@$r;
+        my ($cross_id, $cross_name, $cross_combination, $cross_props_hash) =@$r;
 
-        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>} );
+        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination );
         foreach my $key (@column_order){
           push @row, $cross_props_hash->{$key};
         }
@@ -1892,8 +1902,8 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $progeny_number, $family_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number, $family_name];
+        my ($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -2052,38 +2062,31 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
 sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $pheno_ids = $c->req->param('pheno_id');
-    my $trait_ids = $c->req->param('traits_id');
+    my $pheno_ids = $c->req->param('pheno_id') ? JSON::decode_json($c->req->param('pheno_id')) : [];
+    my $trait_ids = $c->req->param('traits_id') ? JSON::decode_json($c->req->param('traits_id')) : [];
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial = $c->stash->{trial};
 
     if (!$c->user()) {
-    	print STDERR "User not logged in... not deleting trait.\n";
-    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
-    	return;
+        print STDERR "User not logged in... not deleting trait.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+        return;
     }
 
     if ($self->privileges_denied($c)) {
-      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
-      return;
+        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+        return;
     }
 
-    my $delete_trait_return_error;
-    if ($pheno_ids){
-            my $phenotypes_ids = JSON::decode_json($pheno_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
-    }
-    if ($trait_ids){
-        my $traits_ids = JSON::decode_json($trait_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
-    }
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $pheno_ids, $trait_ids);
 
     if ($delete_trait_return_error) {
-      $c->stash->{rest} = { error => $delete_trait_return_error };
-      return;
+        $c->stash->{rest} = { error => $delete_trait_return_error };
+    } else {
+        $c->stash->{rest} = { success => 1};
     }
-
-    $c->stash->{rest} = { success => 1};
 }
 
 sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {

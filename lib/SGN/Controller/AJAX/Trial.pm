@@ -105,7 +105,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
-    my $increment =  $c->req->param('increment');
+    my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
     my $trial_location = $c->req->param('trial_location');
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
@@ -120,6 +120,11 @@ sub generate_experimental_design_POST : Args(0) {
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
+
+    if ( !$start_number ) {
+        $c->stash->{rest} = { error => "You need to select the starting plot number."};
+        return;
+    }
 
     if ($design_type eq 'westcott'){
         if (!$westcott_check_1){
@@ -894,6 +899,14 @@ sub upload_trial_file_POST : Args(0) {
         return;
     }
 
+    my $return_warnings;
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
+            $return_warnings=$return_warnings.$warning_string."<br>";
+        }
+    }
+
     print STDERR "Check 4: ".localtime()."\n";
 
     #print STDERR Dumper $parsed_data;
@@ -951,7 +964,7 @@ sub upload_trial_file_POST : Args(0) {
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
-        $c->stash->{rest} = {error => $save->{'error'}};
+        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
 
@@ -959,7 +972,7 @@ sub upload_trial_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {success => "1"};
+        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
         return;
     }
 

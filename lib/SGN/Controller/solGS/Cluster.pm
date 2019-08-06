@@ -48,12 +48,23 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
-
+    my @traits_ids  = $c->req->param('training_traits_ids[]');
+    
     my $list_id     = $c->req->param('list_id');
-    my $list_type   = $c->req->param('list_type');
-    my $list_name   = $c->req->param('list_name');
+    my $list_type;   
+    my $list_name;
 
+    if ($list_id) 
+    {
+	$list_id =~ s/list_//;		   	
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+
+	$list_type = $list->type();
+	$list_name = $list->name();
+    }
+   
     my $dataset_id     =  $c->req->param('dataset_id');
+    my $dataset_name   = $c->req->param('dataset_name');
     my $data_structure =  $c->req->param('data_structure');
     my $k_number       =  $c->req->param('k_number'); 
     my $cluster_type   = $c->req->param('cluster_type');
@@ -65,15 +76,18 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
     $c->stash->{list_id}          = $list_id;
+    $c->stash->{list_name}        = $list_name;
     $c->stash->{list_type}        = $list_type;
     $c->stash->{dataset_id}       = $dataset_id;
+    $c->stash->{dataset_name}     = $dataset_name;
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{k_number}         = $k_number;
     
+    $c->stash->{training_traits_ids} = \@traits_ids;
+    
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
-    #my $file_id = $c->stash->{file_id};
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -97,7 +111,8 @@ sub check_cluster_output_files {
 
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
-  
+
+    print STDERR "\check cluster output files: file_id $file_id\n";
     my $cluster_type = $c->stash->{cluster_type};
     my $cluster_result_file;
     my $cluster_plot_file;
@@ -131,12 +146,25 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $cluster_pop_id   = $c->req->param('cluster_pop_id');
-
+    
+    my @traits_ids  = $c->req->param('training_traits_ids[]');
+    
     my $list_id     = $c->req->param('list_id');
-    my $list_type   = $c->req->param('list_type');
-    my $list_name   = $c->req->param('list_name');
 
+    my $list_type;   
+    my $list_name;
+
+    if ($list_id) 
+    {
+	$list_id =~ s/list_//;		   	
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+
+	$list_type = $list->type();
+	$list_name = $list->name();
+    }
+  
     my $dataset_id     =  $c->req->param('dataset_id');
+    my $dataset_name   =  $c->req->param('dataset_name');
     my $data_structure =  $c->req->param('data_structure');
     my $k_number       =  $c->req->param('k_number'); 
     my $cluster_type   = $c->req->param('cluster_type');
@@ -149,17 +177,22 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{cluster_pop_id}   = $cluster_pop_id;
     $c->stash->{data_structure}   = $data_structure;
     $c->stash->{list_id}          = $list_id;
+    $c->stash->{list_name}        = $list_name;
     $c->stash->{list_type}        = $list_type;
     $c->stash->{dataset_id}       = $dataset_id;
+    $c->stash->{dataset_name}     = $dataset_name;
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
     $c->stash->{k_number}         = $k_number;
-
-    $c->stash->{pop_id} = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    
+    $c->stash->{training_traits_ids} = \@traits_ids;
+   
+    my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id = $c->stash->{file_id};
   
+    $c->stash->{pop_id} = $cluster_pop_id || $pop_id;
+   
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
  
@@ -170,8 +203,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	my $no_cluster_data;
 
 	if ($data_type =~ /genotype/i) 
-	{
-	    $c->stash->{pop_id} = $cluster_pop_id;
+	{	  
 	    $self->create_cluster_genotype_data($c);
 	 
 	    my $geno_files = $c->stash->{genotype_files_list};
@@ -184,7 +216,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
 	} 
 	elsif ($data_type =~ /phenotype/i)
 	{
-	    $c->stash->{pop_id} = $cluster_pop_id;
 	    $self->create_cluster_phenotype_data($c);
 	    
 	    if (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
@@ -281,7 +312,8 @@ sub _prepare_response {
     my $report            = $c->stash->{download_cluster_report};
 
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
- 
+
+    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name};
     my $ret->{kcluster_plot} = $cluster_plot_file;
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;
@@ -292,6 +324,7 @@ sub _prepare_response {
     $ret->{cluster_type}  = $c->stash->{cluster_type};
     $ret->{dataset_id}    = $c->stash->{dataset_id};
     $ret->{trials_names}  = $c->stash->{trials_names};
+    $ret->{result_name}   = $result_name;
     $ret->{output_link}   = $output_link;
 
     return $ret;
@@ -410,7 +443,6 @@ sub cluster_list_phenotype_data {
     my ($self, $c) = @_;
     
     my $list_id       = $c->stash->{list_id};
-    my $list_type     = $c->stash->{list_type};
     my $pop_id        = $c->stash->{pop_id};
     my $data_structure = $c->stash->{data_structure};
     my $data_set_type  = $c->stash->{data_set_type};
@@ -430,16 +462,7 @@ sub cluster_list_phenotype_data {
     }	   
     else
     {
-	if ($list_type eq 'plots')
-	{
-	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
-	    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
-	} 
-	elsif ( $list_type eq 'trials') 
-	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);	    
-	    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
-	}
+	$c->controller('solGS::List')->list_phenotype_data($c);
     }
     
 }
@@ -458,8 +481,7 @@ sub combined_cluster_trials_data_file {
     
     if ($cluster_type =~ /k-means/i)
     {
-	$file_name = "combined_${cluster_type}_data_file_${file_id}";
-	
+	$file_name = "combined_${cluster_type}_data_file_${file_id}";	
     }
     else
     {
@@ -745,13 +767,12 @@ sub run_cluster {
 
     $self->cluster_input_files($c);
     my $input_file = $c->stash->{cluster_input_files};
+    
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
    
     $c->stash->{input_files}  = $input_file;
-    $c->stash->{output_files} = $output_file;
-       
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
-    $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";
-    
+    $c->stash->{output_files} = $output_file;   
+    $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";  
     $c->stash->{r_script}     = 'R/solGS/cluster.r';
     $c->controller("solGS::solGS")->run_r_script($c);
     

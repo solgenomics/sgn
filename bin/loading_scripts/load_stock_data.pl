@@ -1,11 +1,12 @@
+#!/usr/bin/perl
 
 =head1
 
-load_stock_data.pl
+load_stock_data.pl - a script to load stock data
 
 =head1 SYNOPSIS
 
-    $load_stock_data.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock population name]
+load_stock_data.pl -H [dbhost] -D [dbname] [-t] [-s species name ] [-p stock population name]
 
 =head1 COMMAND-LINE OPTIONS
 
@@ -17,20 +18,24 @@ load_stock_data.pl
  -p population name - will create a new stock of type 'population' if doesn't exist. 
  -t  Test run . Rolling back at the end.
 
-
-=head2 DESCRIPTION
+=head1 DESCRIPTION
 
 Updated script for loading and adding stock names and synonyms.
 The owners of the stock accession are not stored in stockprop, but in phenome.stock_owner.
 
+File format for infile (tab delimited):
+
+accession genus species population_name synonyms
+
+=head1 AUTHOR
+
 Naama Menda (nm249@cornell.edu)
 
-    April 2013
+April 2013
 
 =cut
 
 
-#!/usr/bin/perl
 use strict;
 use Getopt::Std;
 use CXGN::Tools::File::Spreadsheet;
@@ -149,7 +154,7 @@ my $coderef= sub  {
 	
 	my $population_name  =  $spreadsheet->value_at($accession, "population_name");
         my $synonym_string   =  $spreadsheet->value_at($accession, "synonyms");
-	my @synonyms = split "|" , $synonym_string;
+	my @synonyms = split /\|/ , $synonym_string;
         # see if a stock exists with any of the synonyms
         #my @stocks = $stock_rs->search( {
         #    -or => [

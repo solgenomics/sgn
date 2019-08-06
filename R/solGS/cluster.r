@@ -121,7 +121,7 @@ extractGenotype <- function(inputFiles) {
 }
 
 set.seed(235)
-clusterNa <- c()
+
 clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case=TRUE)) {
@@ -162,19 +162,8 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
         clusterData <- column_to_rownames(gebvsData, 'V1')    
     } else if (grepl('phenotype', dataType, ignore.case=TRUE)) {
 
-        metaFile <- grep("meta", inputFiles,  value = TRUE)
-      
-        pheno <-  extractPhenotype(inputFiles, metaFile)
-
-        phenoData <- cleanMetaCols(metaDataFile=metaFile,
-                                   phenoData=pheno,
-                                   keepMetaCols=c('germplasmName'))
-                
-        phenoData <- summarizeTraits(phenoData)
-
-        clusterNa   <- phenoData %>% filter_all(any_vars(is.na(.)))
-        clusterData <- column_to_rownames(phenoData, 'germplasmName')
-           
+        metaFile <- grep("meta", inputFiles,  value = TRUE)      
+        clusterData <- cleanAveragePhenotypes(inputFiles, metaFile)            
     }
 
     clusterDataNotScaled <- na.omit(clusterData)
@@ -184,12 +173,10 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
 }
 
 kMeansOut   <- kmeansruns(clusterData, runs=10)
-
-kCenters <- kMeansOut$bestk
+kCenters    <- kMeansOut$bestk
 reportNotes <- paste0(reportNotes, 'Recommended number of clusters (k) for this data set is: ', kCenters, "\n")
 
 if (!is.na(userKNumbers)) {
-
     if (userKNumbers != 0) {
         kCenters <- as.integer(userKNumbers)
         reportNotes <- paste0(reportNotes, 'However, Clustering was based on ', userKNumbers, "\n")
@@ -211,12 +198,8 @@ png(plotKmeansFile)
 autoplot(kMeansOut, data=clusterData, frame = TRUE,  x=1, y=2)
 dev.off()
 
-#png(plotPamFile)
-#autoplot(pam(genoData, 3), frame = TRUE, frame.type = 'norm', x=1, y=2)
-#dev.off()
 
 cat(reportNotes, file=reportFile, sep="\n", append=TRUE)
-
 
 if (length(genoFiles) > 1) {
     fwrite(genoData,

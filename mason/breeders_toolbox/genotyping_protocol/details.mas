@@ -2,7 +2,6 @@
 $protocol_id
 $protocol_name
 $protocol_description
-$markers => {}
 $marker_names => []
 $header_information_lines => []
 $reference_genome_name

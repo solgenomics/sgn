@@ -142,6 +142,7 @@ EOH
 
 
 =head2 image_search_form
+  ### DEPRECATED CGIBIN CODE
 
   Desc: canned html for the SGN image search form
   Args: CXGN::Page object

@@ -20,6 +20,7 @@ use CXGN::Phenome::Schema;
 use Bio::Chado::Schema;
 use DateTime;
 use SGN::Model::Cvterm;
+use LWP::Simple;
 use LWP::UserAgent;
 use JSON;
 use CXGN::ODK::Crosses;
@@ -69,7 +70,35 @@ sub get_crossing_available_forms : Path('/ajax/odk/get_crossing_available_forms'
 
 sub get_crossing_available_forms_GET {
     my ( $self, $c ) = @_;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $bcs_schema->storage->dbh;
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+    my $session_id = $c->req->param('session_id');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to look at ONA forms!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to look at ONA forms!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
     my $message_hash;
     if ($odk_crossing_data_service_name eq 'ONA'){
         my $ua = LWP::UserAgent->new;
@@ -82,8 +111,6 @@ sub get_crossing_available_forms_GET {
             my $message = $resp->decoded_content;
             $message_hash = decode_json $message;
         }
-    } else {
-        $message_hash = [];
     }
     $c->stash->{rest} = { success => 1, forms=>$message_hash };
 }
@@ -92,9 +119,8 @@ sub get_crossing_data : Path('/ajax/odk/get_crossing_data') : ActionClass('REST'
 
 sub get_crossing_data_GET {
     my ( $self, $c ) = @_;
-    my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
-    my $cross_wishlist_file_name = $c->req->param('cross_wishlist_file_name');
     my $form_id = $c->req->param('form_id');
+    print STDERR Dumper $form_id;
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
@@ -123,8 +149,10 @@ sub get_crossing_data_GET {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
-    my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
-    my $temp_file_path = $temp_file->filename;
+    my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
+    my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
+    my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
 
     my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
@@ -137,9 +165,8 @@ sub get_crossing_data_GET {
         sp_person_role=>$user_role,
         archive_path=>$c->config->{archive_path},
         temp_file_dir=>$c->config->{basepath}.$tempfiles_dir,
-        temp_file_path=>$temp_file_path,
-        cross_wishlist_md_file_id=>$cross_wishlist_id,
-        cross_wishlist_file_name=>$cross_wishlist_file_name,
+        cross_wishlist_temp_file_path=>$cross_wishlist_temp_file_path,
+        germplasm_info_temp_file_path=>$germplasm_info_temp_file_path,
         allowed_cross_properties=>$c->config->{cross_properties},
         odk_crossing_data_service_url=>$c->config->{odk_crossing_data_service_url},
         odk_crossing_data_service_username=>$c->config->{odk_crossing_data_service_username},
@@ -173,8 +200,6 @@ sub schedule_get_crossing_data_GET {
         $c->detach();
     }
     my $form_id = $c->req->param('form_id');
-    my $cross_wishlist_id = $c->req->param('cross_wishlist_md_file_id');
-    my $cross_wishlist_file_name = $c->req->param('cross_wishlist_file_name');
     my $timing_select = $c->req->param('timing');
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
@@ -205,6 +230,10 @@ sub schedule_get_crossing_data_GET {
     my $tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($temp_file, $uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_info_downloadXXXXX');
     my $temp_file_path = $temp_file->filename;
+    my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
+    my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
+    my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
 
     my $progress_tree_dir = catdir($c->site_cluster_shared_dir, "ODK_ONA_cross_info");
 
@@ -222,7 +251,7 @@ sub schedule_get_crossing_data_GET {
     my $www_user = $c->config->{www_user};
     my $crontab_log = $c->config->{crontab_log_filepath};
     my $include_path = 'export PERL5LIB="$PERL5LIB:'.$basepath.'/lib:'.$rootpath.'/cxgn-corelibs/lib:'.$rootpath.'/Phenome/lib:'.$rootpath.'/local-lib/lib/perl5"';
-    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -i $user_name -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -w $cross_wishlist_id -x $cross_wishlist_file_name -f $progress_tree_dir -l $ODK_url -c $cross_properties -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
+    my $perl_command = "$include_path; perl $basepath/bin/ODK/ODK_ONA_get_crosses.pl -u $user_id -i $user_name -r $user_role -a $archive_path -d $basepath.$tempfiles_dir -t $temp_file_path -n $ODk_username -m $ODK_password -o $form_id -q $cross_wishlist_temp_file_path -y $germplasm_info_temp_file_path -f $progress_tree_dir -l $ODK_url -c $cross_properties -D $database_name -U $database_user -p $database_pass -H $database_host >> $crontab_log 2>&1";
     my $timing = '';
     if ($timing_select eq 'everyminute'){
         $timing = "0-59/1 * * * * ";
@@ -345,7 +374,7 @@ sub get_odk_cross_progress_cached : Path('/ajax/odk/get_odk_cross_progress_cache
 
 sub get_odk_cross_progress_cached_GET {
     my ( $self, $c ) = @_;
-    my $wishlist_file_id = $c->req->param("cross_wishlist_file_id");
+    my $ona_form_id = $c->req->param("form_id");
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
@@ -378,16 +407,16 @@ sub get_odk_cross_progress_cached_GET {
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
+    my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
-    my $contents;
+    my $json;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = <$fh> ? decode_json <$fh> : undef;
+        my $line = <$fh>;
+        $json = $line && $line ne '{}' ? decode_json $line : {};
     }
     close($fh);
-    my $json = $contents->{top_level_json} || {};
 
     my $top_level_id = $c->req->param('id');
     print STDERR "ODK Cross Tree Progress Node: ".$top_level_id."\n";
@@ -395,7 +424,16 @@ sub get_odk_cross_progress_cached_GET {
         $top_level_id = undef;
     }
     if ($top_level_id){
-        my $top_level_contents = $contents->{top_level_contents};
+        $filename = $dir."/ona_odk_cross_progress_top_level_contents_html_".$ona_form_id.".txt";
+        print STDERR "Opening $filename \n";
+        my $top_level_contents;
+        open(my $fh, '<', $filename) or warn "cannot open file $filename";
+        {
+            local $/;
+            my $line = <$fh>;
+            $top_level_contents = $line && $line ne '{}' ? decode_json $line : {};
+        }
+        close($fh);
         $json = $top_level_contents->{$top_level_id};
     }
 
@@ -407,7 +445,7 @@ sub get_odk_cross_summary_cached : Path('/ajax/odk/get_odk_cross_summary_cached'
 
 sub get_odk_cross_summary_cached_GET {
     my ( $self, $c ) = @_;
-    my $wishlist_file_id = $c->req->param("cross_wishlist_file_id");
+    my $ona_form_id = $c->req->param("form_id");
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
@@ -440,17 +478,26 @@ sub get_odk_cross_summary_cached_GET {
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_odk_cross_progress_html_".$wishlist_file_id.".txt";
+    my $filename = $dir."/ona_odk_cross_progress_summary_info_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
-    my $contents;
+    my $summary;
     open(my $fh, '<', $filename) or warn "cannot open file $filename";
     {
         local $/;
-        $contents = <$fh> ? decode_json <$fh> : undef;
+        my $line = <$fh>;
+        $summary = $line && $line ne '{}' ? decode_json $line : undef;
     }
     close($fh);
-    my $summary = $contents->{summary_info};
-    my $plant_status_summary = $contents->{summary_plant_status_info};
+    $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$ona_form_id.".txt";
+    print STDERR "Opening $filename \n";
+    my $plant_status_summary;
+    open($fh, '<', $filename) or warn "cannot open file $filename";
+    {
+        local $/;
+        my $line = <$fh>;
+        $plant_status_summary = $line && $line ne '{}' ? decode_json $line : undef;
+    }
+    close($fh);
 
     #print STDERR Dumper $summary;
     $c->stash->{rest} = { summary => $summary, plant_status_summary => $plant_status_summary };
@@ -487,7 +534,13 @@ sub get_crossing_saved_ona_forms_GET {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $bcs_schema->storage->dbh;
-    
+
+    my $odk_ona_forms = _get_allowed_ONA_ODK_forms_from_lists($dbh);
+    $c->stash->{rest} = {success => 1, odk_ona_forms => $odk_ona_forms};
+}
+
+sub _get_allowed_ONA_ODK_forms_from_lists {
+    my $dbh = shift;
     my $odk_ona_lists = CXGN::List::available_public_lists($dbh, 'odk_ona_forms');
     my %odk_ona_forms_unique;
     foreach (@$odk_ona_lists) {
@@ -498,8 +551,7 @@ sub get_crossing_saved_ona_forms_GET {
         }
     }
     my @odk_ona_forms = keys %odk_ona_forms_unique;
-
-    $c->stash->{rest} = {success => 1, odk_ona_forms => \@odk_ona_forms};
+    return \@odk_ona_forms;
 }
 
 1;

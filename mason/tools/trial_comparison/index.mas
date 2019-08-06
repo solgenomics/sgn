@@ -70,7 +70,7 @@
   $(document).ready(function(){
     if (isLoggedIn()) {
       list = new CXGN.List();
-      var select_html = list.listSelect('trials', ['trials'], ' ');
+      var select_html = list.listSelect('trials', ['trials'], ' ', undefined, undefined);
       $('#trials_list_select_container').html(select_html);
       if (d3.select('#trials_list_select').selectAll("option").size()<2){
         d3.select('#trials_list_select').html("<option>No trial lists! (Create one using the wizard.)</option>");

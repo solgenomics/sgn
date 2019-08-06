@@ -24,6 +24,7 @@ use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Chado::Publication;
+use CXGN::Genotype::DownloadFactory;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -264,7 +265,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
-            direct_genotypes   => $c->stash->{direct_genotypes},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
@@ -331,55 +331,54 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
 
 sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my ($self, $c) = @_;
-    my $stock = $c->stash->{stock_row};
-    my $stock_id = $stock->stock_id;
-    my $stock_name = $stock->uniquename;
+    my $stock_row = $c->stash->{stock_row};
+    my $stock_id = $stock_row->stock_id;
+    my $stock_name = $stock_row->uniquename;
     my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
 
-    my @lines = ();
-    my @sorted_lines = ();
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
+
     if ($stock_id) {
-        print STDERR "Exporting genotype file...\n";
-        push @lines, ["genotyping_data_project", "protocol_name", "observationunit_name", "observationunit_type", "synonyms", "marker", "$stock_name", "marker_info", "genotype_info"];
+        my $dir = $c->tempfiles_subdir('genotype_download');
+        my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
+        $tempfile = $tempfile.".vcf";
 
-        my $genotypes_search = CXGN::Genotype::Search->new({
-            bcs_schema=>$self->schema,
-            accession_list=>[$stock_id],
-            markerprofile_id_list=>$genotypeprop_id
-        });
-        my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+        my %genotype_download_factory = (
+            bcs_schema=>$schema,
+            filename=>$tempfile,  #file path to write to
+            markerprofile_id_list=>$genotypeprop_id,
+            #genotype_data_project_list=>$genotype_data_project_list,
+            #marker_name_list=>['S80_265728', 'S80_265723'],
+            #limit=>$limit,
+            #offset=>$offset
+        );
 
-        foreach my $g (@$genotypes ) {
-            my $genotype_full = $g->{selected_genotype_hash};
-            my $protocol_full = $g->{selected_protocol_hash};
-            my $project_name = $g->{genotypingDataProjectName};
-            my $marker_info = $protocol_full->{markers};
-            print STDERR Dumper $protocol_full;
-            print STDERR Dumper $marker_info;
-            my $stock_name = $g->{stock_name};
-            my $stock_type_name = $g->{stock_type_name};
-            my $synonym_string = join ',', @{$g->{synonyms}};
-            my $protocol_name = $g->{analysisMethod};
-
-            foreach my $marker_name (keys %$genotype_full) {
-                my $read;
-                if ($genotype_full->{$marker_name}->{GT}){
-                    $read = $genotype_full->{$marker_name}->{GT};
-                }
-                if (defined($genotype_full->{$marker_name}->{DS})) {
-                    $read = $genotype_full->{$marker_name}->{DS};
-                }
-                my $marker = $marker_info->{$marker_name};
-                my $marker_print = $marker ? encode_json $marker : '';
-                my $genotype_print = encode_json $genotype_full->{$marker_name};
-                push @lines, [$project_name, $protocol_name, $stock_name, $stock_type_name, $synonym_string, $marker_name, $read, $marker_print, $genotype_print];
-            }
+        if ($stock_type eq 'accession') {
+            $genotype_download_factory{accession_list} = [$stock_id];
         }
-        @sorted_lines = sort chr_sort @lines;
-    }
+        elsif ($stock_type eq 'tissue_sample') {
+            $genotype_download_factory{tissue_sample_list} = [$stock_id];
+        }
 
-    $c->stash->{'csv'} = \@sorted_lines;
-    $c->forward("View::Download::CSV");
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+            'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
+            \%genotype_download_factory
+        );
+        my $status = $geno->download();
+
+        $c->res->content_type("application/text");
+        $c->res->cookies->{$dl_cookie} = {
+            value => $dl_token,
+            expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
+        my $output = read_file($tempfile);
+        $c->res->body($output);
+    }
 }
 
 sub chr_sort {
@@ -500,17 +499,9 @@ sub get_stock_extended_info : Private {
     my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->schema,
-        accession_list=>[$c->stash->{stock_row}->stock_id],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    $c->stash->{direct_genotypes} = $genotypes;
-
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
     if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
-
 }
 
 ############## HELPER METHODS ######################3

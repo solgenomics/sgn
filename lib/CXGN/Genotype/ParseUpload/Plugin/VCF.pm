@@ -273,7 +273,6 @@ sub _parse_with_plugin {
                     }
 
                     my @nucleotide_genotype;
-                    my @nucleotide_genotype_unphased;
                     my @ref_calls;
                     my @alt_calls;
                     foreach (@alleles) {

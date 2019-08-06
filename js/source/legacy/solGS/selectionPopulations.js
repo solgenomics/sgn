@@ -16,15 +16,27 @@ jQuery(document).ready( function () {
 function checkSelectionPopulations () {
     
     var popId =  getPopulationId();
-   
+    
+    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+    if (trainingTraitsIds) {
+	trainingTraitsIds = trainingTraitsIds.split(',');
+    }
+    
+    var traitId = jQuery('#trait_id').val();
+    if (traitId && !trainingTraitsIds) {
+	trainingTraitsIds = [traitId];
+    }
+    
     jQuery.ajax({
         type: 'POST',
+	data: {'training_traits_ids': trainingTraitsIds},
         dataType: 'json',
         url: '/solgs/check/selection/populations/' + popId,
         success: function(response) {
             if (response.data) {
 		jQuery("#selection_populations").show();
 		jQuery("#search_all_selection_pops").show();
+		
 		displaySelectionPopulations(response.data);					
             } else { 
 		jQuery("#search_all_selection_pops").show();	

@@ -656,11 +656,13 @@ sub generate_and_cache_layout {
             push @tissue_sample_ids, $tissue_id;
 
             my $tissue_number_rs = $t->search_related('stockprops', {'me.type_id' => $tissue_number_cvterm_id });
-            if ($tissue_number_rs->count != 1){
-                print STDERR "Problem with tissue_sample_index_number stockprop for tissue_sample: $tissue_name\n";
+            if ($tissue_number_rs->count > 0) {
+                if ($tissue_number_rs->count != 1){
+                    print STDERR "Problem with tissue_sample_index_number stockprop for tissue_sample: $tissue_name\n";
+                }
+                my $tissue_sample_index_number = $tissue_number_rs->first->value;
+                push @tissue_sample_index_numbers, $tissue_sample_index_number;
             }
-            my $tissue_sample_index_number = $tissue_number_rs->first->value;
-            push @tissue_sample_index_numbers, $tissue_sample_index_number;
         }
         $design_info{"tissue_sample_names"}=\@tissue_sample_names;
         $design_info{"tissue_sample_ids"}=\@tissue_sample_ids;
@@ -739,7 +741,7 @@ sub _get_field_layout_experiment_from_project {
   $field_layout_experiment = $project
      ->search_related("nd_experiment_projects")
        ->search_related("nd_experiment")
-   	->find({ 'type.name' => ['field_layout', 'genotyping_layout']}, {join => 'type' });
+   	->find({ 'type.name' => ['field_layout', 'genotyping_layout', 'treatment_experiment']}, {join => 'type' });
   return $field_layout_experiment;
 }
 

@@ -209,7 +209,7 @@ sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0)
 	
 	my $name        = $acc->uniquename;
 	my $description = $acc->description;
-	push @formatted_accessions, [ '<a href="/stock/' .$id. '/view">'.$name.'</a>' ];
+	push @formatted_accessions, [ '<a href="/stock/' .$id. '/view">'.$name.'</a>', $description ];
     }
     $c->stash->{rest} = { data => \@formatted_accessions };
 }

@@ -53,6 +53,7 @@ list_types	trials
 list_types	unigene_ids
 list_types	vector_constructs				00049
 list_types	years
+list_types  family_names            00111
 local	date
 local	months after planting
 local	operator
@@ -82,6 +83,8 @@ project_property	genomic selection
 project_property	project_harvest_date				00080
 project_property	marker_count
 project_property	project_planting_date				00080
+project_property	management_factor_date	For setting the date of a management factor	05/14/2019	nm529	00109
+project_property	management_factor_type	For setting whether a management factor was a fertilizer herbicide fungicide or weeding	05/14/2019	nm529	00109
 project_property	population type
 project_property	project fertilizer date
 project_property	project first harvest date					sgn database
@@ -184,8 +187,8 @@ stock_property	dna_person	For indicating dna_person in genotype plate well	2/15/
 stock_property	extraction	For indicating extraction in genotype plate well	2/15/2018	nm529	00091
 stock_property	tissue_type	For indicating tissue type in genotype plate well	2/15/2018	nm529	00091
 stock_property	ncbi_taxonomy_id	For indicating ncbi taxonomy	2/15/2018	nm529	00091
-stock_property  family_name    Some breeding programs use family name for progenies (in addition to cross name)    00101
-stock_relationship	cross_relationship				00052
+stock_property  family_name    00101 (obsoleted) changed to stock_type 00111
+stock_property  cross_combination    Some breeding programs use cross combination (accession level) as a short informative name to indicate parents used in each cross    00111
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052
 stock_relationship	member_of				00052
@@ -217,6 +220,7 @@ stock_type	vector_construct				00052
 stock_type	seedlot				00077
 stock_type	subplot				00084
 stock_type	grafted_accession		00079
+stock_type  family_name            00111
 trait_property	trait_categories
 trait_property	trait_default_value
 trait_property	trait_details

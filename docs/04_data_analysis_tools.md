@@ -237,6 +237,51 @@ You can do ANOVA from two places: trial detail and training population detail. I
 
 <img src='{{"assets/images/anova-dm.png" | relative_url }}' width="522" />
 
+4.6 K-Means Clustering
+--------------
+Clustering, currently using the K-Means method, allows you to partition a dataset into groups (K number). You can do this partition based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated.
 
+There are three pathways to using this tool. 
+
+(1) When you have data in the form of a list or dataset from the search wizard:
+
+   (A) -- go to the 'Analyze' menu and select the clustering option
+  
+   (B) -- make sure you are logged in
+  
+   (C) -- select your list or dataset, click 'Go'
+  
+   (D) -- select the data type to use
+  
+   (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
+
+   (F) -- click the 'Run Cluster' and wait for the analysis to finish, depending on the data size this may take minutes.
+   
+   (G) -- You can download the outputs following the download links.
+   
+(2) From the trial detail page:
+
+   (A) -- Go to the 'Analysis Tools' section
+   
+   (B) -- Follow steps D to G in (1)
+   
+(3) In the solGS pipeline:
+
+   (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above.
+ 
+ <img src='{{"assets/images/kmeans-cluster.png" | relative_url }}' width="522" />
+
+
+4.7 Genetic Gain
+--------------
+
+You can check for genetic gain by comparing the the GEBVs of a training and a selection population. You can do this in the solGS pipepline once you build a model and apply the model to predict the GEBVs of a selection population. Once at that stage, you will see a section 'Check Genetic Gain'. Select a selection population to compare with the training population and click the 'Check Genetic Gain' button. The genetic gain will be visualized in boxplots. You can download the boxplot(s) as well as the GEBVs data used for the plot(s).
+
+<img src='{{"assets/images/genetic-gain.png" | relative_url }}' width="522" />
+
+
+
+
+   
 
 
