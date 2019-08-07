@@ -1175,17 +1175,22 @@ sub predict_selection_pop_multi_traits {
     if (@unpredicted_traits)
     {
 	$c->stash->{training_traits_ids} = \@unpredicted_traits;
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id);
 	
-	$self->get_selection_pop_query_args_file($c);
-	my $pre_req = $c->stash->{selection_pop_query_args_file};
+	if (!-s $c->stash->{genotype_file_name}) 
+	{		
+	    $self->get_selection_pop_query_args_file($c);        
+	    $c->stash->{prerequisite_jobs} = $c->stash->{selection_pop_query_args_file};
+	}
 	
 	$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
 
 	$self->get_gs_modeling_jobs_args_file($c);	
 	$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 	
-	$c->stash->{prerequisite_jobs} = $pre_req;
-	$c->stash->{prerequisite_type} = 'selection_pop_download_data';
+
+	#$c->stash->{prerequisite_type} = 'selection_pop_download_data';
 		
 	$self->run_async($c);
     }
@@ -3201,18 +3206,25 @@ sub training_pop_data_query_job_args {
     
     foreach my $trial (@$trials)
     {
-	#my $pheno_args =  $self->phenotype_trial_query_args($c, $trial);
-	$self->get_cluster_phenotype_query_job_args($c, $trials);
-	my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
-	push @queries, @$pheno_query if $pheno_query;
+	$c->controller('solGS::Files')->phenotype_file_name($c, $trial);
 
-	#my $geno_args =  $self->genotype_trial_query_args($c, $trial);
-	$self->get_cluster_genotype_query_job_args($c, $trials);
-	my $geno_query = $c->stash->{cluster_genotype_query_job_args};
-	push @queries, @$geno_query if $geno_query;
+	if (!-s $c->stash->{phenotype_file_name})
+	{
+	    $self->get_cluster_phenotype_query_job_args($c, $trials);
+	    my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
+	    push @queries, @$pheno_query if $pheno_query;
+	}
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $trial);
+
+	if (!-s $c->stash->{genotype_file_name})
+	{
+	    $self->get_cluster_genotype_query_job_args($c, $trials);
+	    my $geno_query = $c->stash->{cluster_genotype_query_job_args};
+	    push @queries, @$geno_query if $geno_query;
+	}
     }
 
-    print STDERR "\ntraining_pop_data_query_job_args queries @queries\n";
     
     $c->stash->{training_pop_data_query_job_args} = \@queries;
 }
@@ -3446,6 +3458,7 @@ sub clean_traits {
     return $terms;
 }
 
+
 sub format_phenotype_dataset_headers {
     my ($self, $all_headers, $meta_headers,  $traits_file) = @_;
     
@@ -3663,6 +3676,7 @@ sub run_rrblup_trait {
     }
     elsif (($selection_pop_id && !-s $selection_pop_gebvs_file))
     {
+	
 	$self->get_selection_pop_query_args_file($c);
 	my $pre_req = $c->stash->{selection_pop_query_args_file};
 	
@@ -3702,7 +3716,7 @@ sub run_async {
     my ($self, $c) = @_;    
 
     my $prerequisite_jobs  = $c->stash->{prerequisite_jobs} || 'none';
-    my $prerequisite_type  = $c->stash->{prerequisite_type} || 'none';
+   ### my $prerequisite_type  = $c->stash->{prerequisite_type} || 'none';
     my $background_job     = $c->stash->{background_job};
     my $dependent_jobs     = $c->stash->{dependent_jobs};
     
@@ -3715,9 +3729,12 @@ sub run_async {
    
     my $referer = $c->req->referer;
     
-    my $report_file = 'none'; 
+    my $report_file = 'none';
+
+    print STDERR "\n\nrun_async bg : $background_job\n\n";
     if ($background_job)  
     {
+	$c->stash->{async} = 1;
 	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c);
 	$report_file = $c->stash->{analysis_report_job_args_file};
     }									  
@@ -3736,17 +3753,17 @@ sub run_async {
 	
     my $cmd = 'mx-run solGS::asyncJob'
 	. ' --prerequisite_jobs '         . $prerequisite_jobs
-	. ' --prerequisite_type '         . $prerequisite_type
+#######	. ' --prerequisite_type '         . $prerequisite_type
 	. ' --dependent_jobs '            . $dependent_jobs
     	. ' --analysis_report_job '       . $report_file
-	. ' --temp_dir '                  . $temp_dir;
+###	. ' --temp_dir '                  . $temp_dir;
 
     my $cluster_job_args = {
 	'cmd' => $cmd,
 	'config' => $job_config,
 	'background_job'  => $background_job,
 	'temp_dir'     => $temp_dir,
-	'async'        => 1,
+	'async'        => $c->stash->{async},
     };
 
    my $job = $self->submit_job_cluster($c, $cluster_job_args);
@@ -4019,7 +4036,9 @@ sub get_cluster_r_job_args {
 	. "$in_file $out_temp_file " 
 	. '--args ' .  $input_files 
 	. ' ' . $output_files;
-    
+  
+
+print STDERR "\n\n cmd: $cmd\n$input_files\n$output_files\n\n";  
     my $job_args = {
 	'cmd' => $cmd,
 	'background_job' => $c->stash->{background_job},
@@ -4084,6 +4103,8 @@ sub submit_job_cluster {
 	} 
 	else 
 	{
+	    my $cmd = $args->{cmd};
+	     print STDERR "\n\nsubmit cluster job cmd: $cmd\n\n";
 	    $job->is_cluster(1);
 	    $job->run_cluster($args->{cmd});
 	    $job->wait;
