@@ -5,14 +5,14 @@ use Moose;
 use namespace::autoclean;
 
 use CXGN::Tools::Run;
-use File::Slurp qw /write_file read_file/;
-use File::Spec::Functions qw / catfile catdir/;
-use File::Temp qw / tempfile tempdir /;
-use Try::Tiny;
+#use File::Slurp qw /write_file read_file/;
+#use File::Spec::Functions qw / catfile catdir/;
+#use File::Temp qw / tempfile tempdir /;
+###use Try::Tiny;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
 
-use Carp qw/ carp confess croak /;
+#use Carp qw/ carp confess croak /;
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -43,9 +43,6 @@ sub run {
     $self->run_jobs;
           
 }
-
-
-
 
 
 sub run_jobs {
