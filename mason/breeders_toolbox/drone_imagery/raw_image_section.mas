@@ -4,7 +4,7 @@
 <table class="table table-bordered table-hover" id="raw_drone_image_datatable">
     <thead>
         <tr>
-            <th>Field Trials -> Drone Runs</th>
+            <th>Field Trials -> Imaging Events</th>
         </tr>
     </thead>
 </table>
