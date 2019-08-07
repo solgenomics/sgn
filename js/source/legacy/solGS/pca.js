@@ -69,7 +69,7 @@ solGS.pca = {
 
 	if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
 	    jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));					 
-	    jQuery("#pca_message").html("Running PCA... please wait...");
+	    jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
 	    jQuery("#run_pca").hide();
 	}  
 
