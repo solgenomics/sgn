@@ -25,8 +25,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my @criteria_list = $c->req->param('categories[]');
   my @querytypes = $c->req->param('querytypes[]');
 
-  print STDERR "criteria list = " . Dumper(@criteria_list);
-  print STDERR "querytypes = " . Dumper(@querytypes);
+  #print STDERR "criteria list = " . Dumper(@criteria_list);
+  #print STDERR "querytypes = " . Dumper(@querytypes);
 
   my $dataref = {};
   my $queryref = {};
