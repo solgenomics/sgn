@@ -177,7 +177,8 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
-my $return = $store_genotypes->store();
+$store_genotypes->store_metadata();
+$store_genotypes->store();
 
 ---------------------------------------------------------------
 
@@ -205,7 +206,8 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
 my $verified_errors = $store_genotypes->validate();
-my $return = $store_genotypes->store();
+$store_genotypes->store_metadata();
+$store_genotypes->store();
 
 ---------------------------------------------------------------
 
@@ -229,7 +231,8 @@ my $return = $store_genotypes->store();
     archived_file_type => 'genotype_vcf'  #can be 'genotype_vcf' or 'genotype_dosage'
 );
  my $verified_errors = $store_genotypes->validate();
- my $return = $store_genotypes->store();
+ $store_genotypes->store_metadata();
+ $store_genotypes->store();
 
 =head1 DESCRIPTION
 
