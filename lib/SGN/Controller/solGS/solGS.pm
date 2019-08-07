@@ -3753,10 +3753,9 @@ sub run_async {
 	
     my $cmd = 'mx-run solGS::asyncJob'
 	. ' --prerequisite_jobs '         . $prerequisite_jobs
-#######	. ' --prerequisite_type '         . $prerequisite_type
 	. ' --dependent_jobs '            . $dependent_jobs
-    	. ' --analysis_report_job '       . $report_file
-###	. ' --temp_dir '                  . $temp_dir;
+    	. ' --analysis_report_job '       . $report_file;
+    
 
     my $cluster_job_args = {
 	'cmd' => $cmd,
