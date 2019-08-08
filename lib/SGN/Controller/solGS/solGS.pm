@@ -3105,8 +3105,7 @@ sub get_cluster_phenotype_query_job_args {
 	};
 	
 	my $config = $self->create_cluster_config($c, $config_args);
-
-	print STDERR "\ncluster_phenotyp_query_job_args popid: $trial_id - cmd: $cmd\n";
+	
 	my $job_args = {
 	    'cmd' => $cmd,
 	    'config' => $config,
@@ -3716,7 +3715,6 @@ sub run_async {
     my ($self, $c) = @_;    
 
     my $prerequisite_jobs  = $c->stash->{prerequisite_jobs} || 'none';
-   ### my $prerequisite_type  = $c->stash->{prerequisite_type} || 'none';
     my $background_job     = $c->stash->{background_job};
     my $dependent_jobs     = $c->stash->{dependent_jobs};
     
@@ -3731,7 +3729,6 @@ sub run_async {
     
     my $report_file = 'none';
 
-    print STDERR "\n\nrun_async bg : $background_job\n\n";
     if ($background_job)  
     {
 	$c->stash->{async} = 1;
@@ -4036,8 +4033,6 @@ sub get_cluster_r_job_args {
 	. '--args ' .  $input_files 
 	. ' ' . $output_files;
   
-
-print STDERR "\n\n cmd: $cmd\n$input_files\n$output_files\n\n";  
     my $job_args = {
 	'cmd' => $cmd,
 	'background_job' => $c->stash->{background_job},
@@ -4102,8 +4097,6 @@ sub submit_job_cluster {
 	} 
 	else 
 	{
-	    my $cmd = $args->{cmd};
-	     print STDERR "\n\nsubmit cluster job cmd: $cmd\n\n";
 	    $job->is_cluster(1);
 	    $job->run_cluster($args->{cmd});
 	    $job->wait;
@@ -4113,7 +4106,6 @@ sub submit_job_cluster {
 
     if ($@) 
     {
-	print STDERR "\nError occured submitting the job:  $@  \nJob:  $args->{cmd}";
 	$c->stash->{Error} =  'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
 	$c->stash->{status} = 'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
     }
