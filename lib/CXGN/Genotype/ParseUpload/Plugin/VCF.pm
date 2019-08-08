@@ -162,6 +162,7 @@ sub _validate_with_plugin {
             push @missing_stocks_return, $_;
             print STDERR "WARNING! Observation unit name $_ not found for stock type $stock_type. You can pass an option to automatically create accessions.\n";
         } else {
+            print STDERR "Adding new accession $_!\n";
             my $stock = $schema->resultset("Stock::Stock")->create({
                 organism_id => $organism_id,
                 name       => $_,
