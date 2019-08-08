@@ -224,38 +224,12 @@ sub upload_genotype_verify_POST : Args(0) {
         igd_numbers_included => $include_igd_numbers
     });
     $parser->load_plugin($parser_plugin);
-    my $parsed_data = $parser->parse();
-    my $parse_errors;
-    if (!$parsed_data) {
-        my $return_error = '';
-        if (!$parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
-            $c->stash->{rest} = {error_string => $return_error,};
-        } else {
-            $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
-            }
-        }
-        $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-        $c->detach();
-    }
-    #print STDERR Dumper $parsed_data;
-    my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-    my $genotype_info = $parsed_data->{genotypes_info};
-    my $protocol_info = $parsed_data->{protocol_info};
-    $protocol_info->{'reference_genome_name'} = $reference_genome_name;
-    $protocol_info->{'species_name'} = $organism_species;
 
-    my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+    my $store_args = {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        protocol_info=>$protocol_info,
-        genotype_info=>$genotype_info,
         observation_unit_type_name=>$obs_type,
-        observation_unit_uniquenames=>$observation_unit_uniquenames,
         project_id=>$project_id,
         protocol_id=>$protocol_id,
         genotyping_facility=>$genotyping_facility, #projectprop
@@ -272,24 +246,121 @@ sub upload_genotype_verify_POST : Args(0) {
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
         archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-    });
-    my $verified_errors = $store_genotypes->validate();
-    if (scalar(@{$verified_errors->{error_messages}}) > 0){
-        #print STDERR Dumper $verified_errors->{error_messages};
-        my $error_string = join ', ', @{$verified_errors->{error_messages}};
-        $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
-        $c->detach();
-    }
-    if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        #print STDERR Dumper $verified_errors->{warning_messages};
-        my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
-        if (!$accept_warnings){
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+    };
+
+    my $return;
+    #For VCF files, memory was an issue so we parse them with an iterator
+    if ($parser_plugin eq 'VCF' || $parser_plugin eq 'transposedVCF') {
+        my $parser_return = $parser->parse_with_iterator();
+
+        if ($parser->get_parse_errors()) {
+            my $return_error = '';
+            my $parse_errors = $parser->get_parse_errors();
+            print STDERR Dumper $parse_errors;
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
             $c->detach();
         }
+
+        my $protocol = $parser->protocol_data();
+        my $store_genotypes;
+        if (my ($observation_unit_names, $genotype_info) = $parser->next()) {
+            print STDERR "Parsing first genotype and extracting protocol info... \n";
+            $protocol->{'reference_genome_name'} = $reference_genome_name;
+            $protocol->{'species_name'} = $organism_species;
+
+            $store_args->{protocol_info} = $protocol;
+            $store_args->{genotype_info} = $genotype_info;
+            $store_args->{observation_unit_uniquenames} = $observation_unit_names;
+
+            $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+            my $verified_errors = $store_genotypes->validate();
+            print STDERR Dumper $verified_errors;
+            if (scalar(@{$verified_errors->{error_messages}}) > 0){
+                my $error_string = join ', ', @{$verified_errors->{error_messages}};
+                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+                $c->detach();
+            }
+            if (scalar(@{$verified_errors->{warning_messages}}) > 0){
+                #print STDERR Dumper $verified_errors->{warning_messages};
+                my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+                if (!$accept_warnings){
+                    $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+                    $c->detach();
+                }
+            }
+
+            $store_genotypes->store_metadata();
+            $return = $store_genotypes->store();
+        }
+
+        print STDERR "Done loading first line, moving on...\n";    
+
+        while (my ($observation_unit_names, $genotype_info) = $parser->next()) {
+            if ($genotype_info) {
+                $store_genotypes->genotype_info($genotype_info);
+                $store_genotypes->observation_unit_uniquenames($observation_unit_names);
+                $return = $store_genotypes->store();
+            } else {
+                last;
+            }
+        }
     }
-    $store_genotypes->store_metadata();
-    my $return = $store_genotypes->store();
+    #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
+    elsif ($parser_plugin eq 'GridFileIntertekCSV' || $parser_plugin eq 'IntertekCSV') {
+        my $parsed_data = $parser->parse();
+        my $parse_errors;
+        if (!$parsed_data) {
+            my $return_error = '';
+            if (!$parser->has_parse_errors() ){
+                $return_error = "Could not get parsing errors";
+                $c->stash->{rest} = {error_string => $return_error,};
+            } else {
+                $parse_errors = $parser->get_parse_errors();
+                #print STDERR Dumper $parse_errors;
+                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                    $return_error=$return_error.$error_string."<br>";
+                }
+            }
+            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
+            $c->detach();
+        }
+        #print STDERR Dumper $parsed_data;
+        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+        my $genotype_info = $parsed_data->{genotypes_info};
+        my $protocol_info = $parsed_data->{protocol_info};
+        $protocol_info->{'reference_genome_name'} = $reference_genome_name;
+        $protocol_info->{'species_name'} = $organism_species;
+
+        $store_args->{protocol_info} = $protocol_info;
+        $store_args->{genotype_info} = $genotype_info;
+        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
+
+        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        my $verified_errors = $store_genotypes->validate();
+        if (scalar(@{$verified_errors->{error_messages}}) > 0){
+            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+            $c->detach();
+        }
+        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
+            #print STDERR Dumper $verified_errors->{warning_messages};
+            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            if (!$accept_warnings){
+                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+                $c->detach();
+            }
+        }
+        $store_genotypes->store_metadata();
+        $return = $store_genotypes->store();
+    }
+    else {
+        print STDERR "Parser plugin $parser_plugin not recognized!\n";
+        $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
+        $c->detach();
+    }
     $c->stash->{rest} = $return;
 }
 

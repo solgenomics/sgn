@@ -423,7 +423,7 @@ sub next_genotype {
     
     # $self->_set_parsed_data(\%parsed_data);
 
-    return ( $observation_unit_name, { $observation_unit_name => $genotypeprop } );
+    return ( [$observation_unit_name], { $observation_unit_name => $genotypeprop } );
 }
 
 1;

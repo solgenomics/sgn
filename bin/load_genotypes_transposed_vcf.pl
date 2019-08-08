@@ -215,12 +215,12 @@ my $protocol = $parser->protocol_data();
 
 my $store_genotypes;
 
-if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
+if (my ($observation_unit_names, $genotype_info) = $parser->next()) {
     print STDERR "Parsing first genotype and extracting protocol info... \n";
 
     #print STDERR "PROTOCOL: ".Dumper($parser->protocol_data());
     #print STDERR "GENOTYPE: ".Dumper($genotype_info);
-    print STDERR Dumper $observation_unit_name;
+    print STDERR Dumper $observation_unit_names;
     $protocol->{'reference_genome_name'} = $reference_genome_name;
     $protocol->{'species_name'} = $organism_species;
 
@@ -230,7 +230,7 @@ if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
 	phenome_schema=>$phenome_schema,
 	genotype_info=>$genotype_info,
 	observation_unit_type_name=>$obs_type,
-	observation_unit_uniquenames=> [ $observation_unit_name ],
+	observation_unit_uniquenames=> $observation_unit_names,
 	project_id=>$opt_h,
 	genotyping_facility=>$opt_n, #projectprop
 	breeding_program_id=>$breeding_program_id, #project_rel
@@ -266,48 +266,13 @@ if (my ($observation_unit_name, $genotype_info) = $parser->next()) {
 
 print STDERR "Done loading first accession, moving on...\n";    
 
-while (my ($observation_unit_name, $genotype_info) = $parser->next()) {
+while (my ($observation_unit_names, $genotype_info) = $parser->next()) {
     if ($genotype_info) {
 	print STDERR "parsing next... ";
-	print STDERR Dumper $observation_unit_name;
-	my $protocol_info = $parser->protocol_data();
-	$protocol_info->{'reference_genome_name'} = $reference_genome_name;
-	$protocol_info->{'species_name'} = $organism_species;
+	print STDERR Dumper $observation_unit_names;
 
-	
-	# my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
-	#     bcs_schema=>$schema,
-	#     metadata_schema=>$metadata_schema,
-	#     phenome_schema=>$phenome_schema,
-	#     protocol_id => $protocol_id,
-	#     genotype_info=>$genotype_info,
-	#     observation_unit_type_name=>$obs_type,
-	#     observation_unit_uniquenames=> [ $observation_unit_name ],
-	#     genotyping_facility=>$opt_n, #projectprop
-	#     breeding_program_id=>$breeding_program_id, #project_rel
-	#     #	project_year=>$opt_y, #projectprop#
-	#     project_location_id=>$location_id, #ndexperiment and projectprop
-	#     #	project_name=>$opt_p, #project_attr
-	#     #	project_description=>$opt_d, #project_attr
-	#     protocol_info=>$protocol,
-	#     project_id => $project_id,
-	#     organism_id=>$organism_id,
-	#     igd_numbers_included=>$include_igd_numbers,
-	#     user_id=>$sp_person_id,
-	#     archived_filename=>$archived_filename_with_path,
-	#     archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-	# 							     });
-	#my $verified_errors = $store_genotypes->validate();
-	#if (scalar(@{$verified_errors->{error_messages}}) > 0){
-	#    print STDERR Dumper $verified_errors;
-	#    print STDERR Dumper "There exist errors in your file. Not storing!\n";
-	#    die;
-	#}
-
-	# re-use old object instance...
-	#
 	$store_genotypes->genotype_info($genotype_info);
-	$store_genotypes->observation_unit_uniquenames( [ $observation_unit_name ]);
+	$store_genotypes->observation_unit_uniquenames($observation_unit_names);
 	my $return = $store_genotypes->store();
 	print STDERR "Successfully stored genotype.\n";
     } else {

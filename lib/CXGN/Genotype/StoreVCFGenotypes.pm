@@ -514,6 +514,21 @@ sub validate {
         push @error_messages, "No observtaion_unit_names in file";
     }
 
+    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
+    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    $self->snp_genotype_id($snp_genotype_id);
+    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    $self->geno_cvterm_id($geno_cvterm_id);
+
+    my $snp_genotypingprop_cvterm_id;
+    if ($self->archived_file_type eq 'genotype_vcf'){
+        $snp_genotypingprop_cvterm_id = $snp_vcf_cvterm_id;
+    } elsif ($self->archived_file_type eq 'genotype_dosage'){
+        $snp_genotypingprop_cvterm_id = $snp_genotype_id;
+    }
+    $self->snp_genotypingprop_cvterm_id($snp_genotypingprop_cvterm_id);
+
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
     foreach (@$observation_unit_uniquenames) {
@@ -636,23 +651,24 @@ sub validate {
     }
 
     my $previous_genotypes_exist;
-    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    $self->snp_genotype_id($snp_genotype_id);
+    # my $q_g = "SELECT stock.stock_id, stock.uniquename, genotypeprop.genotypeprop_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop ON(genotypeprop.genotype_id=nd_experiment_genotype.genotype_id AND genotypeprop.type_id=$snp_vcf_cvterm_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_protocol USING(nd_protocol_id) JOIN nd_experiment_project JOIN USING(nd_experiment_id) WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F' AND nd_protocol_id=$protocol_id AND project_id=$project_id;";
+    # my $q_g_h = $schema->storage->dbh()->prepare($q_g);
+    # $q_g_h->execute();
+    
     my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search({
         'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
         'me.type_id' => $stock_type_id,
         'me.organism_id' => $organism_id,
         'nd_experiment.type_id' => $geno_cvterm_id,
-        'genotype.type_id' => $snp_genotype_id
+        'genotype.type_id' => [$snp_vcf_cvterm_id, $snp_genotype_id]
     }, {
         join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
-        '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],
-        '+as' => ['protocol_id', 'protocol_name', 'project_id', 'project_name'],
+        '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name', 'genotype.genotype_id', 'nd_experiment_genotypes.nd_experiment_genotype_id', 'nd_experiment.nd_experiment_id', 'nd_experiment_stocks.nd_experiment_stock_id', 'nd_experiment_projects.nd_experiment_project_id', 'nd_experiment_protocols.nd_experiment_protocol_id'],
+        '+as' => ['protocol_id', 'protocol_name', 'project_id', 'project_name', 'genotype_id', 'nd_experiment_genotype_id', 'nd_experiment_id', 'nd_experiment_stock_id', 'nd_experiment_project_id', 'nd_experiment_protocol_id'],
         order_by => 'genotype.genotype_id'
     });
     while(my $r = $previous_genotypes_rs->next){
-	print STDERR "PREVIOUS GENOTYPES ".join (",", ($r->get_column('uniquename'), $r->get_column('protocol_name'), $r->get_column('project_name')))."\n";
+        print STDERR "PREVIOUS GENOTYPES ".join (",", ($r->get_column('uniquename'), $r->get_column('protocol_name'), $r->get_column('project_name'), $r->get_column('genotype_id'), $r->get_column('nd_experiment_genotype_id'), $r->get_column('nd_experiment_id'), $r->get_column('nd_experiment_stock_id'), $r->get_column('nd_experiment_project_id'), $r->get_column('nd_experiment_protocol_id')))."\n";
         my $uniquename = $r->uniquename;
         my $protocol_name = $r->get_column('protocol_name');
         my $project_name = $r->get_column('project_name');
@@ -721,16 +737,7 @@ sub store_metadata {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     $self->stock_type_id($stock_type_id);
-    
-    #for differentiating between genotypeprop info stored in the 'old' format of only storing dosage in json, and genotypeprop data stored in the expanded json form
-    my $snp_genotypingprop_cvterm_id;
-    if ($self->archived_file_type eq 'genotype_vcf'){
-        $snp_genotypingprop_cvterm_id = $snp_vcf_cvterm_id;
-    } elsif ($self->archived_file_type eq 'genotype_dosage'){
-        $snp_genotypingprop_cvterm_id = $self->snp_genotype_id();
-    }
-    $self->snp_genotypingprop_cvterm_id($snp_genotypingprop_cvterm_id);
-    
+
     #when project_id is provided, a new project is not created
     my $project_id;
     my $project_check = $schema->resultset("Project::Project")->find({
@@ -829,6 +836,8 @@ sub store_metadata {
             $stock_lookup{$synonym} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
         }
     }
+
+    print STDERR Dumper \%stock_lookup;
 
     $self->stock_lookup(\%stock_lookup);
     print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
