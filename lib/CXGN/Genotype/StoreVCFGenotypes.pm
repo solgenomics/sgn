@@ -811,13 +811,25 @@ sub store_metadata {
     $h->execute();
 
     while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
-        $stock_lookup{$uniquename} = $stock_id;
+        $stock_lookup{$uniquename} = { stock_id => $stock_id };
         if ($type_id) {
             if ($type_id == $self->synonym_type_id()) {
-                $stock_lookup{$synonym} = $stock_id;
+                $stock_lookup{$synonym} = { stock_id => $stock_id };
             }
         }
     }
+
+    # Updates stock_lookup to have the genotypeprop_ids for samples previously saved in this protocol/project. Useful for when appending genotypes to the jsonb
+    my $q_g = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id, genotypeprop.genotypeprop_id FROM stock LEFT JOIN stockprop USING(stock_id) JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop ON(genotypeprop.genotype_id=nd_experiment_genotype.genotype_id AND genotypeprop.type_id=".$self->snp_vcf_cvterm_id.") JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F' AND nd_protocol_id=$protocol_id AND project_id=$project_id;";
+    my $q_g_h = $schema->storage->dbh()->prepare($q_g);
+    $q_g_h->execute();
+    while (my ($stock_id, $uniquename, $synonym, $type_id, $genotypeprop_id) = $q_g_h->fetchrow_array()) {
+        $stock_lookup{$uniquename} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+        if ($type_id && $type_id == $self->synonym_type_id()) {
+            $stock_lookup{$synonym} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+        }
+    }
+
     $self->stock_lookup(\%stock_lookup);
     print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
 
@@ -846,11 +858,17 @@ sub store {
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
 
-    #preparing insertion of new genotypes and genotype props
     my $genotypeprop_observation_units = $self->genotype_info;
-    my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
-    #my $new_genotypeprop_sql = "SELECT jsonb_insert(value, '{}', ?::jsonb) FROM genotypeprop WHERE genotype_id = ? AND type_id = ?;";
+
+    #Preparing insertion of new genotypes. Will insert/update marker genotype score into genotypeprop jsonb
+    my $new_genotypeprop_sql = "UPDATE genotypeprop SET value = (CASE
+        WHEN value->? IS NULL
+        THEN jsonb_insert(value, ?, ?::jsonb)
+        WHEN value->? IS NOT NULL
+        THEN jsonb_set(value, ?, ?::jsonb)
+    END) WHERE genotypeprop_id = ?;";
     my $h_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
+
     my %nd_experiment_ids;
     my $stock_relationship_schema = $schema->resultset("Stock::StockRelationship");
     my $nd_experiment_schema = $schema->resultset('NaturalDiversity::NdExperiment');
@@ -898,7 +916,9 @@ sub store {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
         }
         #print STDERR Dumper $observation_unit_name;
-        my $stock_id = $self->stock_lookup()->{$observation_unit_name};
+        my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
+        my $stock_id = $stock_lookup_obj->{stock_id};
+        my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
 
         if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
             my $pop_rs = $stock_relationship_schema->find_or_create({
@@ -908,41 +928,42 @@ sub store {
             });
         }
 
-        my $experiment = $nd_experiment_schema->create({
-            nd_geolocation_id => $self->project_location_id(),
-            type_id => $self->geno_cvterm_id(),
-            nd_experiment_projects => [ {project_id => $self->project_id()} ],
-            nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $self->geno_cvterm_id() } ],
-            nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
-        });
-        my $nd_experiment_id = $experiment->nd_experiment_id();
+        if (!$genotypeprop_id) {
+            my $experiment = $nd_experiment_schema->create({
+                nd_geolocation_id => $self->project_location_id(),
+                type_id => $self->geno_cvterm_id(),
+                nd_experiment_projects => [ {project_id => $self->project_id()} ],
+                nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $self->geno_cvterm_id() } ],
+                nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
+            });
+            my $nd_experiment_id = $experiment->nd_experiment_id();
 
-        print STDERR "Storing new genotype for stock " . $observation_unit_name . " \n";
-        my $genotype = $genotype_schema->create({
-            name        => $observation_unit_name . "|" . $nd_experiment_id,
-            uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
-            description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
-            type_id     => $self->snp_genotype_id(),
-        });
-        my $genotype_id = $genotype->genotype_id();
+            my $genotype = $genotype_schema->create({
+                name        => $observation_unit_name . "|" . $nd_experiment_id,
+                uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
+                description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
+                type_id     => $self->snp_genotype_id(),
+            });
+            my $genotype_id = $genotype->genotype_id();
 
-        my $genotypeprop_json = $genotypeprop_observation_units->{$_};
-        my $json_string = encode_json $genotypeprop_json;
+            my $add_genotypeprop_obj = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->snp_genotypingprop_cvterm_id(), value => encode_json {} });
+            $genotypeprop_id = $add_genotypeprop_obj->genotypeprop_id;
 
-        #Store json for genotype. Has all markers and scores for this stock.
-        $h_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
+            #Store IGD number if the option is given.
+            if ($self->igd_numbers_included()) {
+                my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => encode_json {'igd_number' => $igd_number} });
+            }
 
-        #Store IGD number if the option is given.
-        if ($self->igd_numbers_included()) {
-            my %igd_number = ('igd_number' => $igd_number);
-            my $json_obj = JSON::Any->new;
-            my $json_string = $json_obj->encode(\%igd_number);
-            my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => $json_string });
+            #link the genotype to the nd_experiment
+            my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
+            $nd_experiment_ids{$nd_experiment_id}++;
         }
 
-        #link the genotype to the nd_experiment
-        my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
-        $nd_experiment_ids{$nd_experiment_id}++;
+        my $genotypeprop_json = $genotypeprop_observation_units->{$_};
+        while (my ($m, $v) = each %$genotypeprop_json) {
+            my $v_string = encode_json $v;
+            $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+        }
     }
 
     foreach my $nd_experiment_id (keys %nd_experiment_ids) {
