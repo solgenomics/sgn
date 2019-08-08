@@ -17,7 +17,7 @@ This patch updates the materialized view for all stockprops by using public.stoc
 
 =head1 AUTHOR
 
-
+Nicolas Morales nm529@cornell.edu
 
 =head1 COPYRIGHT & LICENSE
 
