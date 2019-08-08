@@ -97,5 +97,26 @@ sub parse {
     return;
 }
 
+sub parse_with_iterator {
+    my $self = shift;
+
+    if (!$self->_validate_with_plugin()) {
+        my $errors = $self->get_parse_errors();
+        #print STDERR "\nCould not validate genotypes file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";
+        return;
+    }
+
+    if (!$self->_parse_with_plugin()) {
+        my $errors = $self->get_parse_errors();
+        #print STDERR "\nCould not parse genotypes file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";
+        return 1;
+    }
+}
+
+sub next {
+    my $self = shift;
+
+    return $self->next_genotype();
+}
 
 1;
