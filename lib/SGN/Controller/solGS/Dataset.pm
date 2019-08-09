@@ -32,15 +32,14 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     
     $c->stash->{dataset_id} = $dataset_id;
     $self->get_dataset_trials_details($c);
-    my $trials_ids = $c->stash->{dataset_trials_ids};
-    my $combo_pops_id = $c->stash->{dataset_combo_trials_id};
     
-    if ($trials_ids->[0]) 
-    {
-	$c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
-	$c->stash->{rest}{'trials_ids'} = $trials_ids;
-	$c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
-    }
+    my $trials_ids = $c->stash->{trials_ids};
+    my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $trials_names = $c->stash->{trials_names};
+    
+    $c->stash->{rest}{'trials_ids'} = $trials_ids;
+    $c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
+    $c->stash->{rest}{'trials_names'} = $trials_names;
        
 }
 
@@ -69,7 +68,7 @@ sub check_predicted_dataset_selection :Path('/solgs/check/predicted/dataset/sele
 }
 
 
-sub get_dataset_trials_details {
+sub get_dataset_trials_ids {
     my ($self, $c) = @_;
     my $dataset_id = $c->stash->{dataset_id};
   
@@ -77,14 +76,17 @@ sub get_dataset_trials_details {
     my $data = $model->get_dataset_data($dataset_id);
     my $trials_ids = $data->{categories}->{trials};
     $c->stash->{dataset_trials_ids} = $trials_ids;
+    $c->stash->{trials_ids} = $trials_ids;
 
-    if (scalar(@$trials_ids) > 1)
-    {
-	$c->stash->{pops_ids_list} = $trials_ids;
-	$c->controller('solGS::List')->process_trials_list_details($c);
-	$c->stash->{dataset_combo_trials_id} = $c->stash->{combo_pops_id};
-    }
-          
+}
+
+
+sub get_dataset_trials_details {
+    my ($self, $c) = @_;
+    
+    $self->get_dataset_trials_ids($c);
+    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+
 }
 
 
@@ -182,7 +184,6 @@ sub create_dataset_pheno_data_query_jobs {
 	$c->stash->{plots_names} = $data->{categories}->{plots};
 	my $plots = $data->{categories}->{plots};
 
-	print STDERR "\n create_dataset_pheno_data_query_jobs plots @$plots\n";
 	$c->controller('solGS::List')->plots_list_phenotype_query_job($c);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
     } 
@@ -192,7 +193,7 @@ sub create_dataset_pheno_data_query_jobs {
 	
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
-		print STDERR "\n create_dataset_pheno_data_query_jobs trials @$trials_ids\n";
+	
 	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials_ids);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }    
