@@ -288,6 +288,7 @@ sub upload_genotype_verify_POST : Args(0) {
             $c->detach();
         }
     }
+    $store_genotypes->store_metadata();
     my $return = $store_genotypes->store();
     $c->stash->{rest} = $return;
 }

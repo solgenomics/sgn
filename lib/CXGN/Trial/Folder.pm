@@ -2,7 +2,7 @@
 package CXGN::Trial::Folder;
 
 use CXGN::Chado::Cvterm;
-
+use CXGN::Location;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -54,6 +54,10 @@ has 'folder_for_genotyping_trials' => (isa => 'Bool',
 );
 
 has 'location_id' => (isa => 'Int',
+	is => 'rw',
+);
+
+has 'location_name' => (isa => 'Str',
 	is => 'rw',
 );
 
@@ -127,6 +131,8 @@ sub BUILD {
 				$self->folder_type("genotyping_trial");
 			} elsif ($tt->type_id == $location_cvterm_id) {
 				$self->location_id($tt->value + 0);
+                my $location = CXGN::Location->new( { bcs_schema => $self->bcs_schema, nd_geolocation_id => $self->location_id } );
+                $self->location_name($location->name());
 			}
 		}
 

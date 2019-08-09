@@ -240,6 +240,7 @@ if (scalar(@{$verified_errors->{error_messages}}) > 0){
     print STDERR Dumper "There exist errors in your file. Not storing!\n";
     die;
 }
+$store_genotypes->store_metadata();
 my $return = $store_genotypes->store();
 
 print STDERR "Complete!\n";
