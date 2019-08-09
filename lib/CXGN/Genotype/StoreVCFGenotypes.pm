@@ -862,14 +862,17 @@ sub store {
 
     my $genotypeprop_observation_units = $self->genotype_info;
 
+    my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?) RETURNING genotypeprop_id;";
+    my $h_new_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
+
     #Preparing insertion of new genotypes. Will insert/update marker genotype score into genotypeprop jsonb
-    my $new_genotypeprop_sql = "UPDATE genotypeprop SET value = (CASE
+    my $update_genotypeprop_sql = "UPDATE genotypeprop SET value = (CASE
         WHEN value->? IS NULL
         THEN jsonb_insert(value, ?, ?::jsonb)
         WHEN value->? IS NOT NULL
         THEN jsonb_set(value, ?, ?::jsonb)
     END) WHERE genotypeprop_id = ?;";
-    my $h_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
+    my $h_genotypeprop = $schema->storage->dbh()->prepare($update_genotypeprop_sql);
 
     my %nd_experiment_ids;
     my $stock_relationship_schema = $schema->resultset("Stock::StockRelationship");
@@ -930,6 +933,7 @@ sub store {
             });
         }
 
+        my $genotypeprop_json = $genotypeprop_observation_units->{$_};
         if (!$genotypeprop_id) {
             my $experiment = $nd_experiment_schema->create({
                 nd_geolocation_id => $self->project_location_id(),
@@ -948,8 +952,9 @@ sub store {
             });
             my $genotype_id = $genotype->genotype_id();
 
-            my $add_genotypeprop_obj = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->snp_genotypingprop_cvterm_id(), value => encode_json {} });
-            $genotypeprop_id = $add_genotypeprop_obj->genotypeprop_id;
+            my $json_string = encode_json $genotypeprop_json;
+            $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
+            my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
             $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
 
             #Store IGD number if the option is given.
@@ -957,15 +962,16 @@ sub store {
                 my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => encode_json {'igd_number' => $igd_number} });
             }
 
+
             #link the genotype to the nd_experiment
             my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
             $nd_experiment_ids{$nd_experiment_id}++;
         }
-
-        my $genotypeprop_json = $genotypeprop_observation_units->{$_};
-        while (my ($m, $v) = each %$genotypeprop_json) {
-            my $v_string = encode_json $v;
-            $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+        else {
+            while (my ($m, $v) = each %$genotypeprop_json) {
+                my $v_string = encode_json $v;
+                $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+            }
         }
     }
 
