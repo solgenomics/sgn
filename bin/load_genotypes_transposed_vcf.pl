@@ -216,7 +216,7 @@ my $protocol = $parser->protocol_data();
 my $store_genotypes;
 
 my ($observation_unit_names, $genotype_info) = $parser->next();
-if ($genotype_info) {
+if (scalar(keys %$genotype_info) > 0) {
     print STDERR "Parsing first genotype and extracting protocol info... \n";
 
     #print STDERR "PROTOCOL: ".Dumper($parser->protocol_data());

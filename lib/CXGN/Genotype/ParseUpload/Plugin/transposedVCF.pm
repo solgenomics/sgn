@@ -316,7 +316,7 @@ sub next_genotype {
     #print STDERR "Processing next genotype...\n";
     my @fields;
 
-    my $genotypeprop; # hashref
+    my $genotypeprop = {}; # hashref
     my $observation_unit_name;
     
     my $line;
@@ -326,7 +326,7 @@ sub next_genotype {
     if (! ($line = <$F>)) { 
 	print STDERR "No next genotype... Done!\n"; 
 	close($F); 
-	return undef;
+	return ( [$observation_unit_name], $genotypeprop );
     }
     else {
 	chomp($line);
@@ -337,7 +337,8 @@ sub next_genotype {
 	    print STDERR "Skipping 8 more lines... ";
 	    for (0..7) { $line = <$F>; }
 	}
-	
+    chomp($line);
+
 	my @fields = split /\t/, $line;
 
 	$observation_unit_name = $fields[0];

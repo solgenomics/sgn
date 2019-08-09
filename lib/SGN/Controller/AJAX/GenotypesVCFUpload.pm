@@ -276,7 +276,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $protocol->{'species_name'} = $organism_species;
         my $store_genotypes;
         my ($observation_unit_names, $genotype_info) = $parser->next();
-        if ($genotype_info) {
+        if (scalar(keys %$genotype_info) > 0) {
             print STDERR "Parsing first genotype and extracting protocol info... \n";
 
             $store_args->{protocol_info} = $protocol;

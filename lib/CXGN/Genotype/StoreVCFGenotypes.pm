@@ -917,7 +917,7 @@ sub store {
         } else {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
         }
-        #print STDERR Dumper $observation_unit_name;
+        #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
         my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
         my $stock_id = $stock_lookup_obj->{stock_id};
         my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
