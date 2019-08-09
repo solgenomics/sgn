@@ -759,7 +759,7 @@ sub store_metadata {
             bcs_schema => $schema,
             trial_id => $project_id
         });
-        #$t->breeding_program_id($self->breeding_program_id);
+        $t->set_breeding_program($self->breeding_program_id);
         $self->project_location_id($location_id);
     }
 
@@ -836,9 +836,6 @@ sub store_metadata {
             $stock_lookup{$synonym} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
         }
     }
-
-    print STDERR Dumper \%stock_lookup;
-
     $self->stock_lookup(\%stock_lookup);
     print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
 
@@ -957,6 +954,7 @@ sub store {
 
             my $add_genotypeprop_obj = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->snp_genotypingprop_cvterm_id(), value => encode_json {} });
             $genotypeprop_id = $add_genotypeprop_obj->genotypeprop_id;
+            $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
 
             #Store IGD number if the option is given.
             if ($self->igd_numbers_included()) {
@@ -971,6 +969,7 @@ sub store {
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
         while (my ($m, $v) = each %$genotypeprop_json) {
             my $v_string = encode_json $v;
+            print STDERR Dumper [$m, $genotypeprop_id, $v_string];
             $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
         }
     }

@@ -70,7 +70,6 @@ sub _validate_with_plugin {
         my $line_count = 1;
         while (<$F>) {
             chomp;
-            #print STDERR Dumper $_;
 
             if ($_ =~ m/^##/){
                 next;
@@ -238,7 +237,7 @@ sub extract_protocol_data {
     my $self = shift;
     my %protocolprop_info;
 
-    for (my $i=1; $i<@{$self->ids()}; $i++) { 
+    for (my $i=0; $i<@{$self->ids()}; $i++) {
         my $marker_info_p2 = $self->ids()->[$i];
         my $marker_name;
         my $marker_info_p8 = $self->format()->[$i];
@@ -280,8 +279,8 @@ sub _parse_with_plugin {
 
     my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
-    while (<$F> =~ m/^##/ || <$F> =~ m/^#/) {
-        my $trash = <$F>; # Remove header lines
+    while (<$F> =~ m/^##/) {
+        #Trash header lines
     }
     $self->_fh($F);
 }
@@ -303,7 +302,6 @@ sub next_genotype {
     }
     else {
         chomp($line);
-        print STDERR Dumper $line;
         LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
 
         my @fields = split /\t/, $line;
@@ -376,144 +374,5 @@ sub next_genotype {
 
     return ($observation_unit_names, \%genotypeprop_observation_units);
 }
-
-# sub _parse_with_plugin {
-#     my $self = shift;
-#     my $filename = $self->get_filename();
-#     my $schema = $self->get_chado_schema();
-#     my $stock_type = $self->get_observation_unit_type_name;
-# 
-#     print STDERR "Reading VCF to parse\n";
-# 
-#     my %protocolprop_info;
-#     my %genotypeprop_observation_units;
-#     my @observation_unit_names;
-# 
-#     my $F;
-#     open($F, "<", $filename) || die "Can't open file $filename\n";
-# 
-#         my @header_info;
-#         my @fields;
-#         while (<$F>) {
-#             chomp;
-#             #print STDERR Dumper $_;
-# 
-#             if ($_ =~ m/^##/){
-#                 push @header_info, $_;
-#                 next;
-#             }
-#             if ($_ =~ m/^#/){
-#                 my $header = $_;
-#                 @fields = split /\t/, $header;
-#                 @observation_unit_names = @fields[9..$#fields];
-#                 next;
-#             }
-# 
-#             @fields = split /\t/;
-# 
-#             my @marker_info = @fields[ 0..8 ];
-#             my @values = @fields[ 9..$#fields ];
-# 
-#             my $marker_name;
-#             my $marker_info_p2 = $marker_info[2];
-#             my $marker_info_p8 = $marker_info[8];
-#             if ($marker_info_p2 eq '.') {
-#                 $marker_name = $marker_info[0]."_".$marker_info[1];
-#             } else {
-#                 $marker_name = $marker_info_p2;
-#             }
-# 
-#             #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-#             my %marker = (
-#                 name => $marker_name,
-#                 chrom => $marker_info[0],
-#                 pos => $marker_info[1],
-#                 ref => $marker_info[3],
-#                 alt => $marker_info[4],
-#                 qual => $marker_info[5],
-#                 filter => $marker_info[6],
-#                 info => $marker_info[7],
-#                 format => $marker_info_p8,
-#             );
-#             $protocolprop_info{'markers'}->{$marker_name} = \%marker;
-#             push @{$protocolprop_info{'marker_names'}}, $marker_name;
-#             push @{$protocolprop_info{'markers_array'}}, \%marker;
-# 
-#             my @separated_alts = split ',', $marker_info[4];
-# 
-#             my @format =  split /:/,  $marker_info_p8;
-#             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-#             for (my $i = 0; $i < scalar(@observation_unit_names); $i++ ) {
-#                 my @fvalues = split /:/, $values[$i];
-#                 my %value;
-#                 #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-#                 #    $value{@format[$fv]} = @fvalues[$fv];
-#                 #}
-#                 @value{@format} = @fvalues;
-#                 my $gt_dosage = 0;
-#                 if (exists($value{'GT'})) {
-#                     my $gt = $value{'GT'};
-#                     my $separator = '/';
-#                     my @alleles = split (/\//, $gt);
-#                     if (scalar(@alleles) <= 1){
-#                         @alleles = split (/\|/, $gt);
-#                         if (scalar(@alleles) > 1) {
-#                             $separator = '|';
-#                         }
-#                     }
-# 
-#                     my @nucleotide_genotype;
-#                     my @ref_calls;
-#                     my @alt_calls;
-#                     foreach (@alleles) {
-#                         if (looks_like_number($_)) {
-#                             $gt_dosage = $gt_dosage + $_;
-#                             my $index = $_ + 0;
-#                             if ($index == 0) {
-#                                 push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
-#                                 push @ref_calls, $marker_info[3];
-#                             } else {
-#                                 push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
-#                                 push @alt_calls, $separated_alts[$index-1];
-#                             }
-#                         } else {
-#                             push @nucleotide_genotype, $_;
-#                         }
-#                     }
-#                     if ($separator eq '/') {
-#                         $separator = ',';
-#                         @nucleotide_genotype = (@ref_calls, @alt_calls);
-#                     }
-#                     $value{'NT'} = join $separator, @nucleotide_genotype;
-#                 }
-#                 if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-#                     $value{'DS'} = $gt_dosage;
-#                 }
-#                 if (looks_like_number($value{'DS'})) {
-#                     my $rounded_ds = round($value{'DS'});
-#                     $value{'DS'} = "$rounded_ds";
-#                 }
-#                 $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
-#             }
-#         }
-# 
-#     close($F);
-# 
-#     $protocolprop_info{'header_information_lines'} = \@header_info;
-#     $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
-# 
-#     #print STDERR Dumper \%protocolprop_info;
-#     #print STDERR Dumper \%genotypeprop_observation_units;
-# 
-#     my %parsed_data = (
-#         protocol_info => \%protocolprop_info,
-#         genotypes_info => \%genotypeprop_observation_units,
-#         observation_unit_uniquenames => \@observation_unit_names
-#     );
-# 
-#     $self->_set_parsed_data(\%parsed_data);
-# 
-#     return 1;
-# }
 
 1;

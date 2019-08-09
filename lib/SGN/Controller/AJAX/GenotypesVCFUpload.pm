@@ -81,6 +81,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     #archive uploaded file
     my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
+    my $upload_transposed_vcf = $c->req->upload('upload_genotype_transposed_vcf_file_input');
     my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
     my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
 
@@ -106,6 +107,12 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_vcf->tempname;
         $subdirectory = "genotype_vcf_upload";
         $parser_plugin = 'VCF';
+    }
+    if ($upload_transposed_vcf) {
+        $upload_original_name = $upload_transposed_vcf->filename();
+        $upload_tempfile = $upload_transposed_vcf->tempname;
+        $subdirectory = "genotype_transpoed_vcf_upload";
+        $parser_plugin = 'transposedVCF';
     }
 
     my $archived_intertek_marker_info_file;
@@ -265,11 +272,11 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         my $protocol = $parser->protocol_data();
+        $protocol->{'reference_genome_name'} = $reference_genome_name;
+        $protocol->{'species_name'} = $organism_species;
         my $store_genotypes;
         if (my ($observation_unit_names, $genotype_info) = $parser->next()) {
             print STDERR "Parsing first genotype and extracting protocol info... \n";
-            $protocol->{'reference_genome_name'} = $reference_genome_name;
-            $protocol->{'species_name'} = $organism_species;
 
             $store_args->{protocol_info} = $protocol;
             $store_args->{genotype_info} = $genotype_info;
@@ -277,7 +284,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
             $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
             my $verified_errors = $store_genotypes->validate();
-            print STDERR Dumper $verified_errors;
+            # print STDERR Dumper $verified_errors;
             if (scalar(@{$verified_errors->{error_messages}}) > 0){
                 my $error_string = join ', ', @{$verified_errors->{error_messages}};
                 $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
