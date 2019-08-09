@@ -4,8 +4,9 @@
 load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, based on the load_cassava_snps.pl script by Naama.
 
 =head1 SYNOPSIS
-    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "BTI" -n "IGD" -b "accession" -m "test_protocol_01_new" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
-    
+    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -c VCF -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "test_location" -n "IGD" -b "accession" -m "test_protocol_01_new" -k "protocol description" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
+
+    If you are loading a "transposed VCF" use -c transposedVCF otherwise for a normal VCF use -c VCF
     To use an existing project (not create a new project name entry), use -h project_id
     To use an existing protocol (not create a new nd_protocol name entry), use -j protocol_id
 
@@ -14,6 +15,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -H host name (required) e.g. "localhost"
  -D database name (required) e.g. "cxgn_cassava"
  -U database username (required)
+ -c VCF file type. transposedVCF or VCF
  -i path to infile (required)
  -r archive path (required)
  -u username in database (required)
@@ -46,8 +48,11 @@ This script loads genotype data into the Chado genotype table it encodes the gen
 
 This script mimics exactly the "online process" in SGN::Controller::AJAX::GenotypesVCFUpload->upload_genotype_verify
 
+Can use a transposedVCF or normal VCF
+
 =head1 AUTHOR
- Nicolas Morales (nm529@cornell.edu) May 2016
+ Nicolas Morales (nm529@cornell.edu)
+ Lukas Mueller <lam87@cornell.edu>
 =cut
 
 use strict;
@@ -74,12 +79,16 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
+our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
 
-getopts('H:U:i:r:u:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:');
+getopts('H:U:i:r:u:c:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:');
 
-if (!$opt_H || !$opt_U || !$opt_D || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
+if (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
+}
+
+if ($opt_c ne 'transposedVCF' && $opt_c ne 'VCF') {
+    die "Not a valid option c\n";
 }
 
 my $file = $opt_i;
@@ -192,55 +201,76 @@ my $parser = CXGN::Genotype::ParseUpload->new({
     create_missing_observation_units_as_accessions => $add_accessions,
     igd_numbers_included => $include_igd_numbers
 });
-$parser->load_plugin('VCF');
-my $parsed_data = $parser->parse();
-if (!$parsed_data) {
-    if (!$parser->has_parse_errors() ){
-        print STDERR "Could not get parsing errors\n";
-    } else {
-        my $parse_errors = $parser->get_parse_errors();
-        print STDERR Dumper $parse_errors;
-    }
-    die;
-}
-#print STDERR Dumper $parsed_data;
-my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-my $genotype_info = $parsed_data->{genotypes_info};
-my $protocol_info = $parsed_data->{protocol_info};
-$protocol_info->{'reference_genome_name'} = $reference_genome_name;
-$protocol_info->{'species_name'} = $organism_species;
 
-my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
-    bcs_schema=>$schema,
-    metadata_schema=>$metadata_schema,
-    phenome_schema=>$phenome_schema,
-    protocol_info=>$protocol_info,
-    genotype_info=>$genotype_info,
-    observation_unit_type_name=>$obs_type,
-    observation_unit_uniquenames=>$observation_unit_uniquenames,
-    project_id=>$opt_h,
-    protocol_id=>$opt_j,
-    genotyping_facility=>$opt_n, #projectprop
-    breeding_program_id=>$breeding_program_id, #project_rel
-    project_year=>$opt_y, #projectprop
-    project_location_id=>$location_id, #ndexperiment and projectprop
-    project_name=>$opt_p, #project_attr
-    project_description=>$opt_d, #project_attr
-    protocol_name=>$opt_m,
-    protocol_description=>$opt_k,
-    organism_id=>$organism_id,
-    igd_numbers_included=>$include_igd_numbers,
-    user_id=>$sp_person_id,
-    archived_filename=>$archived_filename_with_path,
-    archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-});
-my $verified_errors = $store_genotypes->validate();
-if (scalar(@{$verified_errors->{error_messages}}) > 0){
-    print STDERR Dumper $verified_errors;
-    print STDERR Dumper "There exist errors in your file. Not storing!\n";
-    die;
+$parser->load_plugin($opt_c);
+$parser->parse_with_iterator();
+
+my $project_id;
+my $protocol = $parser->protocol_data();
+$protocol->{'reference_genome_name'} = $reference_genome_name;
+$protocol->{'species_name'} = $organism_species;
+
+my $store_genotypes;
+my ($observation_unit_names, $genotype_info) = $parser->next();
+if (scalar(keys %$genotype_info) > 0) {
+    print STDERR "Parsing first genotype and extracting protocol info... \n";
+    print STDERR Dumper $observation_unit_names;
+
+    $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        genotype_info=>$genotype_info,
+        observation_unit_type_name=>$obs_type,
+        observation_unit_uniquenames=> $observation_unit_names,
+        project_id=>$opt_h,
+        genotyping_facility=>$opt_n, #projectprop
+        breeding_program_id=>$breeding_program_id, #project_rel
+        project_year=>$opt_y, #projectprop
+        project_location_id=>$location_id, #ndexperiment and projectprop
+        project_name=>$opt_p, #project_attr
+        project_description=>$opt_d, #project_attr
+        protocol_id => $protocol_id,
+        protocol_name=>$opt_m,
+        protocol_description=>$opt_k,
+        protocol_name => $opt_m,
+        protocol_info=>$protocol,
+        organism_id=>$organism_id,
+        igd_numbers_included=>$include_igd_numbers,
+        user_id=>$sp_person_id,
+        archived_filename=>$archived_filename_with_path,
+        archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+    });
+    my $verified_errors = $store_genotypes->validate();
+    if (scalar(@{$verified_errors->{error_messages}}) > 0){
+        print STDERR Dumper $verified_errors;
+        print STDERR Dumper "There exist errors in your file. Not storing!\n";
+        die;
+    }
+
+    $store_genotypes->store_metadata();
+    my $result = $store_genotypes->store();
+    $protocol_id = $result->{nd_protocol_id};
+    $project_id = $result->{project_id};
 }
-$store_genotypes->store_metadata();
-my $return = $store_genotypes->store();
+
+print STDERR "Done loading first accession, moving on...\n";    
+
+my $continue_iterate = 1;
+while ($continue_iterate == 1) {
+    my ($observation_unit_names, $genotype_info) = $parser->next();
+    if (scalar(keys %$genotype_info) > 0) {
+        print STDERR "parsing next... ";
+        print STDERR Dumper $observation_unit_names;
+
+        $store_genotypes->genotype_info($genotype_info);
+        $store_genotypes->observation_unit_uniquenames($observation_unit_names);
+        my $return = $store_genotypes->store();
+        print STDERR "Successfully stored genotype.\n";
+    } else {
+        $continue_iterate = 0;
+        last;
+    }
+}
 
 print STDERR "Complete!\n";
