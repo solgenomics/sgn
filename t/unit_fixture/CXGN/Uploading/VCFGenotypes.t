@@ -234,4 +234,71 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is(scalar(@{$response->{data}}), 3);
 
+
+my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
+
+#test upload with file where sample names are not in the database
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_transposed_vcf_file_input => [ $file, 'genotype_transposed_vcf_data_upload' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Transposed VCF project 1",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"accession", #IDEALLY THIS IS "tissue_sample"
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Transposed VCF project 1",
+            "upload_genotype_vcf_protocol_name"=>"Transposed VCF protocol 1",
+            "upload_genotype_vcf_include_igd_numbers"=>1,
+            "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+            "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
+        ]
+    );
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is($message_hash->{success}, 1);
+ok($message_hash->{project_id});
+ok($message_hash->{nd_protocol_id});
+
+my $file = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_grid.csv";
+my $snp_info_file = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_info.csv";
+
+#test upload with file where sample names are not in the database
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_intertek_file_input => [ $file, 'genotype_intertek_grid_data_upload' ],
+            upload_genotype_intertek_snp_file_input => [ $snp_info_file, 'genotype_intertek_snp_info_data_upload' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Intertek SNP project 1",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"accession", #IDEALLY THIS IS "tissue_sample"
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Intertek SNP project 1",
+            "upload_genotype_vcf_protocol_name"=>"Intertek SNP protocol 1",
+            "upload_genotype_vcf_include_igd_numbers"=>1,
+            "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+            "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
+        ]
+    );
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is($message_hash->{success}, 1);
+ok($message_hash->{project_id});
+ok($message_hash->{nd_protocol_id});
+
 done_testing();
