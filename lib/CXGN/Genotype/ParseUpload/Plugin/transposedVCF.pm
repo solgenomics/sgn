@@ -347,7 +347,7 @@ sub next_genotype {
 
 	my $marker_name = "";
 	
-	for(my $i=1; $i<@scores; $i++) { 
+	for(my $i=1; $i<=@scores; $i++) { 
 	    my $marker_name = $self->ids()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
 	    #print STDERR "ALTS = ".Dumper(\@separated_alts);

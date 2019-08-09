@@ -16,7 +16,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -D database name (required) e.g. "cxgn_cassava"
  -U database username (required)
  -c VCF file type. transposedVCF or VCF
- -o temporary file for transposing a VCF. whenever a VCF is used, it is transposed for speed.
+ -o temporary file for transposing a VCF. whenever a VCF is used, it is transposed for speed (unless option w is flagged).
  -i path to infile (required)
  -r archive path (required)
  -u username in database (required)
