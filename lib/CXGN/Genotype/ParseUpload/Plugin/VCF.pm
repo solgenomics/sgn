@@ -293,82 +293,84 @@ sub next_genotype {
     my $line;
     my $F = $self->_fh();
 
-    if (! ($line = <$F>)) { 
-        print STDERR "No next genotype... Done!\n";
-        if ($F) {
-            close($F);
+    for my $iter (1..10) {
+        if (! ($line = <$F>)) {
+            print STDERR "No next genotype... Done!\n";
+            if ($F) {
+                close($F);
+            }
+            return ($observation_unit_names, \%genotypeprop_observation_units);
         }
-        return undef;
-    }
-    else {
-        chomp($line);
-        LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
+        else {
+            chomp($line);
+            LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
 
-        my @fields = split /\t/, $line;
-        my @marker_info = @fields[ 0..8 ];
-        my @values = @fields[ 9..$#fields ];
+            my @fields = split /\t/, $line;
+            my @marker_info = @fields[ 0..8 ];
+            my @values = @fields[ 9..$#fields ];
 
-        my $marker_name;
-        my $marker_info_p2 = $marker_info[2];
-        my $marker_info_p8 = $marker_info[8];
-        if ($marker_info_p2 eq '.') {
-            $marker_name = $marker_info[0]."_".$marker_info[1];
-        } else {
-            $marker_name = $marker_info_p2;
-        }
+            my $marker_name;
+            my $marker_info_p2 = $marker_info[2];
+            my $marker_info_p8 = $marker_info[8];
+            if ($marker_info_p2 eq '.') {
+                $marker_name = $marker_info[0]."_".$marker_info[1];
+            } else {
+                $marker_name = $marker_info_p2;
+            }
 
-        my @separated_alts = split ',', $marker_info[4];
+            my @separated_alts = split ',', $marker_info[4];
 
-        my @format =  split /:/,  $marker_info_p8;
-        #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-        for (my $i = 0; $i < scalar(@$observation_unit_names); $i++ ) {
-            my @fvalues = split /:/, $values[$i];
-            my %value;
-            @value{@format} = @fvalues;
-            my $gt_dosage = 0;
-            if (exists($value{'GT'})) {
-                my $gt = $value{'GT'};
-                my $separator = '/';
-                my @alleles = split (/\//, $gt);
-                if (scalar(@alleles) <= 1){
-                    @alleles = split (/\|/, $gt);
-                    if (scalar(@alleles) > 1) {
-                        $separator = '|';
-                    }
-                }
-
-                my @nucleotide_genotype;
-                my @ref_calls;
-                my @alt_calls;
-                foreach (@alleles) {
-                    if (looks_like_number($_)) {
-                        $gt_dosage = $gt_dosage + $_;
-                        my $index = $_ + 0;
-                        if ($index == 0) {
-                            push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
-                            push @ref_calls, $marker_info[3];
-                        } else {
-                            push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
-                            push @alt_calls, $separated_alts[$index-1];
+            my @format =  split /:/,  $marker_info_p8;
+            #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
+            for (my $i = 0; $i < scalar(@$observation_unit_names); $i++ ) {
+                my @fvalues = split /:/, $values[$i];
+                my %value;
+                @value{@format} = @fvalues;
+                my $gt_dosage = 0;
+                if (exists($value{'GT'})) {
+                    my $gt = $value{'GT'};
+                    my $separator = '/';
+                    my @alleles = split (/\//, $gt);
+                    if (scalar(@alleles) <= 1){
+                        @alleles = split (/\|/, $gt);
+                        if (scalar(@alleles) > 1) {
+                            $separator = '|';
                         }
-                    } else {
-                        push @nucleotide_genotype, $_;
                     }
+
+                    my @nucleotide_genotype;
+                    my @ref_calls;
+                    my @alt_calls;
+                    foreach (@alleles) {
+                        if (looks_like_number($_)) {
+                            $gt_dosage = $gt_dosage + $_;
+                            my $index = $_ + 0;
+                            if ($index == 0) {
+                                push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
+                                push @ref_calls, $marker_info[3];
+                            } else {
+                                push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+                                push @alt_calls, $separated_alts[$index-1];
+                            }
+                        } else {
+                            push @nucleotide_genotype, $_;
+                        }
+                    }
+                    if ($separator eq '/') {
+                        $separator = ',';
+                        @nucleotide_genotype = (@ref_calls, @alt_calls);
+                    }
+                    $value{'NT'} = join $separator, @nucleotide_genotype;
                 }
-                if ($separator eq '/') {
-                    $separator = ',';
-                    @nucleotide_genotype = (@ref_calls, @alt_calls);
+                if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
+                    $value{'DS'} = $gt_dosage;
                 }
-                $value{'NT'} = join $separator, @nucleotide_genotype;
+                if (looks_like_number($value{'DS'})) {
+                    my $rounded_ds = round($value{'DS'});
+                    $value{'DS'} = "$rounded_ds";
+                }
+                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
             }
-            if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-                $value{'DS'} = $gt_dosage;
-            }
-            if (looks_like_number($value{'DS'})) {
-                my $rounded_ds = round($value{'DS'});
-                $value{'DS'} = "$rounded_ds";
-            }
-            $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
         }
     }
 

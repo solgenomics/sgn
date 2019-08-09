@@ -969,7 +969,6 @@ sub store {
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
         while (my ($m, $v) = each %$genotypeprop_json) {
             my $v_string = encode_json $v;
-            print STDERR Dumper [$m, $genotypeprop_id, $v_string];
             $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
         }
     }

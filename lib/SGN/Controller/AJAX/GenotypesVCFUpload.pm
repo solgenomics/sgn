@@ -275,7 +275,8 @@ sub upload_genotype_verify_POST : Args(0) {
         $protocol->{'reference_genome_name'} = $reference_genome_name;
         $protocol->{'species_name'} = $organism_species;
         my $store_genotypes;
-        if (my ($observation_unit_names, $genotype_info) = $parser->next()) {
+        my ($observation_unit_names, $genotype_info) = $parser->next();
+        if ($genotype_info) {
             print STDERR "Parsing first genotype and extracting protocol info... \n";
 
             $store_args->{protocol_info} = $protocol;
@@ -305,12 +306,15 @@ sub upload_genotype_verify_POST : Args(0) {
 
         print STDERR "Done loading first line, moving on...\n";    
 
-        while (my ($observation_unit_names, $genotype_info) = $parser->next()) {
-            if ($genotype_info) {
+        my $continue_iterate = 1;
+        while ($continue_iterate == 1) {
+            my ($observation_unit_names, $genotype_info) = $parser->next();
+            if (scalar(keys %$genotype_info) > 0) {
                 $store_genotypes->genotype_info($genotype_info);
                 $store_genotypes->observation_unit_uniquenames($observation_unit_names);
                 $return = $store_genotypes->store();
             } else {
+                $continue_iterate = 0;
                 last;
             }
         }

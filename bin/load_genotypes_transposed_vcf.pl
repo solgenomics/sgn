@@ -215,7 +215,8 @@ my $protocol = $parser->protocol_data();
 
 my $store_genotypes;
 
-if (my ($observation_unit_names, $genotype_info) = $parser->next()) {
+my ($observation_unit_names, $genotype_info) = $parser->next();
+if ($genotype_info) {
     print STDERR "Parsing first genotype and extracting protocol info... \n";
 
     #print STDERR "PROTOCOL: ".Dumper($parser->protocol_data());
@@ -266,17 +267,20 @@ if (my ($observation_unit_names, $genotype_info) = $parser->next()) {
 
 print STDERR "Done loading first accession, moving on...\n";    
 
-while (my ($observation_unit_names, $genotype_info) = $parser->next()) {
-    if ($genotype_info) {
-	print STDERR "parsing next... ";
-	print STDERR Dumper $observation_unit_names;
+my $continue_iterate = 1;
+while ($continue_iterate == 1) {
+    my ($observation_unit_names, $genotype_info) = $parser->next();
+    if (scalar(keys %$genotype_info) > 0) {
+        print STDERR "parsing next... ";
+        print STDERR Dumper $observation_unit_names;
 
-	$store_genotypes->genotype_info($genotype_info);
-	$store_genotypes->observation_unit_uniquenames($observation_unit_names);
-	my $return = $store_genotypes->store();
-	print STDERR "Successfully stored genotype.\n";
+        $store_genotypes->genotype_info($genotype_info);
+        $store_genotypes->observation_unit_uniquenames($observation_unit_names);
+        my $return = $store_genotypes->store();
+        print STDERR "Successfully stored genotype.\n";
     } else {
-	last;
+        $continue_iterate = 0;
+        last;
     }
 }
 
