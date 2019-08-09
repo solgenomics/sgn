@@ -16,8 +16,8 @@
 
 
 <ul class="nav nav-pills">
-   <li><a data-toggle="pill" href="#load_saved">Load a Saved Design</a></li>
-   <li><a data-toggle="pill" href="#select_new">Select a New Layout</a></li>
+   <li class="col-md-6"><a data-toggle="pill" href="#load_saved">Load a Saved Design</a></li>
+   <li class="active col-md-6"><a data-toggle="pill" href="#select_new">Select a New Layout</a></li>
  </ul>
 
  <div class="tab-content">
