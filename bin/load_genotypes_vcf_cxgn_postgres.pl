@@ -4,9 +4,9 @@
 load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, based on the load_cassava_snps.pl script by Naama.
 
 =head1 SYNOPSIS
-    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -c VCF -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "test_location" -n "IGD" -b "accession" -m "test_protocol_01_new" -k "protocol description" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
+    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -c VCF -o /tmp/transposevcf.txt -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "test_location" -n "IGD" -b "accession" -m "test_protocol_01_new" -k "protocol description" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7"
 
-    If you are loading a "transposed VCF" use -c transposedVCF otherwise for a normal VCF use -c VCF
+    If you are loading a "transposed VCF" use -c transposedVCF otherwise for a normal VCF use -c VCF. When using a normal VCF, give a temporary file using -o for where this script will transpose your VCF. VCF are transposed for speed.
     To use an existing project (not create a new project name entry), use -h project_id
     To use an existing protocol (not create a new nd_protocol name entry), use -j protocol_id
 
@@ -16,6 +16,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -D database name (required) e.g. "cxgn_cassava"
  -U database username (required)
  -c VCF file type. transposedVCF or VCF
+ -o temporary file for transposing a VCF. whenever a VCF is used, it is transposed for speed.
  -i path to infile (required)
  -r archive path (required)
  -u username in database (required)
@@ -41,7 +42,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -a add accessions that are not in the database
  -z if accession names include an IGD number. Accession names are in format 'accession_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
  -t Test run . Rolling back at the end.
-
+ -w in the case that you have uploaded a normal VCF and you do not want to transpose it (because the transposition is memory intensive), use this flag
 
 =head1 DESCRIPTION
 This script loads genotype data into the Chado genotype table it encodes the genotype + marker name in a json format in the genotyope.uniquename field for easy parsing by a Perl program. The genotypes are linked to the relevant stock using nd_experiment_genotype. Each column in the spreadsheet, which represents a single accession (stock) is stored as a single genotype entry and linked to the stock via nd_experiment_genotype. Stock names are stored in the stock table if cannot be found, and linked to a population stock with the name supplied in opt_g. Map details (chromosome, position, ref, alt, qual, filter, info, and format) are stored in json format in the protocolprop table.
@@ -79,9 +80,9 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j);
+our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w);
 
-getopts('H:U:i:r:u:c:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:');
+getopts('H:U:i:r:u:c:o:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:w');
 
 if (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name)\n");
@@ -89,6 +90,10 @@ if (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y ||
 
 if ($opt_c ne 'transposedVCF' && $opt_c ne 'VCF') {
     die "Not a valid option c\n";
+}
+
+if ($opt_c eq 'VCF '&& !$opt_o) {
+    die "When uploading a VCF e.g. option c is VCF, you must give a temporary file using option o, so that this script can transpose your file before loading. All VCF are transposed for speed of loading.\n";
 }
 
 my $file = $opt_i;
@@ -129,6 +134,38 @@ $h->execute();
 my ($sp_person_id) = $h->fetchrow_array();
 if (!$sp_person_id){
     die "Not a valid -u\n";
+}
+
+if ($opt_c eq 'VCF' && !$opt_w) {
+    open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
+    open (my $F, "<", $file) or die "Can't open file $file \n";
+    my @outline;
+    my $lastcol;
+    while (<$F>) {
+        if ($_ =~ m/^\##/) {
+            print $Fout $_;
+        } else {
+            chomp;
+            my @line = split /\t/;
+            my $oldlastcol = $lastcol;
+            $lastcol = $#line if $#line > $lastcol;
+            for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                $outline[$i] = "\t" x $oldlastcol;
+            }
+            for (my $i=0; $i <=$lastcol; $i++) {
+                $outline[$i] .= "$line[$i]\t"
+            }
+        }
+    }
+    for (my $i=0; $i <= $lastcol; $i++) {
+        $outline[$i] =~ s/\s*$//g;
+        print $outline[$i];
+        print $Fout $outline[$i]."\n";
+    }
+    close($F);
+    close($Fout);
+    $file = $opt_o;
+    $opt_c = 'transposedVCF';
 }
 
 my $uploader = CXGN::UploadFile->new({
