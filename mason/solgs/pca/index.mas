@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster on. 
+/solgs/pca/index.mas - a template with menu for selecting list or dataset for pca. 
 
 =AUTHOR
 
