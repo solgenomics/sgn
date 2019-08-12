@@ -3,14 +3,17 @@ package SGN::Controller::solGS::pca;
 use Moose;
 use namespace::autoclean;
 
+use Carp qw/ carp confess croak /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw / mkpath  /;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use Scalar::Util qw /weaken reftype/;
+use Storable qw/ nstore retrieve /;
 
 use CXGN::List;
+
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -45,12 +48,13 @@ sub pca_run :Path('/pca/run/') Args() {
     my $combo_pops_id    = $c->req->param('combo_pops_id');
 
     my $list_id      = $c->req->param('list_id');   
-    my $dataset_id   =  $c->req->param('dataset_id');
-    my $dataset_name =  $c->req->param('dataset_name');
+    my $dataset_id   = $c->req->param('dataset_id');
+    my $dataset_name = $c->req->param('dataset_name');
     
     my $data_structure =  $c->req->param('data_structure');
     my $data_type      =  $c->req->param('data_type');
-    $data_type         = 'Genotype' if !$data_type;
+    $data_type         = 'genotype' if !$data_type;
+    $data_type         = lc($data_type);
     
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -67,35 +71,22 @@ sub pca_run :Path('/pca/run/') Args() {
     if ($list_id)
     {
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
-	$c->controller('solGS::List')->get_trials_list_ids($c);
 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 	$c->stash->{list_type} =  $list->type;
 	$c->stash->{list_name} =  $list->name;	
     }
-    elsif ($dataset_id)
+
+    if ($combo_pops_id)
     {
-	$c->controller('solGS::Dataset')->get_dataset_trials_details($c);	
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};	
     }
-    
+      
     my $ret->{status} = 'PCA analysis failed';
    
     if (!$self->check_pca_output($c)) 
     {
-	$self->create_pca_data($c);
-
-	my $pca_data = $c->stash->{genotype_files_list} ||
-	    $c->stash->{genotype_file} ||
-	    $c->stash->{phenotype_files_list} ||
-	    $c->stash->{phenotype_file};
-	
-	if (!$pca_data)
-	{	  
-	    $ret->{status} = 'There is no genotype or phenotype data. Stopped PCA analysis.';                
-	}
-	else 
-	{ 
-	    $self->run_pca($c);	  
-	}	
+	    $self->run_pca($c);	  	
     }
     
     $self->format_pca_output($c);
@@ -150,10 +141,11 @@ sub format_pca_output {
 	    my $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
 	    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
 
-	    my $output_link =  '/pca/analysis/' . $file_id;
-	 
-	    $c->controller('solGS::List')->process_trials_list_details($c);
+	    my $output_link =  '/pca/analysis/' . $file_id;	 
+        
+	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
 	    my $trial_names =  $c->stash->{trials_names};
+
 	    if ($pca_scores)
 	    {
 		$ret->{pca_scores} = $pca_scores;
@@ -162,6 +154,7 @@ sub format_pca_output {
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
 		$ret->{trials_names} = $trial_names;
 		$ret->{output_link}  = $output_link;
+		$ret->{data_type} = $c->stash->{data_type};
 	    }
 
 	    $c->stash->{formatted_pca_output} = $ret;
@@ -271,9 +264,11 @@ sub create_pca_genotype_data {
    
     my $data_structure = $c->stash->{data_structure};
 
+    my $pca_query_jobs;
+
     if ($data_structure =~ /list/) 
     {
-	$self->pca_list_genotype_data($c);	
+	$self->pca_list_genotype_data($c);
     }
     elsif ($data_structure =~ /dataset/)
     {
@@ -291,7 +286,7 @@ sub pca_trials_genotype_data {
     my ($self, $c) = @_;
 
     my $combo_pops_id = $c->stash->{combo_pops_id};
-    
+   
     if ($combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
@@ -328,7 +323,7 @@ sub pca_dataset_genotype_data {
     {
 	$c->stash->{pops_ids_list} = $trials;
 	$c->controller('solGS::List')->get_trials_list_geno_data($c);
-	$c->controller('solGS::List')->process_trials_list_details($c);	
+	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);	
     }
    
 }
@@ -355,14 +350,12 @@ sub pca_list_genotype_data {
     {
 	$c->stash->{pops_ids_list} = [$c->stash->{training_pop_id},  $c->stash->{selection_pop_id}];
 	$c->controller('solGS::solGS')->genotype_file($c);
-	$c->controller('solGS::List')->process_trials_list_details($c);
+	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
     }
     elsif ($referer =~ /pca\/analysis\// && $data_set_type =~ 'combined_populations')
     {
-    	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $c->stash->{combo_pops_id});
-        $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$c->controller('solGS::List')->get_trials_list_geno_data($c);
-	$c->controller('solGS::List')->process_trials_list_details($c);
+	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
     }	   
     else
     {
@@ -372,14 +365,90 @@ sub pca_list_genotype_data {
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);
+	    $c->controller('solGS::List')->get_list_trials_ids($c);
 	    $c->stash->{pops_ids_list} = $c->stash->{trials_ids};
 	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
-	    $c->controller('solGS::List')->process_trials_list_details($c);
+	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
 	}
 	
     }
 
+}
+
+
+sub create_pca_phenotype_data_query_jobs {
+    my ($self, $c) = @_;
+
+    my $data_str = $c->stash->{data_structure};
+       
+    if ($data_str =~ /list/)
+    {
+	$c->controller('solGS::List')->create_list_pheno_data_query_jobs($c);
+	$c->stash->{pca_pheno_query_jobs} = $c->stash->{list_pheno_data_query_jobs};
+    } 
+    elsif ($data_str =~ /dataset/)
+    {
+	$c->controller('solGS::Dataset')->create_dataset_pheno_data_query_jobs($c);
+	$c->stash->{pca_pheno_query_jobs} = $c->stash->{dataset_pheno_data_query_jobs};
+    }
+    else
+    {
+	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
+	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
+	$c->stash->{pca_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
+    }
+    
+}
+
+sub create_pca_genotype_data_query_jobs {
+    my ($self, $c) = @_;
+
+    my $data_str = $c->stash->{data_structure};
+       
+    if ($data_str =~ /list/)
+    {
+	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
+	$c->stash->{pca_geno_query_jobs} = $c->stash->{list_geno_data_query_jobs};
+    } 
+    elsif ($data_str =~ /dataset/)
+    {
+	$c->controller('solGS::Dataset')->create_dataset_geno_data_query_jobs($c);
+	$c->stash->{pca_geno_query_jobs} = $c->stash->{dataset_geno_data_query_jobs};
+    }
+    else
+    {
+	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials);
+	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
+    }
+    
+}
+
+
+sub pca_query_jobs {
+    my ($self, $c) = @_;
+
+    my $data_type = $c->stash->{data_type};
+
+    my $jobs = [];
+    
+    if ($data_type =~ /phenotype/i) 
+    {
+	$self->create_pca_phenotype_data_query_jobs($c);
+	$jobs = $c->stash->{pca_pheno_query_jobs};
+    }
+    elsif ($data_type =~ /genotype/i)
+    {
+	$self->create_pca_genotype_data_query_jobs($c);
+	$jobs = $c->stash->{pca_geno_query_jobs};
+    }
+
+     if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+
+    $c->stash->{pca_query_jobs} = $jobs;
 }
 
 
@@ -392,7 +461,8 @@ sub create_pca_phenotype_data {
     
     if ($data_structure =~ /list/) 
     {
-	$c->controller('solGS::List')->list_phenotype_data($c);	
+      $c->controller('solGS::List')->list_phenotype_data($c);
+	
     }
     elsif ($data_structure =~ /dataset/) 
     {
@@ -404,8 +474,6 @@ sub create_pca_phenotype_data {
     }
     elsif ($combo_pops_id) 
     {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
     }
 
@@ -542,18 +610,12 @@ sub pca_geno_input_files {
     
     my $data_type = $c->stash->{data_type};
     my $files;
-    
+  
     if ($data_type =~ /genotype/i)
-    {
-	my $geno_files = $c->stash->{genotype_files_list};
-	if ($geno_files->[0]) 
-	{
-	    $files = join("\t", @$geno_files);			      
-	}
-	else 
-	{
-	    $files = $c->stash->{genotype_file};
-	}
+    {	
+	$files = $c->stash->{genotype_files_list} 
+	|| $c->stash->{genotype_file} 
+	|| $c->stash->{genotype_file_name};
     }
 
     $c->stash->{pca_geno_input_files} = $files;
@@ -568,16 +630,10 @@ sub pca_pheno_input_files {
     
     if ($data_type =~ /phenotype/i)
     {
-	my $pheno_files = $c->stash->{phenotype_files_list};
-	if ($pheno_files->[0]) 
-	{
-	    $files = join("\t", @$pheno_files);			      
-	}
-	else 
-	{
-	    $files = $c->stash->{phenotype_file};
-	}
-
+	$files = $c->stash->{phenotype_files_list} 
+	|| $c->stash->{phenotype_file} 
+	|| $c->stash->{phenotype_file_name};
+	
 	$c->controller('solGS::Files')->phenotype_metadata_file($c);
 	my $metadata_file = $c->stash->{phenotype_metadata_file};
 
@@ -591,7 +647,63 @@ sub pca_pheno_input_files {
 
 sub run_pca {
     my ($self, $c) = @_;
+ 
+    my $cores = qx/lscpu | grep -e '^CPU(s)'/;   
+    my ($name, $cores) = split(':', $cores);
+    $cores =~ s/\s+//g;
+     
+    if ($cores > 1) 
+    {
+    	$self->run_pca_multi_cores($c);
+    }
+    else
+    {
+	$self->run_pca_single_core($c);
+	
+    }
     
+}
+
+
+sub run_pca_single_core {
+    my ($self, $c) = @_;
+
+    $self->pca_query_jobs($c);
+    my $queries =$c->stash->{pca_query_jobs};
+    
+    $self->pca_r_jobs($c);
+    my $r_jobs = $c->stash->{pca_r_jobs};
+
+    foreach my $job (@$queries) 
+    {
+	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+    }
+
+    foreach my $job (@$r_jobs)
+    {
+	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+    }
+ 
+}
+
+
+sub run_pca_multi_cores {
+    my ($self, $c) = @_;
+    
+    $self->pca_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{pca_query_jobs_file};
+    
+    $self->pca_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{pca_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
+    
+}
+
+
+sub pca_r_jobs {
+    my ($self, $c) = @_;
+
     my $file_id = $c->stash->{file_id};
     
     $self->pca_output_files($c);
@@ -607,7 +719,49 @@ sub run_pca {
     $c->stash->{r_temp_file}  = "pca-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
     
-    $c->controller("solGS::solGS")->run_r_script($c);
+    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    my $jobs  = $c->stash->{cluster_r_job_args};
+
+    if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+
+    $c->stash->{pca_r_jobs} = $jobs;
+   
+}
+
+
+sub pca_r_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->pca_r_jobs($c);
+    my $jobs = $c->stash->{pca_r_jobs};
+      
+    my $temp_dir = $c->stash->{pca_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pca-r-jobs-file');	   
+   
+    nstore $jobs, $jobs_file
+	or croak "pca r jobs : $! serializing pca r jobs to $jobs_file";
+
+    $c->stash->{pca_r_jobs_file} = $jobs_file;
+    
+}
+
+
+sub pca_query_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->pca_query_jobs($c);
+    my $jobs = $c->stash->{pca_query_jobs};
+  
+    my $temp_dir = $c->stash->{pca_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pca-query-jobs-file');	   
+   
+    nstore $jobs, $jobs_file
+	or croak "pca query jobs : $! serializing pca query jobs to $jobs_file";
+
+    $c->stash->{pca_query_jobs_file} = $jobs_file;
     
 }
 
