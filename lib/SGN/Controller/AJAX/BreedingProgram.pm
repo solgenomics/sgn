@@ -202,7 +202,7 @@ sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0)
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my @formatted_accessions;
    
-    my %acc_hash;
+
     foreach my $id ( @$accessions ) {
 	my $acc =  my $row = $schema->resultset("Stock::Stock")->find(  
 	    { stock_id => $id , } 
@@ -210,14 +210,7 @@ sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0)
 	
 	my $name        = $acc->uniquename;
 	my $description = $acc->description;
-
-	$acc_hash{$name} => { id => $id, description => $description };
-    }
-    
-    foreach my $uname (sort keys %acc_hash) {
-	my $id = $acc_hash{$uname}{id};
-	my $description = $acc_hash{$uname}{description};
-	push @formatted_accessions, [ '<a href="/stock/' .$id. '/view">'.$uname.'</a>', $description ];
+	push @formatted_accessions, [ '<a href="/stock/' .$id. '/view">'.$name.'</a>', $description ];
     }
     $c->stash->{rest} = { data => \@formatted_accessions };
 }
