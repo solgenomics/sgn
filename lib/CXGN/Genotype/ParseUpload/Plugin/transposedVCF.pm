@@ -340,11 +340,11 @@ sub next_genotype {
         chomp($line);
 
         my @fields = split /\t/, $line;
-        print STDERR Dumper \@fields;
+        #print STDERR Dumper \@fields;
 
         $observation_unit_name = $fields[0];
         my @scores = @fields[1..$#fields];
-        print STDERR Dumper \@scores;
+        #print STDERR Dumper \@scores;
 
         my $marker_name = "";
 
