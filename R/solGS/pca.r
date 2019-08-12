@@ -195,14 +195,16 @@ fwrite(variances,
        )
 
 
-if (length(inputFiles) > 1) {
-    fwrite(genoData,
-       file      = combinedDataFile,
-       sep       = "\t",
-       row.names = TRUE,
-       quote     = FALSE,
-       )
+if (!is.null(genoData)) {
+    if (length(inputFiles) > 1) {
+        fwrite(genoData,
+               file      = combinedDataFile,
+               sep       = "\t",
+               row.names = TRUE,
+               quote     = FALSE,
+               )
 
+    }
 }
 
 ## if (!is.null(genoDataMissing)) {

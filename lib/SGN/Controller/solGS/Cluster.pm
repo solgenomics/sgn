@@ -112,7 +112,6 @@ sub check_cluster_output_files {
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
 
-    print STDERR "\check cluster output files: file_id $file_id\n";
     my $cluster_type = $c->stash->{cluster_type};
     my $cluster_result_file;
     my $cluster_plot_file;
@@ -411,14 +410,14 @@ sub cluster_list_genotype_data {
     {
 	$c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
 	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
-	$c->controller('solGS::List')->process_trials_list_details($c);
+	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
     }
     elsif ($referer =~ /cluster\/analysis\// && $data_set_type =~ 'combined_populations')
     {
     	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $c->stash->{combo_pops_id});
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$c->controller('solGS::List')->get_trials_list_geno_data($c);
-	$c->controller('solGS::List')->process_trials_list_details($c);
+	$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
     }	   
     else
     {
@@ -428,11 +427,11 @@ sub cluster_list_genotype_data {
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
-	    $c->controller('solGS::List')->get_trials_list_ids($c);
+	    $c->controller('solGS::List')->get_list_trials_ids($c);
 	    $c->stash->{pops_ids_list} =  $c->stash->{trials_ids};
 	    
 	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
-	    $c->controller('solGS::List')->process_trials_list_details($c);
+	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
 	}
     }
     
