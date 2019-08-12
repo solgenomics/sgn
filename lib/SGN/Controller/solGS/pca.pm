@@ -48,12 +48,13 @@ sub pca_run :Path('/pca/run/') Args() {
     my $combo_pops_id    = $c->req->param('combo_pops_id');
 
     my $list_id      = $c->req->param('list_id');   
-    my $dataset_id   =  $c->req->param('dataset_id');
-    my $dataset_name =  $c->req->param('dataset_name');
+    my $dataset_id   = $c->req->param('dataset_id');
+    my $dataset_name = $c->req->param('dataset_name');
     
     my $data_structure =  $c->req->param('data_structure');
     my $data_type      =  $c->req->param('data_type');
-    $data_type         = 'Genotype' if !$data_type;
+    $data_type         = 'genotype' if !$data_type;
+    $data_type         = lc($data_type);
     
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -153,6 +154,7 @@ sub format_pca_output {
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
 		$ret->{trials_names} = $trial_names;
 		$ret->{output_link}  = $output_link;
+		$ret->{data_type} = $c->stash->{data_type};
 	    }
 
 	    $c->stash->{formatted_pca_output} = $ret;
@@ -388,6 +390,12 @@ sub create_pca_phenotype_data_query_jobs {
     {
 	$c->controller('solGS::Dataset')->create_dataset_pheno_data_query_jobs($c);
 	$c->stash->{pca_pheno_query_jobs} = $c->stash->{dataset_pheno_data_query_jobs};
+    }
+    else
+    {
+	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
+	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
+	$c->stash->{pca_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
     
 }
