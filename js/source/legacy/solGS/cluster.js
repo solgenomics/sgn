@@ -251,7 +251,7 @@ solGS.cluster = {
 	    || popDetails.combo_pops_id) {
 	 
 	    jQuery("#cluster_canvas .multi-spinner-container").show();
-	    jQuery("#cluster_message").html("Running K-means clustering... please wait...");
+	    jQuery("#cluster_message").html("Running K-means clustering... please wait...it may take minutes");
 	 
 	    jQuery("#run_cluster").hide();
 	}  
