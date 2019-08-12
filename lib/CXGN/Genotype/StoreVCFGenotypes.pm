@@ -880,97 +880,78 @@ sub store {
     my $genotype_schema = $schema->resultset("Genetic::Genotype");
     my $genotypeprop_schema = $schema->resultset("Genetic::Genotypeprop");
 
-    #remove extra numbers, such as igd after : symbol
-    my @observation_unit_uniquenames_stripped;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames();
     foreach (@$observation_unit_uniquenames) {
         $_ =~ s/^\s+|\s+$//g;
-        if ($self->igd_numbers_included()){
-            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
-            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-            push @observation_unit_uniquenames_stripped, $observation_unit_name;
-        }
-        elsif ($self->lab_numbers_included()){
-            my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
-            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-            push @observation_unit_uniquenames_stripped, $observation_unit_name;
-        }
-        else {
-            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
-            push @observation_unit_uniquenames_stripped, $observation_unit_name;
-        }
-    }
-
-
-    foreach (@$observation_unit_uniquenames) {
-        $_ =~ s/^\s+|\s+$//g;
-        my $observation_unit_name_with_accession_name;
-        my $observation_unit_name;
-        my $accession_name;
-        my $igd_number;
-        my $lab_number;
-        if ($self->igd_numbers_included()){
-            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
-            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
-            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-        } elsif ($self->lab_numbers_included()) {
-            ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
-            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
-            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-        } else {
-            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
-        }
-        #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
-        my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
-        my $stock_id = $stock_lookup_obj->{stock_id};
-        my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
-
-        if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
-            my $pop_rs = $stock_relationship_schema->find_or_create({
-                type_id => $self->population_members_id(),
-                subject_id => $stock_id,
-                object_id => $self->population_stock_id(),
-            });
-        }
-
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
-        if (!$genotypeprop_id) {
-            my $experiment = $nd_experiment_schema->create({
-                nd_geolocation_id => $self->project_location_id(),
-                type_id => $self->geno_cvterm_id(),
-                nd_experiment_projects => [ {project_id => $self->project_id()} ],
-                nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $self->geno_cvterm_id() } ],
-                nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
-            });
-            my $nd_experiment_id = $experiment->nd_experiment_id();
+        if ($genotypeprop_json) {
+            my $observation_unit_name_with_accession_name;
+            my $observation_unit_name;
+            my $accession_name;
+            my $igd_number;
+            my $lab_number;
+            if ($self->igd_numbers_included()){
+                ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
+                $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+                ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            } elsif ($self->lab_numbers_included()) {
+                ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
+                $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+                ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            } else {
+                ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            }
+            #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
+            my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
+            my $stock_id = $stock_lookup_obj->{stock_id};
+            my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
 
-            my $genotype = $genotype_schema->create({
-                name        => $observation_unit_name . "|" . $nd_experiment_id,
-                uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
-                description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
-                type_id     => $self->snp_genotype_id(),
-            });
-            my $genotype_id = $genotype->genotype_id();
-
-            my $json_string = encode_json $genotypeprop_json;
-            $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
-            my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
-            $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
-
-            #Store IGD number if the option is given.
-            if ($self->igd_numbers_included()) {
-                my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => encode_json {'igd_number' => $igd_number} });
+            if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+                my $pop_rs = $stock_relationship_schema->find_or_create({
+                    type_id => $self->population_members_id(),
+                    subject_id => $stock_id,
+                    object_id => $self->population_stock_id(),
+                });
             }
 
+            if (!$genotypeprop_id) {
+                my $experiment = $nd_experiment_schema->create({
+                    nd_geolocation_id => $self->project_location_id(),
+                    type_id => $self->geno_cvterm_id(),
+                    nd_experiment_projects => [ {project_id => $self->project_id()} ],
+                    nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $self->geno_cvterm_id() } ],
+                    nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
+                });
+                my $nd_experiment_id = $experiment->nd_experiment_id();
 
-            #link the genotype to the nd_experiment
-            my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
-            $nd_experiment_ids{$nd_experiment_id}++;
-        }
-        else {
-            while (my ($m, $v) = each %$genotypeprop_json) {
-                my $v_string = encode_json $v;
-                $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+                my $genotype = $genotype_schema->create({
+                    name        => $observation_unit_name . "|" . $nd_experiment_id,
+                    uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
+                    description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
+                    type_id     => $self->snp_genotype_id(),
+                });
+                my $genotype_id = $genotype->genotype_id();
+
+                my $json_string = encode_json $genotypeprop_json;
+                $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
+                my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
+                $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+
+                #Store IGD number if the option is given.
+                if ($self->igd_numbers_included()) {
+                    my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => encode_json {'igd_number' => $igd_number} });
+                }
+
+
+                #link the genotype to the nd_experiment
+                my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
+                $nd_experiment_ids{$nd_experiment_id}++;
+            }
+            else {
+                while (my ($m, $v) = each %$genotypeprop_json) {
+                    my $v_string = encode_json $v;
+                    $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+                }
             }
         }
     }

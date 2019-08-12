@@ -29,6 +29,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -45,6 +46,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $transpose_vcf_for_loading = 1;
     my @error_status;
     my @success_status;
 
@@ -107,6 +109,43 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_vcf->tempname;
         $subdirectory = "genotype_vcf_upload";
         $parser_plugin = 'VCF';
+
+        if ($transpose_vcf_for_loading) {
+            my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
+            my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
+
+            open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+            open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+            my @outline;
+            my $lastcol;
+            while (<$F>) {
+                if ($_ =~ m/^\##/) {
+                    print $Fout $_;
+                } else {
+                    chomp;
+                    my @line = split /\t/;
+                    my $oldlastcol = $lastcol;
+                    $lastcol = $#line if $#line > $lastcol;
+                    for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                        if ($oldlastcol) {
+                            $outline[$i] = "\t" x $oldlastcol;
+                        }
+                    }
+                    for (my $i=0; $i <=$lastcol; $i++) {
+                        $outline[$i] .= "$line[$i]\t"
+                    }
+                }
+            }
+            for (my $i=0; $i <= $lastcol; $i++) {
+                $outline[$i] =~ s/\s*$//g;
+                print $Fout $outline[$i]."\n";
+            }
+            close($F);
+            close($Fout);
+            $upload_tempfile = $temp_file_transposed;
+            $upload_original_name = basename($temp_file_transposed);
+            $parser_plugin = 'transposedVCF';
+        }
     }
     if ($upload_transposed_vcf) {
         $upload_original_name = $upload_transposed_vcf->filename();
@@ -272,16 +311,19 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         my $protocol = $parser->protocol_data();
+        my $observation_unit_names = $parser->observation_unit_names();
+        $store_args->{observation_unit_uniquenames} = $observation_unit_names;
+
         $protocol->{'reference_genome_name'} = $reference_genome_name;
         $protocol->{'species_name'} = $organism_species;
         my $store_genotypes;
         my ($observation_unit_names, $genotype_info) = $parser->next();
         if (scalar(keys %$genotype_info) > 0) {
+            print STDERR Dumper [$observation_unit_names, $genotype_info];
             print STDERR "Parsing first genotype and extracting protocol info... \n";
 
             $store_args->{protocol_info} = $protocol;
             $store_args->{genotype_info} = $genotype_info;
-            $store_args->{observation_unit_uniquenames} = $observation_unit_names;
 
             $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
             my $verified_errors = $store_genotypes->validate();

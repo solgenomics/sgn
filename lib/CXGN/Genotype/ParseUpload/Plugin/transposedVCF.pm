@@ -324,106 +324,85 @@ sub next_genotype {
     my $F = $self->_fh();
     
     if (! ($line = <$F>)) { 
-	print STDERR "No next genotype... Done!\n"; 
-	close($F); 
-	return ( [$observation_unit_name], $genotypeprop );
+        print STDERR "No next genotype... Done!\n"; 
+        close($F); 
+        return ( [$observation_unit_name], $genotypeprop );
     }
     else {
-	chomp($line);
+        chomp($line);
 
-	LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
+        LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
 
-	if ($self->_is_first_line()) {
-	    print STDERR "Skipping 8 more lines... ";
-	    for (0..7) { $line = <$F>; }
-	}
-    chomp($line);
+        if ($self->_is_first_line()) {
+            print STDERR "Skipping 8 more lines... ";
+            for (0..7) { $line = <$F>; }
+        }
+        chomp($line);
 
-	my @fields = split /\t/, $line;
+        my @fields = split /\t/, $line;
+        print STDERR Dumper \@fields;
 
-	$observation_unit_name = $fields[0];
+        $observation_unit_name = $fields[0];
+        my @scores = @fields[1..$#fields];
+        print STDERR Dumper \@scores;
 
-	my @scores = @fields[1..$#fields];
+        my $marker_name = "";
 
-	my $marker_name = "";
-	
-	for(my $i=1; $i<=@scores; $i++) { 
-	    my $marker_name = $self->ids()->[$i];
+        for(my $i=1; $i<=@scores; $i++) {
+            my $marker_name = $self->ids()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
-	    #print STDERR "ALTS = ".Dumper(\@separated_alts);
-            
-	    my @format =  split /:/,  $self->format()->[$i];
+            my @format =  split /:/,  $self->format()->[$i];
 
-            #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-	    
-	    my @fvalues = split /:/, $scores[$i];
-	    my %value;
-	    #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-	    #    $value{@format[$fv]} = @fvalues[$fv];
-	    #}
-	    @value{@format} = @fvalues;
-	    my $gt_dosage = 0;
-	    if (exists($value{'GT'})) {
-		my @nucleotide_genotype;
-		my $gt = $value{'GT'};
-		my $separator = '/';
-		my @alleles = split (/\//, $gt);
-		if (scalar(@alleles) <= 1){
-		    @alleles = split (/\|/, $gt);
-		    if (scalar(@alleles) > 1) {
-			$separator = '|';
-		    }
-		}
-		foreach (@alleles) {
-		    if (looks_like_number($_)) {
-			$gt_dosage = $gt_dosage + $_;
-			my $index = $_ + 0;
-			if ($index == 0) {
-			    push @nucleotide_genotype, $self->refs()->[$i]; #Using Reference Allele
-			} else {
-			    if ($separated_alts[$index-1]) {
-				push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
-			    } else {
-				push @nucleotide_genotype, '.'; #Alt not found
-			    }
-			}
-		    } else {
-			push @nucleotide_genotype, $_;
-		    }
-		    #print STDERR "Allele".$_."\n";
-		}
-		#print STDERR "N_G = ".Dumper(\@nucleotide_genotype);
-		$value{'NT'} = join $separator, @nucleotide_genotype;
-	    }
-	    if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-		$value{'DS'} = $gt_dosage;
-	    }
-	    if (looks_like_number($value{'DS'})) {
-		$value{'DS'} = round($value{'DS'});
-	    }
-	    $genotypeprop->{$marker_name} = \%value;
-	}
-	$self->_is_first_line(0);
+            my @fvalues = split /:/, $scores[$i-1];
+            my %value;
+            @value{@format} = @fvalues;
+            my $gt_dosage = 0;
+            if (exists($value{'GT'})) {
+                my $gt = $value{'GT'};
+                my $separator = '/';
+                my @alleles = split (/\//, $gt);
+                if (scalar(@alleles) <= 1){
+                    @alleles = split (/\|/, $gt);
+                    if (scalar(@alleles) > 1) {
+                        $separator = '|';
+                    }
+                }
+
+                my @nucleotide_genotype;
+                my @ref_calls;
+                my @alt_calls;
+                foreach (@alleles) {
+                    if (looks_like_number($_)) {
+                        $gt_dosage = $gt_dosage + $_;
+                        my $index = $_ + 0;
+                        if ($index == 0) {
+                            push @nucleotide_genotype, $self->refs()->[$i]; #Using Reference Allele
+                            push @ref_calls, $self->refs()->[$i];
+                        } else {
+                            push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
+                            push @alt_calls, $separated_alts[$index-1];
+                        }
+                    } else {
+                        push @nucleotide_genotype, $_;
+                    }
+                }
+                if ($separator eq '/') {
+                    $separator = ',';
+                    @nucleotide_genotype = (@ref_calls, @alt_calls);
+                }
+                $value{'NT'} = join $separator, @nucleotide_genotype;
+            }
+            if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
+                $value{'DS'} = $gt_dosage;
+            }
+            if (looks_like_number($value{'DS'})) {
+                my $rounded_ds = round($value{'DS'});
+                $value{'DS'} = "$rounded_ds";
+            }
+            $genotypeprop->{$marker_name} = \%value;
+        }
+        $self->_is_first_line(0);
     }
-    
-    
-    #        print STDERR Dumper($genotypeprop);
-    #   close($F);
-    
-    #    $protocolprop_info{'header_information_lines'} = \@header_info;
-    #    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
-    
-    #print STDERR Dumper \%protocolprop_info;
-    #print STDERR Dumper \%genotypeprop_observation_units;
-    
-    #  my %parsed_data = (
-    #      protocol_info => \%protocolprop_info,
-    #      genotypes_info => \%genotypeprop_observation_units,
-    #      observation_unit_uniquenames => \@observation_unit_names
-    #  );
-    
-    # $self->_set_parsed_data(\%parsed_data);
-
     return ( [$observation_unit_name], { $observation_unit_name => $genotypeprop } );
 }
 
