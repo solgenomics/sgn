@@ -138,6 +138,7 @@ sub upload_drone_imagery_POST : Args(0) {
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
+    my @return_drone_run_band_project_ids;
     if ($new_drone_run_band_stitching eq 'no') {
         my @new_drone_run_bands;
         if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
@@ -238,6 +239,8 @@ sub upload_drone_imagery_POST : Args(0) {
             $image->set_sp_person_id($user_id);
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
             my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+
+            push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
     }
     elsif ($new_drone_run_band_stitching eq 'yes') {
@@ -408,10 +411,12 @@ sub upload_drone_imagery_POST : Args(0) {
             $image->set_sp_person_id($user_id);
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
             my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+
+            push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
     }
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { success => 1, drone_run_band_project_ids => \@return_drone_run_band_project_ids };
 }
 
 sub _check_user_login {
