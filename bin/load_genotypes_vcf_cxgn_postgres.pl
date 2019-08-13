@@ -40,7 +40,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
- -z if accession names include an IGD number. Accession names are in format 'accession_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
+ -z if sample names include an IGD number. sample names are in format 'sample_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
  -t Test run . Rolling back at the end.
  -w in the case that you have uploaded a normal VCF and you do not want to transpose it (because the transposition is memory intensive), use this flag
  -A accept warnings and continue with the storing. warnings are whether the samples already have genotype scores for a specific protocol/project
@@ -307,7 +307,7 @@ if (scalar(keys %$genotype_info) > 0) {
     $project_id = $result->{project_id};
 }
 
-print STDERR "Done loading first accession, moving on...\n";    
+print STDERR "Done loading first sample, moving on...\n";    
 
 my $continue_iterate = 1;
 while ($continue_iterate == 1) {
