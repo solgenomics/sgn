@@ -4,7 +4,7 @@
 load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, based on the load_cassava_snps.pl script by Naama.
 
 =head1 SYNOPSIS
-    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -c VCF -o /tmp/transposevcf.txt -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "test_location" -n "IGD" -b "accession" -m "test_protocol_01_new" -k "protocol description" -q "Manihot esculenta" -e "IITA" -s -u nmorales -f "Mesculenta_511_v7" -B /tmp/SQLCOPY.csv -A
+    perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D fixture -U postgres -c VCF -o /tmp/transposevcf.txt -i /home/vagrant/Documents/cassava_subset_108KSNP_10acc.vcf -r /archive_path/ -g "test_pop_01" -p "test_project_01" -d "Diversity study" -y 2016 -l "test_location" -n "IGD" -b "accession" -m "test_protocol_01_new" -k "protocol description" -q "Manihot esculenta" -e "IITA" -z -u nmorales -f "Mesculenta_511_v7" -B /tmp/SQLCOPY.csv -A
 
     If you are loading a "transposed VCF" use -c transposedVCF otherwise for a normal VCF use -c VCF. When using a normal VCF, give a temporary file using -o for where this script will transpose your VCF. VCF are transposed for speed.
     To use an existing project (not create a new project name entry), use -h project_id
@@ -27,7 +27,6 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -g population name (required) e.g. "NaCRRI training population"
  -b observation unit type name (required) e.g. "tissue_sample" or "accession"
  -e breeding program name (required) e.g. "IITA"
- -s include igd numbers in sample names
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
  -k protocol description (required)
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
@@ -82,9 +81,9 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B);
+our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B);
 
-getopts('H:U:i:r:u:c:o:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:wAB:');
+getopts('H:U:i:r:u:c:o:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:');
 
 if (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written)\n");
