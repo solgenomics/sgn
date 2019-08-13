@@ -161,23 +161,23 @@ sub _validate_with_plugin {
     
     my @observation_unit_names;
 
-    print STDERR "Scanning file for observation unit names... \n";
+    #print STDERR "Scanning file for observation unit names... \n";
     my $lines = 0;
     while (<$F>) {
 	chomp;
 
 	my @fields = split /\t/;
-	print "Parsing line $fields[0]\n";
+	#print "Parsing line $fields[0]\n";
 	push @observation_unit_names, $fields[0];
 	$lines++;
 	if ($lines % 100 == 0) { print STDERR "Reading line $lines...        \r"; }
     }
     
-    print STDERR "\n";
+    #print STDERR "\n";
     close($F);
     
     my $number_observation_units = scalar(@observation_unit_names);
-    print STDERR "Number of observation units: $number_observation_units\n";
+    #print STDERR "Number of observation units: $number_observation_units\n";
     
     my @observation_units_names_trim;
     if ($self->get_igd_numbers_included){
@@ -340,11 +340,11 @@ sub next_genotype {
         chomp($line);
 
         my @fields = split /\t/, $line;
-        print STDERR Dumper \@fields;
+        #print STDERR Dumper \@fields;
 
         $observation_unit_name = $fields[0];
         my @scores = @fields[1..$#fields];
-        print STDERR Dumper \@scores;
+        #print STDERR Dumper \@scores;
 
         my $marker_name = "";
 

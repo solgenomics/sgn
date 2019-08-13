@@ -271,6 +271,9 @@ sub upload_genotype_verify_POST : Args(0) {
     });
     $parser->load_plugin($parser_plugin);
 
+    my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
+    my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
+
     my $store_args = {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
@@ -291,7 +294,8 @@ sub upload_genotype_verify_POST : Args(0) {
         lab_numbers_included=>$include_lab_numbers,
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
-        archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+        archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+        temp_file_sql_copy=>$temp_file_sql_copy
     };
 
     my $return;
@@ -314,12 +318,16 @@ sub upload_genotype_verify_POST : Args(0) {
         my $observation_unit_names = $parser->observation_unit_names();
         $store_args->{observation_unit_uniquenames} = $observation_unit_names;
 
+        if ($parser_plugin eq 'VCF') {
+            $store_args->{marker_by_marker_storage} = 1;
+        }
+
         $protocol->{'reference_genome_name'} = $reference_genome_name;
         $protocol->{'species_name'} = $organism_species;
         my $store_genotypes;
         my ($observation_unit_names, $genotype_info) = $parser->next();
         if (scalar(keys %$genotype_info) > 0) {
-            print STDERR Dumper [$observation_unit_names, $genotype_info];
+            #print STDERR Dumper [$observation_unit_names, $genotype_info];
             print STDERR "Parsing first genotype and extracting protocol info... \n";
 
             $store_args->{protocol_info} = $protocol;
@@ -343,7 +351,7 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 
             $store_genotypes->store_metadata();
-            $return = $store_genotypes->store();
+            $store_genotypes->store_identifiers();
         }
 
         print STDERR "Done loading first line, moving on...\n";    
@@ -354,12 +362,13 @@ sub upload_genotype_verify_POST : Args(0) {
             if (scalar(keys %$genotype_info) > 0) {
                 $store_genotypes->genotype_info($genotype_info);
                 $store_genotypes->observation_unit_uniquenames($observation_unit_names);
-                $return = $store_genotypes->store();
+                $store_genotypes->store_identifiers();
             } else {
                 $continue_iterate = 0;
                 last;
             }
         }
+        $return = $store_genotypes->store_genotypeprop_table();
     }
     #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
     elsif ($parser_plugin eq 'GridFileIntertekCSV' || $parser_plugin eq 'IntertekCSV') {
@@ -407,7 +416,8 @@ sub upload_genotype_verify_POST : Args(0) {
             }
         }
         $store_genotypes->store_metadata();
-        $return = $store_genotypes->store();
+        $store_genotypes->store_identifiers();
+        $return = $store_genotypes->store_genotypeprop_table();
     }
     else {
         print STDERR "Parser plugin $parser_plugin not recognized!\n";

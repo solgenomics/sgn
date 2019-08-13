@@ -144,15 +144,18 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
 );
 my $verified_errors = $store_genotypes->validate();
 $store_genotypes->store_metadata();
-$store_genotypes->store();
+$store_genotypes->store_identifiers();
+$return = $store_genotypes->store_genotypeprop_table();
 
  # if genotypes are loaded consecutively, as in the transposed 
  # file, each genotype can be loaded as follows:
  #
 foreach $genotype (@genotypes) { 
     $store_genotypes->genotype_info($genotype);
-    $store_genotypes->genotype_
-    my $return = $store_genotypes->store();
+    $store_genotypes->observation_unit_uniquenames(\@observation_unit_uniquenames);
+    my $return = $store_genotypes->store_identifiers();
+}
+$return = $store_genotypes->store_genotypeprop_table();
 
 ---------------------------------------------------------------
 
@@ -178,7 +181,8 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
 );
 my $verified_errors = $store_genotypes->validate();
 $store_genotypes->store_metadata();
-$store_genotypes->store();
+$store_genotypes->store_identifiers();
+$return = $store_genotypes->store_genotypeprop_table();
 
 ---------------------------------------------------------------
 
@@ -207,7 +211,8 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
 );
 my $verified_errors = $store_genotypes->validate();
 $store_genotypes->store_metadata();
-$store_genotypes->store();
+$store_genotypes->store_identifiers();
+$return = $store_genotypes->store_genotypeprop_table();
 
 ---------------------------------------------------------------
 
@@ -232,7 +237,8 @@ $store_genotypes->store();
 );
  my $verified_errors = $store_genotypes->validate();
  $store_genotypes->store_metadata();
- $store_genotypes->store();
+ $store_genotypes->store_identifiers();
+ $return = $store_genotypes->store_genotypeprop_table();
 
 =head1 DESCRIPTION
 
@@ -254,6 +260,7 @@ use CXGN::UploadFile;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::Trial;
+use Text::CSV;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -378,7 +385,7 @@ has 'archived_file_type' => ( #can be 'genotype_vcf' or 'genotype_dosage' to dis
     required => 0,
 );
 
-    has 'igd_numbers_included' => (
+has 'igd_numbers_included' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
@@ -388,7 +395,13 @@ has 'lab_numbers_included' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
-    );
+);
+
+has 'temp_file_sql_copy' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
 
 has 'geno_cvterm_id' => (
     isa => 'Int',
@@ -484,8 +497,13 @@ has 'design_cvterm' => (
 has 'project_year_cvterm' => (
     isa => 'Ref',
     is => 'rw',
-    );
-  
+);
+
+has 'marker_by_marker_storage' => (
+    isa => 'Bool|Undef',
+    is => 'rw'
+); 
+
 sub BUILD {
     my $self = shift;
 }
@@ -854,18 +872,21 @@ sub store_metadata {
     print STDERR "md_file_id is ".$self->md_file_id()."\n";
 }
 
-sub store {
+sub store_identifiers {
     my $self = shift;
-    
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
+    my $temp_file_sql_copy = $self->temp_file_sql_copy;
+
+    my $csv = Text::CSV->new({ binary => 1, auto_diag => 1, eol => "\n"});
+    open(my $fh, ">>", $temp_file_sql_copy) or die "Failed to open file $temp_file_sql_copy: $!";
 
     my $genotypeprop_observation_units = $self->genotype_info;
 
     my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?) RETURNING genotypeprop_id;";
     my $h_new_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
 
-    #Preparing insertion of new genotypes. Will insert/update marker genotype score into genotypeprop jsonb
+    #Preparing insertion of new genotypes. Will insert/update marker genotype score into genotypeprop jsonb. Only Used when loading standard VCF (non-transposed)
     my $update_genotypeprop_sql = "UPDATE genotypeprop SET value = (CASE
         WHEN value->? IS NULL
         THEN jsonb_insert(value, ?, ?::jsonb)
@@ -933,21 +954,24 @@ sub store {
                 my $genotype_id = $genotype->genotype_id();
 
                 my $json_string = encode_json $genotypeprop_json;
-                $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
-                my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
-                $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+                if ($self->marker_by_marker_storage) { #Used when standard VCF is being stored (NOTE VCF is transpoed prior to parsing by default now), where genotype scores are appended into jsonb.
+                    $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
+                    my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
+                    $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+                }
+                else { #Used when transpoed VCF is being stored, or when Intertek files being stored
+                    $csv->print($fh, [ $genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string ]);
+                }
 
                 #Store IGD number if the option is given.
                 if ($self->igd_numbers_included()) {
                     my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => encode_json {'igd_number' => $igd_number} });
                 }
 
-
-                #link the genotype to the nd_experiment
                 my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
                 $nd_experiment_ids{$nd_experiment_id}++;
             }
-            else {
+            else { #When storing standard VCF, when genotype scores are appended into jsonb one by one. NOTE VCF is transposed by default now prior to parsing, but NOT transposing is relevant for instances where transposing requires too much memory.
                 while (my ($m, $v) = each %$genotypeprop_json) {
                     my $v_string = encode_json $v;
                     $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
@@ -955,6 +979,7 @@ sub store {
             }
         }
     }
+    close($fh);
 
     foreach my $nd_experiment_id (keys %nd_experiment_ids) {
         my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
@@ -962,6 +987,30 @@ sub store {
             file_id => $self->md_file_id(),
         });
     }
+
+    my %response = (
+        success => 1,
+        nd_protocol_id => $self->protocol_id(),
+        project_id => $self->project_id(),
+    );
+
+    return \%response;
+}
+
+sub store_genotypeprop_table {
+    my $self = shift;
+    my $temp_file_sql_copy = $self->temp_file_sql_copy;
+    my $dbh = $self->bcs_schema->storage->dbh;
+
+    my $SQL = "COPY genotypeprop (genotype_id, type_id, value) FROM STDIN WITH DELIMITER ',' CSV";
+    my $sth = $dbh->do($SQL);
+
+    open(my $infile, "<", $temp_file_sql_copy) or die "Failed to open file in store_genotypeprop_table() $temp_file_sql_copy: $!";
+    while (my $line = <$infile>) {
+        $dbh->pg_putcopydata($line);
+    }
+    $dbh->pg_putcopyend();
+    close($infile);
 
     my %response = (
         success => 1,
