@@ -84,7 +84,7 @@ use CXGN::Genotype::ParseUpload;
 
 our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_r, $opt_i, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_v, $opt_s, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_s, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B);
 
-getopts('H:U:i:r:u:c:o:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:wA');
+getopts('H:U:i:r:u:c:o:tD:p:y:g:axsm:k:l:q:zf:d:b:n:se:h:j:wAB:');
 
 if (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written)\n");
@@ -253,7 +253,6 @@ my $store_args = {
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
-    genotype_info=>$genotype_info,
     observation_unit_type_name=>$obs_type,
     observation_unit_uniquenames=> $observation_unit_names_all,
     project_id=>$opt_h,
@@ -267,7 +266,6 @@ my $store_args = {
     protocol_name=>$opt_m,
     protocol_description=>$opt_k,
     protocol_name => $opt_m,
-    protocol_info=>$protocol,
     organism_id=>$organism_id,
     igd_numbers_included=>$include_igd_numbers,
     user_id=>$sp_person_id,
@@ -284,6 +282,9 @@ my $store_genotypes;
 my ($observation_unit_names, $genotype_info) = $parser->next();
 if (scalar(keys %$genotype_info) > 0) {
     print STDERR "Parsing first genotype and extracting protocol info... \n";
+
+    $store_args->{protocol_info} = $protocol;
+    $store_args->{genotype_info} = $genotype_info;
 
     $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
     my $verified_errors = $store_genotypes->validate();
@@ -302,7 +303,7 @@ if (scalar(keys %$genotype_info) > 0) {
     }
 
     $store_genotypes->store_metadata();
-    $store_genotypes->store_identifiers();
+    my $result = $store_genotypes->store_identifiers();
     $protocol_id = $result->{nd_protocol_id};
     $project_id = $result->{project_id};
 }
@@ -324,6 +325,6 @@ while ($continue_iterate == 1) {
         last;
     }
 }
-$return = $store_genotypes->store_genotypeprop_table();
+my $return = $store_genotypes->store_genotypeprop_table();
 
 print STDERR "Complete!\n";
