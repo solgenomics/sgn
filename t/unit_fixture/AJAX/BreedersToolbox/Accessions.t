@@ -104,7 +104,8 @@ $response = $ua->post(
         Content_Type => 'form-data',
         Content => [
             new_accessions_upload_file => [ $file, 'test_accession_upload', Content_Type => 'application/vnd.ms-excel', ],
-            "sgn_session_id"=>$sgn_session_id
+            "sgn_session_id"=>$sgn_session_id,
+            "fuzzy_check_upload_accessions"=>1
         ]
     );
 

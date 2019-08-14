@@ -34,6 +34,7 @@ use CXGN::Phenotypes::MetaDataMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
 use CXGN::Stock::StockLookup;
+use CXGN::Genotype::DownloadFactory;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -675,171 +676,80 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 #=pod
 
 
-#Used from manage download page for downloading gbs from accessions
+#Used from wizard page and manage download page for downloading gbs from accessions
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
 
-  print STDERR "Collecting download parameters ...  ".localtime()."\n";
-  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-  my $format = $c->req->param("format") || "list_id";
-  my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
-  my $dl_token = $c->req->param("gbs_download_token") || "no_token";
-  my $dl_cookie = "download".$dl_token;
+    print STDERR "Collecting download parameters ...  ".localtime()."\n";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $format = $c->req->param("format") || "list_id";
+    my $download_format = $c->req->param("download_format") || 'VCF';
+    my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
 
-  my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
 
-  $trial_id_string = $c->req->param("trial_ids");
-  if ($trial_id_string){
-      @trial_ids = split(',', $trial_id_string);
-  }
-
-  if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
-    $id_string = $c->req->param("ids");
-    @accession_ids = split(',',$id_string);
-    $protocol_id = $c->req->param("protocol_id");
-    if (!$protocol_id){
-        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
-        $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
-    }
-  }
-  elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
-
-
-    my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
-    $protocol_id = $c->req->param("genotyping_protocol_select");
-    #$protocol_id = 2;
-
-    if ($accession_list_id) {
-	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    $trial_id_string = $c->req->param("trial_ids");
+    if ($trial_id_string){
+        @trial_ids = split(',', $trial_id_string);
     }
 
-    @accession_list = map { $_->[1] } @$accession_data;
+    if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
+        $id_string = $c->req->param("ids");
+        @accession_ids = split(',',$id_string);
+        $protocol_id = $c->req->param("protocol_id");
+        if (!$protocol_id){
+            my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+            $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+        }
+    }
+    elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
+        my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
+        $protocol_id = $c->req->param("genotyping_protocol_select");
 
-    my $t = CXGN::List::Transform->new();
+        if ($accession_list_id) {
+            $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+        }
 
-    my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
-    @accession_ids = @{$accession_id_hash->{transform}};
-  }
+        @accession_list = map { $_->[1] } @$accession_data;
 
-  my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "gt_download_XXXXX", UNLINK=> 0);  #create download file
-  open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+        my $t = CXGN::List::Transform->new();
+        my $acc_t = $t->can_transform("accessions", "accession_ids");
+        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+        @accession_ids = @{$accession_id_hash->{transform}};
+    }
 
-  print STDERR "Downloading genotype data ... ".localtime()."\n";
+    my $dir = $c->tempfiles_subdir('genotype_download');
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
+    $tempfile = $tempfile.".vcf";
 
-  print STDERR "Accession ids= @accession_ids \n";
-  print STDERR "Protocol id= $protocol_id \n";
+    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+        $download_format,    #can be either 'VCF' or 'DosageMatrix'
+        {
+            bcs_schema=>$schema,
+            filename=>$tempfile,  #file path to write to
+            accession_list=>\@accession_ids,
+            #tissue_sample_list=>$tissue_sample_list,
+            trial_list=>\@trial_ids,
+            protocol_id_list=>[$protocol_id],
+            #markerprofile_id_list=>$markerprofile_id_list,
+            #genotype_data_project_list=>$genotype_data_project_list,
+            #marker_name_list=>['S80_265728', 'S80_265723'],
+            #limit=>$limit,
+            #offset=>$offset
+        }
+    );
+    my $status = $geno->download();
 
-  my $genotypes_search = CXGN::Genotype::Search->new({
-      bcs_schema=>$schema,
-      accession_list=>\@accession_ids,
-      trial_list=>\@trial_ids,
-      protocol_id_list=>[$protocol_id],
-      genotypeprop_hash_select=>['DS'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
-      protocolprop_top_key_select=>[], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
-      protocolprop_marker_hash_select=>[], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
-      return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
-  });
-  my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-
-  if (scalar(@$genotypes) == 0) {
-    my $error = "No genotype data was found for Accessions: @accession_list, Trials: $trial_id_string, and protocol with id $protocol_id. You can determine which accessions have been genotyped with a given protocol by using the search wizard.";
     $c->res->content_type("application/text");
-    $c->res->header('Content-Disposition', qq[attachment; filename="Download error details"]);
-    $c->res->body($error);
-    return;
-  }
-
-  # find accession synonyms
-  my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
-  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
-  my $synonym_string = "";
-  while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
-      if(scalar(@{$synonym_list})>0){
-          if(not length($synonym_string)<1){
-              $synonym_string.=" ";
-          }
-          $synonym_string.=$uniquename."=(";
-          $synonym_string.= (join ", ", @{$synonym_list}).")";
-      }
-  }
-
-
-  print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
-  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
-  if (length($synonym_string)>0){
-      print $TEMP "# Synonyms: ".$synonym_string."\n";
-  }
-  print $TEMP "Marker\t";
-
-  print STDERR "Decoding genotype data ...".localtime()."\n";
-
-  for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-
-    my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
-    print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
-    push(@accession_genotypes, $genotypes->[$i]->{selected_genotype_hash});
-  }
-  @unsorted_markers = keys   %{ $accession_genotypes[0] };
-  print $TEMP "\n";
-
-  #print STDERR "building custom optimiized sort ... ".localtime()."\n";
-  my $marker_sort = make_sorter(
-    qw( GRT ),
-    number => {
-      # primary subkeys (chrom number) comparison
-      # ascending numeric comparison
-      code => '/(\d+)/',
-      ascending => 1,
-      unsigned => 1,
-    },
-    number => {
-      # if chrom number is equal
-      # return secondary subkey (chrom position) comparison
-      # ascending numeric comparison
-      code => '/(\d+)$/',
-      ascending => 1,
-      unsigned => 1,
-    },
-  );
-  die "make_sorter: $@" unless $marker_sort;
-
-  print STDERR "Sorting markers... ".localtime()."\n";
-  my @markers = $marker_sort->( @unsorted_markers );
-
-  print STDERR "Printing sorted markers and scores ... ".localtime()."\n";
-  for my $j (0 .. $#markers) {
-    print $TEMP "$markers[$j]\t";
-
-    for my $i ( 0 .. $#accession_genotypes ) {
-      if($i == $#accession_genotypes ) {                              # print last accession genotype value and move onto new line
-        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\n";
-      }
-      elsif (exists($accession_genotypes[$i]->{$markers[$j]}->{'DS'})) {        # print genotype and tab
-        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\t";
-      }
-    }
-  }
-
-  close $TEMP;
-  print STDERR "Downloading file ... ".localtime()."\n";
-
-  my $filename;
-  if (scalar(@$genotypes) > 1) { #name file with number of acessions and protocol id
-    $filename = scalar(@$genotypes) . "genotypes-p" . $protocol_id . ".txt";
-  }
-  else { #name file with acesssion name and protocol id if there's just one
-    $filename = $genotypes->[0]->{germplasmName} . "genotype-p" . $protocol_id . ".txt";
-  }
-
-  $c->res->content_type("application/text");
-  $c->res->cookies->{$dl_cookie} = {
-    value => $dl_token,
-    expires => '+1m',
-  };
-  $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-  my $output = read_file($tempfile);
-  $c->res->body($output);
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 }
 
 #=pod
