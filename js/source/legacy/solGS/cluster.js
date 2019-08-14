@@ -614,12 +614,8 @@ jQuery(document).ready( function() {
 	    if(jQuery('#cluster_canvas #cluster_select_a_population_div').is(':visible')) {
 		jQuery('#cluster_canvas #cluster_options #data_type_opts').html(dataTypeOpts);
 		jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-
-		jQuery('#cluster_canvas #cluster_options #data_type_opts').html(dataTypeOpts);
-		jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
 	
-		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();
-	
+		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();	
 		jQuery('#cluster_canvas #cluster_options').show();
 	    } else {
 		setTimeout(checkClusterPop, 6000);
