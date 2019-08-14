@@ -448,8 +448,6 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                     $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Rotated imagery not found. The standard process should have covered all supported image cases. Please try again or contact us.</button><br/><br/>';
                 }
             } else {
-                # $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_stitch" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Stitch Uploaded Images Into Ortho Image Now</button><br/><br/>';
-                # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_upload_stitched" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Upload Previously Stitched Ortho Image</button>';
                 $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Please upload previously stitched imagery. We do not support unstitched imagery at this time. Please try again or contact us.</button><br/><br/>';
             }
 

@@ -139,6 +139,8 @@ sub upload_drone_imagery_POST : Args(0) {
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
     my @return_drone_run_band_project_ids;
+    my @return_drone_run_band_image_ids;
+    my @return_drone_run_band_image_urls;
     if ($new_drone_run_band_stitching eq 'no') {
         my @new_drone_run_bands;
         if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
@@ -239,7 +241,8 @@ sub upload_drone_imagery_POST : Args(0) {
             $image->set_sp_person_id($user_id);
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
             my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-
+            push @return_drone_run_band_image_urls, $image->get_image_url('original');
+            push @return_drone_run_band_image_ids, $image->get_image_id();
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
     }
@@ -411,12 +414,13 @@ sub upload_drone_imagery_POST : Args(0) {
             $image->set_sp_person_id($user_id);
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
             my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-
+            push @return_drone_run_band_image_urls, $image->get_image_url('original');
+            push @return_drone_run_band_image_ids, $image->get_image_id();
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
     }
 
-    $c->stash->{rest} = { success => 1, drone_run_band_project_ids => \@return_drone_run_band_project_ids };
+    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls };
 }
 
 sub _check_user_login {

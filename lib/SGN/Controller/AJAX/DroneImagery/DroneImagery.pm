@@ -299,96 +299,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     $c->stash->{rest} = \@results;
 }
 
-sub raw_drone_imagery_stitch : Path('/api/drone_imagery/raw_drone_imagery_stitch') : ActionClass('REST') { }
-sub raw_drone_imagery_stitch_GET : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
-
-    my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
-    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        drone_run_band_project_id_list=>[$drone_run_band_project_id],
-        project_image_type_id=>$raw_drone_images_cvterm_id
-    });
-    my ($result, $total_count) = $images_search->search();
-    #print STDERR Dumper $result;
-
-    my $main_production_site = $c->config->{main_production_site_url};
-
-    my @image_urls;
-    foreach (@$result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_url = $image->get_image_url("original");
-        push @image_urls, $main_production_site.$image_url;
-    }
-    #print STDERR Dumper \@image_urls;
-    my $image_urls_string = join ',', @image_urls;
-
-    my $dir = $c->tempfiles_subdir('/stitched_drone_imagery');
-    my $archive_stitched_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'stitched_drone_imagery/imageXXXX');
-    $archive_stitched_temp_image .= '.png';
-
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageStitching/PanoramaStitch.py --images_urls \''.$image_urls_string.'\' --outfile_path \''.$archive_stitched_temp_image.'\'';
-    print STDERR Dumper $cmd;
-    my $status = system($cmd);
-
-    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $ret = $image->process_image($archive_stitched_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
-
-    unlink($archive_stitched_temp_image);
-    $c->stash->{rest} = { data => \@image_urls };
-}
-
-sub upload_drone_imagery_stitch : Path('/api/drone_imagery/upload_drone_imagery_stitch') : ActionClass('REST') { }
-sub upload_drone_imagery_stitch_POST : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $drone_run_band_project_id = $c->req->param('drone_imagery_upload_stitched_ortho_drone_run_band_project_id');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
-
-    my $upload_file = $c->req->upload('drone_imagery_upload_stitched_ortho');
-
-    my $upload_original_name = $upload_file->filename();
-    my $upload_tempfile = $upload_file->tempname;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => "drone_imagery_upload_ortho",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
-        $c->detach();
-    }
-    unlink $upload_tempfile;
-    print STDERR "Archived Ortho Drone Image File: $archived_filename_with_path\n";
-
-    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $ret = $image->process_image($archived_filename_with_path, 'project', $drone_run_band_project_id, $linking_table_type_id);
-    my $uploaded_image_fullpath = $image->get_filename('original_converted', 'full');
-    my $uploaded_image_url = $image->get_image_url('original');
-
-    unlink($archived_filename_with_path);
-    $c->stash->{rest} = { success => 1, uploaded_image_url => $uploaded_image_url, uploaded_image_fullpath => $uploaded_image_fullpath };
-}
-
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }
 sub drone_imagery_rotate_image_GET : Args(0) {
     my $self = shift;
@@ -736,7 +646,7 @@ sub _perform_plot_polygon_assign {
         } else {
             $image->set_sp_person_id($user_id);
             my $ret = $image->process_image($archive_plot_polygons_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
-            my $stock_associate = $image->associate_stock($stock_id);
+            my $stock_associate = $image->associate_stock($stock_id, $user_name);
             $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
             $plot_polygon_image_url = $image->get_image_url('original');
             my $added_image_tag_id = $image->add_tag($image_tag);
@@ -748,7 +658,7 @@ sub _perform_plot_polygon_assign {
     }
 
     return {
-        image_url => $image_url, image_fullpath => $image_fullpath, success => 1
+        image_url => $image_url, image_fullpath => $image_fullpath, success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id
     };
 }
 
@@ -807,7 +717,7 @@ sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $c->stash->{rest} = {success => 1};
+    $c->stash->{rest} = {success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id};
 }
 
 sub drone_imagery_fourier_transform : Path('/api/drone_imagery/fourier_transform') : ActionClass('REST') { }
@@ -836,9 +746,11 @@ sub drone_imagery_fourier_transform_GET : Args(0) {
     $image->set_sp_person_id($user_id);
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'fourier_transform_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $ret = $image->process_image($archive_fourier_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+    my $ft_image_url = $image->get_image_url('original');
+    my $ft_image_id = $image->get_image_id();
 
     unlink($archive_fourier_temp_image);
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath };
+    $c->stash->{rest} = { fourier_transform_image_id=>$ft_image_id, fourier_transform_image_url=>$ft_image_url, image_url => $image_url, image_fullpath => $image_fullpath };
 }
 
 sub drone_imagery_denoise : Path('/api/drone_imagery/denoise') : ActionClass('REST') { }
@@ -3429,7 +3341,7 @@ sub _perform_phenotype_calculation {
             } else {
                 $image->set_sp_person_id($user_id);
                 my $ret = $image->process_image($_, 'project', $drone_run_band_project_id, $linking_table_type_id);
-                $ret = $image->associate_stock($stock->{stock_id});
+                $ret = $image->associate_stock($stock->{stock_id}, $user_name);
                 $image_fullpath = $image->get_filename('original_converted', 'full');
                 $image_url = $image->get_image_url('original');
                 $image_source_tag_small = $image->get_img_src_tag("tiny");
