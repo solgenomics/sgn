@@ -1,11 +1,11 @@
-<div class="col-md-12" id="save_and_download" style="margin-bottom:20px;">
-    <div class="col-md-4">
+<div class="col-md-12" id="save_and_download">
+    <div class="col-md-4" style="margin-bottom:40px;">
         <center>
         <br>
             <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
         </center>
-    </div><br>
-    <div class="col-md-4">
+    </div></br></br>
+    <div class="col-md-4" style="margin-bottom:40px;">
         <center>
             <label>Save label design:</label>
             <div class="input-group" id="save_design_div">

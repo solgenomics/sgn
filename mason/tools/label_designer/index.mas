@@ -7,36 +7,23 @@
 <&| /util/workflow.mas , id=> "label_designer_workflow"&>
 
     <&| /util/workflow.mas:step, title=>"Intro and Data Source" &>
-    <& /page/page_title.mas, title=>"Welcome to the label designer" &>
-    <br/>
-    <p>This workflow will guide you through the steps to design your own custom labels.</p>
-    <p>The first step is to select a data source. Select a field, genotyping, or crossing trial to populate your labels with the trial design information. Or select a list to populate your label with the list contents</p>
-    <p>Once you've picked a data source, you will have to option to either load a saved design, or start a new one by selecting a page size and label size. If you don not see your page or label size as an option then select <b>Custom</b> and enter your custom dimensions (the units will be in pixels, or 1/72 of an inch)</p>
-    <p>Once you have set your source and size, a draw area will appear where you can begin adding elements to your label. Once added, you can drag, drop, or resize them as you like.
-    <p>Once your design is finished you will have the option to modify additional settings such as print margins, save your design for later use, and/or download your labels:</p>
-    <p>If you have trouble at any point during the process, please reference the Label Designer section of the manual to see more detailed instructions and illustrative animations.</p>
-    <br/><br/>
-    <div class="col-md-3">
-    </div>
-    <div class="col-md-2">
-        <label><b>Data Source:</b></label>
-    </div>
-    <div class="col-md-4" id="data_source">
-    </div>
-    <div class="col-md-3">
-    </div><br/><br/><br/>
-
+        <& /page/page_title.mas, title=>"Welcome to the Label Designer" &>
+        <& /tools/label_designer/select_datasource.mas &>
+        <br/><br/>
+        <div class="col-md-12 text-center">
+            <button id="select_datasource_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+        </div>
     </&>
     <&| /util/workflow.mas:step, title=>"Set Page and Label Size" &>
         <& /tools/label_designer/select_layout.mas &>
         <div class="col-md-12 text-center">
-            <button class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);">Next Step</button>
+            <button id="select_layout_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
         </div>
     </&>
     <&| /util/workflow.mas:step, title=>"Design Your Label" &>
         <& /tools/label_designer/design_label.mas &>
         <div class="col-md-12 text-center">
-            <button class="btn btn-primary" type="button" class="btn btn-default" id="complete_design" onclick="Workflow.complete(this);">Next Step</button>
+            <button id="design_label_button" class="btn btn-primary" type="button" class="btn btn-default" id="complete_design" onclick="Workflow.complete(this);" disabled>Next</button>
         </div>
     </&>
     <&| /util/workflow.mas:step, title=>"More Options, Save, And Download" &>

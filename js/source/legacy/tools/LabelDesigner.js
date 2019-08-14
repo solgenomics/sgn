@@ -286,7 +286,7 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">Plot</option>';
+                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="plots">Plot</option>';
                     if(response.has_plants){
                         html = html + '<option value="plants">Plant</option>';
                     }
@@ -298,7 +298,7 @@ $(document).ready(function($) {
                     }
                     html = html + '</select>';
                     jQuery('#label_designer_data_level_select_div').html(html);
-                    jQuery('#label_designer_data_level_div').show();
+                    jQuery("#label_designer_data_level").focus();
                 },
                 error: function(response) {
                     alert('There was a problem checking the data levels available for your field trial. Please contact us.');
@@ -306,11 +306,12 @@ $(document).ready(function($) {
             });
         } else if (data_type == 'Genotyping Plates') {
 
-            jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="plate">Plate</option></select>');
+            jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="plate">Plate</option></select>');
+            jQuery("#label_designer_data_level").focus();
 
         } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
 
-            var html = '<select class="form-control" id="label_designer_data_level" ><option value="list">List Items</option>';
+            var html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="list">List Items</option>';
             // Check list type, if Plot, Plant, or Tissue Sample add details option
             var name = $('#source_select :selected').text();
 
@@ -337,20 +338,32 @@ $(document).ready(function($) {
                     }
                     html = html + '</select>';
                     jQuery('#label_designer_data_level_select_div').html(html);
+                    jQuery("#label_designer_data_level").focus();
                 },
                 error: function(response) {
                     alert('There was a problem checking the data levels available for your field trial. Please contact us.');
                 }
             });
-            // jQuery('#label_designer_data_level_select_div').html('');
-            // jQuery('#label_designer_data_level_div').hide();
         }
     });
 
     jQuery(document).on('change', '#label_designer_data_level', function(){
         var data_type = $('#source_select :selected').parent().attr('label');
         var source_id = jQuery('#source_select').val();
+
+        var name = jQuery('#label_designer_data_level :selected').text();
+        jQuery('#selected_data_level').text(name);
+
+        if (this.value) { jQuery('#select_datasource_button').prop('disabled', false); }
         updateFields(data_type, source_id, this.value);
+    });
+
+    jQuery(document).on('change', 'input[type=radio][name=optradio]', function(){
+        if (this.value == 'saved') {
+            document.getElementById("design_list").style.display = "inline";
+        } else {
+            document.getElementById("design_list").style.display = "none";
+        }
     });
 
     var page_format_select = d3.select("#page_format");
@@ -368,6 +381,7 @@ $(document).ready(function($) {
         var label = $(this).find('option:selected').val();
         if (!label || label == 'Select a label format') {
             disableDrawArea();
+            jQuery('#select_layout_button').prop('disabled',true)
         } else {
             switchLabelDependentOptions(label);
         }
@@ -376,6 +390,7 @@ $(document).ready(function($) {
     d3.select("#d3-apply-custom-label-size").on("click", function() {
 
         //save and apply custom label size
+        jQuery('#select_layout_button').prop('disabled', false)
         var page = d3.select("#page_format").node().value;
         var custom_label = page_formats[page].label_sizes['Custom'];
 
@@ -459,6 +474,7 @@ $(document).ready(function($) {
         var size = document.getElementById("d3-add-size-input").value;
         var font = document.getElementById("d3-add-font-input").value || 'Courier';
         addToLabel(field, text, type, size, font);
+        jQuery('#design_label_button').prop('disabled', false)
     });
 
     $("#d3-pdf-button, #d3-zpl-button").on("click", function() {
@@ -806,7 +822,7 @@ function getDataSourceSelect() {
             id: 'source_select',
             default: 'Select a data source',
             live_search: 1,
-            workflow_trigger: 1,
+            // workflow_trigger: 1,
         });
 }
 
@@ -901,6 +917,7 @@ function switchLabelDependentOptions(label) {
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
         $('#label_width').focus();
     } else {
+        jQuery('#select_layout_button').prop('disabled', false)
         document.getElementById("d3-custom-dimensions-div").style.display = "none";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);

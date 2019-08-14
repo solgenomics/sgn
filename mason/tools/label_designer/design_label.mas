@@ -1,3 +1,7 @@
+<p>Below is a draw area where you can begin adding elements to your label. First select a type, then field, size, font and click 'Add'</p>
+<p>Once added, you can drag and drop elements, or delete them by clicking on the red box in their upper left corners.</p>
+<p>Barcodes can also be resized by dragging on the green box in their lower right corners. When you are satisfied with your deisgn, click next!</p>
+
 <div class="col-md-12" id="d3-draw-div" style="margin-bottom:20px;">
     <div class="col-md-2"></div>
     <div class="col-md-8" id="d3-draw-area"></div>
