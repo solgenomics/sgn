@@ -162,8 +162,8 @@ if (grepl('genotype', dataType, ignore.case=TRUE)) {
         clusterData <- column_to_rownames(gebvsData, 'V1')    
     } else if (grepl('phenotype', dataType, ignore.case=TRUE)) {
 
-        metaFile <- grep("meta", inputFiles,  value = TRUE)      
-        clusterData <- cleanAveragePhenotypes(inputFiles, metaFile)            
+        metaFile <- grep("meta", inputFiles,  value = TRUE)
+        clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile=metaFile)
     }
 
     clusterDataNotScaled <- na.omit(clusterData)
