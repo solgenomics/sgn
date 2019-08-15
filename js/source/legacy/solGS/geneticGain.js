@@ -155,7 +155,7 @@ solGS.geneticGain = {
 		    trainingGEBVs = res.gebv_arrayref;
 		    
 		    if (trainingGEBVs) {
-			getSelectionPopulationGEBVs(gebvParams)
+			solGS.geneticGain.getSelectionPopulationGEBVs(gebvParams);
 		    }
 		    
 		} else {
@@ -192,7 +192,7 @@ solGS.geneticGain = {
 			    .html('Please wait... plotting gebvs')
 			    .show();
 			
-			plotGEBVs(trainingGEBVs, selectionGEBVs);
+			solGS.geneticGain.plotGEBVs(trainingGEBVs, selectionGEBVs);
 			
 			jQuery('#gg_message').empty();
 			jQuery('#check_genetic_gain').hide();
@@ -227,7 +227,7 @@ solGS.geneticGain = {
 	
 	var dbSelPopsList;
 	if (ggArgs.training_pop_id.match(/list/) == null) {
-            dbSelPopsList = addSelectionPopulations();
+            dbSelPopsList = solGS.sIndex.addSelectionPopulations();
 	}
 
 	if (dbSelPopsList) {
@@ -236,7 +236,7 @@ solGS.geneticGain = {
 	
 	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
 	if (userUploadedSelExists == true) {	    
-            var userSelPops = listUploadedSelPopulations();
+            var userSelPops = solGS.sIndex.listUploadedSelPopulations();
             if (userSelPops) {
 		jQuery("#gg_select_a_population_div ul").append(userSelPops);  
             }

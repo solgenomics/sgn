@@ -72,7 +72,7 @@ jQuery(document).on("click", "#run_genetic_correlation", function() {
 
 
 function listGenCorPopulations ()  {
-    var modelData = getTrainingPopulationData();
+    var modelData = solGS.sIndex.getTrainingPopulationData();
    
     var trainingPopIdName = JSON.stringify(modelData);
    
@@ -90,7 +90,7 @@ function listGenCorPopulations ()  {
      
     var dbSelPopsList;
     if (modelData.id.match(/list/) == null) {
-        dbSelPopsList = addSelectionPopulations();
+        dbSelPopsList = solGS.sIndex.addSelectionPopulations();
     }
 
     if (dbSelPopsList) {
@@ -99,7 +99,7 @@ function listGenCorPopulations ()  {
       
     var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
     if (userUploadedSelExists == true) {     
-        var userSelPops = listUploadedSelPopulations();
+        var userSelPops = solGS.sIndex.listUploadedSelPopulations();
         if (userSelPops) {
 
             jQuery("#corre_select_a_population_div ul").append(userSelPops);  
@@ -326,7 +326,7 @@ function runGenCorrelationAnalysis (args) {
                         + popName.replace(/\s/g, "") 
                         + "\"></div>";  
                 
-                    var legendValues = legendParams();                 
+                    var legendValues = solGS.sIndex.legendParams();                 
                     var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
             
                     jQuery("#si_correlation_canvas").append(corLegDivVal).show();
@@ -558,7 +558,6 @@ function plotCorrelation (data, divPlace) {
         .attr("text-anchor", "start");
 
 }
-
 
 
 function createAcronymsTable (tableId) {

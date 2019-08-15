@@ -426,7 +426,7 @@ solGS.cluster = {
 
 
     listClusterPopulations: function()  {
-	var modelData = getTrainingPopulationData();
+	var modelData = solGS.sIndex.getTrainingPopulationData();
 	
 	var trainingPopIdName = JSON.stringify(modelData);
 	
@@ -444,7 +444,7 @@ solGS.cluster = {
 	
 	var dbSelPopsList;
 	if (modelData.id.match(/list/) == null) {
-            dbSelPopsList = addSelectionPopulations();
+            dbSelPopsList = solGS.sIndex.addSelectionPopulations();
 	}
 
 	if (dbSelPopsList) {
@@ -454,7 +454,7 @@ solGS.cluster = {
 	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
 	if (userUploadedSelExists == true) {
 	    
-            var userSelPops = listUploadedSelPopulations();
+            var userSelPops = solGS.sIndex.listUploadedSelPopulations();
             if (userSelPops) {
 		jQuery("#cluster_select_a_population_div ul").append(userSelPops);  
             }
