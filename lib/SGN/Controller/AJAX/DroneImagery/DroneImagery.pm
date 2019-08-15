@@ -720,39 +720,6 @@ sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
     $c->stash->{rest} = {success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id};
 }
 
-sub drone_imagery_fourier_transform : Path('/api/drone_imagery/fourier_transform') : ActionClass('REST') { }
-sub drone_imagery_fourier_transform_GET : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $image_id = $c->req->param('image_id');
-    my $drone_run_project_id = $c->req->param('drone_run_project_id');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
-
-    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-    my $image_url = $image->get_image_url("original");
-    my $image_fullpath = $image->get_filename('original_converted', 'full');
-
-    my $dir = $c->tempfiles_subdir('/drone_imagery_fourier_transform');
-    my $archive_fourier_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_fourier_transform/imageXXXX');
-    $archive_fourier_temp_image .= '.png';
-
-    my $method = 'frequency';
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/FourierTransform.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_fourier_temp_image.'\' --frequency_threshold_method \''.$method.'\'';
-    print STDERR Dumper $cmd;
-    my $status = system($cmd);
-
-    $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image->set_sp_person_id($user_id);
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'fourier_transform_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $ret = $image->process_image($archive_fourier_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
-    my $ft_image_url = $image->get_image_url('original');
-    my $ft_image_id = $image->get_image_id();
-
-    unlink($archive_fourier_temp_image);
-    $c->stash->{rest} = { fourier_transform_image_id=>$ft_image_id, fourier_transform_image_url=>$ft_image_url, image_url => $image_url, image_fullpath => $image_fullpath };
-}
-
 sub drone_imagery_denoise : Path('/api/drone_imagery/denoise') : ActionClass('REST') { }
 sub drone_imagery_denoise_GET : Args(0) {
     my $self = shift;

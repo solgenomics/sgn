@@ -147,6 +147,18 @@ is(scalar(@{$message_hash_raster->{drone_run_band_project_ids}}), 5);
 is(scalar(@{$message_hash_raster->{drone_run_band_image_ids}}), 5);
 
 $ua = LWP::UserAgent->new;
+my $response_get_image = $ua->get('http://localhost:3010/api/drone_imagery/get_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_raster->{drone_run_band_image_ids}->[0]);
+
+ok($response_get_image->is_success);
+my $message_get_image = $response_get_image->decoded_content;
+my $message_hash_get_image = decode_json $message_get_image;
+print STDERR Dumper $message_hash_get_image;
+ok($message_hash_get_image->{image_url});
+ok($message_hash_get_image->{image_fullpath});
+ok($message_hash_get_image->{image_width});
+ok($message_hash_get_image->{image_height});
+
+$ua = LWP::UserAgent->new;
 my $response_denoised = $ua->get('http://localhost:3010/api/drone_imagery/denoise?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_raster->{drone_run_band_image_ids}->[0].'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0]);
 
 ok($response_denoised->is_success);
@@ -157,7 +169,7 @@ ok($message_hash_denoised->{denoised_image_id});
 ok($message_hash_denoised->{denoised_image_url});
 
 $ua = LWP::UserAgent->new;
-my $response_rotate = $ua->get('http://localhost:3010/api/drone_imagery/rotate_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_denoised->{denoised_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&angle=2.1&view_only=0');
+my $response_rotate = $ua->get('http://localhost:3010/api/drone_imagery/crop_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_denoised->{denoised_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&angle=2.1&view_only=0');
 
 ok($response_rotate->is_success);
 my $message_rotate = $response_rotate->decoded_content;
@@ -165,6 +177,28 @@ my $message_hash_rotate = decode_json $message_rotate;
 print STDERR Dumper $message_hash_rotate;
 ok($message_hash_rotate->{rotated_image_id});
 ok($message_hash_rotate->{rotated_image_url});
+
+$ua = LWP::UserAgent->new;
+my $response_rotate = $ua->get('http://localhost:3010/api/drone_imagery/rotate_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_rotate->{rotated_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&angle=2.1&view_only=0');
+
+ok($response_rotate->is_success);
+my $message_rotate = $response_rotate->decoded_content;
+my $message_hash_rotate = decode_json $message_rotate;
+print STDERR Dumper $message_hash_rotate;
+ok($message_hash_rotate->{rotated_image_id});
+ok($message_hash_rotate->{rotated_image_url});
+
+my %crop_polygon = [{'x'=>100, 'y'=>100}, {'x'=>120, 'y'=>100}, {'x'=>120, 'y'=>80}, {'x'=>100, 'y'=>70}];
+my $polygon_crop = encode_json \%crop_polygon;
+$ua = LWP::UserAgent->new;
+my $response_crop = $ua->get('http://localhost:3010/api/drone_imagery/crop_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_rotate->{rotated_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&polygon='.$polygon_crop);
+
+ok($response_crop->is_success);
+my $message_crop = $response_crop->decoded_content;
+my $message_hash_crop = decode_json $message_crop;
+print STDERR Dumper $message_hash_crop;
+ok($message_hash_crop->{cropped_image_id});
+ok($message_hash_crop->{cropped_image_url});
 
 $ua = LWP::UserAgent->new;
 my $response_contours = $ua->get('http://localhost:3010/api/drone_imagery/get_contours?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_raster->{drone_run_band_image_ids}->[0].'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0]);
@@ -190,7 +224,7 @@ ok($message_hash_save_template->{success});
 ok($message_hash_save_template->{drone_run_band_template_id});
 
 $ua = LWP::UserAgent->new;
-my $response_assign_plot_polygons = $ua->post('http://localhost:3010/api/drone_imagery/assign_plot_polygons?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_raster->{drone_run_band_image_ids}->[0].'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&stock_polygons='.$stock_polygon_json.'&assign_plot_polygons_type=observation_unit_polygon_blue_imagery');
+my $response_assign_plot_polygons = $ua->post('http://localhost:3010/api/drone_imagery/assign_plot_polygons?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_crop->{cropped_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&stock_polygons='.$stock_polygon_json.'&assign_plot_polygons_type=observation_unit_polygon_blue_imagery');
 
 ok($response_assign_plot_polygons->is_success);
 my $message_assign_plot_polygons = $response_assign_plot_polygons->decoded_content;
@@ -293,6 +327,12 @@ my $message_hash_project_md_image = decode_json $message_project_md_image;
 print STDERR Dumper $message_hash_project_md_image;
 ok($message_hash_project_md_image->{data});
 
+my $response_remove_image = $ua->get('http://localhost:3010/api/drone_imagery/remove_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_raster->{drone_run_band_image_ids}->[0]);
 
+ok($response_remove_image->is_success);
+my $message_remove_image = $response_remove_image->decoded_content;
+my $message_hash_remove_image = decode_json $message_remove_image;
+print STDERR Dumper $message_hash_remove_image;
+ok($message_hash_remove_image->{status});
 
 done_testing();
