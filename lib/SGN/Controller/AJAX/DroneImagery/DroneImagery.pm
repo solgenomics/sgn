@@ -36,6 +36,7 @@ use CXGN::DroneImagery::ImageTypes;
 use Time::Piece;
 use POSIX;
 use Math::Round;
+use Parallel::ForkManager;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -530,6 +531,9 @@ sub _perform_plot_polygon_assign {
     my $from_web_interface = shift;
     print STDERR "Plot Polygon Assign Type: $assign_plot_polygons_type \n";
 
+    my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+    print STDERR "NUMCORES $number_system_cores\n";
+
     my $polygon_objs = decode_json $stock_polygons;
     my %stock_ids;
 
@@ -611,9 +615,20 @@ sub _perform_plot_polygon_assign {
     if (defined($corresponding_channel)) {
         $image_band_index_string = "--image_band_index $corresponding_channel";
     }
+
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
+
+    my $pm = Parallel::ForkManager->new($number_system_cores);
+    $pm->run_on_finish( sub {
+        my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+        push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
+        push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
+    });
+
     foreach my $stock_name (keys %$polygon_objs) {
+        my $pid = $pm->start and next;
+
         my $polygon = $polygon_objs->{$stock_name};
         my $polygons = encode_json [$polygon];
         my $stock_id = $stock_ids{$stock_name};
@@ -651,11 +666,11 @@ sub _perform_plot_polygon_assign {
             $plot_polygon_image_url = $image->get_image_url('original');
             my $added_image_tag_id = $image->add_tag($image_tag);
         }
-        push @plot_polygon_image_fullpaths, $plot_polygon_image_fullpath;
-        push @plot_polygon_image_urls, $plot_polygon_image_url;
-
         unlink($archive_plot_polygons_temp_image);
+
+        $pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
     }
+    $pm->wait_all_children;
 
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id

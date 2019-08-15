@@ -88,8 +88,10 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     my @return;
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
-        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}."): <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a><br/>" : "";
-        $associations .= "Project (".$_->{project_image_type_name}."): ".$_->{project_name};
+        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}."): <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
+        if ($_->{project_name}) {
+            $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): ".$_->{project_name} : "Project (".$_->{project_image_type_name}."): ".$_->{project_name};
+        }
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {
             push @tags, $t->{name};

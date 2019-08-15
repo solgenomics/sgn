@@ -451,9 +451,11 @@ sub upload_image {
 sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
-    my $user_name = shift;
+    my $username = shift;
     if ($stock_id) {
-        my $username = $self->config->user ? $self->config->user->get_object->get_username : $user_name;
+        if (!$username) {
+            $username = $self->config->can('user_exists') ? $self->config->user->get_object->get_username : $self->config->username;
+        }
         if ($username) {
             my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema');
             my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $username);
@@ -464,6 +466,9 @@ sub associate_stock  {
             $sth->execute($stock_id, $self->get_image_id, $metadata_id);
             my ($stock_image_id) = $sth->fetchrow_array;
             return $stock_image_id;
+        }
+        else {
+            die "No username. Could not save image-stock association!\n";
         }
     }
     return undef;
