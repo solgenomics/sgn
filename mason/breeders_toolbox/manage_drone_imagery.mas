@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.DroneImagery', 'CXGN.BreedersToolbox.DroneImagery.DragAndDrop', "opencv.opencv" ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'd3.d3v4Min.js', "opencv.opencv" ] &>
 
 <style>
 .ui-autocomplete { z-index:2147483647; }
@@ -1169,7 +1169,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 </div>
 
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
-<& /breeders_toolbox/drone_imagery/drone_imagery_fourier_transform_dialogs.mas &>
 
 <script>
 
@@ -1597,27 +1596,6 @@ jQuery(document).ready(function() {
             return false;
         } else {
             jQuery.ajax({
-                type: 'POST',
-                url: '/api/drone_imagery/standard_process_apply',
-                dataType: "json",
-                data: {
-                    'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
-                    'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
-                    'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
-                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices)
-                },
-                success: function(response){
-                    console.log(response);
-                    if(response.error) {
-                        alert(response.error);
-                    }
-                },
-                error: function(response){
-                    //alert('Error saving standard process assigned plot polygons!')
-                }
-            });
-
-            jQuery.ajax({
                 type: 'GET',
                 url: '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id,
                 dataType: "json",
@@ -1663,9 +1641,18 @@ jQuery(document).ready(function() {
             return false;
         } else {
             jQuery.ajax({
-                type: 'GET',
-                url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&phenotype_types='+JSON.stringify(selected)+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type=minimal',
+                type: 'POST',
+                url: '/api/drone_imagery/standard_process_apply',
                 dataType: "json",
+                data: {
+                    'drone_run_project_id': manage_drone_imagery_standard_process_drone_run_project_id,
+                    'drone_run_band_project_id': manage_drone_imagery_standard_process_drone_run_band_project_id,
+                    'apply_drone_run_band_project_ids': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_project_ids),
+                    'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices),
+                    'phenotype_types': JSON.stringify(selected),
+                    'time_cvterm_id': manage_drone_imagery_standard_process_phenotype_time,
+                    'standard_process_type': 'minimal'
+                },
                 success: function(response){
                     console.log(response);
                     if(response.error) {
@@ -1673,7 +1660,7 @@ jQuery(document).ready(function() {
                     }
                 },
                 error: function(response){
-                    //alert('Error saving standard process saved phenotypes!');
+                    //alert('Error saving standard process assigned plot polygons!')
                 }
             });
 
@@ -1892,7 +1879,7 @@ jQuery(document).ready(function() {
 
         jQuery.ajax({
             type: 'GET',
-            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id,
+            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time+'&standard_process_type=extended',
             dataType: "json",
             success: function(response){
                 console.log(response);
@@ -1902,24 +1889,6 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 alert('Error running extended standard process!');
-            }
-        });
-
-        jQuery.ajax({
-            type: 'GET',
-            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time+'&standard_process_type=extended',
-            dataType: "json",
-            success: function(response){
-                console.log(response);
-                if (response.error) {
-                    alert(response.error);
-                }
-                if (response.success) {
-                    alert('Drone image phenotypes stored for extended standard process!');
-                }
-            },
-            error: function(response){
-                alert('Error generating drone image phenotypes for extended standard process!');
             }
         });
 

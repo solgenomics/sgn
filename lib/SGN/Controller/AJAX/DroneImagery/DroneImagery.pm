@@ -532,6 +532,7 @@ sub _perform_plot_polygon_assign {
     print STDERR "Plot Polygon Assign Type: $assign_plot_polygons_type \n";
 
     my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+    chomp($number_system_cores);
     print STDERR "NUMCORES $number_system_cores\n";
 
     my $polygon_objs = decode_json $stock_polygons;
@@ -619,7 +620,7 @@ sub _perform_plot_polygon_assign {
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
 
-    my $pm = Parallel::ForkManager->new($number_system_cores);
+    my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
     $pm->run_on_finish( sub {
         my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
         push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
@@ -1363,10 +1364,15 @@ sub standard_process_apply_POST : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $apply_drone_run_band_project_ids = decode_json $c->req->param('apply_drone_run_band_project_ids');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
     my $vegetative_indices = decode_json $c->req->param('vegetative_indices');
+    my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
+    my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $standard_process_type = $c->req->param('standard_process_type');
+    
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
@@ -1536,6 +1542,8 @@ sub standard_process_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
+    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
+
     my @result;
     $c->stash->{rest} = { data => \@result, success => 1 };
 }
@@ -1652,7 +1660,11 @@ sub standard_process_extended_apply_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
+    my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $standard_process_type = $c->req->param('standard_process_type');
+    my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
@@ -1791,6 +1803,8 @@ sub standard_process_extended_apply_GET : Args(0) {
     {
         key=>'projectprop_c1'
     });
+
+    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = {success => 1};
 }
