@@ -85,13 +85,14 @@ has 'jbrowse_link' => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'blast_db_id' => (isa => 'Maybe[Int]', is => 'rw');
 
-has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link blast_db_id | ] } );
+has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link blast_db_id stockprop_id stock_id | ] } );
 
 
 sub BUILD {
     my $self = shift;
     my $args = shift;
 
+    if ($args->{stockprop_id} eq "undefined") { $args->{stockprop_id} = undef; }
     $self->stockprop_id($args->{stockprop_id});
     $self->schema($args->{schema});
 
@@ -122,6 +123,7 @@ sub from_hash {
     
     foreach my $f (@$allowed_fields) {
 	print STDERR "Processing $f ($hash->{$f})...\n";
+	if ($hash->{$f} eq "undefined") { $hash->{$f} = undef; }
 	$self->$f($hash->{$f});
     }
 }
@@ -180,7 +182,7 @@ sub validate {
 
 =head2 get_sequencing_project_infos($schema, $stock_id)
 
- Usage:        my @seq_projects = $stock->get_sequencing_project_infos($schema, $stock_id);
+ Usage:        my @seq_projects = $se_info->get_sequencing_project_infos($schema, $stock_id);
  Desc:
  Ret:
  Args:
@@ -194,9 +196,11 @@ sub get_sequencing_project_infos {
     my $schema = shift;
     my $stock_id = shift;
     
-    my @stockprops = _retrieve_stockprops($schema, $stock_id, "sequencing_project_info");
+    my @stockprops = $class->_retrieve_stockprops($schema, $stock_id, "sequencing_project_info");
+    
     print STDERR "Stockprops = ".Dumper(\@stockprops);
-    my @hashes = ();
+    
+    my @infos = ();
     foreach my $sp (@stockprops) { 
 	my $json = $sp->[1];
 	my $hash;
@@ -206,10 +210,42 @@ sub get_sequencing_project_infos {
 	if ($@) { 
 	    print STDERR "Warning: $json is not valid json in stockprop ".$sp->[0].".!\n"; 
 	}
-	push @hashes, [ $sp->[0], $hash ];
+	push @infos, $hash;
     }
 
-    return @hashes;
+    print STDERR "Hashes = ".Dumper(\@infos);
+    return \@infos;
+}
+
+
+=head2 all_sequenced_stocks()
+
+ Usage:        @sequenced_stocks = CXGN::Stock->sequenced_stocks();
+ Desc:
+ Ret:
+ Args:         
+ Side Effects:
+ Example:
+
+=cut
+
+sub all_sequenced_stocks {
+    my $class = shift;
+    my $schema = shift;
+ 
+    print STDERR "all_sequenced_stocks with ".ref($schema)." as parameter...\n";
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequencing_project_info', 'stock_property')->cvterm_id();
+    print STDERR "type_id = $type_id\n";
+
+    my $sp_rs = $schema->resultset("Stock::Stockprop")->search({ type_id => $type_id });
+    
+    my @sequenced_stocks = ();
+    while (my $row = $sp_rs->next()) {
+	print STDERR "found stock with stock_id ".$row->stock_id()."\n";
+	push @sequenced_stocks, $row->stock_id();
+    }
+
+    return @sequenced_stocks;
 }
 
 
@@ -234,7 +270,7 @@ sub store {
     if (!$self->stock_id()) {
 	die "Need a stock_id to save SequencingInfo object.";
     }
-    
+
     if ($self->stockprop_id()) {
 	# update
 	print STDERR "updating stockprop...\n";
@@ -306,7 +342,8 @@ sub delete {
 
 sub _load_object {
     my $self= shift;
-   
+
+    print STDERR "_load_object...\n";
     my @results;
 
     if ($self->stockprop_id()) { 
@@ -325,7 +362,7 @@ sub _load_object {
 	};
 	
 	if ($@) {
-	    print STDERR "Cvterm with stockprop_id ".$self->stockprop_id()." does not exit does not exist in this database\n";
+	    die "Cvterm with stockprop_id ".$self->stockprop_id()." does not exist in this database\n";
 	};
     }
 
@@ -347,21 +384,25 @@ sub _load_object {
 =cut
 
 sub _retrieve_stockprops {
+    my $class = shift;
     my $schema = shift;
     my $stock_id = shift;
     my $type = shift;
     
     my @results;
 
-    try {
+    print STDERR "_retrieve_stockprops...\n";
+    
+    eval { 
         my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $type, 'stock_property')->cvterm_id();
         my $rs = $schema->resultset("Stock::Stockprop")->search({ stock_id => $stock_id, type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
 
         while (my $r = $rs->next()){
             push @results, [ $r->stockprop_id(), $r->value() ];
         }
-    } catch {
-        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+    if ($@)  {
+        print STDERR "Cvterm $type does not exist in this database\n";
     };
 
     return @results;

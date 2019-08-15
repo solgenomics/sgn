@@ -2,6 +2,7 @@
 
 import '../legacy/jquery.js';
 import '../legacy/jquery/dataTables.js';
+import '../legacy/CXGN/Login.js';
 
 export function init(main_div, stock_id, stockprop_id){
 
@@ -10,6 +11,18 @@ export function init(main_div, stock_id, stockprop_id){
 	    main_div.startsWith("#") ? main_div.slice(1) : main_div
 	);
     }  
+
+    alert("NOW: "+stock_id);
+    // show the add button if the user is logged and and there we are on a stock page
+    var button_html = "";
+    if (isLoggedIn() && stock_id!==undefined) {
+	button_html = `<button id="show_sequencing_info_dialog_button" class="btn btn-primary" data-toggle="modal" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>`;
+    }
+    else {
+	if (stock_id !== undefined) { 
+	    button_html = `<button disabled id="show_sequencing_info_dialog_button" class="btn btn-primary" data-toggle="modal" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>`;
+	}
+    }
     
     main_div.innerHTML = `
      <div>
@@ -70,10 +83,10 @@ export function init(main_div, stock_id, stockprop_id){
 	       <div class="input-group mb-3">
 	         <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20"></input><br />
 	</div> <!-- input group -->
-
-    <input type="hidden" name="stock_id" value="`+stock_id+`" />
-	<input type="hidden" name="stockprop_id" value="`+stockprop_id+`" />
-             </div> <!-- form-search -->
+	
+	<input id="stock_id"  name="stock_id" value="`+stock_id+`" />
+	<input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
+        </div> <!-- form-search -->
 
 	   </div> <!-- modal-body -->
 	   <div class="modal-footer">
@@ -86,8 +99,10 @@ export function init(main_div, stock_id, stockprop_id){
 	</div> <!-- modal -->
 
 
-    `;
+    `+button_html;
 
+    
+    
     var stock_param = "";
     if (stock_id !== undefined && stock_id !== null) {
 	stock_param = "/"+stock_id;
@@ -104,15 +119,17 @@ export function init(main_div, stock_id, stockprop_id){
     jQuery("#sequencing_info_form").submit(function(event) {
 	event.preventDefault();
 	
-	var formdata = jQuery("#sequencing_info_form").serializeArray();
-	alert("FORMDATA = "+formdata);
+	var formdata = jQuery("#sequencing_info_form").serialize();
+	alert(formdata);
 	jQuery.ajax( {
-	    url : '/ajax/genomes/store_sequencing_info',
-	    data: formdata
-
+	    url : '/ajax/genomes/store_sequencing_info?'+formdata
 	});
     });
 	
 }
 
 
+function delete_sequencing_info(stockprop_id) {
+    confirm("Are you sure you want to delete the stockprop with id "+stockprop_id);
+
+}

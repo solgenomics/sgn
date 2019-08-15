@@ -6,12 +6,12 @@ $stock_id
 <div id="sequenced_stocks_div">[loading...]</div>
 
 <script>
+  alert("stock_id "+<% $stock_id %>);
   jQuery(document).ready( function() { 
     var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
   });
 </script>
 
-<button id="show_sequencing_info_dialog_button" class="btn btn-primary" data-toggle="modal" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>
 
 <br />
 

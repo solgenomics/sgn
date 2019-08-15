@@ -51,8 +51,10 @@ is($si2->stock_id(), $si->stock_id(), "stock_id test");
 print STDERR "Deletion test...\n";
 ok($si2->delete(), "object delete test");
 
-my $si3 = CXGN::Stock::SequencingInfo->new( { schema => $f->bcs_schema(), stockprop_id => $stockprop_id });
-
+eval {
+    my $si3 = CXGN::Stock::SequencingInfo->new( { schema => $f->bcs_schema(), stockprop_id => $stockprop_id });
+};
+ok($@, "attempt to create non existing object from database");
 
 
 done_testing();
