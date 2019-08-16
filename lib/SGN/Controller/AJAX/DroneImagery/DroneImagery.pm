@@ -1372,7 +1372,6 @@ sub standard_process_apply_POST : Args(0) {
     my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $standard_process_type = $c->req->param('standard_process_type');
-    
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
@@ -2812,6 +2811,10 @@ sub _perform_phenotype_automated {
     my $user_name = shift;
     my $user_role = shift;
 
+    my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+    chomp($number_system_cores);
+    print STDERR "NUMCORES $number_system_cores\n";
+
     my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
@@ -2866,15 +2869,20 @@ sub _perform_phenotype_automated {
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($drone_run_project_id);
+
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
         foreach my $phenotype_method (@$phenotype_types) {
+            my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
             foreach my $plot_polygon_type (@{$project_observation_unit_plot_polygons_types{$drone_run_band_project_type}->{$standard_process_type}}) {
+                my $pid = $pm->start and next;
                 my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, 1);
                 if ($return->{error}){
                     print STDERR Dumper $return->{error};
                 }
+                $pm->finish();
             }
+            $pm->wait_all_children;
         }
     }
 
