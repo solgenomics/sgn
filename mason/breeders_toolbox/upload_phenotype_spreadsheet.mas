@@ -58,6 +58,14 @@
                         <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
+                <div id="phenotype_upload_associated_images_div" style="display:none">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Associated Images (.zip): </label>
+                        <div class="col-sm-9" >
+                            <input type="file" id="upload_spreadsheet_phenotype_associated_images_file_input" name="upload_spreadsheet_phenotype_associated_images_file_input" encoding="multipart/form-data" />
+                        </div>
+                    </div>
+                </div>
 
 
                 <div id="upload_phenotype_spreadsheet_verify_status"></div>
@@ -167,6 +175,15 @@ jQuery(document).ready(function() {
 
     jQuery("#phenotype_upload_spreadsheet_format_info").click( function () {
         jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+    jQuery('#upload_spreadsheet_phenotype_file_format').change(function(){
+        if (jQuery(this).val() == 'associated_images') {
+            jQuery('#phenotype_upload_associated_images_div').show();
+        }
+        else {
+            jQuery('#phenotype_upload_associated_images_div').hide();
+        }
     });
 
 });
