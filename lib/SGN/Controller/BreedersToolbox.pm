@@ -758,6 +758,18 @@ sub manage_markers : Path("/breeders/markers") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
 }
 
+sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $c->stash->{template} = '/breeders_toolbox/manage_drone_imagery.mas';
+}
 
 1;

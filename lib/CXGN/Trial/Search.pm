@@ -351,7 +351,7 @@ sub search {
             next;
         }
         if ($self->field_trials_only){
-            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'genotyping_plate')) {
+            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'genotyping_plate' || $design eq 'drone_run')) {
                 $subtract_count++;
                 next();
             }
