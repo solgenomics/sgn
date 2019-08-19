@@ -258,7 +258,9 @@ sub verify {
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
     my $schema = $self->bcs_schema;
     my $transaction_error;
-    #print STDERR Dumper \%plot_trait_value;
+    # print STDERR Dumper \@plot_list;
+    # print STDERR Dumper \@trait_list;
+    # print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
@@ -317,7 +319,7 @@ sub verify {
             }
             foreach my $img_name (@$file_names_stripped) {
                 $img_name = substr($img_name, 0, -20);
-                if ($img_name, !exists($plot_name_check{$img_name})) {
+                if ($img_name && !exists($plot_name_check{$img_name})) {
                     $warning_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name (e.g. the image filename does not have a plot or plant name in it)!</small><hr>";
                 }
             }
@@ -333,7 +335,7 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if (defined($trait_value) || $trait_value eq '0') {
+            if ($trait_value || $trait_value eq '0') {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
