@@ -322,7 +322,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         return (\@success_status, \@error_status);

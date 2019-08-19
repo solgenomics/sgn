@@ -5834,4 +5834,49 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>','']],'recordsFiltered' => 2,'draw' => undef,'recordsTotal' => 2});
 
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/phenotypes_associated_images/4picsimagephenotypespreadsheet.xls";
+my $image_zipfile_filename = "t/data/phenotypes_associated_images/4pics.zip";
+
+$validate_file = $parser->validate('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename);
+ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
+
+$parsed_file = $parser->parse('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename, 'janedoe');
+ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
+
+print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014'],'data' => {'test_trial21_plant_2' => {'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:24-0500','johndoe','']},'test_trial23_plant_1' => {'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']},'test_trial21_plant_1' => {'dry yield|CO_334:0000014' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe','']},'test_trial22_plant_1' => {'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe',''],'dry yield|CO_334:0000014' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial22_plant_2' => {'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:26-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial23_plant_2' => {'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']}},'units' => ['test_trial21_plant_1','test_trial21_plant_2','test_trial22_plant_1','test_trial22_plant_2','test_trial23_plant_1','test_trial23_plant_2']}, "check parse fieldbook plant file");
+
+$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype associated_images file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-26_05:55:17";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+);
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet associated_images works");
+
 done_testing();
