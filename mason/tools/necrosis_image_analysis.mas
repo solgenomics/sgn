@@ -78,6 +78,9 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <button class="btn btn-primary" id="necrosis_image_analysis_submit">Submit</button>
+                <hr>
+                <div id="necrosis_image_analysis_result">
+                </div>
             </div>
         </div>
     </div>
@@ -140,6 +143,13 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
+
+                var html = '<table class="table table-hover"><thead><tr><th>Image</th><th>Analysis</th></tr></thead><tbody>';
+                for (var i=0; i<response.results.length; i++) {
+                    html = html + '<tr><td><img src="'+response.results[i].image_link+'"></td><td>'+response.results[i].cbsd_score+'</td></tr>';
+                }
+                html = html + '</tbody></table>';
+                jQuery('#necrosis_image_analysis_result').html(html);
             },
             error: function(response) {
                 jQuery('#working_msg').html('');
