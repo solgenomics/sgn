@@ -875,7 +875,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_hash=>\%phenotype_metadata,
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-#print STDERR Dumper $verified_error;
+print STDERR Dumper $verified_error;
 ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
