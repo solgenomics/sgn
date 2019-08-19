@@ -1,3 +1,8 @@
+<p>Last step! Here you can tweak your formatting and page layout, save your design, or download your labels.</p>
+<p>The additional settings dialog will allow you to fine tune the print margins and margins between labels. The units are pixels or 1/72nds of an inch. It's not recommended to change these until you've already done a test print</p>
+<p>You can also set the # of copies per label, filter by rep, or download just the first page for test purposes.</p>
+<p>TO save you're design just type a unique name and hit save. This will save your design to your list manager where you can set it to public to share it with others</p>
+<p>Finally if you are ready just hit download to generate and download your labels!</p>
 <div class="col-md-12" id="save_and_download">
     <div class="col-md-4" style="margin-bottom:40px;">
         <center>
@@ -5,7 +10,7 @@
             <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
         </center>
     </div></br></br>
-    <div class="col-md-4" style="margin-bottom:40px;">
+    <div class="col-md-4" style="margin-top:20px;">
         <center>
             <label>Save label design:</label>
             <div class="input-group" id="save_design_div">
@@ -16,7 +21,7 @@
             </div>
         </center>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-4" style="margin-top:20px;">
       <center>
           <br>
           <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;">Download pdf</button>

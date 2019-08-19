@@ -255,8 +255,31 @@ $(document).ready(function($) {
         saveLabelDesign();
     });
 
-    $('#complete_design').click(function() {
+    $('#design_label_button').click(function() {
         $("#d3-draw-area").prependTo("#save_and_download");
+    });
+
+    $('#design_label_button').click(function() {
+        $("#d3-draw-area").prependTo("#save_and_download");
+        $(".workflow-complete").click(function() {
+            var title = $(this).children().text();
+            //console.log("workflow element with title "+title+" was just clicked\n");
+
+            if (title == "Design Your Label") {
+                $("#d3-draw-area").prependTo("#d3-draw-div");
+            } else if (title == "More Options, Save, And Download") {
+                $("#d3-draw-area").prependTo("#save_and_download");
+            }
+
+        });
+        $("ol.workflow-prog li").click(function() {
+            var title = $(this).children().text();
+            //console.log("workflow element with title "+title+" was just clicked\n");
+            if (title == "More Options, Save, And Download") {
+                $("#d3-draw-area").prependTo("#save_and_download");
+            }
+
+        });
     });
 
     getDataSourceSelect();
@@ -489,7 +512,7 @@ $(document).ready(function($) {
         var data_type = $('#source_select :selected').parent().attr('label');
         var source_id = $("#source_select").val();
         var source_name = $("#source_select :selected").text();
-        console.log("Id is "+source_id+" and name is "+source_name);
+        //console.log("Id is "+source_id+" and name is "+source_name);
         if (!source_id || source_id == 'Please select a trial' || source_id == 'Select a plot list') {
             alert("No data source selected. Please select a data source before downloading");
             return;
@@ -544,7 +567,7 @@ $(document).ready(function($) {
 
 function updateFields(data_type, source_id, data_level){
 
-    console.log("running update fields");
+    //console.log("running update fields");
     if (data_type.match(/List/)) {
         jQuery('#sort_order').val('list_order');
     }
@@ -1354,6 +1377,8 @@ function showLoadOption() {
         disable_ui();
         loadDesign(this.value);
         enable_ui();
+        Workflow.complete(this);
+        jQuery('#design_label_button').prop('disabled', false);
     });
 }
 

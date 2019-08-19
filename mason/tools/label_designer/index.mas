@@ -23,7 +23,7 @@
     <&| /util/workflow.mas:step, title=>"Design Your Label" &>
         <& /tools/label_designer/design_label.mas &>
         <div class="col-md-12 text-center">
-            <button id="design_label_button" class="btn btn-primary" type="button" class="btn btn-default" id="complete_design" onclick="Workflow.complete(this);" disabled>Next</button>
+            <button id="design_label_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
         </div>
     </&>
     <&| /util/workflow.mas:step, title=>"More Options, Save, And Download" &>
