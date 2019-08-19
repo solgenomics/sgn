@@ -280,8 +280,7 @@ $locations
                     <br><br>
                     <b>Header:</b>
                     <br>
-
-                    The first row (header) must contain the following:
+                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
                     <br>
 
                     <table class="table table-bordered table-hover">
@@ -292,9 +291,11 @@ $locations
                                 <td>cross_type</td>
                                 <td>female_parent</td>
                                 <td>male_parent</td>
+                                <!--
 % foreach my $column_header(@column_header){
                                 <td><% $column_header %></td>
 %}
+                                -->
                             </tr>
                         </tbody>
                     </table>
@@ -305,10 +306,10 @@ $locations
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
                             <ul class="a">
-                                <li><b>cross type description:</b></li>
+                                <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
                                     <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
                                     <li><b>self:</b> A self pollinated individual plant.</li>
@@ -320,17 +321,24 @@ $locations
                                 </ul>
                             </ul>
                         </li>
-                        <li><b>female_parent</b> (accession names or population names must exist in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names or population names must exist in the database)</li>
+                        <li><b>female_parent</b> (accession names or population names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names or population names must exist as <b>uniquenames</b> in the database)</li>
                     </ul>
 
+                    <!--
                     <b>Optional columns (dates must be in the format YYYY/MM/DD):</b>
                     <ul>
 % foreach my $column_header(@column_header){
                         <li><% $column_header %></li>
 %}
                     </ul>
+                    -->
 
+                    <b>Additional cross information:</b>
+                    <ul>
+                        <li>After you establish cross unique ids in the database, you can add additional cross info (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to the corresponding cross unique ids.</li>
+                        <li>Cross info and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -356,8 +364,7 @@ $locations
                     <br><br>
                     <b>Header:</b>
                     <br>
-
-                    The first row (header) must contain the following:
+                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
                     <br>
 
                     <table class="table table-bordered table-hover">
@@ -370,9 +377,11 @@ $locations
                                 <td>male_parent</td>
                                 <td>female_plot</td>
                                 <td>male_plot</td>
+                                <!--
 % foreach my $column_header(@column_header){
                                 <td><% $column_header %></td>
 %}
+                                -->
                             </tr>
                         </tbody>
                     </table>
@@ -383,10 +392,10 @@ $locations
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
                             <ul class="a">
-                                <li><b>cross type description:</b></li>
+                                <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
                                     <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
                                     <li><b>self:</b> A self pollinated individual plant.</li>
@@ -398,19 +407,24 @@ $locations
                                 </ul>
                             </ul>
                         </li>
-                        <li><b>female_parent</b> (accession names must exist in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
+                        <li><b>female_parent</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist as <b>uniquenames</b> in the database)</li>
                         <li><b>female_plot</b> (Plot names must exist in the database)</li>
                         <li><b>male_plot</b> (Plot names must exist in the database)</li>
                     </ul>
-
+                    <!--
                     <b>Optional columns (dates must be in the format YYYY/MM/DD):</b>
                     <ul>
 % foreach my $column_header(@column_header){
                         <li><% $column_header %></li>
 %}
                     </ul>
-
+                    -->
+                    <b>Additional cross information:</b>
+                    <ul>
+                        <li>After you establish cross unique ids in the database, you can add additional cross info (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to the corresponding cross unique ids.</li>
+                        <li>Cross info and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -436,8 +450,7 @@ $locations
                     <br><br>
                     <b>Header:</b>
                     <br>
-
-                    The first row (header) must contain the following:
+                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
                     <br>
 
                     <table class="table table-bordered table-hover">
@@ -450,9 +463,11 @@ $locations
                                 <td>male_parent</td>
                                 <td>female_plant</td>
                                 <td>male_plant</td>
+                                <!--
 % foreach my $column_header(@column_header){
                                 <td><% $column_header %></td>
 %}
+                                -->
                             </tr>
                         </tbody>
                     </table>
@@ -463,10 +478,10 @@ $locations
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (female accession/male accession) may be left blank)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
                             <ul class="a">
-                                <li><b>cross type description:</b></li>
+                                <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
                                     <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
                                     <li><b>self:</b> A self pollinated individual plant.</li>
@@ -478,19 +493,24 @@ $locations
                                 </ul>
                             </ul>
                         </li>
-                        <li><b>female_parent</b> (accession names must exist in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist in the database)</li>
+                        <li><b>female_parent</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist as <b>uniquenames</b> in the database)</li>
                         <li><b>female_plant</b> (Plant names must exist in the database)</li>
                         <li><b>male_plant</b> (Plant names must exist in the database)</li>
                     </ul>
-
+                    <!--
                     <b>Optional columns (dates must be in the format YYYY/MM/DD):</b>
                     <ul>
 % foreach my $column_header(@column_header){
                         <li><% $column_header %></li>
 %}
                     </ul>
-
+                    -->
+                    <b>Additional cross information:</b>
+                    <ul>
+                        <li>After you establish cross unique ids in the database, you can add additional cross info (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to the corresponding cross unique ids.</li>
+                        <li>Cross info and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
