@@ -263,7 +263,7 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my $error_message;
+    my $error_message = '';
     my $warning_message = '';
 
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
@@ -298,6 +298,7 @@ sub verify {
     }
 
     my %image_plot_full_names;
+    #This is for saving Fieldbook images, which are only associated to a stock. To save images that are associated to a stock and a trait and a value, use the ExcelAssociatedImages parser
     if ($archived_image_zipfile_with_path) {
 
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
@@ -316,8 +317,8 @@ sub verify {
             }
             foreach my $img_name (@$file_names_stripped) {
                 $img_name = substr($img_name, 0, -20);
-                if (!exists($plot_name_check{$img_name})) {
-                    $error_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
+                if ($img_name, !exists($plot_name_check{$img_name})) {
+                    $warning_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
                 }
             }
         }
@@ -332,7 +333,7 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if ($trait_value || $trait_value eq '0') {
+            if (defined($trait_value) || $trait_value eq '0') {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();

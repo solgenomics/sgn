@@ -380,8 +380,7 @@ sub upload_phenotypes_associated_images_zipfile {
     my %observationunit_stock_id_image_id;
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
-        my $img_name = $_->fileName();
-        print STDERR Dumper $img_name;
+        my $img_name = basename($_->fileName());
         my $stock_id = $image_observation_unit_hash->{$img_name};
 
         my $temp_file = $image->upload_zipfile_images($_);
