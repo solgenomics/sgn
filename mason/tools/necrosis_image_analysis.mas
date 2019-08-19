@@ -8,6 +8,12 @@
 <& /page/page_title.mas, title=>"Necrosis Image Analysis" &>
 <hr>
 
+<div class="well well-sm">
+    <center>
+    <h4>The Necrosis Image Analysis is implemented as a standalone tool here: <a href="https://github.com/solomonnsumba/Necrosis-_Web_Server">Necrosis Image Analysis</a>.</h4>
+    </center>
+</div>
+
 <&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
 
     <div id="necrosis_image_search_form" class="well well-sm">
