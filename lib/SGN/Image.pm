@@ -367,6 +367,7 @@ sub upload_phenotypes_associated_images_zipfile {
     my $image_zip = shift;
     my $user_id = shift;
     my $image_observation_unit_hash = shift;
+    my $image_type_name = shift;
     my $c = $self->config();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -377,11 +378,24 @@ sub upload_phenotypes_associated_images_zipfile {
         return {error => 'Could not read your zipfile. Is is .zip format?</br></br>'};
     }
 
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
+
+    my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
+    if (!$image_tag_id) {
+        my $image_tag = CXGN::Tag->new($schema->storage->dbh);
+        $image_tag->set_name($image_type_name);
+        $image_tag->set_description('Upload phenotype spreadsheet with associated images: '.$image_type_name);
+        $image_tag->set_sp_person_id($user_id);
+        $image_tag_id = $image_tag->store();
+    }
+    my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
+
     my %observationunit_stock_id_image_id;
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
         my $img_name = basename($_->fileName());
-        my $stock_id = $image_observation_unit_hash->{$img_name};
+        my $stock_id = $image_observation_unit_hash->{$img_name}->{stock_id};
+        my $project_id = $image_observation_unit_hash->{$img_name}->{project_id};
 
         my $temp_file = $image->upload_zipfile_images($_);
 
@@ -391,11 +405,13 @@ sub upload_phenotypes_associated_images_zipfile {
         #my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
         #print STDERR "Count: $md_image\n";
         $image->set_sp_person_id($user_id);
-        my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+        my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
         if (!$ret ) {
             return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
         }
+        my $stock_associate = $image->associate_stock($stock_id);
         my $image_id = $image->get_image_id();
+        my $added_image_tag_id = $image->add_tag($image_tag);
         $observationunit_stock_id_image_id{$stock_id} = $image_id;
     }
     return {return => \%observationunit_stock_id_image_id};

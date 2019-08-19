@@ -159,16 +159,25 @@ sub parse {
 
     my @observation_units = sort keys %observationunits_seen;
     my %observationunit_lookup;
-    my $stock_rs = $schema->resultset("Stock::Stock")->search({uniquename => {'-in' => \@observation_units}});
-    while (my $r = $stock_rs->next) {
-        $observationunit_lookup{$r->uniquename} = $r->stock_id;
+    my $field_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $tf = CXGN::List::Transform->new();
+    my $stock_ids = $tf->transform($schema, 'stocks_2_stock_ids', \@observation_units)->{transform};
+    my $stock_ids_sql  = join ("," , @$stock_ids);
+    my $stock_q = "SELECT uniquename, stock_id, project_id FROM stock join nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id=$field_experiment_type_id AND stock.stock_id IN ($stock_ids_sql);";
+    my $h = $schema->storage->dbh()->prepare($stock_q);
+    $h->execute();
+    while (my ($uniquename, $stock_id, $project_id) = $h->fetchrow_array()) {
+        $observationunit_lookup{$uniquename} = {
+            stock_id => $stock_id,
+            project_id => $project_id
+        };
     }
     while (my ($image_name, $uniquename) = each %image_observation_unit_hash) {
         $image_observation_unit_hash{$image_name} = $observationunit_lookup{$uniquename};
     }
 
     my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $zipfile_return = $image->upload_phenotypes_associated_images_zipfile($image_zipfile, $user_id, \%image_observation_unit_hash);
+    my $zipfile_return = $image->upload_phenotypes_associated_images_zipfile($image_zipfile, $user_id, \%image_observation_unit_hash, "phenotype_spreadsheet_associated_images");
     print STDERR Dumper $zipfile_return;
     if ($zipfile_return->{error}) {
         $parse_result{'error'} = $zipfile_return->{error};
@@ -187,7 +196,7 @@ sub parse {
         my $timestamp = '';
         if ( defined($phenotype_value) && defined($timestamp) ) {
             if ($phenotype_value ne '.'){
-                $data{$observationunit_name}->{$observationvariable_name} = [$phenotype_value, $timestamp, $username, '', $stock_id_image_id_lookup->{$observationunit_lookup{$observationunit_name}}];
+                $data{$observationunit_name}->{$observationvariable_name} = [$phenotype_value, $timestamp, $username, '', $stock_id_image_id_lookup->{$observationunit_lookup{$observationunit_name}->{stock_id}}];
             }
         }
     }

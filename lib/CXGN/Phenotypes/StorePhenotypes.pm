@@ -318,7 +318,7 @@ sub verify {
             foreach my $img_name (@$file_names_stripped) {
                 $img_name = substr($img_name, 0, -20);
                 if ($img_name, !exists($plot_name_check{$img_name})) {
-                    $warning_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
+                    $warning_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name (e.g. the image filename does not have a plot or plant name in it)!</small><hr>";
                 }
             }
         }
