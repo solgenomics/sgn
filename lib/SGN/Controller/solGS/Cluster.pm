@@ -201,50 +201,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     if (!$cluster_plot_exists)
     {
-	# my $no_cluster_data;
-
-	# if ($data_type =~ /genotype/i) 
-	# {	  
-	#     $self->create_cluster_genotype_data($c);
-	 
-	#     my $geno_files = $c->stash->{genotype_files_list};
-	#     my $geno_file = $c->stash->{genotype_file};
-	    
-	#     if (!$c->stash->{genotype_files_list} && !$c->stash->{genotype_file}) 
-	#     {	  
-	# 	$no_cluster_data = 'There is no genotype data. Aborted Cluster analysis.';                
-	#     }
-	# } 
-	# elsif ($data_type =~ /phenotype/i)
-	# {
-	#     $self->create_cluster_phenotype_data($c);
-	    
-	#     if (!$c->stash->{phenotype_files_list} && !$c->stash->{phenotype_file})
-	#     {
-	# 	$no_cluster_data = 'There is no phenotype data. Aborted Cluster analysis.';
-	#     }
-	# } 	
-	# elsif ($data_type =~ /gebv/i)
-	# {
-	#     $self->cluster_gebvs_file($c);
-	#     my $cluster_gebvs_file = $c->stash->{cluster_gebvs_file};
-
-	#     if (!$cluster_gebvs_file)
-	#     {
-	# 	$no_cluster_data = 'There is no GEBVs data. Aborted Cluster analysis.';
-	#     }
-	# }
-
-	# if ($no_cluster_data)
-	# {
-	#     $ret->{result} = $no_cluster_data; 
-	# }  
-	# else 
-	# {
 	    $self->save_cluster_opts($c);
-	    $self->run_cluster($c);
-	   # $ret = $self->_prepare_response($c);
-	#}	
+	    $self->run_cluster($c);	
     }
     
     $ret = $self->_prepare_response($c);
@@ -787,28 +745,6 @@ sub save_cluster_opts {
     
 }
 
-
-# sub run_cluster {
-#     my ($self, $c) = @_;
-    
-#     my $file_id = $c->stash->{file_id};
-#     my $cluster_type = $c->stash->{cluster_type};
-   
-#     $self->cluster_output_files($c);
-#     my $output_file = $c->stash->{cluster_output_files};
-
-#     $self->cluster_input_files($c);
-#     my $input_file = $c->stash->{cluster_input_files};
-    
-#     $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
-   
-#     $c->stash->{input_files}  = $input_file;
-#     $c->stash->{output_files} = $output_file;   
-#     $c->stash->{r_temp_file}  =  "${cluster_type}_${file_id}";  
-#     $c->stash->{r_script}     = 'R/solGS/cluster.r';
-#     $c->controller("solGS::solGS")->run_r_script($c);
-    
-# }
 
 sub create_cluster_phenotype_data_query_jobs {
     my ($self, $c) = @_;
