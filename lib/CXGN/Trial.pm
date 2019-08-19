@@ -47,6 +47,8 @@ use CXGN::CrossingTrial;
 use CXGN::Analysis;
 use CXGN::ManagementFactor;
 use CXGN::GenotypeDataProject;
+use CXGN::AerialImagingEventBandProject;
+use CXGN::AerialImagingEventProject;
 use Data::Dumper;
 
 sub new {
@@ -80,6 +82,12 @@ sub new {
         }
         elsif ($val eq "genotype_data_project") {
             $object = CXGN::GenotypeDataProject->new($args);
+        }
+        elsif ($val eq "drone_run") {
+            $object = CXGN::AerialImagingEventProject->new($args);
+        }
+        elsif ($val eq "drone_run_band") {
+            $object = CXGN::AerialImagingEventBandProject->new($args);
         }
         else {
             $object = CXGN::PhenotypingTrial->new($args);
@@ -201,8 +209,4 @@ sub get_all_phenotype_metadata {
     return \@file_array;
 }
 
-
-
-
 1;
-

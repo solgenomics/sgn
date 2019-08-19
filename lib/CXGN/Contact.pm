@@ -46,7 +46,8 @@ sub send_email {
     my ( $subject, $body, $mailto, $replyto ) = @_;
     my $request_info = "";
     my $vhost_conf   = SGN::Context->new;
-    my $hostname     = `hostname`;
+    my @main_production_site_url = split "\:\/\/", $vhost_conf->get_conf('main_production_site_url');
+    my $hostname = $main_production_site_url[1];
     chomp($hostname);
     #my $dnsdomainname = `dnsdomainname`;
     #chomp($dnsdomainname);

@@ -119,9 +119,15 @@ sub _get_all_trials_by_breeding_program {
 sub get_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
+
     my $field_trials;
     my $cross_trials;
     my $genotyping_trials;
+    my $genotyping_data_projects;
+    my $field_management_factor_projects;
+    my $drone_run_projects;
+    my $drone_run_band_projects;
+
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
@@ -131,50 +137,69 @@ sub get_trials_by_breeding_program {
     my %project_name;
     my %project_description;
     my %projects_that_are_genotyping_trials;
+    my %projects_that_are_treatment_trials; #Field Management Factors
+    my %projects_that_are_genotyping_data_projects;
+    my %projects_that_are_drone_run_projects;
+    my %projects_that_are_drone_run_band_projects;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
-	#print STDERR "PROP: $prop, $propvalue \n";
-	#push @$trials, [ $id, $name, $desc ];
-      if ($name) {
-	$project_name{$id} = $name;
-      }
-      if ($desc) {
-	$project_description{$id} = $desc;
-      }
-      if ($prop) {
-	if ($prop == $crossing_trial_cvterm_id) {
-	  $projects_that_are_crosses{$id} = 1;
-	  $project_year{$id} = '';
-	  #print STDERR Dumper "Cross Trial: ".$name;
-	}
-	if ($prop == $project_year_cvterm_id && $propvalue) {
-	  $project_year{$id} = $propvalue;
-	}
-	if ($propvalue) {
-	if ($propvalue eq "genotyping_plate") {
-	    #print STDERR "$id IS GENOTYPING PLATE\n";
-	    $projects_that_are_genotyping_trials{$id} =1;
-		#print STDERR Dumper "Genotyping Plate: ".$name;
-	}
-	}
-      }
-
+        #print STDERR "PROP: $prop, $propvalue \n";
+        #push @$trials, [ $id, $name, $desc ];
+        if ($name) {
+            $project_name{$id} = $name;
+        }
+        if ($desc) {
+            $project_description{$id} = $desc;
+        }
+        if ($prop) {
+            if ($prop == $crossing_trial_cvterm_id) {
+                $projects_that_are_crosses{$id} = 1;
+                $project_year{$id} = '';
+            }
+            if ($prop == $project_year_cvterm_id && $propvalue) {
+                $project_year{$id} = $propvalue;
+            }
+            if ($propvalue) {
+                if ($propvalue eq "genotyping_plate") {
+                    $projects_that_are_genotyping_trials{$id} = 1;
+                }
+                if ($propvalue eq "treatment") {
+                    $projects_that_are_treatment_trials{$id} = 1;
+                }
+                if ($propvalue eq "genotype_data_project") {
+                    $projects_that_are_genotyping_data_projects{$id} = 1;
+                }
+                if ($propvalue eq "drone_run") {
+                    $projects_that_are_drone_run_projects{$id} = 1;
+                }
+                if ($propvalue eq "drone_run_band") {
+                    $projects_that_are_drone_run_band_projects{$id} = 1;
+                }
+            }
+        }
     }
 
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-		if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
-			#print STDERR "$id_key RETAINED.\n";
-			push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_crosses{$id_key}) {
-			push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_genotyping_trials{$id_key}) {
-			push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		}
+        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key}) {
+            push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_crosses{$id_key}) {
+            push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_genotyping_trials{$id_key}) {
+            push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_genotyping_data_projects{$id_key}) {
+            push @$genotyping_data_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_treatment_trials{$id_key}) {
+            push @$field_management_factor_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_drone_run_projects{$id_key}) {
+            push @$drone_run_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_drone_run_band_projects{$id_key}) {
+            push @$drone_run_band_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -557,7 +582,6 @@ sub get_crossing_trial_cvterm_id {
   my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'crossing_trial',  'project_type');
   return $crossing_trial_cvterm_id->cvterm_id();
 }
-
 
 sub _get_design_trial_cvterm_id {
     my $self = shift;

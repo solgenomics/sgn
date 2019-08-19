@@ -144,15 +144,18 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
 );
 my $verified_errors = $store_genotypes->validate();
 $store_genotypes->store_metadata();
-$store_genotypes->store();
+$store_genotypes->store_identifiers();
+$return = $store_genotypes->store_genotypeprop_table();
 
  # if genotypes are loaded consecutively, as in the transposed 
  # file, each genotype can be loaded as follows:
  #
 foreach $genotype (@genotypes) { 
     $store_genotypes->genotype_info($genotype);
-    $store_genotypes->genotype_
-    my $return = $store_genotypes->store();
+    $store_genotypes->observation_unit_uniquenames(\@observation_unit_uniquenames);
+    my $return = $store_genotypes->store_identifiers();
+}
+$return = $store_genotypes->store_genotypeprop_table();
 
 ---------------------------------------------------------------
 
@@ -178,7 +181,8 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
 );
 my $verified_errors = $store_genotypes->validate();
 $store_genotypes->store_metadata();
-$store_genotypes->store();
+$store_genotypes->store_identifiers();
+$return = $store_genotypes->store_genotypeprop_table();
 
 ---------------------------------------------------------------
 
@@ -207,7 +211,8 @@ my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new(
 );
 my $verified_errors = $store_genotypes->validate();
 $store_genotypes->store_metadata();
-$store_genotypes->store();
+$store_genotypes->store_identifiers();
+$return = $store_genotypes->store_genotypeprop_table();
 
 ---------------------------------------------------------------
 
@@ -232,7 +237,8 @@ $store_genotypes->store();
 );
  my $verified_errors = $store_genotypes->validate();
  $store_genotypes->store_metadata();
- $store_genotypes->store();
+ $store_genotypes->store_identifiers();
+ $return = $store_genotypes->store_genotypeprop_table();
 
 =head1 DESCRIPTION
 
@@ -254,6 +260,7 @@ use CXGN::UploadFile;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::Trial;
+use Text::CSV;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -378,7 +385,7 @@ has 'archived_file_type' => ( #can be 'genotype_vcf' or 'genotype_dosage' to dis
     required => 0,
 );
 
-    has 'igd_numbers_included' => (
+has 'igd_numbers_included' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
@@ -388,7 +395,13 @@ has 'lab_numbers_included' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
-    );
+);
+
+has 'temp_file_sql_copy' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
 
 has 'geno_cvterm_id' => (
     isa => 'Int',
@@ -484,8 +497,13 @@ has 'design_cvterm' => (
 has 'project_year_cvterm' => (
     isa => 'Ref',
     is => 'rw',
-    );
-  
+);
+
+has 'marker_by_marker_storage' => (
+    isa => 'Bool|Undef',
+    is => 'rw'
+); 
+
 sub BUILD {
     my $self = shift;
 }
@@ -513,6 +531,21 @@ sub validate {
     if (scalar(@$observation_unit_uniquenames) == 0){
         push @error_messages, "No observtaion_unit_names in file";
     }
+
+    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    $self->snp_vcf_cvterm_id($snp_vcf_cvterm_id);
+    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
+    $self->snp_genotype_id($snp_genotype_id);
+    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    $self->geno_cvterm_id($geno_cvterm_id);
+
+    my $snp_genotypingprop_cvterm_id;
+    if ($self->archived_file_type eq 'genotype_vcf'){
+        $snp_genotypingprop_cvterm_id = $snp_vcf_cvterm_id;
+    } elsif ($self->archived_file_type eq 'genotype_dosage'){
+        $snp_genotypingprop_cvterm_id = $snp_genotype_id;
+    }
+    $self->snp_genotypingprop_cvterm_id($snp_genotypingprop_cvterm_id);
 
     #remove extra numbers, such as igd after : symbol
     my @observation_unit_uniquenames_stripped;
@@ -636,9 +669,6 @@ sub validate {
     }
 
     my $previous_genotypes_exist;
-    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    $self->snp_genotype_id($snp_genotype_id);
     my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search({
         'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
         'me.type_id' => $stock_type_id,
@@ -652,7 +682,7 @@ sub validate {
         order_by => 'genotype.genotype_id'
     });
     while(my $r = $previous_genotypes_rs->next){
-	print STDERR "PREVIOUS GENOTYPES ".join (",", ($r->get_column('uniquename'), $r->get_column('protocol_name'), $r->get_column('project_name')))."\n";
+        print STDERR "PREVIOUS GENOTYPES ".join (",", ($r->get_column('uniquename'), $r->get_column('protocol_name'), $r->get_column('project_name')))."\n";
         my $uniquename = $r->uniquename;
         my $protocol_name = $r->get_column('protocol_name');
         my $project_name = $r->get_column('project_name');
@@ -721,16 +751,7 @@ sub store_metadata {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     $self->stock_type_id($stock_type_id);
-    
-    #for differentiating between genotypeprop info stored in the 'old' format of only storing dosage in json, and genotypeprop data stored in the expanded json form
-    my $snp_genotypingprop_cvterm_id;
-    if ($self->archived_file_type eq 'genotype_vcf'){
-        $snp_genotypingprop_cvterm_id = $snp_vcf_cvterm_id;
-    } elsif ($self->archived_file_type eq 'genotype_dosage'){
-        $snp_genotypingprop_cvterm_id = $self->snp_genotype_id();
-    }
-    $self->snp_genotypingprop_cvterm_id($snp_genotypingprop_cvterm_id);
-    
+
     #when project_id is provided, a new project is not created
     my $project_id;
     my $project_check = $schema->resultset("Project::Project")->find({
@@ -752,7 +773,7 @@ sub store_metadata {
             bcs_schema => $schema,
             trial_id => $project_id
         });
-        #$t->breeding_program_id($self->breeding_program_id);
+        $t->set_breeding_program($self->breeding_program_id);
         $self->project_location_id($location_id);
     }
 
@@ -811,11 +832,22 @@ sub store_metadata {
     $h->execute();
 
     while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
-        $stock_lookup{$uniquename} = $stock_id;
+        $stock_lookup{$uniquename} = { stock_id => $stock_id };
         if ($type_id) {
             if ($type_id == $self->synonym_type_id()) {
-                $stock_lookup{$synonym} = $stock_id;
+                $stock_lookup{$synonym} = { stock_id => $stock_id };
             }
+        }
+    }
+
+    # Updates stock_lookup to have the genotypeprop_ids for samples previously saved in this protocol/project. Useful for when appending genotypes to the jsonb
+    my $q_g = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id, genotypeprop.genotypeprop_id FROM stock LEFT JOIN stockprop USING(stock_id) JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop ON(genotypeprop.genotype_id=nd_experiment_genotype.genotype_id AND genotypeprop.type_id=".$self->snp_vcf_cvterm_id.") JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F' AND nd_protocol_id=$protocol_id AND project_id=$project_id;";
+    my $q_g_h = $schema->storage->dbh()->prepare($q_g);
+    $q_g_h->execute();
+    while (my ($stock_id, $uniquename, $synonym, $type_id, $genotypeprop_id) = $q_g_h->fetchrow_array()) {
+        $stock_lookup{$uniquename} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+        if ($type_id && $type_id == $self->synonym_type_id()) {
+            $stock_lookup{$synonym} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
         }
     }
     $self->stock_lookup(\%stock_lookup);
@@ -840,110 +872,114 @@ sub store_metadata {
     print STDERR "md_file_id is ".$self->md_file_id()."\n";
 }
 
-sub store {
+sub store_identifiers {
     my $self = shift;
-    
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh;
+    my $temp_file_sql_copy = $self->temp_file_sql_copy;
 
-    #preparing insertion of new genotypes and genotype props
+    my $csv = Text::CSV->new({ binary => 1, auto_diag => 1, eol => "\n"});
+    open(my $fh, ">>", $temp_file_sql_copy) or die "Failed to open file $temp_file_sql_copy: $!";
+
     my $genotypeprop_observation_units = $self->genotype_info;
-    my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?);";
-    #my $new_genotypeprop_sql = "SELECT jsonb_insert(value, '{}', ?::jsonb) FROM genotypeprop WHERE genotype_id = ? AND type_id = ?;";
-    my $h_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
+
+    my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotype_id, type_id, value) VALUES (?, ?, ?) RETURNING genotypeprop_id;";
+    my $h_new_genotypeprop = $schema->storage->dbh()->prepare($new_genotypeprop_sql);
+
+    #Preparing insertion of new genotypes. Will insert/update marker genotype score into genotypeprop jsonb. Only Used when loading standard VCF (non-transposed)
+    my $update_genotypeprop_sql = "UPDATE genotypeprop SET value = (CASE
+        WHEN value->? IS NULL
+        THEN jsonb_insert(value, ?, ?::jsonb)
+        WHEN value->? IS NOT NULL
+        THEN jsonb_set(value, ?, ?::jsonb)
+    END) WHERE genotypeprop_id = ?;";
+    my $h_genotypeprop = $schema->storage->dbh()->prepare($update_genotypeprop_sql);
+
     my %nd_experiment_ids;
     my $stock_relationship_schema = $schema->resultset("Stock::StockRelationship");
     my $nd_experiment_schema = $schema->resultset('NaturalDiversity::NdExperiment');
     my $genotype_schema = $schema->resultset("Genetic::Genotype");
     my $genotypeprop_schema = $schema->resultset("Genetic::Genotypeprop");
 
-    #remove extra numbers, such as igd after : symbol
-    my @observation_unit_uniquenames_stripped;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames();
     foreach (@$observation_unit_uniquenames) {
         $_ =~ s/^\s+|\s+$//g;
-        if ($self->igd_numbers_included()){
-            my ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
-            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-            push @observation_unit_uniquenames_stripped, $observation_unit_name;
-        }
-        elsif ($self->lab_numbers_included()){
-            my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
-            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-            push @observation_unit_uniquenames_stripped, $observation_unit_name;
-        }
-        else {
-            my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
-            push @observation_unit_uniquenames_stripped, $observation_unit_name;
-        }
-    }
-
-
-    foreach (@$observation_unit_uniquenames) {
-        $_ =~ s/^\s+|\s+$//g;
-        my $observation_unit_name_with_accession_name;
-        my $observation_unit_name;
-        my $accession_name;
-        my $igd_number;
-        my $lab_number;
-        if ($self->igd_numbers_included()){
-            ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
-            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
-            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-        } elsif ($self->lab_numbers_included()) {
-            ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
-            $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
-            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
-        } else {
-            ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
-        }
-        #print STDERR Dumper $observation_unit_name;
-        my $stock_id = $self->stock_lookup()->{$observation_unit_name};
-
-        if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
-            my $pop_rs = $stock_relationship_schema->find_or_create({
-                type_id => $self->population_members_id(),
-                subject_id => $stock_id,
-                object_id => $self->population_stock_id(),
-            });
-        }
-
-        my $experiment = $nd_experiment_schema->create({
-            nd_geolocation_id => $self->project_location_id(),
-            type_id => $self->geno_cvterm_id(),
-            nd_experiment_projects => [ {project_id => $self->project_id()} ],
-            nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $self->geno_cvterm_id() } ],
-            nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
-        });
-        my $nd_experiment_id = $experiment->nd_experiment_id();
-
-        print STDERR "Storing new genotype for stock " . $observation_unit_name . " \n";
-        my $genotype = $genotype_schema->create({
-            name        => $observation_unit_name . "|" . $nd_experiment_id,
-            uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
-            description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
-            type_id     => $self->snp_genotype_id(),
-        });
-        my $genotype_id = $genotype->genotype_id();
-
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
-        my $json_string = encode_json $genotypeprop_json;
+        if ($genotypeprop_json) {
+            my $observation_unit_name_with_accession_name;
+            my $observation_unit_name;
+            my $accession_name;
+            my $igd_number;
+            my $lab_number;
+            if ($self->igd_numbers_included()){
+                ($observation_unit_name_with_accession_name, $igd_number) = split(/:/, $_, 2);
+                $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+                ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            } elsif ($self->lab_numbers_included()) {
+                ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
+                $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
+                ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
+            } else {
+                ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
+            }
+            #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
+            my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
+            my $stock_id = $stock_lookup_obj->{stock_id};
+            my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
 
-        #Store json for genotype. Has all markers and scores for this stock.
-        $h_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
+            if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+                my $pop_rs = $stock_relationship_schema->find_or_create({
+                    type_id => $self->population_members_id(),
+                    subject_id => $stock_id,
+                    object_id => $self->population_stock_id(),
+                });
+            }
 
-        #Store IGD number if the option is given.
-        if ($self->igd_numbers_included()) {
-            my %igd_number = ('igd_number' => $igd_number);
-            my $json_obj = JSON::Any->new;
-            my $json_string = $json_obj->encode(\%igd_number);
-            my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => $json_string });
+            if (!$genotypeprop_id) {
+                my $experiment = $nd_experiment_schema->create({
+                    nd_geolocation_id => $self->project_location_id(),
+                    type_id => $self->geno_cvterm_id(),
+                    nd_experiment_projects => [ {project_id => $self->project_id()} ],
+                    nd_experiment_stocks => [ {stock_id => $stock_id, type_id => $self->geno_cvterm_id() } ],
+                    nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
+                });
+                my $nd_experiment_id = $experiment->nd_experiment_id();
+
+                my $genotype = $genotype_schema->create({
+                    name        => $observation_unit_name . "|" . $nd_experiment_id,
+                    uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
+                    description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
+                    type_id     => $self->snp_genotype_id(),
+                });
+                my $genotype_id = $genotype->genotype_id();
+
+                my $json_string = encode_json $genotypeprop_json;
+                if ($self->marker_by_marker_storage) { #Used when standard VCF is being stored (NOTE VCF is transpoed prior to parsing by default now), where genotype scores are appended into jsonb.
+                    $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string);
+                    my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
+                    $self->stock_lookup()->{$observation_unit_name} = { stock_id => $stock_id, genotypeprop_id => $genotypeprop_id };
+                }
+                else { #Used when transpoed VCF is being stored, or when Intertek files being stored
+                    $csv->print($fh, [ $genotype_id, $self->snp_genotypingprop_cvterm_id(), $json_string ]);
+                }
+
+                #Store IGD number if the option is given.
+                if ($self->igd_numbers_included()) {
+                    my $add_genotypeprop = $genotypeprop_schema->create({ genotype_id => $genotype_id, type_id => $self->igd_number_cvterm_id(), value => encode_json {'igd_number' => $igd_number} });
+                }
+
+                my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
+                $nd_experiment_ids{$nd_experiment_id}++;
+            }
+            else { #When storing standard VCF, when genotype scores are appended into jsonb one by one. NOTE VCF is transposed by default now prior to parsing, but NOT transposing is relevant for instances where transposing requires too much memory.
+                while (my ($m, $v) = each %$genotypeprop_json) {
+                    my $v_string = encode_json $v;
+                    $h_genotypeprop->execute($m, '{'.$m.'}', $v_string, $m, '{'.$m.'}', $v_string, $genotypeprop_id);
+                }
+            }
         }
-
-        #link the genotype to the nd_experiment
-        my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
-        $nd_experiment_ids{$nd_experiment_id}++;
     }
+    close($fh);
 
     foreach my $nd_experiment_id (keys %nd_experiment_ids) {
         my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
@@ -951,6 +987,30 @@ sub store {
             file_id => $self->md_file_id(),
         });
     }
+
+    my %response = (
+        success => 1,
+        nd_protocol_id => $self->protocol_id(),
+        project_id => $self->project_id(),
+    );
+
+    return \%response;
+}
+
+sub store_genotypeprop_table {
+    my $self = shift;
+    my $temp_file_sql_copy = $self->temp_file_sql_copy;
+    my $dbh = $self->bcs_schema->storage->dbh;
+
+    my $SQL = "COPY genotypeprop (genotype_id, type_id, value) FROM STDIN WITH DELIMITER ',' CSV";
+    my $sth = $dbh->do($SQL);
+
+    open(my $infile, "<", $temp_file_sql_copy) or die "Failed to open file in store_genotypeprop_table() $temp_file_sql_copy: $!";
+    while (my $line = <$infile>) {
+        $dbh->pg_putcopydata($line);
+    }
+    $dbh->pg_putcopyend();
+    close($infile);
 
     my %response = (
         success => 1,
