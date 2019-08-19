@@ -506,6 +506,34 @@ def: "" []
 is_a: TIME:0000005
 
 [Term]
+id: TIME:0000141
+name: month 13
+synonym: "Mo13" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000142
+name: month 14
+synonym: "Mo14" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000143
+name: month 15
+synonym: "Mo15" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000144
+name: month 16
+synonym: "Mon16" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
 id: TIME:0000076
 name: "categorical plant stage"
 def: "." []

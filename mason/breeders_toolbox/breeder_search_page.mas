@@ -3,23 +3,327 @@
 $dataset_id => undef
 </%args>
 
+<& /util/import_javascript.mas, entries => ["wizard"] &>
+<& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
-<&| /page/info_section.mas, title=>"Explore the database using metadata" &>
+<div class="row">
+  <div class="col-md-12" style="margin-bottom:1em; text-align:right;">
+    Don't see your data? <button id="update_wizard_lists" class="btn btn-default">Refresh Lists</button>
+    <button id="update_wizard_show" class="btn btn-default">Update Wizard</button>
+  </div>
+</div>
+
+<div id="wizard" class="row">
+  <span class="wizard-main">
+    <span class="wizard-columns"></span>
+    <div class="templates" style="display: none !important;">
+      
+      <div class="wizard-unselected">
+        <div class="btn-group wizard-list-item">
+          <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button>
+          <a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
+        </div>
+      </div>
+      
+      <div class="wizard-selected">
+        <div class="btn-group wizard-list-item">
+          <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button>
+          <a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
+        </div>
+      </div>
+      
+      <div class="wizard-column">
+        <div class="wizard-panel panel panel-default">
+          
+          <span class="wizard-loader glyphicon glyphicon-refresh" aria-hidden="true"></span>
+          
+          <div class="panel-heading">
+            <select class="wizard-type-select form-control input-sm form-inline">
+              <option value="" disabled selected>Select Column Type</option>
+              <optgroup class="wizard-types-group" label="--------------------"></optgroup>
+              <optgroup class="wizard-lists-group" label="Load Selection from List:"></optgroup>
+            </select>
+          </div>
+          
+          <div class="panel-heading">
+            <input type="text" class="wizard-search form-control input-sm" placeholder="Search">
+          </div>
+          
+          <div class="panel-body">
+            
+            <div class="wizard-btn-center">
+              <div class="btn-group"> 
+                <button class="wizard-select-all btn btn-default btn-xs">Select All</button
+                ><button class="wizard-btn-tag btn btn-primary btn-xs">
+                  <span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span>
+                </button
+                ><button class="wizard-select-clear btn btn-default btn-xs">Clear</button>
+              </div>
+            </div>
+            
+            <ul class="wizard-list-unselected wizard-list well"></ul>
+            <ul class="wizard-list-selected wizard-list well"></ul>
+            
+            <div class="wizard-btn-center wizard-union-toggle">
+              <div class="btn-group"> 
+                <button class="wizard-btn-tag btn btn-xs btn-default disabled">Match</button
+                ><button class="btn btn-xs btn-primary active">ANY</button
+                ><button class="btn btn-default btn-xs">ALL</button>
+              </div>
+            </div>
+            
+          </div>
+          
+          <table class="wizard-save-to-list table panel-footer">
+            <&| /util/user.mas:logged_in &>
+              <tr>
+                <td>
+                  <select class="wizard-add-to-list-id form-control input-sm">
+                    <option selected value="" disabled>Add to List...</option>
+                    <optgroup class="wizard-lists-group" label="--------------------"></optgroup>
+                  </select>
+                </td>
+                <td>
+                  <button class="wizard-add-to-list btn btn-sm btn-primary btn-block">Add</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input class="wizard-create-list-name form-control input-sm" type="text" placeholder="Create New List..."></input>
+                </td>
+                <td>
+                  <button class="wizard-create-list btn btn-primary btn-sm btn-block">Create</button>
+                </td>
+              </tr>
+            </&>
+            <&| /util/user.mas:logged_out &>
+              <tr>
+                <td><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to save lists.</td>
+              </tr>
+            </&>
+          </table>  
+          
+        </div>
+      </div>
+      
+    </div>
+  </span>
   
-  <& /breeders_toolbox/breeder_search.mas, dataset_id => $dataset_id &>
+  <div class="clearfix col-xs-12"></div>
+  
+  <div class="wizard-datasets panel-group col-sm-12 col-md-6">
+    <div class="panel panel-default wizard-panel">
+      <div class="panel-heading">
+        <&| /util/user.mas:logged_out &><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to</&>
+        Load/Create Datasets using <button class="btn btn-xs btn-default disabled wizard-btn-tag">Match</button> Columns
+      </div>
+      <&| /util/user.mas:logged_in &>
+        <div class="panel-body">
+          <div class="input-group">
+            <select class="form-control input-sm wizard-dataset-select">
+              <option selected value="" disabled>Load Dataset</option>
+              <optgroup class="wizard-dataset-group" label="--------------------"></optgroup>
+            </select>
+            <span class="input-group-btn">
+              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-load">Load</button></span>
+            </span>
+          </div>
+        </div>
+        <div class="panel-body" style="margin-top:-1px;">
+          <div class="input-group">
+            <input type="text" placeholder="Create New Dataset" class="form-control input-sm wizard-dataset-name" />
+            <span class="input-group-btn">
+              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-create">Create</button></span>
+            </span>
+          </div>
+        </div>
+      </&>
+    </div>
+  </div>
+  
+  <div class="wizard-downloads panel-group col-sm-12 col-md-6" id="wiz-down-group" role="tablist" aria-multiselectable="true">  
+    <&| /util/user.mas:logged_out &>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to download related data.
+        </div>
+      </div>
+    </&>
+    <&| /util/user.mas:logged_in &>
+      <div class="panel panel-default">
+        <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-1-c" aria-controls="wiz-down-1-c">
+          <span class="btnn btn-link">Related Genotype Data</span>
+        </div>
+        <div id="wiz-down-1-c" class="panel-collapse collapse" role="tabpanel">
+          <table class="table">
+            <tr>
+              <td><input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input></td>
+            </tr>
+          </table>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-genotypes btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                Genotypes
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel panel-default">
+        <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-2-c" aria-controls="wiz-down-2-c">
+          <span class="btnn btn-link">Related Trial Metadata</span>
+        </div>
+        <div id="wiz-down-2-c" class="panel-collapse collapse" role="tabpanel">
+          <table class="table">
+            <tr>
+              <td>
+                <input class="wizard-download-tmetadata-info form-control input-sm" type="text" disabled value="No Trials Selected"></input>
+              </td>
+              <td>
+                <select class="wizard-download-tmetadata-format form-control input-sm">
+                  <option value="" disabled>Format</option>
+                  <option selected value="csv">CSV</option>
+                  <option value="xls">XLS</option>
+                </select>
+              </td>
+            </tr>
+          </table>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-tmetadata btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
+                Metadata
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="panel panel-default">
+        <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-3-c" aria-controls="wiz-down-3-c">
+          <span class="btnn btn-link">Related Trial Phenotypes</span>
+        </div>
+        <div id="wiz-down-3-c" class="panel-collapse collapse" role="tabpanel">
+          <table class="table">
+            <tr>
+              <td colspan="3">
+                <input class="wizard-download-phenotypes-info form-control input-sm" type="text" disabled></input>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <select class="wizard-download-phenotypes-format form-control input-sm">
+                  <option value="" disabled>Format</option>
+                  <option selected value="csv">CSV</option>
+                  <option value="xls">XLS</option>
+                </select>
+              </td>
+              <td>
+                <select class="wizard-download-phenotypes-level form-control input-sm">
+                  <option value="" disabled>Data Level</option>
+                  <option value="all">All</option>
+                  <option selected value="plot">Plots</option>
+                  <option value="plant">Plants</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-phenotypes-timestamp" type="checkbox">
+                    Include timestamps
+                  </label>
+                </div>
+              </td>
+              <td colspan="2">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-phenotypes-outliers" type="checkbox">
+                    Supress user defined phenotype outliers
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span>Trait Name Contains</span>
+                <input placeholder="" type="text" class="wizard-download-phenotypes-name form-control">
+              </td>
+              <td>
+                <span>Min Value</span>
+                <input placeholder="-&#8734;" type="text" class="wizard-download-phenotypes-min form-control">
+              </td>
+              <td>
+                <span>Max Value</span>
+                <input placeholder="&#8734;" type="text" class="wizard-download-phenotypes-max form-control">
+              </td>
+            </tr>
+          </table>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-phenotypes btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                Phenotypes
+            </button>
+          </div>
+        </div>
+      </div>
+    </&>
+  </div>
+  
+</div>
 
-</&>
+<script type="text/javascript">
+  window.sWizard = jsMod['wizard'].WizardSetup("#wizard");
+</script>
 
-<&| /page/info_section.mas, title=>"Download selected data" &>
+<div class="modal fade" id="update_wizard_dialog" name="update_wizard_dialog" tabindex="-1" role="dialog" aria-labelledby="updateWizardDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title" id="updateWizardDialog">Update Search Wizard</h3>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	     <h4>How the wizard works</h4>
+	     	     <p>For the search wizard to be fast and flexible, it avoids querying the database directly. Instead, it stores a copy of the data from the database in a temporary format that is optimized for the types of queries the wizard makes.</p><p>For this to be practical, the copy must be updated regularly. Updates usually start every time new data is uploaded, however users with submitter status or higher can also initiate them manually.</p><p>If an update isn't already in progress, you can initiate one below. It will run independently on the server without any additional input required from the user. Depending on the size of the database, it will take from a few minutes to a few hours to complete.</p>
+	<div><h4>Current status:</h4><p id="wizard_status"></p></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="well well-sm" id="update_wizard_error" style="display:none;"></div>
+        <button type="button" class="btn btn-primary wiz-update" name="update_wizard" data-loading-text="Working..." id="update_wizard">Update search wizard</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <& /breeders_toolbox/breeder_search_download.mas &>
+<script type="text/javascript">
+  d3.select('#update_wizard_show').on('click', function () {
+    $('#update_wizard_dialog').modal("show");
+    jsMod['wizard'].updateStatus("#wizard_status")
+      .then(function(isLoading){
+        if(isLoading) {
+          d3.select("#update_wizard")
+          .attr("title","A search wizard update is already in progress...")
+          .attr("disabled",true);
+        }
+        else {
+          d3.select("#update_wizard")
+          .attr("title","Refresh the search wizard to include newly uploaded data")
+          .attr("disabled",null)
+        }
+      });
+  });
+  
+  d3.select("#update_wizard").on('click',function(){
+    jsMod['wizard'].refreshMatviews("fullview",this);
+  });
 
-</&>
+  d3.select("#update_wizard_lists").on('click',function(){
+    window.sWizard.reload_lists();
+  });
 
-<&| /page/info_section.mas, title=>"Save current selection" &>
-
-  <& /breeders_toolbox/breeder_search_dataset.mas &>
-
-</&>
+</script>

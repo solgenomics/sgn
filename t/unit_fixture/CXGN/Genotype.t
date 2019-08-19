@@ -2,6 +2,7 @@
 use strict;
 use Test::More;
 use Data::Dumper;
+use JSON;
 
 use lib 't/lib';
 use SGN::Test::Fixture;
@@ -65,30 +66,19 @@ print STDERR "AFTER GT3 MARKERS=".Dumper(\%$gt3_markers);
 my $gt3 = CXGN::Genotype->new();
 $gt3->markerscores($gt3_markers);
 
-if (is_deeply($gt3_markers, $gt1_markers)) { 
-    print STDERR "They are the same!\n";
-}
-
+# if (!is_deeply($gt3_markers, $gt1_markers)) { 
+#     print STDERR "They are not the same!\n";
+# }
 
 my $dist3 = $gt1->calculate_distance($gt3);
-
 print STDERR "Distance with changes: $dist3\n";
-
-
-
+is($dist3, 0);
 
 my $dist = $gt1->calculate_distance($gt2);
-
 print STDERR  "The distance is $dist\n";
-
-
+is($dist, 0.444);
 
 #print STDERR join(",", @{$gt1->markers});
-
-print STDERR "Done!\n";
-exit();
-
-
 
 my $rs = $schema->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id=> { -in => [ 1708, 1709 ] } });
 
@@ -101,17 +91,17 @@ my @gt;
 
 print STDERR Dumper(\@gt);
 
-
-
-
-    
-    
-
-
-
 my $gt = CXGN::Genotype->new();
 
-$gt->from_json(' { "marker1" : "0", "marker2" : "0", "marker3" : "1", "marker4" :"2", "marker5" :"0.9" } ');
+my $gt_json = {
+    'marker1' => {'DS'=>"0"},
+    'marker2' => {'DS'=>"0"},
+    'marker3' => {'DS'=>"1"},
+    'marker4' => {'DS'=>"2"},
+    'marker5' => {'DS'=>"0.9"}
+};
+
+$gt->from_json(encode_json $gt_json);
 
 my $markers = $gt->markers();
 
@@ -119,7 +109,15 @@ is(scalar(@$markers), 5, "marker number test");
 
 my $gt2 = CXGN::Genotype->new();
 
-$gt2->from_json(' { "marker1" : "0", "marker3" : "1", "marker4" :"1", "marker5" :"0.9", "marker6": "0" } ');
+my $gt_json2 = {
+    'marker1' => {'DS'=>"0"},
+    'marker3' => {'DS'=>"1"},
+    'marker4' => {'DS'=>"1"},
+    'marker5' => {'DS'=>"0.9"},
+    'marker6' => {'DS'=>"0"}
+};
+
+$gt2->from_json(encode_json $gt_json2);
 
 is($gt->calculate_distance($gt2), 0.75, "distance calculation test");
 is($gt->good_score('0.0'), 1, "good score test 1");

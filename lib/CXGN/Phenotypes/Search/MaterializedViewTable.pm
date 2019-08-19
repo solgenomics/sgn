@@ -54,7 +54,7 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     required => 1,
 );
 
-#(plot, plant, or all)
+#(plot, plant, subplot, tissue_sample, or all)
 has 'data_level' => (
     isa => 'Str|Undef',
     is => 'ro',
@@ -199,7 +199,7 @@ sub search {
         push @where_clause, "year in ($year_sql)";
     }
     if ($self->data_level ne 'all') {
-        push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot
+        push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot or tissue_sample
     } else {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample')"; #plots AND plants AND subplots AND tissue_samples
     }

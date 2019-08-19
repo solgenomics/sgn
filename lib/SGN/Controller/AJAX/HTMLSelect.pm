@@ -34,6 +34,7 @@ use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
 use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -637,6 +638,8 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $cvprop_type_names = $c->req->param("cvprop_type_name") ? decode_json $c->req->param("cvprop_type_name") : ['trait_ontology'];
+    my $use_full_trait_name = $c->req->param("use_full_trait_name") || 0;
 
     my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -652,12 +655,16 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
         $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
     }
 
-    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces});
+    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces, cvprop_type_names => $cvprop_type_names});
     #print STDERR Dumper $result;
 
     my @ontos;
     foreach my $o (@{$result->{result}->{data}}) {
-        push @ontos, [$o->{ontologyDbId}, $o->{ontologyName}." (".$o->{description}.")" ];
+        if ($use_full_trait_name) {
+            push @ontos, [$o->{description}."|".$o->{ontologyName}.":".$o->{ontologyDbxrefAccession}, $o->{description}."|".$o->{ontologyName}.":".$o->{ontologyDbxrefAccession} ];
+        } else {
+            push @ontos, [$o->{ontologyDbId}, $o->{ontologyName}." (".$o->{description}.")" ];
+        }
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
@@ -949,6 +956,41 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         id => $select_id,
         multiple => $multiple,
         choices => \@ontology_children,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Args(0) {
+    my ($self, $c) = @_;
+    my $db_id = $c->request->param("db_id");
+    my $size = $c->req->param('size') || '5';
+
+    my $select_name = $c->request->param("selectbox_name");
+    my $select_id = $c->request->param("selectbox_id");
+
+    my $empty = $c->request->param("empty") || '';
+    my $multiple =  $c->req->param("multiple") || 0;
+
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my @ontology_terms;
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE db_id=$db_id ORDER BY cvterm.name;";
+    my $sth = $bcs_schema->storage->dbh->prepare($q);
+    $sth->execute();
+    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
+        push @ontology_terms, [$cvterm_id, $cvterm_name."|".$db_name.":".$accession];
+    }
+
+    #@ontology_terms = sort { $a->[1] cmp $b->[1] } @ontology_terms;
+    if ($empty) {
+        unshift @ontology_terms, [ 0, "None" ];
+    }
+    #print STDERR Dumper \@ontology_children;
+    my $html = simple_selectbox_html(
+        name => $select_name,
+        id => $select_id,
+        multiple => $multiple,
+        choices => \@ontology_terms,
     );
     $c->stash->{rest} = { select => $html };
 }

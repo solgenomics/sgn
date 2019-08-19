@@ -89,7 +89,7 @@ has 'marker_name_list' => (
 has 'genotypeprop_hash_select' => (
     isa => 'ArrayRef[Str]',
     is => 'ro',
-    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES
+    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL', 'NT']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES
 );
 
 has 'protocolprop_top_key_select' => (

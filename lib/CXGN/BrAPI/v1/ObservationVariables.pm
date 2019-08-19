@@ -6,6 +6,7 @@ use JSON;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use SGN::Model::Cvterm;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -88,16 +89,28 @@ sub observation_variable_data_types {
 }
 
 sub observation_variable_ontologies {
-	my $self = shift;
+    my $self = shift;
 	my $inputs = shift;
 	my $name_spaces = $inputs->{name_spaces};
+	my $cvprop_types = $inputs->{cvprop_type_names} || [];
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
 	my @available;
 
+    my @composable_cv_prop_types;
+    foreach (@$cvprop_types) {
+        my $composable_cv_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $_, 'composable_cvtypes')->cvterm_id();
+        push @composable_cv_prop_types, $composable_cv_type_cvterm_id;
+    }
+    my $composable_cv_prop_sql;
+    if (scalar(@composable_cv_prop_types)>0) {
+        $composable_cv_prop_sql = join ("," , @composable_cv_prop_types);
+        $composable_cv_prop_sql = " AND cvprop.type_id IN ($composable_cv_prop_sql)";
+    }
+
 	#Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=?;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) JOIN cvprop USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? $composable_cv_prop_sql;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	foreach (@$name_spaces){
 		$sth->execute($_);
@@ -108,12 +121,13 @@ sub observation_variable_ontologies {
 			}
 			push @available, {
                 ontologyDbId=>qq|$db_id|,
-                ontologyName=>$db_name." (".$cv_name.")",
+                ontologyName=>$db_name,
                 description=>$cvterm_name,
                 authors=>$info->{authors} ? $info->{authors} : '',
                 version=>$dbxref_version,
                 copyright=>$info->{copyright} ? $info->{copyright} : '',
-                licence=>$info->{licence} ? $info->{licence} : ''
+                licence=>$info->{licence} ? $info->{licence} : '',
+                ontologyDbxrefAccession=>$dbxref_accession,
 			};
 		}
 	}
