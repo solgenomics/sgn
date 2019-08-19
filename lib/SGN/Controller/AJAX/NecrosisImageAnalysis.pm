@@ -83,7 +83,7 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
     );
     my $server_endpoint = "http://18.219.45.102/necrosis/api2/";
     print STDERR $server_endpoint."\n";
-    my @results;
+    my $it = 0;
     foreach (@image_files) {
         my $resp = $ua->post(
             $server_endpoint,
@@ -96,11 +96,13 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
             my $message = $resp->decoded_content;
             my $message_hash = decode_json $message;
             print STDERR Dumper $message_hash;
-            push @results, $message_hash;
+            $message_hash->{original_image} = $image_urls[$it];
+            $result->[$it]->{result} = $message_hash;
         }
+        $it++;
     }
 
-    $c->stash->{rest} = { success => 1, results => \@results };
+    $c->stash->{rest} = { success => 1, results => $result };
 }
 
 1;
