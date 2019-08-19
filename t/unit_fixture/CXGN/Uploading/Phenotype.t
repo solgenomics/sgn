@@ -5841,7 +5841,7 @@ my $image_zipfile_filename = "t/data/phenotypes_associated_images/4pics.zip";
 $validate_file = $parser->validate('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename);
 ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
 
-$parsed_file = $parser->parse('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename, 'janedoe');
+$parsed_file = $parser->parse('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename, 41, $f);
 ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
 
 print STDERR Dumper $parsed_file;

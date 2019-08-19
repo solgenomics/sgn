@@ -150,7 +150,7 @@ jQuery(document).ready(function(){
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
 
-                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previous Image-Associated Phenotype(s)</th></tr></thead><tbody>';
+                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
                     html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.cbsd_score+'</td><td>';
                     for (var j=0; j<response.results[i].observations_array.length; j++) {
@@ -159,6 +159,7 @@ jQuery(document).ready(function(){
                     html = html + '</td></tr>';
                 }
                 html = html + '</tbody></table>';
+                html = html + '<hr><button class="btn btn-primary" id="necrosis_image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
                 jQuery('#necrosis_image_analysis_result').html(html);
             },
             error: function(response) {
@@ -167,6 +168,10 @@ jQuery(document).ready(function(){
                 alert("An error occurred submitting necrosis image analysis");
             }
         });
+    });
+
+    jQuery(document).on("click", "#necrosis_image_analysis_image_search_results_save", function() {
+        alert("Need to implement!");
     });
 
 });

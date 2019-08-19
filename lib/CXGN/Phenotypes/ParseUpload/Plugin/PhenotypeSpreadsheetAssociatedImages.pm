@@ -122,6 +122,7 @@ sub parse {
     my $schema = shift;
     my $image_zipfile = shift;
     my $user_id = shift;
+    my $c = shift;
     my %parse_result;
     my %observationunits_seen;
     my %observationvariables_seen;
@@ -175,7 +176,7 @@ sub parse {
         $image_observation_unit_hash{$image_name} = $observationunit_lookup{$uniquename};
     }
 
-    my $image = SGN::Image->new( $schema->storage->dbh, undef, undef );
+    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $zipfile_return = $image->upload_phenotypes_associated_images_zipfile($image_zipfile, $user_id, \%image_observation_unit_hash, "phenotype_spreadsheet_associated_images");
     print STDERR Dumper $zipfile_return;
     if ($zipfile_return->{error}) {
