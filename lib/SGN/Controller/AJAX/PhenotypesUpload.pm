@@ -195,18 +195,25 @@ sub _prep_upload {
     my $image_zip;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or associated_images
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         }
-        if ($spreadsheet_format eq 'simple'){
+        elsif ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
+        }
+        elsif ($spreadsheet_format eq 'associated_images'){
+            $validate_type = "phenotype spreadsheet associated_images";
+        }
+        else {
+            die "Spreadsheet format not supported! Only simple, detailed, or associated_images\n";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
+        $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
     }
     elsif ($file_type eq "fieldbook") {
         print STDERR "Fieldbook \n";
@@ -294,7 +301,7 @@ sub _prep_upload {
     }
 
     ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         return (\@success_status, \@error_status);
@@ -315,7 +322,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         return (\@success_status, \@error_status);

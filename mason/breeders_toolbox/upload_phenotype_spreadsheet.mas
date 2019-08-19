@@ -117,7 +117,7 @@
             <ul>
                 <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.</li>
                 <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
-                <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values. It has the following columns: observationunit_name, observationvariable_name, phenotype_value, image_name. Image name should exist as the image name in the uploaded zipfile.</li>
+                <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values. It has the following columns: observationunit_name, observationvariable_name, phenotype_value, phenotype_timestamp, image_name, username. Image name should exist as the image name in the uploaded zipfile.</li>
             </ul>
 
             <h4>Timestamps:</h4>

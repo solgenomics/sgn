@@ -362,6 +362,46 @@ sub upload_fieldbook_zipfile {
     return $error_status;
 }
 
+sub upload_phenotypes_associated_images_zipfile {
+    my $self = shift;
+    my $image_zip = shift;
+    my $user_id = shift;
+    my $image_observation_unit_hash = shift;
+    my $c = $self->config();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $schema->storage->dbh;
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        return {error => 'Could not read your zipfile. Is is .zip format?</br></br>'};
+    }
+
+    my %observationunit_stock_id_image_id;
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        my $img_name = $_->fileName();
+        print STDERR Dumper $img_name;
+        my $stock_id = $image_observation_unit_hash->{$img_name};
+
+        my $temp_file = $image->upload_zipfile_images($_);
+
+        #Check if image already stored in database
+        #my $md5checksum = $image->calculate_md5sum($temp_file);
+        #print STDERR "MD5: $md5checksum\n";
+        #my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
+        #print STDERR "Count: $md_image\n";
+        $image->set_sp_person_id($user_id);
+        my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+        if (!$ret ) {
+            return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+        }
+        my $image_id = $image->get_image_id();
+        $observationunit_stock_id_image_id{$stock_id} = $image_id;
+    }
+    return {return => \%observationunit_stock_id_image_id};
+}
+
 sub upload_drone_imagery_zipfile {
     my $self = shift;
     my $image_zip = shift;

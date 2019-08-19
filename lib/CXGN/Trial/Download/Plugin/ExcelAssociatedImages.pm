@@ -58,7 +58,7 @@ sub download {
     my $bold = $workbook->add_format();
     $bold->set_bold();
 
-    my @column_headers = ('observationunit_name', 'observationvariable_name', 'phenotype_value', 'image_name');
+    my @column_headers = ('observationunit_name', 'observationvariable_name', 'phenotype_value', 'phenotype_timestamp', 'image_name', 'username');
     for(my $n=0; $n<scalar(@column_headers); $n++) {
         $ws->write(0, $n, $column_headers[$n]);
     }

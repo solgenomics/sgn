@@ -96,7 +96,6 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
-    my $composable_cvterm_format = shift // 'extended';
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
