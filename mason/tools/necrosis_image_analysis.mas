@@ -172,13 +172,15 @@ jQuery(document).ready(function(){
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
 
-                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th></tr></thead><tbody>';
+                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
                     html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.cbsd_score+'</td><td>';
                     for (var j=0; j<response.results[i].observations_array.length; j++) {
                         html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
                     }
-                    html = html + '</td></tr>';
+                    html = html + "</td>";
+                    html = html + "<td><a href='/stock/"+response.results[i].stock_id+"/view'>"+response.results[i].stock_uniquename+"</a></td>";
+                    html = html + '</tr>';
                 }
                 html = html + '</tbody></table>';
                 html = html + '<hr><button class="btn btn-primary" id="necrosis_image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
