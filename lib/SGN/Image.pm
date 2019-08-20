@@ -368,6 +368,7 @@ sub upload_phenotypes_associated_images_zipfile {
     my $user_id = shift;
     my $image_observation_unit_hash = shift;
     my $image_type_name = shift;
+    print STDERR "Doing upload_phenotypes_associated_images_zipfile\n";
     my $c = $self->config();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -400,18 +401,32 @@ sub upload_phenotypes_associated_images_zipfile {
         my $temp_file = $image->upload_zipfile_images($_);
 
         #Check if image already stored in database
-        #my $md5checksum = $image->calculate_md5sum($temp_file);
-        #print STDERR "MD5: $md5checksum\n";
-        #my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
-        #print STDERR "Count: $md_image\n";
-        $image->set_sp_person_id($user_id);
-        my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
-        if (!$ret ) {
-            return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+        $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        my $md5checksum = $image->calculate_md5sum($temp_file);
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+            JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+            WHERE md_image.obsolete = 'f' AND md_image.md5sum = '$md5checksum' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id;";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute();
+        my ($saved_image_id) = $h->fetchrow_array();
+        my $image_id;
+        if ($saved_image_id) {
+            print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
+            $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+            $image_id = $image->get_image_id();
         }
-        my $stock_associate = $image->associate_stock($stock_id);
-        my $image_id = $image->get_image_id();
-        my $added_image_tag_id = $image->add_tag($image_tag);
+        else {
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
+            if (!$ret ) {
+                return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+            }
+            print STDERR "Saved $temp_file\n";
+            my $stock_associate = $image->associate_stock($stock_id);
+            $image_id = $image->get_image_id();
+            my $added_image_tag_id = $image->add_tag($image_tag);
+        }
         $observationunit_stock_id_image_id{$stock_id} = $image_id;
     }
     return {return => \%observationunit_stock_id_image_id};
@@ -460,7 +475,10 @@ sub upload_zipfile_images {
       . $filename;
     system("chmod 775 $zipfile_image_temp_path");
     $file_member->extractToFileNamed($temp_file);
-    print STDERR "Temp Image: ".$temp_file."\n";
+    if ( ! `mogrify -format jpg '$temp_file'` ) {
+        system( "convert", "$temp_file", "$temp_file.JPG" );
+            $? and die "Sorry, can't convert image";
+    }
     return $temp_file;
 }
 

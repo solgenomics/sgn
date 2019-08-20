@@ -77,7 +77,7 @@ sub validate {
         my $filename = basename($file_member->fileName());
         $image_zip_contents{$filename}++;
     }
-    print STDERR Dumper \%image_zip_contents;
+    #print STDERR Dumper \%image_zip_contents;
 
     #StorePhenotypes verify checks that observationunitnames and observationvariablenames are in database.
     my %observationunits_seen;
@@ -163,7 +163,7 @@ sub parse {
     my $tf = CXGN::List::Transform->new();
     my $stock_ids = $tf->transform($schema, 'stocks_2_stock_ids', \@observation_units)->{transform};
     my $stock_ids_sql  = join ("," , @$stock_ids);
-    my $stock_q = "SELECT uniquename, stock_id, project_id FROM stock join nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id=$field_experiment_type_id AND stock.stock_id IN ($stock_ids_sql);";
+    my $stock_q = "SELECT uniquename, stock_id, project_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id=$field_experiment_type_id AND stock.stock_id IN ($stock_ids_sql);";
     my $h = $schema->storage->dbh()->prepare($stock_q);
     $h->execute();
     while (my ($uniquename, $stock_id, $project_id) = $h->fetchrow_array()) {
@@ -178,7 +178,6 @@ sub parse {
 
     my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     my $zipfile_return = $image->upload_phenotypes_associated_images_zipfile($image_zipfile, $user_id, \%image_observation_unit_hash, "phenotype_spreadsheet_associated_images");
-    print STDERR Dumper $zipfile_return;
     if ($zipfile_return->{error}) {
         $parse_result{'error'} = $zipfile_return->{error};
         return \%parse_result;
@@ -206,7 +205,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@observation_units;
     $parse_result{'variables'} = \@observation_variables;
-    print STDERR Dumper \%parse_result;
+    #print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }
