@@ -9,7 +9,8 @@ sub register_field_book :Path('/brapi/authorize') {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{app} =
+    $c->stash->{success_url} = "fieldbook://";
+    $c->stash->{display_name} = "Intercross";
 
     $c->stash->{template} = '/brapi/authorize.mas';
 }

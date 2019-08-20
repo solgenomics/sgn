@@ -1,6 +1,7 @@
 <%args>
     # $logged_in_username
-    $success_url => ''
+    $success_url
+    $display_name
 </%args>
 
 <& /page/page_title.mas, title=>"BrAPI Authorization" &>
@@ -25,3 +26,10 @@
 <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
 
 <script src="/js/legacy/brapi/auth.js"></script>
+<script>
+const domContainer = document.querySelector('#brapi-auth');
+ReactDOM.render(e(BrapiAuth, {
+    appName: "<% $display_name %>",
+    successUrl: "<% $success_url %>"
+}), domContainer);
+</script>
