@@ -5871,12 +5871,27 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     trait_list=>\@traits,
     values_hash=>\%parsed_data,
     has_timestamps=>1,
-    overwrite_values=>0,
+    overwrite_values=>1,
     metadata_hash=>\%phenotype_metadata,
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet associated_images works");
+
+$mech->get_ok('http://localhost:3010/ajax/search/images');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'recordsFiltered' => 6,'recordsTotal' => 6,'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>',''],['<a href="/data/images/image_files/63/12/5d/a7/dad19de8898c2e509d7b6bcf/medium.jpg"  title="<a href=/image/view/2427>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/63/12/5d/a7/dad19de8898c2e509d7b6bcf/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2427\' >3</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/ac/31/ab/7e/9f332950a2f1d824a2100b61/medium.jpg"  title="<a href=/image/view/2428>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/31/ab/7e/9f332950a2f1d824a2100b61/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2428\' >1</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/1a/be/f4/eb/580da78f17245b318268df0d/medium.jpg"  title="<a href=/image/view/2429>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/1a/be/f4/eb/580da78f17245b318268df0d/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2429\' >4</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images, phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/a8/11/e4/76/e7f24fbccc79bed797b73a31/medium.jpg"  title="<a href=/image/view/2430>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/a8/11/e4/76/e7f24fbccc79bed797b73a31/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2430\' >2</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images, phenotype_spreadsheet_associated_images']],'draw' => undef});
+
+my $stored_image_ids = [2426,2430];
+my $stored_image_ids_string = encode_json $stored_image_ids;
+$mech->post_ok('http://localhost:3010/ajax/necrosis_image_analysis/submit?selected_image_ids='.$stored_image_ids_string);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is(scalar(@{$response->{results}}), 2);
+is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+ok($response->{results}->[0]->{result}->{image_link});
+ok($response->{results}->[1]->{result}->{image_link});
 
 done_testing();
