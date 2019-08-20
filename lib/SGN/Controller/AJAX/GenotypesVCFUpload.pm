@@ -315,8 +315,8 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         my $protocol = $parser->protocol_data();
-        my $observation_unit_names = $parser->observation_unit_names();
-        $store_args->{observation_unit_uniquenames} = $observation_unit_names;
+        my $observation_unit_names_all = $parser->observation_unit_names();
+        $store_args->{observation_unit_uniquenames} = $observation_unit_names_all;
 
         if ($parser_plugin eq 'VCF') {
             $store_args->{marker_by_marker_storage} = 1;

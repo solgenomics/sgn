@@ -1406,6 +1406,9 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
         my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
         my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
         $h3->execute();
+        my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+        my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
+        $h4->execute();
 
         open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
             foreach (@{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}}) {

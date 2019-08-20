@@ -16,11 +16,15 @@ $goto_url => ''
 	<form id="login_form" name="login_form">
 	<div class="container-fluid">
 
-	    <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
+% if ($c->config->{default_login_janedoe}) {
+	    <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" value="janedoe"/>
 	    <br />
-	    <div>
-	      <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
-	    </div>	    
+        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
+% } else {
+        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
+        <br />
+        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
+% }
 	    <br />
 	    <div style="margin-bottom:40px">
 	      <a href="/user/reset_password" style="float:left">Forgot password?</a>

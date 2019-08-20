@@ -1,0 +1,85 @@
+<%args>
+</%args>
+
+<table class="table table-bordered table-hover" id="raw_drone_image_datatable">
+    <thead>
+        <tr>
+            <th>Field Trials -> Imaging Events</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+jQuery(document).ready(function(){
+
+    var raw_drone_imagery_table = jQuery('#raw_drone_image_datatable').DataTable( {
+        'ajax': '/api/drone_imagery/raw_drone_imagery',
+        'paging': false
+    });
+    
+    raw_drone_imagery_table.on( 'draw', function () {
+        jQuery.ajax({
+            url : '/api/drone_imagery/raw_drone_imagery_plot_image_count',
+            success: function(response){
+                //console.log(response);
+                jQuery('div[name="drone_run_band_total_plot_image_div"]').html('<div class="panel-group"><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >No Plot Images Saved</a></h4></div></div></div>');
+                for (drone_run_project_id in response.data) {
+                    var html = '<div class="panel-group" id="drone_run_plot_polygons_table_accordion_'+drone_run_project_id+'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_plot_polygons_table_accordion_'+drone_run_project_id+'" href="#drone_run_plot_polygons_table_accordion_one_'+drone_run_project_id+'" >View Plot Images Summary ('+response.data[drone_run_project_id]['total_plot_image_count']+')</a></h4></div><div id="drone_run_plot_polygons_table_accordion_one_'+drone_run_project_id+'" class="panel-collapse collapse"><div class="panel-body">';
+                    delete response.data[drone_run_project_id]['total_plot_image_count'];
+                    html = html + "<table class='table table-bordered table-sm'><thead><tr><th>Plot Image Type</th><th>Count</th></tr></thead><tbody>";
+                    for (plot_image_type in response.data[drone_run_project_id]) {
+                        html = html + "<tr><td>" + plot_image_type + "</td><td>" + response.data[drone_run_project_id][plot_image_type] + "</td></tr>";
+                    }
+                    html = html + "</tbody></table>";
+                    html = html + '</div></div></div></div>';
+                    jQuery('#drone_run_band_total_plot_image_count_div_'+drone_run_project_id).html(html);
+                }
+            },
+            error: function(response){
+                //alert('Error getting plot image count!')
+            }
+        });
+    });
+
+    jQuery(document).on('click', 'span[name="drone_image_remove"]', function(){
+        var image_id = jQuery(this).data('image_id');
+        if (confirm("Are you sure you want to remove this image?")) {
+            jQuery.ajax({
+                url : '/api/drone_imagery/remove_image?image_id='+image_id,
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    location.reload();
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error removing drone image!')
+                }
+            });
+        }
+    });
+
+});
+
+function manageDroneImageryDroneRunBandDisplay(project_drone_run_band_id){
+    jQuery.ajax({
+        url : '/api/drone_imagery/raw_drone_imagery_drone_run_band?drone_run_band_project_id='+project_drone_run_band_id,
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery('#drone_run_band_accordian_drone_run_band_div_'+project_drone_run_band_id).html(response.data[0]);
+            jQuery("#working_modal").modal("hide");
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert('Error getting drone run band summary images!');
+        }
+    });
+}
+
+</script>
