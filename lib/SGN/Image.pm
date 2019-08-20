@@ -395,6 +395,12 @@ sub upload_phenotypes_associated_images_zipfile {
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );
         my $img_name = basename($_->fileName());
+        my $basename;
+        my $file_ext;
+        if ($img_name =~ m/(.*)(\.(?!\.).*)$/) {  # extension is what follows last .
+            $basename = $1;
+            $file_ext = $2;
+        }
         my $stock_id = $image_observation_unit_hash->{$img_name}->{stock_id};
         my $project_id = $image_observation_unit_hash->{$img_name}->{project_id};
 
@@ -402,11 +408,10 @@ sub upload_phenotypes_associated_images_zipfile {
 
         #Check if image already stored in database
         $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        my $md5checksum = $image->calculate_md5sum($temp_file);
         my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
             JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
             JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-            WHERE md_image.obsolete = 'f' AND md_image.md5sum = '$md5checksum' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id;";
+            WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.original_filename = '$basename';";
         my $h = $schema->storage->dbh->prepare($q);
         $h->execute();
         my ($saved_image_id) = $h->fetchrow_array();
@@ -475,10 +480,6 @@ sub upload_zipfile_images {
       . $filename;
     system("chmod 775 $zipfile_image_temp_path");
     $file_member->extractToFileNamed($temp_file);
-    if ( ! `mogrify -format jpg '$temp_file'` ) {
-        system( "convert", "$temp_file", "$temp_file.JPG" );
-            $? and die "Sorry, can't convert image";
-    }
     return $temp_file;
 }
 
