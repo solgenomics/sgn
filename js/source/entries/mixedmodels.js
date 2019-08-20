@@ -307,8 +307,13 @@ export function init(main_div){
      });
    });
 
-   $('#run_mixed_model_button').click( function() { 
+    $('#run_mixed_model_button').click( function() {
+	alert("RUNNING!");
        var model = $('#model_string').text();
+//	var fixed_factors = $('#fixed_factors').val();
+//	alert("FIXED:"+fixed_factors);
+//	var random_factors = $('#random_factors').val();
+//	alert("RANDOM:"+random_factors);
        //alert('Model: '+model);
        var tempfile = $('#tempfile').text();
        var dependent_variable = $('#dependent_variable_select').val();
@@ -316,7 +321,13 @@ export function init(main_div){
        $.ajax( {
            "url": '/ajax/mixedmodels/run',
 	   "method": "POST",
-           "data": { "model" : model, "tempfile" : tempfile, "dependent_variable": dependent_variable },
+           "data": {
+	       "model" : model,
+	       "tempfile" : tempfile,
+	       "dependent_variable": dependent_variable,
+//	       "fixed_factors" : fixed_factors,
+//	       "random_factors" : random_factors
+	   },
            "success": function(r) { 
                if (r.error) { alert(r.error);}
                else{ 

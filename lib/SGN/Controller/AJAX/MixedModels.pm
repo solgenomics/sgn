@@ -115,7 +115,6 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     
     my $traits_html = join("\n", @traits_select);
 
-
     $c->stash->{rest} = { 
 	dependent_variable => "<select id=\"dependent_variable_select\">$traits_html</select>",
 	factors => \@factor_select,
@@ -138,6 +137,14 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $tempfile = $params->{tempfile};
     my $dependent_variable = $params->{dependent_variable};
     my $model  = $params->{model};
+    my $random_factors = $params->{random_factors}; # space separated list
+    my $fixed_factors = $params->{fixed_factors}; #   "
+
+    my @random_factors = split / +/,$random_factors;
+    my @fixed_factors = split / +/, $fixed_factors;
+
+    my $random_factors = '"'.join('","', @random_factors).'"';
+    my $fixed_factors = '"'.join('","',@fixed_factors).'"';
     
     print STDERR "DV: $dependent_variable Model: $model TF: $tempfile.\n";
   
@@ -148,6 +155,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $param_file = $temppath.".params";
     open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
     print $F "dependent_variable = \"$dependent_variable\"\n";
+    print $F "random_factors <- c($random_factors)\n";
+    print $F "fixed_factors <- c($fixed_factors)\n";
 
     print $F "model <- \"$model\"\n";
     close($F);
@@ -160,7 +169,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     system($cmd);
     print STDERR "Done.\n";
 
-    my $resultfile = $temppath.".results";
+    my $resultfile = $temppath.".adjusted_means";
 
     my $error;
     my $lines;
@@ -169,7 +178,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
     }
     else { 
-	$lines = read_file($temppath.".results");
+	$lines = read_file($resultfile);
     }
 
     my $figure1file_response;
@@ -179,10 +188,10 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
     $c->stash->{rest} = {
 	error => $error,
-        figure1 => $figure1file_response,
-        figure2 => $figure2file_response,
-        figure3 => $figure3file_response,
-        figure4 => $figure4file_response,
+#        figure1 => $figure1file_response,
+#        figure2 => $figure2file_response,
+#        figure3 => $figure3file_response,
+#        figure4 => $figure4file_response,
         html =>  $lines,
     };
 }

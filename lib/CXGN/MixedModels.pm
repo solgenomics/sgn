@@ -113,6 +113,7 @@ sub run_model {
     my $self = shift;
 
     my $tempfile = $self->tempfile();
+    
     # generate params_file
     #
     my $param_file = $tempfile.".params";
@@ -120,6 +121,7 @@ sub run_model {
     my $model = $self->generate_model();
     print $F $model;
     close($F);
+    
     # run r script to create model
     #
     my $cmd = "R CMD BATCH  '--args datafile=\"".$tempfile."\" paramfile=\"".$tempfile.".params\"' /R/mixed_models.R $tempfile.out";

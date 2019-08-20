@@ -10,8 +10,11 @@ if(length(args)==0){
     ##supply default values
     datafile=''
     paramfile=''
+    fixed_factors<-c()
+    random_factors<-c()
 }else{
     for(i in 1:length(args)){
+         print(paste("Processing arg ", args[[i]]));
          eval(parse(text=args[[i]]))
     }
 }
@@ -32,7 +35,8 @@ source(paramfile)  # should give us dependent_variable and the model
 
 pd$studyYear = as.factor(pd$studyYear)
 print(paste("MODEL :", model))
-
+print(paste("FIXED FACTORS: ", fixed_factors));
+print(paste("RANDOM FACTROS: ", random_factors));
 print(head(pd))
 dependent_variable = gsub(" ", "\\.", dependent_variable) # replace space with "." in variable name
 dependent_variable = gsub("\\|", "\\.", dependent_variable) # replace | with .
@@ -62,15 +66,20 @@ adjusted_means = getAdjMeans(modelOut=model,
 
 print(head(adjusted_means))
 
-outfile = paste(datafile, ".results", sep="")
-print(outfile)
-print(model)
-#print(model_summary)
-print(colnames(model))
-print(ranef(model))
-print(adjusted_means)
+outfile = paste(datafile, ".adjusted_means", sep="")
 sink(outfile)
-#write.table(ranef(model)$germplasmName)
-
 write.table(select(adjusted_means, 'germplasmName', dependent_variable), row.names = F)
 sink();
+
+outfile = paste(datafile, ".blups", sep="");
+sink(outfile)
+write.table(ranef(model, whichel=c("germplasmName")), quote=F)
+sink();
+
+# need to provide the fixed effect factors to
+# set that to retrieve the fixed effects
+#
+#outfile = paste(datafile, ".blues", sep="");
+#sink(outfile)
+#write.table(model.fixef(dependent_variable));
+#sink();
