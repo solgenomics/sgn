@@ -84,7 +84,7 @@ has 'data_level' => (
     isa => 'Str',
     default => 'plots',
 );
-  
+
 has 'treatment_project_ids' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
@@ -94,6 +94,12 @@ has 'selected_columns' => (
     is => 'ro',
     isa => 'HashRef',
     default => sub { {"plot_name"=>1, "plot_number"=>1} }
+);
+
+has 'include_measured'=> (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
 );
 
 has 'selected_trait_ids'=> (
@@ -137,7 +143,7 @@ has 'phenotype_performance_hash' => (
     is => 'rw',
 );
 
-sub get_layout_output { 
+sub get_layout_output {
     my $self = shift;
     my $trial_id = $self->trial_id();
     my $schema = $self->schema();
@@ -202,7 +208,7 @@ sub get_layout_output {
     }
 
     my $summary_values = [];
-    if (scalar(@selected_traits)>0){ 
+    if (scalar(@selected_traits)>0){
         my $summary = CXGN::Phenotypes::Summary->new({
             bcs_schema=>$schema,
             trait_list=>\@selected_traits,
@@ -210,11 +216,23 @@ sub get_layout_output {
         });
         $summary_values = $summary->search();
     }
-    my %fieldbook_trait_hash;
+    my %overall_trait_hash;
     foreach (@$summary_values){
-        $fieldbook_trait_hash{$_->[0]}->{$_->[8]} = $_;
+        $overall_trait_hash{$_->[0]}->{$_->[8]} = $_;
     }
     #print STDERR Dumper \%fieldbook_trait_hash;
+
+    #get include measured on plot/plant level using trial_id
+
+    my $exact_values;
+    if ($include_measured) {
+        my $exact = CXGN::Phenotypes::Exact->new({
+            bcs_schema=>$schema,
+            trial_id=>$trial_id
+        });
+        $exact_values = $exact->search();
+    }
+    my %exact_trait_hash = %{$exact_values};
 
     my @treatment_trials;
     my @treatment_names;
@@ -297,12 +315,12 @@ sub get_layout_output {
         trial_id => $trial_id,
         data_level => $data_level,
         selected_columns => \%selected_cols,
-        selected_trait_ids => \@selected_traits,
         treatment_project_ids => $treatments,
         design => $design,
         trial => $selected_trial,
         treatment_info_hash => \%treatment_info_hash,
-        phenotype_performance_hash => \%fieldbook_trait_hash
+        exact_performance_hash => \%exact_trait_hash
+        overall_performance_hash => \%overall_trait_hash
     };
     my $layout_output;
     if ($data_level eq 'plots' ) {
@@ -342,16 +360,34 @@ sub _add_treatment_to_line {
     return $line;
 }
 
-sub _add_trait_performance_to_line {
+sub _add_overall_performance_to_line {
     my $self = shift;
     my $selected_trait_names = shift;
     my $line = shift;
-    my $fieldbook_trait_hash = shift;
+    my $overall_trait_hash = shift;
     my $design_info = shift;
     foreach my $t (@$selected_trait_names){
-        my $perf = $fieldbook_trait_hash->{$t}->{$design_info->{"accession_id"}};
+        my $perf = $overall_trait_hash->{$t}->{$design_info->{"accession_id"}};
         if($perf){
             push @$line, "Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6];
+        } else {
+            push @$line, '';
+        }
+    }
+    return $line;
+}
+
+sub _add_exact_performance_to_line {
+    my $self = shift;
+    my $line = shift;
+    my $exact_trait_hash = shift;
+    my $stock_name = shift;
+    #my @exact_trait_names = sort keys %{$exact_trait_hash};
+
+    foreach my $trait (sort keys %{$exact_trait_hash}){
+        my $value = $exact_trait_hash->{$trait}->{$stock_name};
+        if($value) {
+            push @$line, $value
         } else {
             push @$line, '';
         }
