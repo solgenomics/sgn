@@ -14,6 +14,14 @@
     </center>
 </div>
 
+<div class="well well-sm">
+    <center>
+    <button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload New Phenotypes and Associated Images</button>
+    </center>
+</div>
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
+
 <&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
 
     <div id="necrosis_image_search_form" class="well well-sm">
@@ -83,7 +91,20 @@
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Image Analysis Service: </label>
+                    <div class="col-sm-6" >
+                        <select class="form-control" id="necrosis_image_analysis_service_select" name="necrosis_image_analysis_service_select">
+                            <option value="necrosis">Necrosis</option>
+                        </select>
+                    </div>
+                </div>
+                <br/>
+
+                <hr>
+                <center>
                 <button class="btn btn-primary" id="necrosis_image_analysis_submit">Submit</button>
+                </center>
                 <hr>
                 <div id="necrosis_image_analysis_result">
                 </div>
@@ -140,6 +161,7 @@ jQuery(document).ready(function(){
             method: 'POST',
             data: {
                 'selected_image_ids': JSON.stringify(selected_image_ids),
+                'service': jQuery('#necrosis_image_analysis_service_select').val()
             },
             dataType:'json',
             beforeSend: function() {

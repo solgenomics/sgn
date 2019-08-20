@@ -56,6 +56,7 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $image_ids = decode_json $c->req->param('selected_image_ids');
+    my $service = $c->req->param('service');
     my $main_production_site_url = $c->config->{main_production_site_url};
 
     my $image_search = CXGN::Image::Search->new({
@@ -81,7 +82,10 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
-    my $server_endpoint = "http://18.219.45.102/necrosis/api2/";
+    my $server_endpoint;
+    if ($service eq 'necrosis') {
+        $server_endpoint = "http://18.219.45.102/necrosis/api2/";
+    }
     print STDERR $server_endpoint."\n";
     my $it = 0;
     foreach (@image_files) {
