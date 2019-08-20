@@ -5839,14 +5839,14 @@ $filename = "t/data/phenotypes_associated_images/4picsimagephenotypespreadsheet.
 my $image_zipfile_filename = "t/data/phenotypes_associated_images/4pics.zip";
 
 $validate_file = $parser->validate('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename);
-ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
+ok($validate_file == 1, "Check if parse validate works for associated_images phenotype spreadsheet file");
 
 $parsed_file = $parser->parse('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename, 41, $f);
-ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
+ok($parsed_file, "Check if parse parse associated_images phenotype spreadsheet works");
 
 print STDERR Dumper $parsed_file;
 
-is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014'],'data' => {'test_trial21_plant_2' => {'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:24-0500','johndoe','']},'test_trial23_plant_1' => {'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']},'test_trial21_plant_1' => {'dry yield|CO_334:0000014' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe','']},'test_trial22_plant_1' => {'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe',''],'dry yield|CO_334:0000014' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial22_plant_2' => {'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:26-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial23_plant_2' => {'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']}},'units' => ['test_trial21_plant_1','test_trial21_plant_2','test_trial22_plant_1','test_trial22_plant_2','test_trial23_plant_1','test_trial23_plant_2']}, "check parse fieldbook plant file");
+is_deeply($parsed_file, {'data' => {'test_trial22' => {'CO_334:0000011' => ['4','','','',2429],'CO_334:0000010' => ['5','','nmorales','',2429]},'test_trial21' => {'CO_334:0000008' => ['12','','nmorales','',2430],'CO_334:0000013' => ['23','','','',2430]}},'variables' => ['CO_334:0000008','CO_334:0000010','CO_334:0000011','CO_334:0000013'],'units' => ['test_trial21','test_trial22']}, "check parse associated_images phenotype spreadsheet file");
 
 $phenotype_metadata{'archived_file'} = $filename;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype associated_images file";
