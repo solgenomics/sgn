@@ -13,7 +13,7 @@ var solGS = solGS || function solGS () {};
 
 solGS.sIndex = {
     
-    listSelectionIndexPopulations: function ()  {
+    listSelectionIndexPopulations: function()  {
    
 	var modelData = this.getTrainingPopulationData();
 	var trainingPopIdName = JSON.stringify(modelData);
@@ -40,7 +40,7 @@ solGS.sIndex = {
 	}
 	
 	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-	if( userUploadedSelExists == true) {
+	if(userUploadedSelExists == true) {
             var userSelPops = this.listUploadedSelPopulations();
             if (userSelPops) {
 
@@ -88,7 +88,7 @@ solGS.sIndex = {
     },
 
        
-    addSelectionPopulations: function (){
+    addSelectionPopulations: function(){
       
 	var selPopsTable = jQuery("#selection_pops_list").html();
 	var selPopsRows;
@@ -125,7 +125,7 @@ solGS.sIndex = {
     },
 
 
-    getSelectionPopTraits: function (modelId, selectedPopId) {
+    getSelectionPopTraits: function(modelId, selectedPopId) {
 
 	if (modelId === selectedPopId) {selectedPopId=undefined;}
 
@@ -167,7 +167,7 @@ solGS.sIndex = {
     },
 
 
-    selectionIndexForm: function (predictedTraits) {   
+    selectionIndexForm: function(predictedTraits) {   
 	
 	var trait = '<div>';
 	for (var i=0; i < predictedTraits.length; i++) { 
@@ -282,17 +282,14 @@ solGS.sIndex = {
     },
     
 
-    validateRelativeWts: function (nm, val) {    
+    validateRelativeWts: function(nm, val) {    
 	
 	if (isNaN(val) && nm != 'all') {
-            alert('the relative weight of trait '+nm+ 
-		  ' must be a number.'
-		 );            
+            alert('the relative weight of trait ' + nm + ' must be a number.');            
             return;
 	} else if (!val && nm != 'all') {
-            alert('You need to assign a relative weight to trait '+nm+'.' 
-		  +' If you want to exclude the trait assign 0 to it.'
-		 );            
+            alert('You need to assign a relative weight to trait ' + nm + '.' 
+		  + ' If you want to exclude the trait assign 0 to it.');            
             return;
 	    // }// else if (val < 0 && nm != 'all') {
 	    //   alert('The relative weight to trait '+nm+
@@ -309,7 +306,7 @@ solGS.sIndex = {
     },
 
 
-     sumElements: function (elements) {
+     sumElements: function(elements) {
 	 var sum = 0;
 	 for (var i=0; i<elements.length; i++) {            
              if (!isNaN(elements[i])) {
@@ -321,7 +318,7 @@ solGS.sIndex = {
      },
 
     
-    selectionIndex: function ( trainingPopId, selectionPopId ) {    
+    selectionIndex: function(trainingPopId, selectionPopId) {    
        
 	var legendValues = this.legendParams();
 	
@@ -336,7 +333,7 @@ solGS.sIndex = {
     },
 
 
-    legendParams: function () {
+    legendParams: function() {
     
 	var predPopName   = jQuery("#si_canvas #selected_population_name").val();
 	
@@ -400,7 +397,7 @@ solGS.sIndex = {
     },
 
 
-    listUploadedSelPopulations: function ()  {
+    listUploadedSelPopulations: function()  {
    
 	var selPopsDivUploaded   = document.getElementById("list_selection_populations");
 	var selPopsTableUploaded = selPopsDivUploaded.getElementsByTagName("table");
@@ -434,7 +431,7 @@ solGS.sIndex = {
     },
 
 
-    getTrainingPopulationData: function () {
+    getTrainingPopulationData: function() {
 
 	var modelId   = jQuery("#si_canvas #model_id").val();
 	var modelName = jQuery("#si_canvas #model_name").val();
@@ -452,7 +449,7 @@ solGS.sIndex = {
 /////
 }
 ////
-jQuery(document).ready( function () {
+jQuery(document).ready( function() {
     
     setTimeout(function (){
 	solGS.sIndex.listSelectionIndexPopulations()
