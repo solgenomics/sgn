@@ -531,6 +531,68 @@ sub germplasm_list_POST {
 }
 
 
+
+sub germplasm_list_new  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+
+sub germplasm_list_new_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search({
+        germplasmName => $clean_inputs->{germplasmName},
+        accessionNumber => $clean_inputs->{accessionNumber},
+        germplasmGenus => $clean_inputs->{germplasmGenus},
+        germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+        germplasmSpecies => $clean_inputs->{germplasmSpecies},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        germplasmPUI => $clean_inputs->{germplasmPUI},
+        matchMethod => $clean_inputs->{matchMethod},
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub germplasm_list_cached  : Chained('brapi') PathPart('search/germplasm') Args(0) : ActionClass('REST') { }
+
+sub germplasm_list_cached_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search_retrieve({
+        searchResultsDbId => $clean_inputs->{searchResultsDbId}
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub germplasm_list_cached_POST {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search_save({
+        germplasmName => $clean_inputs->{germplasmNames},
+        accessionNumber => $clean_inputs->{accessionNumbers},
+        germplasmGenus => $clean_inputs->{germplasmGenus},
+        germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+        germplasmSpecies => $clean_inputs->{germplasmSpecies},
+        germplasmDbId => $clean_inputs->{germplasmDbIds},
+        germplasmPUI => $clean_inputs->{germplasmPUIs},
+        matchMethod => $clean_inputs->{matchMethod},
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+
+
+
+
 =head2 brapi/v1/germplasm/{id}
 
  Usage: To retrieve details for a single germplasm
