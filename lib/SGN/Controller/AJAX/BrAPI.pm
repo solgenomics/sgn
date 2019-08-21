@@ -563,9 +563,8 @@ sub germplasm_list_cached_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->germplasm_search_retrieve({
-        searchResultsDbId => $clean_inputs->{searchResultsDbId}
-    });
+    my $tempfiles_subdir = $c->config->{basepath}."/".$c->tempfiles_subdir('brapi_searches');
+    my $brapi_package_result = $brapi_module->germplasm_search_retrieve( $tempfiles_subdir, $clean_inputs->{searchResultsDbId} );
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -576,16 +575,20 @@ sub germplasm_list_cached_POST {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->germplasm_search_save({
-        germplasmName => $clean_inputs->{germplasmNames},
-        accessionNumber => $clean_inputs->{accessionNumbers},
-        germplasmGenus => $clean_inputs->{germplasmGenus},
-        germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
-        germplasmSpecies => $clean_inputs->{germplasmSpecies},
-        germplasmDbId => $clean_inputs->{germplasmDbIds},
-        germplasmPUI => $clean_inputs->{germplasmPUIs},
-        matchMethod => $clean_inputs->{matchMethod},
-    });
+    my $tempfiles_subdir = $c->config->{basepath}."/".$c->tempfiles_subdir('brapi_searches');
+    my $brapi_package_result = $brapi_module->germplasm_search_save(
+        $tempfiles_subdir,
+        {
+            germplasmName => $clean_inputs->{germplasmNames},
+            accessionNumber => $clean_inputs->{accessionNumbers},
+            germplasmGenus => $clean_inputs->{germplasmGenus},
+            germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+            germplasmSpecies => $clean_inputs->{germplasmSpecies},
+            germplasmDbId => $clean_inputs->{germplasmDbIds},
+            germplasmPUI => $clean_inputs->{germplasmPUIs},
+            matchMethod => $clean_inputs->{matchMethod},
+        }
+    );
     _standard_response_construction($c, $brapi_package_result);
 }
 
