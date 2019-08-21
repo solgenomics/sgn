@@ -96,6 +96,8 @@
                     <div class="col-sm-6" >
                         <select class="form-control" id="necrosis_image_analysis_service_select" name="necrosis_image_analysis_service_select">
                             <option value="necrosis">Necrosis</option>
+                            <option value="count_contours">Count Contours</option>
+                            <option value="count_sift">SIFT Feature Count</option>
                         </select>
                     </div>
                 </div>
@@ -174,7 +176,7 @@ jQuery(document).ready(function(){
 
                 var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
-                    html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.cbsd_score+'</td><td>';
+                    html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td><td>';
                     for (var j=0; j<response.results[i].observations_array.length; j++) {
                         html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
                     }

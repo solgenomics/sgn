@@ -63,6 +63,8 @@ sub patch {
     my $terms = {
         'project_md_image' => [
             'phenotype_spreadsheet_associated_images',
+            'image_analysis_contours',
+            'image_analysis_sift'
         ]
     };
 
