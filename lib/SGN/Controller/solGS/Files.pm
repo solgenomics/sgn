@@ -370,23 +370,6 @@ sub combined_gebvs_file {
 }
 
 
-sub selection_index_file {
-    my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-   
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $selection_pop_id  if $selection_pop_id;
-
-    my $name = "selection_index_only_${training_pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $self->create_tempfile($temp_dir, $name);
-    $c->stash->{selection_index_only_file} = $file;
-   
-}
-
-
 sub trait_phenotype_file {
     my ($self, $c, $pop_id, $trait) = @_;
 
@@ -497,23 +480,6 @@ sub rrblup_selection_gebvs_file {
 
     $self->cache_file($c, $cache_data);
 
-}
-
-
-sub gebvs_selection_index_file {
-    my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-    
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $selection_pop_id  if $selection_pop_id;
-  
-    my $name = "gebvs_selection_index_${training_pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $self->create_tempfile($temp_dir, $name);
-    $c->stash->{gebvs_selection_index_file} = $file;
-   
 }
 
 
@@ -639,6 +605,7 @@ sub create_file_id {
     my $combo_pops_id    = $c->stash->{combo_pops_id};
     my $data_type        = $c->stash->{data_type};
     my $k_number         = $c->stash->{k_number};
+    my $sel_index_id     = $c->stash->{selection_index_id};
 
     my $traits_ids = $c->stash->{training_traits_ids};
     my $traits_selection_id;
@@ -686,7 +653,16 @@ sub create_file_id {
 
     $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
-    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
+
+    if ($sel_index_id)
+    {
+	$file_id = $sel_index_id ? $file_id . '-' . $sel_index_id : $file_id;
+    }
+    else
+    {
+	$file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
+    }
+   
     $c->stash->{file_id} = $file_id;
     
 }
@@ -789,6 +765,8 @@ sub get_solgs_dirs {
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
     my $cluster_cache   = catdir($tmp_dir, 'cluster', 'cache');
     my $cluster_temp    = catdir($tmp_dir, 'cluster', 'tempfiles');
+    my $sel_index_cache = catdir($tmp_dir, 'selectionIndex', 'cache');
+    my $sel_index_temp  = catdir($tmp_dir, 'selectionIndex', 'tempfiles');
 
     mkpath (
 	[
@@ -796,7 +774,7 @@ sub get_solgs_dirs {
 	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
 	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
 	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
-	 $cluster_cache, $cluster_temp,
+	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
 	0, 0755
 	);
@@ -819,6 +797,8 @@ sub get_solgs_dirs {
 	      solqtl_cache_dir            => $solqtl_cache,
               solqtl_tempfiles_dir        => $solqtl_tempfiles,
 	      cache_dir                   => $solgs_cache,
+	      selection_index_cache_dir   => $sel_index_cache,
+	      selection_index_temp_dir    => $sel_index_temp,
 
         );
 
@@ -828,3 +808,4 @@ sub get_solgs_dirs {
 ###
 1;#
 ##
+ 
