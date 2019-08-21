@@ -294,10 +294,8 @@ sub _parse_with_plugin {
             if ($worksheet->get_cell($row,$column)) {
                 my $column_property = $properties_columns{$column};
                 $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
-                if ($row == $row_max) {
-                    my $info_type = $worksheet->get_cell(0,$column)->value();
-                    $parsed_result{$info_type} = $additional_properties{$column_property};
-                }
+                my $info_type = $worksheet->get_cell(0,$column)->value();
+                $parsed_result{$info_type} = $additional_properties{$column_property};
             }
         }
 
