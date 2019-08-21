@@ -115,15 +115,13 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
         my $input_image;
         my $outfile_image;
         my $results_outfile;
-        my @images;
         if ($service eq 'count_contours') {
             $image_type_name = "image_analysis_contours";
             $trait_name = "count_contours";
             $script = 'GetContours.py';
-            $input_image = 'image_url';
+            $input_image = 'image_path';
             $outfile_image = 'outfile_path';
             $results_outfile = 'results_outfile_path';
-            @images = @image_urls;
         }
         if ($service eq 'count_sift') {
             $image_type_name = "image_analysis_sift";
@@ -132,7 +130,6 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
             $input_image = 'image_paths';
             $outfile_image = 'outfile_paths';
             $results_outfile = 'results_outfile_path';
-            @images = @image_files;
         }
 
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
@@ -148,7 +145,7 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
         my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
 
         my $it = 0;
-        foreach (@images) {
+        foreach (@image_files) {
             my $dir = $c->tempfiles_subdir('/'.$image_type_name);
             my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
             $archive_contours_temp_image .= '.png';
