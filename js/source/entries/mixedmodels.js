@@ -8,6 +8,47 @@ export function init(main_div){
   }  
 
     main_div.innerHTML = `
+
+	<style>
+	.factor {
+	    z-index:4;
+	    border-style:solid;
+	    border-radius:8px;
+	    width:200px;
+	    height:100;
+	    border-color:#337ab7;
+	    background-color:#337ab7;
+	    color:white;
+	    margin:4px
+	}
+        .factor_panel {
+	    min-height:100px;
+	    height:auto;
+	    margin-top:0px;
+	    border-style:dotted;
+	    border-width:5px;
+	    color:grey;
+	    background-color:lightyellow;
+	}
+        .factor_interaction_panel {
+	    border-style:dotted;
+	    border-width:0px;
+	    margin-top:20px;
+	    height:auto;
+	    z-index:1;
+	}
+        .model_bg {
+	    margin-left:30px;
+	    margin-right:30px;
+	    background-color:#DDEEEE;
+	    min-height:80px;
+	    padding-top:10px;
+	    padding-left:10px;
+	    padding-bottom:10px;
+	    border-radius:8px;
+	}
+	</style>
+    
 	<div class="container">
 	<div class="row">
 	<div class="col-md-6">
@@ -40,7 +81,7 @@ export function init(main_div){
 
          3. Build model
 	<hr />
-	<div style="margin-left:30px; margin-right:30px;background-color:#FFEEEE;min-height:80px;padding-top:10px;padding-left:10px; padding-bottom:10px;border-radius:8px">
+	<div class="model_bg" >
 	<div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold">[model will appear here in lme4 format]</div>
 	<button id="store_model_formula" class="btn btn-default btn-sm">Save model</button>
 	</div>
@@ -62,10 +103,13 @@ export function init(main_div){
               <div class="col-md-4">
                 <div  id="fixed_factors_panel" style="border-width:0;" class="panel panel-default">
 	           <div class="panel-header">Fixed factors</div>
-	           <div id="fixed_factors" class="panel-body" style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey"></div>
+	<div id="fixed_factors" class="panel-body factor_panel">
+
+    <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" --></div>
            
                 </div>
-	       <div id="interaction_factor_collection_panel" class="panel panel-default" style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" >
+	<div id="interaction_factor_collection_panel" class="panel panel-default factor_interaction_panel">
+    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" --> 
                    <div class="panel-header">
 	               Fixed factors with interaction<br />
                        <button  id="add_interaction_factor_button">add new interaction</button>
@@ -73,11 +117,13 @@ export function init(main_div){
 	           <div id="interaction_factors_collection" name="interaction_factors_collection" class="panel-body">
 	           </div>
                 </div>
-		<div id="variable_slope_intersect_collection_panel" class="panel panel-default" style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" >
+	<div id="variable_slope_intersect_collection_panel" class="panel panel-default factor_interaction_panel"> 
 
-	           <div class="panel-header">
-	              Fixed factors with variable slope/intersects<br />
-                      <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
+<!--    style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
+
+        <div class="panel-header">
+              Fixed factors with variable slope/intersects<br />
+              <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
 	            </div>
 	            <div id="variable_slope_intersect_collection" class="panel-body">
 	
@@ -87,7 +133,9 @@ export function init(main_div){
 	         <div style="height:30">&nbsp;</div>
                   <div id="random_factors_panel" class="panel panel-default" style="border-width:0px">
           	     <div class="panel-header">Random factors</div>
-	             <div id="random_factors" class="panel-body" style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey">          
+	<div id="random_factors" class="panel-body factor_panel">
+
+    <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" -->          
                      </div>
                    </div>
 	       </div>
@@ -100,27 +148,43 @@ export function init(main_div){
 
         <button style="position:relative;" id="run_mixed_model_button" class="btn btn-main">Go!</button>
 	<hr />
-	4. Results
+
+    4. Results
+
+	<table>
+	<tr><td>
+        Adjusted means 	     <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means" data-target="#save_analysis_dialog">Save adjusted means</button>
+        <div id="mixed_models_adjusted_means_results_div">
+	</td>
+	<td>&nbsp;&nbsp;</td>
+	<td>
+            BLUPs 	     <button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#save_analysis_dialog">Save BLUPs</button>
+        <div id="mixed_models_blup_results_div">
+        </td>
+	</tr>
+	</table>
     
-        BLUPs 	     <button id="store_blups_button" class="btn btn-primary" data-toggle="modal" data-target="#save_blup_dialog">Save BLUPs</button>
-        <div id="mixed_models_results_div">
 	[ go throught steps 1-3 first ]
 </div>
 
     </div>
 
-<div id="save_blup_dialog" class="modal fade">
+<div id="save_analysis_dialog" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
         <h4 class="modal-title">Save analysis results</h4>
-      </div>
-      <div class="modal-body">
-	<label for="analysis_name">Analysis name</label> <input id="analysis_name"></input><br />
-	<label for="analysis_description">Analysis description</label>
-        <textarea rows="4" cols="30" id="analysis_description"></textarea>
-      </div>
+	</div>
+	<div class="modal-body">
+	  <div class="form_group">
+   	    <label class="control-label" for="analysis_name">Analysis name</label> <input name="analysis_name" id="analysis_name" class="form-control" ></input><br />
+	    <label class="control-label" for="analysis_description">Analysis description</label>
+        <textarea name="analysis_description" rows="4" cols="30" class="form-control" id="analysis_description"></textarea>
+	<input type="hidden" name="analysis_file" id="analysis_file" />
+	<input type="hidden" name="analysis_dir" id="analysis_dir" value="mixedmodels" />
+	</div> <!-- form-group -->
+      </div> <!-- modal-body -->
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" id="save_blups_button" class="btn btn-primary">Save changes</button>
@@ -133,12 +197,44 @@ export function init(main_div){
     
     get_select_box("datasets", "mixed_model_dataset_select", {});
 
+    $('#save_analysis_dialog').on('show.bs.modal', function(e) {
+	var analysis_type = e.relatedTarget.dataset.analysis_type;
+	alert(analysis_type);
+	$('#analysis_type').val(analysis_type);
+    }); 
+    
     $('#save_blups_button').click( function() {
+	var name = $('#analysis_name').val();
+	var description = $('#description').val();
+	var file = $('#tempfile').html();
+	var basename = file.split('/').reverse()[0];
+	alert(basename);
+	jQuery.ajax( {
+	    'method' : 'POST',
+	    'url': '/ajax/analysis/store/file',
+	    'dir': 'mixedmodels',
+	    'data' : { 'file': basename,
+		       'dir' : 'mixedmodels',
+		       'analysis_name': name,
+		       'description' : description
+		     },
+	    'success' :	function(r) {
+		alert("Everything worked! Woohoo!" + file + " " +name);
+		return;
+	    },
+	    'error' : function(r) {
+		alert("ERRRRRRORRRRRR!!!"+r.error);
+		return;
+	    }
+	});
+    });
+
+    $('#save_adjusted_means_button').click( function() {
 	var name = $('#analysis_name').val();
 	var file = $('#tempfile').html();
 	alert("Everything worked! Woohoo!" + file + " " +name);
     });
-    
+
      $('#mixed_model_analysis_prepare_button').click( function() { 
        var dataset_id=$('#available_datasets').val();
        $.ajax({
@@ -152,8 +248,8 @@ export function init(main_div){
              $('#dependent_variable').html(r.dependent_variable);
              var html = "";
 
-             for (var n=0; n<r.factors.length; n++) { 
-                html += "<div style=\"z-index:4;border-style:solid;border-radius:8px;width:200px;height:100;border-color:#337ab7;background-color:#337ab7;color:white;margin:4px;text-align:center\" id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
+		 for (var n=0; n<r.factors.length; n++) { 
+                html += "<div id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
              }
              $('#factors').html(html);
 
@@ -230,7 +326,7 @@ export function init(main_div){
 
 	var div_name = div_prefix + factor_count;
 
-	var div = '<div id="'+div_name+'_panel" class="panel panel-default" style="border-width:0px"><div id="'+div_name+'_header" class="panel-header"><span id="close_interaction_div_'+factor_count+'" class="remove">X</span> '+collection_name+' Term '+factor_count+'</div><div id="'+div_name+'" class="panel-body interaction_factor_group" style="min-height:100px;height:auto;margin-top:0px;border-style:dotted;border-width:5px;color:grey;background-color:lightyellow;"></div></div>';
+	var div = '<div id="'+div_name+'_panel" class="panel panel-default" style="border-width:0px"><div id="'+div_name+'_header" class="panel-header"><span id="close_interaction_div_'+factor_count+'" class="remove">X</span> '+collection_name+' Term '+factor_count+'</div><div id="'+div_name+'" class="panel-body factor_panel" ></div></div>';
 
 	$('#'+collection_div).append(div);
 
@@ -310,10 +406,10 @@ export function init(main_div){
     $('#run_mixed_model_button').click( function() {
 	alert("RUNNING!");
        var model = $('#model_string').text();
-//	var fixed_factors = $('#fixed_factors').val();
-//	alert("FIXED:"+fixed_factors);
-//	var random_factors = $('#random_factors').val();
-//	alert("RANDOM:"+random_factors);
+	var fixed_factors = parse_simple_factors("fixed_factors");
+	alert("FIXED:"+fixed_factors);
+	var random_factors = parse_simple_factors("random_factors");;
+	alert("RANDOM:"+random_factors);
        //alert('Model: '+model);
        var tempfile = $('#tempfile').text();
        var dependent_variable = $('#dependent_variable_select').val();
@@ -325,13 +421,14 @@ export function init(main_div){
 	       "model" : model,
 	       "tempfile" : tempfile,
 	       "dependent_variable": dependent_variable,
-//	       "fixed_factors" : fixed_factors,
-//	       "random_factors" : random_factors
+	       "fixed_factors" : fixed_factors,
+	       "random_factors" : random_factors
 	   },
            "success": function(r) { 
                if (r.error) { alert(r.error);}
-               else{ 
-		   $('#mixed_models_results_div').html('<pre>' + r.html + '</pre>');
+               else{
+		   $('#mixed_models_adjusted_means_results_div').html('<pre>' + r.adjusted_means_html + '</pre>');
+		   $('#mixed_models_blup_results_div').html('<pre>' + r.blup_html+'</pre>');
                }
            },
            "error": function(r) { 

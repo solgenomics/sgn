@@ -137,14 +137,19 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $tempfile = $params->{tempfile};
     my $dependent_variable = $params->{dependent_variable};
     my $model  = $params->{model};
-    my $random_factors = $params->{random_factors}; # space separated list
-    my $fixed_factors = $params->{fixed_factors}; #   "
-
-    my @random_factors = split / +/,$random_factors;
-    my @fixed_factors = split / +/, $fixed_factors;
-
-    my $random_factors = '"'.join('","', @random_factors).'"';
-    my $fixed_factors = '"'.join('","',@fixed_factors).'"';
+    my $random_factors = $params->{'random_factors[]'}; #
+    if (!ref($random_factors)) {
+	$random_factors = [ $random_factors ];
+    }
+    my $fixed_factors = $params->{'fixed_factors[]'}; #   "
+    if (!ref($fixed_factors)) {
+	$fixed_factors = [ $fixed_factors ];
+    }
+    print STDERR "FIXED FACTOR = ".Dumper($fixed_factors);
+    print STDERR "RANDOM factors = ".Dumper($random_factors);
+    
+    my $random_factors = '"'.join('","', @$random_factors).'"';
+    my $fixed_factors = '"'.join('","',@$fixed_factors).'"';
     
     print STDERR "DV: $dependent_variable Model: $model TF: $tempfile.\n";
   
@@ -164,7 +169,6 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     # run r script to create model
     #
     my $cmd = "R CMD BATCH  '--args datafile=\"".$temppath."\" paramfile=\"".$temppath.".params\"' " . $c->config->{basepath} . "/R/mixed_models.R $temppath.out";
-    
     print STDERR "running R command $cmd...\n";
     system($cmd);
     print STDERR "Done.\n";
@@ -181,6 +185,11 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$lines = read_file($resultfile);
     }
 
+    my $blupfile = $temppath.".blups";
+
+    my $blups = read_file($blupfile);
+    
+    
     my $figure1file_response;
     my $figure2file_response;
     my $figure3file_response;
@@ -192,7 +201,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 #        figure2 => $figure2file_response,
 #        figure3 => $figure3file_response,
 #        figure4 => $figure4file_response,
-        html =>  $lines,
+        adjusted_means_html =>  $lines,
+	blup_html => $blups,
     };
 }
 

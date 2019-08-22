@@ -53,16 +53,21 @@ sub store_analysis_file_POST {
     my $dir = $c->req->param("dir"); # the dir under tempfiles/
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
-    
-    my $user_id = $c->user()->get_object()->sp_person_id();
-    
+    my $description = $c->req->param("description");
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    print STDERR "Storing analysis file: $dir / $file...\n";
+
     if (my $error = $self->check_user($c)) {
-	$c->stash->{error} = $error;
+	$c->stash->{error} = "Need to be logged in ($error)";
 	return;
     }
     
     my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $analysis_type, 'analysis_type');
-    if (! $analysis_type_row) { die "Provided analysis type does not exist in the database. Exiting." }
+    if (! $analysis_type_row) { 
+	$c->stash->{error} = "Provided analysis type does not exist in the database. Exiting.";
+	return;
+    }
     
     my @plots;
     my @stocks;
@@ -73,18 +78,22 @@ sub store_analysis_file_POST {
     push @traits, $analysis_type_id;
 
     my $fullpath = $c->tempfiles_base()."/".$dir."/".$file;
+
+    print STDERR "Reading analysis file path $fullpath...\n";
+    
     my @lines = slurp($file);
 
     foreach my $line (@lines) {
 	my ($acc, $value) = split /\t/, $line;
+	print STDERR "Reading data for $acc with value $value...\n";
 	my $plot_name = $analysis_name."_".$acc;
 	push @plots, $plot_name;
 	push @stocks, $acc;
         $values{$plot_name}->{$traits[0]} = $value;
     }
 
-    $self->store_data($c, \%values, $user_id);
-
+    print STDERR "Storing data...\n";
+    return $self->store_data($c, \%values, $user_id);
 }
 
 
@@ -93,12 +102,8 @@ sub store_data {
     my $c = shift;
 
     my $a = CXGN::Analysis->new( {bcs_schema=> $c->dbic("Bio::Chado::Schema") });
-
-
-    
     my ($verified_warning, $verified_error) = $a->store_analysis();
-    
-    
+       
     if ($verified_warning || $verified_error) {
 	$c->stash->{rest} = { warnings => $verified_warning, error => $verified_error };
 	return;
