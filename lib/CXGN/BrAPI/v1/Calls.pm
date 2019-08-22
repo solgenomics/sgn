@@ -80,7 +80,7 @@ sub calls {
 		['search/observationunits', ['json'], ['GET','POST'], ['1.3'] ],
 		['observationtables', ['json'], ['GET'], ['1.3'] ],
 		['search/observationtables', ['json'], ['GET','POST'], ['1.3'] ],
-		['traits', ['json'], ['GET'], ['1.0','1.2'] ],
+		['traits', ['json'], ['GET'], ['1.0','1.2','1.3'] ],
 		['traits', ['json'], ['POST'], ['1.3'] ],
 		['traits/{traitDbId}', ['json'], ['GET'], ['1.0','1.2'] ],
 		['traits/{traitDbId}', ['json'], ['PUT'], ['1.3'] ],
