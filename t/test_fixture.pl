@@ -66,9 +66,10 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-print STDERR Dumper($cfg);
+if ($verbose) { print STDERR Dumper($cfg); }
 my $db_user_password = $config->{dbpass};
-my $dbhost = $config->{dbhost} || 'localhost';
+my $dbhost = "localhost";
+eval { $dbhost = $config->{DatabaseConnection}->{sgn_test}->{dbhost} };
 my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
 print STDERR "Using $dbhost:$dbport\n";
