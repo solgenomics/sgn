@@ -65,7 +65,8 @@ sub patch {
             'phenotype_spreadsheet_associated_images',
             'image_analysis_contours',
             'image_analysis_sift',
-            'image_analysis_largest_contour'
+            'image_analysis_largest_contour',
+            'image_analysis_necrosis_solomon_nsumba'
         ]
     };
 

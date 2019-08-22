@@ -15,6 +15,7 @@ package SGN::Controller::AJAX::NecrosisImageAnalysis;
 use Moose;
 use Data::Dumper;
 use LWP::UserAgent;
+use LWP::Simple;
 use JSON;
 use SGN::Model::Cvterm;
 use DateTime;
@@ -86,8 +87,21 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
     my $server_endpoint;
     if ($service eq 'necrosis') {
         $server_endpoint = "http://18.219.45.102/necrosis/api2/";
-
         print STDERR $server_endpoint."\n";
+
+        my $image_type_name = "image_analysis_necrosis_solomon_nsumba";
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
+
+        my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
+        if (!$image_tag_id) {
+            my $image_tag = CXGN::Tag->new($schema->storage->dbh);
+            $image_tag->set_name($image_type_name);
+            $image_tag->set_description('Image analysis result image: '.$image_type_name);
+            $image_tag->set_sp_person_id($user_id);
+            $image_tag_id = $image_tag->store();
+        }
+        my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
+
         my $it = 0;
         foreach (@image_files) {
             my $resp = $ua->post(
@@ -103,6 +117,45 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
                 print STDERR Dumper $message_hash;
                 $message_hash->{original_image} = $image_urls[$it];
                 $result->[$it]->{result} = $message_hash;
+
+                my $project_id = $result->[$it]->{project_id};
+                my $stock_id = $result->[$it]->{stock_id};
+
+                my $dir = $c->tempfiles_subdir('/'.$image_type_name);
+                my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
+                $archive_temp_image .= '.png';
+
+                my $rc = getstore($message_hash->{image_link}, $archive_temp_image);
+                if (is_error($rc)) {
+                    die "getstore of ".$message_hash->{image_link}." failed with $rc";
+                }
+
+                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+                my $md5 = $image->calculate_md5sum($archive_temp_image);
+                my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                    JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+                    JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+                    WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.md5sum = '$md5';";
+                my $h = $schema->storage->dbh->prepare($q);
+                $h->execute();
+                my ($saved_image_id) = $h->fetchrow_array();
+                my $image_id;
+                if ($saved_image_id) {
+                    print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
+                    $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                    $image_id = $image->get_image_id();
+                }
+                else {
+                    $image->set_sp_person_id($user_id);
+                    my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
+                    if (!$ret ) {
+                        return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                    }
+                    print STDERR "Saved $archive_temp_image\n";
+                    my $stock_associate = $image->associate_stock($stock_id);
+                    $image_id = $image->get_image_id();
+                    my $added_image_tag_id = $image->add_tag($image_tag);
+                }
             }
             $it++;
         }
@@ -206,9 +259,9 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
             my $res = {
                 trait_name => $trait_name,
                 trait_value => $columns[0],
-                image_link => $main_production_site_url.$image->get_image_url("original")
+                image_link => $main_production_site_url.$image->get_image_url("original"),
+                original_image => $image_urls[$it]
             };
-            $res->{original_image} = $image_urls[$it];
             $result->[$it]->{result} = $res;
             $it++;
         }
