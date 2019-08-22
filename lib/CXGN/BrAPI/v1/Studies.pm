@@ -159,10 +159,10 @@ sub studies_search_retrieve {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $schema = $self->bcs_schema;
-	my @data_files;
+    my @data_files;
 
 	#create save object and retrieve search params from db
-    my $search_object = CXGN::BrAPI::Search->new({
+    my $search_object = CXGN::BrAPI::Search->new({ 
         tempfiles_subdir => $tempfiles_subdir,
         search_type => 'studies'
     });
