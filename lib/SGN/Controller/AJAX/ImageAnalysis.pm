@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::NecrosisImageAnalysis - a REST controller class to provide the
+SGN::Controller::AJAX::ImageAnalysis - a REST controller class to provide image analysis including
 functions for necrosis image analysis https://github.com/solomonnsumba/Necrosis-_Web_Server
 
 =head1 DESCRIPTION
@@ -10,7 +10,7 @@ functions for necrosis image analysis https://github.com/solomonnsumba/Necrosis-
 
 =cut
 
-package SGN::Controller::AJAX::NecrosisImageAnalysis;
+package SGN::Controller::AJAX::ImageAnalysis;
 
 use Moose;
 use Data::Dumper;
@@ -49,8 +49,8 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
 );
 
-sub necrosis_image_analysis_submit : Path('/ajax/necrosis_image_analysis/submit') : ActionClass('REST') { }
-sub necrosis_image_analysis_submit_POST : Args(0) {
+sub image_analysis_submit : Path('/ajax/image_analysis/submit') : ActionClass('REST') { }
+sub image_analysis_submit_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");

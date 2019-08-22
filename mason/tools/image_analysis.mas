@@ -5,7 +5,7 @@
 
 <& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
-<& /page/page_title.mas, title=>"Necrosis Image Analysis" &>
+<& /page/page_title.mas, title=>"Image Analysis" &>
 <hr>
 
 <div class="well well-sm">
@@ -87,7 +87,7 @@
     </div>
 </&>
 
-<&| /page/info_section.mas, title=>"Necrosis Image Analysis", collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"Image Analysis", collapsible => 1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -160,7 +160,7 @@ jQuery(document).ready(function(){
         }
 
         jQuery.ajax({
-            url: '/ajax/necrosis_image_analysis/submit',
+            url: '/ajax/image_analysis/submit',
             method: 'POST',
             data: {
                 'selected_image_ids': JSON.stringify(selected_image_ids),
