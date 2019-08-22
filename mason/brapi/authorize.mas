@@ -1,6 +1,6 @@
 <%args>
     # $logged_in_username
-    $success_url
+    $return_url
     $display_name
 </%args>
 
@@ -13,12 +13,12 @@
 </div>
 <div class="row">
     <img class="col-md-2 col-md-offset-5" src="/user/field-book/generate">
-</div> -->
+</div>
 
-<!--<div class="row center">
+<div class="row center">
     <p>Click the button below to authorize Field Book to access Breedbase</p>
-    <button class="btn btn-primary" onclick="window.location.replace('fieldbook://<% #$auth_token %>');">Authorize Field Book</button>
-</div>-->
+    <button class="btn btn-primary" onclick="window.location.replace('fieldbook://hello-world');">Authorize Field Book</button>
+</div> -->
 
 <div id="brapi-auth"></div>
 
@@ -30,6 +30,6 @@
 const domContainer = document.querySelector('#brapi-auth');
 ReactDOM.render(e(BrapiAuth, {
     appName: "<% $display_name %>",
-    successUrl: "<% $success_url %>"
+    returnUrl: "<% $return_url %>"
 }), domContainer);
 </script>

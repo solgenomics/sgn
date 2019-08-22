@@ -8,27 +8,34 @@ class BrapiAuth extends React.Component {
         this.state = {
             loggedIn: false,
             appName: props.appName,
-            successUrl: props.successUrl,
+            returnUrl: props.returnUrl,
             authToken: 'hello-world'
         };
     }
 
     render() {
         if (this.state.loggedIn) {
+            const allow = this.state.returnUrl + "?status=200&token=" + this.state.authToken;
+            const deny = this.state.returnUrl + "?status=401";
             return React.createElement("div", {
                 className: "row"
             }, React.createElement("div", {
                 className: "col-xs-12 col-md-4 col-md-offset-4"
-            }, React.createElement("p", null, this.state.appName + " would like to access BreedBase on your behalf."), React.createElement("p", null, this.state.appName + " will be able to:"), React.createElement("ul", null, React.createElement("li", null, "Read data on your behalf"), React.createElement("li", null, "Write data on your behalf")), React.createElement("div", null, React.createElement("button", {
+            }, React.createElement("p", null, this.state.appName + " would like to access Breedbase on your behalf."),
+                React.createElement("p", null, this.state.appName + " will be able to:"),
+                React.createElement("ul", null, React.createElement("li", null, "Read data on your behalf"),
+                    React.createElement("li", null, "Write data on your behalf")),
+                React.createElement("div", null, React.createElement("button", {
                 className: "btn btn-default",
                 id: "deny",
-                style: {"float":"left"}
+                style: {"float":"left"},
+                onClick: () => window.location.replace(deny)
             }, "Deny"), React.createElement("button", {
                 className: "btn btn-primary",
                 id: "allow",
                 name: "allow",
                 style: {"float":"right"},
-                onClick: () => window.location.replace(this.state.successUrl + this.state.authToken)
+                onClick: () => window.location.replace(allow)
             }, "Allow"))));
         }
 
