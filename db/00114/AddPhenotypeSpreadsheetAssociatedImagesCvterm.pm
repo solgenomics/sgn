@@ -64,7 +64,8 @@ sub patch {
         'project_md_image' => [
             'phenotype_spreadsheet_associated_images',
             'image_analysis_contours',
-            'image_analysis_sift'
+            'image_analysis_sift',
+            'image_analysis_largest_contour'
         ]
     };
 

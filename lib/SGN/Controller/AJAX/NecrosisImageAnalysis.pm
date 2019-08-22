@@ -107,7 +107,7 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
             $it++;
         }
     }
-    elsif ($service eq 'count_contours' || $service eq 'count_sift') {
+    elsif ($service eq 'count_contours' || $service eq 'count_sift' || $service eq 'largest_contour_percent') {
 
         my $image_type_name;
         my $trait_name;
@@ -119,6 +119,14 @@ sub necrosis_image_analysis_submit_POST : Args(0) {
             $image_type_name = "image_analysis_contours";
             $trait_name = "count_contours";
             $script = 'GetContours.py';
+            $input_image = 'image_path';
+            $outfile_image = 'outfile_path';
+            $results_outfile = 'results_outfile_path';
+        }
+        if ($service eq 'largest_contour_percent') {
+            $image_type_name = 'image_analysis_largest_contour';
+            $trait_name = 'percent_largest_contour';
+            $script = 'GetLargestContour.py';
             $input_image = 'image_path';
             $outfile_image = 'outfile_path';
             $results_outfile = 'results_outfile_path';

@@ -2,6 +2,7 @@
 package SGN::Controller::NecrosisImageAnalysis;
 
 use Moose;
+use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller' };
 

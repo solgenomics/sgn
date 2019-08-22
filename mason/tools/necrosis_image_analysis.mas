@@ -97,6 +97,7 @@
                         <select class="form-control" id="necrosis_image_analysis_service_select" name="necrosis_image_analysis_service_select">
                             <option value="necrosis">Necrosis</option>
                             <option value="count_contours">Count Contours</option>
+                            <option value="largest_contour_percent">Largest Contour Mask Percent</option>
                             <option value="count_sift">SIFT Feature Count</option>
                         </select>
                     </div>
