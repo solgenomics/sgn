@@ -51,6 +51,70 @@ has 'status' => (
 sub search {
     my $self = shift;
     my $inputs = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
+
+    my ($result, $status, $total_count) = search_results($inputs);
+
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+}
+
+sub search_save {
+    my $self = shift;
+    my $inputs = shift;
+    my $tempfiles_subdir = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
+
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'phenotypes'
+    });
+
+    my $save_id = $search_object->save($inputs);
+    my %result = ( searchResultsDbId => $save_id );
+
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+}
+
+sub search_retrieve {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
+    my $search_id = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
+
+
+    #create save object and retrieve search params from db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'phenotypes'
+    });
+
+    my $search_params = $search_object->retrieve($search_id);
+    my ($result, $status, $total_count) = search_results($search_params);
+
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+}
+
+sub search_results {
+    my $self = shift;
+    my $inputs = shift;
     my $data_level = $inputs->{data_level} || 'all';
     my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
     my $phenotype_min_value = $inputs->{phenotype_min_value};
@@ -139,10 +203,9 @@ sub search {
         };
         $total_count = $obs_unit->{full_count};
     }
-    my %result = (data=>\@data_window);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+
+    my %result = (data => \@data_window);
+    return (\%result, $status, $total_count);
 }
 
 sub search_table {

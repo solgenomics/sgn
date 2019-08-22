@@ -135,7 +135,6 @@ sub search_save {
 
 sub search_retrieve {
     my $self = shift;
-    my $search_params = shift;
     my $tempfiles_subdir = shift;
     my $search_id = shift;
     my $page_size = $self->page_size;

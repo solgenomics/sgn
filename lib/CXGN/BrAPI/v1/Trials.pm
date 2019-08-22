@@ -82,12 +82,12 @@ sub trials_search_save {
 
 sub trials_search_retrieve {
     my $self = shift;
-    my $search_params = shift;
+    my $tempfiles_subdir = shift;
+    my $search_id = shift;
     my $schema = $self->bcs_schema;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $tempfiles_subdir = shift;
-    my $search_id = shift;
+    
     my @data_files;
 
     #create save object and retrieve search params from db
