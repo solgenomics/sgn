@@ -104,7 +104,7 @@ sub germplasm_search_retrieve {
     });
 
     my $search_params = $search_object->retrieve($search_id);
-    my ($result, $status, $total_count) = search_results($search_params);
+    my ($result, $status, $total_count) = search_results($self, $search_params);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'search/germplasm result constructed');
