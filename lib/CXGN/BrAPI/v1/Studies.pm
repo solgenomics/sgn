@@ -122,6 +122,65 @@ sub studies_search {
     my $status = $self->status;
     my $schema = $self->bcs_schema;
     #my $auth = _authenticate_user($c);
+    my ($result, $status, $total_count) = search_results($search_params);
+
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies-search result constructed');
+}
+
+sub studies_search_save {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
+    my $search_params = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $schema = $self->bcs_schema;    
+    my @data_files;
+
+    #create save object and save search params in db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'studies'
+    });
+
+    my $save_id = $search_object->save($search_params);
+    my %result = ( searchResultsDbId => $save_id );
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies search result constructed');
+}
+
+sub studies_search_retrieve {
+    my $self = shift;
+    my $search_params = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $schema = $self->bcs_schema;
+	my @data_files;
+
+	#create save object and retrieve search params from db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'studies'
+    });
+
+    my $search_params = $search_object->retrieve($search_id);
+    my ($result, $status, $total_count) = search_results($search_params);
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies search result constructed');
+}
+
+sub search_results {
+    my $self = shift;
+    my $search_params = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $schema = $self->bcs_schema;
 
     my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
     my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
@@ -190,9 +249,7 @@ sub studies_search {
     }
 
     my %result = (data=>\@data_out);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies-search result constructed');
+    return (\%result, $status, $total_count);
 }
 
 sub studies_germplasm {
