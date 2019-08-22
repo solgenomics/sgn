@@ -9,6 +9,7 @@ use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::Search;
 use CXGN::Cross;
 
 has 'bcs_schema' => (
@@ -116,6 +117,7 @@ sub search_results {
     my $page = $self->page;
     my $status = $self->status;
 
+    my @crop_names = $search_params->{commonCropName} ? @{$search_params->{commonCropName}} : ();
     my @germplasm_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
     my @accession_numbers = $search_params->{accessionNumber} ? @{$search_params->{accessionNumber}} : ();
     my @genus = $search_params->{germplasmGenus} ? @{$search_params->{germplasmGenus}} : ();
@@ -167,6 +169,7 @@ sub search_results {
         uniquename_list=>\@germplasm_names,
         genus_list=>\@genus,
         species_list=>\@species,
+        crop_name_list=>\@crop_names,
         stock_id_list=>\@germplasm_ids,
         stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,

@@ -18,12 +18,12 @@ use Digest::MD5;
 use File::Slurp;
 
 has 'tempfiles_subdir' => (
-    isa => '[Str]',
+    isa => 'Str',
     is => 'rw',
 );
 
 has 'search_type' => (
-    isa => '[Str]',
+    isa => 'Str',
     is => 'rw',
 );
 
@@ -40,8 +40,8 @@ has 'search_id' => (
 sub BUILD {
 	my $self = shift;
 	my $search_type = $self->search_type;
-    #add types as they are implemented
-    my @allowed_types = ['germplasm'];
+    
+    my @allowed_types = ('germplasm','studies'); #add more types as they are implemented
     my %allowed_types = map { $_ => 1 } @allowed_types;
 
 	unless (exists($allowed_types{$search_type})){
@@ -53,6 +53,7 @@ sub save {
 	my $self = shift;
 	my $search_params = shift;
     my $dir = $self->tempfiles_subdir();
+    my $search_json = encode_json($search_params);
 
     #get md5 hash as id
     my $md5 = Digest::MD5->new();
@@ -61,7 +62,7 @@ sub save {
 
     #write to tmp file with id as name
     open my $fh, ">", $dir . "/" . $search_id;
-    print $fh encode_json($search_params);
+    print $fh $search_json;
     close $fh;
 
     return $search_id;

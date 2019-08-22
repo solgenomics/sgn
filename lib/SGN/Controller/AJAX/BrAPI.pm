@@ -530,11 +530,7 @@ sub germplasm_list_POST {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-
-
-sub germplasm_list_new  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
-
-sub germplasm_list_new_GET {
+sub germplasm_search  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -543,50 +539,46 @@ sub germplasm_list_new_GET {
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
     my $brapi_package_result = $brapi_module->germplasm_search({
         germplasmName => $clean_inputs->{germplasmName},
-        accessionNumber => $clean_inputs->{accessionNumber},
-        germplasmGenus => $clean_inputs->{germplasmGenus},
-        germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
-        germplasmSpecies => $clean_inputs->{germplasmSpecies},
         germplasmDbId => $clean_inputs->{germplasmDbId},
         germplasmPUI => $clean_inputs->{germplasmPUI},
-        matchMethod => $clean_inputs->{matchMethod},
+        commonCropName => $clean_inputs->{commonCropName}
     });
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_list_cached  : Chained('brapi') PathPart('search/germplasm') Args(0) : ActionClass('REST') { }
-
-sub germplasm_list_cached_GET {
+sub germplasm_search_retrieve  : Chained('brapi') PathPart('search/germplasm') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
+    my $search_id = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $tempfiles_subdir = $c->config->{basepath}."/".$c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->germplasm_search_retrieve( $tempfiles_subdir, $clean_inputs->{searchResultsDbId} );
+    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
+    my $brapi_package_result = $brapi_module->germplasm_search_retrieve( $tempfiles_subdir, $search_id );
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_list_cached_POST {
+sub germplasm_search_save  : Chained('brapi') PathPart('search/germplasm') Args(0) : ActionClass('REST') { }
+
+sub germplasm_search_save_POST {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $tempfiles_subdir = $c->config->{basepath}."/".$c->tempfiles_subdir('brapi_searches');
+    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
     my $brapi_package_result = $brapi_module->germplasm_search_save(
         $tempfiles_subdir,
         {
             germplasmName => $clean_inputs->{germplasmNames},
             accessionNumber => $clean_inputs->{accessionNumbers},
+            commonCropName => $clean_inputs->{commonCropNames},
             germplasmGenus => $clean_inputs->{germplasmGenus},
-            germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
             germplasmSpecies => $clean_inputs->{germplasmSpecies},
             germplasmDbId => $clean_inputs->{germplasmDbIds},
-            germplasmPUI => $clean_inputs->{germplasmPUIs},
-            matchMethod => $clean_inputs->{matchMethod},
+            germplasmPUI => $clean_inputs->{germplasmPUIs}
         }
     );
     _standard_response_construction($c, $brapi_package_result);
