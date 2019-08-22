@@ -109,7 +109,7 @@ sub search {
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     my @data_files;
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Sample search result constructed');
 }
 
 sub search_save {
@@ -140,7 +140,7 @@ sub search_retrieve {
     my $search_id = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $status = $self->status;
+
 
     #create save object and retrieve search params from db
     my $search_object = CXGN::BrAPI::Search->new({
@@ -153,7 +153,7 @@ sub search_retrieve {
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     my @data_files;
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Sample search result constructed');
 }
 
 sub search_results {
@@ -175,7 +175,7 @@ sub search_results {
     my @accession_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
     my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbId}} : ();
     my @obs_names = $search_params->{observationUnitName} ? @{$search_params->{observationUnitName}} : ();
-    
+
     my $sample_search = CXGN::Stock::TissueSample::Search->new({
         bcs_schema=>$self->bcs_schema,
         tissue_sample_db_id_list => \@tissue_ids,

@@ -530,7 +530,9 @@ sub germplasm_list_POST {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_search  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') {
+sub germplasm_search  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+
+sub germplasm_search_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -543,19 +545,6 @@ sub germplasm_search  : Chained('brapi') PathPart('germplasm') Args(0) : ActionC
         germplasmPUI => $clean_inputs->{germplasmPUI},
         commonCropName => $clean_inputs->{commonCropName}
     });
-    _standard_response_construction($c, $brapi_package_result);
-}
-
-sub germplasm_search_retrieve  : Chained('brapi') PathPart('search/germplasm') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $search_id = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->germplasm_search_retrieve( $tempfiles_subdir, $search_id );
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -584,9 +573,18 @@ sub germplasm_search_save_POST {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-
-
-
+sub germplasm_search_retrieve  : Chained('brapi') PathPart('search/germplasm') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
+    my $brapi_package_result = $brapi_module->germplasm_search_retrieve( $tempfiles_subdir, $search_id );
+    _standard_response_construction($c, $brapi_package_result);
+}
 
 =head2 brapi/v1/germplasm/{id}
 

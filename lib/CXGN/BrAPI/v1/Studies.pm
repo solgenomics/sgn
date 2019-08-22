@@ -119,14 +119,14 @@ sub studies_search {
     my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $status = $self->status;
+    #my $status = $self->status;
     my $schema = $self->bcs_schema;
     #my $auth = _authenticate_user($c);
     my ($result, $status, $total_count) = search_results($search_params);
 
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies-search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies-search result constructed');
 }
 
 sub studies_search_save {
@@ -136,7 +136,7 @@ sub studies_search_save {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $schema = $self->bcs_schema;    
+    my $schema = $self->bcs_schema;
     my @data_files;
 
     #create save object and save search params in db
@@ -146,19 +146,18 @@ sub studies_search_save {
     });
 
     my $save_id = $search_object->save($search_params);
-    my %result = ( searchResultsDbId => $save_id );
+    my $result = ( searchResultsDbId => $save_id );
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');
 }
 
 sub studies_search_retrieve {
     my $self = shift;
-    my $search_params = shift;
+    my $tempfiles_subdir = shift;
     my $search_id = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $status = $self->status;
     my $schema = $self->bcs_schema;
 	my @data_files;
 
@@ -172,7 +171,7 @@ sub studies_search_retrieve {
     my ($result, $status, $total_count) = search_results($search_params);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');
 }
 
 sub search_results {
@@ -523,7 +522,7 @@ sub studies_layout {
             my $image_id = CXGN::Stock->new({
     			schema => $self->bcs_schema,
     			stock_id => $design->{$plot_number}->{plot_id},
-    		}); 
+    		});
     		my @plot_image_ids = $image_id->get_image_ids();
             my @ids;
             foreach my $arrayimage (@plot_image_ids){
@@ -532,7 +531,7 @@ sub studies_layout {
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
-             
+
 			$formatted_plot = {
 				studyDbId => $study_id,
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
@@ -551,7 +550,7 @@ sub studies_layout {
             $window_count++;
 		}
 		$count++;
-	} 
+	}
 	my %result;
     my @data_files;
     if ($format eq 'json'){

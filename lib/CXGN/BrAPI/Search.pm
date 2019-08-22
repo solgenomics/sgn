@@ -77,7 +77,7 @@ sub retrieve {
 
     # check if file exists, if it does retrive and return contents
     if (-e $filename) {
-        $search_json = read_file( 'input.txt' ) ;
+        $search_json = read_file($filename) ;
     }
     my $search_params = decode_json($search_json);
     return $search_params;

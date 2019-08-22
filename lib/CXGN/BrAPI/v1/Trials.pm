@@ -54,7 +54,7 @@ sub trials_search {
     my ($result, $status, $total_count) = search_results($search_params);
 
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
 }
 
 sub trials_search_save {
@@ -74,10 +74,10 @@ sub trials_search_save {
     });
 
     my $save_id = $search_object->save($search_params);
-    my %result = ( searchResultsDbId => $save_id );
+    my $result = ( searchResultsDbId => $save_id );
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$self->page_size,$self->page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $self->status, 'Trials search result constructed');
 }
 
 sub trials_search_retrieve {
@@ -100,7 +100,7 @@ sub trials_search_retrieve {
     my ($result, $status, $total_count) = search_results($search_params);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $self->status, 'Trials search result constructed');
 }
 
 sub search_results {
@@ -108,6 +108,7 @@ sub search_results {
     my $search_params = shift;
     my $schema = $self->bcs_schema;
     my $data;
+    my $status = $self->status();
     #my $auth = _authenticate_user($c);
 
     my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
