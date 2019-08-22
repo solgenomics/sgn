@@ -41,7 +41,7 @@ sub BUILD {
 	my $self = shift;
 	my $search_type = $self->search_type;
 
-    my @allowed_types = ('germplasm','studies','samples','trials','phenotypes'); #add more types as they are implemented
+    my @allowed_types = ('germplasm','studies','samples','trials','observationunits','observationtables'); #add more types as they are implemented
     my %allowed_types = map { $_ => 1 } @allowed_types;
 
 	unless (exists($allowed_types{$search_type})){

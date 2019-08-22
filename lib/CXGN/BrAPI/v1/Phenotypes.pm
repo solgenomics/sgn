@@ -47,44 +47,40 @@ has 'status' => (
 	required => 1,
 );
 
-
 sub search {
     my $self = shift;
-    my $inputs = shift;
+    my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
-
-    my ($result, $status, $total_count) = search_results($inputs);
-
     my @data_files;
+
+    my ($result, $status, $total_count) = execute_search($search_params);
+
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
 }
 
 sub search_save {
     my $self = shift;
-    my $inputs = shift;
     my $tempfiles_subdir = shift;
+    my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
+    my @data_files;
 
+    #create save object and save search params in db
     my $search_object = CXGN::BrAPI::Search->new({
         tempfiles_subdir => $tempfiles_subdir,
-        search_type => 'phenotypes'
+        search_type => 'observationunits'
     });
 
-    my $save_id = $search_object->save($inputs);
+    my $save_id = $search_object->save($search_params);
     my %result = ( searchResultsDbId => $save_id );
 
-    my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'search/observationunits result constructed');
 }
 
 sub search_retrieve {
@@ -94,39 +90,41 @@ sub search_retrieve {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
-
+    my @data_files;
 
     #create save object and retrieve search params from db
     my $search_object = CXGN::BrAPI::Search->new({
         tempfiles_subdir => $tempfiles_subdir,
-        search_type => 'phenotypes'
+        search_type => 'observationunits'
     });
 
     my $search_params = $search_object->retrieve($search_id);
-    my ($result, $status, $total_count) = search_results($search_params);
+    my ($result, $total_count) = execute_search($self, $search_params);
 
-    my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'search/observationunits result constructed');
 }
 
-sub search_results {
+sub execute_search {
     my $self = shift;
-    my $inputs = shift;
-    my $data_level = $inputs->{data_level} || 'all';
-    my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
-    my $phenotype_min_value = $inputs->{phenotype_min_value};
-    my $phenotype_max_value = $inputs->{phenotype_max_value};
-    my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
-    my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
-    my @study_ids_array = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
-    my @location_ids_array = $inputs->{location_ids} ? @{$inputs->{location_ids}} : ();
-    my @years_array = $inputs->{years} ? @{$inputs->{years}} : ();
+    my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $status = $self->status;
+
+    my $data_level = $search_params->{data_level} || 'all';
+    my $exclude_phenotype_outlier = $search_params->{exclude_phenotype_outlier} || 0;
+    my $phenotype_min_value = $search_params->{phenotype_min_value};
+    my $phenotype_max_value = $search_params->{phenotype_max_value};
+    my $start_time = $search_params->{start_time};
+    my $end_time = $search_params->{end_time};
+    my @trait_ids_array = $search_params->{trait_ids} ? @{$search_params->{trait_ids}} : ();
+    my @accession_ids_array = $search_params->{accession_ids} ? @{$search_params->{accession_ids}} : ();
+    my @study_ids_array = $search_params->{study_ids} ? @{$search_params->{study_ids}} : ();
+    my @location_ids_array = $search_params->{location_ids} ? @{$search_params->{location_ids}} : ();
+    my @years_array = $search_params->{years} ? @{$search_params->{years}} : ();
+    my @program_ids_array = $search_params->{program_ids} ? @{$search_params->{program_ids}} : ();
+    my @folder_ids_array = $search_params->{folder_ids} ? @{$search_params->{folder_ids}} : ();
+
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
@@ -136,6 +134,8 @@ sub search_results {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level,
             trial_list=>\@study_ids_array,
+            program_list=>\@program_ids_array,
+            folder_list=>\@folder_ids_array,
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
             year_list=>\@years_array,
@@ -158,6 +158,8 @@ sub search_results {
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
+            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
+            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
             push @brapi_observations, {
                 observationDbId => qq|$_->{phenotype_id}|,
                 observationVariableDbId => qq|$_->{trait_id}|,
@@ -203,24 +205,82 @@ sub search_results {
         };
         $total_count = $obs_unit->{full_count};
     }
-
-    my %result = (data => \@data_window);
-    return (\%result, $status, $total_count);
+    my %result = (data=>\@data_window);
+    return (\%result, $total_count);
 }
 
 sub search_table {
     my $self = shift;
-    my $inputs = shift;
-    my $data_level = $inputs->{data_level} || 'all';
-    my $exclude_phenotype_outlier = $inputs->{exclude_phenotype_outlier} || 0;
-    my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
-    my @accession_ids_array = $inputs->{accession_ids} ? @{$inputs->{accession_ids}} : ();
-    my @study_ids_array = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
-    my @location_ids_array = $inputs->{location_ids} ? @{$inputs->{location_ids}} : ();
-    my @years_array = $inputs->{years} ? @{$inputs->{years}} : ();
+    my $search_params = shift;
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my @data_files;
+
+    my ($result, $status, $total_count) = execute_search_table($search_params);
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
+}
+
+sub search_table_save {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
+    my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my @data_files;
+
+    #create save object and save search params in db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'observationtables'
+    });
+
+    my $save_id = $search_object->save($search_params);
+    my %result = ( searchResultsDbId => $save_id );
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'search/observationtables result constructed');
+}
+
+sub search_table_retrieve {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
+    my $search_id = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my @data_files;
+
+    #create save object and retrieve search params from db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'observationtables'
+    });
+
+    my $search_params = $search_object->retrieve($search_id);
+    my ($result, $status, $total_count) = execute_search_table($self, $search_params);
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'search/observationtables result constructed');
+}
+
+sub execute_search_table {
+    my $self = shift;
+    my $search_params = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my $data_level = $search_params->{data_level} || 'all';
+    my $exclude_phenotype_outlier = $search_params->{exclude_phenotype_outlier} || 0;
+    my @trait_ids_array = $search_params->{trait_ids} ? @{$search_params->{trait_ids}} : ();
+    my @accession_ids_array = $search_params->{accession_ids} ? @{$search_params->{accession_ids}} : ();
+    my @study_ids_array = $search_params->{study_ids} ? @{$search_params->{study_ids}} : ();
+    my @location_ids_array = $search_params->{location_ids} ? @{$search_params->{location_ids}} : ();
+    my @years_array = $search_params->{years} ? @{$search_params->{years}} : ();
+
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$self->bcs_schema,
@@ -270,8 +330,7 @@ sub search_table {
         data=>\@data_window
     );
 
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
+    return (\%result, $status, $total_count);
 }
 
 sub search_table_csv_or_tsv {

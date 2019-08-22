@@ -13,6 +13,8 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         data_level=>$data_level,
         trait_list=>$trait_list,
         trial_list=>$trial_list,
+        program_list=>$program_list,
+        folder_list=>$folder_list,
         year_list=>$year_list,
         location_list=>$location_list,
         accession_list=>$accession_list,
@@ -61,6 +63,16 @@ has 'data_level' => (
 );
 
 has 'trial_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'program_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'folder_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -179,6 +191,14 @@ sub search {
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
         push @where_clause, "trial_id in ($trial_sql)";
+    }
+    if ($self->program_list && scalar(@{$self->program_list})>0) {
+        my $program_sql = _sql_from_arrayref($self->program_list);
+        push @where_clause, "breeding_program_id in ($program_sql)";
+    }
+    if ($self->folder_list && scalar(@{$self->folder_list})>0) {
+        my $folder_sql = _sql_from_arrayref($self->folder_list);
+        push @where_clause, "folder_id in ($folder_sql)";
     }
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $arrayref = $self->accession_list;
