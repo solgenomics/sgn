@@ -55,21 +55,21 @@ has 'status' => (
 
 sub germplasm_search {
     my $self = shift;
-    my $search_params = shift;
+    my $params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my @data_files;
 
-    my @crop_names = $search_params->{commonCropName} ? @{$search_params->{commonCropName}} : ();
-    my @germplasm_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
-    my @accession_numbers = $search_params->{accessionNumber} ? @{$search_params->{accessionNumber}} : ();
-    my @genus = $search_params->{germplasmGenus} ? @{$search_params->{germplasmGenus}} : ();
-    my $subtaxa = $search_params->{germplasmSubTaxa}->[0];
-    my @species = $search_params->{germplasmSpecies} ? @{$search_params->{germplasmSpecies}} : ();
-    my @germplasm_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbId}} : ();
-    my @germplasm_puis = $search_params->{germplasmPUI} ? @{$search_params->{germplasmPUI}} : ();
-    my $match_method = $search_params->{matchMethod}->[0] || 'wildcard';
+    my @crop_names = $params->{commonCropName} || ($params->{commonCropNames} || ();
+    my @germplasm_names = $params->{germplasmName} || ($params->{germplasmNames} || ();
+    my @accession_numbers = $params->{accessionNumber} || ($params->{accessionNumbers} || ();
+    my @genera = $params->{germplasmGenus} || ($params->{germplasmGenera} || ();
+    my @germplasm_ids  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ();
+    my @germplasm_puis = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ();
+    my @species = $params->{germplasmSpecies} || ();
+    my $subtaxa = $params->{germplasmSubTaxa}->[0];
+    my $match_method = $params->{matchMethod}->[0] || 'exact';
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
@@ -111,7 +111,7 @@ sub germplasm_search {
         phenome_schema=>$self->phenome_schema,
         match_type=>$match_type,
         uniquename_list=>\@germplasm_names,
-        genus_list=>\@genus,
+        genus_list=>\@genera,
         species_list=>\@species,
         crop_name_list=>\@crop_names,
         stock_id_list=>\@germplasm_ids,
@@ -163,7 +163,7 @@ sub germplasm_search {
 
     my %result = (data => \@data);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm-search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-search result constructed');
 }
 
 sub germplasm_detail {

@@ -553,37 +553,14 @@ sub germplasm_search_save  : Chained('brapi') PathPart('search/germplasm') Args(
 sub germplasm_search_save_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $search_params = {
-        germplasmName => $clean_inputs->{germplasmNames},
-        accessionNumber => $clean_inputs->{accessionNumbers},
-        commonCropName => $clean_inputs->{commonCropNames},
-        germplasmGenus => $clean_inputs->{germplasmGenus},
-        germplasmSpecies => $clean_inputs->{germplasmSpecies},
-        germplasmDbId => $clean_inputs->{germplasmDbIds},
-        germplasmPUI => $clean_inputs->{germplasmPUIs}
-    };
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi = $self->brapi_module;
-    my $search_module = $brapi->brapi_wrapper('Search');
-    my $brapi_package_result = $search_module->save_search($tempfiles_subdir, $search_params);
-    _standard_response_construction($c, $brapi_package_result);
+    save_search($self,$c,$c->stash->{clean_inputs});
 }
 
 sub germplasm_search_retrieve  : Chained('brapi') PathPart('search/germplasm') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi = $self->brapi_module;
-    my $search_module = $brapi->brapi_wrapper('Search');
-    my $search_params = $search_module->retrieve_search($tempfiles_subdir, $search_id);
-    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->germplasm_search($search_params);
-    _standard_response_construction($c, $brapi_package_result);
+    retrieve_search($self, $c, $search_id, 'Germplasm');
 }
 
 =head2 brapi/v1/germplasm/{id}
@@ -2051,18 +2028,9 @@ sub phenotypes_search_POST {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-    my $brapi_package_result = $brapi_module->search({
-        trait_ids => $clean_inputs->{observationVariableDbIds},
-        accession_ids => $clean_inputs->{germplasmDbIds},
-        study_ids => $clean_inputs->{studyDbIds},
-        location_ids => $clean_inputs->{locationDbIds},
-        years => $clean_inputs->{seasonDbIds},
-        data_level => $clean_inputs->{observationLevel}->[0],
-        exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
-    });
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2070,19 +2038,9 @@ sub phenotypes_search_GET {
 	my $self = shift;
 	my $c = shift;
     my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-    my $brapi_package_result = $brapi_module->search({
-        trait_ids => $clean_inputs->{observationVariableDbId},
-        accession_ids => $clean_inputs->{germplasmDbId},
-        study_ids => $clean_inputs->{studyDbId},
-        location_ids => $clean_inputs->{locationDbId},
-        years => $clean_inputs->{seasonDbId},
-        data_level => $clean_inputs->{observationLevel}->[0],
-        search_type => $clean_inputs->{search_type}->[0],
-        exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
-    });
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2091,40 +2049,14 @@ sub observation_units_search_save : Chained('brapi') PathPart('search/observatio
 sub observation_units_search_save_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->search_save({
-        $tempfiles_subdir,
-        {
-            accession_ids => $clean_inputs->{germplasmDbIds},
-            location_ids => $clean_inputs->{locationDbIds},
-            data_level => $clean_inputs->{observationLevel}->[0],
-            end_time => $clean_inputs->{observationTimeStampRangeEnd},
-            start_time => $clean_inputs->{observationTimeStampRangeStart},
-            trait_ids => $clean_inputs->{observationVariableDbIds},
-            program_ids => $clean_inputs->{programDbIds},
-            years => $clean_inputs->{seasonDbIds},
-            study_ids => $clean_inputs->{studyDbIds},
-            folder_ids => $clean_inputs->{trialDbIds}
-        }
-    });
-    _standard_response_construction($c, $brapi_package_result);
+    save_search($self,$c,$c->stash->{clean_inputs});
 }
 
 sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/observationunits') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->search_retrieve({ $tempfiles_subdir, $search_id });
-    _standard_response_construction($c, $brapi_package_result);
+    retrieve_search($self, $c, $search_id, 'ObservationUnits');
 }
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
@@ -2147,17 +2079,8 @@ sub process_phenotypes_search_table {
 	my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-	my $brapi_package_result = $brapi_module->search_table({
-		trait_ids => $clean_inputs->{observationVariableDbIds},
-		accession_ids => $clean_inputs->{germplasmDbIds},
-		study_ids => $clean_inputs->{studyDbIds},
-		location_ids => $clean_inputs->{locationDbIds},
-		years => $clean_inputs->{seasonDbIds},
-		data_level => $clean_inputs->{observationLevel}->[0],
-		search_type => $clean_inputs->{search_type}->[0],
-		exclude_phenotype_outlier => $clean_inputs->{exclude_phenotype_outlier}->[0],
-	});
+	my $brapi_module = $brapi->brapi_wrapper('ObservationTables');
+	my $brapi_package_result = $brapi_module->search_table($c->stash->{clean_inputs});
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2166,40 +2089,14 @@ sub observation_tables_search_save : Chained('brapi') PathPart('search/observati
 sub observation_tables_search_save_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->search_table_save({
-        $tempfiles_subdir,
-        {
-            accession_ids => $clean_inputs->{germplasmDbIds},
-            location_ids => $clean_inputs->{locationDbIds},
-            data_level => $clean_inputs->{observationLevel}->[0],
-            end_time => $clean_inputs->{observationTimeStampRangeEnd},
-            start_time => $clean_inputs->{observationTimeStampRangeStart},
-            trait_ids => $clean_inputs->{observationVariableDbIds},
-            program_ids => $clean_inputs->{programDbIds},
-            years => $clean_inputs->{seasonDbIds},
-            study_ids => $clean_inputs->{studyDbIds},
-            folder_ids => $clean_inputs->{trialDbIds}
-        }
-    });
-    _standard_response_construction($c, $brapi_package_result);
+    save_search($self,$c,$c->stash->{clean_inputs});
 }
 
 sub observation_tables_search_retrieve  : Chained('brapi') PathPart('search/observationtables') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->search_table_retrieve({ $tempfiles_subdir, $search_id });
-    _standard_response_construction($c, $brapi_package_result);
+    retrieve_search($self, $c, $search_id, 'ObservationTables');
 }
 
 sub phenotypes_search_csv : Chained('brapi') PathPart('phenotypes-search/csv') Args(0) : ActionClass('REST') { }
@@ -3030,6 +2927,34 @@ sub observations_search_process {
         observationVariableDbIds => $clean_inputs->{observationVariableDbIds}
 	});
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub save_search {
+    my $self = shift;
+    my $c = shift;
+    my $search_params = shift;
+    my $auth = _authenticate_user($c);
+    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
+    my $brapi = $self->brapi_module;
+    my $search_module = $brapi->brapi_wrapper('Search');
+    my $brapi_package_result = $search_module->save_search($tempfiles_subdir,$search_params);
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub retrieve_search {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    my $search_type = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
+    my $brapi = $self->brapi_module;
+    my $search_module = $brapi->brapi_wrapper('Search');
+    my $search_params = $search_module->retrieve_search($tempfiles_subdir, $search_id);
+    my $brapi_module = $brapi->brapi_wrapper($search_type);
+    my $brapi_package_result = $brapi_module->search({$search_params});
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 1;
