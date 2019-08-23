@@ -657,7 +657,7 @@ sub add_individual_cross {
 
     #check that cross name does not already exist
     if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
-        $c->stash->{rest} = {error =>  "cross name already exists." };
+        $c->stash->{rest} = {error =>  "Cross Unique ID already exists." };
         return 0;
     }
 

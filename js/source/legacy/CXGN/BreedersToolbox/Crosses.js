@@ -150,7 +150,7 @@ jQuery(document).ready(function($) {
         var crossName = $("#cross_name").val();
         crossName = crossName.trim();
         if (!crossName) {
-            alert("A cross name is required");
+            alert("A cross unique id is required");
             return;
         }
 
@@ -329,7 +329,7 @@ jQuery(document).ready(function($) {
                 'female_plot': female_plot,
                 'male_plot': male_plot,
                 'cross_combination': cross_combination,
-            },  
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },

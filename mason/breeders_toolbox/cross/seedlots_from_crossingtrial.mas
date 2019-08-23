@@ -20,7 +20,7 @@ jQuery(document).ready(function(){
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial',
 
             columns: [
-                { title: "Cross Name", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
                 { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
                     if (row.seedlot_id === null){
                         return 'No Seedlot'
