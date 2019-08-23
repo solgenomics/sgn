@@ -205,7 +205,7 @@ sub _validate_with_plugin {
     my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following accessions or populations are not in the database or are not in the database as uniquenames: ".join(',',@parents_missing);
+        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
         $errors{'missing_accessions'} = \@parents_missing;
     }
 
