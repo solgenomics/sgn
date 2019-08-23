@@ -81,11 +81,11 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     
         $self->gebv_rel_weights($c, $rel_wts);         
         $self->calc_selection_index($c);
-         
-        my $geno = $c->controller('solGS::solGS')->tohtml_genotypes($c);
+	
+	my $ranked_genos = $c->stash->{top_10_selection_indices};
+        my $geno = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($ranked_genos);
         
-        my $link         = $c->stash->{ranked_genotypes_download_url};             
-        my $ranked_genos = $c->stash->{top_10_selection_indices};
+        my $link         = $c->stash->{ranked_genotypes_download_url};                    
         my $index_file   = $c->stash->{selection_index_only_file};
        
         $ret->{status} = 'No GEBV values to rank.';
@@ -165,8 +165,7 @@ sub get_top_10_selection_indices {
 
 sub gebv_rel_weights {
     my ($self, $c, $rel_wts) = @_;
-      
-   
+         
     my @si_id;
     my $rel_wts_txt = "trait" . "\t" . 'relative_weight' . "\n";
     
