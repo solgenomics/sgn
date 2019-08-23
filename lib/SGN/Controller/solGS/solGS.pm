@@ -1614,23 +1614,15 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
 
 sub convert_to_arrayref_of_arrays {
     my ($self, $c, $file) = @_;
-
-    open my $fh, $file or die "couldnot open $file: $!";    
-    
-    my @data;   
-    while (<$fh>)
-    {
-        push @data,  map { [ split(/\t/) ]  } $_ if $_;
-    }
+ 
+    my @lines = read_file($file); 
+    shift(@lines); 
    
-    if (@data) 
-    {
-	shift(@data);
-	return \@data;
-    } else 
-    {
-	return;
-    }    
+    my @data; 
+    push @data,  map { [ split(/\t/), $_ ]  } @lines;
+      
+    return \@data;
+
 }
 
 
@@ -2603,20 +2595,6 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     $c->res->content_type('application/json');
     $c->res->body($ret);
 
-}
-
-
-sub tohtml_genotypes {
-    my ($self, $c) = @_;
-  
-    my $genotypes = $c->stash->{top_10_selection_indices};
-    my %geno = ();
-
-    foreach (@$genotypes)
-    {
-        $geno{$_->[0]} = $_->[1];
-    }
-    return \%geno;
 }
 
 
