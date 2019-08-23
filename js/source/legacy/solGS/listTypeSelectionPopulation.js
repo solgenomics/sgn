@@ -16,12 +16,18 @@ JSAN.use("jquery.blockUI");
 jQuery(document).ready( function() {
     var list = new CXGN.List();
     var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
-    var relevant =[]; 	
+    var relevant =[];
+
+    var dType = ['accessions']; 
+    var dMenu = solGS.dataset.getDatasetsMenu(dType);
         
     if (listMenu.match(/option/) != null) {
             
         jQuery("#list_type_selection_pops_list")
 	    .append(listMenu);
+
+	jQuery("#list_type_selection_pops_list_select")
+	    .append(dMenu);
 
         } else {       
             jQuery("#list_type_selection_pops_list")
@@ -32,31 +38,39 @@ jQuery(document).ready( function() {
 
 
 jQuery(document).ready( function() { 
-    var listId;
+    var selectedId;
+    var selectedType;
+    var selectedName;
         
     jQuery("<option>", {value: '', selected: true})
 	.prependTo("#list_type_selection_pops_list_select");
       
     jQuery("#list_type_selection_pops_list_select").change(function() {
-           
-        listId = jQuery(this).find("option:selected").val(); 
-	listId = parseInt(listId)
 
-        var listDetail = getListTypeSelectionPopDetail(listId);
-  
-        if (listId) {
+	selectedType = jQuery(this).find("option:selected").attr('name');           
+        selectedId = jQuery(this).find("option:selected").val(); 
+	selectedId = parseInt(selectedId)
+	selectedName = jQuery(this).find("option:selected").text();
+
+        if (selectedId) {
 	
 	    jQuery("#list_type_selection_pop_load").click(function() {
-	
-		if (listDetail.type.match(/accessions/)) {
-		    checkPredictedListSelection(listId);
-		    //askSelectionJobQueueing(listId);
-		} else {
+
+		if (typeof selectedType === 'undefined'
+		    || !selectedType.match(/dataset/i))  {
+
+		    var listDetail = getListTypeSelectionPopDetail(selectedId);
+		    if (listDetail.type.match(/accessions/)) {
+			checkPredictedListSelection(selectedId);
+		    } else {
 			//TO-DO
-		//	var trialsList = listDetail.list;
-		//	var trialsNames = listDetail.elementsNames;
+			//	var trialsList = listDetail.list;
+			//	var trialsNames = listDetail.elementsNames;
 			
-		//	loadTrialListTypeSelectionPop(trialsNames);		    
+			//	loadTrialListTypeSelectionPop(trialsNames);		    
+		    }
+		} else {
+		    solGS.dataset.checkPredictedDatasetSelection(selectedId, selectedName)
 		}
             });
         }
@@ -65,7 +79,7 @@ jQuery(document).ready( function() {
 
 
 function checkPredictedListSelection (listId) {
-  
+   
     var args =  createSelectionReqArgs(listId);
     args = JSON.stringify(args);
    
@@ -116,8 +130,6 @@ function getListTypeSelectionPopDetail(listId) {
 	var listData;
 	var listType;
 	var listName;
-	//var listElements;
-	//var listElementsNames;
 
 	if (listId) {
             listData      = list.getListData(listId);
@@ -369,7 +381,7 @@ function displayPredictedListTypeSelectionPops(args, output) {
                        
     if ( predictedListTypeSelectionPops == false) {  
                                   
-	var predictedListTypeSelectionTable ='<table id="list_selection_pops_table" style="width:100%;text-align:left"><thead><tr>'
+	var predictedListTypeSelectionTable ='<table id="list_selection_pops_table" class="table"><thead><tr>'
             + '<th>List-based selection population</th>'
             + '<th>View GEBVs</th>'
             + '</tr></thead><tbody>'

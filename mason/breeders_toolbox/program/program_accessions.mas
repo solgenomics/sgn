@@ -25,6 +25,7 @@ $program_id
   
     jQuery('#accession_summary_data').DataTable( { 
       'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/accessions',
+      "order": [[ 1, "desc" ], [0, "asc" ]],
     });
   });
 

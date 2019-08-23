@@ -75,7 +75,7 @@ sub get_heritability {
     my $var_comp_file = $c->stash->{variance_components_file};
 
     my ($txt, $value) = map { split(/\t/)  } 
-                        grep {/Heritability/}
+                        grep {/SNP heritability/}
                         read_file($var_comp_file);
 
     $c->stash->{heritability} = $value;

@@ -55,6 +55,7 @@ sub _validate_with_plugin {
 
     #get column headers
     my $cross_name_head;
+    my $cross_combination_head;
     my $cross_type_head;
     my $female_parent_head;
     my $male_parent_head;
@@ -63,27 +64,35 @@ sub _validate_with_plugin {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $cross_type_head  = $worksheet->get_cell(0,1)->value();
+        $cross_combination_head  = $worksheet->get_cell(0,1)->value();
     }
     if ($worksheet->get_cell(0,2)) {
-        $female_parent_head  = $worksheet->get_cell(0,2)->value();
+        $cross_type_head  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $male_parent_head  = $worksheet->get_cell(0,3)->value();
+        $female_parent_head  = $worksheet->get_cell(0,3)->value();
+    }
+    if ($worksheet->get_cell(0,4)) {
+        $male_parent_head  = $worksheet->get_cell(0,4)->value();
     }
 
-    if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
-        push @error_messages, "Cell A1: cross_name is missing from the header";
+
+    if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
+        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+    }
+    if (!$cross_combination_head || $cross_combination_head ne 'cross_combination') {
+        push @error_messages, "Cell B1: cross_combination is missing from the header";
     }
     if (!$cross_type_head || $cross_type_head ne 'cross_type') {
-        push @error_messages, "Cell B1: cross_type is missing from the header";
+        push @error_messages, "Cell C1: cross_type is missing from the header";
     }
     if (!$female_parent_head || $female_parent_head ne 'female_parent') {
-        push @error_messages, "Cell C1: female_parent is missing from the header";
+        push @error_messages, "Cell D1: female_parent is missing from the header";
     }
     if (!$male_parent_head || $male_parent_head ne 'male_parent') {
-        push @error_messages, "Cell D1: male_parent is missing from the header";
+        push @error_messages, "Cell E1: male_parent is missing from the header";
     }
+
 
     my %valid_properties;
     my @properties = @{$cross_properties};
@@ -91,7 +100,7 @@ sub _validate_with_plugin {
         $valid_properties{$property} = 1;
     }
 
-    for my $column ( 4 .. $col_max ) {
+    for my $column ( 5 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         if (!$valid_properties{$header_string}){
@@ -105,6 +114,7 @@ sub _validate_with_plugin {
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $cross_name;
+        my $cross_combination;
         my $cross_type;
         my $female_parent;
         my $male_parent;
@@ -113,20 +123,23 @@ sub _validate_with_plugin {
             $cross_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $cross_type = $worksheet->get_cell($row,1)->value();
+            $cross_combination =  $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $female_parent =  $worksheet->get_cell($row,2)->value();
+            $cross_type = $worksheet->get_cell($row,2)->value();
+        }
+        if ($worksheet->get_cell($row,3)) {
+            $female_parent =  $worksheet->get_cell($row,3)->value();
         }
         #skip blank lines or lines with no name, type and parent
         if (!$cross_name && !$cross_type && !$female_parent) {
             next;
         }
-        if ($worksheet->get_cell($row,3)) {
-            $male_parent =  $worksheet->get_cell($row,3)->value();
+        if ($worksheet->get_cell($row,4)) {
+            $male_parent =  $worksheet->get_cell($row,4)->value();
         }
 
-        for my $column ( 4 .. $col_max ) {
+        for my $column ( 5 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
                 my $info_value = $worksheet->get_cell($row,$column)->value();
                 my $info_type = $worksheet->get_cell(0,$column)->value();
@@ -141,32 +154,32 @@ sub _validate_with_plugin {
 
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross name missing";
+            push @error_messages, "Cell A$row_name: cross unique id missing";
         } else {
             $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
         }
 #        } elsif ($cross_name =~ /\s/ || $cross_name =~ /\// || $cross_name =~ /\\/ ) {
 #            push @error_messages, "Cell A$row_name: cross_name must not contain spaces or slashes.";
         if ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Cell A$row_name: duplicate cross name: $cross_name";
+            push @error_messages, "Cell A$row_name: duplicate cross unique id: $cross_name";
         }
 
         #cross type must not be blank
         if (!$cross_type || $cross_type eq '') {
-            push @error_messages, "Cell B$row_name: cross type missing";
+            push @error_messages, "Cell C$row_name: cross type missing";
         } elsif (!$supported_cross_types{$cross_type}){
-            push @error_messages, "Cell B$row_name: cross type not supported: $cross_type";
+            push @error_messages, "Cell C$row_name: cross type not supported: $cross_type";
         }
 
         #female parent must not be blank
         if (!$female_parent || $female_parent eq '') {
-            push @error_messages, "Cell C$row_name: female parent missing";
+            push @error_messages, "Cell D$row_name: female parent missing";
         }
 
         #male parent must not be blank if type is biparental or bulk
         if (!$male_parent || $male_parent eq '') {
             if ($cross_type eq ( 'biparental' || 'bulk' )) {
-                push @error_messages, "Cell D$row_name: male parent required for biparental and bulk crosses";
+                push @error_messages, "Cell E$row_name: male parent required for biparental and bulk crosses";
             }
         }
 
@@ -202,7 +215,7 @@ sub _validate_with_plugin {
         'uniquename' => { -in => \@crosses }
     });
     while (my $r=$rs->next){
-        push @error_messages, "Cross name already exists in database: ".$r->uniquename;
+        push @error_messages, "Cross unique id already exists in database: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -237,7 +250,7 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    for my $column ( 4 .. $col_max ) {
+    for my $column ( 5 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         $properties_columns{$column} = $header_string;
@@ -246,6 +259,7 @@ sub _parse_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $cross_name;
+        my $cross_combination;
         my $cross_type;
         my $female_parent;
         my $male_parent;
@@ -256,10 +270,13 @@ sub _parse_with_plugin {
             $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
         }
         if ($worksheet->get_cell($row,1)) {
-            $cross_type = $worksheet->get_cell($row,1)->value();
+            $cross_combination =  $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $female_parent =  $worksheet->get_cell($row,2)->value();
+            $cross_type = $worksheet->get_cell($row,2)->value();
+        }
+        if ($worksheet->get_cell($row,3)) {
+            $female_parent =  $worksheet->get_cell($row,3)->value();
         }
 
         #skip blank lines or lines with no name, type and parent
@@ -267,11 +284,13 @@ sub _parse_with_plugin {
             next;
         }
 
-        if ($worksheet->get_cell($row,3)) {
-            $male_parent =  $worksheet->get_cell($row,3)->value();
+        if ($worksheet->get_cell($row,4)) {
+            $male_parent =  $worksheet->get_cell($row,4)->value();
         }
 
-        for my $column ( 4 .. $col_max ) {
+
+
+        for my $column ( 5 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
                 my $column_property = $properties_columns{$column};
                 $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
@@ -282,7 +301,7 @@ sub _parse_with_plugin {
             }
         }
 
-        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type);
+        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type, cross_combination=>$cross_combination);
         if ($female_parent) {
             my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
             $pedigree->set_female_parent($female_parent_individual);

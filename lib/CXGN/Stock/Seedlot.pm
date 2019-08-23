@@ -991,8 +991,7 @@ sub store {
         #Creating new seedlot
         if(!$self->stock){
             $self->name($self->uniquename());
-            my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
-            $self->type_id($type_id);
+            $self->type('seedlot');
             my $id = $self->SUPER::store();
             print STDERR "Saving seedlot returned ID $id.".localtime."\n";
             $self->seedlot_id($id);

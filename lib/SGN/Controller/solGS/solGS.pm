@@ -75,6 +75,21 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
 }
 
 
+sub solgs_login_message :Path('/solgs/login/message') Args(0) {
+    my ($self, $c) = @_;
+
+    my $page = $c->req->param('page');
+
+    my $message = "This is a private data. If you are the owner, "
+	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
+
+    $c->stash->{message} = $message;
+
+    $c->stash->{template} = "/generic_message.mas"; 
+   
+}
+
+
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
@@ -151,7 +166,7 @@ sub projects_links {
 	    #$self->trial_compatibility_table($c, $has_genotype);
 	    #my $match_code = $c->stash->{trial_compatibility_code};
 	   	    
-	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	    my $checkbox = qq |<form> <input type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 
 	    #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
@@ -236,7 +251,7 @@ sub format_trait_gs_projects {
 	   $self->trial_compatibility_table($c, $has_genotype);
 	   my $match_code = $c->stash->{trial_compatibility_code};
 
-	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
 	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
@@ -272,7 +287,7 @@ sub format_gs_projects {
 	   $self->trial_compatibility_table($c, $has_genotype);
 	   my $match_code = $c->stash->{trial_compatibility_code};
 
-	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
 	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
@@ -433,61 +448,49 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 
 sub population : Path('/solgs/population') Args(1) {
     my ($self, $c, $pop_id) = @_;
-      
-    my $list_reference = $c->req->param('list_reference');
-    $c->stash->{list_reference} = $list_reference;
 
-    if ($list_reference) 
-    {
-        $pop_id = $c->req->param('model_id');
-
-        $c->stash->{model_id}   = $c->req->param('model_id'),
-        $c->stash->{list_name} = $c->req->param('list_name'),
+    if (!$pop_id)
+    {	 
+	$c->stash->{message} = "You can not access this page with out population id.";
+	$c->stash->{template} = "/generic_message.mas"; 
     }
 
-    if ($pop_id )
-    {   
-        if($pop_id =~ /list/) 
-        {
-            $c->stash->{list_reference} = 1;
-            $list_reference = 1;
-        }
+    $c->stash->{pop_id} = $pop_id; 
 
-        $c->stash->{pop_id} = $pop_id; 
-       
-        $self->phenotype_file($c); 
-        $self->genotype_file($c); 
+    if ($pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+    }
+    elsif ($pop_id =~ /list/) 
+    {
+	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
+    }
+    
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+    $c->stash->{phenotype_file} = $c->stash->{phenotype_file_name};
+	
+    $c->controller('solGS::Files')->genotype_file_name($c);
+    $c->stash->{genotype_file} = $c->stash->{genotype_file_name};
+  
+    if (!-s $c->stash->{phenotype_file} || !-s $c->stash->{genotype_file})
+    {	 
+	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
+	    . " and create the training population data.";
+	
+	$c->stash->{template} = "/generic_message.mas"; 
+    }
+    else 
+    {	
         $self->get_all_traits($c);  
         $self->project_description($c, $pop_id);
  
         $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
-      
-     #   if ($action && $action =~ /selecttraits/ ) {
-     #       $c->stash->{no_traits_selected} = 'none';
-     #   }
-     #   else {
-     #       $c->stash->{no_traits_selected} = 'some';
-     #   }
-
+          
         my $acronym = $self->get_acronym_pairs($c);
         $c->stash->{acronym} = $acronym;
     }
- 
-    my $pheno_data_file = $c->stash->{phenotype_file};
     
-    if ($list_reference) 
-    {
-	my $ret->{status} = 'failed';
-	if ( !-s $pheno_data_file )
-	{
-	    $ret->{status} = 'failed';
-            
-	    $ret = to_json($ret);
-                
-	    $c->res->content_type('application/json');
-	    $c->res->body($ret); 
-	}
-    }
 } 
 
 
@@ -582,11 +585,20 @@ sub project_description {
     my ($self, $c, $pr_id) = @_;
 
     $c->stash->{pop_id} = $pr_id;
-    $c->stash->{list_reference} = 1 if ($pr_id =~ /list/);
-
+    
     my $protocol = $self->create_protocol_url($c);
     
-    if(!$c->stash->{list_reference}) {
+    if ($c->stash->{list_id})
+    {
+        $c->controller('solGS::List')->list_population_summary($c);
+
+    }
+    elsif ($c->stash->{dataset_id})
+    {
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
+    }
+    else
+    {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pr_id);
 
         while (my $row = $pr_rs->next)
@@ -599,13 +611,7 @@ sub project_description {
        
         $self->get_project_owners($c, $pr_id);       
         $c->stash->{owner} = $c->stash->{project_owners};
-
     } 
-    else 
-    {
-        $c->stash->{model_id} = $pr_id;
-        $c->controller('solGS::List')->list_population_summary($c, $pr_id);
-    }
     
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
@@ -706,10 +712,20 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
-    
+
     if ($training_pop_id =~ /list/) 
     {
+	$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
 	$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
+	$c->stash->{training_pop_id} = $c->stash->{project_id};
+	$c->stash->{training_pop_name} = $c->stash->{project_name};
+	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
+	$c->stash->{training_pop_owner} = $c->stash->{owner}; 
+    }
+    elsif ($training_pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
 	$c->stash->{training_pop_id} = $c->stash->{project_id};
 	$c->stash->{training_pop_name} = $c->stash->{project_name};
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
@@ -728,7 +744,18 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
 
     if ($selection_pop_id =~ /list/) 
     {
+	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
+	
 	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
+	$c->stash->{selection_pop_id} = $c->stash->{project_id};
+	$c->stash->{selection_pop_name} = $c->stash->{project_name};
+	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+	$c->stash->{selection_pop_owner} = $c->stash->{owner}; 
+    }
+    elsif ($selection_pop_id =~ /dataset/) 
+    {
+	$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
+	$c->controller('solGS::Dataset')->dataset_population_summary($c);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -754,10 +781,11 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     my $protocol = $self->create_protocol_url($c);
     $c->stash->{protocol} = $protocol;
 
-    my $identifier    = $training_pop_id . '_' . $selection_pop_id; 
+    my $identifier    = $training_pop_id . '_' . $selection_pop_id;
+   
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-    
+   
     my @stock_rows = read_file($gebvs_file);
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
 
@@ -783,78 +811,54 @@ sub build_single_trait_model {
 
 sub trait :Path('/solgs/trait') Args(3) {
     my ($self, $c, $trait_id, $key, $pop_id) = @_;
-   
-    my $ajaxredirect = $c->req->param('source');
-    $c->stash->{ajax_request} = $ajaxredirect;
-   
+        
+    if ($pop_id =~ /dataset/)
+    { 
+	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+    }
+    elsif ($pop_id =~ /list/)
+    {
+	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+    }
+
+    $c->stash->{pop_id}   = $pop_id;   
+    $c->stash->{trait_id} = $trait_id;
+    
     if ($pop_id && $trait_id)
     {    
-        $c->stash->{pop_id}   = $pop_id;       
-	$c->stash->{trait_id} = $trait_id;
-     
-	$self->build_single_trait_model($c);
+	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+	my $out_file = $c->stash->{rrblup_training_gebvs_file};
+
+	$self->project_description($c, $pop_id);
+	my $training_pop_name = $c->stash->{project_name};
+	my $training_pop_desc = $c->stash->{project_desc};
+	my $training_pop_page = qq | <a href="/solgs/population/$pop_id">$training_pop_name</a> |;
 	
-	$self->gs_modeling_files($c);
+	if (!-s $c->stash->{rrblup_training_gebvs_file})
+	{	 
+	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" . 
+	     " Please go to $training_pop_page and run the analysis.";
+	 
+	    $c->stash->{template} = "/generic_message.mas"; 
+	} 
+	else 
+	{	     
+	    $self->get_trait_details($c, $trait_id);	    
+	    $self->gs_modeling_files($c);
 
-        unless ($ajaxredirect eq 'heritability') 
-        {	    
-            my $script_error = $c->stash->{script_error};
-	             
-	    if ($script_error) 
-            {
-		my $trait_name   = $c->stash->{trait_name};
-                $c->stash->{message} = "$script_error can't create a prediction model for <b>$trait_name</b>. 
-                                        There is a problem with the trait dataset.";
+	    $c->controller('solGS::Files')->traits_acronym_file($c);
+	    my $acronym_file = $c->stash->{traits_acronym_file};
+		    
+	    if (!-e $acronym_file || !-s $acronym_file) 
+	    {
+		$self->get_all_traits($c);
+	    }
 
-                $c->stash->{template} = "/generic_message.mas";   
-            } 
-            else 
-	    {    
-		$c->controller('solGS::Files')->traits_acronym_file($c);
-		my $acronym_file = $c->stash->{traits_acronym_file};
-	
-		if (!-e $acronym_file || !-s $acronym_file) 
-		{
-		    $self->get_all_traits($c);
-		}
-
-		$self->project_description($c, $pop_id); 
-
-		$self->trait_phenotype_stat($c);  
- 
-		$self->get_project_owners($c, $pop_id);       
-		$c->stash->{owner} = $c->stash->{project_owners};
-                
-		$c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
-	    }	  
+	    $self->trait_phenotype_stat($c);  		   		    
+	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
     }
- 
-    if ($ajaxredirect) 
-    {
-        #my $trait_abbr = $c->stash->{trait_abbr};
-        #my $cache_dir  = $c->stash->{solgs_cache_dir};
-        #my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
-       # $gebv_file     = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
-
-	#my $gebv_file  = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";       
-        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-	my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
-
-        my $ret->{status} = 'failed';
-        
-        if (-s $gebv_file) 
-        {
-            $ret->{status} = 'success';
-        }
-        
-        $ret = to_json($ret);
-        
-        $c->res->content_type('application/json');
-        $c->res->body($ret);
-        
-    }
-    
+   
 }
 
 
@@ -1158,32 +1162,35 @@ sub predict_selection_pop_multi_traits {
 
     $c->stash->{training_traits_ids} = \@traits_with_valid_models;
 
-    my @prediction_traits;
+    my @unpredicted_traits;
     foreach my $trait_id (@{$c->stash->{training_traits_ids}})
     {
 	my $identifier = $training_pop_id .'_' . $selection_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-	 
-     	if (!-s $c->stash->{rrblup_selection_gebvs_file})
-	{
-	    push @prediction_traits, $trait_id;
-	}
+
+	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
+	
     }
 
-    if (@prediction_traits)
+    if (@unpredicted_traits)
     {
-	$c->stash->{training_traits_ids} = \@prediction_traits;
+	$c->stash->{training_traits_ids} = \@unpredicted_traits;
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id);
 	
-	$self->get_selection_pop_query_args_file($c);
-	my $pre_req = $c->stash->{selection_pop_query_args_file};
+	if (!-s $c->stash->{genotype_file_name}) 
+	{		
+	    $self->get_selection_pop_query_args_file($c);        
+	    $c->stash->{prerequisite_jobs} = $c->stash->{selection_pop_query_args_file};
+	}
 	
 	$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
 
 	$self->get_gs_modeling_jobs_args_file($c);	
 	$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 	
-	$c->stash->{prerequisite_jobs} = $pre_req;
-	$c->stash->{prerequisite_type} = 'selection_pop_download_data';
+
+	#$c->stash->{prerequisite_type} = 'selection_pop_download_data';
 		
 	$self->run_async($c);
     }
@@ -1363,7 +1370,7 @@ sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;           
    
     my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-  
+    
     no warnings 'uninitialized';
   
     my $dir = $c->stash->{solgs_cache_dir};
@@ -1374,31 +1381,8 @@ sub prediction_pop_analyzed_traits {
     my @trait_abbrs;
     my @selected_trait_abbrs;
     my @selected_files;
-     my $identifier = $training_pop_id . '_' . $selection_pop_id;
-    if ($training_pop_id !~ /$selection_pop_id/) 
-    {
-	my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
-                 readdir($dh); 
-   
-	closedir $dh; 
-
-	if (@files) 
-	{
-	    my @copy_files = @files;
-   
-	    @trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
-	    @trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
-	    @trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
-	}
-
-	foreach my $trait_abbr (@trait_abbrs)
-	{
-	    $c->stash->{trait_abbr} = $trait_abbr;
-	    $self->get_trait_details_of_trait_abbr($c);
-	    push @trait_ids, $c->stash->{trait_id};
-	}
-    }
-
+    my $identifier = $training_pop_id . '_' . $selection_pop_id;
+    
     if (@selected_analyzed_traits) 
     {
 	@trait_ids=();
@@ -1410,14 +1394,41 @@ sub prediction_pop_analyzed_traits {
 	    push @selected_trait_abbrs, $c->stash->{trait_abbr};
 	   
 	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-	   
+	    my $file = $c->stash->{rrblup_selection_gebvs_file};
+	  
 	    if ( -s $c->stash->{rrblup_selection_gebvs_file})
 	    {
 		push @selected_files, $c->stash->{rrblup_selection_gebvs_file};
 		push @trait_ids, $trait_id;
 	    }
 	}	
-    }
+    } 
+    # else
+    # {
+    # 	if ($training_pop_id !~ /$selection_pop_id/) 
+    # 	{
+    # 	    my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
+    # 	    readdir($dh); 
+	    
+    # 	    closedir $dh; 
+
+    # 	    if (@files) 
+    # 	    {
+    # 		my @copy_files = @files;
+		
+    # 		@trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
+    # 		@trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
+    # 		@trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
+    # 	    }
+
+    # 	    foreach my $trait_abbr (@trait_abbrs)
+    # 	    {
+    # 		$c->stash->{trait_abbr} = $trait_abbr;
+    # 		$self->get_trait_details_of_trait_abbr($c);
+    # 		push @trait_ids, $c->stash->{trait_id};
+    # 	    }
+    # 	}	
+    # }
   
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
@@ -2076,55 +2087,35 @@ sub get_trait_details_of_trait_abbr {
 
 
 sub build_multiple_traits_models {
-    my ($self, $c, $traits) = @_;
+    my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    my $prediction_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id}; 
-    
-    my @selected_traits =  @{$c->stash->{training_traits_ids}};
-      
-    my $single_trait_id;
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};    
+    my @selected_traits =  @{$c->stash->{training_traits_ids}};      
+    my $trait_id = $selected_traits[0] if scalar(@selected_traits) == 1;
    
-    if (scalar(@selected_traits) == 1)
-    {
-	$single_trait_id = $selected_traits[0];
-    }
-    else 
-    {
-	my ($traits, $trait_ids);    
-        
-	for (my $i = 0; $i <= $#selected_traits; $i++)
-	{  
-	    my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
-	    my $abbr = $self->abbreviate_term($tr);
-	    $traits .= $abbr;
-	    $traits .= "\t" unless ($i == $#selected_traits); 
-	    
-	    foreach my $tr_id (@selected_traits)
-	    {
-		$trait_ids .= $tr_id;
-	    }  
-	} 
+    my $traits;    
     
-	if ($c->stash->{data_set_type} =~ /combined populations/)
-	{
-	    my $identifier = crc($trait_ids);
-	    $c->controller('solGS::Files')->combined_gebvs_file($c, $identifier);
-	}  
+    for (my $i = 0; $i <= $#selected_traits; $i++)
+    {  
+	my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
+	my $abbr = $self->abbreviate_term($tr);
+	$traits .= $abbr;
+	$traits .= "\t" unless ($i == $#selected_traits); 	    
 	
-	my $name = "selected_traits_pop_${pop_id}";
-	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-	my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-	
-	write_file($file, $traits);
-	$c->stash->{selected_traits_file} = $file;
-
-	$name     = "trait_info_${single_trait_id}_pop_${pop_id}";
-	my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
-	
-	$c->stash->{trait_file} = $file2;  
     }
+	
+    my $name = "selected_traits_pop_${pop_id}";
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
+    
+    write_file($file, $traits);
+    $c->stash->{selected_traits_file} = $file;
 
+    $name     = "trait_info_${trait_id}_pop_${pop_id}";
+    my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
+    
+    $c->stash->{trait_file} = $file2;  
+   
     $self->get_gs_modeling_jobs_args_file($c);	
     $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
     $self->run_async($c);
@@ -2558,7 +2549,6 @@ sub trait_phenotype_stat {
      
     $c->stash->{descriptive_stat} = \@desc_stat;
 }
-
 #sends an array of trait gebv data to an ajax request
 #with a population id and trait id parameters
 sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
@@ -2568,7 +2558,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     my $trait_id          = $c->req->param('trait_id');
     my $prediction_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id     = $c->req->param('combo_pops_id');
-    
+
     if ($combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
@@ -2588,9 +2578,8 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     if ($page =~ /solgs\/selection\//) 
     {   	
         my $identifier =  $pop_id . '_' . $prediction_pop_id;
-        $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-   
-        $gebv_file = $c->stash->{rrblup_selection_gebvs_file}; 
+        $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);   
+        $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
     }
     else
     { 
@@ -3084,62 +3073,105 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 
 
 sub get_cluster_phenotype_query_job_args {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
 
-    my $pop_id = $args->{population_id};
-    
-    $c->stash->{r_temp_file} = "phenotype-data-query-${pop_id}";
-    $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-   
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $background_job = $c->stash->{background_job};
-   
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "pheno-data-args_file-${pop_id}");
-    
-    nstore $args, $args_file 
-		or croak "data query script: $! serializing phenotype data query details to $args_file ";
+    my @queries;
+    foreach my $trial_id (@$trials)
+    {
+	$c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
-	. ' --data_type phenotype '
-	. ' --population_type trial '
-	. ' --args_file ' . $args_file;
+	if (!-s $c->stash->{phenotype_file_name})
+	{
+	    my $args = $self->phenotype_trial_query_args($c, $trial_id);
+	    
+	    $c->stash->{r_temp_file} = "phenotype-data-query-${trial_id}";
+	    $self->create_cluster_accesible_tmp_files($c);
+	    my $out_temp_file = $c->stash->{out_file_temp};
+	    my $err_temp_file = $c->stash->{err_file_temp};
+	    
+	    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	    my $background_job = $c->stash->{background_job};
+	    
+	    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "pheno-data-args_file-${trial_id}");
+	    
+	    nstore $args, $args_file 
+		or croak "data query script: $! serializing phenotype data query details to $args_file ";
+	    
+	    my $cmd = 'mx-run solGS::queryJobs ' 
+		. ' --data_type phenotype '
+		. ' --population_type trial '
+		. ' --args_file ' . $args_file;
 
-    my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
-     };
-    
-    my $config = $self->create_cluster_config($c, $config_args);
+	    my $config_args = {
+		'temp_dir' => $temp_dir,
+		'out_file' => $out_temp_file,
+		'err_file' => $err_temp_file
+	    };
+	    
+	    my $config = $self->create_cluster_config($c, $config_args);
+	    
+	    my $job_args = {
+		'cmd' => $cmd,
+		'config' => $config,
+		'background_job'=> $background_job,
+		'temp_dir' => $temp_dir,
+	    };
 
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
-    };
+	    push @queries, $job_args;
+	}
+    }
     
-    $c->stash->{cluster_phenotype_query_job_args} = $job_args;
+    $c->stash->{cluster_phenotype_query_job_args} = \@queries;
   
 }
 
 
-sub submit_cluster_phenotype_query {
-    my ($self, $c, $args) = @_;
+sub get_pheno_data_query_job_args_file {
+    my ($self, $c, $trials) = @_;
+    
+    $self->get_cluster_phenotype_query_job_args($c, $trials);
+    my $pheno_query_args = $c->stash->{cluster_phenotype_query_job_args};
 
-    $self->get_training_pop_pheno_query_args_file($c, $args);
-    $c->stash->{dependent_jobs} = $c->stash->{training_pop_pheno_query_args_file};
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $pheno_query_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'phenotype_data_query_args_file');	   
+ 
+    nstore $pheno_query_args, $pheno_query_args_file 
+	or croak "pheno  data query job : $! serializing selection pop data query details to $pheno_query_args_file";
+
+    $c->stash->{pheno_data_query_job_args_file} = $pheno_query_args_file;
+}
+
+
+sub get_geno_data_query_job_args_file {
+    my ($self, $c, $trials) = @_;
+    
+    $self->get_cluster_genotype_query_job_args($c, $trials);
+    my $geno_query_args = $c->stash->{cluster_genotype_query_job_args};
+ 
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $geno_query_args_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'genotype_data_query_args_file');	   
+   
+    nstore $geno_query_args, $geno_query_args_file 
+	or croak "geno  data query job : $! serializing selection pop data query details to $geno_query_args_file";
+
+    $c->stash->{geno_data_query_job_args_file} = $geno_query_args_file;
+}
+
+
+sub submit_cluster_phenotype_query {
+    my ($self, $c, $trials) = @_;
+    
+    $self->get_pheno_data_query_job_args_file($c, $trials); 
+    $c->stash->{dependent_jobs} =  $c->stash->{pheno_data_query_job_args_file};
     $self->run_async($c);
 }
 
 
 sub submit_cluster_genotype_query {
-    my ($self, $c, $args) = @_;
-
-    $self->get_training_pop_geno_query_args_file($c, $args);
-    $c->stash->{dependent_jobs} = $c->stash->{training_pop_geno_query_args_file};
+    my ($self, $c, $trials) = @_;
+ 
+    $self->get_geno_data_query_job_args_file($c, $trials);   
+    $c->stash->{dependent_jobs} =  $c->stash->{geno_data_query_job_args_file};  
     $self->run_async($c);
 }
 
@@ -3148,7 +3180,7 @@ sub submit_cluster_training_pop_data_query {
     my ($self, $c, $trials) = @_;
 
     $self->get_training_pop_data_query_job_args_file($c, $trials);
-    $c->stash->{dependent_jobs} = $c->stash->{training_pop_data_query_job_args_file};
+    $c->stash->{dependent_jobs} = $c->stash->{training_pop_data_query_job_args_file}; 
     $self->run_async($c);
 }
 
@@ -3160,15 +3192,26 @@ sub training_pop_data_query_job_args {
     
     foreach my $trial (@$trials)
     {
-	$self->phenotype_file($c, $trial);
-	my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
-	push @queries, $pheno_query if $pheno_query;
+	$c->controller('solGS::Files')->phenotype_file_name($c, $trial);
 
-	$self->genotype_file($c, $trial);
-	my $geno_query = $c->stash->{cluster_genotype_query_job_args};
-	push @queries, $geno_query if $geno_query;
+	if (!-s $c->stash->{phenotype_file_name})
+	{
+	    $self->get_cluster_phenotype_query_job_args($c, $trials);
+	    my $pheno_query = $c->stash->{cluster_phenotype_query_job_args};
+	    push @queries, @$pheno_query if $pheno_query;
+	}
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $trial);
+
+	if (!-s $c->stash->{genotype_file_name})
+	{
+	    $self->get_cluster_genotype_query_job_args($c, $trials);
+	    my $geno_query = $c->stash->{cluster_genotype_query_job_args};
+	    push @queries, @$geno_query if $geno_query;
+	}
     }
 
+    
     $c->stash->{training_pop_data_query_job_args} = \@queries;
 }
 
@@ -3190,45 +3233,58 @@ sub get_training_pop_data_query_job_args_file {
 
 
 sub get_cluster_genotype_query_job_args {
-    my ($self, $c, $args) = @_;
+    my ($self, $c, $trials) = @_;
 
-    my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
+    my @queries;
 
-    $c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
-    $self->create_cluster_accesible_tmp_files($c);
-    my $out_temp_file = $c->stash->{out_file_temp};
-    my $err_temp_file = $c->stash->{err_file_temp};
-   
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $background_job = $c->stash->{background_job};
-
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
-
-    nstore $args, $args_file 
-		or croak "data queryscript: $! serializing model details to $args_file ";
+    foreach my $trial_id (@$trials) 
+    {
+	$c->controller('solGS::Files')->genotype_file_name($c, $trial_id);
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
-	. ' --data_type genotype '
-	. ' --population_type trial '
-	. ' --args_file ' . $args_file;
+	if (!-s $c->stash->{genotype_file_name})
+	{
+	    #my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
+	    my $args = $self->genotype_trial_query_args($c, $trial_id);
+	    
+	    $c->stash->{r_temp_file} = "genotype-data-query-${trial_id}";
+	    $self->create_cluster_accesible_tmp_files($c);
+	    my $out_temp_file = $c->stash->{out_file_temp};
+	    my $err_temp_file = $c->stash->{err_file_temp};
+	    
+	    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	    my $background_job = $c->stash->{background_job};
+
+	    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${trial_id}");
+
+	    nstore $args, $args_file 
+		or croak "data queryscript: $! serializing model details to $args_file ";
+	    
+	    my $cmd = 'mx-run solGS::queryJobs ' 
+		. ' --data_type genotype '
+		. ' --population_type trial '
+		. ' --args_file ' . $args_file;
 
 
-    my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
-     };
+	    my $config_args = {
+		'temp_dir' => $temp_dir,
+		'out_file' => $out_temp_file,
+		'err_file' => $err_temp_file
+	    };
+	    
+	    my $config = $self->create_cluster_config($c, $config_args);
+
+	    my $job_args = {
+		'cmd' => $cmd,
+		'config' => $config,
+		'background_job'=> $background_job,
+		'temp_dir' => $temp_dir,
+	    };
+
+	    push @queries, $job_args;
+	}
+    }
     
-    my $config = $self->create_cluster_config($c, $config_args);
-
-    my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
-    };
-    
-    $c->stash->{cluster_genotype_query_job_args} = $job_args;
+    $c->stash->{cluster_genotype_query_job_args} = \@queries;
 }
 
 
@@ -3255,7 +3311,8 @@ sub phenotype_file {
 	|| $c->stash->{training_pop_id} 
 	|| $c->stash->{trial_id};
     }
-   
+
+    $c->stash->{pop_id}  = $pop_id;
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
     
@@ -3264,36 +3321,22 @@ sub phenotype_file {
 	    
 	    my $page = "/" . $c->req->path;
 	 
-	    $c->res->redirect("/solgs/list/login/message?page=$page");
+	    $c->res->redirect("/solgs/login/message?page=$page");
 	    $c->detach;   
-
 	}	
     }
  
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
-    $c->controller('solGS::Files')->phenotype_metadata_file($c);
-    my $metadata_file = $c->stash->{phenotype_metadata_file};
-
     no warnings 'uninitialized';
     
     unless ( -s $pheno_file)
-    {  	   	    
-	$c->controller('solGS::Files')->traits_list_file($c);
-	my $traits_file =  $c->stash->{traits_list_file};
-	
-	my $args = {
-	    'population_id'    => $pop_id,
-	    'phenotype_file'   => $pheno_file,
-	    'traits_list_file' => $traits_file,
-	    'metadata_file'    => $metadata_file,
-	};
-	   
-	if (!$c->stash->{list_reference}) 
+    {  	   	 
+	if ($pop_id !~ /list/) 
 	{
-	    #$self->submit_cluster_phenotype_query($c, $args);
-	    $self->get_cluster_phenotype_query_job_args($c, $args);
+	    #my $args = $self->phenotype_trial_query_args($c);
+	    $self->submit_cluster_phenotype_query($c, [$pop_id]);
 	}	    
     }
 
@@ -3301,6 +3344,74 @@ sub phenotype_file {
    
     $c->stash->{phenotype_file} = $pheno_file;   
 
+}
+
+
+sub genotype_trial_query_args {
+    my ($self, $c, $pop_id) = @_;
+
+    $pop_id  = $c->stash->{pop_id} if !$pop_id;
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+ 
+    $pop_id  = $training_pop_id || $selection_pop_id if !$pop_id;
+    
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+      
+    my $referer = $c->req->referer;
+     
+    my $tr_pop_id;
+    if ($referer =~ /models\/combined\/trials\//) 
+    {
+	$training_pop_id = $c->stash->{combo_pops_id};
+	$tr_pop_id = "${training_pop_id}_combined";
+    } 
+    else
+    {
+	$tr_pop_id = $training_pop_id ? $training_pop_id : $pop_id;
+    }
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $tr_pop_id);
+    my $training_geno_file = $c->stash->{genotype_file_name};
+
+    my $args = {
+	'training_pop_id' => $pop_id,
+	'selection_pop_id' => $selection_pop_id,
+	'training_geno_file'  => $training_geno_file,
+	'genotype_file'       => $geno_file,
+	'cache_dir'     => $c->stash->{solgs_cache_dir},
+    };
+
+    return $args;
+    
+}
+
+    
+sub phenotype_trial_query_args {
+    my ($self, $c, $pop_id) = @_;
+
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
+     
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+    my $pheno_file = $c->stash->{phenotype_file_name};
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+
+    no warnings 'uninitialized';
+     	   	    
+    $c->controller('solGS::Files')->traits_list_file($c);
+    my $traits_file =  $c->stash->{traits_list_file};
+	
+    my $args = {
+	'population_id'    => $pop_id,
+	'phenotype_file'   => $pheno_file,
+	'traits_list_file' => $traits_file,
+	'metadata_file'    => $metadata_file,
+    };
+  
+    return $args;
 }
 
 
@@ -3337,6 +3448,7 @@ sub clean_traits {
 
     return $terms;
 }
+
 
 sub format_phenotype_dataset_headers {
     my ($self, $all_headers, $meta_headers,  $traits_file) = @_;
@@ -3410,12 +3522,10 @@ sub genotype_file  {
     my ($self, $c, $pop_id) = @_;
     
     $pop_id  = $c->stash->{pop_id} if !$pop_id;
-    my $training_pop_id = $pop_id;
-    my $geno_file;
- 
-    my  $selection_pop_id = $c->stash->{selection_pop_id};
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
   
-    my $pop_id =  $selection_pop_id || $training_pop_id;
+    $pop_id = $training_pop_id || $selection_pop_id if !$pop_id;
     die "Population id must be provided to get the genotype data set." if !$pop_id;
     
     if ($pop_id =~ /list/) 
@@ -3423,45 +3533,22 @@ sub genotype_file  {
   	if (!$c->user)
 	{
 	    my $path = "/" . $c->req->path;
-	    $c->res->redirect("/solgs/list/login/message?page=$path");
+	    $c->res->redirect("/solgs/login/message?page=$path");
 	    $c->detach;
 	}
     }
   
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    $geno_file = $c->stash->{genotype_file_name};
+    my $geno_file = $c->stash->{genotype_file_name};
     
     no warnings 'uninitialized';
     unless (-s $geno_file)
     { 
-	my $referer = $c->req->referer;
-     
-	my $tr_pop_id;
-	if ($referer =~ /models\/combined\/trials\//) 
-	{
-	    $training_pop_id = $c->stash->{combo_pops_id};
-	    $tr_pop_id = "${training_pop_id}_combined";
-	} 
-	else
-	{
-	     $tr_pop_id = $training_pop_id;
-	}
-
-	$c->controller('solGS::Files')->genotype_file_name($c, $tr_pop_id);
-	my $training_geno_file = $c->stash->{genotype_file_name};
-
-	my $args = {
-	    'training_pop_id' => $training_pop_id,
-	    'selection_pop_id' => $selection_pop_id,
-	    'training_geno_file'  => $training_geno_file,
-	    'genotype_file'       => $geno_file,
-	    'cache_dir'     => $c->stash->{solgs_cache_dir},
-	};
-	
-	$self->get_cluster_genotype_query_job_args($c, $args);
+	my $args = $self->genotype_trial_query_args($c, $pop_id);
+	$self->submit_cluster_genotype_query($c, $args);
     }
        
-    $c->stash->{genotype_file} = $geno_file; 
+    $c->stash->{genotype_file} = $geno_file;
  
 }
 
@@ -3580,6 +3667,7 @@ sub run_rrblup_trait {
     }
     elsif (($selection_pop_id && !-s $selection_pop_gebvs_file))
     {
+	
 	$self->get_selection_pop_query_args_file($c);
 	my $pre_req = $c->stash->{selection_pop_query_args_file};
 	
@@ -3619,7 +3707,6 @@ sub run_async {
     my ($self, $c) = @_;    
 
     my $prerequisite_jobs  = $c->stash->{prerequisite_jobs} || 'none';
-    my $prerequisite_type  = $c->stash->{prerequisite_type} || 'none';
     my $background_job     = $c->stash->{background_job};
     my $dependent_jobs     = $c->stash->{dependent_jobs};
     
@@ -3629,11 +3716,17 @@ sub run_async {
     $self->create_cluster_accesible_tmp_files($c);
     my $err_temp_file = $c->stash->{err_file_temp};
     my $out_temp_file = $c->stash->{out_file_temp};
-  
-    my $referer = $c->req->referer;
    
-    $c->controller('solGS::AnalysisProfile')->get_analysis_report_job_args_file($c);
-    my $report_file = $c->stash->{analysis_report_job_args_file};									  
+    my $referer = $c->req->referer;
+    
+    my $report_file = 'none';
+
+    if ($background_job)  
+    {
+	$c->stash->{async} = 1;
+	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c);
+	$report_file = $c->stash->{analysis_report_job_args_file};
+    }									  
        
     my $config_args = {
 	'temp_dir' => $temp_dir,
@@ -3649,19 +3742,18 @@ sub run_async {
 	
     my $cmd = 'mx-run solGS::asyncJob'
 	. ' --prerequisite_jobs '         . $prerequisite_jobs
-	. ' --prerequisite_type '         . $prerequisite_type
 	. ' --dependent_jobs '            . $dependent_jobs
-    	. ' --analysis_report_job '       . $report_file
-	. ' --temp_dir '                  . $temp_dir;
+    	. ' --analysis_report_job '       . $report_file;
+    
 
     my $cluster_job_args = {
 	'cmd' => $cmd,
 	'config' => $job_config,
 	'background_job'  => $background_job,
 	'temp_dir'     => $temp_dir,
-	'async'        => 1,
+	'async'        => $c->stash->{async},
     };
-      
+
    my $job = $self->submit_job_cluster($c, $cluster_job_args);
   
 }
@@ -3705,8 +3797,7 @@ sub get_selection_pop_query_args {
     if ($selection_pop_id)
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id);
-	$selection_pop_geno_file = $c->stash->{genotype_file_name};
-	$pop_type = 'trial';	
+	$selection_pop_geno_file = $c->stash->{genotype_file_name};	
     }
    
     my $genotypes_ids;
@@ -3715,6 +3806,17 @@ sub get_selection_pop_query_args {
 	$c->controller('solGS::List')->get_genotypes_list_details($c);
 	$genotypes_ids = $c->stash->{genotypes_ids};
 	$pop_type = 'list';
+    }
+    elsif ($selection_pop_id =~ /dataset/)
+    {
+	#$c->controller('solGS::Dataset')->get_dataset_genotypes_list($c);
+	#$genotypes_ids = $c->stash->{genotypes_ids};
+	
+	$pop_type = 'dataset';
+    } 
+    else
+    {
+	$pop_type = 'trial';	
     }
 
     $c->stash->{population_type} = $pop_type;
@@ -3728,8 +3830,10 @@ sub get_selection_pop_query_args {
 	'selection_pop_id' => $selection_pop_id,
 	'genotype_file' => $selection_pop_geno_file,
 	'genotypes_ids'  => $genotypes_ids,
+	'dataset_id'    => $c->stash->{dataset_id},
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file,	
+	'err_file' => $err_temp_file,
+	'population_type' => $pop_type
     };
 
     $c->stash->{selection_pop_query_args} = $selection_pop_query_args;
@@ -3754,13 +3858,13 @@ sub get_cluster_query_job_args {
     my $genotype_file = $query_args->{genotype_file};
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-args_file-${pop_id}");
 
-    my $pop_type = $c->stash->{population_type};
+    my $pop_type = $query_args->{population_type};
     my $data_type = 'genotype';
     
     nstore $query_args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::Cluster ' 
+    my $cmd = 'mx-run solGS::queryJobs ' 
 	. ' --data_type ' . $data_type
 	. ' --population_type ' . $pop_type
 	. ' --args_file ' . $args_file;
@@ -3920,7 +4024,7 @@ sub get_cluster_r_job_args {
 	. "$in_file $out_temp_file " 
 	. '--args ' .  $input_files 
 	. ' ' . $output_files;
-    
+  
     my $job_args = {
 	'cmd' => $cmd,
 	'background_job' => $c->stash->{background_job},
@@ -3956,9 +4060,10 @@ sub submit_job_cluster {
     my ($self, $c, $args) = @_;
 
     my $job;
-    
+   
     eval 
     {
+	
 	$job = CXGN::Tools::Run->new($args->{config});
 	$job->do_not_cleanup(1);
 
@@ -3993,7 +4098,6 @@ sub submit_job_cluster {
 
     if ($@) 
     {
-	print STDERR "\nError occured submitting the job:  $@  \nJob:  $args->{cmd}";
 	$c->stash->{Error} =  'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
 	$c->stash->{status} = 'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
     }

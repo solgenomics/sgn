@@ -267,11 +267,12 @@ sub save_trial {
 		description => $self->get_trial_description(),
 	});
 
-    my $t = CXGN::Trial->new({
+    my $t = CXGN::Project->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id()
 	});
 
+	print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
 	my $nd_experiment_type_id;
 	if (!$self->get_is_genotyping) {
 		$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();

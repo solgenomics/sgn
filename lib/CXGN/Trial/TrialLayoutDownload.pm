@@ -110,8 +110,15 @@ has 'design' => (
     is => 'rw',
 );
 
+subtype 'Trial',
+  as 'Ref',
+    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ },
+  message { "The string, $_, was not a valid trial object type"};
+
+
+
 has 'trial' => (
-    isa => 'CXGN::Trial',
+    isa => 'Trial',
     is => 'rw',
 );
 
@@ -223,7 +230,7 @@ sub get_layout_output {
 
     if ($data_level eq 'plots') {
         foreach (@treatment_trials){
-            my $treatment_units = $_ ? $_->get_plots() : [];
+            my $treatment_units = $_ ? $_->get_observation_units_direct('plot', ['treatment_experiment']) : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'plants') {
@@ -233,7 +240,7 @@ sub get_layout_output {
             return \%errors;
         }
         foreach (@treatment_trials){
-            my $treatment_units = $_ ? $_->get_plants() : [];
+            my $treatment_units = $_ ? $_->get_observation_units_direct('plant', ['treatment_experiment']) : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'subplots') {
@@ -243,7 +250,8 @@ sub get_layout_output {
             return \%errors;
         }
         foreach (@treatment_trials){
-            my $treatment_units = $_ ? $_->get_subplots() : [];
+            my $treatment_units = $_ ? $_->get_observation_units_direct('subplot', ['treatment_experiment']) : [];
+            print STDERR Dumper $treatment_units;
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'field_trial_tissue_samples') {
@@ -253,7 +261,7 @@ sub get_layout_output {
             return \%errors;
         }
         foreach (@treatment_trials){
-            my $treatment_units = $_ ? $_->get_tissue_samples() : [];
+            my $treatment_units = $_ ? $_->get_observation_units_direct('tissue_sample', ['treatment_experiment']) : [];
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'plate') {

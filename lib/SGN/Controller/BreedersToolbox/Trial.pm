@@ -15,6 +15,7 @@ use CXGN::List::Transform;
 use CXGN::List::Validate;
 use CXGN::List;
 use JSON;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -364,6 +365,9 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     }
     if ($format eq "dartseqcsv") {
         $plugin = "GenotypingTrialLayoutDartSeqCSV";
+    }
+    if ($format eq "csv") {
+        $plugin = "TrialLayoutCSV";
     }
 
     my $dir = $c->tempfiles_subdir('download');

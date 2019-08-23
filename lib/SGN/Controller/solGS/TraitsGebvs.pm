@@ -78,12 +78,11 @@ sub get_gebv_files_of_traits {
     my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     
     my $dir = $c->stash->{solgs_cache_dir};
-    
+ 
     my $gebv_files;
     my $valid_gebv_files;
-    my $pred_gebv_files;
-   
-    if ($selection_pop_id && $selection_pop_id != $training_pop_id) 
+     
+    if ($selection_pop_id) 
     {
         $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
 	$gebv_files = join("\t", @{$c->stash->{prediction_pop_analyzed_traits_files}});	
@@ -93,18 +92,14 @@ sub get_gebv_files_of_traits {
         $c->controller('solGS::solGS')->analyzed_traits($c);
 	$gebv_files = join("\t", @{$c->stash->{analyzed_traits_files}});     
 	$valid_gebv_files = join("\t", @{$c->stash->{analyzed_valid_traits_files}}); 
-
     }
-   
-    #my $pred_file_suffix;
-    my $pred_file_suffix =  $selection_pop_id ? '_' . $selection_pop_id : 0; 
-    
+ 
+    my $pred_file_suffix =  $selection_pop_id ? '_' . $selection_pop_id : 0;    
     my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
    
-    write_file($file, $gebv_files);
-   
+    write_file($file, $gebv_files);   
     $c->stash->{gebv_files_of_traits} = $file;
 
     my $name2 = "gebv_files_of_valid_traits_${training_pop_id}${pred_file_suffix}";
