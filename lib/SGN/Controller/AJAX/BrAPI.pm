@@ -555,21 +555,19 @@ sub germplasm_search_save_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $search_params = {
+        germplasmName => $clean_inputs->{germplasmNames},
+        accessionNumber => $clean_inputs->{accessionNumbers},
+        commonCropName => $clean_inputs->{commonCropNames},
+        germplasmGenus => $clean_inputs->{germplasmGenus},
+        germplasmSpecies => $clean_inputs->{germplasmSpecies},
+        germplasmDbId => $clean_inputs->{germplasmDbIds},
+        germplasmPUI => $clean_inputs->{germplasmPUIs}
+    };
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->germplasm_search_save(
-        $tempfiles_subdir,
-        {
-            germplasmName => $clean_inputs->{germplasmNames},
-            accessionNumber => $clean_inputs->{accessionNumbers},
-            commonCropName => $clean_inputs->{commonCropNames},
-            germplasmGenus => $clean_inputs->{germplasmGenus},
-            germplasmSpecies => $clean_inputs->{germplasmSpecies},
-            germplasmDbId => $clean_inputs->{germplasmDbIds},
-            germplasmPUI => $clean_inputs->{germplasmPUIs}
-        }
-    );
+    my $brapi = $self->brapi_module;
+    my $search_module = $brapi->brapi_wrapper('Search');
+    my $brapi_package_result = $search_module->save_search($tempfiles_subdir, $search_params);
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -579,10 +577,12 @@ sub germplasm_search_retrieve  : Chained('brapi') PathPart('search/germplasm') A
     my $search_id = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
-    my $brapi_package_result = $brapi_module->germplasm_search_retrieve( $tempfiles_subdir, $search_id );
+    my $brapi = $self->brapi_module;
+    my $search_module = $brapi->brapi_wrapper('Search');
+    my $search_params = $search_module->retrieve_search($tempfiles_subdir, $search_id);
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search($search_params);
     _standard_response_construction($c, $brapi_package_result);
 }
 

@@ -9,7 +9,6 @@ use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
-use CXGN::BrAPI::Search;
 use CXGN::Cross;
 
 has 'bcs_schema' => (
@@ -59,63 +58,8 @@ sub germplasm_search {
     my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my @data_files;
-
-    my ($result, $status, $total_count) = execute_search($search_params);
-
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm-search result constructed');
-}
-
-sub germplasm_search_save {
-    my $self = shift;
-    my $tempfiles_subdir = shift;
-    my $search_params = shift;
-    my $page_size = $self->page_size;
-    my $page = $self->page;
     my $status = $self->status;
     my @data_files;
-
-    #create save object and save search params in db
-    my $search_object = CXGN::BrAPI::Search->new({
-        tempfiles_subdir => $tempfiles_subdir,
-        search_type => 'germplasm'
-    });
-
-    my $save_id = $search_object->save($search_params);
-    my %result = ( searchResultsDbId => $save_id );
-
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'search/germplasm result constructed');
-}
-
-sub germplasm_search_retrieve {
-    my $self = shift;
-    my $tempfiles_subdir = shift;
-    my $search_id = shift;
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my @data_files;
-
-    #create save object and retrieve search params from db
-    my $search_object = CXGN::BrAPI::Search->new({
-        tempfiles_subdir => $tempfiles_subdir,
-        search_type => 'germplasm'
-    });
-
-    my $search_params = $search_object->retrieve($search_id);
-    my ($result, $status, $total_count) = execute_search($self, $search_params);
-
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'search/germplasm result constructed');
-}
-
-sub execute_search {
-    my $self = shift;
-    my $search_params = shift;
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
 
     my @crop_names = $search_params->{commonCropName} ? @{$search_params->{commonCropName}} : ();
     my @germplasm_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
@@ -129,7 +73,7 @@ sub execute_search {
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
-	}
+    }
     my $match_type;
     if ($match_method eq 'exact'){
         $match_type = 'exactly';
@@ -218,7 +162,8 @@ sub execute_search {
     }
 
     my %result = (data => \@data);
-    return (\%result, $status, $total_count);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm-search result constructed');
 }
 
 sub germplasm_detail {
@@ -284,143 +229,6 @@ sub germplasm_detail {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
 }
-
-
-sub germplasm_pedigree {
-    my $self = shift;
-    my $inputs = shift;
-    my $stock_id = $inputs->{stock_id};
-    my $notation = $inputs->{notation};
-    my $status = $self->status;
-    if ($notation) {
-        push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
-        if ($notation ne 'purdy') {
-            push @$status, { 'error' => "Unsupported notation code '$notation'. Allowed notation: 'purdy'" };
-        }
-    }
-
-    my %result;
-    my @data_files;
-    my $total_count = 0;
-    my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
-    if ($s) {
-        $total_count = 1;
-        my $uniquename = $s->uniquename;
-        my $parents = $s->get_parents();
-        my $pedigree_string = $s->get_pedigree_string('Parents');
-        my $female_name = $parents->{'mother'};
-        my $male_name = $parents->{'father'};
-        my $female_id = $parents->{'mother_id'};
-        my $male_id = $parents->{'father_id'};
-
-        my $cross_info = CXGN::Cross->get_cross_info_for_progeny($self->bcs_schema, $female_id, $male_id, $stock_id);
-        my $cross_id = $cross_info ? $cross_info->[0] : '';
-        my $cross_name = $cross_info ? $cross_info->[1] : '';
-        my $cross_year = $cross_info ? $cross_info->[3] : '';
-        my $cross_type = $cross_info ? $cross_info->[2] : '';
-
-        my @siblings;
-        if ($female_name || $male_name){
-            my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
-            #print STDERR Dumper $progenies;
-            foreach (@$progenies){
-                if ($_->[5] ne $uniquename){
-                    my $germplasm_id = $_->[4];
-                    push @siblings, {
-                        germplasmDbId => qq|$germplasm_id|,
-                        defaultDisplayName => $_->[5]
-                    };
-                }
-            }
-        }
-
-        %result = (
-            germplasmDbId=>qq|$stock_id|,
-            defaultDisplayName=>$uniquename,
-            pedigree=>$pedigree_string,
-            crossingPlan=>$cross_type,
-            crossingYear=>$cross_year,
-            familyCode=>$cross_name,
-            parent1Id=>$female_id,
-            parent2Id=>$male_id,
-            parent1DbId=>$female_id,
-            parent1Name=>$female_name,
-            parent1Type=>'FEMALE',
-            parent2DbId=>$male_id,
-            parent2Name=>$male_name,
-            parent2Type=>'MALE',
-            siblings=>\@siblings
-        );
-    }
-
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
-}
-
-sub germplasm_detail {
-    my $self = shift;
-    my $stock_id = shift;
-    my $status = $self->status;
-    my @data_files;
-
-    my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
-    if (!$verify_id) {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
-    }
-
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my $stock_search = CXGN::Stock::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        people_schema=>$self->people_schema,
-        phenome_schema=>$self->phenome_schema,
-        match_type=>'exactly',
-        stock_id_list=>[$stock_id],
-        stock_type_id=>$accession_cvterm_id,
-        display_pedigree=>1,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
-    });
-    my ($result, $total_count) = $stock_search->search();
-
-    if ($total_count != 1){
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId did not return 1 result');
-    }
-    my @type_of_germplasm_storage_codes = $result->[0]->{'type of germplasm storage code'} ? split ',', $result->[0]->{'type of germplasm storage code'} : ();
-    my @ncbi_taxon_ids = split ',', $result->[0]->{'ncbi_taxonomy_id'};
-    my @taxons;
-    foreach (@ncbi_taxon_ids){
-        push @taxons, {
-            sourceName => 'NCBI',
-            taxonId => $_
-        };
-    }
-    my %result = (
-        germplasmDbId=>$result->[0]->{stock_id},
-        defaultDisplayName=>$result->[0]->{uniquename},
-        germplasmName=>$result->[0]->{uniquename},
-        accessionNumber=>$result->[0]->{'accession number'},
-        germplasmPUI=>$result->[0]->{'PUI'},
-        pedigree=>$result->[0]->{pedigree},
-        germplasmSeedSource=>$result->[0]->{'seed source'},
-        synonyms=> $result->[0]->{synonyms},
-        commonCropName=>$result->[0]->{common_name},
-        instituteCode=>$result->[0]->{'institute code'},
-        instituteName=>$result->[0]->{'institute name'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
-        countryOfOriginCode=>$result->[0]->{'country of origin'},
-        typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
-        genus=>$result->[0]->{genus},
-        species=>$result->[0]->{species},
-        taxonIds=>\@taxons,
-        speciesAuthority=>$result->[0]->{speciesAuthority},
-        subtaxa=>$result->[0]->{subtaxa},
-        subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
-        donors=>$result->[0]->{donors},
-        acquisitionDate=>$result->[0]->{'acquisition date'},
-    );
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
-}
-
 
 sub germplasm_pedigree {
     my $self = shift;
@@ -594,6 +402,5 @@ sub germplasm_markerprofiles {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm markerprofiles result constructed');
 }
-
 
 1;
