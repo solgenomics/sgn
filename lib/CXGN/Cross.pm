@@ -468,8 +468,6 @@ sub get_cross_progenies_trial {
 
 }
 
-=cut
-
 
 
 =head2 delete

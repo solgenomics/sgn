@@ -77,9 +77,13 @@ sub get_root_nodes {
 sub store_composed_term {
     my $self = shift;
     my $new_trait_names = shift;
+    #print STDERR Dumper $new_trait_names;
 
     my $schema = $self->schema();
     my $dbh = $schema->storage->dbh;
+
+    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' });
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' });
 
     my @new_terms;
     foreach my $name (sort keys %$new_trait_names){
@@ -129,9 +133,6 @@ sub store_composed_term {
 
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
-
-        my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' });
-        my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' });
 
         my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
             subject_id => $new_term->cvterm_id(),

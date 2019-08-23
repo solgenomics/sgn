@@ -24,6 +24,7 @@ use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
+use CXGN::Trial::TrialLayoutDownload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -102,8 +103,11 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
         $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-        $error .= $c->stash->{trial}->delete_phenotype_data();
+        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
     }
 
     elsif ($datatype eq 'layout') {
@@ -1323,6 +1327,24 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     $c->stash->{rest} = {design => $design};
 }
 
+sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
+
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $c->stash->{trial_id},
+        data_level => 'plots',
+        #treatment_project_ids => [1,2],
+        selected_columns => $selected_cols,
+    });
+    my $output = $trial_layout_download->get_layout_output();
+
+    $c->stash->{rest} = $output;
+}
+
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2059,38 +2081,31 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
 sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $pheno_ids = $c->req->param('pheno_id');
-    my $trait_ids = $c->req->param('traits_id');
+    my $pheno_ids = $c->req->param('pheno_id') ? JSON::decode_json($c->req->param('pheno_id')) : [];
+    my $trait_ids = $c->req->param('traits_id') ? JSON::decode_json($c->req->param('traits_id')) : [];
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial = $c->stash->{trial};
 
     if (!$c->user()) {
-    	print STDERR "User not logged in... not deleting trait.\n";
-    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
-    	return;
+        print STDERR "User not logged in... not deleting trait.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+        return;
     }
 
     if ($self->privileges_denied($c)) {
-      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
-      return;
+        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+        return;
     }
 
-    my $delete_trait_return_error;
-    if ($pheno_ids){
-            my $phenotypes_ids = JSON::decode_json($pheno_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
-    }
-    if ($trait_ids){
-        my $traits_ids = JSON::decode_json($trait_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
-    }
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $pheno_ids, $trait_ids);
 
     if ($delete_trait_return_error) {
-      $c->stash->{rest} = { error => $delete_trait_return_error };
-      return;
+        $c->stash->{rest} = { error => $delete_trait_return_error };
+    } else {
+        $c->stash->{rest} = { success => 1};
     }
-
-    $c->stash->{rest} = { success => 1};
 }
 
 sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {

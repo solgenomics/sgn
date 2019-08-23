@@ -26,6 +26,7 @@ my $plugin = "TrialLayoutCSV";
 my $download = CXGN::Trial::Download->new({
     bcs_schema => $schema,
     trial_id => $c->stash->{trial_id},
+    trial_list => \@trial_ids,
     trait_list => \@trait_list,
     filename => $tempfile,
     format => $plugin,
@@ -56,30 +57,42 @@ sub validate {
 
 sub download { 
     my $self = shift;
-
-    my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $self->trial_id() });
-    my $treatments = $trial->get_treatments();
+    my @trial_ids = $self->trial_id() ? ($self->trial_id()) : ();
+    if ($self->trial_list) {
+        push @trial_ids, (@{$self->trial_list});
+    }
 
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
 
-    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-        schema => $self->bcs_schema,
-        trial_id => $self->trial_id,
-        data_level => $self->data_level,
-        treatment_project_ids => $self->treatment_project_ids,
-        selected_columns => $self->selected_columns,
-        selected_trait_ids => $self->trait_list,
-    });
-    my $output = $trial_layout_download->get_layout_output();
-    if ($output->{error_messages}){
-        return $output;
-    }
-    my @output_array = @{$output->{output}};
-    foreach my $l (@output_array){
-        print $F '"';
-        print $F join '","', @$l;
-        print $F '"';
-        print $F "\n";
+    my $it = 0;
+    foreach my $trial_id (@trial_ids) {
+        my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+        my $treatments = $trial->get_treatments();
+
+        my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+            schema => $self->bcs_schema,
+            trial_id => $trial_id,
+            data_level => $self->data_level,
+            treatment_project_ids => $self->treatment_project_ids,
+            selected_columns => $self->selected_columns,
+            selected_trait_ids => $self->trait_list,
+        });
+        my $output = $trial_layout_download->get_layout_output();
+        if ($output->{error_messages}){
+            return $output;
+        }
+        my @output_array = @{$output->{output}};
+        if ($it > 0) {
+            my $header = shift @output_array;
+        }
+        no warnings 'uninitialized';
+        foreach my $l (@output_array){
+            print $F '"';
+            print $F join '","', @$l;
+            print $F '"';
+            print $F "\n";
+        }
+        $it++;
     }
 
     close($F);

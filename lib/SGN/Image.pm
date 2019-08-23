@@ -49,6 +49,8 @@ use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::Tag;
 use CXGN::Metadata::Metadbdata;
+use SGN::Model::Cvterm;
+use Data::Dumper;
 
 use CatalystX::GlobalContext '$c';
 
@@ -128,7 +130,7 @@ sub get_image_url {
 
 sub process_image {
     my $self = shift;
-    my ($filename, $type, $type_id) = @_;
+    my ($filename, $type, $type_id, $linking_table_type_id) = @_;
 
     $self->SUPER::process_image($filename);
 
@@ -153,6 +155,9 @@ sub process_image {
     } 
     elsif ( $type eq "cvterm" ) {
 	$self->associate_cvterm($type_id);
+    }
+    elsif ( $type eq "project" ) {
+        $self->associate_project($type_id, $linking_table_type_id);
     }
 
     elsif ( $type eq "test") { 
@@ -198,7 +203,7 @@ sub get_img_src_tag {
     my $self = shift;
     my $size = shift;
     my $url  = $self->get_image_url($size);
-    my $name = $self->get_name();
+    my $name = $self->get_name() || '';
     if ( $size && $size eq "original" ) {
 
         my $static = $self->config()->get_conf("static_datasets_url");
@@ -206,9 +211,9 @@ sub get_img_src_tag {
         return
             "<a href=\""
           . ($url)
-          . "\"><img src=\"$static/images/download_icon.png\" border=\"0\" alt=\""
+          . "\"><span class=\"glyphicon glyphicon-floppy-save\" alt=\""
           . $name
-          . "\" /></a>";
+          . "\" ></a>";
     }
     elsif ( $size && $size eq "tiny" ) {
         return
@@ -344,6 +349,7 @@ sub upload_fieldbook_zipfile {
         my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
         #print STDERR "Count: $md_image\n";
         if ($md_image > 0) {
+            print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
             $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);
@@ -354,6 +360,34 @@ sub upload_fieldbook_zipfile {
         }
     }
     return $error_status;
+}
+
+sub upload_drone_imagery_zipfile {
+    my $self = shift;
+    my $image_zip = shift;
+    my $user_id = shift;
+    my $project_id = shift;
+    my $c = $self->config();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $schema->storage->dbh;
+
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        return {error => 'Could not read your zipfile. Is it .zip format?</br></br>'};
+    }
+
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+    print STDERR Dumper scalar(@$file_members);
+    my @image_files;
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        #print STDERR Dumper $_;
+        my $temp_file = $image->upload_zipfile_images($_);
+        push @image_files, $temp_file;
+    }
+    return {image_files => \@image_files};
 }
 
 sub upload_zipfile_images {
@@ -417,8 +451,11 @@ sub upload_image {
 sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
+    my $username = shift;
     if ($stock_id) {
-        my $username = $self->config->can('user_exists') ? $self->config->user->get_object->get_username : $self->config->username;
+        if (!$username) {
+            $username = $self->config->can('user_exists') ? $self->config->user->get_object->get_username : $self->config->username;
+        }
         if ($username) {
             my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema');
             my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $username);
@@ -429,6 +466,9 @@ sub associate_stock  {
             $sth->execute($stock_id, $self->get_image_id, $metadata_id);
             my ($stock_image_id) = $sth->fetchrow_array;
             return $stock_image_id;
+        }
+        else {
+            die "No username. Could not save image-stock association!\n";
         }
     }
     return undef;
@@ -556,6 +596,30 @@ sub get_experiments {
         push @experiments, CXGN::Insitu::Experiment->new($self->get_dbh(), $experiment_id);
     }
     return @experiments;
+}
+
+=head2 associate_project
+
+ Usage: $image->associate_project($project_id);
+ Desc:  associate an image with an project entry via the phenome.project_md_image table
+ Ret:   a database id
+ Args:  experiment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub associate_project {
+    my $self = shift;
+    my $project_id = shift;
+    my $linking_table_type_id = shift;
+    my $query = "INSERT INTO phenome.project_md_image
+                 (image_id, project_id, type_id)
+                 VALUES (?, ?, ?)";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute($self->get_image_id(), $project_id, $linking_table_type_id);
+    my $id= $self->get_currval("phenome.project_md_image_project_md_image_id_seq");
+    return $id;
 }
 
 =head2 associate_fish_result

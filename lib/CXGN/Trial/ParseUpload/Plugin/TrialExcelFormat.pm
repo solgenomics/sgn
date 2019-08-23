@@ -15,6 +15,8 @@ sub _validate_with_plugin {
   my $schema = $self->get_chado_schema();
   my %errors;
   my @error_messages;
+  my %warnings;
+  my @warning_messages;
   my %missing_accessions;
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
@@ -211,8 +213,11 @@ sub _validate_with_plugin {
     if (!$plot_name || $plot_name eq '' ) {
         push @error_messages, "Cell A$row_name: plot name missing.";
     }
-    elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
-        push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
+    elsif ($plot_name =~ /\s/ ) {
+        push @error_messages, "Cell A$row_name: plot name must not contain spaces.";
+    }
+    elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
+        push @warning_messages, "Cell A$row_name: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
     }
     else {
         $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
@@ -337,6 +342,11 @@ sub _validate_with_plugin {
     });
     while (my $r=$rs->next){
         push @error_messages, "Cell A".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
+    }
+
+    if (scalar(@warning_messages) >= 1) {
+        $warnings{'warning_messages'} = \@warning_messages;
+        $self->_set_parse_warnings(\%warnings);
     }
 
     #store any errors found in the parsed file to parse_errors accessor

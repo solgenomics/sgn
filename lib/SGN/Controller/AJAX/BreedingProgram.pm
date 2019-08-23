@@ -201,7 +201,8 @@ sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0)
     my $accessions = $program->get_accessions;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my @formatted_accessions;
-    
+   
+
     foreach my $id ( @$accessions ) {
 	my $acc =  my $row = $schema->resultset("Stock::Stock")->find(  
 	    { stock_id => $id , } 
