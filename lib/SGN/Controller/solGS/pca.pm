@@ -648,10 +648,8 @@ sub pca_pheno_input_files {
 sub run_pca {
     my ($self, $c) = @_;
  
-    my $cores = qx/lscpu | grep -e '^CPU(s)'/;   
-    my ($name, $cores) = split(':', $cores);
-    $cores =~ s/\s+//g;
-     
+    my $cores = $c->controller('solGS::Utils')->count_cores();
+    
     if ($cores > 1) 
     {
     	$self->run_pca_multi_cores($c);
