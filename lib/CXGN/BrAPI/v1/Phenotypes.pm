@@ -58,7 +58,7 @@ sub search {
     my ($result, $status, $total_count) = execute_search($search_params);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Phenotype search result constructed');
 }
 
 sub search_save {
@@ -220,7 +220,7 @@ sub search_table {
     my ($result, $status, $total_count) = execute_search_table($search_params);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
 }
 
 sub search_table_save {
