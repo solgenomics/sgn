@@ -84,9 +84,14 @@ sub image_analysis_submit_POST : Args(0) {
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
-    my $server_endpoint;
-    if ($service eq 'necrosis') {
-        $server_endpoint = "http://18.219.45.102/necrosis/api2/";
+    if ($service eq 'necrosis' || $service eq 'whitefly_count') {
+        my $server_endpoint;
+        if ($service eq 'necrosis') {
+            $server_endpoint = "http://18.219.45.102/necrosis/api2/";
+        }
+        if ($service eq 'whitefly_count') {
+            $server_endpoint = "http://18.216.149.204/home/api2/";
+        }
         print STDERR $server_endpoint."\n";
 
         my $image_type_name = "image_analysis_necrosis_solomon_nsumba";

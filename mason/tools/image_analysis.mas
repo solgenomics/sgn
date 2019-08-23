@@ -99,6 +99,7 @@
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
                             <option value="count_sift">SIFT Feature Count</option>
+                            <option value="whitefly_count">Whitefly Count (Solomon Nsumba)</option>
                         </select>
                     </div>
                 </div>

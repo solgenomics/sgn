@@ -403,36 +403,40 @@ sub upload_phenotypes_associated_images_zipfile {
         }
         my $stock_id = $image_observation_unit_hash->{$img_name}->{stock_id};
         my $project_id = $image_observation_unit_hash->{$img_name}->{project_id};
+        if ($stock_id && $project_id) {
+            my $temp_file = $image->upload_zipfile_images($_);
 
-        my $temp_file = $image->upload_zipfile_images($_);
-
-        #Check if image already stored in database
-        $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-            JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-            WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.original_filename = '$basename';";
-        my $h = $schema->storage->dbh->prepare($q);
-        $h->execute();
-        my ($saved_image_id) = $h->fetchrow_array();
-        my $image_id;
-        if ($saved_image_id) {
-            print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
-            $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-            $image_id = $image->get_image_id();
+            #Check if image already stored in database
+            $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+                JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+                WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.original_filename = '$basename';";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute();
+            my ($saved_image_id) = $h->fetchrow_array();
+            my $image_id;
+            if ($saved_image_id) {
+                print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
+                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                $image_id = $image->get_image_id();
+            }
+            else {
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
+                if (!$ret ) {
+                    return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                }
+                print STDERR "Saved $temp_file\n";
+                my $stock_associate = $image->associate_stock($stock_id);
+                $image_id = $image->get_image_id();
+                my $added_image_tag_id = $image->add_tag($image_tag);
+            }
+            $observationunit_stock_id_image_id{$stock_id} = $image_id;
         }
         else {
-            $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
-            if (!$ret ) {
-                return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
-            }
-            print STDERR "Saved $temp_file\n";
-            my $stock_associate = $image->associate_stock($stock_id);
-            $image_id = $image->get_image_id();
-            my $added_image_tag_id = $image->add_tag($image_tag);
+            print STDERR "$img_name Not Included in the uploaded phenotype spreadsheet, skipping..\n";
         }
-        $observationunit_stock_id_image_id{$stock_id} = $image_id;
     }
     return {return => \%observationunit_stock_id_image_id};
 }
