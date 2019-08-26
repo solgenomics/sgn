@@ -8,7 +8,7 @@ use File::Basename;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw / mkpath  /;
 use File::Temp qw / tempfile tempdir /;
-use File::Slurp qw /write_file read_file :edit prepend_file/;
+use File::Slurp qw /write_file read_file/;
 use JSON;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
@@ -826,9 +826,7 @@ sub cluster_query_jobs {
 sub run_cluster {
     my ($self, $c) = @_;
  
-    my $cores = qx/lscpu | grep -e '^CPU(s)'/;   
-    my ($name, $cores) = split(':', $cores);
-    $cores =~ s/\s+//g;
+    my $cores = $c->controller('solGS::Utils')->count_cores();
      
     if ($cores > 1) 
     {
