@@ -66,7 +66,8 @@ sub patch {
             'image_analysis_contours',
             'image_analysis_sift',
             'image_analysis_largest_contour',
-            'image_analysis_necrosis_solomon_nsumba'
+            'image_analysis_necrosis_solomon_nsumba',
+            'image_analysis_white_fly_count_solomon_nsumba'
         ]
     };
 

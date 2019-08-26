@@ -86,15 +86,17 @@ sub image_analysis_submit_POST : Args(0) {
     );
     if ($service eq 'necrosis' || $service eq 'whitefly_count') {
         my $server_endpoint;
+        my $image_type_name;
         if ($service eq 'necrosis') {
             $server_endpoint = "http://18.219.45.102/necrosis/api2/";
+            $image_type_name = "image_analysis_necrosis_solomon_nsumba";
         }
         if ($service eq 'whitefly_count') {
             $server_endpoint = "http://18.216.149.204/home/api2/";
+            $image_type_name = "image_analysis_white_fly_count_solomon_nsumba";
         }
         print STDERR $server_endpoint."\n";
 
-        my $image_type_name = "image_analysis_necrosis_solomon_nsumba";
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
 
         my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
