@@ -156,7 +156,7 @@ sub get_top_10_selection_indices {
     
     my $si_file = $c->stash->{selection_index_only_file};
   
-    my $si_data = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $si_file);
+    my $si_data = $c->controller('solGS::Utils')->read_file($c, $si_file);
     my @top_genotypes = @$si_data[0..9];
     
     $c->stash->{top_10_selection_indices} = \@top_genotypes;

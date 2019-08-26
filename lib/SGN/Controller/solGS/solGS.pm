@@ -1082,7 +1082,7 @@ sub download_urls {
 sub top_blups {
     my ($self, $c, $blups_file) = @_;
       
-    my $blups = $self->convert_to_arrayref_of_arrays($c, $blups_file);
+    my $blups = $self->read_file($c, $blups_file);
     my @top_blups;
     if (scalar(@$blups) > 10) 
     {
@@ -1102,7 +1102,7 @@ sub top_markers {
     
     my $markers_file = $c->stash->{marker_effects_file};
 
-    my $markers = $self->convert_to_arrayref_of_arrays($c, $markers_file);
+    my $markers = $self->read_file($c, $markers_file);
     
     my @top_markers = @$markers[0..9];
 
@@ -1612,7 +1612,7 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
 }
 
 
-sub convert_to_arrayref_of_arrays {
+sub >read_file {
     my ($self, $c, $file) = @_;
  
     my @lines = read_file($file); 
@@ -2445,7 +2445,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-    my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
+    my $trait_data = $self->read_file($c, $trait_pheno_file);
 
     my $ret->{status} = 'failed';
     
@@ -2471,7 +2471,7 @@ sub trait_phenotype_stat {
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
-    my $trait_data = $self->convert_to_arrayref_of_arrays($c, $trait_pheno_file);
+    my $trait_data = $self->read_file($c, $trait_pheno_file);
     
     my @desc_stat;
     my $background_job = $c->stash->{background_job};
@@ -2580,7 +2580,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
        
     }
 
-    my $gebv_data = $self->convert_to_arrayref_of_arrays($c, $gebv_file);
+    my $gebv_data = $self->read_file($c, $gebv_file);
 
     my $ret->{status} = 'failed';
     
