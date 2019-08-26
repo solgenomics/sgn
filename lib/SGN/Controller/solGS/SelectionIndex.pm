@@ -3,7 +3,7 @@ package SGN::Controller::solGS::SelectionIndex;
 use Moose;
 use namespace::autoclean;
 
-use File::Slurp qw /write_file read_file :edit prepend_file append_file/;
+use File::Slurp qw /write_file read_file/;
 use List::MoreUtils qw /uniq/;
 
 use JSON;
@@ -154,12 +154,8 @@ sub calc_selection_index {
 sub get_top_10_selection_indices {
     my ($self, $c) = @_;
     
-    my $si_file = $c->stash->{selection_index_only_file};
-  
-    my $si_data = $c->controller('solGS::Utils')->read_file($c, $si_file);
-    my @top_genotypes = @$si_data[0..9];
-    
-    $c->stash->{top_10_selection_indices} = \@top_genotypes;
+    my $si_file = $c->stash->{selection_index_only_file};   
+    $c->stash->{top_10_selection_indices} = $c->controller('solGS::Utils')->top_10($si_file);
 }
 
 

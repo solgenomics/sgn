@@ -8,7 +8,7 @@ use URI::FromHash 'uri';
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Temp qw / tempfile tempdir /;
-use File::Slurp qw /write_file read_file :edit prepend_file append_file/;
+use File::Slurp qw /write_file read_file/;
 use File::Copy;
 use File::Basename;
 use Cache::File;
@@ -827,14 +827,14 @@ sub trait :Path('/solgs/trait') Args(3) {
     if ($pop_id && $trait_id)
     {    
 	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-	my $out_file = $c->stash->{rrblup_training_gebvs_file};
+	my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
 	$self->project_description($c, $pop_id);
 	my $training_pop_name = $c->stash->{project_name};
 	my $training_pop_desc = $c->stash->{project_desc};
 	my $training_pop_page = qq | <a href="/solgs/population/$pop_id">$training_pop_name</a> |;
 	
-	if (!-s $c->stash->{rrblup_training_gebvs_file})
+	if (!-s $gebv_file)
 	{	 
 	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" . 
 	     " Please go to $training_pop_page and run the analysis.";
@@ -868,9 +868,9 @@ sub gs_modeling_files {
     $self->output_files($c);
     $self->input_files($c);
     $self->model_accuracy($c);
-    $c->controller('solGS::Files')->blups_file($c);
+    $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
     $self->download_urls($c);
-    $self->top_markers($c);
+    $self->top_markers($c, $c->stash->{marker_effects_file});
     $self->model_parameters($c);
 
 }
@@ -1079,34 +1079,18 @@ sub download_urls {
 }
 
 
-sub top_blups {
-    my ($self, $c, $blups_file) = @_;
-      
-    my $blups = $self->read_file($c, $blups_file);
-    my @top_blups;
-    if (scalar(@$blups) > 10) 
-    {
-	@top_blups = @$blups[0..9];
-    }
-    else 
-    {
-	@top_blups = @$blups;
-    }
 
-    $c->stash->{top_blups} = \@top_blups;
+sub top_markers {
+    my ($self, $c, $markers_file) = @_;
+    
+    $c->stash->{top_marker_effects} = $c->controller('solGS::Utils')->top_10($markers_file);
 }
 
 
-sub top_markers {
-    my ($self, $c) = @_;
-    
-    my $markers_file = $c->stash->{marker_effects_file};
-
-    my $markers = $self->read_file($c, $markers_file);
-    
-    my @top_markers = @$markers[0..9];
-
-    $c->stash->{top_marker_effects} = \@top_markers;
+sub top_blups {
+    my ($self, $c, $gebv_file) = @_;
+       
+    $c->stash->{top_blups} = $c->controller('solGS::Utils')->top_10($gebv_file);
 }
 
 
@@ -1612,19 +1596,6 @@ sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args
 }
 
 
-sub >read_file {
-    my ($self, $c, $file) = @_;
- 
-    my @lines = read_file($file); 
-    shift(@lines); 
-   
-    my @data; 
-    push @data,  map { [ split(/\t/), $_ ]  } @lines;
-      
-    return \@data;
-
-}
-
 
 sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
     my ($self, $c, $tr_pop_id) = @_;
@@ -1929,7 +1900,7 @@ sub save_selection_pops {
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $selection_pops_file = $c->stash->{list_of_prediction_pops_file};
 
-    my @existing_pops_ids = split(/\n/, read_file($selection_pops_file));
+    my @existing_pops_ids = read_file($selection_pops_file);
    
     my @uniq_ids = unique(@existing_pops_ids, @$selection_pop_id);
     my $formatted_ids = join("\n", @uniq_ids);
@@ -1967,7 +1938,7 @@ sub list_of_prediction_pops {
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
   
-    my @pred_pops_ids = split(/\n/, read_file($pred_pops_file));
+    my @pred_pops_ids = read_file($pred_pops_file);
     $c->stash->{selection_pops_ids} = \@pred_pops_ids;
     
     $self->format_selection_pops($c, \@pred_pops_ids);
@@ -2445,7 +2416,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-    my $trait_data = $self->read_file($c, $trait_pheno_file);
+    my $trait_data = $c->controller("solGS::Utils")->read_file($trait_pheno_file);
 
     my $ret->{status} = 'failed';
     
@@ -2471,7 +2442,7 @@ sub trait_phenotype_stat {
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
-    my $trait_data = $self->read_file($c, $trait_pheno_file);
+    my $trait_data = $c->controller("solGS::Utils")->read_file($trait_pheno_file);
     
     my @desc_stat;
     my $background_job = $c->stash->{background_job};
@@ -2576,11 +2547,10 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     else
     { 
         $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-        $gebv_file = $c->stash->{rrblup_training_gebvs_file};
-       
+        $gebv_file = $c->stash->{rrblup_training_gebvs_file};       
     }
 
-    my $gebv_data = $self->read_file($c, $gebv_file);
+    my $gebv_data = $c->controller("solGS::Utils")->read_file($gebv_file);
 
     my $ret->{status} = 'failed';
     

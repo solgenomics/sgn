@@ -311,12 +311,13 @@ sub relationship_matrix_file {
 }
 
 
-sub blups_file {
-    my ($self, $c) = @_;
+# sub blups_file {
+#     my ($self, $c) = @_;
     
-    my $blups_file = $c->stash->{rrblup_training_gebvs_file};
-    $c->controller('solGS::solGS')->top_blups($c, $blups_file);
-}
+#     my $blups_file = $c->stash->{rrblup_training_gebvs_file};
+#     my $top_blups = $c->controller('solGS::Utils')->top_10($blups_file);
+#     $c->stash->{top_blups} = $top_blups;
+# }
 
 
 sub validation_file {
