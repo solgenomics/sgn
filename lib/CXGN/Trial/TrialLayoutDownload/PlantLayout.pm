@@ -153,7 +153,7 @@ sub retrieve {
             }
         }
         $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{plant_name});
-        $line = $self->_add_exact_performance_to_line($line, $exact_performance_hash, $design_info->{plant_name});
+        $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{plant_name});
         $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info);
         push @output, $line;
     }

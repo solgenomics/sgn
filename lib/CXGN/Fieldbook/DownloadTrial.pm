@@ -122,9 +122,9 @@ has 'selected_columns' => (
 );
 
 has 'include_measured'=> (
-    isa => 'Bool|Undef',
     is => 'rw',
-    default => 0
+    isa => 'Str',
+    default => 'true',
 );
 
 has 'selected_trait_ids'=> (

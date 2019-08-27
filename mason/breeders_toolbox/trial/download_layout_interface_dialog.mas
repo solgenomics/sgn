@@ -90,9 +90,9 @@ $download_type
                 <div id="accession_average_performance">
                     <div class="well">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Include exisiting plot phenotypes: </label>
+                            <label class="col-sm-3 control-label">Include existing plot phenotypes: </label>
                             <div class="col-sm-2" >
-                                 <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" class="form-check-input" checked>
+                                 <input id="create_fieldbook_include_measured_<% $download_type %>" value="true" type="checkbox" class="form-check-input" checked>
                             </div>
                             <label class="col-sm-3 control-label">Include summary of overall accession performance (for a list of traits): </label>
                             <div class="col-sm-4" >

@@ -43,8 +43,7 @@ sub search {
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
 
-    my $h = $schema->storage->dbh->prepare("
-        SELECT stock.name, synonym, phenotype.value
+    my $h = $schema->storage->dbh->prepare("SELECT stock.name, synonym, phenotype.value
         FROM project
         JOIN nd_experiment_project using(project_id)
         JOIN nd_experiment_stock on(nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -53,8 +52,7 @@ sub search {
         JOIN phenotype using(phenotype_id)
         JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id)
         JOIN cvtermsynonym using(cvterm_id)
-        WHERE project_id = ? AND synonym NOT LIKE '% %' AND synonym NOT LIKE '\%_%';"
-    );
+        WHERE project_id = ? AND synonym NOT LIKE '% %' AND synonym NOT LIKE '%\\_%';");
 
     $h->execute($trial_id);
 

@@ -16,13 +16,13 @@ my $trial_plot_layout = CXGN::Trial::TrialLayoutDownload::PlotLayout->new({
     design => $design,
     trial => $selected_trial,
     treatment_info_hash => \%treatment_info_hash,
-    phenotype_performance_hash => \%fieldbook_trait_hash
+    overall_performance_hash => \%fieldbook_trait_hash
 });
 my $result = $trial_plot_layout->retrieve();
 
 =head1 DESCRIPTION
 
-Will output an array of arrays, where each row is a plot in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial. additionally, trait performance can be included in column using the phenotype_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
+Will output an array of arrays, where each row is a plot in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial. additionally, trait performance can be included in column using the overall_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
 
 =head1 AUTHORS
 
@@ -50,8 +50,10 @@ sub retrieve {
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
     my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
-    my $phenotype_performance_hash = $self->phenotype_performance_hash || {};
-    my @trait_names = sort keys %$phenotype_performance_hash;
+    my $exact_performance_hash = $self->exact_performance_hash || {};
+    my $overall_performance_hash = $self->overall_performance_hash || {};
+    my @exact_trait_names = sort keys %$exact_performance_hash;
+    my @overall_trait_names = sort keys %$overall_performance_hash;
     my @output;
 
     my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
@@ -65,9 +67,13 @@ sub retrieve {
     foreach (@$treatment_name_list){
         push @header, "ManagementFactor:".$_;
     }
-    foreach (@trait_names){
+    foreach (@exact_trait_names){
         push @header, $_;
     }
+    foreach (@overall_trait_names){
+        push @header, $_;
+    }
+
     push @output, \@header;
 
     my $trial_name = $trial->get_name ? $trial->get_name : '';
@@ -105,7 +111,8 @@ sub retrieve {
             }
         }
         $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{'plot_name'});
-        $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
+        $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{'plot_name'});
+        $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info);
         push @output, $line;
     }
 

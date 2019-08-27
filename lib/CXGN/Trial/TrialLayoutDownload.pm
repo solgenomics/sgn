@@ -61,6 +61,7 @@ use CXGN::Stock;
 use CXGN::Stock::Accession;
 use JSON;
 use CXGN::Phenotypes::Summary;
+use CXGN::Phenotypes::Exact;
 use CXGN::Trial::TrialLayoutDownload::PlotLayout;
 use CXGN::Trial::TrialLayoutDownload::PlantLayout;
 use CXGN::Trial::TrialLayoutDownload::SubplotLayout;
@@ -97,9 +98,9 @@ has 'selected_columns' => (
 );
 
 has 'include_measured'=> (
-    isa => 'Bool|Undef',
     is => 'rw',
-    default => 0
+    isa => 'Str',
+    default => 'true',
 );
 
 has 'selected_trait_ids'=> (
@@ -138,7 +139,12 @@ has 'treatment_info_hash' => (
 );
 
 #This phenotype_performance_hash is a hashref of hashref where the top key is the trait name, subsequent key is the stock id, and subsequent object contains mean, mix, max, stdev, count, etc for that trait and stock
-has 'phenotype_performance_hash' => (
+has 'exact_performance_hash' => (
+    isa => 'HashRef',
+    is => 'rw',
+);
+
+has 'overall_performance_hash' => (
     isa => 'HashRef',
     is => 'rw',
 );
@@ -148,6 +154,7 @@ sub get_layout_output {
     my $trial_id = $self->trial_id();
     my $schema = $self->schema();
     my $data_level = $self->data_level();
+    my $include_measured = $self->include_measured();
     my %selected_cols = %{$self->selected_columns};
     my $treatments = $self->treatment_project_ids();
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
@@ -223,7 +230,6 @@ sub get_layout_output {
     #print STDERR Dumper \%fieldbook_trait_hash;
 
     #get include measured on plot/plant level using trial_id
-
     my $exact_values;
     if ($include_measured) {
         my $exact = CXGN::Phenotypes::Exact->new({
@@ -319,7 +325,7 @@ sub get_layout_output {
         design => $design,
         trial => $selected_trial,
         treatment_info_hash => \%treatment_info_hash,
-        exact_performance_hash => \%exact_trait_hash
+        exact_performance_hash => \%exact_trait_hash,
         overall_performance_hash => \%overall_trait_hash
     };
     my $layout_output;
@@ -362,11 +368,11 @@ sub _add_treatment_to_line {
 
 sub _add_overall_performance_to_line {
     my $self = shift;
-    my $selected_trait_names = shift;
+    my $overall_trait_names = shift;
     my $line = shift;
     my $overall_trait_hash = shift;
     my $design_info = shift;
-    foreach my $t (@$selected_trait_names){
+    foreach my $t (@$overall_trait_names){
         my $perf = $overall_trait_hash->{$t}->{$design_info->{"accession_id"}};
         if($perf){
             push @$line, "Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6];
@@ -379,13 +385,13 @@ sub _add_overall_performance_to_line {
 
 sub _add_exact_performance_to_line {
     my $self = shift;
+    my $exact_trait_names = shift;
     my $line = shift;
     my $exact_trait_hash = shift;
-    my $stock_name = shift;
-    #my @exact_trait_names = sort keys %{$exact_trait_hash};
+    my $observationunit_name = shift;
 
-    foreach my $trait (sort keys %{$exact_trait_hash}){
-        my $value = $exact_trait_hash->{$trait}->{$stock_name};
+    foreach my $trait (@$exact_trait_names){
+        my $value = $exact_trait_hash->{$trait}->{$observationunit_name };
         if($value) {
             push @$line, $value
         } else {
