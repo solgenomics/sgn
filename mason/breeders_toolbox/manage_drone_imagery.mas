@@ -986,6 +986,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </div>
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
+                        <option value="lmer_germplasmname_block">LMER y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
                     </select>
 
                     <br/><br/>

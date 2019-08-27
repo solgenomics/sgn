@@ -247,26 +247,21 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     }
 
     my @data_matrix;
-    my @data_total;
     foreach (@$data) {
         my $germplasm_name = $_->{germplasm_uniquename};
-        my @row = ($_->{obsunit_rep}, $germplasm_name_encoder{$germplasm_name});
-        my @row2 = ($_->{observationunit_uniquename}, $_->{obsunit_rep}, $germplasm_name);
+        my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_name_encoder{$germplasm_name});
         foreach my $t (@sorted_trait_names) {
             if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
                 push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
-                push @row2, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
             } else {
                 print STDERR $_->{observationunit_uniquename}." : $t : $germplasm_name : NA \n";
                 push @row, 'NA';
-                push @row2, 'NA';
             }
         }
         push @data_matrix, @row;
-        push @data_total, \@row2;
     }
 
-    my @phenotype_header = ("replicate", "germplasmName");
+    my @phenotype_header = ("replicate", "block", "germplasmName");
     foreach (@sorted_trait_names) {
         push @phenotype_header, $trait_name_encoder{$_};
     }
@@ -287,6 +282,22 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $rmatrix->send_rbase($rbase, 'r_block');
             $r_block->add_command('library(lme4)');
             $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
+            $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+            $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+            $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+            $r_block->run_block();
+            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
+            #print STDERR Dumper $result_matrix;
+            push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+        }
+    }
+    elsif ($statistics_select eq 'lmer_germplasmname_block') {
+        foreach my $t (@sorted_trait_names) {
+            my $rbase = R::YapRI::Base->new();
+            my $r_block = $rbase->create_block('r_block');
+            $rmatrix->send_rbase($rbase, 'r_block');
+            $r_block->add_command('library(lme4)');
+            $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
             $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
             $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
             $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
