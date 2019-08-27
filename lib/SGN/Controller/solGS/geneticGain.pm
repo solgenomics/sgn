@@ -231,9 +231,7 @@ sub get_gebv_arrayref {
 sub check_population_type {
     my ($self, $c, $pop_id) = @_;
 
-    my $type = $c->model('solGS::solGS')->get_population_type($pop_id);
-
-    $c->stash->{population_type} = $type;
+    $c->stash->{population_type} = $c->model('solGS::solGS')->get_population_type($pop_id);
 }
 
 

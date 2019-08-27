@@ -1387,33 +1387,7 @@ sub prediction_pop_analyzed_traits {
 	    }
 	}	
     } 
-    # else
-    # {
-    # 	if ($training_pop_id !~ /$selection_pop_id/) 
-    # 	{
-    # 	    my  @files  =  grep { /rrblup_selection_gebvs_\w+_${identifier}/ && -s "$dir/$_" > 0 } 
-    # 	    readdir($dh); 
-	    
-    # 	    closedir $dh; 
-
-    # 	    if (@files) 
-    # 	    {
-    # 		my @copy_files = @files;
-		
-    # 		@trait_abbrs = map { s/rrblup_selection_gebvs_//g ? $_ : 0} @copy_files;
-    # 		@trait_abbrs = map { s/$identifier//g ? $_ : 0} @trait_abbrs;
-    # 		@trait_abbrs = map { s/\.txt|\s+|_//g ? $_ : 0 } @trait_abbrs;
-    # 	    }
-
-    # 	    foreach my $trait_abbr (@trait_abbrs)
-    # 	    {
-    # 		$c->stash->{trait_abbr} = $trait_abbr;
-    # 		$self->get_trait_details_of_trait_abbr($c);
-    # 		push @trait_ids, $c->stash->{trait_id};
-    # 	    }
-    # 	}	
-    # }
-  
+    
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
     
@@ -1564,11 +1538,11 @@ sub get_trait_details {
 	    $trait_id   = $row->id;
 	    $trait_name = $row->name;
 	    $trait_def  = $row->definition;
-	    $trait_abbr = $self->abbreviate_term($trait_name);
+	    $trait_abbr = $c->controller('solGS::Utils')->abbreviate_term($trait_name);
 	}	
     } 
    
-    my $abbr = $self->abbreviate_term($trait_name);
+    my $abbr = $c->controller('solGS::Utils')->abbreviate_term($trait_name);
        
     $c->stash->{trait_id}   = $trait_id;
     $c->stash->{trait_name} = $trait_name;
@@ -2061,7 +2035,7 @@ sub build_multiple_traits_models {
     for (my $i = 0; $i <= $#selected_traits; $i++)
     {  
 	my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
-	my $abbr = $self->abbreviate_term($tr);
+	my $abbr = $c->controller('solGS::Utils')->abbreviate_term($tr);
 	$traits .= $abbr;
 	$traits .= "\t" unless ($i == $#selected_traits); 	    
 	
@@ -2622,7 +2596,7 @@ sub get_all_traits {
 	my @filtered_traits = split(/\t/, $traits);
 	my $count = scalar(@filtered_traits);
 
-	my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);    
+	my $acronymized_traits = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits);    
 	my $acronym_table = $acronymized_traits->{acronym_table};
 
 	$self->traits_acronym_table($c, $acronym_table);
@@ -2817,42 +2791,6 @@ sub analyzed_traits {
     $c->stash->{analyzed_traits_files}  = \@analyzed_traits_files;
     $c->stash->{selection_index_traits} = \@si_traits;
     $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;   
-}
-
-
-sub abbreviate_term {
-    my ($self, $term) = @_;
-  
-    my @words = split(/\s/, $term);
-    
-    my $acronym;
-	
-    if (scalar(@words) == 1) 
-    {
-	$acronym = shift(@words);
-    }  
-    else 
-    {
-	foreach my $word (@words) 
-        {
-	    if ($word =~ /^\D/)
-            {
-		my $l = substr($word,0,1,q{}); 
-		$acronym .= $l;
-	    } 
-            else 
-            {
-                $acronym .= $word;
-            }
-
-	    $acronym = uc($acronym);
-	    $acronym =~/(\w+)/;
-	    $acronym = $1; 
-	}	   
-    }
-  
-    return $acronym;
-
 }
 
 
@@ -3412,7 +3350,7 @@ sub format_phenotype_dataset_headers {
     write_file($traits_file, $traits) if $traits_file;   
     my  @filtered_traits = split(/\t/, $traits);
          
-    my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);   
+    my $acronymized_traits = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits);   
     my $acronym_table = $acronymized_traits->{acronym_table};
 
     my $formatted_headers;
@@ -3436,34 +3374,6 @@ sub format_phenotype_dataset_headers {
 }
 
 
-sub acronymize_traits {
-    my ($self, $traits) = @_;
-  
-    my $acronym_table = {};  
-    my $cnt = 0;
-    my $acronymized_traits;
-
-    foreach my $trait_name (@$traits)
-    {
-	$cnt++;
-        my $abbr = $self->abbreviate_term($trait_name);
-
-	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};  
-
-        $acronymized_traits .= $abbr;
-	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
-	
-        $acronym_table->{$abbr} = $trait_name if $abbr;
-	my $tr_h = $acronym_table->{$abbr};
-    }
- 
-    my $acronym_data = {
-	'acronymized_traits' => $acronymized_traits,
-	'acronym_table'      => $acronym_table
-    };
-
-    return $acronym_data;
-}
 
 
 sub genotype_file  {
