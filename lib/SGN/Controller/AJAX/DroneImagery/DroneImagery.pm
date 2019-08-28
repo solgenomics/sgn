@@ -631,15 +631,15 @@ sub _perform_plot_polygon_assign {
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
 
-    my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
-    $pm->run_on_finish( sub {
-        my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
-        push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
-        push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
-    });
+    # my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
+    # $pm->run_on_finish( sub {
+    #     my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+    #     push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
+    #     push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
+    # });
 
     foreach my $stock_name (keys %$polygon_objs) {
-        my $pid = $pm->start and next;
+        #my $pid = $pm->start and next;
 
         my $polygon = $polygon_objs->{$stock_name};
         my $polygons = encode_json [$polygon];
@@ -680,9 +680,9 @@ sub _perform_plot_polygon_assign {
         }
         unlink($archive_plot_polygons_temp_image);
 
-        $pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
+        #$pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
     }
-    $pm->wait_all_children;
+    #$pm->wait_all_children;
 
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id
@@ -2884,16 +2884,16 @@ sub _perform_phenotype_automated {
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
         foreach my $phenotype_method (@$phenotype_types) {
-            my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
+            #my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
             foreach my $plot_polygon_type (@{$project_observation_unit_plot_polygons_types{$drone_run_band_project_type}->{$standard_process_type}}) {
-                my $pid = $pm->start and next;
+                #my $pid = $pm->start and next;
                 my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, 1);
                 if ($return->{error}){
                     print STDERR Dumper $return->{error};
                 }
-                $pm->finish();
+                #$pm->finish();
             }
-            $pm->wait_all_children;
+            #$pm->wait_all_children;
         }
     }
 
