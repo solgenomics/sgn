@@ -49,7 +49,7 @@ jQuery(document).ready(function(){
                         return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
                     }
                 }},
-                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot()' >Add</a>"; } },
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\")' >Add</a>"; } },
             ]
         });
     });
@@ -58,13 +58,13 @@ jQuery(document).ready(function(){
 
 
 
-function addSeedlot(){
+function addSeedlot(cross_name){
 
     var html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Seedlot Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_name" placeholder="Required"></div><br><br>';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Cross Unique ID: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_content" value="'+cross_name+'" disabled></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Seedlot Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_name" placeholder="Required"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Breeding Program: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_program" placeholder="Required"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Location: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_location" placeholder="Required"></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Content: </label><div class="col-sm-9" ><input class="form-control" id="new_cross_seedlot" placeholder="Required"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Amount: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_amount" placeholder="Number of seeds, required"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Organization: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_organization" placeholder="Optional"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_timestamp" placeholder="Required"></div><br><br>';
