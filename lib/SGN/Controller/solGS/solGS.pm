@@ -2390,7 +2390,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     $c->controller("solGS::Files")->trait_phenodata_file($c);
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-    my $trait_data = $c->controller("solGS::Utils")->read_file($trait_pheno_file);
+    my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
 
     my $ret->{status} = 'failed';
     
@@ -2416,7 +2416,7 @@ sub trait_phenotype_stat {
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
-    my $trait_data = $c->controller("solGS::Utils")->read_file($trait_pheno_file);
+    my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
     
     my @desc_stat;
     my $background_job = $c->stash->{background_job};
@@ -2524,7 +2524,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
         $gebv_file = $c->stash->{rrblup_training_gebvs_file};       
     }
 
-    my $gebv_data = $c->controller("solGS::Utils")->read_file($gebv_file);
+    my $gebv_data = $c->controller("solGS::Utils")->read_file_data($gebv_file);
 
     my $ret->{status} = 'failed';
     
@@ -3350,7 +3350,7 @@ sub format_phenotype_dataset_headers {
     write_file($traits_file, $traits) if $traits_file;   
     my  @filtered_traits = split(/\t/, $traits);
          
-    my $acronymized_traits = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits);   
+    my $acronymized_traits = SGN::Controller::solGS::Utils->acronymize_traits(\@filtered_traits);   
     my $acronym_table = $acronymized_traits->{acronym_table};
 
     my $formatted_headers;

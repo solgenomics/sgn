@@ -224,7 +224,7 @@ sub get_gebv_arrayref {
     my ($self, $c) = @_;
 
     my $file = $c->stash->{gebv_file};
-    $c->stash->{gebv_arrayref} = $c->controller('solGS::Utils')->read_file($file);
+    $c->stash->{gebv_arrayref} = $c->controller('solGS::Utils')->read_file_data($file);
 }
 
 

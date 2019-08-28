@@ -73,7 +73,7 @@ sub format_plot_data {
    my ($self, $c) = @_;
 
    my $file = $c->stash->{histogram_trait_file};
-   my $data = $c->controller('solGS::Utils')->read_file($$file);
+   my $data = $c->controller('solGS::Utils')->read_file_data($$file);
   
    return $data;
    

@@ -138,8 +138,8 @@ sub format_pca_output {
 	if ( -s $pca_scores_file && -s $pca_variance_file)
 	{
 	    my $ret->{status} = undef;
-	    my $pca_scores    = $c->controller('solGS::solGS')->read_file($c, $pca_scores_file);
-	    my $pca_variances = $c->controller('solGS::solGS')->read_file($c, $pca_variance_file);
+	    my $pca_scores    = $c->controller('solGS::Utils')->read_file_data($pca_scores_file);
+	    my $pca_variances = $c->controller('solGS::Utils')->read_file_data($pca_variance_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
         
@@ -235,7 +235,7 @@ sub format_pca_scores {
    my ($self, $c) = @_;
 
    my $file = $c->stash->{pca_scores_file};
-   my $data = $c->controller('solGS::solGS')->read_file($c, $file);
+   my $data = $c->controller('solGS::Utils')->read_file_data($file);
   
    $c->stash->{pca_scores} = $data;
 
