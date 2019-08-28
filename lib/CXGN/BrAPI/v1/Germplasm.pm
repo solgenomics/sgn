@@ -53,7 +53,7 @@ has 'status' => (
     required => 1,
 );
 
-sub germplasm_search {
+sub search {
     my $self = shift;
     my $params = shift;
     my $page_size = $self->page_size;
@@ -61,12 +61,12 @@ sub germplasm_search {
     my $status = $self->status;
     my @data_files;
 
-    my @crop_names = $params->{commonCropName} || ($params->{commonCropNames} || ();
-    my @germplasm_names = $params->{germplasmName} || ($params->{germplasmNames} || ();
-    my @accession_numbers = $params->{accessionNumber} || ($params->{accessionNumbers} || ();
-    my @genera = $params->{germplasmGenus} || ($params->{germplasmGenera} || ();
-    my @germplasm_ids  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ();
-    my @germplasm_puis = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ();
+    my @crop_names = $params->{commonCropName} || ($params->{commonCropNames} || ());
+    my @germplasm_names = $params->{germplasmName} || ($params->{germplasmNames} || ());
+    my @accession_numbers = $params->{accessionNumber} || ($params->{accessionNumbers} || ());
+    my @genera = $params->{germplasmGenus} || ($params->{germplasmGenera} || ());
+    my @germplasm_ids  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my @germplasm_puis = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ());
     my @species = $params->{germplasmSpecies} || ();
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';
