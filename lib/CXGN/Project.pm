@@ -2036,6 +2036,8 @@ sub get_traits_assayed {
     my $self = shift;
     my $stock_type = shift;
     my $trait_format = shift;
+    my $contains_composable_cv_type = shift;
+    my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
@@ -2048,19 +2050,88 @@ sub get_traits_assayed {
         $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
     }
 
+    my $contains_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'contains' });
+    if ($contains_relationship_rs->count == 0) {
+        die "The cvterm 'contains' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+    }
+    elsif ($contains_relationship_rs->count > 1) {
+        die "The cvterm 'contains' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
+    }
+    my $contains_relationship_cvterm_id = $contains_relationship_rs->first->cvterm_id;
+    my $variable_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' });
+    if ($variable_relationship_rs->count == 0) {
+        die "The cvterm 'VARIABLE_OF' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+    }
+    elsif ($variable_relationship_rs->count > 1) {
+        die "The cvterm 'VARIABLE_OF' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
+    }
+
+    my $composable_cv_type_cvterm_id = $contains_composable_cv_type ? SGN::Model::Cvterm->get_cvterm_row($schema, $contains_composable_cv_type, 'composable_cvtypes')->cvterm_id : '';
+
     my $q;
     if ($stock_type) {
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value)
+            FROM cvterm
+            $cvtermprop_join
+            JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+            JOIN db ON (dbxref.db_id = db.db_id)
+            JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id)
+            WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where
+            GROUP BY trait, cvterm.cvterm_id
+            ORDER BY trait;";
     } else {
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value)
+            FROM cvterm
+            $cvtermprop_join
+            JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+            JOIN db ON (dbxref.db_id = db.db_id)
+            JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            WHERE project_id=? $cvtermprop_where
+            GROUP BY trait, cvterm.cvterm_id
+            ORDER BY trait;";
     }
 
-    my $traits_assayed_q = $dbh->prepare($q);
+    my $component_q = "SELECT COALESCE(
+            json_agg(json_build_object('cvterm_id', component_cvterm.cvterm_id, 'name', component_cvterm.name, 'definition', component_cvterm.definition, 'cv_name', cv.name, 'cv_type', cv_type.name, 'cv_type_cvterm_id', cv_type.cvterm_id))
+            FILTER (WHERE component_cvterm.cvterm_id IS NOT NULL), '[]'
+        ) AS components
+        FROM cvterm
+        LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = $contains_relationship_cvterm_id)
+        LEFT JOIN cvterm AS component_cvterm on (cvterm_relationship.subject_id = component_cvterm.cvterm_id)
+        LEFT JOIN cv on (component_cvterm.cv_id = cv.cv_id)
+        LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
+        LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
+        WHERE cvterm.cvterm_id=? ;";
 
-    $traits_assayed_q->execute($self->get_trial_id());
-    while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-        push @traits_assayed, [$trait_id, $trait_name, $count];
+    my $traits_assayed_h = $dbh->prepare($q);
+    my $component_h = $dbh->prepare($component_q);
+
+    $traits_assayed_h->execute($self->get_trial_id());
+    while (my ($trait_name, $trait_id, $count) = $traits_assayed_h->fetchrow_array()) {
+        $component_h->execute($trait_id);
+        my ($component_terms) = $component_h->fetchrow_array();
+        $component_terms = decode_json $component_terms;
+        if ($contains_composable_cv_type) {
+            my $has_composable_cv_type = 0;
+            foreach (@$component_terms) {
+                if ($_->{cv_type_cvterm_id} == $composable_cv_type_cvterm_id) {
+                    $has_composable_cv_type = 1;
+                }
+            }
+            if ($has_composable_cv_type == 1) {
+                push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count];
+            }
+        }
+        else {
+            push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count];
+        }
     }
     return \@traits_assayed;
 }

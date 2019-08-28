@@ -689,7 +689,14 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $stock_id = $c->req->param('stock_id') || 'all';
     my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
+    my $trait_format = $c->req->param('trait_format');
+    my $contains_composable_cv_type = $c->req->param('contains_composable_cv_type');
+    my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
 
     if ($data_level eq 'all') {
         $data_level = '';
@@ -713,31 +720,63 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             my @val = ($_->[0], $_->[2]."|".$_->[1]);
             push @traits, \@val;
         }
-	} elsif ($trial_ids ne 'all') {
-		my @trial_ids = split ',', $trial_ids;
-		my %unique_traits_ids;
-		foreach (@trial_ids){
-			my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
-			my $traits_assayed = $trial->get_traits_assayed($data_level);
-			foreach (@$traits_assayed) {
-				$unique_traits_ids{$_->[0]} = [$_->[0], $_->[1]." (".$_->[2]." Phenotypes)"];
-			}
-		}
-        @traits = values %unique_traits_ids;
-	}
+    } elsif ($trial_ids ne 'all') {
+        my @trial_ids = split ',', $trial_ids;
+        my %unique_traits_ids;
+        foreach (@trial_ids){
+            my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+            my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, $contains_composable_cv_type);
+            foreach (@$traits_assayed) {
+                $unique_traits_ids{$_->[0]} = $_;
+            }
+        }
+        print STDERR Dumper \%unique_traits_ids;
+        if ($select_format eq 'component_table_select') {
+            my $html = '<table class="table table-hover table-bordered" id="'.$id.'"><thead><th>Observation Variable Components</th><th>Select</th></thead><tbody>';
+            my %unique_components;
+            foreach (values %unique_traits_ids) {
+                foreach my $component (@{$_->[2]}) {
+                    if ($component->{cv_type} eq $contains_composable_cv_type) {
+                        $unique_components{$_->[0]}->{contains_cv_type} = $component->{name};
+                    }
+                    else {
+                        push @{$unique_components{$_->[0]}->{cv_types}}, $component->{name};
+                    }
+                }
+            }
+            print STDERR Dumper \%unique_components;
+            my %separated_components;
+            while (my ($k, $v) = each %unique_components) {
+                my $string_cv_types = join ',', @{$v->{cv_types}};
+                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}];
+            }
+            print STDERR Dumper \%separated_components;
+            while (my ($k, $v) = each %separated_components) {
+                $html .= "<tr><td>".$k."</td><td>";
+                foreach (@$v) {
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]."<br/>";
+                }
+                $html .= "</td></tr>";
+            }
+            $html .= "</tbody></table>";
+            $c->stash->{rest} = { select => $html };
+            $c->detach;
+        }
+        elsif ($select_format eq 'html_select') {
+            foreach (values %unique_traits_ids) {
+                push @traits, [$_->[0], $_->[1]." (".$_->[3]." Phenotypes)"];
+            }
+        }
+    }
 
-	@traits = sort { $a->[1] cmp $b->[1] } @traits;
-
-    my $id = $c->req->param("id") || "html_trial_select";
-    my $name = $c->req->param("name") || "html_trial_select";
-	my $size = $c->req->param("size");
+    @traits = sort { $a->[1] cmp $b->[1] } @traits;
 
     my $html = simple_selectbox_html(
       multiple => 1,
       name => $name,
       id => $id,
       choices => \@traits,
-	  size => $size
+      size => $size
     );
     $c->stash->{rest} = { select => $html };
 }
