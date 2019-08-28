@@ -50,7 +50,8 @@ sub retrieve {
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
     my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
-    my $phenotype_performance_hash = $self->phenotype_performance_hash || {};
+    my $exact_performance_hash = $self->exact_performance_hash || {};
+    my $overall_performance_hash = $self->overall_performance_hash || {};
     my @exact_trait_names = sort keys %$exact_performance_hash;
     my @overall_trait_names = sort keys %$overall_performance_hash;
     my @output;

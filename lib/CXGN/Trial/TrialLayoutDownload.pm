@@ -227,18 +227,6 @@ sub get_layout_output {
     foreach (@$summary_values){
         $overall_trait_hash{$_->[0]}->{$_->[8]} = $_;
     }
-    #print STDERR Dumper \%fieldbook_trait_hash;
-
-    #get include measured on plot/plant level using trial_id
-    my $exact_values;
-    if ($include_measured) {
-        my $exact = CXGN::Phenotypes::Exact->new({
-            bcs_schema=>$schema,
-            trial_id=>$trial_id
-        });
-        $exact_values = $exact->search();
-    }
-    my %exact_trait_hash = %{$exact_values};
 
     my @treatment_trials;
     my @treatment_names;
@@ -251,8 +239,16 @@ sub get_layout_output {
             push @treatment_names, $treatment_name;
         }
     }
-
+    my $exact_trait_hash;
     if ($data_level eq 'plots') {
+        if ($include_measured) {
+            my $exact = CXGN::Phenotypes::Exact->new({
+                bcs_schema=>$schema,
+                trial_id=>$trial_id,
+                data_level=>'plot'
+            });
+            $exact_trait_hash = $exact->search();
+        }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plot', ['treatment_experiment']) : [];
             push @treatment_units_array, $treatment_units;
@@ -262,6 +258,14 @@ sub get_layout_output {
             push @error_messages, "Trial does not have plants, so you should not try to download a plant level layout.";
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
+        }
+        if ($include_measured) {
+            my $exact = CXGN::Phenotypes::Exact->new({
+                bcs_schema=>$schema,
+                trial_id=>$trial_id,
+                data_level=>'plant'
+            });
+            $exact_trait_hash = $exact->search();
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plant', ['treatment_experiment']) : [];
@@ -273,6 +277,14 @@ sub get_layout_output {
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
+        if ($include_measured) {
+            my $exact = CXGN::Phenotypes::Exact->new({
+                bcs_schema=>$schema,
+                trial_id=>$trial_id,
+                data_level=>'subplot'
+            });
+            $exact_trait_hash = $exact->search();
+        }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('subplot', ['treatment_experiment']) : [];
             print STDERR Dumper $treatment_units;
@@ -283,6 +295,14 @@ sub get_layout_output {
             push @error_messages, "Trial does not have tissue samples, so you should not try to download a tissue sample level layout.";
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
+        }
+        if ($include_measured) {
+            my $exact = CXGN::Phenotypes::Exact->new({
+                bcs_schema=>$schema,
+                trial_id=>$trial_id,
+                data_level=>'tissue_sample'
+            });
+            $exact_trait_hash = $exact->search();
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('tissue_sample', ['treatment_experiment']) : [];
@@ -325,7 +345,7 @@ sub get_layout_output {
         design => $design,
         trial => $selected_trial,
         treatment_info_hash => \%treatment_info_hash,
-        exact_performance_hash => \%exact_trait_hash,
+        exact_performance_hash => $exact_trait_hash,
         overall_performance_hash => \%overall_trait_hash
     };
     my $layout_output;
