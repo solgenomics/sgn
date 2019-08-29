@@ -2121,7 +2121,7 @@ sub get_traits_assayed {
         if ($contains_composable_cv_type) {
             my $has_composable_cv_type = 0;
             foreach (@$component_terms) {
-                if ($_->{cv_type_cvterm_id} == $composable_cv_type_cvterm_id) {
+                if ($_->{cv_type_cvterm_id} && $_->{cv_type_cvterm_id} == $composable_cv_type_cvterm_id) {
                     $has_composable_cv_type = 1;
                 }
             }

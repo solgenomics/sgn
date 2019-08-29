@@ -730,13 +730,13 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
                 $unique_traits_ids{$_->[0]} = $_;
             }
         }
-        print STDERR Dumper \%unique_traits_ids;
         if ($select_format eq 'component_table_select') {
             my $html = '<table class="table table-hover table-bordered" id="'.$id.'"><thead><th>Observation Variable Components</th><th>Select</th></thead><tbody>';
             my %unique_components;
             foreach (values %unique_traits_ids) {
                 foreach my $component (@{$_->[2]}) {
-                    if ($component->{cv_type} eq $contains_composable_cv_type) {
+                    $unique_components{$_->[0]}->{num_pheno} = $_->[3];
+                    if ($component->{cv_type} && $component->{cv_type} eq $contains_composable_cv_type) {
                         $unique_components{$_->[0]}->{contains_cv_type} = $component->{name};
                     }
                     else {
@@ -744,17 +744,15 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
                     }
                 }
             }
-            print STDERR Dumper \%unique_components;
             my %separated_components;
             while (my ($k, $v) = each %unique_components) {
                 my $string_cv_types = join ',', @{$v->{cv_types}};
-                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}];
+                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}, $v->{num_pheno}];
             }
-            print STDERR Dumper \%separated_components;
             while (my ($k, $v) = each %separated_components) {
                 $html .= "<tr><td>".$k."</td><td>";
                 foreach (@$v) {
-                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]."<br/>";
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]." (".$_->[2]." Phenotypes)<br/>";
                 }
                 $html .= "</td></tr>";
             }
