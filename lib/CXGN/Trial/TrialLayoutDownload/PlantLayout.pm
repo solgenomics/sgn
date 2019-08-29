@@ -50,10 +50,9 @@ sub retrieve {
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
     my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
+    my $trait_header = $self->trait_header || [];
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
-    my @exact_trait_names = sort keys %$exact_performance_hash;
-    my @overall_trait_names = sort keys %$overall_performance_hash;
     my @output;
 
     my @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
@@ -67,12 +66,10 @@ sub retrieve {
     foreach (@$treatment_name_list){
         push @header, "ManagementFactor:".$_;
     }
-    foreach (@exact_trait_names){
+    foreach (@$trait_header){
         push @header, $_;
     }
-    foreach (@overall_trait_names){
-        push @header, $_;
-    }
+
     push @output, \@header;
 
     my $trial_name = $trial->get_name ? $trial->get_name : '';
@@ -127,6 +124,9 @@ sub retrieve {
         }
     }
     #print STDERR Dumper \@plant_design;
+
+    my @overall_trait_names = sort keys %$overall_performance_hash;
+    my @exact_trait_names = sort keys %$exact_performance_hash;
 
     no warnings 'uninitialized';
     @plant_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;

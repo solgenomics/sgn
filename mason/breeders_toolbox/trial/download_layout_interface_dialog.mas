@@ -90,14 +90,18 @@ $download_type
                 <div id="accession_average_performance">
                     <div class="well">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Include existing plot phenotypes: </label>
-                            <div class="col-sm-2" >
-                                 <input id="create_fieldbook_include_measured_<% $download_type %>" value="true" type="checkbox" class="form-check-input" checked>
+                            <label class="col-sm-2 control-label">Include existing plot phenotypes: </label>
+                            <div class="col-sm-1" >
+                                 <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
                             </div>
                             <label class="col-sm-3 control-label">Include summary of overall accession performance (for a list of traits): </label>
-                            <div class="col-sm-4" >
+                            <div class="col-sm-3" >
                                 <div id="create_fieldbook_with_trait_list_<% $download_type %>">
                                 </div>
+                            </div>
+                            <label class="col-sm-2 control-label">Use trait synonyms: </label>
+                            <div class="col-sm-1" >
+                                 <input id="create_fieldbook_use_synonyms_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
                             </div>
                         </div>
                     </div>
@@ -374,7 +378,8 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
             'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
-            'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').val(),
+            'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
+            'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
             'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val()
         },
         beforeSend: function() {

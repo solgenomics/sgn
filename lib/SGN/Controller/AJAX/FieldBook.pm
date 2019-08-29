@@ -95,7 +95,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 
     my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     my $include_measured = $c->req->param('include_measured');
-    print STDERR "Include measured = $include_measured\n";
+    my $use_synonyms = $c->req->param('use_synonyms');
     my $selected_trait_list_id = $c->req->param('trait_list');
     my @selected_traits;
     if ($selected_trait_list_id){
@@ -127,6 +127,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         treatment_project_ids => $treatment_project_ids,
         selected_columns => $selected_columns,
         include_measured => $include_measured,
+        use_synonyms => $use_synonyms,
         selected_trait_ids => \@selected_traits,
     });
 

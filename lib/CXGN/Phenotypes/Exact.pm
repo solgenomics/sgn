@@ -52,7 +52,7 @@ sub search {
 
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
 
-    my $h = $schema->storage->dbh->prepare("SELECT stock.name, max(cvtermsynonym.synonym), phenotype.value
+    my $h = $schema->storage->dbh->prepare("SELECT stock.name, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, phenotype.value
         FROM project
         JOIN nd_experiment_project USING(project_id)
         JOIN nd_experiment_stock AS all_stocks ON(nd_experiment_project.nd_experiment_id = all_stocks.nd_experiment_id)
@@ -61,9 +61,9 @@ sub search {
         JOIN nd_experiment_phenotype ON(my_stocks.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
         JOIN phenotype USING(phenotype_id)
         JOIN cvterm ON(phenotype.cvalue_id = cvterm.cvterm_id)
-        JOIN cvtermsynonym ON(cvterm.cvterm_id = cvtermsynonym.cvterm_id AND synonym NOT LIKE '% %' AND synonym NOT LIKE '%\\_%')
+        JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
         WHERE project_id = ? AND stock.type_id = ?
-        GROUP BY 1,3;");
+        GROUP BY 1,2,3;");
 
     $h->execute($trial_id, $stock_type_id);
 

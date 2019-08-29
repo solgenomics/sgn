@@ -17,7 +17,7 @@ Module to format layout info for trial based on which columns user wants to see.
 This module can also optionally include treatments into the output.
 This module can also optionally include accession trait performace summaries into the output.
 
-This module is used from CXGN::Trial::Download::Plugin::TrialLayoutExcel, CXGN::Trial::Download::Plugin::TrialLayoutCSV, CXGN::Fieldbook::DownloadTrial, CXGN::Trial->get_plots, CXGN::Trial->get_plants, CXGN::Trial->get_subplots, CXGN::Trial->get_tissue_samples
+This module is used from CXGN::Trial::Download::Plugin::TrialLayoutExcel, CXGN::Trial::Download::Plugin::TrialLayoutCSV, CXGN::Fieldbook::DownloadFile, CXGN::Trial->get_plots, CXGN::Trial->get_plants, CXGN::Trial->get_subplots, CXGN::Trial->get_tissue_samples
 
 my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
     schema => $schema,
@@ -60,6 +60,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock;
 use CXGN::Stock::Accession;
 use JSON;
+use CXGN::List::Transform;
 use CXGN::Phenotypes::Summary;
 use CXGN::Phenotypes::Exact;
 use CXGN::Trial::TrialLayoutDownload::PlotLayout;
@@ -103,6 +104,12 @@ has 'include_measured'=> (
     default => 'true',
 );
 
+has 'use_synonyms'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 has 'selected_trait_ids'=> (
     is => 'ro',
     isa => 'ArrayRef[Int]|Undef',
@@ -138,7 +145,11 @@ has 'treatment_info_hash' => (
     is => 'rw',
 );
 
-#This phenotype_performance_hash is a hashref of hashref where the top key is the trait name, subsequent key is the stock id, and subsequent object contains mean, mix, max, stdev, count, etc for that trait and stock
+has 'trait_header'=> (
+    is => 'rw',
+    isa => 'ArrayRef[Str]|Undef',
+);
+
 has 'exact_performance_hash' => (
     isa => 'HashRef',
     is => 'rw',
@@ -155,6 +166,7 @@ sub get_layout_output {
     my $schema = $self->schema();
     my $data_level = $self->data_level();
     my $include_measured = $self->include_measured();
+    my $use_synonyms = $self->use_synonyms();
     my %selected_cols = %{$self->selected_columns};
     my $treatments = $self->treatment_project_ids();
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
@@ -223,9 +235,9 @@ sub get_layout_output {
         });
         $summary_values = $summary->search();
     }
-    my %overall_trait_hash;
+    my %overall_performance_hash;
     foreach (@$summary_values){
-        $overall_trait_hash{$_->[0]}->{$_->[8]} = $_;
+        $overall_performance_hash{$_->[0]}->{$_->[8]} = $_;
     }
 
     my @treatment_trials;
@@ -239,15 +251,15 @@ sub get_layout_output {
             push @treatment_names, $treatment_name;
         }
     }
-    my $exact_trait_hash;
+    my $exact_performance_hash;
     if ($data_level eq 'plots') {
-        if ($include_measured) {
+        if ($include_measured eq 'true') {
             my $exact = CXGN::Phenotypes::Exact->new({
                 bcs_schema=>$schema,
                 trial_id=>$trial_id,
                 data_level=>'plot'
             });
-            $exact_trait_hash = $exact->search();
+            $exact_performance_hash = $exact->search();
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plot', ['treatment_experiment']) : [];
@@ -259,13 +271,13 @@ sub get_layout_output {
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
-        if ($include_measured) {
+        if ($include_measured eq 'true') {
             my $exact = CXGN::Phenotypes::Exact->new({
                 bcs_schema=>$schema,
                 trial_id=>$trial_id,
                 data_level=>'plant'
             });
-            $exact_trait_hash = $exact->search();
+            $exact_performance_hash = $exact->search();
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plant', ['treatment_experiment']) : [];
@@ -277,13 +289,13 @@ sub get_layout_output {
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
-        if ($include_measured) {
+        if ($include_measured eq 'true') {
             my $exact = CXGN::Phenotypes::Exact->new({
                 bcs_schema=>$schema,
                 trial_id=>$trial_id,
                 data_level=>'subplot'
             });
-            $exact_trait_hash = $exact->search();
+            $exact_performance_hash = $exact->search();
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('subplot', ['treatment_experiment']) : [];
@@ -296,13 +308,13 @@ sub get_layout_output {
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
-        if ($include_measured) {
+        if ($include_measured eq 'true') {
             my $exact = CXGN::Phenotypes::Exact->new({
                 bcs_schema=>$schema,
                 trial_id=>$trial_id,
                 data_level=>'tissue_sample'
             });
-            $exact_trait_hash = $exact->search();
+            $exact_performance_hash = $exact->search();
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('tissue_sample', ['treatment_experiment']) : [];
@@ -336,6 +348,28 @@ sub get_layout_output {
         treatment_units_hash_list => \@treatment_stock_hashes
     );
 
+    #combine sorted exact and overall trait names and if requested convert to synonyms
+    my @exact_trait_names = sort keys %$exact_performance_hash;
+    my @overall_trait_names = sort keys %overall_performance_hash;
+    my @traits = (@exact_trait_names, @overall_trait_names);
+
+    if ($use_synonyms eq 'true') {
+        my $t = CXGN::List::Transform->new();
+        my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', \@traits);
+        my @trait_ids = @{$trait_id_list->{'transform'}};
+        my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', $trait_id_list->{'transform'});
+        my @missing = @{$synonym_list->{'missing'}};
+
+        if (scalar @missing) {
+            push @error_messages, "Traits @missing don't have synonyms. Please turn off synonym option before proceeding\n";
+            $errors{'error_messages'} = \@error_messages;
+            return \%errors;
+        } else {
+            @traits = @{$synonym_list->{'transform'}};
+        }
+    }
+
+
     my $layout_build = {
         schema => $schema,
         trial_id => $trial_id,
@@ -345,8 +379,9 @@ sub get_layout_output {
         design => $design,
         trial => $selected_trial,
         treatment_info_hash => \%treatment_info_hash,
-        exact_performance_hash => $exact_trait_hash,
-        overall_performance_hash => \%overall_trait_hash
+        trait_header => \@traits,
+        exact_performance_hash => $exact_performance_hash,
+        overall_performance_hash => \%overall_performance_hash
     };
     my $layout_output;
     if ($data_level eq 'plots' ) {
@@ -390,10 +425,10 @@ sub _add_overall_performance_to_line {
     my $self = shift;
     my $overall_trait_names = shift;
     my $line = shift;
-    my $overall_trait_hash = shift;
+    my $overall_performance_hash = shift;
     my $design_info = shift;
     foreach my $t (@$overall_trait_names){
-        my $perf = $overall_trait_hash->{$t}->{$design_info->{"accession_id"}};
+        my $perf = $overall_performance_hash->{$t}->{$design_info->{"accession_id"}};
         if($perf){
             push @$line, "Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6];
         } else {
@@ -407,11 +442,11 @@ sub _add_exact_performance_to_line {
     my $self = shift;
     my $exact_trait_names = shift;
     my $line = shift;
-    my $exact_trait_hash = shift;
+    my $exact_performance_hash = shift;
     my $observationunit_name = shift;
 
     foreach my $trait (@$exact_trait_names){
-        my $value = $exact_trait_hash->{$trait}->{$observationunit_name };
+        my $value = $exact_performance_hash->{$trait}->{$observationunit_name };
         if($value) {
             push @$line, $value
         } else {

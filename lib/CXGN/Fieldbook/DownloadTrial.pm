@@ -127,6 +127,12 @@ has 'include_measured'=> (
     default => 'true',
 );
 
+has 'use_synonyms'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 has 'selected_trait_ids'=> (
     is => 'ro',
     isa => 'ArrayRef[Int]|Undef',
@@ -155,6 +161,7 @@ sub download {
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
         include_measured => $self->include_measured,
+        use_synonyms => $self->use_synonyms,
         selected_trait_ids => $self->selected_trait_ids
     });
     my $output = $trial_layout_download->get_layout_output();

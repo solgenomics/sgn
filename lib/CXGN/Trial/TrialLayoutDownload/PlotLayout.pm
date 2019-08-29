@@ -50,10 +50,9 @@ sub retrieve {
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
     my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
+    my $trait_header = $self->trait_header || [];
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
-    my @exact_trait_names = sort keys %$exact_performance_hash;
-    my @overall_trait_names = sort keys %$overall_performance_hash;
     my @output;
 
     my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
@@ -67,10 +66,7 @@ sub retrieve {
     foreach (@$treatment_name_list){
         push @header, "ManagementFactor:".$_;
     }
-    foreach (@exact_trait_names){
-        push @header, $_;
-    }
-    foreach (@overall_trait_names){
+    foreach (@$trait_header){
         push @header, $_;
     }
 
@@ -82,6 +78,9 @@ sub retrieve {
 
     my @plot_design = values %design;
     @plot_design = sort { $a->{plot_number} <=> $b->{plot_number} } @plot_design;
+
+    my @overall_trait_names = sort keys %$overall_performance_hash;
+    my @exact_trait_names = sort keys %$exact_performance_hash;
 
     foreach my $design_info (@plot_design) {
         my $line;
