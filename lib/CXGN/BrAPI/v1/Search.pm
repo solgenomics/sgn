@@ -15,7 +15,6 @@ This module is used to save and retrieve parameters for complex BrAPI search req
 use Moose;
 use Data::Dumper;
 use JSON;
-use Digest::MD5;
 use File::Slurp;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -41,23 +40,21 @@ has 'status' => (
 sub save_search {
     my $self = shift;
     my $tempfiles_subdir = shift;
-    my $search_params = shift;
+    my $search_id = shift;
+    my $search_result =shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $filename = $tempfiles_subdir . "/" . $search_id;
     my @data_files;
 
-    my $search_json = encode_json($search_params);
-
-    #get md5 hash as id
-    my $md5 = Digest::MD5->new();
-    $md5->add($search_json);
-    my $search_id = $md5->hexdigest();
-
     #write to tmp file with id as name
-    open my $fh, ">", $tempfiles_subdir . "/" . $search_id;
-    print $fh $search_json;
-    close $fh;
+    if (!-e $filename) {
+        open my $fh, ">", $tempfiles_subdir . "/" . $search_id;
+        my $search_retrieve = encode_json($search_result);
+        print $fh $search_retrieve;
+        close $fh;
+    }
 
     my %result = ( searchResultsDbId => $search_id );
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);

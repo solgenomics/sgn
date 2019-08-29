@@ -16,6 +16,7 @@ use CXGN::Trial::Search;
 use CXGN::Location::LocationLookup;
 use JSON qw( decode_json );
 use Data::Dumper;
+use Digest::MD5;
 use Try::Tiny;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
@@ -553,14 +554,14 @@ sub germplasm_search_save  : Chained('brapi') PathPart('search/germplasm') Args(
 sub germplasm_search_save_POST {
     my $self = shift;
     my $c = shift;
-    save_search($self,$c,$c->stash->{clean_inputs});
+    save_results($self,$c,$c->stash->{clean_inputs},'Germplasm');
 }
 
 sub germplasm_search_retrieve  : Chained('brapi') PathPart('search/germplasm') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    retrieve_search($self, $c, $search_id, 'Germplasm');
+    retrieve_results($self, $c, $search_id, 'Germplasm');
 }
 
 =head2 brapi/v1/germplasm/{id}
@@ -2929,19 +2930,30 @@ sub observations_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub save_search {
+sub save_results {
     my $self = shift;
     my $c = shift;
     my $search_params = shift;
+    my $search_type = shift;
     my $auth = _authenticate_user($c);
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
     my $brapi = $self->brapi_module;
     my $search_module = $brapi->brapi_wrapper('Search');
-    my $brapi_package_result = $search_module->save_search($tempfiles_subdir,$search_params);
+    my $brapi_module = $brapi->brapi_wrapper($search_type);
+    my $json = JSON::MaybeXS->new(utf8 => 1, pretty => 1, sort_by => 1);
+    my $search_json = $json->encode($search_params);
+    my $md5 = Digest::MD5->new();
+    my $search_result;
+    $md5->add($search_json);
+    my $search_id = $md5->hexdigest();
+    if (!-e $tempfiles_subdir . "/" . $search_id) {
+        $search_result = $brapi_module->search({$search_params});
+    }
+    my $brapi_package_result = $search_module->save_search($tempfiles_subdir,$search_id,$search_result);
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub retrieve_search {
+sub retrieve_results {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
@@ -2951,9 +2963,7 @@ sub retrieve_search {
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
     my $brapi = $self->brapi_module;
     my $search_module = $brapi->brapi_wrapper('Search');
-    my $search_params = $search_module->retrieve_search($tempfiles_subdir, $search_id);
-    my $brapi_module = $brapi->brapi_wrapper($search_type);
-    my $brapi_package_result = $brapi_module->search({$search_params});
+    my $brapi_package_result = $search_module->retrieve_search($tempfiles_subdir, $search_id);
     _standard_response_construction($c, $brapi_package_result);
 }
 
