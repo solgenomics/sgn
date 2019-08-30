@@ -19,6 +19,13 @@ use CXGN::BrAPI::v1::GenomeMaps;
 use CXGN::BrAPI::v1::Samples;
 use CXGN::BrAPI::v1::VendorSamples;
 use CXGN::BrAPI::v1::Observations;
+<<<<<<< HEAD
+=======
+use CXGN::BrAPI::v1::ObservationUnits;
+use CXGN::BrAPI::v1::ObservationTables;
+use CXGN::BrAPI::v1::Results;
+use CXGN::BrAPI::v1::Images;
+>>>>>>> f2d4f80b0... copy over image calls from lukas's topic/brapi_images branch
 
 has 'version' => (
 	isa => 'Str',

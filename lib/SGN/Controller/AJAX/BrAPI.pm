@@ -504,9 +504,9 @@ POST Response:
 
 =cut
 
-sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
+sub germplasm_search_old  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
 
-sub germplasm_list_GET {
+sub germplasm_search_old_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -526,7 +526,7 @@ sub germplasm_list_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_list_POST {
+sub germplasm_search_old_POST {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -2839,7 +2839,80 @@ sub observations_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub _store_observations {
+
+sub images : Chained('brapi') PathPart('images') Args(0) : ActionClass('REST') { }
+
+sub images_GET {
+	my $self = shift;
+	my $c = shift;
+    my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $brapi_package_result = $brapi_module->detail();
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub images_POST {
+	my $self = shift;
+	my $c = shift;
+
+}
+
+sub images_by_id :  Chained('brapi') PathPart('images') CaptureArgs(1) {
+     my $self = shift;
+     my $c = shift;
+     print STDERR "Images_base... capturing image_id\n";
+     $c->stash->{image_id} = shift;
+}
+
+sub images_single :  Chained('images_by_id') PathPart('') Args(0) ActionClass('REST') { }
+
+sub images_single_GET {
+    my $self = shift;
+    my $c = shift;
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $brapi_package_result = $brapi_module->detail( { image_id => $c->stash->{image_id} });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+# /brapi/v1/images PUT
+# sub image_store :  Chained('brapi') PathPart('images') Args(0) ActionClass('REST') { }
+
+sub images_single_PUT {
+    my $self = shift;
+    my $c = shift;
+    print STDERR "Image store PUT...\n";
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    print STDERR "Clean inputs at image_store_PUT: ".Dumper($clean_inputs);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
+    my $brapi_package_result = $brapi_module->image_metadata_store($image_dir, $clean_inputs, $c->stash->{image_id});
+    _standard_response_construction($c, $brapi_package_result);
+
+ }
+
+ # /brapi/v1/images/<image_id>/imagecontent
+sub image_content_store :  Chained('images_by_id') PathPart('imagecontent') Args(0) ActionClass('REST') { }
+
+sub image_content_store_PUT {
+    my $self = shift;
+    my $c = shift;
+
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    print STDERR Dumper($clean_inputs);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
+    my $brapi_package_result = $brapi_module->image_data_store($image_dir, $c->stash->{image_id}, $c->req->body());
+    _standard_response_construction($c, $brapi_package_result);
+
+ }
+
+sub save_results {
     my $self = shift;
     my $c = shift;
     my $observations = shift;

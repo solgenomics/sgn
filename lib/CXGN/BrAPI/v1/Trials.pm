@@ -7,46 +7,72 @@ use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub trials_search {
 	my $self = shift;
 	my $search_params = shift;
 	my $schema = $self->bcs_schema;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my @data_files;
+
+    my ($result, $status, $total_count) = search_results($search_params);
+
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
+	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
+}
+
+sub trials_search_save {
+    my $self = shift;
+    my $search_params = shift;
+    my $schema = $self->bcs_schema;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $tempfiles_subdir = shift;
+    my @data_files;
+
+     #create save object and save search params in db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'trials'
+    });
+
+    my $save_id = $search_object->save($search_params);
+    my $result = ( searchResultsDbId => $save_id );
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$self->page_size,$self->page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $self->status, 'Trials search result constructed');
+}
+
+sub trials_search_retrieve {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
+    my $search_id = shift;
+    my $schema = $self->bcs_schema;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+
+    my @data_files;
+
+    #create save object and retrieve search params from db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'trials'
+    });
+
+    my $search_params = $search_object->retrieve($search_id);
+    my ($result, $status, $total_count) = search_results($search_params);
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $self->status, 'Trials search result constructed');
+}
+
+sub search_results {
+    my $self = shift;
+    my $search_params = shift;
+    my $schema = $self->bcs_schema;
     my $data;
 	#my $auth = _authenticate_user($c);
 
