@@ -10,6 +10,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use Try::Tiny;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::List::Transform;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -56,15 +57,15 @@ sub search {
     my @data_files;
 
     my $data_level = $params->{observationLevel}->[0] || 'all';
-    my @years_array = $params->{seasonDbId} || $params->{seasonDbIds};
-    my @location_ids_array = $params->{locationDbId} || $params->{locationDbIds};
-    my @study_ids_array = $params->{studyDbId} || $params->{studyDbIds};
-    my @accession_ids_array = $params->{germplasmDbId}|| $params->{germplasmDbIds};
-    my @trait_ids_array = $params->{observationVariableDbId} || $params->{observationVariableDbIds};
-    my @program_ids_array = $params->{programDbId} || $params->{programDbIds};
-    my @folder_ids_array = $params->{trialDbId} || $params->{trialDbIds};
-    my $start_time = $params->{observationTimeStampRangeStart} || undef;
-    my $end_time = $params->{observationTimeStampRangeEnd} || undef;
+    my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
+    my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
+    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
+    my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
+    my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
+    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
+    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
 
     # not part of brapi standard yet
     # my $phenotype_min_value = $params->{phenotype_min_value};
@@ -72,16 +73,21 @@ sub search {
     # my $exclude_phenotype_outlier = $params->{exclude_phenotype_outlier} || 0;
     # my $search_type = $params->{search_type}->[0] || 'MaterializedViewTable';
 
+    my $lt = CXGN::List::Transform->new();
+    my $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
+
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$self->bcs_schema,
         data_level=>$data_level,
         search_type=>'MaterializedViewTable',
-        trial_list=>\@study_ids_array,
-        trait_list=>\@trait_ids_array,
+        trial_list=>$study_ids_arrayref,
+        trait_list=>$trait_ids_arrayref,
         include_timestamp=>1,
-        year_list=>\@years_array,
-        location_list=>\@location_ids_array,
-        accession_list=>\@accession_ids_array,
+        year_list=>$years_arrayref,
+        location_list=>$location_ids_arrayref,
+        accession_list=>$accession_ids_arrayref,
+        folder_list=>$folder_ids_arrayref,
+        program_list=>$program_ids_arrayref,
         # phenotype_min_value=>$phenotype_min_value,
         # phenotype_max_value=>$phenotype_max_value,
         # exclude_phenotype_outlier=>$exclude_phenotype_outlier
@@ -100,6 +106,7 @@ sub search {
     my @trait_names = @header_names[39 .. $#header_names];
     my @header_ids;
     foreach my $t (@trait_names) {
+        if ($t eq 'notes') { next; }
         push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
     }
 

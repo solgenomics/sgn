@@ -2050,14 +2050,14 @@ sub observation_units_search_save : Chained('brapi') PathPart('search/observatio
 sub observation_units_search_save_POST {
     my $self = shift;
     my $c = shift;
-    save_search($self,$c,$c->stash->{clean_inputs});
+    save_results($self,$c,$c->stash->{clean_inputs},'ObservationUnits');
 }
 
 sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/observationunits') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    retrieve_search($self, $c, $search_id, 'ObservationUnits');
+    retrieve_results($self, $c, $search_id, 'ObservationUnits');
 }
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
@@ -2090,14 +2090,14 @@ sub observation_tables_search_save : Chained('brapi') PathPart('search/observati
 sub observation_tables_search_save_POST {
     my $self = shift;
     my $c = shift;
-    save_search($self,$c,$c->stash->{clean_inputs});
+    save_results($self,$c,$c->stash->{clean_inputs},'ObservationTables');
 }
 
 sub observation_tables_search_retrieve  : Chained('brapi') PathPart('search/observationtables') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    retrieve_search($self, $c, $search_id, 'ObservationTables');
+    retrieve_results($self, $c, $search_id, 'ObservationTables');
 }
 
 sub phenotypes_search_csv : Chained('brapi') PathPart('phenotypes-search/csv') Args(0) : ActionClass('REST') { }
@@ -2938,7 +2938,7 @@ sub save_results {
     my $auth = _authenticate_user($c);
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
-    my $search_result = $brapi_module->search({$search_params});
+    my $search_result = $brapi_module->search($search_params);
 
     my $dir = $c->tempfiles_subdir('/brapi_searches');
     my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'brapi_searches/XXXXXXXXXXXXXXXX');

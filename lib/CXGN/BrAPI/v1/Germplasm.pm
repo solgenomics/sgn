@@ -61,13 +61,13 @@ sub search {
     my $status = $self->status;
     my @data_files;
 
-    my @crop_names = $params->{commonCropName} || ($params->{commonCropNames} || ());
-    my @germplasm_names = $params->{germplasmName} || ($params->{germplasmNames} || ());
-    my @accession_numbers = $params->{accessionNumber} || ($params->{accessionNumbers} || ());
-    my @genera = $params->{germplasmGenus} || ($params->{germplasmGenera} || ());
-    my @germplasm_ids  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
-    my @germplasm_puis = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ());
-    my @species = $params->{germplasmSpecies} || ();
+    my $crop_names_arrayref = $params->{commonCropName} || ($params->{commonCropNames} || ());
+    my $germplasm_names_arrayref = $params->{germplasmName} || ($params->{germplasmNames} || ());
+    my $accession_numbers_arrayref = $params->{accessionNumber} || ($params->{accessionNumbers} || ());
+    my $genera_arrayref = $params->{germplasmGenus} || ($params->{germplasmGenera} || ());
+    my $germplasm_ids_arrayref  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my $germplasm_puis_arrayref = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ());
+    my $species_arrayref = $params->{germplasmSpecies} || ();
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';
 
@@ -88,16 +88,16 @@ sub search {
     my $offset = $page_size*$page;
 
     my %stockprops_values;
-    if (scalar(@accession_numbers)>0){
-        foreach (@accession_numbers) {
+    if ($accession_numbers_arrayref && scalar(@$accession_numbers_arrayref)>0){
+        foreach (@$accession_numbers_arrayref) {
             $stockprops_values{'accession number'} = {
                 matchtype => 'contains',
                 value => $_
             };
         }
     }
-    if (scalar(@germplasm_puis)>0){
-        foreach (@germplasm_puis) {
+    if ($germplasm_puis_arrayref && scalar(@$germplasm_puis_arrayref)>0){
+        foreach (@$germplasm_puis_arrayref) {
             $stockprops_values{'PUI'} = {
                 matchtype => 'contains',
                 value => $_
@@ -110,11 +110,11 @@ sub search {
         people_schema=>$self->people_schema,
         phenome_schema=>$self->phenome_schema,
         match_type=>$match_type,
-        uniquename_list=>\@germplasm_names,
-        genus_list=>\@genera,
-        species_list=>\@species,
-        crop_name_list=>\@crop_names,
-        stock_id_list=>\@germplasm_ids,
+        uniquename_list=>$germplasm_names_arrayref,
+        genus_list=>$genera_arrayref,
+        species_list=>$species_arrayref,
+        crop_name_list=>$crop_names_arrayref,
+        stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},

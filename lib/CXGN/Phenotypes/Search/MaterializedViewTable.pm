@@ -228,8 +228,10 @@ sub search {
     my $filter_trait_ids;
     my @or_clause;
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
+        print STDERR "A trait list was included\n";
         foreach (@{$self->trait_list}){
             if ($_){
+                print STDERR "Working on trait $_\n";
                 push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;
@@ -354,14 +356,13 @@ sub search {
             push @return_observations, $o;
         }
 
-        $notes =~ s/\R//g;
-        $trial_description =~ s/\R//g;
-        $breeding_program_description =~ s/\R//g;
-        $folder_description =~ s/\R//g;
+        if ($notes) { $notes =~ s/\R//g; }
+        if ($trial_description) { $trial_description =~ s/\R//g; }
+        if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
+        if ($folder_description) { $folder_description =~ s/\R//g };
+
         my $seedlot_transaction_description = $seedlot_transaction->{description};
-        if ($seedlot_transaction_description) {
-            $seedlot_transaction_description =~ s/\R//g;
-        }
+        if ($seedlot_transaction_description) { $seedlot_transaction_description =~ s/\R//g; }
 
         push @result, {
             observationunit_stock_id => $observationunit_stock_id,
