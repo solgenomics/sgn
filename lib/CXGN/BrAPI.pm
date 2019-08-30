@@ -22,6 +22,7 @@ use CXGN::BrAPI::v1::Observations;
 use CXGN::BrAPI::v1::ObservationUnits;
 use CXGN::BrAPI::v1::ObservationTables;
 use CXGN::BrAPI::v1::Results;
+use CXGN::BrAPI::v1::Images;
 
 has 'version' => (
 	isa => 'Str',

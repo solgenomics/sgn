@@ -19,23 +19,7 @@ use File::Slurp;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'page_size' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'status' => (
-    isa => 'ArrayRef[Maybe[HashRef]]',
-    is => 'rw',
-    required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub save_results {
     my $self = shift;
