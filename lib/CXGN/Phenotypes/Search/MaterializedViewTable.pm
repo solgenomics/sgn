@@ -334,10 +334,18 @@ sub search {
             push @return_observations, $o;
         }
 
-        $notes =~ s/\R//g;
-        $trial_description =~ s/\R//g;
-        $breeding_program_description =~ s/\R//g;
-        $folder_description =~ s/\R//g;
+        if ($notes) {
+            $notes =~ s/\R//g;
+        }
+        if ($trial_description) {
+            $trial_description =~ s/\R//g;
+        }
+        if ($breeding_program_description) {
+            $breeding_program_description =~ s/\R//g;
+        }
+        if ($folder_description) {
+            $folder_description =~ s/\R//g;
+        }
         my $seedlot_transaction_description = $seedlot_transaction->{description};
         if ($seedlot_transaction_description) {
             $seedlot_transaction_description =~ s/\R//g;
