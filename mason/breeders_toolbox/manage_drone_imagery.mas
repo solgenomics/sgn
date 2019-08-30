@@ -996,7 +996,10 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
                         <option value="lmer_germplasmname_block">LMER y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
+                        <option value="marss_germplasmname_block">MARSS y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
                     </select>
+
+                    $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
 
                     <br/><br/>
                     <center>
@@ -2023,11 +2026,21 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_statistics_trait_select_step').click(function(){
-        manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
-        if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
-            alert('Please select at least one observation variable!');
-            return false;
+        if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
+            jQuery('input[name="drone_imagery_calculate_statistics_trait_id_select"]').each(function() {
+                if (this.checked){
+                    manage_drone_imagery_calculate_statistics_trait_ids.push(jQuery(this).val());
+                }
+            });
         }
+        else {
+            manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
+            if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
+                alert('Please select at least one observation variable!');
+                return false;
+            }
+        }
+
         if (manage_drone_imagery_calculate_statistics_trait_ids.length < 1){
             alert('Please select at least one observation variable!');
         } else {
