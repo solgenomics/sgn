@@ -20,7 +20,7 @@ use CXGN::BrAPI::v1::Samples;
 use CXGN::BrAPI::v1::VendorSamples;
 use CXGN::BrAPI::v1::Observations;
 use CXGN::BrAPI::v1::ObservationUnits;
-use CXGN::BrAPI::v1::Search;
+use CXGN::BrAPI::v1::Results;
 
 has 'version' => (
 	isa => 'Str',

@@ -1,12 +1,12 @@
-package CXGN::BrAPI::v1::Search;
+package CXGN::BrAPI::v1::Results;
 
 =head1 NAME
 
-CXGN::BrAPI::Search - an object to handle saving and retrieving BrAPI search parameters in tempfiles brapi_searches dir
+CXGN::BrAPI::Results - an object to handle saving and retrieving BrAPI search results in tempfiles brapi_searches dir
 
 =head1 SYNOPSIS
 
-This module is used to save and retrieve parameters for complex BrAPI search requests
+This module is used to save and retrieve the results of complex BrAPI search requests
 
 =head1 AUTHORS
 
@@ -37,32 +37,29 @@ has 'status' => (
     required => 1,
 );
 
-sub save_search {
+sub save_results {
     my $self = shift;
-    my $tempfiles_subdir = shift;
-    my $search_id = shift;
+    my $tempfile = shift;
     my $search_result =shift;
+    my $search_type = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $filename = $tempfiles_subdir . "/" . $search_id;
     my @data_files;
 
-    #write to tmp file with id as name
-    if (!-e $filename) {
-        open my $fh, ">", $tempfiles_subdir . "/" . $search_id;
-        my $search_retrieve = encode_json($search_result);
-        print $fh $search_retrieve;
-        close $fh;
-    }
+    open my $fh, ">", $tempfile;
+    my $json_result = encode_json($search_result);
+    print $fh $json_result;
+    close $fh;
 
+    my $search_id = substr($tempfile, -16);
     my %result = ( searchResultsDbId => $search_id );
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'search/germplasm result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, "search $search_type result constructed");
 
 }
 
-sub retrieve_search {
+sub retrieve_results {
     my $self = shift;
     my $tempfiles_subdir = shift;
     my $search_id = shift;

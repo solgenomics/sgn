@@ -2936,20 +2936,15 @@ sub save_results {
     my $search_params = shift;
     my $search_type = shift;
     my $auth = _authenticate_user($c);
-    my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
     my $brapi = $self->brapi_module;
-    my $search_module = $brapi->brapi_wrapper('Search');
     my $brapi_module = $brapi->brapi_wrapper($search_type);
-    my $json = JSON::MaybeXS->new(utf8 => 1, pretty => 1, sort_by => 1);
-    my $search_json = $json->encode($search_params);
-    my $md5 = Digest::MD5->new();
-    my $search_result;
-    $md5->add($search_json);
-    my $search_id = $md5->hexdigest();
-    if (!-e $tempfiles_subdir . "/" . $search_id) {
-        $search_result = $brapi_module->search({$search_params});
-    }
-    my $brapi_package_result = $search_module->save_search($tempfiles_subdir,$search_id,$search_result);
+    my $search_result = $brapi_module->search({$search_params});
+
+    my $dir = $c->tempfiles_subdir('/brapi_searches');
+    my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'brapi_searches/XXXXXXXXXXXXXXXX');
+    my $results_module = $brapi->brapi_wrapper('Results');
+    my $brapi_package_result = $results_module->save_results($tempfile, $search_result, $search_type);
+
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2962,8 +2957,8 @@ sub retrieve_results {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
     my $brapi = $self->brapi_module;
-    my $search_module = $brapi->brapi_wrapper('Search');
-    my $brapi_package_result = $search_module->retrieve_search($tempfiles_subdir, $search_id);
+    my $search_module = $brapi->brapi_wrapper('Results');
+    my $brapi_package_result = $search_module->retrieve_results($tempfiles_subdir, $search_id);
     _standard_response_construction($c, $brapi_package_result);
 }
 
