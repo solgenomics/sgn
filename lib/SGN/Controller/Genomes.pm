@@ -60,6 +60,8 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
                              { join => 'type' },
                          )->count;
 
+    $c->stash->{dbh} = $c->dbic_schema("Bio::Chado::Schema")->storage()->dbh();
+    
     (my $template_name = '/genomes/'.$organism->species.'.mas') =~ s/ /_/g;
 
     # find assemblies for this organism
