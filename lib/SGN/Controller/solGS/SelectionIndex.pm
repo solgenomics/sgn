@@ -3,7 +3,9 @@ package SGN::Controller::solGS::SelectionIndex;
 use Moose;
 use namespace::autoclean;
 
+use File::Basename;
 use File::Slurp qw /write_file read_file/;
+use File::Spec::Functions qw / catfile catdir/;
 use List::MoreUtils qw /uniq/;
 
 use JSON;
@@ -16,28 +18,28 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my ($self, $c) = @_;
     
     my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $training_pop_id = $c->req->param('training_pop_id');
-    my @traits_ids  = $c->req->param('training_traits_ids[]');
+    my $training_pop_id  = $c->req->param('training_pop_id');
+    my @traits_ids       = $c->req->param('training_traits_ids[]');
    
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
     
-    my @traits;
-    if (!$selection_pop_id) 
+    my $traits;
+    if ($selection_pop_id) 
     {    
-        $c->controller('solGS::solGS')->analyzed_traits($c);
-        @traits = @{ $c->stash->{selection_index_traits} }; 
+	$c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+        $traits = $c->stash->{prediction_pop_analyzed_traits};
     }
     else  
     {
-        $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-        @traits = @{ $c->stash->{prediction_pop_analyzed_traits} };
+	$c->controller('solGS::solGS')->analyzed_traits($c);
+        $traits = $c->stash->{selection_index_traits};        
     }
 
     my $ret->{status} = 'success';
-    $ret->{traits} = \@traits;
+    $ret->{traits} = $traits;
      
     $ret = to_json($ret);       
     $c->res->content_type('application/json');
@@ -85,7 +87,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
 	my $top_10_si = $c->stash->{top_10_selection_indices};
         my $top_10_genos = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($top_10_si);
    
-        my $link         = $c->stash->{ranked_genotypes_download_url};                    
+        my $link         = $c->stash->{selection_index_download_url};                    
         my $index_file   = $c->stash->{selection_index_only_file};
        
         $ret->{status} = 'No GEBV values to rank.';
@@ -107,6 +109,23 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
         
     $c->res->content_type('application/json');
     $c->res->body($ret);
+}
+
+
+sub download_selection_index :Path('/solgs/download/selection/index') Args(1) {
+    my ($self, $c, $sindex_file) = @_;   
+ 
+    my $cache_dir = $c->stash->{selection_index_cache_dir};
+    $sindex_file = catfile($cache_dir, $sindex_file);
+ 
+    unless (!-e $sindex_file || -s $sindex_file == 0) 
+    {
+        my @sindex =  map { [ split(/\t/) ] }  read_file($sindex_file);
+    
+        $c->res->content_type("text/plain");
+        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @sindex);
+    } 
+
 }
 
 
@@ -146,7 +165,7 @@ sub calc_selection_index {
     $c->stash->{r_script}     = 'R/solGS/selection_index.r';
     
     $c->controller('solGS::solGS')->run_r_script($c);
-    $c->controller('solGS::solGS')->download_urls($c);
+    $self->download_sindex_url($c);
     $self->get_top_10_selection_indices($c);
 }
 
@@ -154,10 +173,28 @@ sub calc_selection_index {
 sub get_top_10_selection_indices {
     my ($self, $c) = @_;
     
-    my $si_file = $c->stash->{selection_index_only_file};  
-    $c->stash->{top_10_selection_indices} = $c->controller('solGS::Utils')->top_10($si_file);
+    my $si_file = $c->stash->{selection_index_only_file};
+      
+    my $top_10 = $c->controller('solGS::Utils')->top_10($si_file); 
+    $c->stash->{top_10_selection_indices} = $top_10;
 }
 
+
+sub download_sindex_url {
+    my ($self, $c) = @_;
+    
+    my $sindex_file = $c->stash->{selection_index_only_file};
+    
+    if ($sindex_file) 
+    {
+        ($sindex_file) = fileparse($sindex_file);
+    }
+    
+    my $url = qq | <a href="/solgs/download/selection/index/$sindex_file">Download selection indices</a> |;
+
+    $c->stash->{selection_index_download_url} = $url;
+    
+}
 
 sub gebv_rel_weights {
     my ($self, $c, $rel_wts) = @_;
@@ -182,8 +219,6 @@ sub gebv_rel_weights {
     $self->rel_weights_file($c);
     my $file = $c->stash->{rel_weights_file};
     write_file($file, $rel_wts_txt);
-    
-   ### $c->stash->{rel_weights_file} = $file;
     
 }
 
