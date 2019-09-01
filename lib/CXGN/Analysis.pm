@@ -2,6 +2,7 @@
 package CXGN::Analysis;
 
 use Moose;
+use Try::Tiny;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialDesignStore;
@@ -9,9 +10,9 @@ use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Dataset;
 use DateTime;
 
-BEGIN { extends 'CXGN::Project' };
+#BEGIN { extends 'CXGN::Project' };
 
-#has 'bcs_schema' => (is => 'rw', isa => 'Ref' );
+has 'bcs_schema' => (is => 'rw', isa => 'Ref' );
 
 has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema');
 
@@ -142,8 +143,9 @@ sub create_and_store_analysis_design {
     if ($validate_error) {
 	print STDERR "VALIDATE ERROR: $validate_error\n"; } 
     else { 
-	try { $store_error = $design_store->store(); } 
-	catch { $store_error = $_; }; } 
+	try { $store_error = $design_store->store(); }
+	catch { $store_error = $_; };
+    } 
     if ($store_error) { 
 	die "ERROR SAVING TRIAL!: $store_error\n"; 
     }
@@ -163,22 +165,25 @@ sub create_and_store_analysis_design {
     #
     my $analysis_project_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_project', 'project_property');
     
-    # store dataset info. Copy the actual dataset json, so that dataset 
-    # info is frozen and does not reflect future changes.
+    # store dataset info, if available. Copy the actual dataset json, 
+    # so that dataset  info is frozen and does not reflect future 
+    # changes.
     #
-    my $ds = CXGN::Dataset->new( { people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
 
-    $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
-	{
-	    project_id => $analysis_id, 
-	    type_id => $analysis_project_term->cvterm_id(), 
-	    value => { 
-		original_dataset_id => $self->dataset_id(), 
-		dataset_json => $ds->data(), 
-	    },
-	});
+    if ($self->dataset_id()) { 
+	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema, people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
+	
+	$row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
+	    {
+		project_id => $analysis_id, 
+		type_id => $analysis_project_term->cvterm_id(), 
+		value => { 
+		    original_dataset_id => $self->dataset_id(), 
+		    dataset_json => $ds->data(), 
+		},
+	    });
 
-    
+    }
     print STDERR Dumper($design);
     print STDERR "Done with design create & store.\n";
 }
