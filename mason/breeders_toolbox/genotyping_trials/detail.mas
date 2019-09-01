@@ -68,6 +68,7 @@ $raw_data_link => undef
                 </div>
             </div>
 
+            <a href="/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=plate" class="btn btn-default">Download Breedbase Formatted File</a>
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=dartseqcsv&dataLevel=plate" class="btn btn-default">Download DartSeq Formatted File</a>
 

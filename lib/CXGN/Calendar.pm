@@ -12,7 +12,6 @@ CXGN::Calendar - helper class for calendar
 
 =head1 AUTHOR
 
-Nicolas Morales <nm529@cornell.edu>
 
 =head1 METHODS
 

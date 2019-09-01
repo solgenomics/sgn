@@ -366,6 +366,9 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     if ($format eq "dartseqcsv") {
         $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
+    if ($format eq "csv") {
+        $plugin = "TrialLayoutCSV";
+    }
 
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "genotyping_plate_layouts"."XXXX";
