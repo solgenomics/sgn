@@ -1,0 +1,52 @@
+
+<%args>
+</%args>
+
+<%doc>
+
+=head1 /mason/analyses/index.mas - show user-specific analyses in the system
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+  
+</%doc>
+
+<& /page/page_title.mas, title => "Your analyses" &>
+
+  <button class="btn btn-light" style="float:right">Upload analysis</button><br />
+  <hr>
+
+<!-- data table -->
+
+<table id="analyses_by_user_table">
+  <thead>
+  <tr>
+    <th>
+      Name
+    </th>
+    <th>
+      Description
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+     
+
+<script>
+
+  $(document).ready( function() {
+    $('#analyses_by_user_table').DataTable(
+    {
+       url: '/ajax/analyses/by_user'
+    });
+  
+  });
+
+</script>

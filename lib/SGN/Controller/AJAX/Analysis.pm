@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::Analysis;
 
 use Moose;
 
+use Data::Dumper;
 use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -144,6 +145,25 @@ sub store_data {
     else {
 	$c->stash->{rest} = { success => 1 };
     }
+}
+
+sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $user_id;
+    if ($c->user()) {
+	$user_id = $c->user->get_object()->get_sp_person_id();
+    }
+    if (!$user_id) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+    my @a = CXGN::Analysis->retrieve_analyses_by_user($schema, $user_id);
+
+    print STDERR Dumper(\@a);
+	
+
 }
 
 sub check_user {
