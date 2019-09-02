@@ -85,6 +85,11 @@ has 'altitude' => (
 	is => 'rw',
 );
 
+has 'noaa_station_id' => (
+    isa => 'Maybe[Str]',
+	is => 'rw',
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -106,6 +111,7 @@ sub BUILD {
         $self->latitude( $self->latitude || $location->latitude);
         $self->longitude( $self->longitude || $location->longitude);
         $self->altitude( $self->altitude || $location->altitude);
+        $self->noaa_station_id( $self->noaa_station_id || $self->_get_ndgeolocationprop('noaa_station_id', 'geolocation_property'));
     }
 
     print STDERR "Breeding programs are: ".$self->breeding_programs()."\n";
@@ -128,6 +134,7 @@ sub store_location {
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
+    my $noaa_station_id = $self->noaa_station_id();
 
     # Validate properties
 
@@ -209,7 +216,9 @@ sub store_location {
             if ($location_type){
                 $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
             }
-
+            if ($noaa_station_id){
+                $self->_store_ndgeolocationprop('noaa_station_id', 'geolocation_property', $noaa_station_id);
+            }
         }
         catch {
             $error =  $_;
@@ -237,6 +246,7 @@ sub store_location {
             $self->_update_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
             $self->_update_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             $self->_update_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
+            $self->_update_ndgeolocationprop('noaa_station_id', 'geolocation_property', $noaa_station_id);
             $self->_store_breeding_programs($breeding_program_ids);
         }
         catch {
