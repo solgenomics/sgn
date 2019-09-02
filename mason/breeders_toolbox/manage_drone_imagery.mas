@@ -991,15 +991,20 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <&| /util/workflow.mas:step, title=> "Statistics" &>
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
-                    <div id ="drone_imagery_calculate_statistics_select_div">
-                    </div>
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
                         <option value="lmer_germplasmname_block">LMER y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
-                        <option value="marss_germplasmname_block">MARSS y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
+                        <option value="marss_germplasmname_block">MARSS prediction for each germplasmName</option>
                     </select>
 
-                    $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
+                    <div id="drone_imagery_calculate_statistics_marss_div" style="display:none">
+                        $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
+                        <hr>
+                        <select class="form-control" id="drone_imagery_calculate_statistics_select_marss" name="drone_imagery_calculate_statistics_select_marss">
+                            <option value="marss_predict_last_time_point">Predict Last Time Point</option>
+                            <option value="marss_predict_last_two_time_points">Predict Last Two Time Point</option>
+                        </select>
+                    </div>
 
                     <br/><br/>
                     <center>
@@ -2026,6 +2031,8 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_statistics_trait_select_step').click(function(){
+        manage_drone_imagery_calculate_statistics_trait_ids = [];
+
         if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
             jQuery('input[name="drone_imagery_calculate_statistics_trait_id_select"]').each(function() {
                 if (this.checked){
@@ -2050,8 +2057,23 @@ jQuery(document).ready(function() {
         return false;
     });
 
+    jQuery('#drone_imagery_calculate_statistics_select_input').change(function(){
+        manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
+        if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block') {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
+        }
+    });
+
     jQuery('#drone_imagery_calculate_statistics_select_step').click(function(){
         manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
+
+        if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block' && manage_drone_imagery_calculate_statistics_observation_variable_type != 'time_ontology') {
+            alert('The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits.');
+            return false;
+        }
 
         jQuery.ajax({
             url : '/api/drone_imagery/calculate_statistics',
@@ -2059,7 +2081,8 @@ jQuery(document).ready(function() {
             data : {
                 'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
                 'field_trial_id_list':JSON.stringify([manage_drone_imagery_calculate_statistics_field_trial_id]),
-                'statistics_select':manage_drone_imagery_calculate_statistics_select
+                'statistics_select':manage_drone_imagery_calculate_statistics_select,
+                'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
