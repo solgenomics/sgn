@@ -141,8 +141,8 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012'], [70668,'harvest index variable|CO_334:0000015'], [70741,'dry matter content percentage|CO_334:0000092'], [70773,'fresh shoot weight measurement in kg|CO_334:0000016']);
+print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15], [70668,'harvest index variable|CO_334:0000015', [], 15], [70741,'dry matter content percentage|CO_334:0000092', [], 15], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -272,8 +272,8 @@ ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012'], [70668,'harvest index variable|CO_334:0000015'], [70741,'dry matter content percentage|CO_334:0000092'], [70773,'fresh shoot weight measurement in kg|CO_334:0000016']);
+print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 30], [70668,'harvest index variable|CO_334:0000015', [], 30], [70741,'dry matter content percentage|CO_334:0000092', [], 30], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 30]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -430,25 +430,25 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 30
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 30
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 43
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 30
         ],[
           77107,
-          'fieldbook_image|CO_334:0010472'
+          'fieldbook_image|CO_334:0010472', [], 2
         ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
@@ -885,25 +885,25 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper /@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 44
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 45
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 56
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 55
         ],[
           77107,
-          'fieldbook_image|CO_334:0010472'
+          'fieldbook_image|CO_334:0010472', [], 2
         ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
@@ -1580,37 +1580,37 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 59
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 59
         ],[
           70681,
-          'top yield|CO_334:0000017'
+          'top yield|CO_334:0000017', [], 15
         ],[
           70700,
-          'sprouting proportion|CO_334:0000008'
+          'sprouting proportion|CO_334:0000008', [], 15
         ],[
           70706,
-          'root number counting|CO_334:0000011'
+          'root number counting|CO_334:0000011', [], 14
         ],[
           70713,
-          'flower|CO_334:0000111'
+          'flower|CO_334:0000111', [], 15
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 71
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 60
         ],[
            77107,
-           'fieldbook_image|CO_334:0010472'
+           'fieldbook_image|CO_334:0010472', [], 2
          ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from large phenotyping spreadsheet upload' );
 
@@ -2181,46 +2181,46 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [[
             70666,
-            'fresh root weight|CO_334:0000012'
+            'fresh root weight|CO_334:0000012', [], 88
           ],
           [
             70668,
-            'harvest index variable|CO_334:0000015'
+            'harvest index variable|CO_334:0000015', [], 59
           ],
           [
             70681,
-            'top yield|CO_334:0000017'
+            'top yield|CO_334:0000017', [], 15
           ],
           [
             70700,
-            'sprouting proportion|CO_334:0000008'
+            'sprouting proportion|CO_334:0000008', [], 15
           ],
           [
             70706,
-            'root number counting|CO_334:0000011'
+            'root number counting|CO_334:0000011', [], 14
           ],
           [
             70713,
-            'flower|CO_334:0000111'
+            'flower|CO_334:0000111', [], 15
           ],
           [
             70727,
-            'dry yield|CO_334:0000014'
+            'dry yield|CO_334:0000014', [], 15
           ],
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 100
           ],
           [
             70773,
-            'fresh shoot weight measurement in kg|CO_334:0000016'
+            'fresh shoot weight measurement in kg|CO_334:0000016', [], 60
           ],
           [
             77107,
-            'fieldbook_image|CO_334:0010472'
+            'fieldbook_image|CO_334:0010472', [], 2
           ]], 'check traits assayed after plant upload' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -2511,43 +2511,43 @@ print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70666,
-            'fresh root weight|CO_334:0000012'
+            'fresh root weight|CO_334:0000012', [], 88
           ],
           [
             70668,
-            'harvest index variable|CO_334:0000015'
+            'harvest index variable|CO_334:0000015', [], 59
           ],
           [
             70681,
-            'top yield|CO_334:0000017'
+            'top yield|CO_334:0000017', [], 15
           ],
           [
             70700,
-            'sprouting proportion|CO_334:0000008'
+            'sprouting proportion|CO_334:0000008', [], 15
           ],
           [
             70706,
-            'root number counting|CO_334:0000011'
+            'root number counting|CO_334:0000011', [], 14
           ],
           [
             70713,
-            'flower|CO_334:0000111'
+            'flower|CO_334:0000111', [], 15
           ],
           [
             70727,
-            'dry yield|CO_334:0000014'
+            'dry yield|CO_334:0000014', [], 19
           ],
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 106
           ],
           [
             70773,
-            'fresh shoot weight measurement in kg|CO_334:0000016'
+            'fresh shoot weight measurement in kg|CO_334:0000016', [], 60
           ],
           [
             77107,
-            'fieldbook_image|CO_334:0010472'
+            'fieldbook_image|CO_334:0010472', [], 2
           ]
         ], 'check traits assayed after plant upload' );
 

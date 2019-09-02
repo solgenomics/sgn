@@ -314,6 +314,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my $temp_plot = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_analysis_plot/imageXXXX');
         $temp_plot .= '.jpg';
 
+        my $marss_prediction_selection = $c->req->param('statistics_select_marss_options');
+
         my $rbase = R::YapRI::Base->new();
         my $r_block = $rbase->create_block('r_block');
         $rmatrix->send_rbase($rbase, 'r_block');
@@ -338,7 +340,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
             $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
             $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
-            $r_block->add_command('time_series'.$t.'[length(time_series'.$t.')] <- NA');
+            if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
+                $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
+            }
+            elsif ($marss_prediction_selection eq 'marss_predict_last_time_point') {
+                $r_block->add_command('time_series'.$t.'[length(time_series'.$t.')] <- NA');
+            }
+            else {
+                die "MARSS predict option not selected\n";
+            }
             $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 ), method="kem")');
             $r_block->add_command('minimum_y_val'.$t.' <- min( c( min(as.numeric(time_series_original'.$t.'), na.rm=T), min(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
             $r_block->add_command('maximum_y_val'.$t.' <- max( c( max(as.numeric(time_series_original'.$t.'), na.rm=T), max(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
@@ -501,7 +511,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_contours/imageXXXX');
     $archive_contours_temp_image .= '.png';
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/GetContours.py --image_url \''.$main_production_site.$image_url.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/GetContours.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
