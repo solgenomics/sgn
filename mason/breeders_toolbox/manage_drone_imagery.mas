@@ -1148,10 +1148,18 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <div class="form-horizontal">
                 <div class="form-group">
-                    <label class="col-sm-6 control-label">Base Temperature:</label>
-                    <div class="col-sm-6" >
+                    <label class="col-sm-3 control-label">Base Temperature:</label>
+                    <div class="col-sm-9" >
                         <select class="form-control" id="drone_imagery_calculate_gdd_base_temperature_input">
                             <option value="50">50F</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Formula:</label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="drone_imagery_calculate_gdd_formula_input">
+                            <option value="average_daily_temp_sum">GDD = sum_over_days ( ( (Max Temp + Min Temp)/2 ) - Base Temp)</option>
                         </select>
                     </div>
                 </div>
@@ -2076,10 +2084,12 @@ jQuery(document).ready(function() {
     // Growing Degree Days Calculation
     //
 
+    var manage_drone_imagery_calculate_gdd_field_trial_id;
     var manage_drone_imagery_calculate_gdd_drone_run_project_id;
     var manage_drone_imagery_calculate_gdd_phenotype_time;
 
-    jQuery(document).on('click', 'button[name=drone_imagery_drone_run_calculate_averaged_temperature_gdd]', function() {
+    jQuery(document).on('click', 'button[name=drone_imagery_drone_run_calculate_gdd]', function() {
+        manage_drone_imagery_calculate_gdd_field_trial_id = jQuery(this).data('field_trial_id');
         manage_drone_imagery_calculate_gdd_drone_run_project_id = jQuery(this).data('drone_run_project_id');
 
         jQuery.ajax({
@@ -2099,8 +2109,10 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_upload_gdd_submit').click(function(){
+        var manage_drone_imagery_calculate_gdd_base_temp = jQuery('#drone_imagery_calculate_gdd_base_temperature_input').val();
+        var manage_drone_imagery_calculate_gdd_formula = jQuery('#drone_imagery_calculate_gdd_formula_input').val();
         jQuery.ajax({
-            url : '/api/drone_imagery/growing_degree_days?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_calculate_gdd_phenotype_time,
+            url : '/api/drone_imagery/growing_degree_days?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id+'&formula='+manage_drone_imagery_calculate_gdd_formula+'&gdd_base_temperature='+manage_drone_imagery_calculate_gdd_base_temp+'&field_trial_id='+manage_drone_imagery_calculate_gdd_field_trial_id,
             success: function(response){
                 console.log(response);
             },

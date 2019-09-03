@@ -3620,6 +3620,50 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub drone_imagery_growing_degree_days : Path('/api/drone_imagery/growing_degree_days') : ActionClass('REST') { }
+sub drone_imagery_growing_degree_days_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $formula = $c->req->param('formula');
+    my $gdd_base_temperature = $c->req->param('gdd_base_temperature');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $field_trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $field_trial_id
+    });
+    my $planting_date = $field_trial->get_planting_date();
+
+    my $drone_run_project = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $drone_run_project_id
+    });
+    my $project_start_date = $drone_run_project->get_project_start_date();
+
+    my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+    my $planting_date_datetime = $planting_date_time_object->strftime("%Y-%m-%d");
+    my $project_start_date_time_object = Time::Piece->strptime($project_start_date, "%Y-%B-%d");
+    my $project_start_date_datetime = $project_start_date_time_object->strftime("%Y-%m-%d");
+
+    my $gdd = CXGN::GrowingDegreeDays->new({
+        bcs_schema => $schema,
+        start_date => $planting_date_datetime, #YYYY-MM-DD
+        end_date => $project_start_date_datetime, #YYYY-MM-DD
+        noaa_station_id => "GHCND:US1NCBC0005",
+        noaa_ncdc_access_token => $c->config->{noaa_ncdc_access_token}
+    });
+    if ($formula eq 'average_daily_temp_sum') {
+        my $temperature_averaged_growing_degree_days = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
+    }
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub _check_user_login {
     my $c = shift;
     my $user_id;

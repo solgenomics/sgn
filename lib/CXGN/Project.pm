@@ -279,9 +279,28 @@ sub set_location {
 		}
 }
 
-# CLASS METHOD!
+=head2 function get_location_noaa_station_id()
 
+ Usage:        my $noaa_station_id = $trial->get_location_noaa_station_id();
+ Desc:
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
 
+=cut
+
+sub get_location_noaa_station_id {
+    my $self = shift;
+    my $nd_geolocation_id = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() })->value();
+    my $noaa_station_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'noaa_station_id', 'geolocation_property')->cvterm_id();
+
+    my $q = "SELECT value FROM nd_geolocationprop WHERE nd_geolocation_id = ? AND type_id = ?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($nd_geolocation_id, $noaa_station_id_cvterm_id);
+    my ($noaa_station_id) = $h->fetchrow_array();
+    
+}
 
 =head2 function get_breeding_programs()
 
@@ -807,6 +826,51 @@ sub set_name {
     if ($row) {
 	$row->name($name);
 	$row->update();
+    }
+}
+
+=head2 accessors get_project_start_date(), set_project_start_date()
+
+ Usage:         $t->set_project_start_date("2016/09/17");
+ Desc:          sets the projects project_start_date property.
+                The date format in the setter has to be
+                YYYY/MM/DD
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_project_start_date {
+    my $self = shift;
+
+    my $project_start_date_cvterm_id = $self->get_project_start_date_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $project_start_date_cvterm_id,
+    });
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+    return $row ? $calendar_funcs->display_start_date($row->value()) : undef;
+}
+
+sub set_project_start_date {
+    my $self = shift;
+    my $project_start_date = shift;
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $project_start_date_event = $calendar_funcs->check_value_format($project_start_date) ) {
+        my $project_start_date_cvterm_id = $self->get_project_start_date_cvterm_id();
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $project_start_date_cvterm_id,
+        });
+
+        $row->value($project_start_date_event);
+        $row->update();
+    } else {
+        print STDERR "date format did not pass check while preparing to set project start date: $project_start_date  \n";
     }
 }
 
@@ -2257,6 +2321,18 @@ sub get_harvest_date_cvterm_id {
     return $harvest_date_cvterm_id;
 }
 
+
+sub get_project_start_date_cvterm_id {
+    my $self = shift;
+
+    my $start_date_cvterm_id;
+    my $start_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_start_date', 'project_property');
+    if ($start_date_cvterm) {
+        $start_date_cvterm_id = $start_date_cvterm->cvterm_id();
+    }
+
+    return $start_date_cvterm_id;
+}
 
 =head2 function create_plant_entities()
 

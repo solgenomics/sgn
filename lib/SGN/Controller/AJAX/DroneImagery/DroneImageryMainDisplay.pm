@@ -134,7 +134,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                 $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Averaged Temperature Growing Degree Days</b>:</div><div class="col-sm-7">'.$_->{drone_run_averaged_temperature_gdd}.'</div></div>';
             }
             else {
-                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Degree Days</b>:</div><div class="col-sm-7"><button class="btn btn-default btn-sm" name="drone_imagery_drone_run_calculate_averaged_temperature_gdd" data-drone_run_project_id="'.$k.'" >Calculate</button></div></div>';
+                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Degree Days</b>:</div><div class="col-sm-7"><button class="btn btn-default btn-sm" name="drone_imagery_drone_run_calculate_gdd" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'">Calculate</button></div></div>';
             }
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
             $drone_run_html .= '</div><div class="col-sm-3">';
