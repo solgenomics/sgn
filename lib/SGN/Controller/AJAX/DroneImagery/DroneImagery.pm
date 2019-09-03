@@ -1745,13 +1745,10 @@ sub standard_process_extended_apply_GET : Args(0) {
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
-    my $time_cvterm_id = $c->req->param('time_weeks_cvterm_id');
-    my $time_days_cvterm_id = $c->req->param('time_days_cvterm_id');
+    my $time_cvterm_id = $c->req->param('time_days_cvterm_id');
     my $standard_process_type = $c->req->param('standard_process_type');
     my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
-
-    $time_cvterm_id = $time_days_cvterm_id ? $time_days_cvterm_id : $time_cvterm_id;
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
     my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_extended_completed', 'project_property')->cvterm_id();
