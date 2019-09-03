@@ -23,6 +23,7 @@ use CXGN::Tools::Run;
 use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
+use SGN::Controller::solGS::Utils;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -1059,23 +1060,15 @@ sub download_urls {
     }
     
     my $trait_id          = $c->stash->{trait_id};
-    my $ranked_genos_file = $c->stash->{selection_index_only_file};
-
-    if ($ranked_genos_file) 
-    {
-        ($ranked_genos_file) = fileparse($ranked_genos_file);
-    }
-    
+   
     my $blups_url      = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id">Download all GEBVs</a> |;
     my $marker_url     = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id">Download all marker effects</a> |;
     my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id">Download model accuracy report</a> |;
-    my $ranked_genotypes_url = qq | <a href="/solgs/download/ranked/genotypes/pop/$pop_id/$ranked_genos_file">Download selection indices</a> |;
    
     $c->stash(blups_download_url            => $blups_url,
               marker_effects_download_url   => $marker_url,
-              validation_download_url       => $validation_url,
-              ranked_genotypes_download_url => $ranked_genotypes_url,
-        );
+              validation_download_url       => $validation_url);
+    
 }
 
 
@@ -1550,25 +1543,6 @@ sub get_trait_details {
     $c->stash->{trait_abbr} = $abbr;
 
 }
-
-
-sub download_ranked_genotypes :Path('/solgs/download/ranked/genotypes/pop') Args(2) {
-    my ($self, $c, $pop_id, $genotypes_file) = @_;   
- 
-    $c->stash->{pop_id} = $pop_id;
-  
-    $genotypes_file = catfile($c->stash->{solgs_tempfiles_dir}, $genotypes_file);
-  
-    unless (!-e $genotypes_file || -s $genotypes_file == 0) 
-    {
-        my @ranks =  map { [ split(/\t/) ] }  read_file($genotypes_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @ranks);
-    } 
-
-}
-
 
 
 sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
