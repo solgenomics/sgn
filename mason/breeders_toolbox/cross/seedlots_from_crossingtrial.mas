@@ -1,5 +1,8 @@
 <%args>
 $trial_id
+$breeding_program_name
+$breeding_program_id
+$timestamp => localtime()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -9,25 +12,24 @@ $trial_id
 </table>
 
 <div class="modal fade" id="add_cross_seedlot_dialog" name="add_cross_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="add_seedlot_dialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="add_seedlot_dialog">Add New Seedlot</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-            <div id="add_cross_seedlot_div">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="add_seedlot_dialog">Add New Seedlot</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_cross_seedlot_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_cross_seedlot_button" type="button" class="btn btn-primary" >Add</button>
             </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button id="add_cross_seedlot_button" type="button" class="btn btn-primary" >Add</button>
-      </div>
     </div>
-  </div>
 </div>
-
 
 
 <script>
