@@ -79,6 +79,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_extended} = $_->{drone_run_processed_extended};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_phenotypes_indicator} = $_->{drone_run_phenotypes_indicator};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_averaged_temperature_gdd} = $_->{drone_run_averaged_temperature_gdd};
             $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
         }
         elsif ($_->{project_image_type_name} eq 'stitched_drone_imagery') {
@@ -102,6 +103,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_extended} = $_->{drone_run_processed_extended};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_phenotypes_indicator} = $_->{drone_run_phenotypes_indicator};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_averaged_temperature_gdd} = $_->{drone_run_averaged_temperature_gdd};
             $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
         }
     }
@@ -128,6 +130,12 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Type</b>:</div><div class="col-sm-7">'.$v->{drone_run_type}.'</div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Description</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_description}.'</div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
+            if ($v->{drone_run_averaged_temperature_gdd}) {
+                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Averaged Temperature Growing Degree Days</b>:</div><div class="col-sm-7">'.$_->{drone_run_averaged_temperature_gdd}.'</div></div>';
+            }
+            else {
+                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Degree Days</b>:</div><div class="col-sm-7"><button class="btn btn-default btn-sm" name="drone_imagery_drone_run_calculate_averaged_temperature_gdd" data-drone_run_project_id="'.$k.'" >Calculate</button></div></div>';
+            }
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
             $drone_run_html .= '</div><div class="col-sm-3">';
             if ($v->{drone_run_indicator}) {

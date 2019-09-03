@@ -1186,6 +1186,52 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_calculate_gdd_dialog" name="drone_imagery_calculate_gdd_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalculateGDDDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalculateGDDDialog">Calculate Growing Degree Days</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="well well-sm">
+                Growing Degree Days (GDD) are calculated using the average high and low temperature for each day from planting date to the date of the imaging event. <a href="https://www.canr.msu.edu/news/understanding_growing_degree_days" target=_blank >More Information on GDD</a>. The average daily high and low temperature is fetched from the <a href="https://www.ncdc.noaa.gov/cdo-web/webservices/v2" target=_blank>NOAA NCDC</a>.
+            </div>
+
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Planting Date:</label>
+                    <div class="col-sm-6" >
+                        <input class="form-control" id="drone_imagery_calculate_gdd_planting_date" name="drone_imagery_calculate_gdd_planting_date" title="drone_run_date" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Imaging Event Date:</label>
+                    <div class="col-sm-6" >
+                        <input class="form-control" id="drone_imagery_calculate_gdd_imaging_date" name="drone_imagery_calculate_gdd_imaging_date" title="drone_run_date" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Base Temperature:</label>
+                    <div class="col-sm-6" >
+                        <select class="form-control" id="drone_imagery_calculate_gdd_base_temperature_input">
+                            <option value="50">50F</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary">Calculate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 
 <script>
@@ -2107,6 +2153,52 @@ jQuery(document).ready(function() {
             }
         });
     });
+
+    //
+    // Growing Degree Days Calculation
+    //
+
+    var manage_drone_imagery_calculate_gdd_drone_run_project_id;
+
+    jQuery(document).on('click', 'button[name=drone_imagery_drone_run_calculate_averaged_temperature_gdd]', function() {
+        manage_drone_imagery_calculate_gdd_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id,
+            success: function(response){
+                console.log(response);
+                jQuery('#drone_imagery_calculate_gdd_imaging_date').val(response.drone_run_date_calendar);
+                jQuery('#drone_imagery_calculate_gdd_planting_date').val(response.planting_date_calendar);
+
+                jQuery('#drone_imagery_calculate_gdd_dialog').modal('show');
+            },
+            error: function(response){
+                alert('Error training keras model!')
+            }
+        });
+    });
+
+    jQuery('input[id=drone_imagery_calculate_gdd_imaging_date]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            jQuery('#drone_imagery_calculate_gdd_imaging_date').val(start.format('YYYY/MM/DD HH:mm:ss'));
+        }
+    );
+
+    jQuery('input[id=drone_imagery_calculate_gdd_planting_date]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            jQuery('#drone_imagery_calculate_gdd_planting_date').val(start.format('YYYY/MM/DD HH:mm:ss'));
+        }
+    );
 
     //
     // Keras CNN Training JS

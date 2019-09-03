@@ -63,18 +63,20 @@ sub patch {
     my $terms = {
         'geolocation_property' => [
             'noaa_station_id',
+        ],
+        'project_property' => [
+            'drone_run_averaged_temperature_growing_degree_days'
         ]
     };
 
-	foreach my $t (keys %$terms){
-		foreach (@{$terms->{$t}}){
-			$schema->resultset("Cv::Cvterm")->create_with({
-				name => $_,
-				cv => $t
-			});
-		}
-	}
-
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
 
     print "You're done!\n";
 }

@@ -1409,14 +1409,18 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $planting_date = $trial->get_planting_date();
 
+    my $drone_date_time_object = Time::Piece->strptime($drone_date, "%Y-%B-%d");
+    my $drone_date_full_calendar_datetime = $drone_date_time_object->strftime("%Y/%m/%d %H:%M:%S");
+
     if (!$planting_date) {
-        return { drone_run_date => $drone_date, error => 'The planting date is not set on the field trial, so we could not get the time of this flight automaticaly; however you can still select the time manually'};
+        return { drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, error => 'The planting date is not set on the field trial, so we could not get the time of this flight automaticaly; however you can still select the time manually'};
     }
 
     my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-    my $drone_date_time_object = Time::Piece->strptime($drone_date, "%Y-%B-%d");
+    my $planting_date_full_calendar_datetime = $planting_date_time_object->strftime("%Y/%m/%d %H:%M:%S");
     my $time_diff = $drone_date_time_object - $planting_date_time_object;
     my $time_diff_weeks = $time_diff->weeks;
+    my $time_diff_days = $time_diff->days;
     my $rounded_time_diff_weeks = round($time_diff_weeks);
     print STDERR Dumper $rounded_time_diff_weeks;
 
@@ -1425,13 +1429,17 @@ sub _perform_get_weeks_drone_run_after_planting {
     $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
     my ($week_cvterm_id) = $h->fetchrow_array();
 
+    $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+    my ($day_cvterm_id) = $h->fetchrow_array();
+
     if (!$week_cvterm_id) {
-        return { planting_date => $planting_date, drone_run_date => $drone_date, time_difference_weeks => $time_diff_weeks, rounded_time_difference_weeks => $rounded_time_diff_weeks, error => 'The time ontology term was not found automatically! Maybe the field trial planting date or the drone run date are not correct in the database? The maximum number of weeks currently allowed between these two dates is 54 weeks. This should not be possible, please contact us; however you can still select the time manually'};
+        return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, error => 'The time ontology term was not found automatically! Maybe the field trial planting date or the drone run date are not correct in the database? The maximum number of weeks currently allowed between these two dates is 54 weeks. This should not be possible, please contact us; however you can still select the time manually'};
     }
 
     my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
+    my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
 
-    return { planting_date => $planting_date, drone_run_date => $drone_date, time_difference_weeks => $time_diff_weeks, rounded_time_difference_weeks => $rounded_time_diff_weeks, time_ontology_cvterm_id => $week_cvterm_id, time_ontology_term => $week_term};
+    return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, time_ontology_cvterm_id => $week_cvterm_id, time_ontology_term => $week_term, time_ontology_day_cvterm_id => $day_cvterm_id, time_ontology_day_term => $day_term};
 }
 
 sub standard_process_apply : Path('/api/drone_imagery/standard_process_apply') : ActionClass('REST') { }
