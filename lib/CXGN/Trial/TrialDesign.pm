@@ -164,7 +164,7 @@ sub isint{
 }
 
 
-sub _validate_field_colNumber {
+sub validate_field_colNumber {
   my $colNum = shift;
   if (isint($colNum)){
     return $colNum;

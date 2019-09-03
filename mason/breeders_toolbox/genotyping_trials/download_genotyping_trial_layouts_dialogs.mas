@@ -13,7 +13,8 @@ $genotyping_trial_ids
             <div class="modal-body">
                 <div class="container-fluid">
 
-                <a href="/breeders/trials/download/layout?format=intertekxls&dataLevel=plate&genotyping_trial_id_list=<% $genotyping_trial_ids %>" class="btn btn-default">Download Intertek Formatted File</a>
+                <a href="/breeders/trials/download/layout?format=csv&dataLevel=plate&genotyping_trial_id_list=<% $genotyping_trial_ids %>" class="btn btn-default">Download Breedbase Formatted File</a><br/><br/>
+                <a href="/breeders/trials/download/layout?format=intertekxls&dataLevel=plate&genotyping_trial_id_list=<% $genotyping_trial_ids %>" class="btn btn-default">Download Intertek Formatted File</a><br/><br/>
                 <a href="/breeders/trials/download/layout?format=dartseqcsv&dataLevel=plate&genotyping_trial_id_list=<% $genotyping_trial_ids %>" class="btn btn-default">Download DartSeq Formatted File</a>
 
             </div>
