@@ -853,9 +853,16 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <form class="form-horizontal">
                 <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
+                    <label class="col-sm-5 control-label">Number of Weeks Since Planting Date:</label>
                     <div class="col-sm-7">
-                        <div id="drone_imagery_calculate_phenotypes_extended_standard_process_time_select_div">
+                        <div id="drone_imagery_calculate_phenotypes_extended_standard_process_time_select_weeks_div">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Number of Days Since Planting Date:</label>
+                    <div class="col-sm-7">
+                        <div id="drone_imagery_calculate_phenotypes_extended_standard_process_time_select_days_div">
                         </div>
                     </div>
                 </div>
@@ -1897,7 +1904,8 @@ jQuery(document).ready(function() {
     //
 
     var manage_drone_imagery_standard_process_extended_drone_run_project_id;
-    var manage_drone_imagery_standard_process_extended_phenotype_time = '';
+    var manage_drone_imagery_standard_process_extended_phenotype_time_weeks = '';
+    var manage_drone_imagery_standard_process_extended_phenotype_time_days = '';
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_extended"]', function() {
         manage_drone_imagery_standard_process_extended_drone_run_project_id = jQuery(this).data('drone_run_project_id');
@@ -1914,12 +1922,15 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 }
-                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_extended_standard_process_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
+                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_extended_standard_process_time_select_weeks_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select_weeks', 'selectbox_name':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select_weeks', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_week_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_extended_standard_process_time_select_days_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select_days', 'selectbox_name':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select_days', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_day_cvterm_id });
+
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Days Difference</b>: "+response.time_difference_days+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days Ontology Term</b>:"+response.time_ontology_day_term+"</center>";
                 jQuery('#drone_imagery_extended_standard_process_week_term_div').html(html);
-                if (response.time_ontology_cvterm_id) {
-                    manage_drone_imagery_standard_process_extended_phenotype_time = response.time_ontology_cvterm_id;
+                if (response.time_ontology_week_cvterm_id) {
+                    manage_drone_imagery_standard_process_extended_phenotype_time_weeks = response.time_ontology_week_cvterm_id;
+                    manage_drone_imagery_standard_process_extended_phenotype_time_days = response.time_ontology_week_cvterm_id;
                 }
             },
             error: function(response){
@@ -1931,11 +1942,14 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_extended_standard_process_select').click(function(){
-        if (manage_drone_imagery_standard_process_extended_phenotype_time == '') {
-            manage_drone_imagery_standard_process_extended_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_extended_standard_process_time_select').val();
+        if (manage_drone_imagery_standard_process_extended_phenotype_time_weeks == '') {
+            manage_drone_imagery_standard_process_extended_phenotype_time_weeks = jQuery('#drone_imagery_calculate_phenotypes_extended_standard_process_time_select_weeks').val();
         }
-        if (manage_drone_imagery_standard_process_extended_phenotype_time == '') {
-            alert('Please select a time term!');
+        if (manage_drone_imagery_standard_process_extended_phenotype_time_days == '') {
+            manage_drone_imagery_standard_process_extended_phenotype_time_days = jQuery('#drone_imagery_calculate_phenotypes_extended_standard_process_time_select_days').val();
+        }
+        if (manage_drone_imagery_standard_process_extended_phenotype_time_weeks == '' || drone_imagery_calculate_phenotypes_extended_standard_process_time_select_days == '') {
+            alert('Please select a time term for both number of weeks and number of days!');
             return false;
         }
 
@@ -1943,7 +1957,7 @@ jQuery(document).ready(function() {
 
         jQuery.ajax({
             type: 'GET',
-            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time+'&standard_process_type=extended',
+            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_weeks_cvterm_id='+manage_drone_manage_drone_imagery_standard_process_extended_phenotype_time_weeks+'&time_days_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time_days+'&standard_process_type=extended',
             dataType: "json",
             success: function(response){
                 console.log(response);

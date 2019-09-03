@@ -1439,7 +1439,7 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
     my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
 
-    return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, time_ontology_cvterm_id => $week_cvterm_id, time_ontology_term => $week_term, time_ontology_day_cvterm_id => $day_cvterm_id, time_ontology_day_term => $day_term};
+    return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, time_ontology_week_cvterm_id => $week_cvterm_id, time_ontology_week_term => $week_term, time_ontology_day_cvterm_id => $day_cvterm_id, time_ontology_day_term => $day_term};
 }
 
 sub standard_process_apply : Path('/api/drone_imagery/standard_process_apply') : ActionClass('REST') { }
@@ -1745,10 +1745,13 @@ sub standard_process_extended_apply_GET : Args(0) {
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
-    my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $time_cvterm_id = $c->req->param('time_weeks_cvterm_id');
+    my $time_days_cvterm_id = $c->req->param('time_days_cvterm_id');
     my $standard_process_type = $c->req->param('standard_process_type');
     my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    $time_cvterm_id = $time_days_cvterm_id ? $time_days_cvterm_id : $time_cvterm_id;
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
     my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_extended_completed', 'project_property')->cvterm_id();

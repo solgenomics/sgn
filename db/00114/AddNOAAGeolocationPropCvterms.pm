@@ -65,7 +65,8 @@ sub patch {
             'noaa_station_id',
         ],
         'project_property' => [
-            'drone_run_averaged_temperature_growing_degree_days'
+            'drone_run_averaged_temperature_growing_degree_days',
+            'drone_run_related_time_cvterms_json'
         ]
     };
 
