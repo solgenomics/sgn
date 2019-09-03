@@ -18,6 +18,8 @@ use Data::Dumper;
 use JSON;
 use SGN::Model::Cvterm;
 use DateTime;
+use Math::Round;
+use Time::Piece;
 use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
 use URI::Encode qw(uri_encode uri_decode);
@@ -118,17 +120,43 @@ sub upload_drone_imagery_POST : Args(0) {
     }
 
     if (!$selected_drone_run_id) {
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $selected_trial_id });
+        my $planting_date = $trial->get_planting_date();
+        my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+        my $drone_run_date_time_object = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
+        my $time_diff = $drone_run_date_time_object - $planting_date_time_object;
+        my $time_diff_weeks = $time_diff->weeks;
+        my $time_diff_days = $time_diff->days;
+        my $rounded_time_diff_weeks = round($time_diff_weeks);
+
+        my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+        my ($week_cvterm_id) = $h->fetchrow_array();
+
+        $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+        my ($day_cvterm_id) = $h->fetchrow_array();
+
+        my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
+        my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
+
+        my %related_cvterms = (
+            week => $week_term,
+            day => $day_term
+        );
+
         my $calendar_funcs = CXGN::Calendar->new({});
         my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
         my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
         my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
         my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
         my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
+        my $drone_run_related_cvterms_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
         my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
         my $project_rs = $schema->resultset("Project::Project")->create({
             name => $new_drone_run_name,
             description => $new_drone_run_desc,
-            projectprops => [{type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},{type_id => $project_start_date_type_id, value => $drone_run_event}, {type_id => $design_cvterm_id, value => 'drone_run'}, {type_id => $drone_run_camera_type_cvterm_id, value => $new_drone_run_camera_info}],
+            projectprops => [{type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},{type_id => $project_start_date_type_id, value => $drone_run_event}, {type_id => $design_cvterm_id, value => 'drone_run'}, {type_id => $drone_run_camera_type_cvterm_id, value => $new_drone_run_camera_info}, {type_id => $drone_run_related_cvterms_cvterm_id, value => encode_json \%related_cvterms}],
             project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}]
         });
         $selected_drone_run_id = $project_rs->project_id();

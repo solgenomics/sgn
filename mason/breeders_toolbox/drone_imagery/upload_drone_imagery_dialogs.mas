@@ -40,6 +40,9 @@
                             </div>
                         </div>
 
+                        <div id="upload_drone_image_field_trial_info">
+                        </div>
+
                         <center>
                         <button class="btn btn-primary" id="upload_drone_image_field_trial_select_continue">Go to Next Step</button>
                         </center>
@@ -214,8 +217,24 @@ jQuery(document).ready(function() {
         if (jQuery('#drone_run_field_trial_id').val() == ''){
             alert('Please select a field trial first');
         } else {
-            Workflow.complete('#upload_drone_image_field_trial_select_continue');
-            Workflow.focus('#drone_imagery_upload_workflow', 2);
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+jQuery('#drone_run_field_trial_id').val()+'/details',
+                success: function(response){
+                    console.log(response);
+
+                    if (response.details.planting_date) {
+                        Workflow.complete('#upload_drone_image_field_trial_select_continue');
+                        Workflow.focus('#drone_imagery_upload_workflow', 2);
+                    }
+                    else {
+                        jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>Please set the planting date for this field trial before proceeding. You can do so from the trial's <a href='/breeders/trial/"+jQuery('#drone_run_field_trial_id').val()+"' target=_blank>Detail Page</a></div>");
+                    }
+                    return false;
+                },
+                error: function(response){
+                    alert('Error checking field trial details!');
+                }
+            });
         }
         return false;
     });

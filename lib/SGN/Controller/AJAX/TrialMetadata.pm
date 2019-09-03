@@ -165,8 +165,15 @@ sub trial_details_GET   {
     my $c = shift;
 
     my $trial = $c->stash->{trial};
+    my $planting_date = $trial->get_planting_date();
+    my $harvest_date = $trial->get_harvest_date();
 
-    $c->stash->{rest} = { details => $trial->get_details() };
+    $c->stash->{rest} = {
+        details => {
+            planting_date => $planting_date,
+            harvest_date => $harvest_date
+        }
+    };
 
 }
 
