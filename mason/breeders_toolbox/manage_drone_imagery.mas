@@ -895,11 +895,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <&| /util/workflow.mas, id=> "drone_imagery_calculate_statistics_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in. Selected field trials should have some common accessions between them." &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_trial_select_div"></div>
                             </div>
@@ -1960,40 +1960,42 @@ jQuery(document).ready(function() {
     // Calculate statistics
     //
 
-    var manage_drone_imagery_calculate_statistics_field_trial_id = undefined;
+    var manage_drone_imagery_calculate_statistics_field_trial_id_array = undefined;
+    var manage_drone_imagery_calculate_statistics_field_trial_id_string = "";
     var manage_drone_imagery_calculate_statistics_observation_variable_type;
     var manage_drone_imagery_calculate_statistics_trait_ids = [];
     var manage_drone_imagery_calculate_statistics_select = '';
 
     jQuery('#drone_imagery_calculate_statistics_link').click(function(){
         jQuery('#drone_imagery_calculate_statistics_dialog').modal('show');
-        get_select_box('trials', 'drone_imagery_calculate_statistics_trial_select_div', { 'name' : 'drone_imagery_calculate_statistics_field_trial_id', 'id' : 'drone_imagery_calculate_statistics_field_trial_id', 'empty':1, 'multiple':0 });
+        get_select_box('trials', 'drone_imagery_calculate_statistics_trial_select_div', { 'name' : 'drone_imagery_calculate_statistics_field_trial_id', 'id' : 'drone_imagery_calculate_statistics_field_trial_id', 'empty':1, 'multiple':1 });
 
-        manage_drone_imagery_calculate_statistics_field_trial_id = undefined;
+        manage_drone_imagery_calculate_statistics_field_trial_id_string = undefined;
         manage_drone_imagery_calculate_statistics_trait_ids = [];
     });
 
     jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').change(function(){
         manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
         if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
-            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
+            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
         }
         else {
-            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type });
+            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type });
         }
     });
 
     jQuery('#drone_imagery_calculate_statistics_field_trial_select_step').click(function(){
-        manage_drone_imagery_calculate_statistics_field_trial_id = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
+        manage_drone_imagery_calculate_statistics_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
+        manage_drone_imagery_calculate_statistics_field_trial_id_string = manage_drone_imagery_calculate_statistics_field_trial_id_array.join(",");
         manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
-        if (manage_drone_imagery_calculate_statistics_field_trial_id == '') {
+        if (manage_drone_imagery_calculate_statistics_field_trial_id_string == '') {
             alert('Please select a field trial first!');
         } else {
             if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
-                get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
+                get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
             }
             else {
-                get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type });
+                get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type });
             }
 
             Workflow.complete("#drone_imagery_calculate_statistics_field_trial_select_step");
@@ -2052,7 +2054,7 @@ jQuery(document).ready(function() {
             type : 'POST',
             data : {
                 'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
-                'field_trial_id_list':JSON.stringify([manage_drone_imagery_calculate_statistics_field_trial_id]),
+                'field_trial_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_field_trial_id_array),
                 'statistics_select':manage_drone_imagery_calculate_statistics_select,
                 'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val()
             },
@@ -2062,16 +2064,21 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-
-                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
-                for (var i=0; i<response.length; i++) {
-                    html = html + '<tr><td>'+response[i][0]+'</td><td>'+response[i][1]+'</td><td><img src="'+response[i][2]+'"></td></tr>';
+                
+                if (response.error) {
+                    alert(response.error);
                 }
-                html = html + '</tbody></table>';
-                jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
+                else {
+                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
+                    for (var i=0; i<response.length; i++) {
+                        html = html + '<tr><td>'+response[i][0]+'</td><td>'+response[i][1]+'</td><td><img src="'+response[i][2]+'"></td></tr>';
+                    }
+                    html = html + '</tbody></table>';
+                    jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
 
-                Workflow.complete("#drone_imagery_calculate_statistics_select_step");
-                Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
+                    Workflow.complete("#drone_imagery_calculate_statistics_select_step");
+                    Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
+                }
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");

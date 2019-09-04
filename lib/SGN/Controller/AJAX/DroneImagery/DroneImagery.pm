@@ -38,6 +38,7 @@ use POSIX;
 use Math::Round;
 use Parallel::ForkManager;
 use CXGN::GrowingDegreeDays;
+use CXGN::BreederSearch;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -208,7 +209,26 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     my $statistics_select = $c->req->param('statistics_select');
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
+    my $field_trial_id_list_string = join ',', @$field_trial_id_list;
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+    my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+    if ($status->{'error'}) {
+        $c->stash->{rest} = { error => $status->{'error'}};
+        return;
+    }
+    my $results_ref = $bs->metadata_query(['trials', 'accessions'], {'accessions' => {'trials' => $field_trial_id_list_string}}, {'accessions' => {'trials'=>1}});
+    my %unique_accession_ids;
+    foreach (@{$results_ref->{results}}) {
+        $unique_accession_ids{$_->[0]}++;
+    }
+    my @unique_accession_ids = keys %unique_accession_ids;
+    if (scalar(@unique_accession_ids) == 0) {
+        $c->stash->{rest} = { error => "There are no common accessions in the trials you have selected! If that is the case, please just select one at a time."};
+        return;
+    }
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
@@ -217,12 +237,18 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             data_level=>'plot',
             trait_list=>$trait_id_list,
             trial_list=>$field_trial_id_list,
+            accession_list=>\@unique_accession_ids,
             include_timestamp=>0,
             exclude_phenotype_outlier=>0
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
     my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
 
     my %germplasm_name_encoder;
     my $germplasm_name_encoded = 1;
@@ -316,6 +342,26 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         $temp_plot .= '.jpg';
 
         my $marss_prediction_selection = $c->req->param('statistics_select_marss_options');
+
+        my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
+        my $drone_run_time_q = "SELECT project_id, value FROM projectprop WHERE type_id=? and project_id=? ;"; #NEED TO JOIN TO drone run
+        my $h = $schema->storage->dbh()->prepare($drone_run_time_q);
+        my %time_to_gdd_lookup;
+        foreach (@$field_trial_id_list) {
+            $h->execute($drone_run_related_time_cvterms_json_cvterm_id, $_);
+            my ($drone_run_project_id, $related_time_terms_json) = $h->fetchrow_array();
+            my $related_time_terms;
+            if (!$related_time_terms_json) {
+                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+            }
+            else {
+                $related_time_terms = decode_json $related_time_terms_json;
+            }
+            if (!exists($related_time_terms->{gdd_average_temp})) {
+                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+            }
+            $time_to_gdd_lookup{$related_time_terms->{week}} = $related_time_terms->{gdd_average_temp};
+        }
 
         my $rbase = R::YapRI::Base->new();
         my $r_block = $rbase->create_block('r_block');
@@ -3723,7 +3769,7 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
         $schema->resultset("Project::Projectprop")->create({project_id=>$drone_run_project_id, type_id=>$drone_run_related_time_cvterms_json_cvterm_id, value=>encode_json \%related_cvterms});
     }
 
-    return $gdd_result;
+    return \%related_cvterms;
 }
 
 sub _check_user_login {
