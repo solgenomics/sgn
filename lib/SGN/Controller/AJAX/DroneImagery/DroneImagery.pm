@@ -3659,9 +3659,12 @@ sub drone_imagery_growing_degree_days_GET : Args(0) {
         noaa_station_id => $noaa_station_id,
         noaa_ncdc_access_token => $c->config->{noaa_ncdc_access_token}
     });
+    my $gdd_result;
     if ($formula eq 'average_daily_temp_sum') {
-        my $temperature_averaged_growing_degree_days = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
+        $gdd_result = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
     }
+    print STDERR Dumper $gdd_result;
+    
 
     $c->stash->{rest} = {success => 1};
 }

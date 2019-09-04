@@ -64,19 +64,31 @@ has 'noaa_ncdc_access_token' => (
 sub get_temperature_averaged_gdd {
     my $self = shift;
     my $gdd_base_temperature = shift || '50'; #For Maize use 50
-    my $result;
+    my $result = 0;
 
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
-    my $server_endpoint = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?stationid=".$self->noaa_station_id."&datasetid=GHCND&datatypeid=TMAX&datatypeid=TMIN&startdate=".$self->start_date."&enddate=".$self->end_date;
+    my $server_endpoint = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?stationid=".$self->noaa_station_id."&limit=1000&datasetid=GHCND&datatypeid=TMAX&datatypeid=TMIN&startdate=".$self->start_date."&enddate=".$self->end_date;
     print STDERR $server_endpoint."\n";
     my $resp = $ua->get($server_endpoint, "token"=>$self->noaa_ncdc_access_token);
 
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        print STDERR Dumper $message_hash;
+        #print STDERR Dumper $message_hash;
+        my %weather_hash;
+        foreach (@{$message_hash->{results}}) {
+            $weather_hash{$_->{date}}->{$_->{datatype}} = $_->{value};
+        }
+        foreach (values %weather_hash) {
+            if (defined($_->{TMIN}) & defined($_->{TMAX})) {
+                my $gdd_accumulation = (($_->{TMIN} + $_->{TMAX})/2) - $gdd_base_temperature;
+                if ($gdd_accumulation > 0) {
+                    $result = $result + $gdd_accumulation;
+                }
+            }
+        }
     }
     else {
         print STDERR Dumper $resp;
