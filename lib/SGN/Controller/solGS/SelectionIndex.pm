@@ -87,17 +87,19 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
 	my $top_10_si = $c->stash->{top_10_selection_indices};
         my $top_10_genos = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($top_10_si);
    
-        my $link         = $c->stash->{selection_index_download_url};                    
-        my $index_file   = $c->stash->{selection_index_only_file};
+        my $link       = $c->stash->{selection_index_download_url};                    
+        my $index_file = $c->stash->{selection_index_only_file};
+	my $si_id      = $c->stash->{file_id};
        
         $ret->{status} = 'No GEBV values to rank.';
 
         if (@$top_10_si) 
         {
             $ret->{status}     = 'success';
-            $ret->{genotypes}  = $top_10_genos;
+            $ret->{top_10_genotypes}  = $top_10_genos;
             $ret->{link}       = $link;
             $ret->{index_file} = $index_file;
+	    $ret->{si_id}      = $si_id;
         }                     
     }  
     else

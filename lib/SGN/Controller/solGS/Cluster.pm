@@ -152,7 +152,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $dataset_name     = $c->req->param('dataset_name');
     my $data_structure   = $c->req->param('data_structure');
     my $k_number         = $c->req->param('k_number');
-    my $data_type        =  $c->req->param('data_type');
+    my $data_type        = $c->req->param('data_type');
     my $cluster_type     = $c->req->param('cluster_type');
     my @traits_ids       = $c->req->param('training_traits_ids[]'); 
     my $list_id          = $c->req->param('list_id');

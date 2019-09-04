@@ -432,13 +432,11 @@ solGS.cluster = {
 	
 	var  popsList =  '<dl id="cluster_selected_population" class="cluster_dropdown">'
             + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
-            + '<dd>'
-            + '<ul>'
+            + '<dd><ul>'
             + '<li>'
             + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
-            + '</li>';  
-	
-	popsList += '</ul></dd></dl>'; 
+            + '</li>'
+	    + '</ul></dd></dl>'; 
 	
 	jQuery("#cluster_select_a_population_div").empty().append(popsList).show();
 	
@@ -452,6 +450,7 @@ solGS.cluster = {
 	}
 	
 	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
+
 	if (userUploadedSelExists == true) {
 	    
             var userSelPops = solGS.sIndex.listUploadedSelPopulations();
@@ -460,21 +459,27 @@ solGS.cluster = {
             }
 	}
 
+        var sIndexPops = solGS.sIndex.addIndexedClustering();
+        if (sIndexPops) {
+	    jQuery("#cluster_select_a_population_div ul").append(sIndexPops);  
+	}
+	
 	jQuery(".cluster_dropdown dt a").click(function() {
             jQuery(".cluster_dropdown dd ul").toggle();
 	});
-        
+      
 	jQuery(".cluster_dropdown dd ul li a").click(function() {
-	    
+	       console.log('si select clicked: ')
             var text = jQuery(this).html();
-            
+            console.log('si select: ' + text)
             jQuery(".cluster_dropdown dt a span").html(text);
             jQuery(".cluster_dropdown dd ul").hide();
             
             var idPopName = jQuery("#cluster_selected_population").find("dt a span.value").html();
+	         console.log('si selectd: ' + idPopName)
             idPopName     = JSON.parse(idPopName);
             modelId       = jQuery("#model_id").val();
-            
+       
             var selectedPopId   = idPopName.id;
             var selectedPopName = idPopName.name;
             var selectedPopType = idPopName.pop_type; 
@@ -488,7 +493,7 @@ solGS.cluster = {
 	jQuery(".cluster_dropdown").bind('click', function(e) {
             var clicked = jQuery(e.target);
             
-            if (! clicked.parents().hasClass("cluster_dropdown"))
+            if (!clicked.parents().hasClass("cluster_dropdown")) 
 		jQuery(".cluster_dropdown dd ul").hide();
 
             e.preventDefault();
