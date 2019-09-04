@@ -299,7 +299,7 @@ sub get_location_noaa_station_id {
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
     $h->execute($nd_geolocation_id, $noaa_station_id_cvterm_id);
     my ($noaa_station_id) = $h->fetchrow_array();
-    
+    return $noaa_station_id;
 }
 
 =head2 function get_breeding_programs()

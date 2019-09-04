@@ -37,6 +37,7 @@ use Time::Piece;
 use POSIX;
 use Math::Round;
 use Parallel::ForkManager;
+use CXGN::GrowingDegreeDays;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3638,6 +3639,7 @@ sub drone_imagery_growing_degree_days_GET : Args(0) {
         trial_id => $field_trial_id
     });
     my $planting_date = $field_trial->get_planting_date();
+    my $noaa_station_id = $field_trial->get_location_noaa_station_id();
 
     my $drone_run_project = CXGN::Trial->new({
         bcs_schema => $schema,
@@ -3654,7 +3656,7 @@ sub drone_imagery_growing_degree_days_GET : Args(0) {
         bcs_schema => $schema,
         start_date => $planting_date_datetime, #YYYY-MM-DD
         end_date => $project_start_date_datetime, #YYYY-MM-DD
-        noaa_station_id => "GHCND:US1NCBC0005",
+        noaa_station_id => $noaa_station_id,
         noaa_ncdc_access_token => $c->config->{noaa_ncdc_access_token}
     });
     if ($formula eq 'average_daily_temp_sum') {

@@ -69,7 +69,7 @@ sub get_temperature_averaged_gdd {
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
-    my $server_endpoint = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?stationid=".$self->noaa_station_id."&startdate=".$self->start_date."&enddate=".$self->end_date;
+    my $server_endpoint = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?stationid=".$self->noaa_station_id."&datasetid=GHCND&datatypeid=TMAX&datatypeid=TMIN&startdate=".$self->start_date."&enddate=".$self->end_date;
     print STDERR $server_endpoint."\n";
     my $resp = $ua->get($server_endpoint, "token"=>$self->noaa_ncdc_access_token);
 
@@ -78,9 +78,12 @@ sub get_temperature_averaged_gdd {
         my $message_hash = decode_json $message;
         print STDERR Dumper $message_hash;
     }
+    else {
+        print STDERR Dumper $resp;
+    }
 
     return $result;
 }
 
-1:
+1;
 
