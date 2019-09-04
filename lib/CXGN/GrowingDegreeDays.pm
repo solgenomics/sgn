@@ -83,7 +83,10 @@ sub get_temperature_averaged_gdd {
         }
         foreach (values %weather_hash) {
             if (defined($_->{TMIN}) & defined($_->{TMAX})) {
-                my $gdd_accumulation = (($_->{TMIN} + $_->{TMAX})/2) - $gdd_base_temperature;
+                #TMAX and TMIN are in tenths of C
+                my $tmax_f = (9/5)*($_->{TMAX}/10) + 32;
+                my $tmin_f = (9/5)*($_->{TMIN}/10) + 32;
+                my $gdd_accumulation = (($tmax_f + $tmin_f)/2) - $gdd_base_temperature;
                 if ($gdd_accumulation > 0) {
                     $result = $result + $gdd_accumulation;
                 }
