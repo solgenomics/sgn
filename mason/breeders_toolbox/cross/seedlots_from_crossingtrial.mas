@@ -70,11 +70,11 @@ jQuery(document).ready(function(){
 
         var seedlot_program = jQuery('#new_seedlot_program').val();
         if (!seedlot_program) {
-            alert ("Breeding program is required");
+            alert ("Error retrieving breeding program name");
             return;
         }
 
-        var seedlot_program_id = breeding_program_id;
+        var seedlot_program_id = jQuery('#new_seedlot_breeding_program_id').val();
         if (!seedlot_program_id) {
             alert ("Error retrieving breeding program id");
             return;
@@ -165,6 +165,7 @@ function addSeedlot(cross_name, breeding_program_name, breeding_program_id, time
     html = html + '<label class="col-sm-3 control-label">Organization: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_organization" placeholder="Optional"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_timestamp" value="'+time+'"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Description: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_description" placeholder="Optional"></div></div></div></form>';
+    html = html + '<input id="new_seedlot_breeding_program_id" type="hidden" value="'+breeding_program_id+'"/>';
 
     jQuery('#add_cross_seedlot_div').html(html);
     jQuery('#add_cross_seedlot_dialog').modal('show');
