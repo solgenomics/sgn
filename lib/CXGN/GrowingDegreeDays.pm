@@ -30,6 +30,7 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use LWP::UserAgent;
 use JSON;
+use Math::Round;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -97,7 +98,7 @@ sub get_temperature_averaged_gdd {
         print STDERR Dumper $resp;
     }
 
-    return $result;
+    return round($result);
 }
 
 1;

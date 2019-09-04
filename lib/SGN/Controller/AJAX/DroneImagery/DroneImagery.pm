@@ -3634,6 +3634,20 @@ sub drone_imagery_growing_degree_days_GET : Args(0) {
     my $gdd_base_temperature = $c->req->param('gdd_base_temperature');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $gdd_result = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, $gdd_base_temperature, $formula);
+    print STDERR Dumper $gdd_result;
+
+    $c->stash->{rest} = {success => 1};
+}
+
+sub _perform_gdd_calculation_and_drone_run_time_saving {
+    my $schema = shift;
+    my $field_trial_id = shift;
+    my $drone_run_project_id = shift;
+    my $noaa_ncdc_access_token = shift;
+    my $gdd_base_temperature = shift;
+    my $formula = shift;
+
     my $field_trial = CXGN::Trial->new({
         bcs_schema => $schema,
         trial_id => $field_trial_id
@@ -3657,16 +3671,59 @@ sub drone_imagery_growing_degree_days_GET : Args(0) {
         start_date => $planting_date_datetime, #YYYY-MM-DD
         end_date => $project_start_date_datetime, #YYYY-MM-DD
         noaa_station_id => $noaa_station_id,
-        noaa_ncdc_access_token => $c->config->{noaa_ncdc_access_token}
+        noaa_ncdc_access_token => $noaa_ncdc_access_token
     });
     my $gdd_result;
+    my %related_cvterms;
     if ($formula eq 'average_daily_temp_sum') {
         $gdd_result = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
+        $related_cvterms{gdd_average_temp} = $gdd_result;
+        
+        my $drone_run_averaged_temperature_growing_degree_days_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
+        my $gdd_property_rs = $schema->resultset("Project::Projectprop")->search({project_id=>$drone_run_project_id, type_id=>$drone_run_averaged_temperature_growing_degree_days_cvterm_id});
+        if ($gdd_property_rs->count > 1) {
+            die "There should only be one property for drone_run_averaged_temperature_growing_degree_days for a drone run\n";
+        }
+        elsif ($gdd_property_rs->count == 1) {
+            $gdd_property_rs->first->update({value => $gdd_result});
+        }
+        else {
+            $schema->resultset("Project::Projectprop")->create({project_id=>$drone_run_project_id, type_id=>$drone_run_averaged_temperature_growing_degree_days_cvterm_id, value=>$gdd_result});
+        }
     }
-    print STDERR Dumper $gdd_result;
-    
 
-    $c->stash->{rest} = {success => 1};
+    my $time_diff = $project_start_date_time_object - $planting_date_time_object;
+    my $time_diff_weeks = $time_diff->weeks;
+    my $time_diff_days = $time_diff->days;
+    my $rounded_time_diff_weeks = round($time_diff_weeks);
+
+    my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+    my ($week_cvterm_id) = $h->fetchrow_array();
+
+    $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+    my ($day_cvterm_id) = $h->fetchrow_array();
+
+    my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
+    my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
+
+    $related_cvterms{week} = $week_term;
+    $related_cvterms{day} = $day_term;
+
+    my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
+    my $related_time_property_rs = $schema->resultset("Project::Projectprop")->search({project_id=>$drone_run_project_id, type_id=>$drone_run_related_time_cvterms_json_cvterm_id});
+    if ($related_time_property_rs->count > 1) {
+        die "There should only be one property for drone_run_related_time_cvterms_json for a drone run\n";
+    }
+    elsif ($related_time_property_rs->count == 1) {
+        $related_time_property_rs->first->update({value => encode_json \%related_cvterms});
+    }
+    else {
+        $schema->resultset("Project::Projectprop")->create({project_id=>$drone_run_project_id, type_id=>$drone_run_related_time_cvterms_json_cvterm_id, value=>encode_json \%related_cvterms});
+    }
+
+    return $gdd_result;
 }
 
 sub _check_user_login {
