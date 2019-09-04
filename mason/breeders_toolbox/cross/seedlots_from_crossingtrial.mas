@@ -38,6 +38,9 @@ jQuery(document).ready(function(){
 
     jQuery('#seedlots_from_crossingtrial_section_onswitch').click(function(){
 
+        var breeding_program_name = "<% $breeding_program_name %>";
+        var time = "<% $timestamp %>";
+
         var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
 
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial',
@@ -51,7 +54,7 @@ jQuery(document).ready(function(){
                         return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
                     }
                 }},
-                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\")' >Add</a>"; } },
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+time+"\")' >Add</a>"; } },
             ]
         });
     });
@@ -60,16 +63,17 @@ jQuery(document).ready(function(){
 
 
 
-function addSeedlot(cross_name){
-
+function addSeedlot(cross_name, breeding_program_name, time){
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Cross Unique ID: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_content" value="'+cross_name+'" disabled></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Seedlot Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_name" placeholder="Required"></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Breeding Program: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_program" placeholder="Required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Breeding Program: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_program" value="'+breeding_program_name+'" disabled></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Location: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_location" placeholder="Required"></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Amount: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_amount" placeholder="Number of seeds, required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Box Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_box_name" placeholder="Required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Amount: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_amount" placeholder="Amount (number of seeds) OR Weight (g), required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_weight" placeholder="Amount (number of seeds) OR Weight (g), required"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Organization: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_organization" placeholder="Optional"></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_timestamp" placeholder="Required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_timestamp" value="'+time+'"></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Description: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_description" placeholder="Optional"></div></div></div></form>';
 
     jQuery('#add_cross_seedlot_div').html(html);
