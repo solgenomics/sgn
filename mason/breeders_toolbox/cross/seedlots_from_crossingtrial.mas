@@ -39,6 +39,7 @@ jQuery(document).ready(function(){
     jQuery('#seedlots_from_crossingtrial_section_onswitch').click(function(){
 
         var breeding_program_name = "<% $breeding_program_name %>";
+        var breeding_program_id = "<% $breeding_program_id %>";
         var time = "<% $timestamp %>";
 
         var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
@@ -54,8 +55,97 @@ jQuery(document).ready(function(){
                         return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
                     }
                 }},
-                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+time+"\")' >Add</a>"; } },
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+breeding_program_id+"\", \""+time+"\")' >Add</a>"; } },
             ]
+        });
+    });
+
+    jQuery('#add_cross_seedlot_button').click( function() {
+
+        var seedlot_name = jQuery('#new_seedlot_name').val();
+        if (!seedlot_name) {
+            alert ("Seedlot name is required");
+            return;
+        }
+
+        var seedlot_program = jQuery('#new_seedlot_program').val();
+        if (!seedlot_program) {
+            alert ("Breeding program is required");
+            return;
+        }
+
+        var seedlot_program_id = breeding_program_id;
+        if (!seedlot_program_id) {
+            alert ("Error retrieving breeding program id");
+            return;
+        }
+
+        var seedlot_location = jQuery('#new_seedlot_location').val();
+        if (!seedlot_location) {
+            alert ("Location is required");
+            return;
+        }
+
+        var box_name = jQuery('#new_seedlot_box_name').val();
+        if (!box_name) {
+            alert ("Box name is required");
+            return;
+        }
+
+        var seedlot_content = jQuery('#new_seedlot_content').val();
+        if (!seedlot_content) {
+            alert ("Cross Unique ID is required");
+            return;
+        }
+
+        var seedlot_amount = jQuery('#new_seedlot_amount').val();
+        var seedlot_weight = jQuery('#new_seedlot_weight').val();
+        if (!seedlot_amount && !seedlot_weight) {
+            alert ("Seedlot amount or weight is required");
+            return;
+        }
+
+        var seedlot_organization = jQuery('#new_seedlot_organization').val();
+
+        var seedlot_timestamp = jQuery('#new_seedlot_timestamp').val();
+        if (!seedlot_timestamp) {
+            alert ("Timestamp is required");
+            return;
+        }
+
+        var seedlot_description = jQuery('#new_seedlot_description').val();
+
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot-create',
+            data : {
+                'seedlot_name' : seedlot_name,
+                'seedlot_location': seedlot_location,
+                'seedlot_box_name':box_name,
+                'seedlot_cross_uniquename': seedlot_content,
+                'seedlot_organization': seedlot_organization,
+                'seedlot_amount':seedlot_amount,
+                'seedlot_weight':seedlot_weight,
+                'seedlot_timestamp':seedlot_timestamp,
+                'seedlot_description':seedlot_description,
+                'seedlot_breeding_program_id':seedlot_program_id
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The seedlot has been added.");
+                    jQuery('#add_cross_seedlot_dialog').modal('hide');
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding seed lot');
+            }
         });
     });
 
@@ -63,7 +153,7 @@ jQuery(document).ready(function(){
 
 
 
-function addSeedlot(cross_name, breeding_program_name, time){
+function addSeedlot(cross_name, breeding_program_name, breeding_program_id, time){
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Cross Unique ID: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_content" value="'+cross_name+'" disabled></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Seedlot Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_name" placeholder="Required"></div><br><br>';
