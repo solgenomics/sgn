@@ -153,6 +153,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $data_structure   = $c->req->param('data_structure');
     my $k_number         = $c->req->param('k_number');
     my $data_type        = $c->req->param('data_type');
+    my $selection_prop   = $c->req->param('selection_proportion');
+    my $sindex_name      = $c->req->param('sindex_name');
     my $cluster_type     = $c->req->param('cluster_type');
     my @traits_ids       = $c->req->param('training_traits_ids[]'); 
     my $list_id          = $c->req->param('list_id');
@@ -186,7 +188,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
     $c->stash->{k_number}         = $k_number;
-    
+    $c->stash->{sindex_name}      = $sindex_name;
+    $c->stash->{selection_proportion} = $selection_prop;
+  
     $c->stash->{training_traits_ids} = \@traits_ids;
    
     my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;

@@ -186,9 +186,10 @@ solGS.cluster = {
 	var clusterType = clusterArgs.cluster_type;
 	var kNumber     = clusterArgs.k_number;
 	var dataType    = clusterArgs.data_type;
+	var selectionProp = clusterArgs.selection_proportion;
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
-	var selectName = clusterArgs.select_name;
+//	var selectName = clusterArgs.select_name;
 	
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
@@ -197,10 +198,15 @@ solGS.cluster = {
 	}
 	
 	var popDetails  = solGS.getPopulationDetails();
-
+	if (popDetails == undefined) {
+	    popDetails = {};
+	}
+	
+	var popId   = jQuery("#cluster_selected_population_id").val();
+	var popType = jQuery("#cluster_selected_population_type").val();
+	var selectName = jQuery("#cluster_selected_population_name").val();
+	
 	if (document.URL.match(/solgs\/traits\/all\/population\//)) {
-	    var popId   = jQuery("#cluster_selected_population_id").val();
-	    var popType = jQuery("#cluster_selected_population_type").val();
 	    if (popType.match(/training/)) {
 		popDetails['training_pop_id'] = popId;
 		popDetails['cluster_pop_id'] = popId;
@@ -211,27 +217,20 @@ solGS.cluster = {
 	}
 
 	if (document.URL.match(/solgs\/models\/combined\/trials\//)) {
-	    var popId   = jQuery("#cluster_selected_population_id").val();
-	    var popType = jQuery("#cluster_selected_population_type").val();
-
 	    if (popType.match(/training/)) {
 		popDetails['combo_pops_id'] = popId;
 		popDetails['cluster_pop_id'] = popId;
 	    } else if (popType.match(/selection/)) {
 		popDetails['selection_pop_id'] = popId;
 		popDetails['cluster_pop_id'] = popId;
-	    }
-	    
+	    }	    
 	}
 
 	var listId;
 	var datasetId;
 	var datasetName;
+	var sIndexName;
 	var dataStructure = dataStructureType;
-
-	if (popDetails == undefined) {
-	    popDetails = {};
-	}
 	
 	if (dataStructureType == 'list') {
 	    listId   = selectId;	   
@@ -243,8 +242,10 @@ solGS.cluster = {
 	    popDetails['cluster_pop_id'] = 'dataset_' + selectId;
 	    popDetails['training_pop_id'] = 'dataset_' + selectId;
 	    datasetName = selectName;
+	} else if (selectionProp) {
+	    sIndexName = selectName;
 	}
-
+	
 	if (listId
 	    || datasetId
 	    || popDetails.training_pop_id
@@ -257,22 +258,26 @@ solGS.cluster = {
 	    jQuery("#run_cluster").hide();
 	}  
 
+	var clusteringArgs =  {'training_pop_id': popDetails.training_pop_id,
+			       'selection_pop_id': popDetails.selection_pop_id,
+			       'combo_pops_id': popDetails.combo_pops_id,
+			       'training_traits_ids': trainingTraitsIds,
+			       'cluster_pop_id': popDetails.cluster_pop_id,
+			       'list_id': listId, 
+			       'cluster_type': clusterType,
+			       'data_structure': dataStructure,
+			       'dataset_id': datasetId,
+			       'dataset_name': datasetName,
+			       'data_type': dataType,
+			       'k_number' : kNumber,
+			       'selection_proportion': selectionProp,
+			       'sindex_name': sIndexName
+			      };
+	
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'training_pop_id': popDetails.training_pop_id,
-		   'selection_pop_id': popDetails.selection_pop_id,
-		   'combo_pops_id': popDetails.combo_pops_id,
-		   'training_traits_ids': trainingTraitsIds,
-		   'cluster_pop_id': popDetails.cluster_pop_id,
-		   'list_id': listId, 
-		   'cluster_type': clusterType,
-		   'data_structure': dataStructure,
-		   'dataset_id': datasetId,
-		   'dataset_name': datasetName,
-		   'data_type': dataType,
-		   'k_number' : kNumber
-		  },
+            data: clusteringArgs,
             url: '/cluster/result',
             success: function(res) {
 		if (res.result == 'success') {
@@ -399,10 +404,12 @@ solGS.cluster = {
 	var dataType    = jQuery('#'+selectId + ' #data_type_select').val();
 	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
 	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
+	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
 
 	return {'data_type' : dataType,
 		'cluster_type': clusterType,
-		'k_number': kNumber
+		'k_number': kNumber,
+		'selection_proportion': selectionProp
 	       };
 	
     },
@@ -461,6 +468,7 @@ solGS.cluster = {
 
         var sIndexPops = solGS.sIndex.addIndexedClustering();
         if (sIndexPops) {
+	    jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();
 	    jQuery("#cluster_select_a_population_div ul").append(sIndexPops);  
 	}
 	
@@ -469,21 +477,19 @@ solGS.cluster = {
 	});
       
 	jQuery(".cluster_dropdown dd ul li a").click(function() {
-	       console.log('si select clicked: ')
+	   
             var text = jQuery(this).html();
-            console.log('si select: ' + text)
             jQuery(".cluster_dropdown dt a span").html(text);
             jQuery(".cluster_dropdown dd ul").hide();
             
             var idPopName = jQuery("#cluster_selected_population").find("dt a span.value").html();
-	         console.log('si selectd: ' + idPopName)
             idPopName     = JSON.parse(idPopName);
             modelId       = jQuery("#model_id").val();
        
             var selectedPopId   = idPopName.id;
             var selectedPopName = idPopName.name;
             var selectedPopType = idPopName.pop_type; 
-	    
+
             jQuery("#cluster_selected_population_name").val(selectedPopName);
             jQuery("#cluster_selected_population_id").val(selectedPopId);
             jQuery("#cluster_selected_population_type").val(selectedPopType);
@@ -584,15 +590,13 @@ jQuery(document).ready( function() {
 
 	var clusterOptsId = 'cluster_options';
 	var clusterOpts = solGS.cluster.clusteringOptions(clusterOptsId);
-	var clusterType = clusterOpts.cluster_type;
-	var kNumber     = clusterOpts.k_number;
-	var dataType    = clusterOpts.data_type;
 	
 	var clusterArgs = { 'select_id': clusterOptsId,
 			    'data_structure_type':  dataStructureType,
-			    'cluster_type':  clusterType,
-			    'data_type': dataType,
-			    'k_number':  kNumber
+			    'cluster_type':  clusterOpts.cluster_type,
+			    'data_type': clusterOpts.data_type,
+			    'k_number': clusterOpts.k_number,
+			    'selection_proportion': clusterOpts.selection_proportion
 			  };
 	
         solGS.cluster.clusterResult(clusterArgs);
@@ -620,7 +624,7 @@ jQuery(document).ready( function() {
 		jQuery('#cluster_canvas #cluster_options #data_type_opts').html(dataTypeOpts);
 		jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
 	
-		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();	
+	//	jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();	
 		jQuery('#cluster_canvas #cluster_options').show();
 	    } else {
 		setTimeout(checkClusterPop, 6000);
