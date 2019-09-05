@@ -52,8 +52,8 @@ $locations
                             <& /page/page_title.mas, title=>"Select a crossing experiment" &>
 
                             <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
+                            <!--
                             <hr>
-
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">You can check your crossing experiment here: </label>
                                 <div class="col-sm-10">
@@ -62,7 +62,7 @@ $locations
                                 </div>
                             </div><br/><br/>
                             <hr>
-
+                            -->
                             <center>
                                 <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing experiment, click here</button><br/><br/>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing experiment, go to Next Step</button>

@@ -231,13 +231,13 @@ sub _validate_with_plugin {
 
     my @accessions = keys %seen_accession_names;
     my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+    my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
 
     my $population_validator = CXGN::List::Validate->new();
     my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following accessions or populations are not in the database as uniquenames or synonyms: ".join(',',@parents_missing);
+        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
         $errors{'missing_accessions'} = \@parents_missing;
     }
 
@@ -247,7 +247,7 @@ sub _validate_with_plugin {
         my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
         if (scalar(@plots_missing) > 0) {
-            push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
+            push @error_messages, "The following plots are not in the database or are not in the database as uniquenames: ".join(',',@plots_missing);
             $errors{'missing_plots'} = \@plots_missing;
         }
     } elsif (($female_plot_plant_header eq 'female_plant') && ($male_plot_plant_header eq 'male_plant')) {
@@ -369,10 +369,8 @@ sub _parse_with_plugin {
             if ($worksheet->get_cell($row,$column)) {
                 my $column_property = $properties_columns{$column};
                 $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
-                if ($row == $row_max) {
-                    my $info_type = $worksheet->get_cell(0,$column)->value();
-                    $parsed_result{$info_type} = $additional_properties{$column_property};
-                }
+                my $info_type = $worksheet->get_cell(0,$column)->value();
+                $parsed_result{$info_type} = $additional_properties{$column_property};
             }
         }
 
@@ -413,30 +411,6 @@ sub _parse_with_plugin {
     return 1;
 
 }
-
-
-#sub _get_accession {
-#    my $self = shift;
-#    my $accession_name = shift;
-#    my $chado_schema = $self->get_chado_schema();
-#    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-#    my $stock;
-#    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
-
-#    $stock_lookup->set_stock_name($accession_name);
-#    $stock = $stock_lookup->get_stock_exact();
-
-#    if (!$stock) {
-#        return;
-#    }
-
-#    if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-#        return;
-#    }
-
-#    return $stock;
-
-#}
 
 
 1;
