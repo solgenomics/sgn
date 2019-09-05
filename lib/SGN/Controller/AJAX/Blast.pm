@@ -218,7 +218,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	);
 
 
-    if ($params->{program} eq "blastp" || $params->{program} eq "tblastx") {
+    if (! $params->{program} eq "blastn") { 
 	$arg_handlers{matrix} = sub {
 	    my $m = $params->{matrix};
 	    $m =~ /^(BLOSUM|PAM)\d+$/
