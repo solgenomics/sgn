@@ -1035,6 +1035,124 @@ sub remove_planting_date {
 		}
 }
 
+
+=head2 accessors get_temperature_averaged_gdd(), set_temperature_averaged_gdd()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_temperature_averaged_gdd {
+    my $self = shift;
+
+    my $temperature_averaged_gdd_cvterm_id = $self->get_temperature_averaged_gdd_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $temperature_averaged_gdd_cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_temperature_averaged_gdd {
+    my $self = shift;
+    my $temperature_averaged_gdd = shift;
+
+    my $temperature_averaged_gdd_cvterm_id = $self->get_temperature_averaged_gdd_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $temperature_averaged_gdd_cvterm_id,
+    });
+    $row->value($temperature_averaged_gdd);
+    $row->update();
+}
+
+sub remove_temperature_averaged_gdd {
+    my $self = shift;
+    my $temperature_averaged_gdd = shift;
+
+    my $temperature_averaged_gdd_cvterm_id = $self->get_temperature_averaged_gdd_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $temperature_averaged_gdd_cvterm_id,
+        value => $temperature_averaged_gdd,
+    });
+    if ($row) {
+        print STDERR "Removing $temperature_averaged_gdd from trial ".$self->get_trial_id()."\n";
+        $row->delete();
+    }
+}
+
+=head2 accessors get_related_time_cvterms_json(), set_related_time_cvterms_json()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_related_time_cvterms_json {
+    my $self = shift;
+
+    my $cvterm_id = $self->get_related_time_cvterms_json_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_related_time_cvterms_json {
+    my $self = shift;
+    my $related_time_terms_json = shift;
+
+    my $cvterm_id = $self->get_related_time_cvterms_json_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+    });
+    $row->value($related_time_terms_json);
+    $row->update();
+}
+
+sub remove_related_time_cvterms_json {
+    my $self = shift;
+    my $related_time_terms_json = shift;
+
+    my $cvterm_id = $self->get_related_time_cvterms_json_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+        value => $related_time_terms_json,
+    });
+    if ($row) {
+        print STDERR "Removing $related_time_terms_json from trial ".$self->get_trial_id()."\n";
+        $row->delete();
+    }
+}
+
+sub get_related_time_cvterms_json_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
+}
+
 =head2 function get_management_factor_date()
 
 	Usage:        $trial->get_management_factor_date();

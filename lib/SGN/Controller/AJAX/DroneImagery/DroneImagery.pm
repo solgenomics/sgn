@@ -39,6 +39,7 @@ use Math::Round;
 use Parallel::ForkManager;
 use CXGN::GrowingDegreeDays;
 use CXGN::BreederSearch;
+use CXGN::Phenotypes::SearchFactory;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -212,131 +213,135 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
-    my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
-    if ($status->{'error'}) {
-        $c->stash->{rest} = { error => $status->{'error'}};
-        return;
-    }
-    my $results_ref = $bs->metadata_query(['trials', 'accessions'], {'accessions' => {'trials' => $field_trial_id_list_string}}, {'accessions' => {'trials'=>1}});
-    my %unique_accession_ids;
-    foreach (@{$results_ref->{results}}) {
-        $unique_accession_ids{$_->[0]}++;
-    }
-    my @unique_accession_ids = keys %unique_accession_ids;
-    if (scalar(@unique_accession_ids) == 0) {
-        $c->stash->{rest} = { error => "There are no common accessions in the trials you have selected! If that is the case, please just select one at a time."};
-        return;
-    }
+    my @results;
 
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        'MaterializedViewTable',
-        {
-            bcs_schema=>$schema,
-            data_level=>'plot',
-            trait_list=>$trait_id_list,
-            trial_list=>$field_trial_id_list,
-            accession_list=>\@unique_accession_ids,
-            include_timestamp=>0,
-            exclude_phenotype_outlier=>0
-        }
-    );
-    my ($data, $unique_traits) = $phenotypes_search->search();
-    my @sorted_trait_names = sort keys %$unique_traits;
+    if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block') {
 
-    if (scalar(@$data) == 0) {
-        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
-        return;
-    }
+        my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+            'MaterializedViewTable',
+            {
+                bcs_schema=>$schema,
+                data_level=>'plot',
+                trait_list=>$trait_id_list,
+                trial_list=>$field_trial_id_list,
+                include_timestamp=>0,
+                exclude_phenotype_outlier=>0
+            }
+        );
+        my ($data, $unique_traits) = $phenotypes_search->search();
+        my @sorted_trait_names = sort keys %$unique_traits;
 
-    my %germplasm_name_encoder;
-    my $germplasm_name_encoded = 1;
-    my %trait_name_encoder;
-    my $trait_name_encoded = 1;
-    my %phenotype_data;
-    foreach my $obs_unit (@$data){
-        my $germplasm_name = $obs_unit->{germplasm_uniquename};
-        my $observations = $obs_unit->{observations};
-        if (!exists($germplasm_name_encoder{$germplasm_name})) {
-            $germplasm_name_encoder{$germplasm_name} = $germplasm_name_encoded;
-            $germplasm_name_encoded++;
+        if (scalar(@$data) == 0) {
+            $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+            return;
         }
-        foreach (@$observations){
-            $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
-        }
-    }
-    foreach my $trait_name (@sorted_trait_names) {
-        if (!exists($trait_name_encoder{$trait_name})) {
-            $trait_name_encoder{$trait_name} = 't'.$trait_name_encoded;
-            $trait_name_encoded++;
-        }
-    }
 
-    my @data_matrix;
-    foreach (@$data) {
-        my $germplasm_name = $_->{germplasm_uniquename};
-        my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_name_encoder{$germplasm_name});
-        foreach my $t (@sorted_trait_names) {
-            if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
-                push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
-            } else {
-                print STDERR $_->{observationunit_uniquename}." : $t : $germplasm_name : NA \n";
-                push @row, 'NA';
+        my %germplasm_name_encoder;
+        my $germplasm_name_encoded = 1;
+        my %trait_name_encoder;
+        my $trait_name_encoded = 1;
+        my %phenotype_data;
+        foreach my $obs_unit (@$data){
+            my $germplasm_name = $obs_unit->{germplasm_uniquename};
+            my $observations = $obs_unit->{observations};
+            if (!exists($germplasm_name_encoder{$germplasm_name})) {
+                $germplasm_name_encoder{$germplasm_name} = $germplasm_name_encoded;
+                $germplasm_name_encoded++;
+            }
+            foreach (@$observations){
+                $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
             }
         }
-        push @data_matrix, @row;
-    }
-
-    my @phenotype_header = ("replicate", "block", "germplasmName");
-    my $num_col_before_traits = scalar(@phenotype_header);
-    foreach (@sorted_trait_names) {
-        push @phenotype_header, $trait_name_encoder{$_};
-    }
-    print STDERR Dumper \@data_matrix;
-
-    my $rmatrix = R::YapRI::Data::Matrix->new({
-        name => 'matrix1',
-        coln => scalar(@phenotype_header),
-        rown => scalar(@$data),
-        colnames => \@phenotype_header,
-        data => \@data_matrix
-    });
-
-    my @results;
-    if ($statistics_select eq 'lmer_germplasmname') {
-        foreach my $t (@sorted_trait_names) {
-            my $rbase = R::YapRI::Base->new();
-            my $r_block = $rbase->create_block('r_block');
-            $rmatrix->send_rbase($rbase, 'r_block');
-            $r_block->add_command('library(lme4)');
-            $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
-            $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-            $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-            $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
-            $r_block->run_block();
-            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-            #print STDERR Dumper $result_matrix;
-            push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+        foreach my $trait_name (@sorted_trait_names) {
+            if (!exists($trait_name_encoder{$trait_name})) {
+                $trait_name_encoder{$trait_name} = 't'.$trait_name_encoded;
+                $trait_name_encoded++;
+            }
         }
-    }
-    elsif ($statistics_select eq 'lmer_germplasmname_block') {
-        foreach my $t (@sorted_trait_names) {
-            my $rbase = R::YapRI::Base->new();
-            my $r_block = $rbase->create_block('r_block');
-            $rmatrix->send_rbase($rbase, 'r_block');
-            $r_block->add_command('library(lme4)');
-            $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
-            $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-            $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-            $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
-            $r_block->run_block();
-            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-            #print STDERR Dumper $result_matrix;
-            push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+
+        my @data_matrix;
+        foreach (@$data) {
+            my $germplasm_name = $_->{germplasm_uniquename};
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_name_encoder{$germplasm_name});
+            foreach my $t (@sorted_trait_names) {
+                if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
+                    push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
+                } else {
+                    print STDERR $_->{observationunit_uniquename}." : $t : $germplasm_name : NA \n";
+                    push @row, 'NA';
+                }
+            }
+            push @data_matrix, @row;
+        }
+
+        my @phenotype_header = ("replicate", "block", "germplasmName");
+        my $num_col_before_traits = scalar(@phenotype_header);
+        foreach (@sorted_trait_names) {
+            push @phenotype_header, $trait_name_encoder{$_};
+        }
+        print STDERR Dumper \@data_matrix;
+
+        my $rmatrix = R::YapRI::Data::Matrix->new({
+            name => 'matrix1',
+            coln => scalar(@phenotype_header),
+            rown => scalar(@$data),
+            colnames => \@phenotype_header,
+            data => \@data_matrix
+        });
+
+        if ($statistics_select eq 'lmer_germplasmname') {
+            foreach my $t (@sorted_trait_names) {
+                my $rbase = R::YapRI::Base->new();
+                my $r_block = $rbase->create_block('r_block');
+                $rmatrix->send_rbase($rbase, 'r_block');
+                $r_block->add_command('library(lme4)');
+                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
+                $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+                $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+                $r_block->run_block();
+                my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
+                #print STDERR Dumper $result_matrix;
+                push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+            }
+        }
+        elsif ($statistics_select eq 'lmer_germplasmname_block') {
+            foreach my $t (@sorted_trait_names) {
+                my $rbase = R::YapRI::Base->new();
+                my $r_block = $rbase->create_block('r_block');
+                $rmatrix->send_rbase($rbase, 'r_block');
+                $r_block->add_command('library(lme4)');
+                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
+                $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+                $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+                $r_block->run_block();
+                my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
+                #print STDERR Dumper $result_matrix;
+                push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+            }
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+        my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+        if ($status->{'error'}) {
+            $c->stash->{rest} = { error => $status->{'error'}};
+            return;
+        }
+        my $results_ref = $bs->metadata_query(['trials', 'accessions'], {'accessions' => {'trials' => $field_trial_id_list_string}}, {'accessions' => {'trials'=>1}});
+        my %unique_accession_ids;
+        foreach (@{$results_ref->{results}}) {
+            $unique_accession_ids{$_->[0]}++;
+        }
+        my @unique_accession_ids = keys %unique_accession_ids;
+        if (scalar(@unique_accession_ids) == 0) {
+            $c->stash->{rest} = { error => "There are no common accessions in the trials you have selected! If that is the case, please just select one at a time."};
+            return;
+        }
+
         my $dir = $c->tempfiles_subdir('/drone_imagery_analysis_plot');
         my $temp_plot = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_analysis_plot/imageXXXX');
         $temp_plot .= '.jpg';
@@ -344,80 +349,104 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my $marss_prediction_selection = $c->req->param('statistics_select_marss_options');
 
         my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
-        my $drone_run_time_q = "SELECT project_id, value FROM projectprop WHERE type_id=? and project_id=? ;"; #NEED TO JOIN TO drone run
+        my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+        my $drone_run_time_q = "SELECT drone_run_project.project_id, project_relationship.object_project_id, projectprop.value
+            FROM project AS drone_run_band_project
+            JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+            JOIN project AS drone_run_project ON (drone_run_project.project_id = drone_run_band_rel.object_project_id)
+            JOIN project_relationship ON (drone_run_project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+            LEFT JOIN projectprop ON (drone_run_band_project.project_id = projectprop.project_id AND projectprop.type_id=$drone_run_related_time_cvterms_json_cvterm_id)
+            WHERE project_relationship.object_project_id IN ($field_trial_id_list_string) ;";
         my $h = $schema->storage->dbh()->prepare($drone_run_time_q);
-        my %time_to_gdd_lookup;
-        # foreach (@$field_trial_id_list) {
-        #     $h->execute($drone_run_related_time_cvterms_json_cvterm_id, $_);
-        #     my ($drone_run_project_id, $related_time_terms_json) = $h->fetchrow_array();
-        #     my $related_time_terms;
-        #     if (!$related_time_terms_json) {
-        #         $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
-        #     }
-        #     else {
-        #         $related_time_terms = decode_json $related_time_terms_json;
-        #     }
-        #     if (!exists($related_time_terms->{gdd_average_temp})) {
-        #         $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
-        #     }
-        #     $time_to_gdd_lookup{$related_time_terms->{week}} = $related_time_terms->{gdd_average_temp};
-        # }
-
-        my $rbase = R::YapRI::Base->new();
-        my $r_block = $rbase->create_block('r_block');
-        $rmatrix->send_rbase($rbase, 'r_block');
-        $r_block->add_command('library(MARSS)');
-        $r_block->add_command('library(ggplot2)');
-        $r_block->add_command('matrix_transposed <- t(matrix1)');
-        $r_block->add_command('result_matrix <- matrix(NA,nrow = 3*'.scalar(@$data).', ncol = length(matrix_transposed[ ,1]))');
-        $r_block->add_command('jpeg("'.$temp_plot.'")');
-        if (scalar(@$data)>1) {
-            
-            # $r_block->add_command('par(mfrow=c('.ceil(scalar(@$data/2)).',2))');
-            $r_block->add_command('par(mfrow=c(2,1))');
-            # $r_block->add_command('par(mar=rep(1,4))');
-        }
-        my $row_number = 1;
-        # foreach my $t (1..scalar(@$data)) {
-        foreach my $t (1..2) {
-            my $obsunit_name = $data->[$t-1]->{observationunit_uniquename};
-            $r_block->add_command('row'.$t.' <- matrix_transposed[ , '.$t.']');
-            $r_block->add_command('replicate'.$t.' <- row'.$t.'[1]');
-            $r_block->add_command('block'.$t.' <- row'.$t.'[2]');
-            $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
-            $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
-            $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
-            if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
-                $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
-            }
-            elsif ($marss_prediction_selection eq 'marss_predict_last_time_point') {
-                $r_block->add_command('time_series'.$t.'[length(time_series'.$t.')] <- NA');
+        $h->execute();
+        while( my ($drone_run_project_id, $field_trial_project_id, $related_time_terms_json) = $h->fetchrow_array()) {
+            my $related_time_terms;
+            if (!$related_time_terms_json) {
+                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
             }
             else {
-                die "MARSS predict option not selected\n";
+                $related_time_terms = decode_json $related_time_terms_json;
             }
-            $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 ), method="kem")');
-            $r_block->add_command('minimum_y_val'.$t.' <- min( c( min(as.numeric(time_series_original'.$t.'), na.rm=T), min(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
-            $r_block->add_command('maximum_y_val'.$t.' <- max( c( max(as.numeric(time_series_original'.$t.'), na.rm=T), max(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
-            $r_block->add_command('maximum_y_std'.$t.' <- max( mars_fit'.$t.'$ytT.se, na.rm=T)');
-            $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', time_series_original'.$t.')');
-            $row_number++;
-            $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT)');
-            $row_number++;
-            $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT.se)');
-            $row_number++;
-
-            $r_block->add_command('plot(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray", main="State Space '.$obsunit_name.'", xlab="Time Points", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
-            $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
-            $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
-            $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT - qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
-            $r_block->add_command('legend("topleft", col=c("blue", "gray", "red"), legend = c("Predicted", "Observed", "SE"), lty=1 )');
+            if (!exists($related_time_terms->{gdd_average_temp})) {
+                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+            }
         }
-        $r_block->add_command('dev.off()');
-        $r_block->run_block();
-        my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','result_matrix');
-        print STDERR Dumper $result_matrix;
-        push @results, ["TimeSeries", $result_matrix, $temp_plot];
+
+        my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+            'MaterializedViewTable',
+            {
+                bcs_schema=>$schema,
+                data_level=>'plot',
+                trait_list=>$trait_id_list,
+                trial_list=>$field_trial_id_list,
+                accession_list=>\@unique_accession_ids,
+                include_timestamp=>0,
+                exclude_phenotype_outlier=>0
+            }
+        );
+        my @data = $phenotypes_search->search();
+        print STDERR Dumper \@data;
+
+        # my $rbase = R::YapRI::Base->new();
+        # my $r_block = $rbase->create_block('r_block');
+        # $rmatrix->send_rbase($rbase, 'r_block');
+        # $r_block->add_command('library(MARSS)');
+        # $r_block->add_command('library(ggplot2)');
+        # $r_block->add_command('matrix_transposed <- t(matrix1)');
+        # $r_block->add_command('result_matrix <- matrix(NA,nrow = 3*'.scalar(@$data).', ncol = length(matrix_transposed[ ,1]))');
+        # $r_block->add_command('jpeg("'.$temp_plot.'")');
+        # if (scalar(@$data)>1) {
+        # 
+        #     # $r_block->add_command('par(mfrow=c('.ceil(scalar(@$data/2)).',2))');
+        #     $r_block->add_command('par(mfrow=c(2,1))');
+        #     # $r_block->add_command('par(mar=rep(1,4))');
+        # }
+        # my $row_number = 1;
+        # # foreach my $t (1..scalar(@$data)) {
+        # foreach my $t (1..2) {
+        #     my $obsunit_name = $data->[$t-1]->{observationunit_uniquename};
+        #     $r_block->add_command('row'.$t.' <- matrix_transposed[ , '.$t.']');
+        #     $r_block->add_command('replicate'.$t.' <- row'.$t.'[1]');
+        #     $r_block->add_command('block'.$t.' <- row'.$t.'[2]');
+        #     $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
+        #     $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
+        #     $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
+        #     if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
+        #         $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
+        #     }
+        #     elsif ($marss_prediction_selection eq 'marss_predict_last_time_point') {
+        #         $r_block->add_command('time_series'.$t.'[length(time_series'.$t.')] <- NA');
+        #     }
+        #     else {
+        #         die "MARSS predict option not selected\n";
+        #     }
+        #     $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 ), method="kem")');
+        #     $r_block->add_command('minimum_y_val'.$t.' <- min( c( min(as.numeric(time_series_original'.$t.'), na.rm=T), min(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
+        #     $r_block->add_command('maximum_y_val'.$t.' <- max( c( max(as.numeric(time_series_original'.$t.'), na.rm=T), max(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
+        #     $r_block->add_command('maximum_y_std'.$t.' <- max( mars_fit'.$t.'$ytT.se, na.rm=T)');
+        #     $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', time_series_original'.$t.')');
+        #     $row_number++;
+        #     $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT)');
+        #     $row_number++;
+        #     $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT.se)');
+        #     $row_number++;
+        # 
+        #     $r_block->add_command('plot(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray", main="State Space '.$obsunit_name.'", xlab="Time Points", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
+        #     $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
+        #     $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
+        #     $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT - qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
+        #     $r_block->add_command('legend("topleft", col=c("blue", "gray", "red"), legend = c("Predicted", "Observed", "SE"), lty=1 )');
+        # }
+        # $r_block->add_command('dev.off()');
+        # $r_block->run_block();
+        # my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','result_matrix');
+        # #print STDERR Dumper $result_matrix;
+        # push @results, ["TimeSeries", $result_matrix, $temp_plot];
+    }
+    else {
+        $c->stash->{rest} = { error => "Not supported $statistics_select!"};
+        return;
     }
 
     $c->stash->{rest} = \@results;
@@ -3706,6 +3735,8 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
         trial_id => $drone_run_project_id
     });
     my $project_start_date = $drone_run_project->get_project_start_date();
+    my $drone_run_bands = $drone_run_project->get_associated_image_band_projects();
+    print STDERR Dumper $drone_run_bands;
 
     my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
     my $planting_date_datetime = $planting_date_time_object->strftime("%Y-%m-%d");
@@ -3724,17 +3755,12 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     if ($formula eq 'average_daily_temp_sum') {
         $gdd_result = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
         $related_cvterms{gdd_average_temp} = $gdd_result;
-        
-        my $drone_run_averaged_temperature_growing_degree_days_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
-        my $gdd_property_rs = $schema->resultset("Project::Projectprop")->search({project_id=>$drone_run_project_id, type_id=>$drone_run_averaged_temperature_growing_degree_days_cvterm_id});
-        if ($gdd_property_rs->count > 1) {
-            die "There should only be one property for drone_run_averaged_temperature_growing_degree_days for a drone run\n";
-        }
-        elsif ($gdd_property_rs->count == 1) {
-            $gdd_property_rs->first->update({value => $gdd_result});
-        }
-        else {
-            $schema->resultset("Project::Projectprop")->create({project_id=>$drone_run_project_id, type_id=>$drone_run_averaged_temperature_growing_degree_days_cvterm_id, value=>$gdd_result});
+
+        $drone_run_project->set_temperature_averaged_gdd($gdd_result);
+
+        foreach (@$drone_run_bands) {
+            my $drone_run_band = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_->[0]});
+            $drone_run_band->set_temperature_averaged_gdd($gdd_result);
         }
     }
 
@@ -3756,17 +3782,13 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
 
     $related_cvterms{week} = $week_term;
     $related_cvterms{day} = $day_term;
+    my $related_cvterms_result = encode_json \%related_cvterms;
 
-    my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
-    my $related_time_property_rs = $schema->resultset("Project::Projectprop")->search({project_id=>$drone_run_project_id, type_id=>$drone_run_related_time_cvterms_json_cvterm_id});
-    if ($related_time_property_rs->count > 1) {
-        die "There should only be one property for drone_run_related_time_cvterms_json for a drone run\n";
-    }
-    elsif ($related_time_property_rs->count == 1) {
-        $related_time_property_rs->first->update({value => encode_json \%related_cvterms});
-    }
-    else {
-        $schema->resultset("Project::Projectprop")->create({project_id=>$drone_run_project_id, type_id=>$drone_run_related_time_cvterms_json_cvterm_id, value=>encode_json \%related_cvterms});
+    $drone_run_project->set_related_time_cvterms_json($related_cvterms_result);
+
+    foreach (@$drone_run_bands) {
+        my $drone_run_band = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_->[0]});
+        $drone_run_band->set_related_time_cvterms_json($related_cvterms_result);
     }
 
     return \%related_cvterms;
