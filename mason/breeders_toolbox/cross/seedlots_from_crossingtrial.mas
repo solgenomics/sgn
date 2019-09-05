@@ -144,14 +144,12 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred adding seed lot');
+                alert('An error occurred adding seedlot');
             }
         });
     });
 
 });
-
-
 
 function addSeedlot(cross_name, breeding_program_name, breeding_program_id, time){
     var html = '';
@@ -169,6 +167,10 @@ function addSeedlot(cross_name, breeding_program_name, breeding_program_id, time
 
     jQuery('#add_cross_seedlot_div').html(html);
     jQuery('#add_cross_seedlot_dialog').modal('show');
+
+    jQuery('#new_seedlot_location').autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
+    });
 }
 
 
