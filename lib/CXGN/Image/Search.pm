@@ -420,6 +420,10 @@ sub search {
             json_agg(json_build_object('tag_id', tags.tag_id, 'name', tags.name, 'description', tags.description, 'sp_person_id', tags.sp_person_id, 'modified_date', tags.modified_date, 'create_date', tags.create_date, 'obsolete', tags.obsolete))
             FILTER (WHERE tags.tag_id IS NOT NULL), '[]'
         ) AS tags,
+        COALESCE(
+            json_agg(json_build_object('phenotype_id', phenotype.phenotype_id, 'value', phenotype.value, 'observationvariable_name', phenotype_variable.name))
+            FILTER (WHERE phenotype.phenotype_id IS NOT NULL), '[]'
+        ) AS observations,
         count(image.image_id) OVER() AS full_count
         FROM metadata.md_image AS image
         JOIN sgn_people.sp_person AS submitter ON (submitter.sp_person_id=image.sp_person_id)
@@ -431,6 +435,10 @@ sub search {
         LEFT JOIN phenome.project_md_image AS project_image ON(project_image.image_id=image.image_id)
         LEFT JOIN cvterm AS project_image_type ON(project_image.type_id=project_image_type.cvterm_id)
         LEFT JOIN project ON(project_image.project_id=project.project_id)
+        LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images ON(image.image_id = nd_experiment_md_images.image_id)
+        LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id = nd_experiment_md_images.nd_experiment_id)
+        LEFT JOIN phenotype ON (nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id)
+        LEFT JOIN cvterm AS phenotype_variable ON (phenotype.cvalue_id=phenotype_variable.cvterm_id)
         $where_clause
         GROUP BY(image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name)
         ORDER BY image.image_id
@@ -443,7 +451,7 @@ sub search {
 
     my @result;
     my $total_count = 0;
-    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $tags, $full_count) = $h->fetchrow_array()) {
+    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $tags, $observations, $full_count) = $h->fetchrow_array()) {
         push @result, {
             image_id => $image_id,
             image_name => $image_name,
@@ -463,7 +471,8 @@ sub search {
             project_name => $project_name,
             project_md_image_id => $project_md_image_id,
             project_image_type_name => $project_image_type_name,
-            tags_array => decode_json $tags
+            tags_array => decode_json $tags,
+            observations_array => decode_json $observations,
         };
         $total_count = $full_count;
     }

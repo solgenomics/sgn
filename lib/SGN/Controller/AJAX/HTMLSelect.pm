@@ -286,6 +286,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
     my $breeding_program_id = $c->req->param("breeding_program_id");
     my $breeding_program_name = $c->req->param("breeding_program_name");
+    my $trial_name_values = $c->req->param("trial_name_values") || 0;
 
     my $projects;
     if (!$breeding_program_id && !$breeding_program_name) {
@@ -309,6 +310,13 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
       foreach (@$field_trials) {
           push @trials, $_;
       }
+    }
+    if ($trial_name_values) {
+        my @trials_redef;
+        foreach (@trials) {
+            push @trials_redef, [$_->[1], $_->[1]];
+        }
+        @trials = @trials_redef;
     }
     @trials = sort { $a->[1] cmp $b->[1] } @trials;
 
