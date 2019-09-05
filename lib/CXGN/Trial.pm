@@ -67,7 +67,7 @@ sub new {
     while (my $trial_row = $trial_rs->next()) { 
         my $name = $trial_row->type()->name();
         my $val = $trial_row->value();
-        print STDERR Dumper [$name, $val];
+        # print STDERR Dumper [$name, $val];
         if ($val eq "genotyping_plate") {
             return CXGN::GenotypingTrial->new($args);
         }

@@ -23,7 +23,7 @@ sub get_associated_image_band_projects {
     my $drone_run_on_drone_run_band_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $q = "SELECT drone_run_band.project_id, drone_run_band.name
         FROM project AS drone_run
-        JOIN project_relationship on (drone_run.project = project_relationship.object_project_id AND project_relationship.type_id = $drone_run_on_drone_run_band_type_id)
+        JOIN project_relationship on (drone_run.project_id = project_relationship.object_project_id AND project_relationship.type_id = $drone_run_on_drone_run_band_type_id)
         JOIN project AS drone_run_band ON (drone_run_band.project_id = project_relationship.subject_project_id)
         WHERE drone_run.project_id = ?;";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);

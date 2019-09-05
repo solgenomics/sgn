@@ -1092,6 +1092,11 @@ sub remove_temperature_averaged_gdd {
     }
 }
 
+sub get_temperature_averaged_gdd_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
+}
+
 =head2 accessors get_related_time_cvterms_json(), set_related_time_cvterms_json()
 
  Usage:

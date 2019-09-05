@@ -342,10 +342,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             return;
         }
 
-        my $dir = $c->tempfiles_subdir('/drone_imagery_analysis_plot');
-        my $temp_plot = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_analysis_plot/imageXXXX');
-        $temp_plot .= '.jpg';
-
         my $marss_prediction_selection = $c->req->param('statistics_select_marss_options');
 
         my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
@@ -385,64 +381,130 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 exclude_phenotype_outlier=>0
             }
         );
-        my @data = $phenotypes_search->search();
-        print STDERR Dumper \@data;
+        my ($data, $unique_traits) = $phenotypes_search->search();
+        my @sorted_trait_names = sort keys %$unique_traits;
 
-        # my $rbase = R::YapRI::Base->new();
-        # my $r_block = $rbase->create_block('r_block');
-        # $rmatrix->send_rbase($rbase, 'r_block');
-        # $r_block->add_command('library(MARSS)');
-        # $r_block->add_command('library(ggplot2)');
-        # $r_block->add_command('matrix_transposed <- t(matrix1)');
-        # $r_block->add_command('result_matrix <- matrix(NA,nrow = 3*'.scalar(@$data).', ncol = length(matrix_transposed[ ,1]))');
-        # $r_block->add_command('jpeg("'.$temp_plot.'")');
-        # if (scalar(@$data)>1) {
-        # 
-        #     # $r_block->add_command('par(mfrow=c('.ceil(scalar(@$data/2)).',2))');
-        #     $r_block->add_command('par(mfrow=c(2,1))');
-        #     # $r_block->add_command('par(mar=rep(1,4))');
-        # }
-        # my $row_number = 1;
-        # # foreach my $t (1..scalar(@$data)) {
-        # foreach my $t (1..2) {
-        #     my $obsunit_name = $data->[$t-1]->{observationunit_uniquename};
-        #     $r_block->add_command('row'.$t.' <- matrix_transposed[ , '.$t.']');
-        #     $r_block->add_command('replicate'.$t.' <- row'.$t.'[1]');
-        #     $r_block->add_command('block'.$t.' <- row'.$t.'[2]');
-        #     $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
-        #     $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
-        #     $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
-        #     if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
-        #         $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
-        #     }
-        #     elsif ($marss_prediction_selection eq 'marss_predict_last_time_point') {
-        #         $r_block->add_command('time_series'.$t.'[length(time_series'.$t.')] <- NA');
-        #     }
-        #     else {
-        #         die "MARSS predict option not selected\n";
-        #     }
-        #     $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 ), method="kem")');
-        #     $r_block->add_command('minimum_y_val'.$t.' <- min( c( min(as.numeric(time_series_original'.$t.'), na.rm=T), min(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
-        #     $r_block->add_command('maximum_y_val'.$t.' <- max( c( max(as.numeric(time_series_original'.$t.'), na.rm=T), max(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
-        #     $r_block->add_command('maximum_y_std'.$t.' <- max( mars_fit'.$t.'$ytT.se, na.rm=T)');
-        #     $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', time_series_original'.$t.')');
-        #     $row_number++;
-        #     $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT)');
-        #     $row_number++;
-        #     $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT.se)');
-        #     $row_number++;
-        # 
-        #     $r_block->add_command('plot(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray", main="State Space '.$obsunit_name.'", xlab="Time Points", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
-        #     $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
-        #     $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
-        #     $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT - qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
-        #     $r_block->add_command('legend("topleft", col=c("blue", "gray", "red"), legend = c("Predicted", "Observed", "SE"), lty=1 )');
-        # }
-        # $r_block->add_command('dev.off()');
-        # $r_block->run_block();
-        # my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','result_matrix');
-        # #print STDERR Dumper $result_matrix;
-        # push @results, ["TimeSeries", $result_matrix, $temp_plot];
+        if (scalar(@$data) == 0) {
+            $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+            return;
+        }
+
+        my %germplasm_name_encoder;
+        my $germplasm_name_encoded = 1;
+        my %trait_name_encoder;
+        my $trait_name_encoded = 1;
+        my %phenotype_data;
+        my %seen_gdd_times;
+        my %seen_germplasm_names;
+        foreach my $obs_unit (@$data){
+            my $germplasm_name = $obs_unit->{germplasm_uniquename};
+            my $observations = $obs_unit->{observations};
+            if (!exists($germplasm_name_encoder{$germplasm_name})) {
+                $germplasm_name_encoder{$germplasm_name} = $germplasm_name_encoded;
+                $germplasm_name_encoded++;
+            }
+            foreach (@$observations){
+                my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
+                my $gdd_time = $related_time_terms_json->{gdd_average_temp};
+                $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$gdd_time} = $_->{value};
+                $seen_gdd_times{$gdd_time}++;
+            }
+            $seen_germplasm_names{$germplasm_name}++;
+        }
+        my @sorted_gdd_time_points = sort keys %seen_gdd_times;
+
+        my %data_matrix;
+        foreach (@$data) {
+            my $germplasm_name = $_->{germplasm_uniquename};
+            my $obsunit_name = $_->{observationunit_uniquename};
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_name_encoder{$germplasm_name});
+            foreach my $t (sort @sorted_gdd_time_points) {
+                if (defined($phenotype_data{$obsunit_name}->{$t})) {
+                    push @row, $phenotype_data{$obsunit_name}->{$t} + 0;
+                } else {
+                    print STDERR "Using NA for ".$obsunit_name." : $t : $germplasm_name : NA \n";
+                    push @row, 'NA';
+                }
+            }
+            push @{$data_matrix{$germplasm_name}}, @row;
+        }
+
+        my @phenotype_header = ("replicate", "block", "germplasmName");
+        my $num_col_before_traits = scalar(@phenotype_header);
+        push @phenotype_header, @sorted_gdd_time_points;
+
+        print STDERR Dumper \%data_matrix;
+        print STDERR Dumper \@phenotype_header;
+
+        foreach (keys %seen_germplasm_names) {
+            my $dir = $c->tempfiles_subdir('/drone_imagery_analysis_plot');
+            my $temp_plot = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_analysis_plot/imageXXXX');
+            $temp_plot .= '.jpg';
+
+            my $germplasm_data = $data_matrix{$_};
+            my $rmatrix = R::YapRI::Data::Matrix->new({
+                name => 'matrix1',
+                coln => scalar(@phenotype_header),
+                rown => scalar(@$germplasm_data),
+                colnames => \@phenotype_header,
+                data => $germplasm_data
+            });
+
+            my $rbase = R::YapRI::Base->new();
+            my $r_block = $rbase->create_block('r_block');
+            $rmatrix->send_rbase($rbase, 'r_block');
+            $r_block->add_command('library(MARSS)');
+            $r_block->add_command('library(ggplot2)');
+            $r_block->add_command('matrix_transposed <- t(matrix1)');
+            $r_block->add_command('result_matrix <- matrix(NA,nrow = 3*'.scalar(@$data).', ncol = length(matrix_transposed[ ,1]))');
+            $r_block->add_command('jpeg("'.$temp_plot.'")');
+
+            my $row_number = 1;
+            foreach my $t (1..scalar(@$germplasm_data)) {
+                my $obsunit_name = $germplasm_data->[$t-1]->{observationunit_uniquename};
+                $r_block->add_command('row'.$t.' <- matrix_transposed[ , '.$t.']');
+                $r_block->add_command('replicate'.$t.' <- row'.$t.'[1]');
+                $r_block->add_command('block'.$t.' <- row'.$t.'[2]');
+                $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
+                $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
+                $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
+                if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
+                    $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
+                }
+                elsif ($marss_prediction_selection eq 'marss_predict_last_time_point') {
+                    $r_block->add_command('time_series'.$t.'[length(time_series'.$t.')] <- NA');
+                }
+                else {
+                    die "MARSS predict option not selected\n";
+                }
+                $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 ), method="kem")');
+                $r_block->add_command('minimum_y_val'.$t.' <- min( c( min(as.numeric(time_series_original'.$t.'), na.rm=T), min(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
+                $r_block->add_command('maximum_y_val'.$t.' <- max( c( max(as.numeric(time_series_original'.$t.'), na.rm=T), max(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
+                $r_block->add_command('maximum_y_std'.$t.' <- max( mars_fit'.$t.'$ytT.se, na.rm=T)');
+                $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', time_series_original'.$t.')');
+                $row_number++;
+                $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT)');
+                $row_number++;
+                $r_block->add_command('result_matrix['.$row_number.',] <- c(replicate'.$t.', block'.$t.', germplasmName'.$t.', mars_fit'.$t.'$ytT.se)');
+                $row_number++;
+
+                if ($t == 1) {
+                    $r_block->add_command('plot(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray", main="State Space '.$obsunit_name.'", xlab="Time Points", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
+                }
+                else {
+                    $r_block->add_command('lines(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray")');
+                }
+                $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
+                $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
+                $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT - qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
+                # $r_block->add_command('legend("topleft", col=c("blue", "gray", "red"), legend = c("Predicted", "Observed", "SE"), lty=1 )');
+            }
+            $r_block->add_command('dev.off()');
+            $r_block->run_block();
+            my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','result_matrix');
+            #print STDERR Dumper $result_matrix;
+            push @results, ["TimeSeries", $result_matrix, $temp_plot];
+        }
     }
     else {
         $c->stash->{rest} = { error => "Not supported $statistics_select!"};
@@ -3736,7 +3798,6 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     });
     my $project_start_date = $drone_run_project->get_project_start_date();
     my $drone_run_bands = $drone_run_project->get_associated_image_band_projects();
-    print STDERR Dumper $drone_run_bands;
 
     my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
     my $planting_date_datetime = $planting_date_time_object->strftime("%Y-%m-%d");
