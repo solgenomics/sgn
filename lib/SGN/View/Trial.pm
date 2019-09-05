@@ -193,7 +193,7 @@ sub design_layout_map_view {
 }
 
 #For printing the table view of the generated design there are two designs that are different from the others:
-# 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
+# 1. the greenhouse can use accessions or crosses (not yet implemented), so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
 # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
 sub design_layout_view {
     my $design_ref = shift;

@@ -30,7 +30,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     
   <div class="list_upload" style="margin-left:5px">     
     <i class="glyphicon-plus"></i>
-    <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list</a>  
+    <a href="/solgs/breeder_search" style="color:#ffffff">Create a new list or dataset</a>  
   </div>
 
   <br>
