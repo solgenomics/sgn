@@ -347,21 +347,21 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my $drone_run_time_q = "SELECT project_id, value FROM projectprop WHERE type_id=? and project_id=? ;"; #NEED TO JOIN TO drone run
         my $h = $schema->storage->dbh()->prepare($drone_run_time_q);
         my %time_to_gdd_lookup;
-        foreach (@$field_trial_id_list) {
-            $h->execute($drone_run_related_time_cvterms_json_cvterm_id, $_);
-            my ($drone_run_project_id, $related_time_terms_json) = $h->fetchrow_array();
-            my $related_time_terms;
-            if (!$related_time_terms_json) {
-                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
-            }
-            else {
-                $related_time_terms = decode_json $related_time_terms_json;
-            }
-            if (!exists($related_time_terms->{gdd_average_temp})) {
-                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
-            }
-            $time_to_gdd_lookup{$related_time_terms->{week}} = $related_time_terms->{gdd_average_temp};
-        }
+        # foreach (@$field_trial_id_list) {
+        #     $h->execute($drone_run_related_time_cvterms_json_cvterm_id, $_);
+        #     my ($drone_run_project_id, $related_time_terms_json) = $h->fetchrow_array();
+        #     my $related_time_terms;
+        #     if (!$related_time_terms_json) {
+        #         $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+        #     }
+        #     else {
+        #         $related_time_terms = decode_json $related_time_terms_json;
+        #     }
+        #     if (!exists($related_time_terms->{gdd_average_temp})) {
+        #         $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+        #     }
+        #     $time_to_gdd_lookup{$related_time_terms->{week}} = $related_time_terms->{gdd_average_temp};
+        # }
 
         my $rbase = R::YapRI::Base->new();
         my $r_block = $rbase->create_block('r_block');
