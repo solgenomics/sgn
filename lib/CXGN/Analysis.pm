@@ -20,9 +20,9 @@ has 'name' => (is => 'rw', isa => 'Str');
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
-has 'dataset_id' => (is => 'rw', isa => 'Int');
+has 'dataset_id' => (is => 'rw', isa => 'Maybe[Int]');
 
-has 'dataset_info' => (is => 'rw', isa => 'ArrayRef');
+has 'dataset_info' => (is => 'rw', isa => 'Maybe[Str]');
 
 has 'accessions' => (is => 'rw', isa => 'ArrayRef');
 
@@ -31,8 +31,6 @@ has 'data_hash' => (is => 'rw', isa => 'HashRef');
 has 'design' => (is => 'rw', isa => 'Ref');
 
 has 'nd_geolocation_id' => (is => 'rw', isa=> 'Int');
-
-has 'sp_person_id' => (is => 'rw', isa => 'Int');
 
 has 'user_id' => (is => 'rw', isa => 'Int');
 
@@ -86,7 +84,7 @@ sub retrieve_analyses_by_user {
 sub create_and_store_analysis_design {
     my $self = shift;
 
-    if (!$self->sp_person_id()) {
+    if (!$self->user_id()) {
 	die "Need an sp_person_id to store an analysis.";
     }
     if (!$self->description()) {
@@ -170,19 +168,22 @@ sub create_and_store_analysis_design {
     # changes.
     #
 
+    my $ds;
     if ($self->dataset_id()) { 
-	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema, people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
+	$ds = CXGN::Dataset->new( { schema => $self->bcs_schema, people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
+
+	my $data = $ds->data();
+	print STDERR "Data = $data\n";
 	
 	$row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
-	    {
-		project_id => $analysis_id, 
-		type_id => $analysis_project_term->cvterm_id(), 
-		value => { 
-		    original_dataset_id => $self->dataset_id(), 
-		    dataset_json => $ds->data(), 
-		},
-	    });
-
+	{
+	    project_id => $analysis_id, 
+	    type_id => $analysis_project_term->cvterm_id(), 
+	    value => { 
+		original_dataset_id => $self->dataset_id(), 
+		dataset_json => $ds->data(), 
+	    },
+	});
     }
     print STDERR Dumper($design);
     print STDERR "Done with design create & store.\n";

@@ -180,7 +180,7 @@ export function init(main_div){
 	  <div class="form_group">
    	    <label class="control-label" for="analysis_name">Analysis name</label> <input name="analysis_name" id="analysis_name" class="form-control" ></input><br />
 	    <label class="control-label" for="analysis_description">Analysis description</label>
-        <textarea name="analysis_description" rows="4" cols="30" class="form-control" id="analysis_description"></textarea>
+        <textarea name="description" rows="4" cols="30" class="form-control" id="description"></textarea>
 	<input type="hidden" name="analysis_file" id="analysis_file" />
 	<input type="hidden" name="analysis_dir" id="analysis_dir" value="mixedmodels" />
 	</div> <!-- form-group -->
@@ -215,15 +215,22 @@ export function init(main_div){
 	    'dir': 'mixedmodels',
 	    'data' : { 'file': basename,
 		       'dir' : 'mixedmodels',
+		       'analysis_type': 'mixed_model_analysis', 
 		       'analysis_name': name,
+		       'dataset_id' : $('#available_datasets').val(),
 		       'description' : description
 		     },
 	    'success' :	function(r) {
-		alert("Everything worked! Woohoo!" + file + " " +name);
-		return;
+		if (r.error) {
+		    alert("An error occurred. ("+r.error+")");
+		}
+		else { 
+		    alert("Everything worked! Woohoo!" + file + " " +name);
+		    return;
+		}
 	    },
 	    'error' : function(r) {
-		alert("ERRRRRRORRRRRR!!!"+r.error);
+		alert("A protocol error occurred. The system may not be available right now");
 		return;
 	    }
 	});

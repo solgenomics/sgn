@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::Analysis;
 
 use Moose;
 
+use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::StorePhenotypes;
 
@@ -28,7 +29,7 @@ sub store_analysis_json_POST {
     my $analysis_type = $c->req->param("analysis_type");
 
     if (my $error = $self->check_user($c)) {
-	$c->stash->{error} = $error;
+	$c->stash->{rest} = { error =>  $error };
 	return;
     }
 
@@ -36,7 +37,8 @@ sub store_analysis_json_POST {
     
     my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $params->{analysis_type}, 'analysis_type');
     if (! $analysis_type_row) { 
-	die "Provided analysis type does not exist in the database. Exiting." 
+	$c->stash->{rest} = { error => "The provided analysis type does not exist in the database. Please try this with different settings." };
+	return;
     }
     
     my @plots;
@@ -68,15 +70,24 @@ sub store_analysis_file_POST {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     print STDERR "Storing analysis file: $dir / $file...\n";
+    print STDERR <<;
+    Analysis name: $analysis_name
+    Analysis type: $analysis_type
+    Description:   $description
 
+    
     if (my $error = $self->check_user($c)) {
-	$c->stash->{error} = "Need to be logged in ($error)";
+	print STDERR "Sorry you are not logged in... not storing.\n";
+	$c->stash->{rest} = { error => $error };
 	return;
     }
-    
-    my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $params->{analysis_type}, 'analysis_type');
-    if (! $analysis_type_row) { 
-	$c->stash->{error} = "Provided analysis type does not exist in the database. Exiting.";
+
+    print STDERR "Retrieving cvterms...\n";
+    my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $params->{analysis_type}, 'experiment_type');
+    if (! $analysis_type_row) {
+	my $error = "Provided analysis type ($params->{analysis_type}) does not exist in the database. Exiting.";
+	print STDERR $error."\n";
+	$c->stash->{rest} = { error =>  $error };
 	return;
     }
     
@@ -92,7 +103,7 @@ sub store_analysis_file_POST {
 
     print STDERR "Reading analysis file path $fullpath...\n";
     
-    my @lines = slurp($file);
+    my @lines = read_file($fullpath);
 
     foreach my $line (@lines) {
 	my ($acc, $value) = split /\t/, $line;
@@ -123,18 +134,22 @@ sub store_data {
 	    bcs_schema => $bcs_schema,
 	    people_schema => $people_schema,
 	});
-    
-    my $d = CXGN::Dataset->new( 
-	{
-	    bcs_schema => $bcs_schema,
-	    people_schema => $people_schema,
-	});
 
-    $a->name($params->{name});
+    if ($params->{dataset_id}) { 
+	my $d = CXGN::Dataset->new( 
+	    {
+		schema => $bcs_schema,
+		people_schema => $people_schema,
+		dataset_id => $params->{dataset_id},
+	    });
+	$a->dataset_id($params->{dataset_id});
+	print STDERR "Dataset info ".$d->data()."\n";
+	$a->dataset_info($d->data());
+	$a->accessions($d->retrieve_accessions());
+    }
+    $a->name($params->{analysis_name});
     $a->description($params->{description});
     $a->user_id($user_id);
-    $a->dataset_id($params->{dataset_id});
-    $a->dataset_info($d->data());
 		     
     my ($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
        
@@ -176,7 +191,7 @@ sub check_user {
 	$error = "You need to be logged in to store data";
     }
     
-    if (! $c->user()->check_roles("submitter") || ! $c->user()->check_roles("curator")) {
+    if (! $c->user()->check_roles("submitter") && ! $c->user()->check_roles("curator")) {
 	$error = "You have insufficient privileges to store the data in the database";
     }
     
