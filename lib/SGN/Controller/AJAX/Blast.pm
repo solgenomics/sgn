@@ -164,13 +164,6 @@ sub run : Path('/tools/blast/run') Args(0) {
 	      }
 	 },
 
-	 matrix =>
-	 sub {
-	     my $m = $params->{matrix};
-	     $m =~ /^(BLOSUM|PAM)\d+$/
-		 or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
-	     return -M => $m;
-	 },
 
 
 	 expect =>
@@ -224,6 +217,16 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 },
 	);
 
+
+    if ($params->{program} eq "blastp" || $params->{program} eq "tblastx") {
+	$arg_handlers{matrix} = sub {
+	    my $m = $params->{matrix};
+	    $m =~ /^(BLOSUM|PAM)\d+$/
+		or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
+	    return -M => $m;
+	};
+    }
+    
     print STDERR "BUILDING COMMAND...\n";
 
 
