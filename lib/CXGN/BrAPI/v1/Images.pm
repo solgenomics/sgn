@@ -8,6 +8,7 @@ use Image::Size;
 use SGN::Model::Cvterm;
 use SGN::Image;
 use CXGN::Image::Search;
+use CXGN::Page;
 
 extends 'CXGN::BrAPI::v1::Common';
 
@@ -17,6 +18,8 @@ sub search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $page = CXGN::Page->new();
+    my $hostname = $page->get_hostname();
     my @data_files;
 
     my $image_ids_arrayref = $params->{imageDbId} || ($params->{imageDbIds} || ());
@@ -30,59 +33,121 @@ sub search {
         people_schema=>$self->people_schema(),
         phenome_schema=>$self->phenome_schema(),
         image_name_list=>$image_names_arrayref,
-        original_filename_list=>$descriptors_arrayref,
         description_list=>$descriptors_arrayref,
-        stock_name_list=>$stock_ids_arrayref,
+        stock_id_list=>$stock_ids_arrayref,
+        image_id_list=>$image_ids_arrayref
         # still need to implement in the search
         # phenotype_id_list=>$phenotype_ids_arrayref,
-        # image_id_list=>$image_ids_arrayref
     });
     my ($result, $total_count) = $image_search->search();
 
     my @data;
-    foreach (@$result){
-        #process results
+    foreach (@$result) {
+        my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
+        my @cvterms = $image->get_cvterms();
+        my $url = $hostname . $image->get_image_url('medium');
+        my $filename = $image->get_filename();
+        my $size = (stat($filename))[7];
+        my ($width, $height) = imgsize($filename);
+
+        push @data, {
+            additionalInfo => {
+                observationLevel => $_->{'stock_type_name'},
+                observationUnitName => $_->{'stock_uniquename'},
+                tags =>  $_->{'tags_array'},
+            },
+            copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
+            description => $_->{'image_description'},
+            descriptiveOntologyTerms => \@cvterms,
+            imageDbId => $_->{'image_id'},
+            imageFileName => $_->{'image_original_filename'},
+            imageFileSize => $size,
+            imageHeight => $height,
+            imageWidth => $width,
+            imageName => $_->{'image_name'},
+            imageTimeStamp => $_->{'image_modified_date'},
+            imageURL => $url,
+            mimeType => _get_mimetype($_->{'image_file_ext'}),
+            observationUnitDbId => $_->{'stock_id'},
+            # location and linked phenotypes are not yet available for images in the db
+            imageLocation => {
+                geometry => {
+                    coordinates => [],
+                    type=> '',
+                },
+                type => '',
+            },
+            observationDbIds => [],
+        };
     }
 
     my %result = (data => \@data);
+
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Image-search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Image search result constructed');
 }
 
 sub detail {
     my $self = shift;
     my $inputs = shift;
-
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $page = CXGN::Page->new();
+    my $hostname = $page->get_hostname();
+    my @data_files;
 
     my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $inputs->{image_id});
+    my @cvterms = $image->get_cvterms();
+    my $url = $hostname . $image->get_image_url('medium');
+    my $filename = $image->get_filename();
+    my $size = (stat($filename))[7];
+    my ($width, $height) = imgsize($filename);
 
-    my $observation_unit_db_id;
-    if (my @stocks = $image->get_stocks()) {
-	       $observation_unit_db_id = $stocks[0]->stock_id();
+    my @image_ids;
+    push @image_ids, $inputs->{image_id};
+    my $image_search = CXGN::Image::Search->new({
+        bcs_schema=>$self->bcs_schema(),
+        people_schema=>$self->people_schema(),
+        phenome_schema=>$self->phenome_schema(),
+        image_id_list=>\@image_ids
+    });
+
+    my ($search_result, $total_count) = $image_search->search();
+    my %result;
+
+    foreach (@$search_result) {
+        %result = (
+            additionalInfo => {
+                observationLevel => $_->{'stock_type_name'},
+                observationUnitName => $_->{'stock_uniquename'},
+                tags =>  $_->{'tags_array'},
+            },
+            copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
+            description => $_->{'image_description'},
+            descriptiveOntologyTerms => \@cvterms,
+            imageDbId => $_->{'image_id'},
+            imageFileName => $_->{'image_original_filename'},
+            imageFileSize => $size,
+            imageHeight => $height,
+            imageWidth => $width,
+            imageName => $_->{'image_name'},
+            imageTimeStamp => $_->{'image_modified_date'},
+            imageURL => $url,
+            mimeType => _get_mimetype($_->{'image_file_ext'}),
+            observationUnitDbId => $_->{'stock_id'},
+            # location and linked phenotypes are not yet available for images in the db
+            imageLocation => {
+                geometry => {
+                    coordinates => [],
+                    type=> '',
+                },
+                type => '',
+            },
+            observationDbIds => [],
+        );
     }
 
-    my @descriptive_ontology_terms = $image->get_cvterms();
-
-    my ($width, $height) = imgsize($image->get_filename());
-
-     my %result = (
-    	imageDbId => $image->get_image_id(),
-    	imageName => $image->get_name(),
-    	imageFilename => $image->get_original_filename(),
-    	imageType => $image->get_file_ext(),
-    	description => $image->get_description(),
-    	imageURL => $image->get_image_url(),
-    	observationUnitDbId => $observation_unit_db_id,
-    	descriptiveOntologyTerms => \@descriptive_ontology_terms,
-    	imageFileSize => stat(($image->get_filename())[7]),
-    	imageWidth => $width,
-    	imageHeight => $height,
-	);
-
-    my @data_files;
     my $total_count = 1;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Image detail constructed');
@@ -137,6 +202,22 @@ sub detail {
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1, 10, 0);
     return CXGN::BrAPI::JSONResponse->return_success( { image_id => $image_id }, $pagination, [], $self->status());
+}
+
+sub _get_mimetype {
+    my $extension = shift;
+    my %mimetypes = (
+        '.jpg' => 'image/jpeg',
+        '.JPG' => 'image/jpeg',
+        '.jpeg' => 'image/jpeg',
+        '.png' => 'image/png',
+        '.gif' => 'image/gif',
+        '.svg' => 'image/svg+xml',
+        '.pdf' => 'application/pdf',
+        '.ps'  => 'application/postscript',
+    );
+
+    return $mimetypes{$extension};
 }
 
 1;
