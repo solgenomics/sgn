@@ -341,6 +341,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $c->stash->{rest} = { error => "There are no common accessions in the trials you have selected! If that is the case, please just select one at a time."};
             return;
         }
+        print STDERR scalar(@unique_accession_ids)." Common Accessions\n";
 
         my $marss_prediction_selection = $c->req->param('statistics_select_marss_options');
 
@@ -422,8 +423,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 if (defined($phenotype_data{$obsunit_name}->{$t})) {
                     push @row, $phenotype_data{$obsunit_name}->{$t} + 0;
                 } else {
-                    print STDERR "Using NA for ".$obsunit_name." : $t : $germplasm_name : NA \n";
-                    push @row, 'NA';
+                    print STDERR "Using NA for ".$obsunit_name." : $t : $germplasm_name :  \n";
+                    push @row, 0.7;
                 }
             }
             push @{$data_matrix{$germplasm_name}}, @row;
@@ -472,7 +473,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $r_block->add_command('block'.$t.' <- row'.$t.'[2]');
                 $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
                 $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
-                $r_block->add_command('for (i in range(1:length(time_series'.$t.'))) { if (time_series'.$t.'[i] == "NA") { time_series'.$t.'[i] <- 0.7 } }');
+                $r_block->add_command('for (i in range(1:length(time_series'.$t.'))) { if (identical(time_series'.$t.'[i], "NA")) { time_series'.$t.'[i] <- 0.7 } }');
                 $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
                 if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
                     $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
