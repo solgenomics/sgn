@@ -473,6 +473,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $r_block->add_command('germplasmName'.$t.' <- row'.$t.'[3]');
                 $r_block->add_command('time_series'.$t.' <- row'.$t.'[-c(1:'.$num_col_before_traits.')]');
                 $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
+                $r_block->add_command('for i in range(1:time_series_original'.$t.') { if (time_series'.$t.'[i] == "NA") { time_series'.$t.'[i] <- NA } }');
+                $r_block->add_command('time_series_original'.$t.' <- time_series'.$t.'');
                 if ($marss_prediction_selection eq 'marss_predict_last_two_time_points') {
                     $r_block->add_command('time_series'.$t.'[c(length(time_series'.$t.')-1, length(time_series'.$t.') )] <- NA');
                 }
