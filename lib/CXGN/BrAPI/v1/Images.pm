@@ -155,21 +155,34 @@ sub detail {
 
  sub image_metadata_store {
     my $self = shift;
+    my $params = shift;
     my $image_dir = shift;
-    my $inputs = shift;
+    my $user_id = shift;
 
-    print STDERR "inputs to image metadata store: ".Dumper($inputs);
+    print STDERR "inputs to image metadata store: ".Dumper($params);
+
+    my $imageName = $params->{imageName} || "";
+    my $imageFileName = $params->{imageFileName} || "";
+    my $imageTimeStamp = $params->{imageTimeStamp} || "";
+    my $observationUnitDbId = $params->{observationUnitDbId} || "";
+    my $description = $params->{description} || "";
+    my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
+    my $observationDbIds_arrayref = $params->{observationDbIds} || ();
+    my $imageLocation_hashref = $params->{imageLocation} || ();
+
     my $image = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir);
-    my $imageName = "";
-    my $description = "";
-    if (defined($inputs->{imageName})) { $imageName = $inputs->{imageName}->[0] }
-    if (defined($inputs->{description})) { $description = $inputs->{description}->[0] }
+    #$image->process_image($image_dir."/".$tempfile, $type, $observationUnitDbId);
     $image->set_name($imageName);
     $image->set_description($description);
+    $image->set_sp_person_id($user_id);
     my $image_id = $image->store();
 
+    my %result = (
+        image_id => $image->get_image_id(),
+    );
+
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1, 10, 0);
-    return CXGN::BrAPI::JSONResponse->return_success( { image_id => $image_id }, $pagination, undef, $self->status());
+    return CXGN::BrAPI::JSONResponse->return_success( { \%result }, $pagination, undef, $self->status());
 }
 
 
