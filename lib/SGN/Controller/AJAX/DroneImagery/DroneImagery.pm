@@ -409,7 +409,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$gdd_time} = $_->{value};
                 $seen_gdd_times{$gdd_time}++;
             }
-            $seen_germplasm_names{$germplasm_name}++;
+            $seen_germplasm_names{$germplasm_name} = $obs_unit->{germplasm_stock_id};
         }
         my @sorted_gdd_time_points = sort {$a <=> $b} keys %seen_gdd_times;
 
@@ -439,6 +439,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         print STDERR Dumper \@phenotype_header;
 
         foreach (keys %seen_germplasm_names) {
+            my $germplasm_stock_id = $seen_germplasm_names{$_};
             my $dir = $c->tempfiles_subdir('/drone_imagery_analysis_plot');
             my $temp_plot = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_analysis_plot/imageXXXX');
             $temp_plot .= '.jpg';
@@ -507,7 +508,34 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $r_block->run_block();
             my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','result_matrix');
             #print STDERR Dumper $result_matrix;
-            push @results, ["TimeSeries", $result_matrix, $temp_plot];
+
+            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            my $md5checksum = $image->calculate_md5sum($temp_plot);
+            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                JOIN phenome.stock_image USING(image_id)
+                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND phenome.stock_id = ?;";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute($md5checksum, $germplasm_stock_id);
+            my ($saved_image_id) = $h->fetchrow_array();
+
+            my $plot_image_fullpath;
+            my $plot_image_url;
+            my $plot_image_id;
+            if ($saved_image_id) {
+                print STDERR Dumper "Image $temp_plot has already been added to the database and will not be added again.";
+                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                $plot_image_fullpath = $image->get_filename('original_converted', 'full');
+                $plot_image_url = $image->get_image_url('original');
+                $plot_image_id = $image->get_image_id();
+            } else {
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($temp_plot, 'stock', $germplasm_stock_id);
+                $plot_image_fullpath = $image->get_filename('original_converted', 'full');
+                $plot_image_url = $image->get_image_url('original');
+                $plot_image_id = $image->get_image_id();
+            }
+            
+            push @results, ["TimeSeries", $result_matrix, $plot_image_url];
         }
     }
     else {
