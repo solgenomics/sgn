@@ -130,7 +130,7 @@ sub _authenticate_user {
         }
     }
 
-    return 1;
+    return $person_id;
 }
 
 sub _standard_response_construction {
@@ -2948,6 +2948,15 @@ sub images_POST {
 	my $self = shift;
 	my $c = shift;
 
+    my $user = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    #print STDERR "Clean inputs at image_store_PUT: ".Dumper($clean_inputs);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Images');
+    my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
+    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user);
+    _standard_response_construction($c, $brapi_package_result);
+
 }
 
 sub images_by_id :  Chained('brapi') PathPart('images') CaptureArgs(1) {
@@ -2981,7 +2990,7 @@ sub images_single_PUT {
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
-    my $brapi_package_result = $brapi_module->image_metadata_store($image_dir, $clean_inputs, $c->stash->{image_id});
+    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir);
     _standard_response_construction($c, $brapi_package_result);
 
  }
