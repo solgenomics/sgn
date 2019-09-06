@@ -405,13 +405,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             foreach (@$observations){
                 my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
-                my $gdd_time = $related_time_terms_json->{gdd_average_temp};
+                my $gdd_time = $related_time_terms_json->{gdd_average_temp} + 0;
                 $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$gdd_time} = $_->{value};
                 $seen_gdd_times{$gdd_time}++;
             }
             $seen_germplasm_names{$germplasm_name}++;
         }
-        my @sorted_gdd_time_points = sort keys %seen_gdd_times;
+        my @sorted_gdd_time_points = sort {$a <=> $b} keys %seen_gdd_times;
 
         my %data_matrix;
         foreach (@$data) {
@@ -431,7 +431,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
         my @phenotype_header = ("replicate", "block", "germplasmName");
         my $num_col_before_traits = scalar(@phenotype_header);
-        push @phenotype_header, @sorted_gdd_time_points;
+        foreach (@sorted_gdd_time_points) {
+            push @phenotype_header, "$_";
+        }
 
         print STDERR Dumper \%data_matrix;
         print STDERR Dumper \@phenotype_header;
@@ -442,10 +444,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $temp_plot .= '.jpg';
 
             my $germplasm_data = $data_matrix{$_};
+            my $num_rows = scalar(@$germplasm_data)/scalar(@phenotype_header);
             my $rmatrix = R::YapRI::Data::Matrix->new({
                 name => 'matrix1',
                 coln => scalar(@phenotype_header),
-                rown => scalar(@$germplasm_data),
+                rown => $num_rows,
                 colnames => \@phenotype_header,
                 data => $germplasm_data
             });
@@ -455,13 +458,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $rmatrix->send_rbase($rbase, 'r_block');
             $r_block->add_command('library(MARSS)');
             $r_block->add_command('library(ggplot2)');
+            $r_block->add_command('header <- colnames(matrix1)');
+            $r_block->add_command('gdd_times <- header[-c(1:'.$num_col_before_traits.')]');
             $r_block->add_command('matrix_transposed <- t(matrix1)');
-            $r_block->add_command('result_matrix <- matrix(NA,nrow = 3*'.scalar(@$data).', ncol = length(matrix_transposed[ ,1]))');
+            $r_block->add_command('result_matrix <- matrix(NA,nrow = 3*'.$num_rows.', ncol = length(matrix_transposed[ ,1]))');
             $r_block->add_command('jpeg("'.$temp_plot.'")');
 
             my $row_number = 1;
-            foreach my $t (1..scalar(@$germplasm_data)) {
-                my $obsunit_name = $germplasm_data->[$t-1]->{observationunit_uniquename};
+            foreach my $t (1..$num_rows) {
                 $r_block->add_command('row'.$t.' <- matrix_transposed[ , '.$t.']');
                 $r_block->add_command('replicate'.$t.' <- row'.$t.'[1]');
                 $r_block->add_command('block'.$t.' <- row'.$t.'[2]');
@@ -489,14 +493,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $row_number++;
 
                 if ($t == 1) {
-                    $r_block->add_command('plot(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray", main="State Space '.$obsunit_name.'", xlab="Time Points", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
+                    $r_block->add_command('plot(gdd_times, time_series_original'.$t.', type="l", col="gray", main="State Space '.$_.'", xlab="Growing Degree Days", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
                 }
                 else {
-                    $r_block->add_command('lines(seq(1:length(time_series'.$t.')), time_series_original'.$t.', type="l", col="gray")');
+                    $r_block->add_command('lines(gdd_times, time_series_original'.$t.', type="l", col="gray")');
                 }
-                $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
-                $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
-                $r_block->add_command('points(seq(1:length(time_series'.$t.'))[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT - qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
+                $r_block->add_command('points(gdd_times[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
+                $r_block->add_command('points(gdd_times[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
+                $r_block->add_command('points(gdd_times[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT - qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
                 # $r_block->add_command('legend("topleft", col=c("blue", "gray", "red"), legend = c("Predicted", "Observed", "SE"), lty=1 )');
             }
             $r_block->add_command('dev.off()');
