@@ -504,10 +504,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $row_number++;
 
                 if ($t == 1) {
-                    $r_block->add_command('plot(gdd_times, time_series_original'.$t.', type="l", col="gray", main="State Space '.$_.'", xlab="Growing Degree Days", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
+                    $r_block->add_command('plot(gdd_times, time_series_original'.$t.', type="b", col="gray", main="State Space '.$_.'", xlab="Growing Degree Days", ylab="Phenotype", ylim = c(minimum_y_val'.$t.'-maximum_y_std'.$t.'-0.05*maximum_y_val'.$t.', maximum_y_val'.$t.'+maximum_y_std'.$t.'+0.05*maximum_y_val'.$t.') )');
                 }
                 else {
-                    $r_block->add_command('lines(gdd_times, time_series_original'.$t.', type="l", col="gray")');
+                    $r_block->add_command('lines(gdd_times, time_series_original'.$t.', type="b", col="gray")');
                 }
                 $r_block->add_command('points(gdd_times[which(is.na(time_series'.$t.'))], mars_fit'.$t.'$ytT[which(is.na(time_series'.$t.'))], col="blue", lty=2)');
                 $r_block->add_command('points(gdd_times[which(is.na(time_series'.$t.'))], c(mars_fit'.$t.'$ytT + qnorm(0.975)*mars_fit'.$t.'$ytT.se)[which(is.na(time_series'.$t.'))], col="red", lty=2)');
