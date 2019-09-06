@@ -415,19 +415,27 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my @sorted_gdd_time_points = sort {$a <=> $b} keys %seen_gdd_times;
 
         my %data_matrix;
+        my %germplasm_pheno_hash;
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
             my $obsunit_name = $_->{observationunit_uniquename};
-            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_name_encoder{$germplasm_name});
-            foreach my $t (sort @sorted_gdd_time_points) {
+            $germplasm_pheno_hash{$germplasm_name}->{obsunit_rep} = $_->{obsunit_rep};
+            $germplasm_pheno_hash{$germplasm_name}->{obsunit_block} = $_->{obsunit_block};
+            $germplasm_pheno_hash{$germplasm_name}->{germplasm_encoded} = $germplasm_name_encoder{$germplasm_name};
+            foreach my $t (@sorted_gdd_time_points) {
                 if (defined($phenotype_data{$obsunit_name}->{$t})) {
-                    push @row, $phenotype_data{$obsunit_name}->{$t} + 0;
+                    $germplasm_pheno_hash{$germplasm_name}->{$t} = $phenotype_data{$obsunit_name}->{$t} + 0;
                 } else {
                     print STDERR "Using NA for ".$obsunit_name." : $t : $germplasm_name :  \n";
-                    push @row, "NA";
                 }
             }
-            push @{$data_matrix{$germplasm_name}}, @row;
+        }
+        foreach my $g (keys %seen_germplasm_names) {
+            my @row = ($germplasm_pheno_hash{$g}->{obsunit_rep}, $germplasm_pheno_hash{$g}->{obsunit_block}, $germplasm_pheno_hash{$g}->{germplasm_encoded});
+            foreach my $t (@sorted_gdd_time_points) {
+                push @row, $germplasm_pheno_hash{$g}->{$t};
+            }
+            push @{$data_matrix{$g}}, @row;
         }
 
         my @phenotype_header = ("replicate", "block", "germplasmName");
