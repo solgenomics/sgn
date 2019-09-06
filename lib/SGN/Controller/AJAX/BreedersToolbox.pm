@@ -303,7 +303,7 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
 
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-    my $delete_phenotype_values_error = CXGN::Trial::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $c->config->{basepath}, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $c->config->{basepath}, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
     if ($delete_phenotype_values_error) {
         die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
     }

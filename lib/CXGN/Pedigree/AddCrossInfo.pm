@@ -2,20 +2,21 @@ package CXGN::Pedigree::AddCrossInfo;
 
 =head1 NAME
 
-CXGN::Pedigree::AddCrossInfo - a module to add information such as number of seeds or number of flowers as well as family name as stock properties for cross.
+CXGN::Pedigree::AddCrossInfo - a module to add cross information such as date of pollination, number of flowers pollinated, number of fruits set as stock properties for cross.
 
 =head1 USAGE
 
- my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name, key => $info_type, value => $value} );
- $cross_add_info->add_info();
+my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name, key => $info_type, value => $value} );
+$cross_add_info->add_info();
 
 =head1 DESCRIPTION
 
-Adds experiment properties to cross experiment. The a stock of type cross is found using the specified cross name.  Tthe cross must already exist in the database.   This module is intended to be used in independent loading scripts and interactive dialogs.
+Adds cross properties in json string format to stock of type cross. The cross must already exist in the database. This module is intended to be used in independent loading scripts and interactive dialogs.
 
 =head1 AUTHORS
 
- Jeremy D. Edwards (jde22@cornell.edu)
+Jeremy D. Edwards (jde22@cornell.edu)
+Titima Tantikanjana (tt15@cornell.edu)
 
 =cut
 
@@ -37,7 +38,6 @@ has 'chado_schema' => (
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key',);
 has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value',);
-has 'family_name' => (isa =>'Str', is => 'rw', predicate => 'has_family_name');
 
 sub add_info {
     my $self = shift;
@@ -55,7 +55,6 @@ sub add_info {
         }
 
         my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property');
-        my $family_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_property');
 
         my $cross_json_string;
         my $cross_json_hash = {};
@@ -73,10 +72,6 @@ sub add_info {
             $cross_stock->create_stockprops({$cross_info_cvterm->name() => $cross_json_string});
         }
 
-        my $family_name = $self->get_family_name();
-        if ($family_name){
-            $cross_stock->create_stockprops({$family_name_cvterm->name() => $family_name});
-        }
     };
 
     #try to add all cross info in a transaction

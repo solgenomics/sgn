@@ -55,6 +55,7 @@ $user_id => undef
                     <table id = "parent_information" class="table table-hover table-striped">
                         <thead>
                             <tr>
+                                <th>Cross Combination</th>
                                 <th>Cross Type</th>
                                 <th>Female Accession</th>
                                 <th>Male Accession</th>
@@ -75,7 +76,7 @@ $user_id => undef
 % my $edit_link = "[Edit]";
 % if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
 
-<&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
+<&| /page/info_section.mas, title => 'Cross Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
