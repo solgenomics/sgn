@@ -128,6 +128,13 @@ sub image_analysis_submit_POST : Args(0) {
                 my $project_id = $result->[$it]->{project_id};
                 my $stock_id = $result->[$it]->{stock_id};
 
+                my $project_where = ' ';
+                my $project_join = ' ';
+                if ($project_id) {
+                    $project_where = " AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id ";
+                    $project_join = " JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id) ";
+                }
+
                 my $dir = $c->tempfiles_subdir('/'.$image_type_name);
                 my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
                 $archive_temp_image .= '.png';
@@ -140,9 +147,9 @@ sub image_analysis_submit_POST : Args(0) {
                 my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
                 my $md5 = $image->calculate_md5sum($archive_temp_image);
                 my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-                    JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+                    $project_join
                     JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-                    WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.md5sum = '$md5';";
+                    WHERE md_image.obsolete = 'f' $project_where AND stock_image.stock_id = $stock_id AND md_image.md5sum = '$md5';";
                 my $h = $schema->storage->dbh->prepare($q);
                 $h->execute();
                 my ($saved_image_id) = $h->fetchrow_array();
@@ -154,12 +161,20 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 else {
                     $image->set_sp_person_id($user_id);
-                    my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
-                    if (!$ret ) {
-                        return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                    if ($project_id) {
+                        my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
+                        if (!$ret ) {
+                            return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                        }
+                        my $stock_associate = $image->associate_stock($stock_id);
+                    }
+                    else {
+                        my $ret = $image->process_image($archive_temp_image, 'stock', $stock_id);
+                        if (!$ret ) {
+                            return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                        }
                     }
                     print STDERR "Saved $archive_temp_image\n";
-                    my $stock_associate = $image->associate_stock($stock_id);
                     $image_id = $image->get_image_id();
                     my $added_image_tag_id = $image->add_tag($image_tag);
                 }
