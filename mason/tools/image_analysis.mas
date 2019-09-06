@@ -95,11 +95,11 @@
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="necrosis_image_analysis_service_select" name="necrosis_image_analysis_service_select">
-                            <option value="necrosis">Necrosis (Solomon Nsumba)</option>
+                            <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
                             <option value="count_sift">SIFT Feature Count</option>
-                            <option value="whitefly_count">Whitefly Count (Solomon Nsumba)</option>
+                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option>
                         </select>
                     </div>
                 </div>
