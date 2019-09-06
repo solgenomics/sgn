@@ -677,6 +677,7 @@ sub cluster_pheno_input_files {
     
 }
 
+
 sub cluster_gebvs_input_files {
     my ($self, $c) = @_;
     
@@ -688,6 +689,19 @@ sub cluster_gebvs_input_files {
     $c->stash->{cluster_gebvs_input_files} = $files;
     
 }
+
+
+sub cluster_sindex_input_files {
+    my ($self, $c) = @_;
+    
+    my $dir = $c->stash->{selection_index_cache_dir};
+    my $file_id = $c->stash->{sindex_name};
+    my $file = catfile($dir, "selection_index_only_${file_id}.txt");
+    
+    $c->stash->{cluster_sindex_input_files} = $file;
+    
+}
+
 
 sub cluster_input_files {
     my ($self, $c) = @_;
@@ -717,7 +731,13 @@ sub cluster_input_files {
 	$self->cluster_gebvs_input_files($c);
 	$files = $c->stash->{cluster_gebvs_input_files};
     }
-
+    
+    if ($c->stash->{sindex_name})
+    {
+	$self->cluster_sindex_input_files($c);
+	$files .=  "\t" . $c->stash->{cluster_sindex_input_files};
+    }
+    
     $self->cluster_options_file($c);
     my $cluster_opts_file = $c->stash->{"${cluster_type}_options_file"};
 
@@ -739,11 +759,14 @@ sub save_cluster_opts {
 
     my $data_type = $c->stash->{data_type};
     my $k_number  = $c->stash->{k_number};
-
+    my $selection_prop = $c->stash->{selection_proportion};
+ 
     my $opts_data = 'Params' . "\t" . 'Value' . "\n";
     $opts_data   .= 'data type' . "\t" . $data_type . "\n";
     $opts_data   .= 'k numbers' . "\t" . $k_number  . "\n";
     $opts_data   .= 'cluster type' . "\t" . $cluster_type  . "\n";
+    $opts_data   .= 'selection proportion' . "\t" . $selection_prop  . "\n" if $selection_prop;
+
     
     write_file($opts_file, $opts_data);
     
