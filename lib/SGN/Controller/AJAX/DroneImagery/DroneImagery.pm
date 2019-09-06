@@ -513,9 +513,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             my $md5checksum = $image->calculate_md5sum($temp_plot);
-            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-                JOIN phenome.stock_image USING(image_id)
-                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND phenome.stock_id = ?;";
+            my $q = "SELECT md_image.image_id
+                FROM metadata.md_image AS md_image
+                JOIN phenome.stock_image AS stock_image USING(image_id)
+                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND stock_image.stock_id = ?;";
             my $h = $schema->storage->dbh->prepare($q);
             $h->execute($md5checksum, $germplasm_stock_id);
             my ($saved_image_id) = $h->fetchrow_array();
