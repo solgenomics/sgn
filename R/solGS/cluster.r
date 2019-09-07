@@ -42,6 +42,9 @@ message("k means plot file: ", plotKmeansFile)
 optionsFile <- grep("options", inputFiles,  value = TRUE)
 message("cluster options file: ", optionsFile)
 
+sIndexFile <- grep("selection_index", inputFiles, value = TRUE)
+message("selection index file: ", sIndexFile)
+
 clusterOptions <- read.table(optionsFile,
                              header=TRUE,
                              sep="\t",
@@ -53,8 +56,10 @@ print(clusterOptions)
 
 userKNumbers <- clusterOptions["k numbers", 1]
 dataType     <- clusterOptions["data type", 1]
+selectionProp     <- clusterOptions["selection proportion", 1]
 message('userKNumbers ', userKNumbers)
 message('data type ', dataType)
+message('selection proportion ', selectionProp)
 
 
 if (is.null(kResultFile))
