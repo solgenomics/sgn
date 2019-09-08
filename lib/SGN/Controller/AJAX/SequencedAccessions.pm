@@ -19,10 +19,11 @@ sub get_all_sequenced_stocks :Path('/ajax/genomes/sequenced_stocks') {
     my $self = shift;
     my $c = shift;
 
+    my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my @sequenced_stocks = CXGN::Stock::SequencingInfo->all_sequenced_stocks($schema);
     
-    my @info = $self->retrieve_sequencing_infos($schema, @sequenced_stocks);
+    my @info = $self->retrieve_sequencing_infos($schema, $user_id, @sequenced_stocks);
     
     $c->stash->{rest} = { data => \@info };
 }
@@ -32,8 +33,9 @@ sub get_sequencing_info_for_stock :Path('/ajax/genomes/sequenced_stocks') Args(1
     my $c = shift;
     my $stock_id = shift;
 
+    my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     print STDERR "Retrieving sequencing info for stock $stock_id...\n";
-    my @info = $self->retrieve_sequencing_infos($c->dbic_schema("Bio::Chado::Schema"), $stock_id);
+    my @info = $self->retrieve_sequencing_infos($c->dbic_schema("Bio::Chado::Schema"), $user_id, $stock_id);
 
     print STDERR "SEQ INFOS: ".Dumper(\@info);
     
@@ -43,6 +45,7 @@ sub get_sequencing_info_for_stock :Path('/ajax/genomes/sequenced_stocks') Args(1
 sub retrieve_sequencing_infos {
     my $self = shift;
     my $schema = shift;
+    my $user_id = shift;
     my @stock_ids = @_;
 
     print STDERR Dumper(\@stock_ids);
@@ -73,13 +76,23 @@ sub retrieve_sequencing_infos {
 		    $jbrowse_link = qq | <a href="'.$info->{jbrowse_link}.'">JBrowse</a> |;
 		}
 
+		my $delete_link_js = "window.jsMod['sequenced_accessions'].delete_sequencing_info(".$info->{stockprop_id}.");";
+
+		my $edit_link_js = "window.jsMod['sequenced_accessions'].edit_sequencing_info(".$info->{stockprop_id}.");";
+		my $edit_delete_html = "Edit | Delete";
+
+		if ($user_id) {
+		    $edit_delete_html = '<a href="javascript:'.$edit_link_js.'">Edit</a> | <a href="javascript:'.$delete_link_js.'">Delete</a>';
+		}
+		    
+		    
 		push @data, [
 		    "<a href=\"/stock/$stock_id\">".$info->{uniquename}."</a>",
 		    $info->{year},
 		    $info->{organization},
-		    $info->{website},
+		    $website,
 		    $blast_link." | ".$jbrowse_link,
-		    '<a href="">Edit</a> | <a href="javascript:alert(\'HELLO\')">Delete</a>'
+		    $edit_delete_html,
 		];
 	    }
 	}
@@ -119,19 +132,29 @@ sub delete_sequencing_info :Path('/ajax/genomes/sequencing_info/delete') Args(1)
     
     my $stockprop_id = shift;
 
+    print STDERR "delete_sequencing_info...\n";
+    
     if (!$c->user() && !$c->user()->check_roles("curator")) {
-	$c->stash->{rest} = { error => "Log in required for sequencing info deletion." };
+	$c->stash->{rest} = { error => "Log in required for sequencing info dele
+tion." };
 	return;
     }
-    
-    my $si = CXGN::Stock::SequencingInfo->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), $stockprop_id });
 
+    my $si = CXGN::Stock::SequencingInfo->new( 
+	{ 
+	    schema => $c->dbic_schema("Bio::Chado::Schema"), 
+	    stockprop_id => $stockprop_id,
+	});
+    
+    print STDERR "Starting delete of stockprop_id $stockprop_id...(in object: ".$si->stockprop_id()."), type_id =". $si->type_id()."\n";
+    
     my $success;
     if ($si->stockprop_id()) {
-	eval { 
+	eval {
 	    $success = $si->delete();
 	};
 	if ($@) {
+	    print STDERR "An error occurred during deletion. Sorry.\n";
 	    $c->stash->{rest} = { error => "An error occurred while deleting sequencing info. ($@)" };
 	    return;
 	}

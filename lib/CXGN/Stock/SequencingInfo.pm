@@ -9,7 +9,7 @@ The stockprop of type "sequencing_project_info" is stored as JSON. This class ma
 
 =head1 EXAMPLE
 
-  my $si = CXGN::Stock::SequencingInfo->new( { schema => $schema, $stockprop_id => $stock_id });
+  my $si = CXGN::Stock::SequencingInfo->new( { schema => $schema, $stockprop_id });
 
 =head1 AUTHOR
 
@@ -23,7 +23,6 @@ use Moose;
 use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
-
 
 =head1 ACCESSORS
 
@@ -93,14 +92,15 @@ sub BUILD {
     my $args = shift;
 
     if ($args->{stockprop_id} eq "undefined") { $args->{stockprop_id} = undef; }
-    $self->stockprop_id($args->{stockprop_id});
-    $self->schema($args->{schema});
 
-    print STDERR "TYPE ".$self->type()."\n";
+    print STDtERR "STOCKPROPID: ".$self->stockprop_id.", TYPE: ".$self->type()."\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_property')->cvterm_id();
+
     $self->type_id($type_id);
 
     $self->_load_object();
+
+    $self->stockprop_id($args->{stockprop_id});
 }
 
 sub from_json {
@@ -201,12 +201,15 @@ sub get_sequencing_project_infos {
     print STDERR "Stockprops = ".Dumper(\@stockprops);
     
     my @infos = ();
-    foreach my $sp (@stockprops) { 
-	my $json = $sp->[1];
+    foreach my $sp (@stockprops) {
 	my $hash;
+	
+	my $json = $sp->[1];
+	
 	eval { 
 	    $hash = JSON::Any->jsonToObj($json);
 	};
+	$hash->{stockprop_id} = $sp->[0];
 	if ($@) { 
 	    print STDERR "Warning: $json is not valid json in stockprop ".$sp->[0].".!\n"; 
 	}
@@ -311,27 +314,33 @@ sub store {
 sub delete {
     my $self = shift;
 
+    print STDERR "CXGN::Stock::SequencingInfo: Deleting sequencing info object ".$self->stockprop_id()."\n";
     my $stockprop;
+
+    print STDERR "stock_id = ".$self->stock_id().", stockprop_id = ".$self->stockprop_id()."\n";
     
     eval { 
 	$stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$self->type_id(), stock_id => $self->stock_id(), stockprop_id=>$self->stockprop_id() });
 
     };
-    if ($@) { die "Delete failed!\n"; }
+    if ($@) { 
+	die "Delete failed!\n"; 
+    }
     
     if (!$stockprop) {
 	print STDERR "No such stockprop associated with such type or stock. Not deleting.\n";
 	return 0;
     }
     else {
+	print STDERR "Deleting stcokprop now.\n";
 	$stockprop->delete();
+	print STDERR "SequencingInfo successfully deleted.\n";
 	return 1;
     }
 }
 
 =head2 _load_object
 
- Usage:
  Desc:
  Ret:
  Args:
@@ -344,29 +353,21 @@ sub _load_object {
     my $self= shift;
 
     print STDERR "_load_object...\n";
-    my @results;
 
-    if ($self->stockprop_id()) { 
-	eval { 
-	    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $self->type(), 'stock_property')->cvterm_id();
-	    my $rs = $self->schema->resultset("Stock::Stockprop")->search({ stockprop_id => $self->stockprop_id(), type_id => $stockprop_type_id } );
-
-	    if ($rs->count() == 0) { die "No stockprops could be retrieved." }
-	    
-	    my $row = $rs->next(); # should only be one
-	    
-	    $self->type_id($stockprop_type_id);
-	    $self->stock_id($row->stock_id());
-	    $self->from_json($row->value());
-	    
-	};
+    print STDERR "Stockprop_id is now ".$self->stockprop_id()."\n";
+    if ($self->stockprop_id()) {
+	print STDERR "configuring object...\n";
+	my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $self->type(), 'stock_property')->cvterm_id();
+	my $rs = $self->schema->resultset("Stock::Stockprop")->search({ stockprop_id => $self->stockprop_id(), type_id => $stockprop_type_id } );
 	
-	if ($@) {
-	    die "Cvterm with stockprop_id ".$self->stockprop_id()." does not exist in this database\n";
-	};
+	if ($rs->count() == 0) { die "No stockprops could be retrieved." }
+	
+	my $row = $rs->next(); # should only be one
+	
+	$self->type_id($stockprop_type_id);
+	$self->stock_id($row->stock_id());
+	$self->from_json($row->value());
     }
-
-    return @results;
 }
 
 
@@ -401,6 +402,7 @@ sub _retrieve_stockprops {
             push @results, [ $r->stockprop_id(), $r->value() ];
         }
     };
+
     if ($@)  {
         print STDERR "Cvterm $type does not exist in this database\n";
     };

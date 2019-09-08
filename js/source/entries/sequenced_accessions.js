@@ -1,5 +1,4 @@
 
-
 import '../legacy/jquery.js';
 import '../legacy/jquery/dataTables.js';
 import '../legacy/CXGN/Login.js';
@@ -125,11 +124,53 @@ export function init(main_div, stock_id, stockprop_id){
 	    url : '/ajax/genomes/store_sequencing_info?'+formdata
 	});
     });
-	
+
+
 }
 
+export function delete_sequencing_info(stockprop_id) {
+    var answer = confirm("Are you sure you want to delete this entry? (stockprop_id= "+stockprop_id+"). This action cannot be undone.");
+    if (answer) {
+	jQuery.ajax( {
+	    url : '/ajax/genomes/sequencing_info/delete/'+stockprop_id,
+	    success: function(r) {
+		if (r.error) { alert(r.error); }
+		else { 
+		    alert("The entry has been deleted.");
+		}
+	    },
+	    error: function(r) {
+		alert("An error occurred. The entry was not deleted.");
+	    }
+	});
+    }
+}
 
-function delete_sequencing_info(stockprop_id) {
-    confirm("Are you sure you want to delete the stockprop with id "+stockprop_id);
+export function edit_sequencing_info(stockprop_id) {
+
+    jQuery.ajax( {
+	url : '/ajax/gneomes/sequenced_stocks/'+stockprop_id,
+	success : function(r) {
+	    if (r.error) { alert(r.error); }
+	    else {
+		jQuery('#organization').val(r.organization);
+		jQuery('#website').val(r.website);
+		jQuery('#genbank_accession').val(r.genbank_accession);
+		jQuery('#funded_by').val(r.funded_by);
+		jQuery('#funder_project_id').val(r.funder_project_id);
+		jQuery('#contact_email').val(r.contact_email);
+		jQuery('#sequencing_year').val(r.sequencing_year);
+		jQuery('#publication').val(r.publication);
+		jQuery('#jbrowse_link').val(r.jbrowse_link);
+		jQuery('#blast_db_id').val(r.blast_db_id);
+		jQuery('#stockprop_id').val(r.stockprop_id);
+		jQuery('#stock_id').val(r.stock_id);
+		jQuery('#website').val(r.website);
+	    }
+	}
+    });
+    
+    jQuery('#edit_sequencing_info_dialog').modal("show");
 
 }
+
