@@ -147,30 +147,33 @@ export function delete_sequencing_info(stockprop_id) {
 }
 
 export function edit_sequencing_info(stockprop_id) {
-
+    alert(stockprop_id);
     jQuery.ajax( {
-	url : '/ajax/gneomes/sequenced_stocks/'+stockprop_id,
+	url : '/ajax/genomes/sequencing_info/'+stockprop_id,
 	success : function(r) {
 	    if (r.error) { alert(r.error); }
 	    else {
-		jQuery('#organization').val(r.organization);
-		jQuery('#website').val(r.website);
-		jQuery('#genbank_accession').val(r.genbank_accession);
-		jQuery('#funded_by').val(r.funded_by);
-		jQuery('#funder_project_id').val(r.funder_project_id);
-		jQuery('#contact_email').val(r.contact_email);
-		jQuery('#sequencing_year').val(r.sequencing_year);
-		jQuery('#publication').val(r.publication);
-		jQuery('#jbrowse_link').val(r.jbrowse_link);
-		jQuery('#blast_db_id').val(r.blast_db_id);
-		jQuery('#stockprop_id').val(r.stockprop_id);
-		jQuery('#stock_id').val(r.stock_id);
-		jQuery('#website').val(r.website);
+		alert(JSON.stringify(r));
+		jQuery('#organization').val(r.data.organization);
+		jQuery('#website').val(r.data.website);
+		jQuery('#genbank_accession').val(r.data.genbank_accession);
+		jQuery('#funded_by').val(r.data.funded_by);
+		jQuery('#funder_project_id').val(r.data.funder_project_id);
+		jQuery('#contact_email').val(r.data.contact_email);
+		jQuery('#sequencing_year').val(r.data.sequencing_year);
+		jQuery('#publication').val(r.data.publication);
+		jQuery('#jbrowse_link').val(r.data.jbrowse_link);
+		jQuery('#blast_db_id').val(r.data.blast_db_id);
+		jQuery('#stockprop_id').val(r.data.stockprop_id);
+		jQuery('#stock_id').val(r.data.stock_id);
+		jQuery('#website').val(r.data.website);
+		jQuery('#edit_sequencing_info_dialog').modal("show");
 	    }
-	}
+	},
+	error : function(r) { alert("an error occurred"); }
     });
     
-    jQuery('#edit_sequencing_info_dialog').modal("show");
+
 
 }
 

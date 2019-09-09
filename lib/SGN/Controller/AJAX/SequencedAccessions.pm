@@ -102,6 +102,19 @@ sub retrieve_sequencing_infos {
     return @data;
 }
 
+sub get_sequencing_info :Path('/ajax/genomes/sequencing_info') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stockprop_id = shift;
+
+    my $si = CXGN::Stock::SequencingInfo->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), stockprop_id => $stockprop_id });
+
+    my $hashref = $si->to_hashref();
+
+    $c->stash->{rest} = { data => $hashref };
+}
+
+
 sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
     my $self =shift;
     my $c = shift;

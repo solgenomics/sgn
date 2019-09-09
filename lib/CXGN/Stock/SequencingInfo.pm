@@ -103,79 +103,6 @@ sub BUILD {
     $self->stockprop_id($args->{stockprop_id});
 }
 
-sub from_json {
-    my $self = shift;
-    my $json = shift;
-
-    my $data = JSON::Any->decode($json);
-
-    $self->from_hash($data);
-
-}
-
-sub from_hash {
-    my $self = shift;
-    my $hash = shift;
-
-    my $allowed_fields = $self->allowed_fields();
-
-    print STDERR Dumper($hash);
-    
-    foreach my $f (@$allowed_fields) {
-	print STDERR "Processing $f ($hash->{$f})...\n";
-	if ($hash->{$f} eq "undefined") { $hash->{$f} = undef; }
-	$self->$f($hash->{$f});
-    }
-}
-
-sub to_json {
-    my $self = shift;
- 
-    my $allowed_fields = $self->allowed_fields();
-
-    print STDERR Dumper($allowed_fields);
-    my $data;
-    
-    foreach my $f (@$allowed_fields) {
-	if (defined($self->$f())) { 
-	    $data->{$f} = $self->$f();
-	}
-    }
-
-    my $json = JSON::Any->encode($data);
-    return $json;
-}
-
-sub validate {
-    my $self = shift;
-    
-    my @errors = ();
-    my @warnings = ();
-    
-    # check keys in the info hash...
-    if (!defined($self->sequencing_year())) {
-	push @errors, "Need year for sequencing project";
-    }
-    if (!defined($self->organization())) {
-	push @errors, "Need organization for sequencing project";
-    }
-    if (!defined($self->website())) {
-	push @errors, "Need website for sequencing project";
-    }
-    if (!defined($self->publication())) {
-	push @warnings, "Need publication for sequencing project";
-    }
-    if (!defined($self->website())) {
-	push @warnings, "Need project url for sequencing project";
-    }
-    if (!defined($self->jbrowse_link())) {
-	push @warnings, "Need jbrowse link for sequencing project";
-    }
-
-    if (@errors) {
-	die join("\n", @errors);
-    }
-}
 
 =head2 Class methods
    
@@ -210,6 +137,7 @@ sub get_sequencing_project_infos {
 	    $hash = JSON::Any->jsonToObj($json);
 	};
 	$hash->{stockprop_id} = $sp->[0];
+	$hash->{uniquename} = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id })->uniquename();
 	if ($@) { 
 	    print STDERR "Warning: $json is not valid json in stockprop ".$sp->[0].".!\n"; 
 	}
@@ -219,7 +147,6 @@ sub get_sequencing_project_infos {
     print STDERR "Hashes = ".Dumper(\@infos);
     return \@infos;
 }
-
 
 =head2 all_sequenced_stocks()
 
@@ -409,6 +336,146 @@ sub _retrieve_stockprops {
 
     return @results;
 }
+
+=head2 from_json
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub from_json {
+    my $self = shift;
+    my $json = shift;
+
+    my $data = JSON::Any->decode($json);
+
+    $self->from_hash($data);
+}
+
+=head2 from_hash
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub from_hash {
+    my $self = shift;
+    my $hash = shift;
+
+    my $allowed_fields = $self->allowed_fields();
+
+    print STDERR Dumper($hash);
+    
+    foreach my $f (@$allowed_fields) {
+	print STDERR "Processing $f ($hash->{$f})...\n";
+	if ($hash->{$f} eq "undefined") { $hash->{$f} = undef; }
+	$self->$f($hash->{$f});
+    }
+}
+
+=head2 to_json
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub to_json {
+    my $self = shift;
+ 
+    my $allowed_fields = $self->allowed_fields();
+
+    print STDERR Dumper($allowed_fields);
+    my $data;
+    
+    foreach my $f (@$allowed_fields) {
+	if (defined($self->$f())) { 
+	    $data->{$f} = $self->$f();
+	}
+    }
+
+    my $json = JSON::Any->encode($data);
+    return $json;
+}
+
+=head2 to_hash
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub to_hashref {
+    my $self = shift;
+
+    my $hashref;
+    foreach my $f (@{$self->allowed_fields()}) {
+	$hashref->{$f} = $self->$f;
+    }
+    return $hashref;
+}
+
+=head2 validate
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub validate {
+    my $self = shift;
+    
+    my @errors = ();
+    my @warnings = ();
+    
+    # check keys in the info hash...
+    if (!defined($self->sequencing_year())) {
+	push @errors, "Need year for sequencing project";
+    }
+    if (!defined($self->organization())) {
+	push @errors, "Need organization for sequencing project";
+    }
+    if (!defined($self->website())) {
+	push @errors, "Need website for sequencing project";
+    }
+    if (!defined($self->publication())) {
+	push @warnings, "Need publication for sequencing project";
+    }
+    if (!defined($self->website())) {
+	push @warnings, "Need project url for sequencing project";
+    }
+    if (!defined($self->jbrowse_link())) {
+	push @warnings, "Need jbrowse link for sequencing project";
+    }
+
+    if (@errors) {
+	die join("\n", @errors);
+    }
+}
+
+
 
 1;
 
