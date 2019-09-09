@@ -1,0 +1,449 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'CXGN.Trial', 'moment_min', 'daterangepicker' ] &>
+
+<div class="modal fade" id="upload_drone_imagery_dialog" name="upload_drone_imagery_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadDroneImageryDialog">Upload Drone Imagery</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_form" name="upload_drone_imagery_form">
+
+                <&| /util/workflow.mas, id=> "drone_imagery_upload_workflow" &>
+                    <&| /util/workflow.mas:step, title=> "Intro" &>
+                        <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database" &>
+                        <p>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
+                        <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field. A field trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
+                        <p>If you have raw aerial images that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). You can have several drone runs for a single field trial. For an individual drone run, once you have uploaded all photos, you can stitch an orthophotoimage together. Afterwards, you will have options to cut the ortho image into plot polygons and extract phenotypes for those plots into the database. The maximum zipfile size is 2GB.</p>
+                        <p>If you already have an orthophotomosaic image of your entire field, you can upload that image under a field trial and a drone run. Afterwards,  you will have options to cut the ortho-image into plot polygons and extract phenotypes for those plots into the database. The maximum size for each image is 200MB. The preferred upload format is PNG.</p>
+                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip" download>Micasense 5 Band Raw Images (Unstitched image-captures) (Upload zipfile for ImageBreed to stitch.)</a></p>
+                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>Micasense 5 Band Panel Images (Micasense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures during stitching.)</a></p>
+                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightOrthomosaics.zip" download>Micasense 5 Band Previously Stitched Orthophotomosaic Images (PNG Files in provided zipfile. Can upload each band separately into ImageBreed.)</a></p>
+                        <br/><br/>
+                        <center>
+                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                        <& /page/page_title.mas, title=>"Select your field trial" &>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="upload_drone_image_trial_select_div"></div>
+                            </div>
+                        </div>
+
+                        <center>
+                        <button class="btn btn-primary" id="upload_drone_image_field_trial_select_continue">Go to Next Step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Drone Run" &>
+                        <& /page/page_title.mas, title=>"Select or create new drone run" &>
+
+                        <table class="table table-bordered table-hover" id="drone_image_upload_drone_runs_table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Imaging Event Name</th>
+                                    <th>Imaging Event Type</th>
+                                    <th>Imaging Event Description</th>
+                                    <th>Imaging Event Date</th>
+                                    <th>Camera</th>
+                                    <th>Field Trial Name</th>
+                                    <th>Field Trial Description</th>
+                                </tr>
+                            </thead>
+                        </table>
+
+                        <!-- If drone run is selected above, the drone_run_project_id is passed to controller, negating need to create new drone run -->
+                        <input id="drone_run_id" name="drone_run_id" type="hidden" value=""/>
+
+                        <center>
+                        <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
+                        </center>
+
+                        <br/>
+                        <div id="drone_image_upload_create_drone_inputs" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Imaging Event Name: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="drone_run_name" name="drone_run_name" type="text" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Imaging Event Type:</label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_run_type" name="drone_run_type">
+                                        <option value="">Select One</option>
+                                        <option value="Aerial Medium to High Res">Medium to High Resolution Aerial Drone Image(s)</option>
+                                        <option value="Aerial Low Res">Low Resolution Aerial Drone Image(s)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Camera Type:</label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_upload_camera_info" name="drone_image_upload_camera_info">
+                                        <option value="">Select One</option>
+                                        <option value="micasense_5">Micasense 5 Bands</option>
+                                        <option value="ccd_color">CCD Sensor Color Image</option>
+                                        <option value="cmos_color">CMOS Sensor Color Image</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Imaging Event Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="drone_run_description" name="drone_run_description" type="text" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Imaging Event Date:</label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
+                                </div>
+                            </div>
+                        </div>
+                        <br/>
+
+                        <center>
+                        <button class="btn btn-primary" id="drone_image_upload_drone_run_continue">Go to Next Step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Image Info" &>
+                        <& /page/page_title.mas, title=>"Stitched vs Unstitched and Number of Bands (Image Sets) To Upload" &>
+
+                        <div class="well">
+                            <ul>
+                                <li>Raw images (unstitched) coming from your drone can be uploaded in a zip file. We can then stitch them together into an orthophotomosaic of the entire drone run.</li>
+                                <li>Or you can choose to upload a single image and skip any stitching</li>
+                            </ul>
+                        </div>
+                        <div class="well">
+                            <ul>
+                                <li>It is possible to upload regular RGB or Black and White photos.</li>
+                                <li>For multi-spectral cameras, it is possible to upload individual spectra orthomosaicphotos.</li>
+                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometrix calibration panel images, so that ImageBreed can produce the best orthomosaic possible.</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Do you require stitching an ortho image of the drone run:</label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
+                                    <option value="">Select One</option>
+                                    <option value="yes">Yes, I am uploading a zipfile of images to stitch</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="drone_run_upload_drone_run_band_number_div">
+                            <label class="col-sm-3 control-label">Number of Spectral Bands (Image Sets) To Upload:</label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="drone_run_band_number" name="drone_run_band_number">
+                                    <option value="">Select One</option>
+                                    <option value="one_bw">One Black and White Image</option>
+                                    <option value="one_rgb">One RGB Color Image</option>
+                                    <option value="1">One Spectral Band</option>
+                                    <option value="2">Two Separate Spectral Bands</option>
+                                    <option value="3">Three Separate Spectral Bands</option>
+                                    <option value="4">Four Separate Spectral Bands</option>
+                                    <option value="5">Five Separate Spectral Bands</option>
+                                    <option value="6">Six Separate Spectral Bands</option>
+                                    <option value="7">Seven Separate Spectral Bands</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <center>
+                        <button class="btn btn-primary" id="drone_image_upload_drone_run_band_continue">Go to Next Step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Images" &>
+                        <& /page/page_title.mas, title=>"Select Image(s) to Upload" &>
+
+                        <div id="upload_drone_images_select_section">
+                        </div>
+
+                        <center>
+                        <button type="button" class="btn btn-info" name="upload_drone_imagery_submit" id="upload_drone_imagery_submit">Submit</button>
+                        </center>
+                    </&>
+
+                </&>
+
+                <div id="upload_drone_imagery_verify_status"></div>
+            </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    get_select_box('trials', 'upload_drone_image_trial_select_div', { 'name' : 'drone_run_field_trial_id', 'id' : 'drone_run_field_trial_id', 'empty':1, 'multiple':0 });
+
+    jQuery('#upload_drone_imagery_link').click( function() {
+        jQuery('#upload_drone_imagery_dialog').modal("show");
+    });
+
+    jQuery(document).on('change', '#drone_run_field_trial_id', function() {
+        var field_trial_id = jQuery(this).val();
+        jQuery('#drone_image_upload_drone_runs_table').DataTable({
+            destroy : true,
+            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_id='+field_trial_id
+        });
+    });
+
+    jQuery('#upload_drone_image_field_trial_select_continue').click(function(){
+        if (jQuery('#drone_run_field_trial_id').val() == ''){
+            alert('Please select a field trial first');
+        } else {
+            Workflow.complete('#upload_drone_image_field_trial_select_continue');
+            Workflow.focus('#drone_imagery_upload_workflow', 2);
+        }
+        return false;
+    });
+
+    var drone_run_date_element = jQuery("#drone_run_date");
+    set_daterangepicker_default (drone_run_date_element);
+    jQuery('input[title="drone_run_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            drone_run_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
+        }
+    );
+
+    jQuery('#drone_image_upload_create_drone_run').click(function(){
+        jQuery('#drone_image_upload_create_drone_inputs').show();
+        return false;
+    });
+
+    jQuery('#drone_image_upload_drone_run_band_stitching').change(function(){
+        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes') {
+            jQuery('#drone_run_upload_drone_run_band_number_div').hide();
+        } else {
+            jQuery('#drone_run_upload_drone_run_band_number_div').show();
+        }
+    });
+
+    jQuery('#drone_image_upload_drone_run_band_continue').click(function(){
+    
+        var drone_run_band_number = jQuery('#drone_run_band_number').val();
+        var drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
+        var drone_run_camera_info = jQuery('#drone_image_upload_camera_info').val();
+        var drone_run_id = jQuery('#drone_run_id').val();
+        if (drone_run_id != '' && drone_run_band_unstitched == 'yes') {
+            alert('Please create a new drone run band if you are uploading a zipfile of images to stitch.');
+            return false;
+        }
+        if (drone_run_band_unstitched == '') {
+            alert('Please select whether you are uploading unstitched images.');
+            return false;
+        }
+        if (drone_run_id == '' && drone_run_camera_info == '') {
+            alert('Please select the camera type used.');
+            return false;
+        }
+
+        var html = '';
+        if (drone_run_band_unstitched == 'no') {
+            if (drone_run_band_number == '') {
+                alert('Please select the number of drone run bands you will upload');
+            } else {
+                if (drone_run_band_number == 'one_bw' || drone_run_band_number == 'one_rgb') {
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_1" name="drone_run_band_name_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_1" name="drone_run_band_description_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_1" name="drone_run_band_type_1"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option></select></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_1" name="drone_run_band_stitched_ortho_image_1" encoding="multipart/form-data" /></div></div>';
+                    html = html + '</div>';
+                } else {
+                    for (var i=0; i<drone_run_band_number; i++) {
+                        html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_'+i+'" name="drone_run_band_name_'+i+'" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_'+i+'" name="drone_run_band_description_'+i+'" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_'+i+'" name="drone_run_band_type_'+i+'"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option></select></div></div>';
+                        html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_'+i+'" name="drone_run_band_stitched_ortho_image_'+i+'" encoding="multipart/form-data" /></div></div>';
+                        html = html + '</div>';
+                    }
+                }
+            }
+        }
+        else if (drone_run_band_unstitched == 'yes') {
+            html = html + '<div class="well well-sm">';
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
+
+            if (drone_run_camera_info == 'micasense_5') {
+                html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+            }
+
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Working Image Scale (Megapixels): </label><div class="col-sm-9" ><select class="form-control" id="upload_drone_images_stitching_work_pix" name="upload_drone_images_stitching_work_pix" disabled><option value="-1">Full</option><option value="0.6">0.6</option><option value="0.4">0.4</option><option value="1.0">1.0</option><option value="2.0">2.0</option></select></div></div>';
+            html = html + '</div>';
+        }
+
+        jQuery('#upload_drone_images_select_section').html(html);
+        Workflow.complete('#drone_image_upload_drone_run_band_continue');
+        Workflow.focus('#drone_imagery_upload_workflow', 4);
+        return false;
+    });
+
+    jQuery('#drone_image_upload_drone_run_continue').click(function(){
+        var selected = [];
+        jQuery('input[name="upload_drone_imagery_drone_run_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1){
+            alert('Only select one drone run!');
+        } else {
+            if (selected.length == 0 && jQuery('#drone_run_name').val() == ''){
+                alert('Select a drone run or create a new one!');
+            } else if (selected.length == 1 && jQuery('#drone_run_name').val() != ''){
+                alert('If you selected a drone run, do not try to make a new one at the same time!');
+            } else if (selected.length == 1 && jQuery('#drone_run_name').val() == ''){
+                jQuery('#drone_run_id').val(selected[0]);
+                Workflow.complete('#drone_image_upload_drone_run_continue');
+                Workflow.focus('#drone_imagery_upload_workflow', 3);
+            } else if (selected.length == 0 && jQuery('#drone_run_name').val() != '') {
+                if (jQuery('#drone_run_description').val() == ''){
+                    alert('Please give a drone run description.');
+                } else if (jQuery('#drone_run_date').val() == ''){
+                    alert('Please give a drone run date.');
+                } else if (jQuery('#drone_run_type') == ''){
+                    alert('Please select a drone run type');
+                } else {
+                    jQuery('#drone_run_id').val('');
+                    jQuery.ajax({
+                        url : '/api/drone_imagery/upload_drone_imagery_check_drone_name?drone_run_name='+jQuery('#drone_run_name').val(),
+                        success: function(response){
+                            console.log(response);
+
+                            if (response.success) {
+                                Workflow.complete('#drone_image_upload_drone_run_continue');
+                                Workflow.focus('#drone_imagery_upload_workflow', 3);
+                            }
+                            else if (response.error) {
+                                alert("Error: " + response.error);
+                            }
+                            return false;
+                        },
+                        error: function(response){
+                            alert('Error checking drone run name!');
+                        }
+                    });
+                }
+            }
+        }
+        return false;
+    });
+
+
+    var drone_run_band_unstitched = '';
+    jQuery('#upload_drone_imagery_submit').click(function(){
+        var drone_run_band_number = jQuery('#drone_run_band_number').val();
+        drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
+        var drone_run_camera_info = jQuery('#drone_image_upload_camera_info').val();
+        if (drone_run_band_unstitched == '') {
+            alert('Please select whether you are uploading unstitched images.');
+            return false;
+        }
+        if (drone_run_camera_info == '') {
+            alert('Please select the camera type used.');
+            return false;
+        }
+
+        if (drone_run_band_unstitched == 'no') {
+            if (drone_run_band_number == '') {
+                alert('Please select the number of drone run bands you will upload');
+                return;
+            } else {
+                if (drone_run_band_number == 'one_bw' || drone_run_band_number == 'one_rgb') {
+                    if (jQuery('#drone_run_band_name_1').val() == ''){
+                        alert('Give a new drone run band name!');
+                        return;
+                    } else if (jQuery('#drone_run_band_description_1').val() == ''){
+                        alert('Please give a drone run band description.');
+                        return;
+                    } else if (jQuery('#drone_run_band_type_1').val() == ''){
+                        alert('Please select a drone run band type.');
+                        return;
+                    }
+                    if (jQuery('#drone_run_band_stitched_ortho_image_1').val() == '') {
+                        alert('Please select an image');
+                        return;
+                    }
+                } else {
+                    for (var i=0; i<drone_run_band_number; i++) {
+                        if (jQuery('#drone_run_band_name_'+i).val() == ''){
+                            alert('Give a new drone run band name!');
+                            return;
+                        } else if (jQuery('#drone_run_band_description_'+i).val() == ''){
+                            alert('Please give a drone run band description.');
+                            return;
+                        } else if (jQuery('#drone_run_band_type_'+i).val() == ''){
+                            alert('Please select a drone run band type.');
+                            return;
+                        }
+                        if (jQuery('#drone_run_band_stitched_ortho_image_'+i).val() == '') {
+                            alert('Please select an image');
+                            return;
+                        }
+                    }
+                }
+            }
+        } else if (drone_run_band_unstitched == 'yes') {
+            if (jQuery('#upload_drone_images_zipfile').val() == ''){
+                alert('Please select a zipfile of images');
+                return;
+            }
+            // if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
+            //    alert('Please select a zipfile of Micasense radiocalibration panel images');
+            //    return;
+            // }
+        }
+
+        upload_drone_imagery_form();
+    })
+
+    function upload_drone_imagery_form() {
+        jQuery('#upload_drone_imagery_form').attr("action", "/api/drone_imagery/upload_drone_imagery");
+        jQuery("#upload_drone_imagery_form").submit();
+    }
+
+    jQuery('#upload_drone_imagery_form').iframePostForm({
+        json: true,
+        post: function () {
+            jQuery('#working_modal').modal("show");
+            if (drone_run_band_unstitched == 'yes') {
+                jQuery('#working_msg').html("It can take a very long time to assemble the orthophotomosaic depending on the number of images uploaded. Times range from 15 minutes to 5 days depending on the number of images, not including upload time.");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_msg').html("");
+
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            location.reload();
+        }
+    });
+
+});
+
+</script>

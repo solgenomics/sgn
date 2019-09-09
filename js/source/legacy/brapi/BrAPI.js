@@ -1118,7 +1118,7 @@ class BrAPI_Behavior_Node extends Context_Node{
                             state.concatenated = json;
                             state.sentry = sentry_task;
                             state.concatenated.result["__response"] = state.concatenated;
-                            console.log(json);
+                            //console.log(json);
                             delete state.concatenated.metadata.pagination;
                         } else {
                             [].push.apply(state.concatenated.result.data, json.result.data);

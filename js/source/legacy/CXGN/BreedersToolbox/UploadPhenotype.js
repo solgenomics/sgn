@@ -3,7 +3,7 @@ jQuery( document ).ready( function() {
 
     //For Spreadsheet Upload
     jQuery('#upload_spreadsheet_phenotype_submit_verify').click( function() {
-        initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet");
+        initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet", jQuery('#upload_spreadsheet_phenotype_file_format').val(), jQuery("#upload_spreadsheet_phenotype_associated_images_file_input").val());
     });
 
     jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
@@ -109,12 +109,17 @@ jQuery( document ).ready( function() {
 
 });
 
-function initializeUploadPhenotype(uploadFile, message, file_form, url) {
-    if (uploadFile === '') {
-	alert("Please select a file");
-    } else {
-	showPhenotypeUploadWorkingModal(message);
-	jQuery(file_form).attr("action", url);
+function initializeUploadPhenotype(uploadFile, message, file_form, url, upload_format, image_zipfile) {
+    if (upload_format == 'associated_images' && image_zipfile === '') {
+        alert('Please select an image zipfile if you are using the Associated Images format');
+        return false;
+    }
+    else if (uploadFile === '') {
+        alert("Please select a file");
+    }
+    else {
+        showPhenotypeUploadWorkingModal(message);
+        jQuery(file_form).attr("action", url);
         jQuery(file_form).submit();
     }
 }

@@ -42,6 +42,11 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         push @stock_name_list, $params->{image_stock_uniquename};
     }
 
+    my @project_name_list;
+    if (exists($params->{image_project_name}) && $params->{image_project_name}) {
+        push @project_name_list, $params->{image_project_name};
+    }
+
     my @first_names;
     my @last_names;
     if (exists($params->{image_person} ) && $params->{image_person} ) {
@@ -67,6 +72,7 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         original_filename_list=>\@descriptors,
         description_list=>\@descriptors,
         stock_name_list=>\@stock_name_list,
+        project_name_list=>\@project_name_list,
         tag_list=>\@tags,
         limit=>$limit,
         offset=>$offset
@@ -82,7 +88,10 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     my @return;
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
-        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}.") : <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
+        my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}."): <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
+        if ($_->{project_name}) {
+            $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): ".$_->{project_name} : "Project (".$_->{project_image_type_name}."): ".$_->{project_name};
+        }
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {
             push @tags, $t->{name};
@@ -96,14 +105,20 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         my $image_page = "/image/view/$image_id";
         my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" height="30" border="0" alt="$image_description" /></a>|;
 
-        push @return, [
+        my @line;
+        if ($params->{html_select_box}) {
+            push @line, "<input type='checkbox' name='".$params->{html_select_box}."' value='".$_->{image_id}."'>";
+        }
+        push @line, (
             $colorbox,
             "<a href='/image/view/".$_->{image_id}."' >".$_->{image_original_filename}."</a>",
             $_->{image_description},
             "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{image_sp_person_id}."' >".$_->{image_username}."</a>",
             $associations,
             (join ', ', @tags)
-        ];
+        );
+
+        push @return, \@line;
     }
 
     #print STDERR Dumper \@return;
