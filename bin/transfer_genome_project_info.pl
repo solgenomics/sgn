@@ -44,4 +44,7 @@ while (my ($organismprop_id, $organism_id, $type_id, $value)= $h->fetchrow_array
     if ($row) {
 	print STDERR "accession $data->{genome_project_sequenced_accessions} FOUND in database!!!!\n";
     }
+    else {
+	print sTDERR "accession $data->{genome_project_sequenced_accessions} ***NOT*** FOUND in database!!!!\n";
+    }
 }
