@@ -37,7 +37,7 @@ my $h = $dbh->prepare($q);
 $h->execute();
 					  
 while (my ($organismprop_id, $organism_id, $type_id, $value)= $h->fetchrow_array()) {
-    my $data = json2obj($value);
+    my $data = JSON::Any->decode($value);
 					      
     my $row = $schema->resultset("Stock::Stock")->find( { organism_id => $organism_id, uniquename => $data->{genome_project_sequenced_accessions} });
 
