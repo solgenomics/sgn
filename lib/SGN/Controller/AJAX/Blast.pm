@@ -505,7 +505,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $query_line_on = 1;
       }
 
-      if ($query_line_on && $line =~ /\((\d+)\s+letters/) {
+      if ($query_line_on && $line =~ /Length=(\d+)/) {
         $query_length = $1;
       }
 
