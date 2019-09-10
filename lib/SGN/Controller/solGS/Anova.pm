@@ -80,11 +80,11 @@ sub anova_traits {
 
      my $trial_id = $c->stash->{trial_id};
 
-     my $trial = CXGN::Trial->new(bcs_schema => $self->schema($c), 
-				  trial_id => $trial_id);
+     my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
+				  trial_id => $trial_id});
 
      my $traits = $trial->get_traits_assayed();
-     my $clean_traits = $self->remove_ontology($traits);
+     my $clean_traits = $self->remove_ontology($c, $traits);
 
      $c->stash->{rest}{anova_traits} = $clean_traits;
 
@@ -92,13 +92,13 @@ sub anova_traits {
 
 
 sub remove_ontology {
-    my ($self, $traits) = @_;
+    my ($self, $c, $traits) = @_;
 
     my @clean_traits;
 
     foreach my $tr (@$traits) {
 	my $name = $tr->[1];
-	$name =~ s/\|CO_\d+:\d+//;
+	$name= $c->controller('solGS::solGS')->clean_traits($name);
 
 	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
  	push @clean_traits, $id_nm;	    	    
@@ -134,12 +134,12 @@ sub check_trial_design {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{trial_id};
-   
-    my $trial = CXGN::Trial->new(bcs_schema => $self->schema($c), 
-				 trial_id => $trial_id);
+  
+    my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
+				 trial_id => $trial_id});
 
     my $design    = $trial->get_design_type();
-
+ 
     my $supported;
     $supported = $self->check_support($design) if $design;
 

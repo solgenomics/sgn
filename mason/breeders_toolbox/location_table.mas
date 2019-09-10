@@ -45,6 +45,7 @@ jQuery(document).ready(function() {
                 data: locationJSON,
                 dom: 'Bfrtip',
                 select: true,
+                rowId: 'properties.Id',
                 "columns": [
                     { "data": "properties.Id" },
                     { "data": "properties.Name" },

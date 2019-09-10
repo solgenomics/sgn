@@ -342,7 +342,14 @@ jQuery(document).ready(function() {
       $('#add_location_dialog').modal("show");
    });
 
-   get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
+   // get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
+   get_select_box('breeding_programs', 'breeding_program',
+       {
+           empty: 1,
+           id: 'breeding_program_select',
+           default: 'please select',
+           multiple: 1,
+       });
 
    $('#store_location_submit').click( function(event) {
        event.preventDefault();
@@ -353,12 +360,18 @@ jQuery(document).ready(function() {
        var country_code = $('#location_country').val();
        var country_text = $('#location_country option:selected').text();
        var country_name = country_text.replace(/^[^\s]+(.*)/, '$1').trim();
-       var program = $('#breeding_program_select option:selected').text();
+    //    var program = $('#breeding_program_select option:selected').text();
+        var programs = [];
+        $('#breeding_program_select option:selected').each( function() {
+            programs.push($(this).text());
+        });
+
+       programs = programs.join("&");
        var type = $('#location_type').val();
        var latitude = $('#location_latitude').val();
        var longitude = $('#location_longitude').val();
        var altitude = $('#location_altitude').val();
-       //console.log("Location program to store is "+program);
+       console.log("Location programs to store are "+JSON.stringify(programs));
        //console.log("Location name to store is "+name);
        //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
@@ -367,7 +380,7 @@ jQuery(document).ready(function() {
        $.ajax({
          type: 'POST',
          url: '/ajax/location/store',
-         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'program': program, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
+         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'programs': programs, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
          success: function(response) {
                   if (response.error) { alert(response.error); }
                   else {
@@ -665,27 +678,33 @@ function onEachFeature(feature, layer) {
     }
 
    function edit_location(id) {
+
         var table = jQuery('#location_table').DataTable();
-        var index = table.rows().eq( 0 ).filter( function (rowIdx) {
-            return table.cell( rowIdx, 0 ).data() === id ? true : false;
-        } );
-       var data = table.rows(index).data();
-       var all_rows = [];
-       for (var i=0; i < data.length ;i++){
-           all_rows.push(data[i]);
-       }
-       var loc_data = all_rows.shift();
+        var loc_data = table.row('#'+id).data();
         //console.log("Data for location to edit: "+JSON.stringify(loc_data));
         //console.log("Program for location to edit is "+loc_data.properties.Program);
         $('#location_id').val(loc_data.properties.Id);
         $('#location_name').val(loc_data.properties.Name);
         $('#location_abbreviation').val(loc_data.properties.Abbreviation);
         $('#location_country').val(loc_data.properties.Code);
-        $('#breeding_program_select option:first').text('');
-        $('#breeding_program_select option:first').prop('selected', true);
-        $("#breeding_program_select option").filter(function() {
-            return this.text == loc_data.properties.Program;
-        }).attr('selected', true);
+
+        $('#breeding_program_select option:selected').prop('selected', false);
+
+        var programs = loc_data.properties.Program;
+        var program_array = [];
+        if (programs) { program_array = programs.split(" & ") };
+
+        if (program_array.length > 0) {
+            program_array.forEach(function(program) {
+                $("#breeding_program_select option").filter(function() {
+                    return this.text == program
+                }).attr('selected', true);
+            });
+        } else {
+            $('#breeding_program_select option:first').text('');
+            $('#breeding_program_select option:first').prop('selected', true);
+        }
+
         $('#location_type').val(loc_data.properties.Type);
         $('#location_latitude').val(loc_data.properties.Latitude);
         $('#location_longitude').val(loc_data.properties.Longitude);

@@ -41,6 +41,8 @@ $user_name => undef
 $design_name => undef
 $phenotypes_fully_uploaded => undef
 $identifier_prefix => 'SGN'
+$management_factor_date => undef
+$management_factor_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -49,7 +51,7 @@ $identifier_prefix => 'SGN'
 
 <& /page/page_title.mas, title=>"Field Management Factor: ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Management Factor Details</h4>", info_section_subtitle => 'View basic information about the management factor.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "management_factor_details", trial_name => $trial_name &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Management Factor Details</h4>", info_section_subtitle => 'View basic information about the management factor.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "management_factor_details", trial_name => $trial_name, year => $year, management_factor_type=>$management_factor_type, management_factor_date=>$management_factor_date &>
 
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View experimental design information for this management factor.', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "management_factor_design", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>

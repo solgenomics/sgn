@@ -8,12 +8,22 @@
       <li data-target="#myCarousel" data-slide-to="3"></li>
       <li data-target="#myCarousel" data-slide-to="4"></li>
       <li data-target="#myCarousel" data-slide-to="5"></li>
-      <li data-target="#myCarousel" data-slide-to="6"></li>
     </ol>
 
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
 
+
+      <div class="item">
+	<div style="background:url(/documents/img/homepage_carousel/varitome.jpeg) center center; background-size:cover;" class="slider-size">
+	  <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
+	    <a href="/projects/varitome/" target="_blank" style="color: #00426c">
+              <h3>The Varitome Project</h3>
+              <p>Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits</p>
+	    </a>
+	  </div>
+	</div>
+      </div>
 
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/5.jpg) center center; background-size:cover;" class="slider-size">
@@ -35,24 +45,7 @@
         </div>
       </div>
 
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/carousel_potato.jpg) center center; background-size:cover;" class="slider-size">
-        <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Solanum_tuberosum/genome">Potato Genome</a></h3>
-            <p><a href="http://www.nature.com/nature/journal/v475/n7355/full/nature10158.html" target="_blank">Genome sequence and analysis of the tuber crop potato</a></p>
-        </div>
-        <div class="carousel-sgn-links">
-          <ul class="sgn_sm_list">
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPGSC_DM_v4.03"><li>Browse the potato genome</li></a>
-            <a href="/tools/blast?db_id=262"><li>Find sequences by similarity</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/annotation/"><li>Download the annotations</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Solanum_tuberosum/assembly/PGSC_DM_v4.03/"><li>Download the Genome Sequence</li></a>
-          </ul>
-        </div>
-
-        </div>
-      </div>
-
+   
       <div class="item">
         <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
         <div class="carousel-sgn-caption">
@@ -115,24 +108,6 @@
       </div>
 
 
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/carousel_eggplant.jpg) center center; background-size:cover;" class="slider-size">
-          <div class="carousel-sgn-caption">
-              <h3><a href="/organism/Solanum_melongena/genome">Eggplant Genome</a></h3>
-              <p><a href="http://dnaresearch.oxfordjournals.org/content/21/6/649" target="_blank">Draft Genome Sequence of Eggplant (<i>Solanum melongena L.</i>)</a></p>
-          </div>
-
-          <div class="carousel-sgn-links">
-            <ul class="sgn_sm_list">
-              <a href="/tools/blast?db_id=248"><li>Find sequences by similarity</li></a>
-              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/"><li>Download the annotations</li></a>
-              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_melongena/"><li>Download the Genome Sequence</li></a>
-            </ul>
-          </div>
-
-        </div>
-      </div>
-
       <!-- <div class="item">
           <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption">
@@ -155,52 +130,29 @@
 
 
       <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/Sol2018.jpg) center center; background-size:cover;" class="slider-size">
+          <div style="background:url(/documents/img/homepage_carousel/sol2019.jpg) center center; background-size:cover;" class="slider-size">
             <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-              <a href="https://www.solanaceae2018.com/" target="_blank" style="color: #00426c">
+              <a href="https://www.sol2019.org/" target="_blank" style="color: #00426c">
                 <!-- <h3>Solcuc2017</h3> -->
-                <h3>The 15th Solanaceae Conference</h3>
-                <p>September 30th - October 4th 2018, Chiang Mai, Thailand</p>
+                <h3>The 16th Solanaceae Conference</h3>
+                <p>September 15th - 19th 2019, Jerusalem, Israel</p>
               </a>
             </div>
 
             <div class="carousel-sgn-links" style="background-color: #efefef">
               <ul class="sgn_sm_list">
-                <a href="https://www.solanaceae2018.com/register" target="_blank"><li style="color: #00426c">Registration</li></a>
-                <a href="https://www.solanaceae2018.com/program" target="_blank"><li style="color: #00426c">Preliminary Program</li></a>
-                <a href="https://www.solanaceae2018.com/venue" target="_blank"><li style="color: #00426c">Venue</li></a>
+                <a href="https://www.sol2019.org/registration" target="_blank"><li style="color: #00426c">Registration</li></a>
+                <a href="https://www.sol2019.org/program-outline" target="_blank"><li style="color: #00426c">Program outline</li></a>
+                <a href="https://www.sol2019.org/general-information" target="_blank"><li style="color: #00426c">Venue and Information</li></a>
               </ul>
             </div>
 
           </div>
         </a>
       </div>
+  
 
-
-
-      <!-- <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/tomato_diseases_2016.jpeg) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption" style="opacity: 0.95">
-              <a href="http://www.tomatodiseases2016.es/web/" target="_blank">
-                <h3>5th International Symposium on Tomato Diseases</h3>
-                <p>Malaga, Spain June 13-16, 2016</p>
-              </a>
-            </div>
-
-            <div class="carousel-sgn-links">
-              <ul>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/tentative-programme" target="_blank">Preliminary Program</a></li>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/important-dates" target="_blank">Important Dates</a></li>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/registration" target="_blank">Registration</a></li>
-                <li><a href="http://www.tomatodiseases2016.es/web/index.php/accommodation" target="_blank">Accomodation</a></li>
-              </ul>
-            </div>
-
-          </div>
-        </a>
-      </div> -->
-
-    </div><!-- Wrapper for slides end-->
+</div><!-- Wrapper for slides end-->
 
   <div class="progress" style="height:5px">
     <hr class="transition-timer-carousel-progress-bar" />
@@ -219,13 +171,12 @@
 </div>
 
 <ul id="btn_carousel_indicators" class="nav nav-pills nav-justified sgn_carousel_button_group">
-  <li class="active"><a data-target="#myCarousel" data-slide-to="0">Tomato</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="1">Potato</a></li>
+    <li><a data-target="#myCarousel" data-slide-to="0">Varitome</a></li>
+    <li class="active"><a data-target="#myCarousel" data-slide-to="1">Tomato</a></li>
   <li><a data-target="#myCarousel" data-slide-to="2">Pepper</a></li>
   <li><a data-target="#myCarousel" data-slide-to="3"><i>N. benthamiana</i></a></li>
   <li><a data-target="#myCarousel" data-slide-to="4">Petunia</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="5">Eggplant</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="6">SOL Meeting</a></li>
+  <li><a data-target="#myCarousel" data-slide-to="5">SOL Meeting</a></li>
   <!-- <li><a data-target="#myCarousel" data-slide-to="6">5th ISTD</a></li> -->
 </ul>
 

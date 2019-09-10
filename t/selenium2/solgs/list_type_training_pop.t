@@ -167,7 +167,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//table[@id="selection_index_table"]/tbody/tr[1]/td[4]/input', 'xpath', 'rel wt 2st')->send_keys(5);
     sleep(5);
-    $d->find_element_ok('rank_genotypes', 'id',  'calc selection index')->click();
+    $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
     sleep(20);
     # TO-DO = check listing of all predicted populations  
 });

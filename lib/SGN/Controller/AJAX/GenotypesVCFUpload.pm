@@ -21,7 +21,6 @@ use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
 use Data::Dumper;
-use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::UploadFile;
@@ -30,6 +29,7 @@ use CXGN::Genotype::StoreVCFGenotypes;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -46,6 +46,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $transpose_vcf_for_loading = 1;
     my @error_status;
     my @success_status;
 
@@ -58,7 +59,7 @@ sub upload_genotype_verify_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -67,7 +68,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -81,12 +82,107 @@ sub upload_genotype_verify_POST : Args(0) {
     }
 
     #archive uploaded file
-    my $upload = $c->req->upload('upload_genotype_vcf_file_input');
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "genotype_vcf_upload";
+    my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
+    my $upload_transposed_vcf = $c->req->upload('upload_genotype_transposed_vcf_file_input');
+    my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
+    my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
+
+    if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
+        $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
+        $c->detach();
+    }
+    if (defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) {
+        $c->stash->{rest} = { error => 'To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.' };
+        $c->detach();
+    }
+
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $upload_original_name;
+    my $upload_tempfile;
+    my $subdirectory;
+    my $parser_plugin;
+    my $include_lab_numbers;
+    if ($upload_vcf) {
+        $upload_original_name = $upload_vcf->filename();
+        $upload_tempfile = $upload_vcf->tempname;
+        $subdirectory = "genotype_vcf_upload";
+        $parser_plugin = 'VCF';
+
+        if ($transpose_vcf_for_loading) {
+            my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
+            my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
+
+            open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+            open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+            my @outline;
+            my $lastcol;
+            while (<$F>) {
+                if ($_ =~ m/^\##/) {
+                    print $Fout $_;
+                } else {
+                    chomp;
+                    my @line = split /\t/;
+                    my $oldlastcol = $lastcol;
+                    $lastcol = $#line if $#line > $lastcol;
+                    for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                        if ($oldlastcol) {
+                            $outline[$i] = "\t" x $oldlastcol;
+                        }
+                    }
+                    for (my $i=0; $i <=$lastcol; $i++) {
+                        $outline[$i] .= "$line[$i]\t"
+                    }
+                }
+            }
+            for (my $i=0; $i <= $lastcol; $i++) {
+                $outline[$i] =~ s/\s*$//g;
+                print $Fout $outline[$i]."\n";
+            }
+            close($F);
+            close($Fout);
+            $upload_tempfile = $temp_file_transposed;
+            $upload_original_name = basename($temp_file_transposed);
+            $parser_plugin = 'transposedVCF';
+        }
+    }
+    if ($upload_transposed_vcf) {
+        $upload_original_name = $upload_transposed_vcf->filename();
+        $upload_tempfile = $upload_transposed_vcf->tempname;
+        $subdirectory = "genotype_transpoed_vcf_upload";
+        $parser_plugin = 'transposedVCF';
+    }
+
+    my $archived_intertek_marker_info_file;
+    if ($upload_intertek_genotypes) {
+        $upload_original_name = $upload_intertek_genotypes->filename();
+        $upload_tempfile = $upload_intertek_genotypes->tempname;
+        $subdirectory = "genotype_intertek_upload";
+        $parser_plugin = 'IntertekCSV';
+
+        my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
+        my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_inteterk_marker_info_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_inteterk_marker_info_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        $archived_intertek_marker_info_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_intertek_marker_info_file);
+        if (!$archived_intertek_marker_info_file) {
+            push @error_status, "Could not save file $upload_inteterk_marker_info_original_name in archive.";
+            return (\@success_status, \@error_status);
+        } else {
+            push @success_status, "File $upload_inteterk_marker_info_original_name saved in archive.";
+        }
+        unlink $upload_inteterk_marker_info_tempfile;
+    }
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -167,44 +263,22 @@ sub upload_genotype_verify_POST : Args(0) {
     my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
+        filename_intertek_marker_info => $archived_intertek_marker_info_file,
         observation_unit_type_name => $obs_type,
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
         igd_numbers_included => $include_igd_numbers
     });
-    $parser->load_plugin('VCF');
-    my $parsed_data = $parser->parse();
-    my $parse_errors;
-    if (!$parsed_data) {
-        my $return_error = '';
-        if (!$parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
-            $c->stash->{rest} = {error_string => $return_error,};
-        } else {
-            $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
-            }
-        }
-        $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-        $c->detach();
-    }
-    #print STDERR Dumper $parsed_data;
-    my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-    my $genotype_info = $parsed_data->{genotypes_info};
-    my $protocol_info = $parsed_data->{protocol_info};
-    $protocol_info->{'reference_genome_name'} = $reference_genome_name;
-    $protocol_info->{'species_name'} = $organism_species;
+    $parser->load_plugin($parser_plugin);
 
-    my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new({
+    my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
+    my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
+
+    my $store_args = {
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        protocol_info=>$protocol_info,
-        genotype_info=>$genotype_info,
         observation_unit_type_name=>$obs_type,
-        observation_unit_uniquenames=>$observation_unit_uniquenames,
         project_id=>$project_id,
         protocol_id=>$protocol_id,
         genotyping_facility=>$genotyping_facility, #projectprop
@@ -217,26 +291,139 @@ sub upload_genotype_verify_POST : Args(0) {
         protocol_description=>$protocol_description,
         organism_id=>$organism_id,
         igd_numbers_included=>$include_igd_numbers,
+        lab_numbers_included=>$include_lab_numbers,
         user_id=>$user_id,
         archived_filename=>$archived_filename_with_path,
-        archived_file_type=>'genotype_vcf' #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-    });
-    my $verified_errors = $store_genotypes->validate();
-    if (scalar(@{$verified_errors->{error_messages}}) > 0){
-        #print STDERR Dumper $verified_errors->{error_messages};
-        my $error_string = join ', ', @{$verified_errors->{error_messages}};
-        $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
-        $c->detach();
-    }
-    if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        #print STDERR Dumper $verified_errors->{warning_messages};
-        my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
-        if (!$accept_warnings){
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+        archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
+        temp_file_sql_copy=>$temp_file_sql_copy
+    };
+
+    my $return;
+    #For VCF files, memory was an issue so we parse them with an iterator
+    if ($parser_plugin eq 'VCF' || $parser_plugin eq 'transposedVCF') {
+        my $parser_return = $parser->parse_with_iterator();
+
+        if ($parser->get_parse_errors()) {
+            my $return_error = '';
+            my $parse_errors = $parser->get_parse_errors();
+            print STDERR Dumper $parse_errors;
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
             $c->detach();
         }
+
+        my $protocol = $parser->protocol_data();
+        my $observation_unit_names_all = $parser->observation_unit_names();
+        $store_args->{observation_unit_uniquenames} = $observation_unit_names_all;
+
+        if ($parser_plugin eq 'VCF') {
+            $store_args->{marker_by_marker_storage} = 1;
+        }
+
+        $protocol->{'reference_genome_name'} = $reference_genome_name;
+        $protocol->{'species_name'} = $organism_species;
+        my $store_genotypes;
+        my ($observation_unit_names, $genotype_info) = $parser->next();
+        if (scalar(keys %$genotype_info) > 0) {
+            #print STDERR Dumper [$observation_unit_names, $genotype_info];
+            print STDERR "Parsing first genotype and extracting protocol info... \n";
+
+            $store_args->{protocol_info} = $protocol;
+            $store_args->{genotype_info} = $genotype_info;
+
+            $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+            my $verified_errors = $store_genotypes->validate();
+            # print STDERR Dumper $verified_errors;
+            if (scalar(@{$verified_errors->{error_messages}}) > 0){
+                my $error_string = join ', ', @{$verified_errors->{error_messages}};
+                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+                $c->detach();
+            }
+            if (scalar(@{$verified_errors->{warning_messages}}) > 0){
+                #print STDERR Dumper $verified_errors->{warning_messages};
+                my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+                if (!$accept_warnings){
+                    $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+                    $c->detach();
+                }
+            }
+
+            $store_genotypes->store_metadata();
+            $store_genotypes->store_identifiers();
+        }
+
+        print STDERR "Done loading first line, moving on...\n";    
+
+        my $continue_iterate = 1;
+        while ($continue_iterate == 1) {
+            my ($observation_unit_names, $genotype_info) = $parser->next();
+            if (scalar(keys %$genotype_info) > 0) {
+                $store_genotypes->genotype_info($genotype_info);
+                $store_genotypes->observation_unit_uniquenames($observation_unit_names);
+                $store_genotypes->store_identifiers();
+            } else {
+                $continue_iterate = 0;
+                last;
+            }
+        }
+        $return = $store_genotypes->store_genotypeprop_table();
     }
-    my $return = $store_genotypes->store();
+    #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
+    elsif ($parser_plugin eq 'GridFileIntertekCSV' || $parser_plugin eq 'IntertekCSV') {
+        my $parsed_data = $parser->parse();
+        my $parse_errors;
+        if (!$parsed_data) {
+            my $return_error = '';
+            if (!$parser->has_parse_errors() ){
+                $return_error = "Could not get parsing errors";
+                $c->stash->{rest} = {error_string => $return_error,};
+            } else {
+                $parse_errors = $parser->get_parse_errors();
+                #print STDERR Dumper $parse_errors;
+                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                    $return_error=$return_error.$error_string."<br>";
+                }
+            }
+            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
+            $c->detach();
+        }
+        #print STDERR Dumper $parsed_data;
+        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+        my $genotype_info = $parsed_data->{genotypes_info};
+        my $protocol_info = $parsed_data->{protocol_info};
+        $protocol_info->{'reference_genome_name'} = $reference_genome_name;
+        $protocol_info->{'species_name'} = $organism_species;
+
+        $store_args->{protocol_info} = $protocol_info;
+        $store_args->{genotype_info} = $genotype_info;
+        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
+
+        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        my $verified_errors = $store_genotypes->validate();
+        if (scalar(@{$verified_errors->{error_messages}}) > 0){
+            my $error_string = join ', ', @{$verified_errors->{error_messages}};
+            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+            $c->detach();
+        }
+        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
+            #print STDERR Dumper $verified_errors->{warning_messages};
+            my $warning_string = join ', ', @{$verified_errors->{warning_messages}};
+            if (!$accept_warnings){
+                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
+                $c->detach();
+            }
+        }
+        $store_genotypes->store_metadata();
+        $store_genotypes->store_identifiers();
+        $return = $store_genotypes->store_genotypeprop_table();
+    }
+    else {
+        print STDERR "Parser plugin $parser_plugin not recognized!\n";
+        $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
+        $c->detach();
+    }
     $c->stash->{rest} = $return;
 }
 

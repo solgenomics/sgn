@@ -55,7 +55,8 @@ Future crop improvement relies on harnessing the broader genetic diversity prese
 
   <ul>
     <li>NCBI BioProject <a href="https://www.ncbi.nlm.nih.gov/bioproject/PRJNA454805">PRJNA454805</a></li>
-    <li>SRA accession: <a href="https://www.ncbi.nlm.nih.gov/sra/SRP150040">SRP150040</a></il>
+    <li>Tomato Genomic DNA sequences <a href="https://www.ncbi.nlm.nih.gov/sra/SRP150040">SRP150040</a></il>
+<li>Tomato sRNA and mRNA sequences<a href="https://www.ncbi.nlm.nih.gov/sra/SRP135718">SRP135718</a></i
   </ul>
 
  </&>
@@ -77,13 +78,14 @@ my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
 </center>
 % }
 
- </&>
+</&>
 
- <&| /page/info_section.mas, id=>"program_trials", title => "Trials" , collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
+
+<&| /page/info_section.mas, id=>"program_accessions", title=>"Accessions", collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
+  
+  <& /breeders_toolbox/program/program_accessions.mas, program_id => 54 &>
     
-    <& /breeders_toolbox/program/trials.mas, program_id => 54 &>
-      
- </&>
+</&>
 
 
 
@@ -93,11 +95,14 @@ my $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
 
  </&>
 
-<&| /page/info_section.mas, id=>"program_accessions", title=>"Accessions", collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
-  
-  <& /breeders_toolbox/program/program_accessions.mas, program_id => 54 &>
+
+
+ <&| /page/info_section.mas, id=>"program_trials", title => "Trials" , collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
     
-</&>
+    <& /breeders_toolbox/program/trials.mas, program_id => 54 &>
+      
+ </&>
+
 
 </&>
 

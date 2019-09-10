@@ -54,7 +54,8 @@ has 'status' => (
 =cut
 
 sub list {
-        my $self = shift;
+    my $self = shift;
+    my $inputs = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -62,7 +63,7 @@ sub list {
 	my $start = $page_size*$page;
 	my $end = $page_size*($page+1)-1;
 
-	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema()->storage->dbh());
+	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema()->storage->dbh(), $inputs->{config});
 
 	my @maps = $map_factory->get_all_maps();
 	my @data;

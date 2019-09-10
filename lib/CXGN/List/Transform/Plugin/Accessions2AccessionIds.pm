@@ -28,37 +28,39 @@ sub transform {
     my $list = shift;
 
     my @transform = ();
-
+    my @found_ids = ();
     my @missing = ();
 
     my $type_id = $schema->resultset("Cv::Cvterm")->search( { name=>'accession' })->first()->cvterm_id();
     my $synonym_type_id = $schema->resultset("Cv::Cvterm")->search( { name=>'stock_synonym' })->first()->cvterm_id();
 
     if (ref($list) eq "ARRAY" ) {
-      foreach my $l (@$list) {
-        #print STDERR "Converting accession $l ...\n";
-	      my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $l, type_id    => $type_id });
+         my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { -in => $list }, type_id    => $type_id });
 
-	      if ($rs->count() == 0) { #If list item isn't a uniquename, check if it's a synonym
-          $rs = $schema->resultset("Stock::Stock")->search(
-          { 'stockprops.value' => $l, 'stockprops.type_id' => $synonym_type_id, 'me.type_id' => $type_id},
-          { join => 'stockprops' }
-          );
-        }
+         @found_ids = map { $_->stock_id() } $rs->all();
+         my @found_names = map { $_->uniquename() } $rs->all();
+         my %found_names_hash = map{$_ => 1} @found_names;
+         my @not_found = grep(!defined $found_names_hash{$_}, @$list);
 
-        if ($rs->count() == 0) {
-          #print STDERR "No id found for accession $l\n";
-          push @missing, $l;
+         if (scalar @not_found) { #If not found as uniquenames, check if list items are synonyms
+             $rs = $schema->resultset("Stock::Stock")->search( { 'stockprops.value' =>  { -in => \@not_found }, 'stockprops.type_id' => $synonym_type_id, 'me.type_id' => $type_id},{ join => 'stockprops' });
+
+             foreach my $synonym ($rs->all()) {
+                  push @found_ids,  $synonym->stock_id();
+                  push @found_names,  $synonym->uniquename();
+             }
+         }
+
+         if (scalar @found_ids != scalar @$list) { #Add any items still not found to list of missing
+            my %found_names_hash = map{$_ => 1} @found_names;
+            @missing = grep(!defined $found_names_hash{$_}, @$list);
         }
-	      else {
-          #print STDERR "Found id ".$rs->first()->stock_id()." for accession $l\n";
-          push @transform, $rs->first()->stock_id();
-        }
-      }
     }
-    return { transform => \@transform,
+
+    return { transform => \@found_ids,
 	     missing => \@missing,
     };
+
 }
 
 1;

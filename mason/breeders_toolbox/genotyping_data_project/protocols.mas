@@ -7,9 +7,9 @@ $trial_id
 <thead>
   <tr>
       <th>Protocol</th>
-      <th>Genotyping Data Project</th>
-      <th>Description</th>
+      <th>Header Information Lines</th>
       <th>Number of Markers</th>
+      <th>Description</th>
       <th>Reference Genome</th>
       <th>Species Name</th>
       <th>Sample Type</th>

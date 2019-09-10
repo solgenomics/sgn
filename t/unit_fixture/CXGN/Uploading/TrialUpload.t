@@ -19,6 +19,7 @@ use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use JSON;
 use Spreadsheet::Read;
+use Text::CSV;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -772,7 +773,7 @@ is_deeply($message_hash, {
                                    'extraction' => undef,
                                    'plot_number' => 'A02',
                                    'row_number' => 'A',
-                                   'tissue_type' => undef,
+                                   'tissue_type' => 'stem',
                                    'stock_name' => 'BLANK',
                                    'notes' => 'test blank',
                                    'is_blank' => 1,
@@ -840,7 +841,7 @@ is_deeply($message_hash, {
                                    'concentration' => 'NA',
                                    'plot_number' => 'B12',
                                    'volume' => 'NA',
-                                   'tissue_type' => 'NA',
+                                   'tissue_type' => 'leaf',
                                    'plot_name' => '18DNA00101_B12',
                                    'extraction' => 'NA',
                                    'row_number' => 'B',
@@ -855,7 +856,7 @@ is_deeply($message_hash, {
                                    'row_number' => 'A',
                                    'extraction' => 'NA',
                                    'plot_name' => '18DNA00101_A01',
-                                   'tissue_type' => 'NA',
+                                   'tissue_type' => 'leaf',
                                    'plot_number' => 'A01',
                                    'volume' => 'NA',
                                    'dna_person' => 'gbauchet',
@@ -878,7 +879,7 @@ is_deeply($message_hash, {
                                    'concentration' => 'NA',
                                    'plot_number' => 'B01',
                                    'volume' => 'NA',
-                                   'tissue_type' => 'NA'
+                                   'tissue_type' => 'leaf'
                                  },
                         'C01' => {
                                    'col_number' => '01',
@@ -887,7 +888,7 @@ is_deeply($message_hash, {
                                    'extraction' => 'NA',
                                    'row_number' => 'C',
                                    'plot_name' => '18DNA00101_C01',
-                                   'tissue_type' => 'NA',
+                                   'tissue_type' => 'leaf',
                                    'is_blank' => 0,
                                    'dna_person' => 'gbauchet',
                                    'concentration' => 'NA',
@@ -904,7 +905,7 @@ is_deeply($message_hash, {
                                    'dna_person' => 'gbauchet',
                                    'is_blank' => 0,
                                    'concentration' => 'NA',
-                                   'tissue_type' => 'NA',
+                                   'tissue_type' => 'leaf',
                                    'plot_name' => '18DNA00101_D01',
                                    'row_number' => 'D',
                                    'extraction' => 'NA',
@@ -964,7 +965,7 @@ is_deeply($message_hash, {
                                    'col_number' => '01',
                                    'notes' => '',
                                    'extraction' => 'CTAB',
-                                   'tissue_type' => 'Leaf',
+                                   'tissue_type' => 'leaf',
                                    'volume' => 'NA',
                                    'concentration' => 'NA',
                                    'stock_name' => 'test_accession1',
@@ -973,7 +974,7 @@ is_deeply($message_hash, {
                                    'dna_person' => 'Trevor_Rife'
                                  },
                         'B04' => {
-                                   'tissue_type' => 'Leaf',
+                                   'tissue_type' => 'leaf',
                                    'extraction' => 'CTAB',
                                    'notes' => '',
                                    'col_number' => '04',
@@ -996,7 +997,7 @@ is_deeply($message_hash, {
                                    'notes' => '',
                                    'col_number' => '01',
                                    'extraction' => 'CTAB',
-                                   'tissue_type' => 'Leaf',
+                                   'tissue_type' => 'leaf',
                                    'volume' => 'NA',
                                    'concentration' => 'NA',
                                    'stock_name' => 'test_accession2',
@@ -1011,7 +1012,7 @@ is_deeply($message_hash, {
                                    'acquisition_date' => '2018-02-06',
                                    'notes' => '',
                                    'col_number' => '04',
-                                   'tissue_type' => 'Leaf',
+                                   'tissue_type' => 'leaf',
                                    'extraction' => 'CTAB',
                                    'volume' => 'NA',
                                    'stock_name' => 'BLANK',
@@ -1028,7 +1029,7 @@ is_deeply($message_hash, {
                                    'notes' => '',
                                    'col_number' => '01',
                                    'extraction' => 'CTAB',
-                                   'tissue_type' => 'Leaf',
+                                   'tissue_type' => 'leaf',
                                    'volume' => 'NA',
                                    'concentration' => 'NA',
                                    'stock_name' => 'test_accession1',
@@ -1043,7 +1044,7 @@ is_deeply($message_hash, {
                                    'stock_name' => 'test_accession2',
                                    'concentration' => 'NA',
                                    'volume' => 'NA',
-                                   'tissue_type' => 'Leaf',
+                                   'tissue_type' => 'leaf',
                                    'extraction' => 'CTAB',
                                    'col_number' => '01',
                                    'notes' => '',
@@ -1143,109 +1144,27 @@ is_deeply($columns, [
           [
             undef,
             'Comments',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: Leaf Person: Trevor_Rife Extraction: CTAB'
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB',
+            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA TissueType: leaf Person: Trevor_Rife Extraction: CTAB'
           ]
         ], 'test intertek genotyping plate download');
 
-$mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqxls&dataLevel=plate");
+$mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layout?format=dartseqcsv&dataLevel=plate");
 my $intertek_download = $mech->content;
-my $contents = ReadData $intertek_download;
-#print STDERR Dumper @contents->[0]->[0];
-is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
-is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
+print STDERR Dumper $intertek_download;
+my @intertek_download = split "\n", $intertek_download;
+print STDERR Dumper \@intertek_download;
 
-my $columns = $contents->[1]->{'cell'};
-#print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 9, "check number of col in created file.");
-
-print STDERR Dumper $columns;
-is_deeply($columns, [
-          [],
-          [
-            undef,
-            'Plate ID',
-            'test_genotype_upload_coordinate_trial1',
-            'test_genotype_upload_coordinate_trial1',
-            'test_genotype_upload_coordinate_trial1',
-            'test_genotype_upload_coordinate_trial1',
-            'test_genotype_upload_coordinate_trial1',
-            'test_genotype_upload_coordinate_trial1'
-          ],
-          [
-            undef,
-            'Row',
-            'A',
-            'B',
-            'B',
-            'C',
-            'C',
-            'D'
-          ],
-          [
-            undef,
-            'Column',
-            '1',
-            '1',
-            '4',
-            '1',
-            '4',
-            '1'
-          ],
-          [
-            undef,
-            'Organism',
-            'Solanum lycopersicum',
-            'Solanum lycopersicum',
-            undef,
-            'Solanum lycopersicum',
-            undef,
-            'Solanum lycopersicum'
-          ],
-          [
-            undef,
-            'Species',
-            'Solanum lycopersicum',
-            'Solanum lycopersicum',
-            undef,
-            'Solanum lycopersicum',
-            undef,
-            'Solanum lycopersicum'
-          ],
-          [
-            undef,
-            'Genotype',
-            '18DNA00001_A01|||test_accession1',
-            '18DNA00001_B01|||test_accession1',
-            '18DNA00001_B04|||BLANK',
-            '18DNA00001_C01|||test_accession2',
-            '18DNA00001_C04|||BLANK',
-            '18DNA00001_D01|||test_accession2'
-          ],
-          [
-            undef,
-            'Tissue',
-            'Leaf',
-            'Leaf',
-            'Leaf',
-            'Leaf',
-            'Leaf',
-            'Leaf'
-          ],
-          [
-            undef,
-            'Comments',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB',
-            'Notes:  AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB'
-          ]
-        ], 'test dartseq genotyping plate download');
+is_deeply(\@intertek_download, [
+          'PlateID,Row,Column,Organism,Species,Genotype,Tissue,Comments',
+          'test_genotype_upload_coordinate_trial1,A,01,tomato,"Solanum lycopersicum",18DNA00001_A01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
+          'test_genotype_upload_coordinate_trial1,B,01,tomato,"Solanum lycopersicum",18DNA00001_B01|||test_accession1,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
+          'test_genotype_upload_coordinate_trial1,C,01,tomato,"Solanum lycopersicum",18DNA00001_C01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"',
+          'test_genotype_upload_coordinate_trial1,D,01,tomato,"Solanum lycopersicum",18DNA00001_D01|||test_accession2,leaf,"Notes: NA AcquisitionDate: 2018-02-06 Concentration: NA Volume: NA Person: Trevor_Rife Extraction: CTAB"'
+        ]);
 
 done_testing();

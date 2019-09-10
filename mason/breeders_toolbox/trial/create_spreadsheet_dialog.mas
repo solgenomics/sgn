@@ -49,6 +49,7 @@ $trial_name => undef
                         <select class="form-control" id="create_spreadsheet_phenotype_file_format" name="create_spreadsheet_phenotype_file_format">
                             <option value="ExcelBasic">Detailed</option>
                             <option value="ExcelBasicSimple">Simple</option>
+                            <option value="ExcelAssociatedImages">Associated Images</option>
                         </select>
                     </div>
                 </div>
@@ -61,6 +62,7 @@ $trial_name => undef
                                 <option value="plants">Plants</option>
                                 <option value="subplots">Subplots</option>
                                 <option value="plants_subplots">Plants and Subplots</option>
+                                <option value="tissue_samples">Tissue Samples</option>
                             </select>
                         </div>
                     </div>
@@ -99,7 +101,7 @@ jQuery(document).ready(function() {
     jQuery("[name='create_spreadsheet_link']").click( function () {
         jQuery('#create_spreadsheet_dialog').modal("show");
         var list = new CXGN.List();
-        jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
+        jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ], undefined, undefined, undefined));
     });
 
     jQuery(document).on('change', '#create_spreadsheet_data_level', function(){
@@ -122,9 +124,12 @@ jQuery(document).ready(function() {
         if (level == 'subplots' || level == 'plants_subplots'){
             url = 'has_subplots';
         }
+        if (level == 'tissue_samples'){
+            url = 'has_tissue_samples';
+        }
 
         for (var i=0; i<selected_trial_ids.length; i++){
-            if (level == 'plants' || level == 'subplots' || level == 'plants_subplots'){
+            if (level == 'plants' || level == 'subplots' || level == 'plants_subplots' || level == 'tissue_samples'){
                 new jQuery.ajax({
                     type: 'POST',
                     url: '/ajax/breeders/trial/'+selected_trial_ids[i]+'/'+url,
@@ -135,7 +140,7 @@ jQuery(document).ready(function() {
                     success: function (response) {
                         //console.log(response);
                         jQuery("#working_modal").modal("hide");
-                        if(response.has_plants == 0 || response.has_subplots == 0){
+                        if(response.has_plants == 0 || response.has_subplots == 0 || response.has_tissue_samples == 0){
                             alert('The trial '+response.trial_name+' does not have '+level);
                             jQuery('#create_spreadsheet_data_level').val('plots');
                             jQuery('#create_spreadsheet_plant_options').hide();
