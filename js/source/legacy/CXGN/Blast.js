@@ -129,11 +129,11 @@ function finish_blast(jobid, seq_count) {
       success: function(response) { 
         var sgn_graph_array = response.desc_array;
         var seq_length = response.sequence_length;
-          alert(JSON.stringify(sgn_graph_array));
+
         // alert("descriptions: "+response.sequence_length);
         // jQuery('#blast_query_length').html("Query length ("+seq_length+")");
         // alert(response.sgn_html);
-          alert("SEQ_LENGTH = "+seq_length);
+
         draw_blast_graph(sgn_graph_array, seq_length);
         jQuery('#sgn_blast_graph').css("display", "inline");
         

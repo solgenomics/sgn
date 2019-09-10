@@ -6,7 +6,7 @@
     var canvas_width = 1000;
 
     var xscale = +(img_width/seq_length); // to transform sequence length to pixels
-      alert("X-scale = "+xscale);
+
     //Create canvas stage
     var kjs_canvas = new Kinetic.Stage({
       container: "myCanvas",
