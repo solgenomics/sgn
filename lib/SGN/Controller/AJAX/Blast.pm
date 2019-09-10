@@ -614,17 +614,17 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $id = sprintf("%.2f", $aln_matched*100/$aln_total);
       }
 
-      if (($line =~ /^Query:\s+(\d+)/) && ($qstart == 0)) {
+      if (($line =~ /^Query\:?\s+(\d+)/) && ($qstart == 0)) {
         $qstart = $1;
       }
-      if (($line =~ /^Sbjct:\s+(\d+)/) && ($sstart == 0)) {
+      if (($line =~ /^Sbjct\:?\s+(\d+)/) && ($sstart == 0)) {
         $sstart = $1;
       }
 
-      if (($line =~ /^Query:/) && ($line =~ /(\d+)\s*$/)) {
+      if (($line =~ /^Query\:?/) && ($line =~ /(\d+)\s*$/)) {
         $qend = $1;
       }
-      if (($line =~ /^Sbjct:/) && ($line =~ /(\d+)\s*$/)) {
+      if (($line =~ /^Sbjct\:?/) && ($line =~ /(\d+)\s*$/)) {
         $send = $1;
       }
 
