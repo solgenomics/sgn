@@ -25,7 +25,7 @@ $harvest_date => undef
 $trial_description => undef
 $folder_name => undef
 $folder_id => undef
-$locations
+@locations_by_program
 </%args>
 
 
