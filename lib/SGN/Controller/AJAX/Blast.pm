@@ -792,7 +792,7 @@ sub search_gene_ids {
 	my @ids = @{$ids_array};
 	my @output_seqs;
 
-	my $fs = Bio::BLAST::Database->open(full_file_basename => "$blastdb_path",);
+	my $fs = Bio::BLAST2::Database->open(full_file_basename => "$blastdb_path",);
 
 	foreach my $input_string (@ids) {
 

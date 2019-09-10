@@ -1,12 +1,12 @@
 use strict;
 use warnings;
 
-package Bio::BLAST::Database::Seq;
+package Bio::BLAST2::Database::Seq;
 BEGIN {
-  $Bio::BLAST::Database::Seq::AUTHORITY = 'cpan:RBUELS';
+  $Bio::BLAST2::Database::Seq::AUTHORITY = 'cpan:RBUELS';
 }
 BEGIN {
-  $Bio::BLAST::Database::Seq::VERSION = '0.4';
+  $Bio::BLAST2::Database::Seq::VERSION = '0.4';
 }
 
 # ABSTRACT: lazy-loading sequence from a BLAST database
@@ -161,10 +161,19 @@ sub _parse_defline {
     my ( $self, $fc ) = @_;
 
     my $defline = <$fc>;
+
+    print STDERR "DEFLINE RETRIEVED = $defline\n";
+    
     return if $defline =~ /ERROR:\s+Entry\s*"[^"]+"\s+not found/;
-    ( my $id, $defline ) = $defline =~ m(
-                                          >(?:lcl\|)?(\S+) \s+ (.*)
-                                        )x
+#    ( my $id, $defline ) = $defline =~ m(
+#                                          >(?:lcl\|)?(\S+) \s+ (.*)
+    #                                        )x
+   ( my $id, $defline ) = $defline =~ m(
+                                          >(\S+)\s+(.*)
+                                            )x
+
+    
+    
                or die "could not parse blastdbcmd output\n:$defline";
 
     undef $defline if $defline =~ /^No definition line found\.?$/;
@@ -182,7 +191,7 @@ __END__
 
 =head1 NAME
 
-Bio::BLAST::Database::Seq - lazy-loading sequence from a BLAST database
+Bio::BLAST2::Database::Seq - lazy-loading sequence from a BLAST database
 
 =head1 DESCRIPTION
 
@@ -199,7 +208,7 @@ large, so can handle arbitrarily large sequences relatively well.
 For use by Bio::BLAST::Database only.
 
 Takes args -id and -bdb, which are the sequence's ID and the
-Bio::BLAST::Database object it's from, respectively.
+Bio::BLAST2::Database object it's from, respectively.
 
 =head2 whole_seq
 

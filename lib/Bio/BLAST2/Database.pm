@@ -1,9 +1,9 @@
-package Bio::BLAST::Database;
+package Bio::BLAST2::Database;
 BEGIN {
-  $Bio::BLAST::Database::AUTHORITY = 'cpan:RBUELS';
+  $Bio::BLAST2::Database::AUTHORITY = 'cpan:RBUELS';
 }
 BEGIN {
-  $Bio::BLAST::Database::VERSION = '0.4';
+  $Bio::BLAST2::Database::VERSION = '0.4';
 }
 # ABSTRACT: work with formatted BLAST databases
 
@@ -460,7 +460,7 @@ sub _read_blastdbcmd_info {
     my $ffbn = $self->full_file_basename;
     my $cmd = "blastdbcmd -db $ffbn -info";
     my $blastdbcmd = `$cmd 2>&1`;
-    #warn "$fastacmd";
+    print STDERR "BLASTDBCMD RETURNED: $blastdbcmd\n";
 
     my ($title) = $blastdbcmd =~ /Database:\s*([\s\S]+)sequences/
       or die "could not parse output of blastdbcmd (0):\n$blastdbcmd";
@@ -474,7 +474,6 @@ sub _read_blastdbcmd_info {
         $blastdbcmd =~ m(
                      Date: \s* ( \w [\S\ ]+ \w )
                        \s+
-                     Version:
                       )x
                           or die "could not parse output of blastdbcmd (2):\n$blastdbcmd";
 
