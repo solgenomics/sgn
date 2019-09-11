@@ -43,8 +43,20 @@ while (my ($organismprop_id, $organism_id, $type_id, $value)= $h->fetchrow_array
 
     if ($row) {
 	print STDERR "accession $data->{genome_project_sequenced_accessions} FOUND in database!!!!\n";
+	my $si = CXGN::Stock::SequencingInfo->new( { schema => $schema });
+	
+	$si->funded_by($data->{genome_project_funding_agencies});
+	$si->contact_email($data->{genome_project_contact_person});
+	$si->organization($data->{genome_project_sequencing_center});
+	$si->sequencing_year($data->{genome_project_dates});
+	$si->genbank_accession($data->{genome_project_genbank_link});
+	$si->website($data->{genome_project_url});
+	$si->stock_id($row->stock_id());
+	$si->store();
+
     }
     else {
 	print sTDERR "accession $data->{genome_project_sequenced_accessions} ***NOT*** FOUND in database!!!!\n";
+
     }
 }
