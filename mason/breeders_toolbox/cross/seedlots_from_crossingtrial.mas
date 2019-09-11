@@ -3,6 +3,7 @@ $trial_id
 $breeding_program_name
 $breeding_program_id
 $timestamp => localtime()
+$locations_by_program_json
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -41,6 +42,7 @@ jQuery(document).ready(function(){
         var breeding_program_name = "<% $breeding_program_name %>";
         var breeding_program_id = "<% $breeding_program_id %>";
         var time = "<% $timestamp %>";
+        var locations_by_program_json = <% $locations_by_program_json %>;
 
         var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
 
@@ -55,7 +57,7 @@ jQuery(document).ready(function(){
                         return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
                     }
                 }},
-                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+breeding_program_id+"\", \""+time+"\")' >Add</a>"; } },
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+breeding_program_id+"\", \""+locations_by_program_json+"\", \""+time+"\")' >Add</a>"; } },
             ]
         });
     });
@@ -151,7 +153,9 @@ jQuery(document).ready(function(){
 
 });
 
-function addSeedlot(cross_name, breeding_program_name, breeding_program_id, time){
+function addSeedlot(cross_name, breeding_program_name, breeding_program_id,locations_by_program_json, time){
+
+    var locations = locations_by_program_json.split (",");
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Cross Unique ID: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_content" value="'+cross_name+'" disabled></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Seedlot Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_name" placeholder="Required"></div><br><br>';
@@ -168,9 +172,6 @@ function addSeedlot(cross_name, breeding_program_name, breeding_program_id, time
     jQuery('#add_cross_seedlot_div').html(html);
     jQuery('#add_cross_seedlot_dialog').modal('show');
 
-    jQuery('#new_seedlot_location').autocomplete({
-       source: '/ajax/stock/geolocation_autocomplete',
-    });
 }
 
 

@@ -175,7 +175,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
                 push @locations_by_program, $name;
             }
         }
-        $c->stash->{locations_by_program} = \@locations_by_program;
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
     }
 
