@@ -3204,7 +3204,11 @@ sub drone_imagery_generate_phenotypes_GET : Args(0) {
     my $standard_process_type = $c->req->param('standard_process_type');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
+    my @standard_processes = split ',', $standard_process_type;
+    my $return;
+    foreach my $standard_process_type (@standard_processes) {
+        $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
+    }
 
     $c->stash->{rest} = $return;
 }
