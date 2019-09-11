@@ -1806,7 +1806,7 @@ sub standard_process_apply_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
+    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
 
     my @result;
     $c->stash->{rest} = { data => \@result, success => 1 };
@@ -2068,7 +2068,7 @@ sub standard_process_extended_apply_GET : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
+    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = {success => 1};
 }
@@ -3072,6 +3072,8 @@ sub _perform_phenotype_automated {
     my $time_cvterm_id = shift;
     my $phenotype_types = shift;
     my $standard_process_type = shift;
+    my $ignore_new_phenotype_values = shift;
+    my $overwrite_phenotype_values = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -3141,7 +3143,7 @@ sub _perform_phenotype_automated {
             #my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
             foreach my $plot_polygon_type (@{$project_observation_unit_plot_polygons_types{$drone_run_band_project_type}->{$standard_process_type}}) {
                 #my $pid = $pm->start and next;
-                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, 1);
+                my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygon_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, 1, $ignore_new_phenotype_values, $overwrite_phenotype_values);
                 if ($return->{error}){
                     print STDERR Dumper $return->{error};
                 }
@@ -3186,7 +3188,7 @@ sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, undef);
+    my $return = _perform_phenotype_calculation($c, $schema, $metadata_schema, $phenome_schema, $drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type, $user_id, $user_name, $user_role, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, undef, undef, 1);
 
     $c->stash->{rest} = $return;
 }
@@ -3207,7 +3209,7 @@ sub drone_imagery_generate_phenotypes_GET : Args(0) {
     my @standard_processes = split ',', $standard_process_type;
     my $return;
     foreach my $standard_process_type (@standard_processes) {
-        $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_methods, $standard_process_type, $user_id, $user_name, $user_role);
+        $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id, $time_cvterm_id, $phenotype_methods, $standard_process_type, undef, 1, $user_id, $user_name, $user_role);
     }
 
     $c->stash->{rest} = $return;
@@ -3230,6 +3232,8 @@ sub _perform_phenotype_calculation {
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
     my $do_not_run_materialized_view_refresh = shift;
+    my $ignore_new_phenotype_values = shift || 1;
+    my $overwrite_phenotype_values = shift || undef;
 
     print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type];
 
@@ -3558,7 +3562,7 @@ sub _perform_phenotype_calculation {
             my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
             my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+            my $store_args = {
                 basepath=>$c->config->{basepath},
                 dbhost=>$c->config->{dbhost},
                 dbname=>$c->config->{dbname},
@@ -3573,9 +3577,18 @@ sub _perform_phenotype_calculation {
                 trait_list=>\@traits_seen,
                 values_hash=>\%zonal_stat_phenotype_data,
                 has_timestamps=>1,
-                #overwrite_values=>1,
-                ignore_new_values=>1,
                 metadata_hash=>\%phenotype_metadata
+            };
+
+            if ($overwrite_phenotype_values) {
+                $store_args->{overwrite_values} = $overwrite_phenotype_values;
+            }
+            if ($ignore_new_phenotype_values) {
+                $store_args->{ignore_new_values} = $ignore_new_phenotype_values;
+            }
+
+            my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+                $store_args
             );
             my ($verified_warning, $verified_error) = $store_phenotypes->verify();
             my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();

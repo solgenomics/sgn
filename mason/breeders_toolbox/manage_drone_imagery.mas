@@ -768,6 +768,16 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <div id="drone_imagery_week_term_div"></div>
         </div>
 
+        <div class="form-group">
+            <label class="col-sm-5 control-label">Phenotype Process:</label>
+            <div class="col-sm-7">
+                <select class="form-control" id="drone_imagery_generate_phenotypes_process_type" name="drone_imagery_generate_phenotypes_process_type">
+                    <option value="minimal,minimal_vi">Minimal</option>
+                    <option value="extended">Extended</option>
+                </select>
+            </div>
+        </div>
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -1721,7 +1731,7 @@ jQuery(document).ready(function() {
 
         jQuery.ajax({
             type: 'GET',
-            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type=minimal,minimal_vi,extended',
+            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type='+jQuery('#drone_imagery_generate_phenotypes_process_type').val(),
             dataType: "json",
             success: function(response){
                 console.log(response);
@@ -2122,6 +2132,7 @@ jQuery(document).ready(function() {
             url : '/api/drone_imagery/growing_degree_days?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id+'&formula='+manage_drone_imagery_calculate_gdd_formula+'&gdd_base_temperature='+manage_drone_imagery_calculate_gdd_base_temp+'&field_trial_id='+manage_drone_imagery_calculate_gdd_field_trial_id,
             success: function(response){
                 console.log(response);
+                location.reload();
             },
             error: function(response){
                 alert('Error calculating growing degree days!');
