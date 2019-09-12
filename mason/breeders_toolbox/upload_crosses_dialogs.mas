@@ -17,7 +17,7 @@ $locations
                             <& /page/page_title.mas, title=>"What are crosses?" &>
                             <ul>
                                 <li>Crosses represent any pollination that occurs.</li>
-                                <li>Crosses can be of different types (biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
+                                <li>Crosses can be of different types (biparental, self, open, sib, bulk, bulk_self, bulk_open, or doubled_haploid)</li>
                                 <li>Depending on the cross type, an individual cross can be defined as between two accessions (e.g. accession A is the female and accession B is the male in a biparental cross)</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are only defined as groups of accessions)</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as the specific male plot or plant.</li>
@@ -314,6 +314,7 @@ $locations
                                     <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
                                     <li><b>self:</b> A self pollinated individual plant.</li>
                                     <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
                                     <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
@@ -400,6 +401,7 @@ $locations
                                     <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
                                     <li><b>self:</b> A self pollinated individual plant.</li>
                                     <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
                                     <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
@@ -486,6 +488,7 @@ $locations
                                     <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
                                     <li><b>self:</b> A self pollinated individual plant.</li>
                                     <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                                    <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
                                     <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>

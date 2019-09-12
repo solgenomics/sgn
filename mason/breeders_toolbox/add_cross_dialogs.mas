@@ -449,7 +449,7 @@ $locations
                     <p><b>biparental:</b> An individual plant pollinated by another individual plant.<p>
                     <p><b>self:</b> A self pollinated individual plant.<p>
                     <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
-                    <p><b>sib:</b> Mating between individuals that have at least one parent in common.<p>
+                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.<p>
                     <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.<p>
                     <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).<p>
                     <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
