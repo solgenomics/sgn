@@ -170,6 +170,12 @@ $locations
                                         <input class="form-control" id="selfed_parent" type="text" name="selfed" />
                                     </div><br/><br/>
                                 </div>
+                                <div class="form-group" id="get_sib_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Sib Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="sib_parent" type="text" name="sib" />
+                                    </div><br/><br/>
+                                </div>
                                 <div class="form-group" id="get_open_maternal_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Female Parent: </label>
                                     <div class="col-sm-10">
@@ -248,7 +254,7 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Track exact cross parents" &>
-                                <& /page/page_title.mas, title=>"If you choose to record exact cross parents, you can do so." &>
+                                <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross parents, you can do so." &>
 
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">Field Trial: </label>
@@ -514,6 +520,11 @@ jQuery(document).ready(function($) {
             maternal_parent = $('#open_maternal_parent').val();
         }
 
+        if ($('#sib_parent').val() != ''){
+            maternal_parent = $('#sib_parent').val();
+        }
+
+
         console.log(maternal_parent);
 
         jQuery.ajax({
@@ -553,6 +564,9 @@ jQuery(document).ready(function($) {
         paternal_parent = $('#selfed_parent').val();
         }
 
+        if ($('#sib_parent').val() != ''){
+        paternal_parent = $('#sib_parent').val();
+        }
 
         jQuery.ajax({
             url:'/ajax/breeders/get_accession_plots',
