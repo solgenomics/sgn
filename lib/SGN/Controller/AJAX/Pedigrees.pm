@@ -30,13 +30,13 @@ has 'schema' => (
 sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
-   
-    if (!$c->user()) { 
+
+    if (!$c->user()) {
 	print STDERR "User not logged in... not uploading pedigrees.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to upload pedigrees." };
 	return;
     }
-    
+
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
 	return;
@@ -59,7 +59,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     # check file type by file name extension
     #
-    if ($upload_original_name =~ /\.xls$|\.xlsx/) { 
+    if ($upload_original_name =~ /\.xls$|\.xlsx/) {
 	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
 	return;
     }
@@ -86,18 +86,18 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
-    
+
     # check if all accessions exist
     #
     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
 
-    my $header = <$F>; 
+    my $header = <$F>;
     my %legal_cross_types = ( biparental => 1, open => 1, self => 1);
     my %errors;
 
-    while (<$F>) { 
+    while (<$F>) {
         chomp;
         $_ =~ s/\r//g;
         my @acc = split /\t/;
@@ -189,7 +189,7 @@ sub _get_pedigrees_from_file {
     my $archived_filename_with_path = shift;
 
     open(my $F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
-    my $header = <$F>; 
+    my $header = <$F>;
     my @pedigrees;
     my $line_num = 2;
     while (<$F>) {
@@ -215,16 +215,16 @@ sub _get_pedigrees_from_file {
             $c->detach();
         }
         if (!$cross_type){
-            $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental,open,self." };
+            $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental,open,self,sib." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self'){
-            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental,open,self." };
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib'){
+            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental,open,self, sib." };
             $c->detach();
         }
 
-        if (($female eq $male) && ($cross_type ne 'self')) {
-            $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self." };
+        if ((($female eq $male) && ($cross_type ne 'self')) || (($female eq $male) && ($cross_type ne 'sib'))) {
+            $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self or sib." };
             $c->detach();
         }
 
@@ -276,7 +276,7 @@ sub _get_pedigrees_from_file {
 Usage:
     GET "/ajax/pedigrees/get_full?stock_id=<STOCK_ID>";
 
-Responds with JSON array containing pedigree relationship objects for the 
+Responds with JSON array containing pedigree relationship objects for the
 accession identified by STOCK_ID and all of its parents (recursively).
 
 =cut
@@ -312,7 +312,7 @@ Usage:
     POST "/ajax/pedigrees/get_relationships";
     BODY "stock_id=<STOCK_ID>[&stock_id=<STOCK_ID>...]"
 
-Responds with JSON array containing pedigree relationship objects for the 
+Responds with JSON array containing pedigree relationship objects for the
 accessions identified by the provided STOCK_IDs.
 
 =cut
@@ -359,12 +359,12 @@ sub _get_pedigree_parents {
     my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
-        { 
+        {
             'me.object_id' => $stock_id,
             'me.type_id' => $father_cvterm,
             'subject.type_id'=> $accession_cvterm
         },
-        { 
+        {
             'me.object_id' => $stock_id,
             'me.type_id' => $mother_cvterm,
             'subject.type_id'=> $accession_cvterm
@@ -388,12 +388,12 @@ sub _get_pedigree_children {
     my $accession_cvterm = shift;
     my $stock_id = shift;
     my $edges = $schema->resultset("Stock::StockRelationship")->search([
-        { 
+        {
             'me.subject_id' => $stock_id,
             'me.type_id' => $father_cvterm,
             'object.type_id'=> $accession_cvterm
         },
-        { 
+        {
             'me.subject_id' => $stock_id,
             'me.type_id' => $mother_cvterm,
             'object.type_id'=> $accession_cvterm
@@ -418,4 +418,4 @@ sub _get_pedigree_children {
 # }
 
 
-1; 
+1;
