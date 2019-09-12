@@ -492,7 +492,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 else {
                     die "MARSS predict option not selected\n";
                 }
-                $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 ), method="kem")');
+                #$r_block->add_command('mars_model'.$t.' <- list(B=matrix("phi"), U=matrix(0), Q=matrix("sig.sq.w"), Z=matrix("a"), A=matrix(0), R=matrix("sig.sq.v"), x0=matrix("mu"), tinitx=0 )');
+                $r_block->add_command('mars_model'.$t.' <- list(B="unconstrained", U="zero", Q="unconstrained", Z="identity", A="zero", R="diagonal and unequal", tinitx=1 )');
+                $r_block->add_command('mars_fit'.$t.' <- MARSS(time_series'.$t.', model=mars_model'.$t.', method="kem")');
                 $r_block->add_command('minimum_y_val'.$t.' <- min( c( min(as.numeric(time_series_original'.$t.'), na.rm=T), min(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
                 $r_block->add_command('maximum_y_val'.$t.' <- max( c( max(as.numeric(time_series_original'.$t.'), na.rm=T), max(as.numeric(mars_fit'.$t.'$ytT)), na.rm=T) , na.rm=T)');
                 $r_block->add_command('maximum_y_std'.$t.' <- max( mars_fit'.$t.'$ytT.se, na.rm=T)');
