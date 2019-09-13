@@ -205,7 +205,7 @@ sub _validate_with_plugin {
         #male parent must not be blank if type is biparental or bulk
         if (!$male_parent || $male_parent eq '') {
             if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental and bulk crosses";
+                push @error_messages, "Cell E$row_name: male parent required for biparental, sib and bulk crosses";
             }
         }
 

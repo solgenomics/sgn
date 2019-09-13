@@ -524,7 +524,6 @@ jQuery(document).ready(function($) {
             maternal_parent = $('#sib_parent').val();
         }
 
-
         console.log(maternal_parent);
 
         jQuery.ajax({

@@ -108,8 +108,8 @@
 
 	  <h4>Required fields:</h4>
 	  <ul>
-	    <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
-	    <li>female parent accession (must exist in the database)</li>
+        <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
+        <li>female parent accession (must exist in the database)</li>
         <li>type (biparental, self, open, sib)</li>
             <ul class="a">
                 <li>cross type descriptions:</li>
