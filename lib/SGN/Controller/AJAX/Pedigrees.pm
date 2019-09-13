@@ -94,7 +94,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1);
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1);
     my %errors;
 
     while (<$F>) {
@@ -222,12 +222,12 @@ sub _get_pedigrees_from_file {
             $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental,open,self, sib." };
             $c->detach();
         }
-
-        if ((($female eq $male) && ($cross_type ne 'self')) || (($female eq $male) && ($cross_type ne 'sib'))) {
-            $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self or sib." };
-            $c->detach();
+        if ($female eq $male) {
+            if ($cross_type ne 'self' && $cross_type ne 'sib'){
+                $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self or sib." };
+                $c->detach();
+            }
         }
-
         if (($female && !$male) && ($cross_type ne 'open')) {
             $c->stash->{rest} = { error => "For $progeny on line number $line_num no male parent specified and cross_type is not open..." };
             $c->detach();
@@ -240,6 +240,14 @@ sub _get_pedigrees_from_file {
         elsif($cross_type eq "biparental") {
             if (!$male){
                 $c->stash->{rest} = { error => "For $progeny Cross Type is biparental, but no male parent given" };
+                $c->detach();
+            }
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        }
+        elsif($cross_type eq "sib") {
+            if (!$male){
+                $c->stash->{rest} = { error => "For $progeny Cross Type is sib, but no male parent given" };
                 $c->detach();
             }
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
