@@ -158,8 +158,16 @@ sub detail {
     my $params = shift;
     my $image_dir = shift;
     my $user_id = shift;
+    my $user_type = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
 
-    print STDERR "inputs to image metadata store: ".Dumper($params);
+    if (!$user_id || ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator')) {
+        print STDERR 'Must be logged in with submitter privileges to post images! Please contact us!';
+        push @$status, {'4003' => 'Permission Denied. Must have correct privilege.'};
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must be logged in with submitter privileges to post images! Please contact us!');
+    }
 
     my $imageName = $params->{imageName} || "";
     my $imageFileName = $params->{imageFileName} || "";
@@ -170,19 +178,68 @@ sub detail {
     my $observationDbIds_arrayref = $params->{observationDbIds} || ();
     my $imageLocation_hashref = $params->{imageLocation} || ();
 
-    my $image = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir);
-    #$image->process_image($image_dir."/".$tempfile, $type, $observationUnitDbId);
-    $image->set_name($imageName);
-    $image->set_description($description);
-    $image->set_sp_person_id($user_id);
-    my $image_id = $image->store();
+    my $image_obj = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir);
 
-    my %result = (
-        image_id => $image->get_image_id(),
-    );
+    #print STDERR "Image name is ".@{$imageName}[0]." and description is ".@{$description}[0]."\n";
 
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1, 10, 0);
-    return CXGN::BrAPI::JSONResponse->return_success( { \%result }, $pagination, undef, $self->status());
+    $image_obj->set_name(@{$imageName}[0]);
+    $image_obj->set_description(@{$description}[0]);
+    $image_obj->set_sp_person_id($user_id);
+    my $image_id = $image_obj->store();
+
+    my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
+    my @cvterms = $image->get_cvterms();
+    my $url = "";
+
+    my @image_ids;
+    push @image_ids, $image_id;
+    my $image_search = CXGN::Image::Search->new({
+        bcs_schema=>$self->bcs_schema(),
+        people_schema=>$self->people_schema(),
+        phenome_schema=>$self->phenome_schema(),
+        image_id_list=>\@image_ids
+    });
+
+    my ($search_result, $total_count) = $image_search->search();
+    my %result;
+
+    foreach (@$search_result) {
+        %result = (
+            additionalInfo => {
+                observationLevel => $_->{'stock_type_name'},
+                observationUnitName => $_->{'stock_uniquename'},
+                tags =>  $_->{'tags_array'},
+            },
+            copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
+            description => $_->{'image_description'},
+            descriptiveOntologyTerms => \@cvterms,
+            imageDbId => $_->{'image_id'},
+            imageFileName => $_->{'image_original_filename'},
+            imageFileSize => 0,
+            imageHeight => 0,
+            imageWidth => 0,
+            imageName => $_->{'image_name'},
+            imageTimeStamp => $_->{'image_modified_date'},
+            imageURL => $url,
+            mimeType => _get_mimetype($_->{'image_file_ext'}),
+            observationUnitDbId => $_->{'stock_id'},
+            # location and linked phenotypes are not yet available for images in the db
+            imageLocation => {
+                geometry => {
+                    coordinates => [],
+                    type=> '',
+                },
+                type => '',
+            },
+            observationDbIds => [],
+        );
+    }
+
+    #print STDERR "Result is ".Dumper(%result)."\n";
+
+    my $total_count = 1;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status());
 }
 
 
