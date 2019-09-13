@@ -120,7 +120,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         }
         # check if the cross types are recognized...
         if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-            $errors{"not legal cross type: $acc[3] (should be biparental, self, or open)"}=1;
+            $errors{"not legal cross type: $acc[3] (should be biparental, self, open or sib)"}=1;
         }
     }
     close($F);
