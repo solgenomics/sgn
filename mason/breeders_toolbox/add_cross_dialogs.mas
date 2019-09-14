@@ -35,7 +35,7 @@ $locations
                             <ul>
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
                                 <li>Each cross has a globally unique cross id.</li>
-                                <li>Supported cross types are: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid</li>
+                                <li>Supported cross types are: biparental, self, open, sib, bulk, bulk_self, bulk_open, or doubled_haploid</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
                                 <li>A cross can have other data associated to it, such as number of flowers, pollination date, etc.</li>
@@ -133,6 +133,7 @@ $locations
                                             <option value="biparental">biparental</option>
                                             <option value="self">self</option>
                                             <option value="open">open pollinated</option>
+                                            <option value="sib">sib</option>
                                             <option value="bulk">bulk</option>
                                             <option value="bulk_self">bulk selfed</option>
                                             <option value="bulk_open">bulk and open pollinated</option>
@@ -167,6 +168,12 @@ $locations
                                     <label class="col-sm-2 control-label">Selfed Parent: </label>
                                     <div class="col-sm-10">
                                         <input class="form-control" id="selfed_parent" type="text" name="selfed" />
+                                    </div><br/><br/>
+                                </div>
+                                <div class="form-group" id="get_sib_parent" style="display: none">
+                                    <label class="col-sm-2 control-label">Sib Parent: </label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="sib_parent" type="text" name="sib" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_open_maternal_parent" style="display: none">
@@ -247,7 +254,7 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Track exact cross parents" &>
-                                <& /page/page_title.mas, title=>"If you choose to record exact cross parents, you can do so." &>
+                                <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross parents, you can do so." &>
 
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">Field Trial: </label>
@@ -442,6 +449,7 @@ $locations
                     <p><b>biparental:</b> An individual plant pollinated by another individual plant.<p>
                     <p><b>self:</b> A self pollinated individual plant.<p>
                     <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
+                    <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.<p>
                     <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.<p>
                     <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).<p>
                     <p><b>bulk and open pollinated:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
@@ -512,6 +520,10 @@ jQuery(document).ready(function($) {
             maternal_parent = $('#open_maternal_parent').val();
         }
 
+        if ($('#sib_parent').val() != ''){
+            maternal_parent = $('#sib_parent').val();
+        }
+
         console.log(maternal_parent);
 
         jQuery.ajax({
@@ -551,6 +563,9 @@ jQuery(document).ready(function($) {
         paternal_parent = $('#selfed_parent').val();
         }
 
+        if ($('#sib_parent').val() != ''){
+        paternal_parent = $('#sib_parent').val();
+        }
 
         jQuery.ajax({
             url:'/ajax/breeders/get_accession_plots',
