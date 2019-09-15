@@ -851,7 +851,7 @@ sub studies_search_POST {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->studies_search({
+    my $brapi_package_result = $brapi_module->search({
         programDbIds => $clean_inputs->{programDbIds},
         programNames => $clean_inputs->{programNames},
         studyDbIds => $clean_inputs->{studyDbIds},
@@ -880,7 +880,7 @@ sub studies_search_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->studies_search({
+    my $brapi_package_result = $brapi_module->search({
         programDbIds => $clean_inputs->{programDbId},
         programNames => $clean_inputs->{programName},
         studyDbIds => $clean_inputs->{studyDbId},
@@ -911,7 +911,7 @@ sub studies_search_new_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->studies_search({
+    my $brapi_package_result = $brapi_module->search({
         programDbIds => $clean_inputs->{programDbId},
         programNames => $clean_inputs->{programName},
         studyDbIds => $clean_inputs->{studyDbId},
@@ -933,64 +933,19 @@ sub studies_search_new_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub studies_search_cached  : Chained('brapi') PathPart('search/studies') Args(0) : ActionClass('REST') { }
+sub studies_search_save  : Chained('brapi') PathPart('search/studies') Args(0) : ActionClass('REST') { }
 
-sub studies_search_cached_POST {
+sub studies_search_save_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->studies_search_retrieve({
-        programDbIds => $clean_inputs->{programDbIds},
-        programNames => $clean_inputs->{programNames},
-        studyDbIds => $clean_inputs->{studyDbIds},
-        studyNames => $clean_inputs->{studyNames},
-        trialDbIds => $clean_inputs->{trialDbIds},
-        trialNames => $clean_inputs->{trialNames},
-        studyLocationDbIds => $clean_inputs->{locationDbIds},
-        studyLocationNames => $clean_inputs->{studyLocations},
-        studyTypeName => $clean_inputs->{studyType},
-        germplasmDbIds => $clean_inputs->{germplasmDbIds},
-        germplasmNames => $clean_inputs->{germplasmNames},
-        seasons => $clean_inputs->{seasonDbIds},
-        observationVariableDbIds => $clean_inputs->{observationVariableDbIds},
-        observationVariableNames => $clean_inputs->{observationVariableNames},
-        active => $clean_inputs->{active}->[0],
-        sortBy => $clean_inputs->{sortBy}->[0],
-        sortOrder => $clean_inputs->{sortOrder}->[0],
-    });
-    _standard_response_construction($c, $brapi_package_result);
+    save_results($self,$c,$c->stash->{clean_inputs},'Studies');
 }
 
-sub studies_search_cached_GET {
+sub studies_search_retrieve : Chained('brapi') PathPart('search/studies') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->studies_search_save({
-        programDbIds => $clean_inputs->{programDbId},
-        programNames => $clean_inputs->{programName},
-        studyDbIds => $clean_inputs->{studyDbId},
-        studyNames => $clean_inputs->{studyName},
-        trialDbIds => $clean_inputs->{trialDbId},
-        trialNames => $clean_inputs->{trialName},
-        studyLocationDbIds => $clean_inputs->{locationDbId},
-        studyLocationNames => $clean_inputs->{locationName},
-        seasons => $clean_inputs->{seasonDbId},
-        studyTypeName => $clean_inputs->{studyType},
-        germplasmDbIds => $clean_inputs->{germplasmDbId},
-        germplasmNames => $clean_inputs->{germplasmName},
-        observationVariableDbIds => $clean_inputs->{observationVariableDbId},
-        observationVariableNames => $clean_inputs->{observationVariableName},
-        active => $clean_inputs->{active}->[0],
-        sortBy => $clean_inputs->{sortBy}->[0],
-        sortOrder => $clean_inputs->{sortOrder}->[0],
-    });
-    _standard_response_construction($c, $brapi_package_result);
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Studies');
 }
 
 
@@ -1660,7 +1615,7 @@ sub programs_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
-	my $brapi_package_result = $brapi_module->programs_list({
+	my $brapi_package_result = $brapi_module->search({
 		program_names => $clean_inputs->{programName},
 		abbreviations => $clean_inputs->{abbreviation},
         crop => $c->config->{supportedCrop}
@@ -1668,6 +1623,20 @@ sub programs_list_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub programs_search_save : Chained('brapi') PathPart('search/programs') Args(0) : ActionClass('REST') { }
+
+sub programs_search_save_POST {
+    my $self = shift;
+    my $c = shift; #print $self;
+    save_results($self,$c,$c->stash->{clean_inputs},'Programs');
+}
+
+sub programs_search_retrieve  : Chained('brapi') PathPart('search/programs') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Programs');
+}
 
 
 
@@ -2645,39 +2614,21 @@ sub _sample_search_process_new {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub samples_list_cached : Chained('brapi') PathPart('search/samples') Args(0) : ActionClass('REST') { }
+sub samples_list_search : Chained('brapi') PathPart('search/samples') Args(0) : ActionClass('REST') { }
 
-sub samples_list_cached_POST {
+sub samples_list_search_POST {
     my $self = shift;
     my $c = shift;
-    _sample_search_process($self, $c);
+    save_results($self,$c,$c->stash->{clean_inputs},'Samples');
 }
 
-sub samples_list_cached_GET {
+sub samples_list_search_retrieve : Chained('brapi') PathPart('search/germplasm') Args(1) {
     my $self = shift;
     my $c = shift;
-    _sample_search_process($self, $c);
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Samples');
 }
 
-sub _sample_search_process_cached {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Samples');
-    my $brapi_package_result = $brapi_module->search_samples({
-        sampleDbId => $clean_inputs->{sampleDbId},
-        sampleName => $clean_inputs->{sampleName},
-        plateDbId => $clean_inputs->{plateDbId},
-        plateName => $clean_inputs->{plateName},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        germplasmName => $clean_inputs->{germplasmName},
-        observationUnitDbId => $clean_inputs->{observationUnitDbId},
-        observationUnitName => $clean_inputs->{observationUnitName},
-    });
-    _standard_response_construction($c, $brapi_package_result);
-}
 
 =head2 brapi/v1/samples/<sampleDbId>
 
@@ -2928,6 +2879,22 @@ sub observations_search_process {
         observationVariableDbIds => $clean_inputs->{observationVariableDbIds}
 	});
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+
+sub markers_search_save  : Chained('brapi') PathPart('search/markers') Args(0) : ActionClass('REST') { }
+
+sub markers_search_save_POST {
+    my $self = shift;
+    my $c = shift; #print "--\n-" ; print Dumper($self); print "--\n-" ;
+    save_results($self,$c,$c->stash->{clean_inputs},'Markers');
+}
+
+sub markers_search_retrieve : Chained('brapi') PathPart('search/markers') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Markers');
 }
 
 

@@ -23,6 +23,7 @@ use CXGN::BrAPI::v1::ObservationUnits;
 use CXGN::BrAPI::v1::ObservationTables;
 use CXGN::BrAPI::v1::Results;
 use CXGN::BrAPI::v1::Images;
+use CXGN::BrAPI::v1::Markers;
 
 has 'version' => (
 	isa => 'Str',
