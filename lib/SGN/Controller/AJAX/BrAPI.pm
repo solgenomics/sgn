@@ -2951,12 +2951,13 @@ sub images_single_PUT {
     my $c = shift;
     print STDERR "Image store PUT...\n";
     my $auth = _authenticate_user($c);
+    my ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
     my $clean_inputs = $c->stash->{clean_inputs};
     print STDERR "Clean inputs at image_store_PUT: ".Dumper($clean_inputs);
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
-    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir);
+    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type, $c->stash->{image_id});
     _standard_response_construction($c, $brapi_package_result);
 
  }
