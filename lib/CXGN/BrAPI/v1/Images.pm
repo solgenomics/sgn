@@ -9,6 +9,7 @@ use SGN::Model::Cvterm;
 use SGN::Image;
 use CXGN::Image::Search;
 use CXGN::Page;
+use CXGN::Tag;
 
 extends 'CXGN::BrAPI::v1::Common';
 
@@ -159,9 +160,11 @@ sub detail {
     my $image_dir = shift;
     my $user_id = shift;
     my $user_type = shift;
+    my $image_id = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
 
     if (!$user_id || ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator')) {
         print STDERR 'Must be logged in with submitter privileges to post images! Please contact us!';
@@ -170,25 +173,45 @@ sub detail {
     }
 
     my $imageName = $params->{imageName} || "";
-    my $imageFileName = $params->{imageFileName} || "";
-    my $imageTimeStamp = $params->{imageTimeStamp} || "";
-    my $observationUnitDbId = $params->{observationUnitDbId} || "";
     my $description = $params->{description} || "";
+    my $imageFileName = $params->{imageFileName} || "";
+    my $mimeType = $params->{mimeType} || "";
+    my $observationUnitDbId = $params->{observationUnitDbId} || "";
     my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
+
+    # metadata store for the rest not yet implemented
+    my $imageFileSize = $params->{imageFileSize} || "";
+    my $imageHeight = $params->{imageHeight} || "";
+    my $imageWidth = $params->{imageWidth} || "";
+    my $copyright = $params->{copyright} || "";
+    my $imageTimeStamp = $params->{imageTimeStamp} || "";
     my $observationDbIds_arrayref = $params->{observationDbIds} || ();
     my $imageLocation_hashref = $params->{imageLocation} || ();
+    my $additionalInfo_hashref = $params->{additionalInfo} || ();
 
-    my $image_obj = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir);
-
-    #print STDERR "Image name is ".@{$imageName}[0]." and description is ".@{$description}[0]."\n";
-
+    my $image_obj = CXGN::Image->new( dbh=>$dbh, image_dir => $image_dir, image_id => $image_id);
+    unless ($image_id) { $image_obj->set_sp_person_id($user_id); }
     $image_obj->set_name(@{$imageName}[0]);
     $image_obj->set_description(@{$description}[0]);
-    $image_obj->set_sp_person_id($user_id);
-    my $image_id = $image_obj->store();
+    $image_obj->set_original_filename(@{$imageFileName}[0]);
+    $image_obj->set_file_ext(@{$mimeType}[0]);
 
-    my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
-    my @cvterms = $image->get_cvterms();
+    my $tag = CXGN::Tag->new($dbh);
+    foreach (@$descriptiveOntologyTerms_arrayref) {
+        $tag->set_name($_);
+        $tag->set_sp_person_id($user_id);
+        $image_obj->add_tag($tag);
+    }
+
+    $image_id = $image_obj->store();
+
+    if (@{$observationUnitDbId}[0]) {
+        my $person = CXGN::People::Person->new($dbh, $user_id);
+        my $user_name = $person->get_username;
+        my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
+        $image->associate_stock(@{$observationUnitDbId}[0], $user_name);
+    }
+
     my $url = "";
 
     my @image_ids;
@@ -204,15 +227,21 @@ sub detail {
     my %result;
 
     foreach (@$search_result) {
+        my $tags = $_->{'tags_array'};
+        my @tag_names;
+        foreach (@$tags) {
+            my $taghashref = $_;
+            my $name = $taghashref->{'name'};
+            push @tag_names, $name;
+        }
         %result = (
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
-            descriptiveOntologyTerms => \@cvterms,
+            descriptiveOntologyTerms => \@tag_names,
             imageDbId => $_->{'image_id'},
             imageFileName => $_->{'image_original_filename'},
             imageFileSize => 0,
@@ -286,8 +315,11 @@ sub _get_mimetype {
         '.pdf' => 'application/pdf',
         '.ps'  => 'application/postscript',
     );
-
-    return $mimetypes{$extension};
+    if ( defined $mimetypes{$extension} ) {
+        return $mimetypes{$extension};
+    } else {
+        return $extension;
+    }
 }
 
 1;
