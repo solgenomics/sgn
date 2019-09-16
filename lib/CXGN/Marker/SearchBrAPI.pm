@@ -1,0 +1,127 @@
+package CXGN::Marker::SearchBrAPI;
+
+=head1 NAME
+
+CXGN::Marker::Search - an object to handle searching for markers given criteria
+
+=head1 USAGE
+
+my $marker_search = CXGN::Marker::Search->new({
+    bcs_schema=>$schema
+});
+my ($result, $total_count) = $marker_search->search();
+
+=head1 DESCRIPTION
+
+
+=head1 AUTHORS
+
+
+=cut
+
+use strict;
+use warnings;
+use Moose;
+use Try::Tiny;
+use Data::Dumper;
+
+use CXGN::Marker;
+use CXGN::Marker::LocMarker;
+use CXGN::Marker::Tools qw(clean_marker_name);
+use SGN::Model::Cvterm;
+use CXGN::Trial;
+use JSON;
+
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'nd_protocol_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
+has 'marker_ids' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'marker_names' => (
+    isa => 'ArrayRef',
+    is => 'rw'
+);
+
+has 'species_name' => (
+    isa => 'Str',
+    is => "rw"
+);
+
+has 'limit' => (
+    isa => 'Int|Undef',
+    is => 'rw'
+);
+
+has 'offset' => (
+    isa => 'Int|Undef',
+    is => 'rw'
+);
+
+
+sub search {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $limit = $self->limit;
+    my $offset = $self->offset;
+    my $marker_ids = $self->marker_ids;
+    # my $marker_name = $self->marker_name;
+    # my $include_synonyms = $self->include_synonyms;
+    # my $match_method = $self->match_method;
+    # my $types = $self->types;
+    my @where_clause;
+
+    if ($marker_ids && scalar(@$marker_ids)>0) {
+        my $sql = join ("," , @$marker_ids);
+        push @where_clause, "marker.marker_id in ($sql)";
+    }
+
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+
+        
+    my $subquery = "select marker.marker_id, m2m.location_id, m2m.lg_name, m2m.lg_order, m2m.position, m2m.confidence_id, m2m.subscript, m2m.map_version_id, m2m.map_id FROM sgn.marker left join sgn.marker_to_map as m2m using(marker_id) $where_clause";
+
+
+    my $h = $schema->storage->dbh()->prepare($subquery);
+    $h->execute();
+
+    my @result;
+    my $total_count = 0;
+    my $subtract_count = 0;
+    while (my ($marker_id, $location_id,$full_count) = $h->fetchrow_array()) {
+        push @result, {
+          marker_id => $marker_id,
+          location_id => $location_id
+        };
+        $total_count = $full_count;
+    }
+
+    my @data_window;
+    if (($limit && defined($limit) || ($offset && defined($offset)))){
+        my $start = $offset;
+        my $end = $offset + $limit - 1;
+        for( my $i = $start; $i <= $end; $i++ ) {
+            if ($result[$i]) {
+                push @data_window, $result[$i];
+            }
+        }
+    } else {
+        @data_window = @result;
+    }
+
+    $total_count = $total_count-$subtract_count;
+    return (\@data_window, $total_count);
+
+}
+
+1;
