@@ -1,4 +1,4 @@
-package SGN::Controller::EPG;
+package SGN::Controller::MetabolomicsHost;
 
 use Moose;
 
