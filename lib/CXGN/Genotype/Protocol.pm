@@ -62,11 +62,20 @@ has 'protocol_description' => (
 has 'markers' => (
     isa => 'HashRef',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_nd_protocolprop_markers',
 );
 
 has 'marker_names' => (
     isa => 'ArrayRef',
     is => 'rw'
+);
+
+has 'markers_array' => (
+    isa => 'ArrayRef',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_nd_protocolprop_markers_array',
 );
 
 has 'header_information_lines' => (
@@ -103,25 +112,23 @@ sub BUILD {
     my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
         'me.nd_protocol_id'=>$self->nd_protocol_id,
         'me.type_id'=>$geno_cvterm_id,
-        #'nd_protocolprops.type_id'=>$protocol_vcf_details_cvterm_id
+        'nd_protocolprops.type_id'=>$protocol_vcf_details_cvterm_id
     }, {
         join => 'nd_protocolprops',
         '+select' => ['nd_protocolprops.value'],
         '+as' => ['value']
     });
     if ($protocol_rs->count != 1){
-        print STDERR "Not a valide nd_protocol_id\n";
+        print STDERR "Not a valid nd_protocol_id\n";
         return;
     }
     my $protocol = $protocol_rs->first;
     my $map_details = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : {};
-    my $markers = $map_details->{markers} || {};
     my $marker_names = $map_details->{marker_names} || [];
     my $header_information_lines = $map_details->{header_information_lines} || [];
     my $reference_genome_name = $map_details->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $species_name = $map_details->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
-    $self->markers($markers);
     $self->marker_names($marker_names);
     $self->protocol_name($protocol->name);
     $self->header_information_lines($header_information_lines);
@@ -140,6 +147,54 @@ sub BUILD {
     return;
 }
 
+sub _retrieve_nd_protocolprop_markers {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $protocol_vcf_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
+
+    my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
+        'me.nd_protocol_id'=>$self->nd_protocol_id,
+        'me.type_id'=>$geno_cvterm_id,
+        'nd_protocolprops.type_id'=>$protocol_vcf_details_markers_cvterm_id
+    }, {
+        join => 'nd_protocolprops',
+        '+select' => ['nd_protocolprops.value'],
+        '+as' => ['value']
+    });
+    if ($protocol_rs->count != 1){
+        print STDERR "Not a valid nd_protocol_id\n";
+        return;
+    }
+    my $protocol = $protocol_rs->first;
+    my $markers = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : {};
+    $self->markers($markers);
+}
+
+sub _retrieve_nd_protocolprop_markers_array {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $protocol_vcf_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
+
+    my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
+        'me.nd_protocol_id'=>$self->nd_protocol_id,
+        'me.type_id'=>$geno_cvterm_id,
+        'nd_protocolprops.type_id'=>$protocol_vcf_details_markers_array_cvterm_id
+    }, {
+        join => 'nd_protocolprops',
+        '+select' => ['nd_protocolprops.value'],
+        '+as' => ['value']
+    });
+    if ($protocol_rs->count != 1){
+        print STDERR "Not a valid nd_protocol_id\n";
+        return;
+    }
+    my $protocol = $protocol_rs->first;
+    my $markers_array = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : [];
+    $self->markers_array($markers_array);
+}
+
 #class method
 sub list {
     my $schema = shift;
@@ -152,6 +207,8 @@ sub list {
     my @where_clause;
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
 
@@ -194,7 +251,7 @@ sub list {
         JOIN nd_experiment_protocol USING(nd_experiment_id)
         JOIN nd_experiment_project USING(nd_experiment_id)
         JOIN nd_protocol USING(nd_protocol_id)
-        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
+        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id=$vcf_map_details_cvterm_id)
         JOIN project USING(project_id)
         $where_clause
         GROUP BY (nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name)
@@ -209,7 +266,6 @@ sub list {
     my @results;
     while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $sample_count) = $h->fetchrow_array()) {
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : {};
-        my $marker_set = $protocol->{markers} || {};
         my $marker_names = $protocol->{marker_names} || [];
         my $header_information_lines = $protocol->{header_information_lines} || [];
         my $reference_genome_name = $protocol->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
@@ -220,7 +276,6 @@ sub list {
             protocol_id => $protocol_id,
             protocol_name => $protocol_name,
             protocol_description => $protocol_description,
-            markers => $marker_set,
             marker_names => $marker_names,
             header_information_lines => $header_information_lines,
             reference_genome_name => $reference_genome_name,
@@ -243,10 +298,12 @@ sub list_simple {
     my @where_clause;
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
 
     my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value->>'header_information_lines', nd_protocolprop.value->>'reference_genome_name', nd_protocolprop.value->>'species_name', nd_protocolprop.value->>'sample_observation_unit_type_name', jsonb_array_length(nd_protocolprop.value->'marker_names')
         FROM nd_protocol
-        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
+        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id=$vcf_map_details_cvterm_id)
         ORDER BY nd_protocol.nd_protocol_id ASC;";
 
     my $h = $schema->storage->dbh()->prepare($q);
