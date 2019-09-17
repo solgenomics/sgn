@@ -1,0 +1,35 @@
+<%args>
+    # $logged_in_username
+    $return_url
+    $display_name
+</%args>
+
+<& /page/page_title.mas, title=>"BrAPI Authorization" &>
+
+<!--<div class="row">
+    <div class="col-lg-12">
+        <p>To tie Field Book to your account on Breedbase, open Field Book and go to Settings -> External Data Source and scan the below QR code</p>
+    </div>
+</div>
+<div class="row">
+    <img class="col-md-2 col-md-offset-5" src="/user/field-book/generate">
+</div>
+
+<div class="row center">
+    <p>Click the button below to authorize Field Book to access Breedbase</p>
+    <button class="btn btn-primary" onclick="window.location.replace('fieldbook://hello-world');">Authorize Field Book</button>
+</div> -->
+
+<div id="brapi-auth"></div>
+
+<script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+
+<script src="/js/legacy/brapi/auth.js"></script>
+<script>
+const domContainer = document.querySelector('#brapi-auth');
+ReactDOM.render(e(BrapiAuth, {
+    appName: "<% $display_name %>",
+    returnUrl: "<% $return_url %>"
+}), domContainer);
+</script>

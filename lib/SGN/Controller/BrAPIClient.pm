@@ -5,6 +5,23 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller' };
 
+sub register_field_book :Path('/brapi/authorize') QueryParam('return_url') QueryParam('display_name') { #breedbase.org/brapi/authorize?success_url=fieldbook://&display_name=Field%20Book
+    my $self = shift;
+    my $c = shift;
+
+    my $return_url = $c->request->param( 'return_url' );
+    my $display_name = $c->request->param( 'display_name' );
+
+    if (length($return_url) > 0 && length($display_name) > 0) {
+        $c->stash->{return_url} = $c->request->param('return_url');
+        $c->stash->{display_name} = $c->request->param('display_name');
+        $c->stash->{template} = '/brapi/authorize.mas';
+    } else {
+        $c->throw_404();
+    }
+
+}
+
 sub home : Path('/brapihome/') Args(0) { 
     my $self = shift;
     my $c = shift;

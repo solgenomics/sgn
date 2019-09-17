@@ -220,12 +220,19 @@ sub process_authenticate_token {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Authentication');
+	# my $brapi_package_result = $brapi_module->login(
+	# 	$clean_inputs->{grant_type}->[0],
+	# 	$clean_inputs->{password}->[0],
+	# 	$clean_inputs->{username}->[0],
+	# 	$clean_inputs->{client_id}->[0],
+	# );
+
 	my $brapi_package_result = $brapi_module->login(
-		$clean_inputs->{grant_type}->[0],
+		"password",
 		$clean_inputs->{password}->[0],
 		$clean_inputs->{username}->[0],
-		$clean_inputs->{client_id}->[0],
 	);
+
 	my $status = $brapi_package_result->{status};
 	my $pagination = $brapi_package_result->{pagination};
 	my $result = $brapi_package_result->{result};
