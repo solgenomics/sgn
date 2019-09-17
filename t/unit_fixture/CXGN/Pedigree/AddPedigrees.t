@@ -46,8 +46,17 @@ ok(my $male_parent3 = Bio::GeneticRelationships::Individual->new(name => 'XG1202
 ok($pedigree3->set_female_parent($female_parent3), "Set a female parent for a pedigree");
 ###ok($pedigree3->set_male_parent(''), "Set an empty male parent for a pedigree");
 
+# sib
+#
+ok(my $pedigree4 = Bio::GeneticRelationships::Pedigree->new(name => "XG120262", cross_type => "sib"),"Create pedigree object");
+ok(my $female_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
+ok(my $male_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
+ok($pedigree4->set_female_parent($female_parent4), "Set a female parent for a pedigree");
+ok($pedigree4->set_male_parent($male_parent4), "Set a male parent for a pedigree");
+
+
 my @pedigrees;
-for my $p ($pedigree, $pedigree2, $pedigree3) { 
+for my $p ($pedigree, $pedigree2, $pedigree3) {
     push (@pedigrees, $p);
 }
 
@@ -61,8 +70,8 @@ print STDERR "Now trying a population as a parent... \n";
 
 my $population_type_id = $test->bcs_schema()->resultset("Cv::Cvterm")->find( { name => 'population' })->cvterm_id();
 
-my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create( 
-    { 
+my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create(
+    {
 	name => 'test_population',
 	uniquename => 'test_population',
 	type_id => $population_type_id,
