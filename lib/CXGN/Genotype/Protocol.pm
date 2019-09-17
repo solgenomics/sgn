@@ -103,6 +103,23 @@ has 'create_date' => (
     is => 'rw'
 );
 
+#Filtering KEYS
+
+has 'chromosome_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'start_position' => (
+    isa => 'Int|Undef',
+    is => 'ro',
+);
+
+has 'end_position' => (
+    isa => 'Int|Undef',
+    is => 'ro',
+);
+
 sub BUILD {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -142,16 +159,39 @@ sub BUILD {
 sub _retrieve_nd_protocolprop_markers {
     my $self = shift;
     my $schema = $self->bcs_schema;
+    my $chromosome_list = $self->chromosome_list;
+    my $start_position = $self->start_position;
+    my $end_position = $self->end_position;
+
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $protocol_vcf_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
-    my $q = "SELECT nd_protocol_id, value FROM nd_protocolprop WHERE type_id = $protocol_vcf_details_markers_cvterm_id AND nd_protocol_id =?;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($self->nd_protocol_id);
-    my ($nd_protocol_id, $value) = $h->fetchrow_array();
+    my $chromosome_where = '';
+    if ($chromosome_list && scalar(@$chromosome_list)>0) {
+        my $chromosome_list_sql = join ',', @$chromosome_list;
+        $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+    }
+    my $start_position_where = '';
+    if (defined($start_position)) {
+        $start_position_where = " AND (s.value->>'pos')::int >= $start_position";
+    }
+    my $end_position_where = '';
+    if (defined($end_position)) {
+        $end_position_where = " AND (s.value->>'pos')::int <= $end_position";
+    }
 
-    my $markers = $value ? decode_json $value : {};
-    $self->markers($markers);
+    my $protocolprop_q = "SELECT nd_protocol_id, s.key, s.value
+        FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s
+        WHERE nd_protocol_id = ? and type_id = $protocol_vcf_details_markers_cvterm_id $chromosome_where $start_position_where $end_position_where;";
+
+    my $h = $schema->storage->dbh()->prepare($protocolprop_q);
+    $h->execute($self->nd_protocol_id);
+    my %markers;
+    while (my ($nd_protocol_id, $marker_name, $value) = $h->fetchrow_array()) {
+        $markers{$marker_name} = decode_json $value;
+    }
+
+    $self->markers(\%markers);
 }
 
 sub _retrieve_nd_protocolprop_markers_array {
