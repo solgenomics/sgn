@@ -109,40 +109,32 @@ sub BUILD {
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
 
-    my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
-        'me.nd_protocol_id'=>$self->nd_protocol_id,
-        'me.type_id'=>$geno_cvterm_id,
-        'nd_protocolprops.type_id'=>$protocol_vcf_details_cvterm_id
-    }, {
-        join => 'nd_protocolprops',
-        '+select' => ['nd_protocolprops.value'],
-        '+as' => ['value']
-    });
-    if ($protocol_rs->count != 1){
-        print STDERR "Not a valid nd_protocol_id\n";
-        return;
-    }
-    my $protocol = $protocol_rs->first;
-    my $map_details = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : {};
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, nd_protocol.create_date, nd_protocol.description
+        FROM nd_protocol
+        LEFT JOIN nd_protocolprop ON(nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id AND nd_protocolprop.type_id=$protocol_vcf_details_cvterm_id)
+        WHERE nd_protocol.type_id=$geno_cvterm_id AND nd_protocol.nd_protocol_id=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($self->nd_protocol_id);
+    my ($nd_protocol_id, $nd_protocol_name, $value, $create_date, $description) = $h->fetchrow_array();
+
+    my $map_details = $value ? decode_json $value : {};
     my $marker_names = $map_details->{marker_names} || [];
     my $header_information_lines = $map_details->{header_information_lines} || [];
     my $reference_genome_name = $map_details->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $species_name = $map_details->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
     $self->marker_names($marker_names);
-    $self->protocol_name($protocol->name);
+    $self->protocol_name($nd_protocol_name);
     $self->header_information_lines($header_information_lines);
     $self->reference_genome_name($reference_genome_name);
     $self->species_name($species_name);
     $self->sample_observation_unit_type_name($sample_observation_unit_type_name);
-
-    my $q = "SELECT create_date, description FROM nd_protocol WHERE nd_protocol_id = ?;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($self->nd_protocol_id);
-    my ($create_date, $description) = $h->fetchrow_array();
-    $create_date = $create_date || 'Not set. Please reload these genotypes using new genotype format!';
-    $self->create_date($create_date);
-    $self->protocol_description($description);
+    if ($create_date) {
+        $self->create_date($create_date);
+    }
+    if ($description) {
+        $self->protocol_description($description);
+    }
 
     return;
 }
@@ -153,21 +145,12 @@ sub _retrieve_nd_protocolprop_markers {
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $protocol_vcf_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
-    my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
-        'me.nd_protocol_id'=>$self->nd_protocol_id,
-        'me.type_id'=>$geno_cvterm_id,
-        'nd_protocolprops.type_id'=>$protocol_vcf_details_markers_cvterm_id
-    }, {
-        join => 'nd_protocolprops',
-        '+select' => ['nd_protocolprops.value'],
-        '+as' => ['value']
-    });
-    if ($protocol_rs->count != 1){
-        print STDERR "Not a valid nd_protocol_id\n";
-        return;
-    }
-    my $protocol = $protocol_rs->first;
-    my $markers = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : {};
+    my $q = "SELECT nd_protocol_id, value FROM nd_protocolprop WHERE type_id = $protocol_vcf_details_markers_cvterm_id AND nd_protocol_id =?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($self->nd_protocol_id);
+    my ($nd_protocol_id, $value) = $h->fetchrow_array();
+
+    my $markers = $value ? decode_json $value : {};
     $self->markers($markers);
 }
 
@@ -177,21 +160,12 @@ sub _retrieve_nd_protocolprop_markers_array {
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $protocol_vcf_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
 
-    my $protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->search({
-        'me.nd_protocol_id'=>$self->nd_protocol_id,
-        'me.type_id'=>$geno_cvterm_id,
-        'nd_protocolprops.type_id'=>$protocol_vcf_details_markers_array_cvterm_id
-    }, {
-        join => 'nd_protocolprops',
-        '+select' => ['nd_protocolprops.value'],
-        '+as' => ['value']
-    });
-    if ($protocol_rs->count != 1){
-        print STDERR "Not a valid nd_protocol_id\n";
-        return;
-    }
-    my $protocol = $protocol_rs->first;
-    my $markers_array = $protocol->get_column('value') ? decode_json $protocol->get_column('value') : [];
+    my $q = "SELECT nd_protocol_id, value FROM nd_protocolprop WHERE type_id = $protocol_vcf_details_markers_array_cvterm_id AND nd_protocol_id =?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($self->nd_protocol_id);
+    my ($nd_protocol_id, $value) = $h->fetchrow_array();
+
+    my $markers_array = $value ? decode_json $value : [];
     $self->markers_array($markers_array);
 }
 
