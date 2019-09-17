@@ -43,7 +43,7 @@ has 'schema' => (
 
 =head2 get/set_pedigrees()
 
- Usage:         
+ Usage:
  Desc:         provide a hash of accession_names as keys and pedigree objects as values
  Ret:
  Args:
@@ -77,10 +77,10 @@ sub add_pedigrees {
       ####These are probably not necessary:
       #######################
       #my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
-      
+
       # get cvterm for cross_relationship
       #my $cross_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_relationship', 'stock_relationship');
-      
+
       # get cvterm for cross_type
       #my $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
       ##########################
@@ -88,7 +88,7 @@ sub add_pedigrees {
         my ($accessions_hash_ref, $accessions_and_populations_hash_ref) = $self->_get_available_stocks();
         my %accessions_hash = %{$accessions_hash_ref};
         my %accessions_and_populations_hash = %{$accessions_and_populations_hash_ref};
- 
+
         foreach my $pedigree (@pedigrees) {
 
             #print STDERR Dumper($pedigree);
@@ -176,7 +176,7 @@ sub add_pedigrees {
     } catch {
         $transaction_error =  $_;
     };
-  
+
     if ($transaction_error) {
         $return{error} = "Transaction error creating a cross: $transaction_error";
         print STDERR "Transaction error creating a cross: $transaction_error\n";
@@ -231,10 +231,10 @@ sub validate_pedigrees {
             push @{$return{error}}, "Female parent not found for $progeny_name.";
         }
 
-        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open'){
-            push @{$return{error}}, "cross_type must be either biparental, self, or open for progeny $progeny_name.";
+        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open' && $cross_type ne 'sib'){
+            push @{$return{error}}, "cross_type must be either biparental, self, open or sib for progeny $progeny_name.";
         }
-        if ($cross_type eq 'biparental' || $cross_type eq 'self'){
+        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib') {
             if (!$pedigree->get_male_parent){
                 push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
             }
