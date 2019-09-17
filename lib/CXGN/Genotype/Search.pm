@@ -457,9 +457,15 @@ sub get_genotype_info {
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
+
+        my $filtered_markers_sql = '';
+        if (scalar(keys %filtered_markers) >0) {
+            $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
+        }
+
         my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
             FROM genotypeprop, jsonb_each(genotypeprop.value) as s
-            WHERE genotypeprop_id = ? AND type_id = $vcf_snp_genotyping_cvterm_id AND s.key IN ($filtered_markers_string);";
+            WHERE genotypeprop_id = ? AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
         foreach my $genotypeprop_id (@found_genotypeprop_ids){
             $genotypeprop_h->execute($genotypeprop_id);
