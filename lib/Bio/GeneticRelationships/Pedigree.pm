@@ -30,6 +30,7 @@ subtype 'CrossType',
       $_ eq 'biparental' ||
       $_ eq 'self' ||
       $_ eq 'open' ||
+      $_ eq 'sib' ||
       $_ eq 'bulk' ||
       $_ eq 'bulk_self' ||
       $_ eq 'bulk_open' ||
