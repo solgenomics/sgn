@@ -69,7 +69,7 @@ sub observations_store {
     my $archive_path = $params->{archive_path};
     my $tempfiles_subdir = $params->{tempfiles_subdir};
 
-    print STDERR "Observations are ". Dumper($observations) . "\n";
+    #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -78,7 +78,7 @@ sub observations_store {
     my $status = $self->status;
     my @data = [];
     my @data_files = ();
-    my %result = (data => \@data);
+    my %result;
 
     my @success_status = [];
 

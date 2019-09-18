@@ -1781,7 +1781,7 @@ sub studies_observations_granular_PUT {
 	my $c = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
     my $observations = $clean_inputs->{observations};
-    print STDERR "Observations are ". Dumper($observations) . "\n";
+    #print STDERR "Observations are ". Dumper($observations) . "\n";
     _store_observations($self, $c, $observations, 'v1');
 }
 
@@ -2654,8 +2654,7 @@ sub phenotypes_POST {
 	my $c = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs->{data};
-    my @all_observations = [];
-
+    my @all_observations;
     foreach my $observationUnit (@{$data}) {
         my $observationUnitDbId = $observationUnit->{observationUnitDbId};
         my $observations = $observationUnit->{observations};
@@ -2664,43 +2663,6 @@ sub phenotypes_POST {
             push @all_observations, $observation;
         }
     }
-
-    #process observations_store
-    # for each value in data array, turn this
-    # {
-    #   "observationUnitDbId": "observationUnitDbId0",
-    #   "observations": [
-    #     {
-    #       "collector": "collector0",
-    #       "observationDbId": "observationDbId0",
-    #       "observationTimeStamp": "2018-01-01T14:47:23-0600",
-    #       "observationVariableDbId": "observationVariableDbId0",
-    #       "observationVariableName": "observationVariableName0",
-    #       "season": "season0",
-    #       "value": "value0"
-    #     },
-    #     {
-    #       "collector": "collector1",
-    #       "observationDbId": "observationDbId1",
-    #       "observationTimeStamp": "2018-01-01T14:47:23-0600",
-    #       "observationVariableDbId": "observationVariableDbId1",
-    #       "observationVariableName": "observationVariableName1",
-    #       "season": "season1",
-    #       "value": "value1"
-    #     }
-    #   ],
-    #   "studyDbId": "studyDbId0"
-    # },
-    # into this
-    # {
-    #   "collector": "collector0",
-    #   "observationDbId": "observationDbId0",
-    #   "observationTimeStamp": "2018-01-01T14:47:23-0600",
-    #   "observationUnitDbId": "observationUnitDbId0",
-    #   "observationVariableDbId": "observationVariableDbId0",
-    #   "value": "value0"
-    # },
-
     _store_observations($self, $c, \@all_observations, 'v1');
 }
 
@@ -2856,8 +2818,6 @@ sub _store_observations {
     my $c = shift;
     my $observations = shift;
     my $version = shift;
-
-    print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $dbh = $c->dbc->dbh;
     my $auth = _authenticate_user($c);
