@@ -141,6 +141,7 @@ sub observation_variable_ontologies {
 sub observation_variable_search {
 	my $self = shift;
 	my $inputs = shift;
+	my $c = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -202,37 +203,90 @@ sub observation_variable_search {
 	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join WHERE $and_where_clause ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	$sth->execute();
+
+	# Get values from our config
+	my $supported_crop = $c->config->{'supportedCrop'};
+	my $production_url = $c->config->{'main_production_site_url'};
+
 	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
 		$total_count = $count;
 		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
+
+        my %ontologyReference = (
+            ontologyDbId => qq|$db_id|,
+            ontologyName => $db_name,
+            version => '',
+            documentationURL => {
+				URL  => '',
+				type => ''
+			}
+		);
+
+		# Note: Breedbase does not have a concept of 'methods'.
+		# Note: Breedbase does not have a concept of 'scale'. The values populated in scale are values from cvprop.
+		# Note: Breedbase does not have a created date stored from ontology variables.
+		# Note: Breedbase does not have synonyms, or abbreviations for its traits.
+
 		push @data, {
+		    contextOfUse => [],
+		    crop => $supported_crop,
+		    defaultValue => $trait->default_value,
+		    documentationURL => $trait->uri,
+		    growthStage => '',
+		    institution => $production_url,
+		    language => '',
+		    method => {
+		        class => '',
+		        description => '',
+		        formula => '',
+		        methodDbId => '',
+		        methodName => '',
+		        name => '',
+		        ontologyReference => \%ontologyReference,
+                reference => ''
+		    },
+		    name => $cvterm_name."|".$db_name.":".$accession,
 			observationVariableDbId => qq|$cvterm_id|,
-			name => $cvterm_name."|".$db_name.":".$accession,
+			observationVariableName => $cvterm_name,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
+			ontologyReference => \%ontologyReference,
+            scale => {
+                dataType=>$trait->format,
+                decimalPlaces=>undef,
+                name =>'',
+                ontologyReference => \%ontologyReference,
+                scaleDbId =>'',
+                scaleName => '',
+                validValues => {
+                    categories=>\@brapi_categories,
+                    max=>$trait->maximum ? $trait->maximum : undef,
+                    min=>$trait->minimum ? $trait->minimum : undef,
+                },
+                xref=>'',
+            },
+            scientist => '',
+            status => '',
+            submissionTimestamp => '',
+            synonyms => [],
 			trait => {
+			    alternativeAbbreviations => [],
+			    attribute => $cvterm_name,
+                class => '',
+                description => $cvterm_definition,
+                entity => '',
+                mainAbbreviations => '',
+                name => $cvterm_name,
+                ontologyReference => \%ontologyReference,
+                status => '',
+                synonyms => [],
 				traitDbId => qq|$cvterm_id|,
-				name => $cvterm_name,
-				description => $cvterm_definition,
-                class => ''
-			},
-			method => {},
-			scale => {
-				scaleDbId =>'',
-				name =>'',
-				datatype=>$trait->format,
-				decimalPlaces=>undef,
-				xref=>'',
-				validValues=> {
-					min=>$trait->minimum ? $trait->minimum : undef,
-					max=>$trait->maximum ? $trait->maximum : undef,
-					categories=>\@brapi_categories
-				}
+				traitName => $cvterm_name,
+				xref => '$db_name.":".$accession'
 			},
 			xref => $db_name.":".$accession,
-			defaultValue => $trait->default_value
 		};
 	}
 
