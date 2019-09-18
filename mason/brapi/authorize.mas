@@ -1,35 +1,25 @@
 <%args>
-    # $logged_in_username
-    $return_url
+    $deny_url
+    $authorize_url
+    $user_name
     $display_name
+    $database_name
 </%args>
 
-<& /page/page_title.mas, title=>"BrAPI Authorization" &>
+<& /page/page_title.mas, title=>"BrAPI Client Authorization" &>
 
-<!--<div class="row">
+<!-- <div class="row">
     <div class="col-lg-12">
         <p>To tie Field Book to your account on Breedbase, open Field Book and go to Settings -> External Data Source and scan the below QR code</p>
     </div>
 </div>
 <div class="row">
     <img class="col-md-2 col-md-offset-5" src="/user/field-book/generate">
-</div>
-
-<div class="row center">
-    <p>Click the button below to authorize Field Book to access Breedbase</p>
-    <button class="btn btn-primary" onclick="window.location.replace('fieldbook://hello-world');">Authorize Field Book</button>
 </div> -->
 
-<div id="brapi-auth"></div>
-
-<script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-
-<script src="/js/legacy/brapi/auth.js"></script>
-<script>
-const domContainer = document.querySelector('#brapi-auth');
-ReactDOM.render(e(BrapiAuth, {
-    appName: "<% $display_name %>",
-    returnUrl: "<% $return_url %>"
-}), domContainer);
-</script>
+<div class="row center">
+    <p>Hello <b><% $user_name %></b>!</p>
+    <p><b><% $display_name %></b> would like to access <b><% $database_name %></b> through your account. Use the buttons below to authorize or deny this request.</p><br>
+    <button class="btn btn-success" onclick="window.location.replace(<% $authorize_url %>);">Authorize Access</button>
+    <button class="btn btn-danger" onclick="window.location.replace(<% $deny_url %>);">Deny Access</button>
+</div>
