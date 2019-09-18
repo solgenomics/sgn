@@ -1551,7 +1551,8 @@ sub studies_info_GET {
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_detail(
 		$c->stash->{study_id},
-        $c->config->{main_production_site_url}
+        $c->config->{main_production_site_url},
+		$c->config->{supportedCrop}
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }

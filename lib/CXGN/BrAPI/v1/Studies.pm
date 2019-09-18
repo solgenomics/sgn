@@ -251,6 +251,7 @@ sub studies_detail {
 	my $self = shift;
 	my $study_id = shift;
     my $main_production_site_url = shift;
+	my $supported_crop = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -306,6 +307,7 @@ sub studies_detail {
             my @data_links;
             foreach (@$additional_files){
                 push @data_links, {
+					dataLinkName => $_->[4],
                     type => 'Additional File',
                     name => $_->[4],
                     url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
@@ -315,6 +317,7 @@ sub studies_detail {
             my $phenotype_files = $t->get_phenotype_metadata();
             foreach (@$additional_files){
                 push @data_links, {
+					dataLinkName => $_->[4],
                     type => 'Uploaded Phenotype File',
                     name => $_->[4],
                     url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
@@ -326,42 +329,46 @@ sub studies_detail {
             my $folder_db_id = $folder->project_parent->project_id();
             my $breeding_program_id = $folder->breeding_program->project_id();
 			%result = (
+				active=>JSON::true,
+				additionalInfo=>\%additional_info,
+				commonCropName=> $supported_crop,
+				contacts=>$brapi_contacts,
+				dataLinks=>\@data_links,
+				documentationURL=>"",
+				endDate => $harvest_date,
+				lastUpdate=>{
+					version => '',
+					timestamp => ''
+				},
+				license=>$data_agreement,
+				location=> {
+					abbreviation=>$location->[9],
+					additionalInfo=> $location->[7],
+					altitude=>$location->[4],
+					countryCode=> $location->[6],
+					countryName=> $location->[5],
+					documentationURL=>"",
+					instituteAddress=>$location->[10],
+					instituteName=>'',
+					latitude=>$location->[2],
+					locationDbId => qq|$location->[0]|,
+					locationName=> $location->[1],
+					locationType=>$location->[8],
+					longitude=>$location->[3],
+					name=>$location->[1],
+				},
+				seasons=>\@years,
+				startDate => $planting_date,
 				studyDbId=>qq|$study_db_id|,
+				studyDescription=>$t->get_description(),
 				studyName=>$t->get_name(),
+				studyType=>$project_type,
+				studyTypeDbId=>"",
+				studyTypeName=>"",
 				trialDbId=>qq|$folder_db_id|,
 				trialName=>$folder->project_parent->name(),
-				studyType=>$project_type,
-				seasons=>\@years,
-                studyDescription=>$t->get_description(),
-				locationDbId=>qq|$location_id|,
-				locationName=>$location_name,
 				programDbId=>qq|$breeding_program_id|,
 				programName=>$folder->breeding_program->name(),
-				startDate => $planting_date,
-				endDate => $harvest_date,
-				additionalInfo=>\%additional_info,
-				active=>JSON::true,
-                license=>$data_agreement,
-				location=> {
-					locationDbId => qq|$location->[0]|,
-					locationType=>$location->[8],
-					name=> $location->[1],
-					abbreviation=>$location->[9],
-					countryCode=> $location->[6],
-                    instituteName=>'',
-                    instituteAddress=>$location->[10],
-					countryName=> $location->[5],
-					latitude=>$location->[2],
-					longitude=>$location->[3],
-					altitude=>$location->[4],
-					additionalInfo=> $location->[7]
-				},
-				contacts=>$brapi_contacts,
-                dataLinks=>\@data_links,
-                lastUpdate=>{
-                    version => '',
-                    timestamp => ''
-                }
 			);
 		} else {
 			return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not a study');
