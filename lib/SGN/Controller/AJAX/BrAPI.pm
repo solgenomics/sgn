@@ -2400,7 +2400,7 @@ sub _observationvariable_search_process {
 		observationvariable_names => $clean_inputs->{name},
 		observationvariable_datatypes => $clean_inputs->{datatype},
 		observationvariable_classes => $clean_inputs->{traitClass},
-	});
+	}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2411,9 +2411,10 @@ sub observationvariable_list_GET {
 	my $c = shift;
 	my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->observation_variable_search();
+	my $brapi_package_result = $brapi_module->observation_variable_search(undef, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
