@@ -105,14 +105,20 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         my $image_page = "/image/view/$image_id";
         my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" height="30" border="0" alt="$image_description" /></a>|;
 
-        push @return, [
+        my @line;
+        if ($params->{html_select_box}) {
+            push @line, "<input type='checkbox' name='".$params->{html_select_box}."' value='".$_->{image_id}."'>";
+        }
+        push @line, (
             $colorbox,
             "<a href='/image/view/".$_->{image_id}."' >".$_->{image_original_filename}."</a>",
             $_->{image_description},
             "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{image_sp_person_id}."' >".$_->{image_username}."</a>",
             $associations,
             (join ', ', @tags)
-        ];
+        );
+
+        push @return, \@line;
     }
 
     #print STDERR Dumper \@return;
