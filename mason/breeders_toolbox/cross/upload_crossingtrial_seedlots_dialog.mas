@@ -103,7 +103,7 @@
                         <tbody>
                             <tr>
                                 <td>seedlot_name</td>
-                                <td>cross_name</td>
+                                <td>cross_unique_id</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
                                 <td>weight(g)</td>
@@ -115,7 +115,7 @@
                     <b>Required fields:</b>
                     <ul>
                         <li>seedlot_name (must be unique)</li>
-                        <li>cross_name (must exist in the database. a cross_name can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
+                        <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
                         <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                         <li>amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
                             <br/><b>AND/OR</b><br/>
