@@ -191,7 +191,7 @@ DELETE Response:
 
 =cut
 
-sub authenticate_token : Chained('brapi') PathPart('token'||'login') Args(0) : ActionClass('REST') { }
+sub authenticate_token : Chained('brapi') PathPart('token') Args(0) : ActionClass('REST') { }
 
 sub authenticate_token_DELETE {
 	my $self = shift;
@@ -1789,7 +1789,10 @@ sub studies_observations_granular : Chained('studies_single') PathPart('observat
 sub studies_observations_granular_PUT {
     my $self = shift;
 	my $c = shift;
-    _store_observations($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $observations = $clean_inputs->{observations};
+    #print STDERR "Observations are ". Dumper($observations) . "\n";
+    _store_observations($self, $c, $observations, 'v1');
 }
 
 sub studies_observations_granular_GET {
@@ -2559,7 +2562,121 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
 
 }
 
-=head2 brapi/v1/observations
+=head2 brapi/v1/phenotypes
+
+ Usage: To store phenotypes
+ Desc:
+ Request body example:
+ {
+  "data": [
+    {
+      "observationUnitDbId": "observationUnitDbId0",
+      "observations": [
+        {
+          "collector": "collector0",
+          "observationDbId": "observationDbId0",
+          "observationTimeStamp": "2018-01-01T14:47:23-0600",
+          "observationVariableDbId": "observationVariableDbId0",
+          "observationVariableName": "observationVariableName0",
+          "season": "season0",
+          "value": "value0"
+        },
+        {
+          "collector": "collector1",
+          "observationDbId": "observationDbId1",
+          "observationTimeStamp": "2018-01-01T14:47:23-0600",
+          "observationVariableDbId": "observationVariableDbId1",
+          "observationVariableName": "observationVariableName1",
+          "season": "season1",
+          "value": "value1"
+        }
+      ],
+      "studyDbId": "studyDbId0"
+    },
+    {
+      "observationUnitDbId": "observationUnitDbId1",
+      "observations": [
+        {
+          "collector": "collector0",
+          "observationDbId": "observationDbId0",
+          "observationTimeStamp": "2018-01-01T14:47:23-0600",
+          "observationVariableDbId": "observationVariableDbId0",
+          "observationVariableName": "observationVariableName0",
+          "season": "season0",
+          "value": "value0"
+        },
+        {
+          "collector": "collector1",
+          "observationDbId": "observationDbId1",
+          "observationTimeStamp": "2018-01-01T14:47:23-0600",
+          "observationVariableDbId": "observationVariableDbId1",
+          "observationVariableName": "observationVariableName1",
+          "season": "season1",
+          "value": "value1"
+        }
+      ],
+      "studyDbId": "studyDbId1"
+    }
+  ]
+}
+
+ Response JSON example:
+ {
+  "metadata": {
+    "datafiles": [],
+    "pagination": {
+      "currentPage": 0,
+      "pageSize": 1000,
+      "totalCount": 2,
+      "totalPages": 1
+    },
+    "status": []
+  },
+  "result": {
+    "data": [
+      {
+        "germplasmDbId": "8383",
+        "germplasmName": "Pahang",
+        "observationDbId": "12345",
+        "observationLevel": "plot",
+        "observationTimestamp": "2015-11-05T15:12:56+01:00",
+        "observationUnitDbId": "11",
+        "observationUnitName": "ZIPA_68_Ibadan_2014",
+        "observationVariableDbId": "CO_334:0100632",
+        "observationVariableName": "Yield",
+        "operator": "Jane Doe",
+        "studyDbId": "35",
+        "uploadedBy": "dbUserId",
+        "value": "5"
+      }
+    ]
+  }
+}
+ Args:
+ Side Effects:
+
+=cut
+
+sub phenotypes : Chained('brapi') PathPart('phenotypes') Args(0) : ActionClass('REST') { }
+
+sub phenotypes_POST {
+	my $self = shift;
+	my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs->{data};
+    my @all_observations;
+    foreach my $observationUnit (@{$data}) {
+        my $observationUnitDbId = $observationUnit->{observationUnitDbId};
+        my $observations = $observationUnit->{observations};
+        foreach my $observation (@{$observations}) {
+            $observation->{observationUnitDbId} = $observationUnitDbId;
+            push @all_observations, $observation;
+        }
+    }
+    _store_observations($self, $c, \@all_observations, 'v1');
+}
+
+=head2 brapi/v2/observations
 
  Usage: To store observations
  Desc:
@@ -2618,7 +2735,9 @@ sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionCla
 sub observations_PUT {
 	my $self = shift;
 	my $c = shift;
-    _store_observations($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $observations = $clean_inputs->{observations};
+    _store_observations($self, $c, $observations, 'v2');
 }
 
 sub observations_GET {
@@ -2707,6 +2826,9 @@ sub observations_search_process {
 sub _store_observations {
     my $self = shift;
     my $c = shift;
+    my $observations = shift;
+    my $version = shift;
+
     my $dbh = $c->dbc->dbh;
     my $auth = _authenticate_user($c);
     my ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($dbh)->query_from_cookie($c->stash->{session_token});
@@ -2720,10 +2842,11 @@ sub _store_observations {
 
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
 	my $brapi_package_result = $brapi_module->observations_store({
-        observations => $clean_inputs->{observations},
+        observations => $observations,
         user_id => $user_id,
         username => $username,
         user_type => $user_type,
+        version => $version,
         archive_path => $c->config->{archive_path},
         tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
         basepath => $c->config->{basepath},
