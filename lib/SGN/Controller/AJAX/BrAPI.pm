@@ -837,7 +837,7 @@ sub studies_search_POST {
         active => $clean_inputs->{active}->[0],
         sortBy => $clean_inputs->{sortBy}->[0],
         sortOrder => $clean_inputs->{sortOrder}->[0],
-    });
+    }, $c);
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -866,8 +866,18 @@ sub studies_search_GET {
         active => $clean_inputs->{active}->[0],
         sortBy => $clean_inputs->{sortBy}->[0],
         sortOrder => $clean_inputs->{sortOrder}->[0],
-    });
+    }, $c);
     _standard_response_construction($c, $brapi_package_result);
+}
+
+sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+
+sub studies_GET {
+	my $self = shift;
+	my $c = shift;
+
+	# Use the studies-search end point for this
+	studies_search_GET($self, $c);
 }
 
 #BrAPI Trials are modeled as Folders

@@ -117,6 +117,7 @@ sub study_types {
 sub studies_search {
     my $self = shift;
     my $search_params = shift;
+	my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -164,27 +165,40 @@ sub studies_search {
     my ($data, $total_count) = $trial_search->search();
     #print STDERR Dumper $data;
 
+	my $supported_crop = $c->config->{"supportedCrop"};
+
     my @data_out;
     foreach (@$data){
         my %additional_info = (
             design => $_->{design},
             description => $_->{description},
         );
+		my %season = (
+			season     => "",
+			seasonDbId => "",
+			year       => $_->{"year"}
+		);
+
         my %data_obj = (
+			active=>JSON::true,
+			additionalInfo=>\%additional_info,
+			commonCropName => $supported_crop,
+			documentationURL => "",
+			endDate => $_->{project_planting_date},
+			locationDbId => $_->{location_id},
+			locationName => $_->{location_name},
+			name => $_->{trial_name},
+			programDbId => qq|$_->{breeding_program_id}|,
+			programName => $_->{breeding_program_name},
+			seasons => \%season,
+			startDate => $_->{project_harvest_date},
             studyDbId => qq|$_->{trial_id}|,
-            name => $_->{trial_name},
+			studyName => "",
+			studyType => $_->{trial_type},
+			studyTypeDbId => "",
+			studyTypeName => "",
             trialDbId => qq|$_->{folder_id}|,
             trialName => $_->{folder_name},
-            studyType => $_->{trial_type},
-            seasons => [$_->{year}],
-            locationDbId => $_->{location_id},
-            locationName => $_->{location_name},
-            programDbId => qq|$_->{breeding_program_id}|,
-            programName => $_->{breeding_program_name},
-            startDate => $_->{project_harvest_date},
-            endDate => $_->{project_planting_date},
-            active=>JSON::true,
-            additionalInfo=>\%additional_info
         );
         push @data_out, \%data_obj;
     }
