@@ -437,8 +437,8 @@ sub studies_observation_variables {
 					reference=>""
 				},
 				name => $trait->display_name,
-				observationVariableDbId => qq|$trait_id|,
-				observationVariableName => $trait->display_name,
+				observationVariableDbId => $trait->display_name,
+				observationVariableName => $trait->name,
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
 				ontologyReference=>\%ontologyReference,

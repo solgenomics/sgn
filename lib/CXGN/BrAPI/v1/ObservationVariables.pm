@@ -247,8 +247,8 @@ sub observation_variable_search {
 		        ontologyReference => \%ontologyReference,
                 reference => ''
 		    },
-		    name => $cvterm_name."|".$db_name.":".$accession,
-			observationVariableDbId => qq|$cvterm_id|,
+		    name => $cvterm_name,
+			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
 			observationVariableName => $cvterm_name,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
