@@ -20,6 +20,6 @@
 <div class="row center">
     <p>Hello <b><% $user_name %></b>!</p>
     <p><b><% $display_name %></b> would like to access <b><% $database_name %></b> through your account. Use the buttons below to authorize or deny this request.</p><br>
-    <button class="btn btn-success" onclick="window.location.replace(<% $authorize_url %>)">Authorize Access</button>
-    <button class="btn btn-danger" onclick="window.location.replace(<% $deny_url %>)">Deny Access</button>
+    <button class="btn btn-success" onclick="window.location.replace('<% $authorize_url %>')">Authorize Access</button>
+    <button class="btn btn-danger" onclick="window.location.replace('<% $deny_url %>')">Deny Access</button>
 </div>
