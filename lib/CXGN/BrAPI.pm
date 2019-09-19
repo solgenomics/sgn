@@ -24,6 +24,7 @@ use CXGN::BrAPI::v1::ObservationTables;
 use CXGN::BrAPI::v1::Results;
 use CXGN::BrAPI::v1::Images;
 use CXGN::BrAPI::v1::Markers;
+use CXGN::BrAPI::v1::Variables;
 
 has 'version' => (
 	isa => 'Str',

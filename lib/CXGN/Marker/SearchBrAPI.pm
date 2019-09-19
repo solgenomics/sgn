@@ -49,13 +49,24 @@ has 'marker_ids' => (
 );
 
 has 'marker_names' => (
-    isa => 'ArrayRef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
 );
 
-has 'species_name' => (
-    isa => 'Str',
-    is => "rw"
+has 'get_synonyms' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
+has 'match_method' => (
+    isa => 'Str|Undef',
+    is => 'rw'
+);
+
+has 'types' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw'
 );
 
 has 'limit' => (
@@ -75,22 +86,42 @@ sub search {
     my $limit = $self->limit;
     my $offset = $self->offset;
     my $marker_ids = $self->marker_ids;
-    # my $marker_name = $self->marker_name;
-    # my $include_synonyms = $self->include_synonyms;
-    # my $match_method = $self->match_method;
-    # my $types = $self->types;
+    my $marker_names = $self->marker_names;
+    my $get_synonyms = $self->get_synonyms;
+    my $match_method = $self->match_method;
+    my $types = $self->types;
     my @where_clause;
+    my $comparison;
+
+    if ($match_method eq 'exact'){ $comparison = 'in';} 
+    elsif ($match_method eq 'case_insensitive'){ $comparison = 'ilike'; }
+    else { $comparison = 'like'; }
 
     if ($marker_ids && scalar(@$marker_ids)>0) {
         my $sql = join ("," , @$marker_ids);
         push @where_clause, "marker.marker_id in ($sql)";
     }
 
+    if ($marker_names && scalar(@$marker_names)>0) {
+        my $sql = join ("," , @$marker_names);
+        push @where_clause, "marker_names.name in ($sql)";
+    }
+
+    if ($types && scalar(@$types)>0) {
+        my $sql = join ("," , @$types);
+        push @where_clause, "protocol in ($sql)";
+    }
+
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
-        
-    my $subquery = "select marker.marker_id, m2m.location_id, m2m.lg_name, m2m.lg_order, m2m.position, m2m.confidence_id, m2m.subscript, m2m.map_version_id, m2m.map_id FROM sgn.marker left join sgn.marker_to_map as m2m using(marker_id) $where_clause";
-
+       
+    my $subquery = "SELECT distinct m2m.marker_id,name,alias,protocol,organism_name,common_name.common_name FROM sgn.marker 
+        LEFT JOIN sgn.marker_to_map as m2m using(marker_id) 
+        INNER JOIN sgn.accession ON(parent_1 = accession.accession_id OR parent_2 = accession.accession_id) 
+        INNER JOIN sgn.organism using(organism_id) 
+        INNER JOIN sgn.common_name USING(common_name_id) 
+        INNER JOIN marker_names ON(m2m.marker_id=marker_names.marker_id) 
+        INNER JOIN marker_alias ON(m2m.marker_id=marker_alias.marker_id) $where_clause";
 
     my $h = $schema->storage->dbh()->prepare($subquery);
     $h->execute();
@@ -98,10 +129,15 @@ sub search {
     my @result;
     my $total_count = 0;
     my $subtract_count = 0;
-    while (my ($marker_id, $location_id,$full_count) = $h->fetchrow_array()) {
+
+    while (my ($marker_id, $marker_name, $reference, $alias, $protocol, $full_count) = $h->fetchrow_array()) {
         push @result, {
-          marker_id => $marker_id,
-          location_id => $location_id
+            marker_id => $marker_id,
+            marker_name => $marker_name,
+            method => $protocol,
+            references => $reference,
+            synonyms => $alias,
+            type => $protocol
         };
         $total_count = $full_count;
     }

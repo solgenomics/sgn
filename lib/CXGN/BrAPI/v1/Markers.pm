@@ -22,29 +22,31 @@ sub search {
     my @marker_ids = $inputs->{markerDbIds} ? @{$inputs->{markerDbIds}} : ();
     my @marker_names = $inputs->{markerNames} ? @{$inputs->{markerNames}} : ();
     my @types = $inputs->{types} ? @{$inputs->{types}} : ();
-    my $method = $inputs->{method};
+    my $synonyms = $inputs->{synonyms};
+    my $method = $inputs->{matchMethod};
     my $schema = $self->bcs_schema;
     my @data_out;
 
     my $marker_search = CXGN::Marker::SearchBrAPI->new({
         bcs_schema=>$schema,
-        marker_ids=>\@marker_ids
-        # markerNames=>\@marker_names,
-        # matchMethod=>[$method],
-        # types=>\@types,
-        # offset=>$page_size*$page,
-        # limit=>$page_size
+        marker_ids=>\@marker_ids,
+        marker_names=>\@marker_names,
+        get_synonyms=>$synonyms,
+        match_method=>$method,
+        types=>\@types, 
+        offset=>$page_size*$page,
+        limit=>$page_size
     });
     my ($data, $total_count) = $marker_search->search();
 
     foreach (@$data){
-        # my %additional_info = (
-        #     design => $_->{design},
-        #     description => $_->{description},
-        # );
         my %data_obj = (
             markerDbId => qq|$_->{marker_id}|,
-            markerName => $_->{location_id} 
+            markerName => $_->{marker_name},
+            analysisMethods => $_->{method}, 
+            refAlt => $_->{references},
+            synonyms => $_->{synonyms},
+            type => $_->{type}
         );
         push @data_out, \%data_obj;
     }
@@ -53,7 +55,6 @@ sub search {
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Marker-search result constructed');
-
 }
 
 1;
