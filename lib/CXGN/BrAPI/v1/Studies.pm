@@ -618,12 +618,16 @@ sub observation_units {
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
+				collector => $_->{operator},
                 observationDbId => qq|$_->{phenotype_id}|,
+				observationTimestamp => $obs_timestamp,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimestamp => $obs_timestamp,
-                season => $obs_unit->{year},
-                collector => $_->{operator},
+                season => {
+					season=>'',
+					seasonDbId=>'',
+					year=>$obs_unit->{year}
+				},
                 value => qq|$_->{value}|,
             };
         }
@@ -635,29 +639,39 @@ sub observation_units {
                 modality => $modality,
             };
         }
+
+		# Get the pedigree of the germplasm
+		my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
+		my $pedigree_string = "";
+		if ($s) {
+			$pedigree_string = $s->get_pedigree_string('Parents');
+		}
+
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {
+			X => $obs_unit->{obsunit_col_number},
+			Y => $obs_unit->{obsunit_row_number},
+			blockNumber => $obs_unit->{obsunit_block_number},
+			entryNumber => '',
+			entryType => $entry_type,
+			germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
+			germplasmName => $obs_unit->{germplasm_uniquename},
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+			observationUnitName => $obs_unit->{observationunit_uniquename},
+			observationUnitXref => [],
+			observations => \@brapi_observations,
+			pedigree=>$pedigree_string,
+			plantNumber => $obs_unit->{obsunit_plant_number},
+			plotNumber => $obs_unit->{obsunit_plot_number},
+			replicate => $obs_unit->{obsunit_rep_number},
             observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
-            plotNumber => $obs_unit->{obsunit_plot_number},
-            plantNumber => $obs_unit->{obsunit_plant_number},
-            blockNumber => $obs_unit->{obsunit_block_number},
-            replicate => $obs_unit->{obsunit_rep_number},
-            observationUnitName => $obs_unit->{observationunit_uniquename},
-            germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
-            germplasmName => $obs_unit->{germplasm_uniquename},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             studyLocationDbId => qq|$obs_unit->{trial_location_id}|,
             studyLocation => $obs_unit->{trial_location_name},
             programName => $obs_unit->{breeding_program_name},
-            X => $obs_unit->{obsunit_col_number},
-            Y => $obs_unit->{obsunit_row_number},
-            entryType => $entry_type,
-            entryNumber => '',
             treatments => \@brapi_treatments,
-            observations => \@brapi_observations
         };
         $total_count = $obs_unit->{full_count};
     }
