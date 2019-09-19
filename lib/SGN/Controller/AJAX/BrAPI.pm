@@ -51,7 +51,16 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 	my $page = $c->req->param("page") || 0;
 	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
-	my $session_token = $c->req->headers->header("access_token");
+	my $bearer_token = $c->req->headers->header("Authorization");
+
+	if (defined $bearer_token) {
+		my @bearer = split(" ", $bearer_token);
+		if (scalar @bearer == 2) {
+			$bearer_token = $bearer[1];
+		}
+	}
+
+	my $session_token = $c->req->headers->header("access_token") || $bearer_token;
 
 	if (defined $c->request->data){
 		$page = $c->request->data->{"page"} || $page || 0;
