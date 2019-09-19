@@ -268,8 +268,8 @@ sub observation_variable_search {
                 xref=>'',
             },
             scientist => '',
-            status => '',
-            submissionTimestamp => '',
+            status => JSON::true,
+            submissionTimestamp => undef,
             synonyms => [],
 			trait => {
 			    alternativeAbbreviations => [],
