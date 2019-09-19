@@ -26,7 +26,7 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breed
         } else {
             my $user_name = $c->user()->get_object()->get_username();
             my $token = CXGN::Login->new($c->dbc->dbh)->get_login_cookie();
-            my $authorize_url = $return_url . "status=200&token=" . $token;
+            my $authorize_url = $return_url . "?status=200&token=" . $token;
             my $deny_url = $return_url . "status=401";
             $c->stash->{authorize_url} = $authorize_url;
             $c->stash->{deny_url} = $deny_url;
