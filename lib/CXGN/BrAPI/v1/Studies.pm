@@ -407,36 +407,74 @@ sub studies_observation_variables {
 			my @brapi_categories = split '/', $categories;
             my $trait_id = $trait->cvterm_id;
             my $trait_db_id = $trait->db_id;
-			push @data, {
-				observationVariableDbId => qq|$trait_id|,
-				name => $trait->display_name,
+
+			my %ontologyReference = (
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
-                language => 'EN',
-                synonyms => [],
-                crop => $crop,
-				trait => {
-					traitDbId => qq|$trait_id|,
-					name => $trait->name,
-					description => $trait->definition,
-                    xref => $trait->term,
-                    class => ''
+				version => '',
+				documentationURL => {
+					URL  => '',
+					type => ''
+				}
+			);
+
+			push @data, {
+				contextOfUse=>[],
+				crop => $crop,
+				defaultValue => $trait->default_value,
+				documentationURL=> $trait->uri,
+				growthStage=>"",
+				institution=>"",
+				language => 'EN',
+				method => {
+					class=>"",
+					description=>"",
+					formula=>"",
+					methodDbId=>"",
+					methodName=>"",
+					name=>"",
+					ontologyReference=>\%ontologyReference,
+					reference=>""
 				},
-				method => {},
+				name => $trait->display_name,
+				observationVariableDbId => qq|$trait_id|,
+				observationVariableName => $trait->display_name,
+				ontologyDbId => qq|$trait_db_id|,
+				ontologyName => $trait->db,
+				ontologyReference=>\%ontologyReference,
 				scale => {
-					scaleDbId =>'',
-					name =>'',
-					datatype=>$trait->format,
+					dataType=>$trait->format,
 					decimalPlaces=>undef,
-					xref=>'',
+					name =>'',
+					ontologyReference=>\%ontologyReference,
+					scaleDbId =>'',
+					scaleName=>'',
 					validValues=> {
 						min=>$trait->minimum ? $trait->minimum + 0 : 0,
-						max=>$trait->maximum ? $trait->maximum + 0 : 0,
-						categories=>\@brapi_categories
-					}
+							max=>$trait->maximum ? $trait->maximum + 0 : 0,
+							categories=>\@brapi_categories
+					},
+					xref=>'',
+				},
+				scientist=>"",
+				status=>JSON::true,
+				submissionTimeStamp=>'',
+				synonyms => [],
+				trait => {
+					alternativeAbbreviations=>[],
+					class => '',
+					description => $trait->definition,
+					entity=>'',
+					mainAbbreviation=>'',
+					name => $trait->name,
+					ontologyReference=>\%ontologyReference,
+					status=>JSON::true,
+					synonyms=>[],
+					traitDbId => qq|$trait_id|,
+					traitName=>$trait->name,
+                    xref => $trait->term,
 				},
 				xref => $trait->term,
-				defaultValue => $trait->default_value
 			};
 		}
 		$result{data} = \@data;
