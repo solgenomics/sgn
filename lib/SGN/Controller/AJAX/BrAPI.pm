@@ -134,6 +134,7 @@ sub _authenticate_user {
 
         if (!$person_id || $expired || !$user_type) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
+
             _standard_response_construction($c, $brapi_package_result);
         }
     }
@@ -144,6 +145,7 @@ sub _authenticate_user {
 sub _standard_response_construction {
 	my $c = shift;
 	my $brapi_package_result = shift;
+	my $return_status = shift;
 	my $status = $brapi_package_result->{status};
 	my $pagination = $brapi_package_result->{pagination};
 	my $result = $brapi_package_result->{result};
@@ -152,6 +154,7 @@ sub _standard_response_construction {
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
+	$c->response->status($return_status == undef ? 200 : $return_status);
     $c->detach;
 }
 
