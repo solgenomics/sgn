@@ -53,14 +53,14 @@ sub send_email {
     #chomp($dnsdomainname);
     my $mailfrom = $vhost_conf->get_conf('www_user') . '@' . $hostname;
 
-#if we are specifying a mailto as a vhost configuration variable (such as 'bugs_email'), then use that variable's value, and append the request info.
-#mailto can also be specified normally (such as 'John Binns <zombieite@gmail.com>').
+    #if we are specifying a mailto as a vhost configuration variable (such as 'bugs_email'), then use that variable's value, and append the request info.
+    #mailto can also be specified normally (such as 'John Binns <zombieite@gmail.com>').
     if ( $mailto and eval{ $vhost_conf->get_conf($mailto)} ) {
         $mailto = $vhost_conf->get_conf($mailto);
         ##$request_info .= CXGN::Apache::Request::as_verbose_string();
     }
 
-#if we have no one specified to mail to, send it to bugs, and append the request info.
+    #if we have no one specified to mail to, send it to bugs, and append the request info.
     unless ($mailto) {
         $mailto = $vhost_conf->get_conf('bugs_email')
           ; #for all emails that do not specify email address, send them to our bugs_email
@@ -87,6 +87,25 @@ sub send_email {
                 Body    => $body,
             );
             $mail{'Reply-To'} = $replyto;
+
+            # Use External STMP server, if smtp config values are found
+            my $smtp_server = $vhost_conf->get_conf('smtp_server');
+            my $smtp_port = $vhost_conf->get_conf('smtp_port');
+            my $smtp_user = $vhost_conf->get_conf('smtp_user');
+            my $smtp_pass = $vhost_conf->get_conf('smtp_pass');
+            if ( $smtp_server and $smtp_port and $smtp_user and $smtp_pass ) {
+                my $smtp_from = $vhost_conf->get_conf('smtp_from');
+                if ( $smtp_from ) {
+                    $mail{'From'} = $smtp_from;
+                }
+                $mail{'server'} = $smtp_server . ":" . $smtp_port;
+                $mail{'auth'} = {
+                    user => $smtp_user,
+                    password => $smtp_pass,
+                    method => 'DIGEST-MD5 CRAM-MD5 PLAIN LOGIN'
+                };
+            }
+
             if ( sendmail(%mail) ) {
                 print STDERR
 "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";

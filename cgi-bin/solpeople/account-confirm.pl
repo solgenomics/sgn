@@ -18,7 +18,7 @@ if ( !$sp ) {
 }
 
 if ( !$sp->get_confirm_code() ) {
-    confirm_failure($page, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='login.pl'>[Login Page]</a></p>");
+    confirm_failure($page, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='/user/login?goto_url=%2F'>[Login Page]</a></p>");
 }
 
 if ( $sp->get_confirm_code() ne $confirm_code ) {
@@ -37,7 +37,7 @@ print <<EOF;
 
 <p>Confirmation successful for username <b>$username</b>.</p>
 
-<p><a href="login.pl">[Login Page]</a></p>
+<p><a href="/user/login?goto_url=%2F">[Login Page]</a></p>
 <br />
 
 EOF

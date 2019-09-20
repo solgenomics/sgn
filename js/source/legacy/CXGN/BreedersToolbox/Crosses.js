@@ -83,6 +83,7 @@ jQuery(document).ready(function($) {
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
+            $("#get_sib_parent").toggle($("#cross_type").val() == "sib");
             $("#get_bulk_maternal_population").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_paternal_parent").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_selfed_population").toggle($("#cross_type").val() == "bulk_self");
@@ -275,6 +276,11 @@ jQuery(document).ready(function($) {
                 maternal = $("#open_maternal_parent").val();
                 paternal = $("#open_paternal_population").val();
                 break;
+            case 'sib':
+                var sibParent = $("#sib_parent").val();
+                maternal = sibParent;
+                paternal = sibParent;
+                break;
             case 'bulk':
                 maternal = $("#bulk_maternal_population").val();
                 paternal = $("#bulk_paternal_parent").val();
@@ -329,7 +335,7 @@ jQuery(document).ready(function($) {
                 'female_plot': female_plot,
                 'male_plot': male_plot,
                 'cross_combination': cross_combination,
-            },  
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },

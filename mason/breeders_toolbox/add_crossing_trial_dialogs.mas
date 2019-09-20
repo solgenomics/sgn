@@ -3,6 +3,7 @@ $programs
 $locations
 </%args>
 
+
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.Crosses', 'CXGN.TrialTreeFolders'] &>
 
 <div class="modal fade" id="create_crossingtrial_dialog" name="create_crossingtrial_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossingTrialDialog">
@@ -26,21 +27,22 @@ $locations
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Add a crossing experiment" &>
-                            <& /page/page_title.mas, title=>"Enter basic information about the crossing experiment" &>
 
-                            <form class="form-horizontal" role="form" name="create_crossingtrial_form" id="create_crossingtrial_form">
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-lable">Crossing Experiment Name: </label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="crossingtrial_name" name="crossingtrial_name" type="text" />
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Breeding Program: </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
-                                            <option value="">Select Breeding Program</option>
+                        <form class="form-horizontal" role="form" name="create_crossingtrial_form" id="create_crossingtrial_form">
+                            <&| /util/workflow.mas:step, title=> "Add a crossing experiment" &>
+                                <& /page/page_title.mas, title=>"Enter basic information about the crossing experiment" &>
+                                    <br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-lable">Crossing Experiment Name: </label>
+                                        <div class="col-sm-8">
+                                            <input class="form-control" type="text" id="crossingtrial_name" name="crossingtrial_name"  />
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Breeding Program: </label>
+                                        <div class="col-sm-8">
+                                            <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
+                                                <option value="">Select Breeding Program</option>
 <%perl>
 foreach my $program (@$programs) {
     if (@$program[3]) {
@@ -51,14 +53,14 @@ foreach my $program (@$programs) {
     }
 }
 </%perl>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Location of crossing experiment </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
-                                            <option value="">Select Location</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Location of crossing experiment: </label>
+                                        <div class="col-sm-8">
+                                            <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
+                                                <option value="">Select Location</option>
 <%perl>
     foreach my $location_hashref (@$locations) {
         my $properties = $location_hashref->{'properties'};
@@ -67,27 +69,30 @@ foreach my $program (@$programs) {
         print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
     }
 </%perl>
-                                        </select>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Year:</label>
+                                        <div class="col-sm-8">
+                                            <div id="crosses_add_project_year" name="crosses_add_project_year" ></div>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Description:</label>
+                                        <div class="col-sm-8">
+                                            <textarea class="form-control" id="crosses_add_project_description" name="crosses_add_project_description" ></textarea>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Year:</label>
-                                    <div class="col-sm-10">
-                                        <div id="crosses_add_project_year" name="crosses_add_project_year" ></div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Description:</label>
-                                    <div class="col-sm-10">
-                                        <textarea class="form-control" id="crosses_add_project_description" name="crosses_add_project_description" ></textarea>
-                                    </div>
-                                </div>
-                            </form>
-                            <br/>
-                            <center>
-                                <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
-                            </center>
-                        </&>
+                                <br/>
+                                <br/>
+                                <br/>
+                                <center>
+                                    <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Submit</button>
+                                </center>
+                            </&>
+                        </form>
+
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
                             <& /page/page_title.mas, title=>"Finished! Your crossing experiment is now in the database" &>
                             <p>

@@ -49,6 +49,7 @@ $trial_name => undef
                         <select class="form-control" id="create_spreadsheet_phenotype_file_format" name="create_spreadsheet_phenotype_file_format">
                             <option value="ExcelBasic">Detailed</option>
                             <option value="ExcelBasicSimple">Simple</option>
+                            <option value="ExcelAssociatedImages">Associated Images</option>
                         </select>
                     </div>
                 </div>
