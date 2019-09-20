@@ -3,7 +3,6 @@ package SGN::Controller::BrAPIClient;
 
 use Moose;
 use URI::FromHash 'uri';
-use List::Util 'first';
 
 BEGIN { extends 'Catalyst::Controller' };
 
