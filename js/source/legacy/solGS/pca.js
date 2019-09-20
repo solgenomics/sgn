@@ -12,9 +12,7 @@ var solGS = solGS || function solGS () {};
 solGS.pca = {
 
     loadPcaPops: function(selectId, selectName, dataStructure) {
-	   console.log('IN  loadpcapops')
-	console.log('selectId ' + selectId + ' name ' + selectName + ' type ' + dataStructure)
-
+	  
 	if ( selectId.length === 0) {       
             alert('The list is empty. Please select a list with content.' );
 	} else {
@@ -51,11 +49,19 @@ solGS.pca = {
 
     pcaRun: function (selectId, selectName, dataStructure) {
 
-	var popDetails  = solGS.getPopulationDetails();
-	var dataType    = jQuery('#'+selectId + ' #data_type_select').val();
+	var dataType;
 
+	if (selectId) {
+	    dataType = jQuery('#'+selectId + ' #data_type_select').val();
+	} else {
+	  dataType = jQuery('#data_type_select').val();  
+	}
+
+	var popDetails = solGS.getPopulationDetails();
+	
 	var listId;
 	var datasetId;
+	var datasetName;
 	
 	if (dataStructure == 'list') {
 	    listId = selectId;
@@ -63,11 +69,14 @@ solGS.pca = {
 	} else if (dataStructure == 'dataset') {
 	    popDetails['training_pop_id'] = 'dataset_' + selectId;
 	    datasetId = selectId;
+	    datasetName = selectName;
 	}
 
 	if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
-	    jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));					 
-	    jQuery("#pca_message").html("Running PCA... please wait...");
+	    jQuery("#pca_canvas .multi-spinner-container").prependTo("#pca_canvas");
+	    jQuery("#pca_canvas .multi-spinner-container").show();
+	    jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));
+	    jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
 	    jQuery("#run_pca").hide();
 	}  
 
@@ -79,7 +88,7 @@ solGS.pca = {
 	    'data_type': dataType,
 	    'data_structure': dataStructure,
 	    'dataset_id': datasetId,
-	    'dataset_name': selectName
+	    'dataset_name': datasetName
 	};
 	
 	jQuery.ajax({
@@ -88,7 +97,8 @@ solGS.pca = {
             data: pcaArgs,
             url: '/pca/run',
             success: function(response) {
-		
+
+		jQuery("#pca_canvas .multi-spinner-container").hide();
 		if (response.pca_scores) {	
 		    var popId = response.pop_id;
 		    
@@ -98,21 +108,25 @@ solGS.pca = {
 				     'list_id': listId,
 				     'list_name': selectName,
 				     'trials_names': response.trials_names,
-				     'output_link' : response.output_link
+				     'output_link' : response.output_link,
+				     'data_type' : response.data_type
 				   };
 		    
                     solGS.pca.plotPca(plotData);
 		    jQuery("#pca_message").empty();
-		    jQuery("#run_pca").hide();
+		    jQuery("#run_pca").show();
 
-		} else {                
+		} else {
+                    jQuery("#pca_canvas .multi-spinner-container").hide();
 		    jQuery("#pca_message").html(response.status);
 		    jQuery("#run_pca").show();
 		}
 	    },
-            error: function(response) {                    
+            error: function(response) {
+                jQuery("#pca_canvas .multi-spinner-container").hide();
 		jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
 		jQuery("#run_pca").show();
+		
             }  
 	});
   
@@ -395,7 +409,7 @@ solGS.pca = {
 	pcaPlot.append("a")
 	    .attr("xlink:href", pcaDownload)
 	    .append("text")
-	    .text("[ Download PCA scores ]" + popName)
+	    .text("[ Download PCA scores ]" + popName + ' -- ' + plotData.data_type)
 	    .attr("y", pad.top + height + 75)
             .attr("x", pad.left)
             .attr("font-size", 14)
@@ -486,7 +500,7 @@ solGS.pca = {
 jQuery(document).ready( function() {
     
     var url = document.URL;
-      console.log('url '+ url)
+    
     if (url.match(/pca\/analysis/)) {
     
         var list = new CXGN.List();
@@ -520,7 +534,7 @@ jQuery(document).ready( function() {
 jQuery(document).ready( function() { 
      
     var url = document.URL;
-    console.log('url '+ url)
+    
     if (url.match(/pca\/analysis/)) {  
         var selectId;
 	var selectName;
@@ -532,16 +546,13 @@ jQuery(document).ready( function() {
             selectId = jQuery(this).find("option:selected").val();
             selectName = jQuery(this).find("option:selected").text();    
             dataStructure  = jQuery(this).find("option:selected").attr('name');
-	    console.log('dataStructureType ' + dataStructure)
-
+	    
 	    if (dataStructure == undefined) {
 		dataStructure = 'list';
 	    }
-	    
-	    console.log('dataStructureType ' + dataStructure)
+	   
             if (selectId) {                
                 jQuery("#pca_go_btn").click(function() {
-		    console.log('calling loadpcapops')
                     solGS.pca.loadPcaPops(selectId, selectName, dataStructure);
                 });
             }

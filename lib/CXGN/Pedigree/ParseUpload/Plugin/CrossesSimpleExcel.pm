@@ -23,7 +23,7 @@ sub _validate_with_plugin {
     $supported_cross_types{'biparental'} = 1; #both parents required
     $supported_cross_types{'self'} = 1; #only female parent required
     $supported_cross_types{'open'} = 1; #only female parent required
-    $supported_cross_types{'bulk'} = 1; #both parents required
+    $supported_cross_types{'sib'} = 1; #both parents required but can be the same.
     $supported_cross_types{'bulk_self'} = 1; #only female parent required
     $supported_cross_types{'bulk_open'} = 1; #only female parent required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
@@ -176,10 +176,10 @@ sub _validate_with_plugin {
             push @error_messages, "Cell D$row_name: female parent missing";
         }
 
-        #male parent must not be blank if type is biparental or bulk
+        #male parent must not be blank if type is biparental, sib or bulk
         if (!$male_parent || $male_parent eq '') {
-            if ($cross_type eq ( 'biparental' || 'bulk' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental and bulk crosses";
+            if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' )) {
+                push @error_messages, "Cell E$row_name: male parent required for biparental, sib and bulk crosses";
             }
         }
 
@@ -199,13 +199,13 @@ sub _validate_with_plugin {
 
     my @accessions = keys %seen_accession_names;
     my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+    my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
 
     my $population_validator = CXGN::List::Validate->new();
     my @parents_missing = @{$population_validator->validate($schema,'populations',\@accessions_missing)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following accessions or populations are not in the database as uniquenames or synonyms: ".join(',',@parents_missing);
+        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
         $errors{'missing_accessions'} = \@parents_missing;
     }
 
@@ -294,10 +294,8 @@ sub _parse_with_plugin {
             if ($worksheet->get_cell($row,$column)) {
                 my $column_property = $properties_columns{$column};
                 $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
-                if ($row == $row_max) {
-                    my $info_type = $worksheet->get_cell(0,$column)->value();
-                    $parsed_result{$info_type} = $additional_properties{$column_property};
-                }
+                my $info_type = $worksheet->get_cell(0,$column)->value();
+                $parsed_result{$info_type} = $additional_properties{$column_property};
             }
         }
 

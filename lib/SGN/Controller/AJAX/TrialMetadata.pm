@@ -24,6 +24,7 @@ use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
+use CXGN::Trial::TrialLayoutDownload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1324,6 +1325,24 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
 
     my $design = $layout->get_design();
     $c->stash->{rest} = {design => $design};
+}
+
+sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
+
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $c->stash->{trial_id},
+        data_level => 'plots',
+        #treatment_project_ids => [1,2],
+        selected_columns => $selected_cols,
+    });
+    my $output = $trial_layout_download->get_layout_output();
+
+    $c->stash->{rest} = $output;
 }
 
 sub trial_design : Chained('trial') PathPart('design') Args(0) {

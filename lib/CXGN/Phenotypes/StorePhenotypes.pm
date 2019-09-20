@@ -22,6 +22,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     values_hash=>$parsed_data,
     has_timestamps=>$timestamp_included,
     overwrite_values=>$overwrite,
+    ignore_new_values=>$ignore_new_values,
     metadata_hash=>$phenotype_metadata,
     image_zipfile_path=>$image_zip
 );
@@ -152,6 +153,12 @@ has 'overwrite_values' => (
     default => 0
 );
 
+has 'ignore_new_values' => (
+    isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
 has 'metadata_hash' => (
     isa => "HashRef",
     is => 'rw',
@@ -240,6 +247,8 @@ sub create_hash_lookups {
 
 sub verify {
     my $self = shift;
+    print STDERR "CXGN::Phenotypes::StorePhenotypes verify\n";
+
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
@@ -249,13 +258,15 @@ sub verify {
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
     my $schema = $self->bcs_schema;
     my $transaction_error;
-    #print STDERR Dumper \%plot_trait_value;
+    # print STDERR Dumper \@plot_list;
+    # print STDERR Dumper \@trait_list;
+    # print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my $error_message;
-    my $warning_message;
+    my $error_message = '';
+    my $warning_message = '';
 
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
         print STDERR "Plots or traits not valid\n";
@@ -289,6 +300,7 @@ sub verify {
     }
 
     my %image_plot_full_names;
+    #This is for saving Fieldbook images, which are only associated to a stock. To save images that are associated to a stock and a trait and a value, use the ExcelAssociatedImages parser
     if ($archived_image_zipfile_with_path) {
 
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
@@ -307,8 +319,8 @@ sub verify {
             }
             foreach my $img_name (@$file_names_stripped) {
                 $img_name = substr($img_name, 0, -20);
-                if (!exists($plot_name_check{$img_name})) {
-                    $error_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
+                if ($img_name && !exists($plot_name_check{$img_name})) {
+                    $warning_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name (e.g. the image filename does not have a plot or plant name in it)!</small><hr>";
                 }
             }
         }
@@ -323,7 +335,7 @@ sub verify {
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
             #print STDERR "$plot_name, $trait_name, $trait_value\n";
-            if ($trait_value || $trait_value eq '0') {
+            if ($trait_value || (defined($trait_value) && $trait_value eq '0')) {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
@@ -404,6 +416,8 @@ sub verify {
 
 sub store {
     my $self = shift;
+    print STDERR "CXGN::Phenotypes::StorePhenotypes store\n";
+
     $self->create_hash_lookups();
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
@@ -419,6 +433,7 @@ sub store {
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
     my $overwrite_values = $self->overwrite_values;
+    my $ignore_new_values = $self->ignore_new_values;
     my $error_message;
     my $transaction_error;
     my $user_id = $self->user_id;
@@ -438,6 +453,7 @@ sub store {
 
     my %experiment_ids;
     my @stored_details;
+    my %nd_experiment_md_images;
 
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
 
@@ -482,6 +498,7 @@ sub store {
                 my $timestamp = $value_array->[1];
                 $operator = $value_array->[2] ? $value_array->[2] : $operator;
                 my $observation = $value_array->[3];
+                my $image_id = $value_array->[4];
                 my $unique_time = $timestamp && defined($timestamp) ? $timestamp : 'NA'.$upload_date;
 
                 if (defined($trait_value) && length($trait_value)) {
@@ -493,6 +510,11 @@ sub store {
                             push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+                    }
+                    if ($ignore_new_values) {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            next;
+                        }
                     }
 
                     my $plot_trait_uniquename = "Stock: " .
@@ -533,6 +555,9 @@ sub store {
                         while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
                             push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_id];
                             $experiment_ids{$nd_experiment_id}=1;
+                            if ($image_id) {
+                                $nd_experiment_md_images{$nd_experiment_id} = $image_id;
+                            }
                         }
 
                     } else {
@@ -556,6 +581,9 @@ sub store {
                         });
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
+                        if ($image_id) {
+                            $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
+                        }
                     }
 
                     my %details = (
@@ -612,6 +640,9 @@ sub store {
     if ($archived_file) {
         $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
+    if (scalar(keys %nd_experiment_md_images) > 0) {
+        $self->save_archived_images_metadata(\%nd_experiment_md_images);
+    }
 
     return ($error_message, $success_message, \@stored_details);
 }
@@ -665,7 +696,7 @@ sub delete_previous_phenotypes {
         push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
         push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
     }
-    my $delete_phenotype_values_error = CXGN::Trial::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($self->dbhost, $self->dbname, $self->dbuser, $self->dbpass, $self->temp_file_nd_experiment_id, $self->basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
     if ($delete_phenotype_values_error) {
         die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
     }
@@ -737,6 +768,17 @@ sub save_archived_file_metadata {
             });
         $experiment_files->insert();
         #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+    }
+}
+
+sub save_archived_images_metadata {
+    my $self = shift;
+    my $nd_experiment_md_images = shift;
+
+    my $q = "INSERT into phenome.nd_experiment_md_images (nd_experiment_id, image_id) VALUES (?, ?);";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    while (my ($nd_experiment_id, $image_id) = each %$nd_experiment_md_images) {
+        $h->execute($nd_experiment_id, $image_id);
     }
 }
 

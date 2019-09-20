@@ -541,9 +541,9 @@ sub multi_pops_phenotype_data {
     if (@$pop_ids)
     {
         foreach my $pop_id (@$pop_ids)        
-        { 
+        {
             $c->stash->{pop_id} = $pop_id;
-            $c->controller('solGS::solGS')->phenotype_file($c);
+            $c->controller('solGS::solGS')->phenotype_file($c, $pop_id);
 	    push @job_ids, $c->stash->{r_job_id};
         }
 	
@@ -572,7 +572,7 @@ sub multi_pops_genotype_data {
         foreach my $pop_id (@$pop_ids)        
         {
             $c->stash->{pop_id} = $pop_id;
-            $c->controller('solGS::solGS')->genotype_file($c);	    
+            $c->controller('solGS::solGS')->genotype_file($c, $pop_id);	    
 	    push @job_ids, $c->stash->{r_job_id};
         }
 
@@ -1182,6 +1182,44 @@ sub count_combined_trials_members {
   
     return $genos_cnt;
     
+}
+
+
+sub process_trials_list_details {
+    my ($self, $c) = @_;
+
+    my $data_str = $c->stash->{data_structure};
+
+    if ($data_str =~ /list/)
+    {
+	$c->controller('solGS::List')->get_list_trials_ids($c);
+    }
+    elsif  ($data_str =~ /dataset/)
+    {
+	$c->controller('solGS::Dataset')->get_dataset_trials_ids($c);	
+    }
+   
+    my $pops_ids = $c->stash->{pops_ids_list} || $c->stash->{trials_ids} ||  [$c->stash->{pop_id}];
+    
+    my %pops_names = ();
+ 
+    if ($pops_ids->[0])  
+    {
+	foreach my $p_id (@$pops_ids)
+	{
+	    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+	    $pops_names{$p_id} = $c->stash->{project_name};  
+	}    
+
+	if (scalar(@$pops_ids) > 1 )
+	{
+	    $c->stash->{pops_ids_list} = $pops_ids;
+	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	}
+    }
+    
+    $c->stash->{trials_names} = \%pops_names;
+  
 }
 
 

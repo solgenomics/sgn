@@ -216,7 +216,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
-is($total_count, 63);
+is($total_count, 42);
 print STDERR Dumper $data->[0];
 print STDERR Dumper $data->[0]->{germplasmName};
 is_deeply($data->[0]->{selected_genotype_hash}, {'S1_27739' => {'DP' => '3','GT' => '0/0','GQ' => '88','PL' => '0,9,108','NT' => 'A,A','AD' => '3,0','DS' => '0'},'S1_84628' => {'AD' => '0,0','NT' => '','DS' => '0','GQ' => '.','PL' => '.','DP' => '0','GT' => './.'},'S1_21597' => {'GQ' => '98','PL' => '0,18,216','AD' => '6,0','NT' => 'G,G','DS' => '0','DP' => '6','GT' => '0/0'},'S1_21594' => {'PL' => '.','GQ' => '.','DS' => '1','NT' => '','AD' => '0,0','GT' => './.','DP' => '0'},'S1_26659' => {'DP' => '4','GT' => '0/0','GQ' => '94','PL' => '0,12,144','NT' => 'C,C','DS' => '0','AD' => '4,0'},'S1_75465' => {'GT' => './.','DP' => '0','NT' => '','DS' => '0','AD' => '0,0','PL' => '.','GQ' => '.'},'S1_26674' => {'DP' => '1','GT' => '0/0','NT' => 'A,A','AD' => '1,0','DS' => '0','GQ' => '66','PL' => '0,3,36'},'S1_26662' => {'GT' => '0/0','DP' => '4','NT' => 'C,C','DS' => '0','AD' => '4,0','PL' => '0,12,144','GQ' => '94'},'S1_27746' => {'GQ' => '99','PL' => '0,24,255','NT' => 'A,A','AD' => '8,0','DS' => '0','DP' => '8','GT' => '0/0'},'S1_27720' => {'AD' => '1,0','NT' => 'C,C','DS' => '0','GQ' => '66','PL' => '0,3,36','DP' => '1','GT' => '0/0'},'S1_75644' => {'PL' => '.','GQ' => '.','NT' => '','AD' => '0,0','DS' => '0','GT' => './.','DP' => '0'},'S1_27874' => {'DP' => '0','GT' => './.','GQ' => '.','PL' => '.','NT' => '','DS' => '0','AD' => '0,0'},'S1_75629' => {'DS' => '0','NT' => '','AD' => '0,0','PL' => '.','GQ' => '.','GT' => './.','DP' => '0'},'S1_26646' => {'GT' => '0/0','DP' => '4','PL' => '0,12,144','GQ' => '94','DS' => '0','NT' => 'A,A','AD' => '4,0'},'S1_27724' => {'NT' => 'T,T','DS' => '0','AD' => '3,0','PL' => '0,9,108','GQ' => '88','GT' => '0/0','DP' => '3'},'S1_27861' => {'NT' => 'C,C','AD' => '8,0','DS' => '0','GQ' => '99','PL' => '0,24,255','DP' => '8','GT' => '0/0'},'S1_26576' => {'GQ' => '94','PL' => '0,12,144','NT' => 'A,A','AD' => '4,0','DS' => '0','DP' => '4','GT' => '0/0'},'S1_26624' => {'GQ' => '94','PL' => '0,12,144','DS' => '0','NT' => 'T,T','AD' => '4,0','DP' => '4','GT' => '0/0'}}, 'test genotype search');
@@ -232,7 +232,92 @@ my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90
 $mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{data}}), 4);
-# is_deeply($response, {'data' => [['<a href = "/breeders_toolbox/trial/193">Test genotype project</a>','Diversity panel genotype study','Cassava GBS v7 2018','SNP genotypes for stock (name = SRLI1_90, id = 42392)','<a href="/stock/42392/genotypes?genotypeprop_id=2157">Download</a>'],['<a href = "/breeders_toolbox/trial/194">Test genotype project2</a>','Diversity panel genotype study','Cassava GBS v7 2018','SNP genotypes for stock (name = SRLI1_90, id = 42392)','<a href="/stock/42392/genotypes?genotypeprop_id=2199">Download</a>'],['<a href = "/breeders_toolbox/trial/194">Test genotype project2</a>','Diversity panel genotype study','Cassava GBS v7 2019','SNP genotypes for stock (name = SRLI1_90, id = 42392)','<a href="/stock/42392/genotypes?genotypeprop_id=2241">Download</a>'],['<a href = "/breeders_toolbox/trial/194">Test genotype project2</a>','Diversity panel genotype study','Cassava GBS v7 2018','SNP genotypes for stock (name = SRLI1_90, id = 42392)','<a href="/stock/42392/genotypes?genotypeprop_id=2283">Download</a>']]});
+is(scalar(@{$response->{data}}), 3);
+
+
+my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
+
+#test upload with file where sample names are not in the database
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_transposed_vcf_file_input => [ $file, 'genotype_transposed_vcf_data_upload' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Transposed VCF project 1",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"accession", #IDEALLY THIS IS "tissue_sample"
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Transposed VCF project 1",
+            "upload_genotype_vcf_protocol_name"=>"Transposed VCF protocol 1",
+            "upload_genotype_vcf_include_igd_numbers"=>1,
+            "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+            "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
+        ]
+    );
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is($message_hash->{success}, 1);
+ok($message_hash->{project_id});
+ok($message_hash->{nd_protocol_id});
+
+my $genotypes_search = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    protocol_id_list=>[$message_hash->{nd_protocol_id}],
+});
+my ($total_count, $data) = $genotypes_search->get_genotype_info();
+is($total_count, 91);
+print STDERR Dumper $data->[0];
+is_deeply($data->[0]->{selected_genotype_hash}, {'S1_26674' => {'DS' => '0','NT' => 'A|A','AD' => '6,0','GT' => '0|0','DP' => '6','PL' => '0,18,216','GQ' => '98'},'S1_26662' => {'DS' => '0','NT' => 'C|C','AD' => '6,0','GT' => '0|0','GQ' => '98','PL' => '0,18,216','DP' => '6'},'S1_27724' => {'DS' => '0','NT' => 'T|T','AD' => '1,0','GT' => '0|0','PL' => '0,3,36','DP' => '1','GQ' => '66'},'S1_27720' => {'NT' => 'C|C','DS' => '0','DP' => '6','PL' => '0,18,216','GQ' => '98','AD' => '6,0','GT' => '0|0'},'S1_27739' => {'GT' => '0|0','AD' => '1,0','DP' => '1','PL' => '0,3,36','GQ' => '66','DS' => '0','NT' => 'A|A'},'S1_26646' => {'GQ' => '98','DP' => '6','PL' => '0,18,216','AD' => '6,0','GT' => '0|0','NT' => 'A|A','DS' => '0'},'S1_21594' => {'DS' => '0','NT' => 'G|G','GT' => '0|0','AD' => '0,0','GQ' => '.','PL' => '.','DP' => '0'},'S1_26624' => {'GQ' => '99','PL' => '0,27,255','DP' => '9','GT' => '0|0','AD' => '9,0','NT' => 'T|T','DS' => '0'},'S1_26659' => {'AD' => '6,0','GT' => '0|0','GQ' => '98','DP' => '6','PL' => '0,18,216','DS' => '0','NT' => 'C|C'},'S1_26576' => {'PL' => '.','DP' => '0','GQ' => '.','GT' => '0|0','AD' => '0','NT' => 'A|A','DS' => '0'}});
+
+my $file = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_grid.csv";
+my $snp_info_file = $f->config->{basepath}."/t/data/genotype_data/Intertek_SNP_info.csv";
+
+#test upload with file where sample names are not in the database
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_intertek_file_input => [ $file, 'genotype_intertek_grid_data_upload' ],
+            upload_genotype_intertek_snp_file_input => [ $snp_info_file, 'genotype_intertek_snp_info_data_upload' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Intertek SNP project 1",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"accession", #IDEALLY THIS IS "tissue_sample"
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Intertek SNP project 1",
+            "upload_genotype_vcf_protocol_name"=>"Intertek SNP protocol 1",
+            "upload_genotype_vcf_include_igd_numbers"=>1,
+            "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+            "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
+        ]
+    );
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+is($message_hash->{success}, 1);
+ok($message_hash->{project_id});
+ok($message_hash->{nd_protocol_id});
+
+my $genotypes_search = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    protocol_id_list=>[$message_hash->{nd_protocol_id}],
+});
+my ($total_count, $data) = $genotypes_search->get_genotype_info();
+is($total_count, 17);
+print STDERR Dumper $data->[0];
+print STDERR Dumper $data->[0]->{germplasmName};
+is_deeply($data->[0]->{selected_genotype_hash}, {'S1_2142358' => {'DP' => undef,'DS' => '0','GQ' => undef,'PL' => undef,'AD' => undef,'GT' => '0/0','NT' => 'C,C'},'S12_7926132' => {'PL' => undef,'GQ' => undef,'DS' => '1','DP' => undef,'AD' => undef,'NT' => 'T,G','GT' => '0/1'},'S14_4626854' => {'PL' => undef,'DP' => undef,'DS' => '2','GQ' => undef,'AD' => undef,'NT' => 'G,G','GT' => '1/1'},'S1_24197219' => {'DS' => '2','DP' => undef,'GQ' => undef,'PL' => undef,'AD' => undef,'GT' => '1/1','NT' => 'C,C'},'S1_24155522' => {'PL' => undef,'DS' => '2','GQ' => undef,'DP' => undef,'AD' => undef,'NT' => 'C,C','GT' => '1/1'}});
 
 done_testing();

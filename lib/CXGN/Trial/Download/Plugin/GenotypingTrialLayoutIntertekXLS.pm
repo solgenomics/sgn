@@ -72,6 +72,7 @@ sub download {
         my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $_, experiment_type => 'genotyping_layout'});
         my $design = $trial_layout->get_design();
         #print STDERR Dumper $design;
+        no warnings 'uninitialized';
         foreach my $key (sort keys %$design){
             my $val = $design->{$key};
             my $comments = 'Notes: '.$val->{notes}.' AcquisitionDate: '.$val->{acquisition_date}.' Concentration: '.$val->{concentration}.' Volume: '.$val->{volume}.' TissueType: '.$val->{tissue_type}.' Person: '.$val->{dna_person}.' Extraction: '.$val->{extraction};

@@ -51,7 +51,7 @@ sub create_design {
     if ($self->has_fieldmap_row_number()) {
       $fieldmap_row_number = $self->get_fieldmap_row_number();
       my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
-      $fieldmap_col_number = $self->_validate_field_colNumber($colNumber);
+      $fieldmap_col_number = $self->CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
 
       #if (isint($colNumber)){
         #$fieldmap_col_number = $colNumber;
