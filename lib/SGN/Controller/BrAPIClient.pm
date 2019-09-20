@@ -3,6 +3,7 @@ package SGN::Controller::BrAPIClient;
 
 use Moose;
 use URI::FromHash 'uri';
+use List::Util 'first';
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -15,11 +16,17 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breed
     );
 
     my $return_url = $c->request->param( 'return_url' );
-    #print STDERR "Return url is $return_url\n";
-    my $display_name = $authorized_clients{$return_url};
-    #print STDERR "Display name is $display_name\n";
+	my @keys = keys %authorized_clients;
+	my $display_name = undef;
 
-    if ($display_name) {
+	while(my($k, $v) = each %authorized_clients) {
+        if ($return_url =~ m/^$k/) {
+            $display_name = $v;
+            last;
+        }
+    }
+
+    if (defined $display_name) {
         if (!$c->user()) {  # redirect to login page
             $c->res->redirect( uri( path => '/user/login', query => { goto_url => "/brapi/authorize?return_url=$return_url" } ) );
             return;
