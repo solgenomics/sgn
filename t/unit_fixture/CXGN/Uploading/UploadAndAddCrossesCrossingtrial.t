@@ -51,11 +51,11 @@ my $crossing_trial_id = $crossing_trial_rs->project_id();
 my $female_plot_id = $schema->resultset('Stock::Stock')->find({name =>'KASESE_TP2013_842'})->stock_id();
 my $male_plot_id = $schema->resultset('Stock::Stock')->find({name =>'KASESE_TP2013_1591'})->stock_id();
 my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-my $info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
+my $cross_combination_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_combination", "stock_property")->cvterm_id();
 
 my $before_adding_cross = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_adding_stocks = $schema->resultset("Stock::Stock")->search({})->count();
-my $before_adding_stockprop = $schema->resultset("Stock::Stockprop")->search({ type_id => $info_type_id})->count();
+my $before_adding_stockprop = $schema->resultset("Stock::Stockprop")->search({ type_id => $cross_combination_type_id})->count();
 my $before_adding_stockprop_all = $schema->resultset("Stock::Stockprop")->search({})->count();
 my $before_adding_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
@@ -66,14 +66,14 @@ is($response->{'success'}, '1');
 
 my $after_adding_cross = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $after_adding_stocks = $schema->resultset("Stock::Stock")->search({})->count();
-my $after_adding_stockprop = $schema->resultset("Stock::Stockprop")->search({ type_id => $info_type_id})->count();
+my $after_adding_stockprop = $schema->resultset("Stock::Stockprop")->search({ type_id => $cross_combination_type_id})->count();
 my $after_adding_stockprop_all = $schema->resultset("Stock::Stockprop")->search({})->count();
 my $after_adding_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
 is($after_adding_cross, $before_adding_cross + 1);
 is($after_adding_stocks, $before_adding_stocks + 1);
-is($after_adding_stockprop, $before_adding_stockprop);
-is($after_adding_stockprop_all, $before_adding_stockprop_all);
+is($after_adding_stockprop, $before_adding_stockprop + 1);
+is($after_adding_stockprop_all, $before_adding_stockprop_all + 1);
 is($after_adding_relationship, $before_adding_relationship + 4);
 
 # test uploading crosses with only accession info
@@ -269,11 +269,10 @@ is_deeply($response, {'data'=> [
 
 
 # test uploading family names
-my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_property")->cvterm_id();
+my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
 
 my $before_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
-my $before_family_name_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
-my $before_add_family_name = $schema->resultset("Stock::Stockprop")->search({type_id => $family_name_type_id})->count();
+my $before_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
 
 $file = $f->config->{basepath}."/t/data/cross/family_name_upload.xls";
 $ua = LWP::UserAgent->new;
@@ -291,11 +290,9 @@ $message_hash = decode_json $message;
 is_deeply($message_hash, {'success' => 1});
 
 my $after_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
-my $after_family_name_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
-my $after_add_family_name = $schema->resultset("Stock::Stockprop")->search({type_id => $family_name_type_id})->count();
+my $after_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
 
-is ($after_family_name_stocks, $before_family_name_stocks);
-is ($after_family_name_stockprop, $before_family_name_stockprop + 4);
+is ($after_family_name_stocks, $before_family_name_stocks +4);
 is ($after_add_family_name, $before_add_family_name + 4);
 
 #test deleting crossing
@@ -306,7 +303,7 @@ my $before_deleting_relationship = $schema->resultset("Stock::StockRelationship"
 my $before_deleting_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
 my $before_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 
-# test_cross_upload1 has 2 progenies
+# test_cross_upload1 has 2 progenies and has family name
 my $deleting_cross_id = $schema->resultset("Stock::Stock")->find({name=>'test_cross_upload1'})->stock_id;
 $mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $deleting_cross_id]);
 $response = decode_json $mech->content;
@@ -322,7 +319,7 @@ my $after_deleting_experiment_stock = $schema->resultset("NaturalDiversity::NdEx
 is($after_deleting_crosses, $before_deleting_crosses - 1);
 is($after_deleting_accessions, $before_deleting_accessions - 2);
 is($after_deleting_stocks, $before_deleting_stocks - 3);
-is($after_deleting_relationship, $before_deleting_relationship - 8);
+is($after_deleting_relationship, $before_deleting_relationship - 9);
 is ($after_deleting_experiment, $before_deleting_experiment - 1);
 is ($after_deleting_experiment_stock, $before_deleting_experiment_stock - 1);
 
