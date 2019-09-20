@@ -362,6 +362,85 @@ sub upload_fieldbook_zipfile {
     return $error_status;
 }
 
+sub upload_phenotypes_associated_images_zipfile {
+    my $self = shift;
+    my $image_zip = shift;
+    my $user_id = shift;
+    my $image_observation_unit_hash = shift;
+    my $image_type_name = shift;
+    print STDERR "Doing upload_phenotypes_associated_images_zipfile\n";
+    my $c = $self->config();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $schema->storage->dbh;
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        return {error => 'Could not read your zipfile. Is is .zip format?</br></br>'};
+    }
+
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
+
+    my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
+    if (!$image_tag_id) {
+        my $image_tag = CXGN::Tag->new($schema->storage->dbh);
+        $image_tag->set_name($image_type_name);
+        $image_tag->set_description('Upload phenotype spreadsheet with associated images: '.$image_type_name);
+        $image_tag->set_sp_person_id($user_id);
+        $image_tag_id = $image_tag->store();
+    }
+    my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
+
+    my %observationunit_stock_id_image_id;
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        my $img_name = basename($_->fileName());
+        my $basename;
+        my $file_ext;
+        if ($img_name =~ m/(.*)(\.(?!\.).*)$/) {  # extension is what follows last .
+            $basename = $1;
+            $file_ext = $2;
+        }
+        my $stock_id = $image_observation_unit_hash->{$img_name}->{stock_id};
+        my $project_id = $image_observation_unit_hash->{$img_name}->{project_id};
+        if ($stock_id && $project_id) {
+            my $temp_file = $image->upload_zipfile_images($_);
+
+            #Check if image already stored in database
+            $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+                JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+                WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.original_filename = '$basename';";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute();
+            my ($saved_image_id) = $h->fetchrow_array();
+            my $image_id;
+            if ($saved_image_id) {
+                print STDERR Dumper "Image $temp_file has already been added to the database and will not be added again.";
+                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                $image_id = $image->get_image_id();
+            }
+            else {
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($temp_file, 'project', $project_id, $linking_table_type_id);
+                if (!$ret ) {
+                    return {error => "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                }
+                print STDERR "Saved $temp_file\n";
+                my $stock_associate = $image->associate_stock($stock_id);
+                $image_id = $image->get_image_id();
+                my $added_image_tag_id = $image->add_tag($image_tag);
+            }
+            $observationunit_stock_id_image_id{$stock_id} = $image_id;
+        }
+        else {
+            print STDERR "$img_name Not Included in the uploaded phenotype spreadsheet, skipping..\n";
+        }
+    }
+    return {return => \%observationunit_stock_id_image_id};
+}
+
 sub upload_drone_imagery_zipfile {
     my $self = shift;
     my $image_zip = shift;
@@ -405,7 +484,6 @@ sub upload_zipfile_images {
       . $filename;
     system("chmod 775 $zipfile_image_temp_path");
     $file_member->extractToFileNamed($temp_file);
-    print STDERR "Temp Image: ".$temp_file."\n";
     return $temp_file;
 }
 

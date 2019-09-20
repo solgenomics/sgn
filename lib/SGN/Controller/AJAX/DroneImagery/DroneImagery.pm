@@ -435,7 +435,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_contours/imageXXXX');
     $archive_contours_temp_image .= '.png';
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/GetContours.py --image_url \''.$main_production_site.$image_url.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/GetContours.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
