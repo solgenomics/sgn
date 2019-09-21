@@ -51,7 +51,7 @@ sub store_analysis_json_POST {
     
     my %values = JSON::Any->decode($params, $data); 
     
-    $self->store_data($c, $params, \%values, $user_id);
+    $self->store_data($c, $params, \%values, \@stocks, \@plots, $user_id);
 }
 
 sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
@@ -115,7 +115,7 @@ sub store_analysis_file_POST {
     }
 
     print STDERR "Storing data...\n";
-    return $self->store_data($c, $params, \%values, $user_id);
+    return $self->store_data($c, $params, \%values, \@stocks, \@plots, $user_id);
 }
 
 
@@ -124,6 +124,8 @@ sub store_data {
     my $c = shift;
     my $params = shift;
     my $values = shift;
+    my $stocks = shift;
+    my $plots = shift;
     my $user_id = shift;
 
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -135,22 +137,28 @@ sub store_data {
 	    people_schema => $people_schema,
 	});
 
-    if ($params->{dataset_id}) { 
-	my $d = CXGN::Dataset->new( 
-	    {
-		schema => $bcs_schema,
-		people_schema => $people_schema,
-		dataset_id => $params->{dataset_id},
-	    });
-	$a->dataset_id($params->{dataset_id});
-	print STDERR "Dataset info ".$d->data()."\n";
-	$a->dataset_info($d->data());
-	$a->accessions($d->retrieve_accessions());
+    if ($params->{dataset_id} !~ /^\d+$/) {
+	$params->{dataset_id} = undef;
     }
+    
+    #if ($params->{dataset_id}) { 
+    # 	my $d = CXGN::Dataset->new( 
+    # 	    {
+    # 		schema => $bcs_schema,
+    # 		people_schema => $people_schema,
+    # 		dataset_id => $params->{dataset_id},
+    # 	    });
+    # 	$a->dataset_id($params->{dataset_id});
+    # 	print STDERR "Dataset info ".$d->data()."\n";
+    # 	$a->dataset_info($d->data());
+    # 	$a->accessions($d->retrieve_accessions());
+    # }
     $a->name($params->{analysis_name});
     $a->description($params->{description});
     $a->user_id($user_id);
-		     
+    $a->accessions($stocks);
+    #$a->plots($plots);
+    
     my ($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
        
     if ($verified_warning || $verified_error) {

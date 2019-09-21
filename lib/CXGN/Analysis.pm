@@ -30,7 +30,7 @@ has 'data_hash' => (is => 'rw', isa => 'HashRef');
 
 has 'design' => (is => 'rw', isa => 'Ref');
 
-has 'nd_geolocation_id' => (is => 'rw', isa=> 'Int');
+has 'nd_geolocation_id' => (is => 'rw', isa=> 'Maybe[Int]');
 
 has 'user_id' => (is => 'rw', isa => 'Int');
 
@@ -94,6 +94,10 @@ sub create_and_store_analysis_design {
     if (!$self->name()) {
 	die "Need a name to store an analysis.";
     }
+
+    my $calculation_location_id = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => "[Computation]" } )->nd_geolocation_id();
+
+    $self->nd_geolocation_id($calculation_location_id);
     
     print STDERR "Create analysis entry in project table...\n";
     my $analysis = $self->bcs_schema()
@@ -169,7 +173,9 @@ sub create_and_store_analysis_design {
     #
 
     my $ds;
-    if ($self->dataset_id()) { 
+
+    if ($self->dataset_id()) {
+	print STDERR "Creating the dataset from the id ".$self->dataset_id()." ...\n";
 	$ds = CXGN::Dataset->new( { schema => $self->bcs_schema, people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
 
 	my $data = $ds->data();
@@ -215,12 +221,12 @@ sub store_analysis_values {
     
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 	{
-        basepath=>$basepath,
-        dbhost=>$dbhost,
-        dbname=>$dbname,
-        dbuser=>$dbuser,
-        dbpass=>$dbpass,
-        temp_file_nd_experiment_id=>$tempfile_path,
+	    basepath=>$basepath,
+	    dbhost=>$dbhost,
+	    dbname=>$dbname,
+	    dbuser=>$dbuser,
+	    dbpass=>$dbpass,
+	    temp_file_nd_experiment_id=>$tempfile_path,
 	    bcs_schema => $self->bcs_schema(),
 	    metadata_schema => $metadata_schema,
 	    phenome_schema => $phenome_schema,
@@ -230,7 +236,7 @@ sub store_analysis_values {
 	    values_hash => $values,
 	    has_timestamps => 0,
 	    overwrite_values => 0,
-	    metadata_hash => \%phenotype_metadata
+	    metadata_hash => \%phenotype_metadata,
 	});
     
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
