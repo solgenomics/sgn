@@ -86,7 +86,7 @@ sub observations_store {
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        push @$status, {'4003' => 'Permission Denied. Must have correct privilege.'};
+        push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
     }
 
