@@ -189,7 +189,6 @@ solGS.cluster = {
 	var selectionProp = clusterArgs.selection_proportion;
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
-//	var selectName = clusterArgs.select_name;
 	
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
@@ -242,7 +241,9 @@ solGS.cluster = {
 	    popDetails['cluster_pop_id'] = 'dataset_' + selectId;
 	    popDetails['training_pop_id'] = 'dataset_' + selectId;
 	    datasetName = selectName;
-	} else if (selectionProp) {
+	}
+
+	if (popType.match(/selection_index/)) {
 	    sIndexName = selectName;
 	}
 	
