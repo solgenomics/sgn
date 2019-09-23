@@ -216,7 +216,7 @@ sub gebv_rel_weights {
     }
 
     my $si_id = join('-', @si_id);
-    $c->stash->{selection_index_id} = $si_id;
+    $c->stash->{sindex_name} = $si_id;
 
     $self->rel_weights_file($c);
     my $file = $c->stash->{rel_weights_file};

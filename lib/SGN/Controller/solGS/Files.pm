@@ -605,8 +605,9 @@ sub create_file_id {
     my $cluster_type     = $c->stash->{cluster_type};
     my $combo_pops_id    = $c->stash->{combo_pops_id};
     my $data_type        = $c->stash->{data_type};
-    my $k_number         = $c->stash->{k_number};
-    my $sel_index_id     = $c->stash->{selection_index_id};
+    my $k_number         = $c->stash->{k_number};    
+    my $sindex_name      = $c->stash->{sindex_name};
+    my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
     my $traits_selection_id;
@@ -638,7 +639,8 @@ sub create_file_id {
     elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
     {
 	$file_id =  $selection_pop_id ? $training_pop_id . '_' . $selection_pop_id : $training_pop_id;
-    }else 
+    }
+    else 
     {
 	$file_id = $training_pop_id;
     }
@@ -655,15 +657,16 @@ sub create_file_id {
     $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
 
-    if ($sel_index_id)
+    if ($sindex_name)
     {
-	$file_id = $sel_index_id ? $file_id . '-' . $sel_index_id : $file_id;
+	$file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
+	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
     else
     {
 	$file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
     }
-   
+
     $c->stash->{file_id} = $file_id;
     
 }

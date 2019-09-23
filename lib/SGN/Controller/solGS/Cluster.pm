@@ -71,6 +71,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $data_structure =  $c->req->param('data_structure');
     my $k_number       =  $c->req->param('k_number'); 
     my $cluster_type   = $c->req->param('cluster_type');
+    my $selection_prop   = $c->req->param('selection_proportion');
+    my $sindex_name      = $c->req->param('sindex_name');
     $cluster_type      = 'k-means' if !$cluster_type;
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
@@ -86,6 +88,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{cluster_type}     = $cluster_type;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{k_number}         = $k_number;
+    $c->stash->{selection_proportion} = $selection_prop;
+    $c->stash->{sindex_name}      = $sindex_name;
     
     $c->stash->{training_traits_ids} = \@traits_ids;
     
@@ -316,7 +320,6 @@ sub create_cluster_genotype_data {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$c->controller('solGS::List')->get_trials_list_geno_data($c);
-
     }
 
 }
@@ -695,8 +698,8 @@ sub cluster_sindex_input_files {
     my ($self, $c) = @_;
     
     my $dir = $c->stash->{selection_index_cache_dir};
-    my $file_id = $c->stash->{sindex_name};
-    my $file = catfile($dir, "selection_index_only_${file_id}.txt");
+    my $sindex_name = $c->stash->{sindex_name};
+    my $file = catfile($dir, "selection_index_only_${sindex_name}.txt");
     
     $c->stash->{cluster_sindex_input_files} = $file;
     
