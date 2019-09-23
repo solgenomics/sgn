@@ -68,7 +68,13 @@ sub list {
 	my @maps = $map_factory->get_all_maps();
 	my @data;
 
+    my $query = "SELECT map_id, date_loaded FROM sgn.map join sgn.map_version using(map_id) WHERE short_name=?";
+	my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
+
 	foreach my $m (@maps) {
+        $sth->execute($m->get_short_name());
+        my ($map_id, $date_loaded) = $sth->fetchrow_array();
+        print STDERR "Date loaded is $date_loaded\n";
         my $map_type = $m->get_type();
         my $map_units = $m->get_units();
         if ($map_type eq 'sequence'){
@@ -80,7 +86,6 @@ sub list {
         }
         my $scientific_name = $m->get_organism();
         my ($genus,$species) = split(" ", $scientific_name);
-        my $map_id = $m->get_id();
         my %map_info = (
 		    mapDbId =>  qq|$map_id|,
 			name => $m->get_long_name(),
@@ -93,7 +98,7 @@ sub list {
             commonCropName => $m->get_common_name(),
             documentationURL => "https://brapi.org",
             mapName => $m->get_short_name(),
-            publishedDate => $m->get_date_loaded(),
+            publishedDate => $date_loaded,
             scientificName => $scientific_name,
 		);
 
@@ -123,15 +128,15 @@ sub list {
 
 sub detail {
 	my $self = shift;
-	my $map_id = shift; # this is really the map_version_id for SGN maps
+	my $map_id = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_version_id => $map_id });
-    my $map_type = $m->get_type();
-    my $map_units = $m->get_units();
+	my $map = $map_factory->create( { map_id => $map_id });
+    my $map_type = $map->get_type();
+    my $map_units = $map->get_units();
     if ($map_type eq 'sequence'){
         $map_type = 'Physical';
         $map_units = 'Mb';
@@ -156,7 +161,7 @@ sub detail {
 		mapName => $map->get_short_name(),
 		type => $map_type,
 		unit => $map_units,
-        comments => $m->get_abstract(),
+        comments => $map->get_abstract(),
         documentationURL => "https://brapi.org",
 		data => $data_window,
 	);
@@ -188,7 +193,7 @@ sub positions {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_version_id => $map_id });
+	my $map = $map_factory->create( { map_id => $map_id });
 
 	my @data = ();
 
