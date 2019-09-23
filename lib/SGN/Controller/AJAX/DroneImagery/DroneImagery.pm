@@ -3234,8 +3234,8 @@ sub _perform_phenotype_calculation {
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
     my $do_not_run_materialized_view_refresh = shift;
-    my $ignore_new_phenotype_values = shift || 1;
-    my $overwrite_phenotype_values = shift || undef;
+    my $ignore_new_phenotype_values = shift;
+    my $overwrite_phenotype_values = shift;
 
     print STDERR Dumper [$drone_run_band_project_id, $drone_run_band_project_type, $phenotype_method, $time_cvterm_id, $plot_polygons_type];
 
