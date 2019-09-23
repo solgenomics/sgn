@@ -2869,7 +2869,31 @@ sub _store_observations {
         dbpass => $c->config->{dbpass},
         temp_file_nd_experiment_id => $temp_file_nd_experiment_id
     });
-	_standard_response_construction($c, $brapi_package_result);
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = 200;
+
+	foreach(@$status) {
+
+		if ($_->{code} eq "403") {
+			$http_status_code = 403;
+			last;
+		}
+		elsif ($_->{code} eq "401") {
+			$http_status_code = 401;
+			last;
+		}
+		elsif ($_->{code} eq "400") {
+			$http_status_code = 400;
+			last;
+		}
+		elsif ($_->{code} eq "200") {
+			$http_status_code = 200;
+			last;
+		}
+	}
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 
 }
 
