@@ -284,7 +284,7 @@ sub observation_variable_search {
                 synonyms => [],
 				traitDbId => qq|$cvterm_id|,
 				traitName => $cvterm_name,
-				xref => '$db_name.":".$accession'
+				xref => $db_name.":".$accession
 			},
 			xref => $db_name.":".$accession,
 		};
