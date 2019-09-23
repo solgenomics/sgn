@@ -35,7 +35,7 @@ has 'status' => (
 =head2 list
 
  Usage:        $brapi->list()
- Desc:         lists all available maps. 
+ Desc:         lists all available maps.
  Ret:          returns a hash with all the map info
                for each map, the following keys are present:
 		        mapDbId
@@ -68,10 +68,15 @@ sub list {
 	my @maps = $map_factory->get_all_maps();
 	my @data;
 
-	foreach my $m (@maps) { 
+	foreach my $m (@maps) {
         my $map_type = $m->get_type();
-        if ($map_type eq 'genetic'){
+        my $map_units = $m->get_units();
+        if ($map_type eq 'sequence'){
+            $map_type = 'Physical';
+            $map_units = 'Mb';
+        } else {
             $map_type = 'Genetic';
+            $map_units = 'cM';
         }
         my $map_id = $m->get_id();
         my %map_info = (
@@ -79,7 +84,7 @@ sub list {
 			name => $m->get_short_name(),
 			species => $m->get_organism() ? $m->get_organism() : '',
 			type => $map_type,
-			unit => $m->get_units() || 'cM',
+			unit => $map_units,
 			markerCount => $m->get_marker_count() + 0,
 			comments => $m->get_abstract(),
 			linkageGroupCount => $m->get_chromosome_count(),
@@ -93,7 +98,7 @@ sub list {
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, 
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination,
 							 \@data_files, $status, 'Maps list result constructed');
 }
 
@@ -117,11 +122,11 @@ sub detail {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_version_id => $map_id }); 
+	my $map = $map_factory->create( { map_version_id => $map_id });
 
        	my @data = ();
 
-	foreach my $chr ($map->get_chromosomes()) { 
+	foreach my $chr ($map->get_chromosomes()) {
 	    push @data, {
             linkageGroupName => $chr->get_name(),
 			  markerCount => scalar($chr->get_markers()),
@@ -166,15 +171,15 @@ sub positions {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_version_id => $map_id }); 
-	
+	my $map = $map_factory->create( { map_version_id => $map_id });
+
 	my @data = ();
-	
-	foreach my $chr ($map->get_chromosomes()) { 
-	    foreach my $m ($chr->get_markers()) { 
-		if (@linkage_group_ids) { 
-		    if (grep $_ eq $chr->get_name(), @linkage_group_ids) { 
-			push @data, { 
+
+	foreach my $chr ($map->get_chromosomes()) {
+	    foreach my $m ($chr->get_markers()) {
+		if (@linkage_group_ids) {
+		    if (grep $_ eq $chr->get_name(), @linkage_group_ids) {
+			push @data, {
 			    markerDbId => $m->get_name(),
 			    markerName => $m->get_name(),
 			    location => $m->get_offset(),
@@ -182,7 +187,7 @@ sub positions {
 			};
 		    }
 		}
-		else { 
+		else {
 		    push @data, {
 			    markerDbId => $m->get_name(),
 			    markerName => $m->get_name(),
@@ -210,7 +215,7 @@ sub positions {
 
  Usage:        genosort($a_chr, $a_pos, $b_chr, $b_pos)
  Desc:         sorts marker coordinates according to position for marker names
-               of the format S(\d+)_(.*)  
+               of the format S(\d+)_(.*)
  Ret:
  Args:
  Side Effects:
