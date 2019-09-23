@@ -468,7 +468,6 @@ solGS.cluster = {
 
         var sIndexPops = solGS.sIndex.addIndexedClustering();
         if (sIndexPops) {
-	    jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();
 	    jQuery("#cluster_select_a_population_div ul").append(sIndexPops);  
 	}
 	
@@ -493,6 +492,12 @@ solGS.cluster = {
             jQuery("#cluster_selected_population_name").val(selectedPopName);
             jQuery("#cluster_selected_population_id").val(selectedPopId);
             jQuery("#cluster_selected_population_type").val(selectedPopType);
+
+	    if (selectedPopType.match(/selection_index/)) {
+		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();
+	    } else {
+		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').hide();	
+	    }
             
 	});
         
