@@ -503,6 +503,12 @@ sub store {
 
                 if (defined($trait_value) && length($trait_value)) {
 
+                    if ($ignore_new_values) {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            next;
+                        }
+                    }
+
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
@@ -510,11 +516,6 @@ sub store {
                             push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                    }
-                    if ($ignore_new_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            next;
-                        }
                     }
 
                     my $plot_trait_uniquename = "Stock: " .
