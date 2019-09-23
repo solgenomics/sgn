@@ -2258,7 +2258,7 @@ sub get_traits_assayed {
     my $q;
     if ($stock_type) {
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value)
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
             FROM cvterm
             $cvtermprop_join
             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
@@ -2267,12 +2267,15 @@ sub get_traits_assayed {
             JOIN nd_experiment_phenotype USING(phenotype_id)
             JOIN nd_experiment_project USING(nd_experiment_id)
             JOIN nd_experiment_stock USING(nd_experiment_id)
+            LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
+            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
+            LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
             JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id)
-            WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where
-            GROUP BY trait, cvterm.cvterm_id
+            WHERE stock.type_id=$stock_type_cvterm_id and nd_experiment_project.project_id=? $cvtermprop_where
+            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
             ORDER BY trait;";
     } else {
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value)
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
             FROM cvterm
             $cvtermprop_join
             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
@@ -2280,8 +2283,11 @@ sub get_traits_assayed {
             JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
             JOIN nd_experiment_project USING(nd_experiment_id)
-            WHERE project_id=? $cvtermprop_where
-            GROUP BY trait, cvterm.cvterm_id
+            LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
+            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
+            LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
+            WHERE nd_experiment_project.project_id=? $cvtermprop_where
+            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
             ORDER BY trait;";
     }
 
@@ -2301,7 +2307,7 @@ sub get_traits_assayed {
     my $component_h = $dbh->prepare($component_q);
 
     $traits_assayed_h->execute($self->get_trial_id());
-    while (my ($trait_name, $trait_id, $count) = $traits_assayed_h->fetchrow_array()) {
+    while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count) = $traits_assayed_h->fetchrow_array()) {
         $component_h->execute($trait_id);
         my ($component_terms) = $component_h->fetchrow_array();
         $component_terms = decode_json $component_terms;
@@ -2313,11 +2319,11 @@ sub get_traits_assayed {
                 }
             }
             if ($has_composable_cv_type == 1) {
-                push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count];
+                push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
             }
         }
         else {
-            push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count];
+            push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
         }
     }
     return \@traits_assayed;

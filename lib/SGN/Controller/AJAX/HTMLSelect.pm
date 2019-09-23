@@ -744,6 +744,8 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             foreach (values %unique_traits_ids) {
                 foreach my $component (@{$_->[2]}) {
                     $unique_components{$_->[0]}->{num_pheno} = $_->[3];
+                    $unique_components{$_->[0]}->{imaging_project_id} = $_->[4];
+                    $unique_components{$_->[0]}->{imaging_project_name} = $_->[5];
                     if ($component->{cv_type} && $component->{cv_type} eq $contains_composable_cv_type) {
                         $unique_components{$_->[0]}->{contains_cv_type} = $component->{name};
                     }
@@ -755,12 +757,16 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             my %separated_components;
             while (my ($k, $v) = each %unique_components) {
                 my $string_cv_types = join ',', @{$v->{cv_types}};
-                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}, $v->{num_pheno}];
+                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}, $v->{num_pheno}, $v->{imaging_project_id}, $v->{imaging_project_name}];
             }
             while (my ($k, $v) = each %separated_components) {
                 $html .= "<tr><td>".$k."</td><td>";
                 foreach (@$v) {
-                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]." (".$_->[2]." Phenotypes)<br/>";
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
+                    if ($_->[3] && $_->[4]) {
+                        $html .= " From ".$_->[4];
+                    }
+                    $html .= ")<br/>";
                 }
                 $html .= "</td></tr>";
             }
