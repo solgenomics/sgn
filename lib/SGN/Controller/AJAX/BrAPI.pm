@@ -926,6 +926,7 @@ sub studies_search_new_GET {
         germplasmNames => $clean_inputs->{germplasmName},
         observationVariableDbIds => $clean_inputs->{observationVariableDbId},
         observationVariableNames => $clean_inputs->{observationVariableName},
+        crop => $c->config->{supportedCrop},
         active => $clean_inputs->{active}->[0],
         sortBy => $clean_inputs->{sortBy}->[0],
         sortOrder => $clean_inputs->{sortOrder}->[0],

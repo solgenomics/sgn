@@ -94,14 +94,16 @@ sub search {
     my @study_names = $search_params->{studyNames} ? @{$search_params->{studyNames}} : ();
     my @folder_dbids = $search_params->{trialDbIds} ? @{$search_params->{trialDbIds}} : ();
     my @folder_names = $search_params->{trialNames} ? @{$search_params->{trialNames}} : ();
-    my @location_ids = $search_params->{studyLocationDbIds} ? @{$search_params->{studyLocationDbIds}} : ();
+    my @location_ids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
     my @location_names = $search_params->{studyLocationNames} ? @{$search_params->{studyLocationNames}} : ();
+    my @study_type_ids = $search_params->{studyTypeDbIds} ? @{$search_params->{studyTypeDbIds}} : ();
     my @study_type_list = $search_params->{studyTypeName} ? @{$search_params->{studyTypeName}} : ();
     my @germplasm_dbids = $search_params->{germplasmDbIds} ? @{$search_params->{germplasmDbIds}} : ();
     my @germplasm_names = $search_params->{germplasmNames} ? @{$search_params->{germplasmNames}} : ();
-    my @years = $search_params->{seasons} ? @{$search_params->{seasons}} : ();
+    my @years = $search_params->{seasonDbIds} ? @{$search_params->{seasonDbIds}} : ();
     my @obs_variable_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
     my @obs_variable_names = $search_params->{observationVariableNames} ? @{$search_params->{observationVariableNames}} : ();
+    my $crop = $search_params->{commonCropNames};
     my $active = $search_params->{active};
     my $sortBy = $search_params->{sortBy};
     my $sortOrder = $search_params->{sortOrder};
@@ -112,6 +114,7 @@ sub search {
         location_list=>\@location_names,
         location_id_list=>\@location_ids,
         trial_type_list=>\@study_type_list,
+        trial_type_ids=>\@study_type_ids,
         trial_id_list=>\@study_dbids,
         trial_name_list=>\@study_names,
         trial_name_is_exact=>1,
@@ -136,11 +139,16 @@ sub search {
             description => $_->{description},
         );
         my %data_obj = (
+        	commonCropName => $crop,
+        	documentationURL => 'null', 
             studyDbId => qq|$_->{trial_id}|,
+            studyName => $_->{trial_name},
             name => $_->{trial_name},
             trialDbId => qq|$_->{folder_id}|,
             trialName => $_->{folder_name},
             studyType => $_->{trial_type},
+            studyType => $_->{trial_type},
+            studyTypeName => $_->{trial_type_name},
             seasons => [$_->{year}],
             locationDbId => $_->{location_id},
             locationName => $_->{location_name},
