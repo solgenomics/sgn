@@ -1,6 +1,6 @@
 
 
-# Tests trial deletion functions as they are used from the trial detail page through AJAX requests
+# Tests stock deletion (obsoleted) function on stock detail page through AJAX request
 
 use strict;
 use warnings;
