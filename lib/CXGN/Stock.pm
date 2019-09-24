@@ -469,6 +469,16 @@ has 'modification_note' => (
     is => 'rw',
 );
 
+has 'objects' => (
+    isa => 'Maybe[Ref]',
+    is => 'rw',
+);
+
+has 'subjects' => (
+    isa => 'Maybe[Ref]',
+    is => 'rw',
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -491,8 +501,27 @@ sub BUILD {
         $self->_retrieve_populations();
     }
 
+
+    if ($self->stock_id()) {
+
+	my @objects;
+	my $object_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_objects();
+	foreach my $object ($object_rs->all()) {
+	    push @objects, [ $object->object->stock_id, $object->object->uniquename(), $object->type->name() ];
+	}
+	$self->objects(\@objects);
+
+	my @subjects;
+	my $subject_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_subjects();
+	foreach my $subject ($subject_rs->all()) {
+	    push @subjects, [ $subject->subject->stock_id, $subject->subject->uniquename(), $subject->type->name() ];
+	}
+
+	$self->subjects(\@subjects);
+    }
     return $self;
 }
+
 
 sub _retrieve_stock_owner {
     my $self = shift;
@@ -835,7 +864,34 @@ sub get_image_ids {
     return @ids;
 }
 
-=head2 associate_allele()
+
+=head2 get_genotypes
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotypeprop_ids {
+    my $self = shift;
+
+    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop USING(genotype_id) WHERE stock.stock_id=?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+    my @genotypeprop_ids;
+    while (my ($genotypeprop_id) = $h->fetchrow_array()) {
+	push @genotypeprop_ids, $genotypeprop_id;
+    }
+
+    return \@genotypeprop_ids;
+
+}
+
+=head2 associate_allele
 
  Usage: $self->associate_allele($allele_id, $sp_person_id)
  Desc:  store a stock-allele link in phenome.stock_allele
@@ -1706,7 +1762,41 @@ COUNTS
 
 }
 
-__PACKAGE__->meta->make_immutable;
+=head2 delete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub hard_delete {
+    my $self = shift;
+
+    # delete sgn.stock_owner entry
+    #
+    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+
+    # delete sgn.stock_image entry
+    #
+    $q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+
+    # delete stock entry
+    #
+    $q = "DELETE FROM stock WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+}
+
+
+###__PACKAGE__->meta->make_immutable;
 
 ##########
 1;########

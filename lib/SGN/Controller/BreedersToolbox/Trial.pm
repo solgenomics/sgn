@@ -164,6 +164,19 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     if ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = decode_json $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
         $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
     }
 

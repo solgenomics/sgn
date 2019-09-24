@@ -142,7 +142,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my $body=<<END_HEREDOC;
     
 Please do *NOT* reply to this message. The return address is not valid. 
-Use the <a href="/contact/form">contact form</a> instead.
+Use the contact form instead ($host/contact/form).
 	
 This message is sent to confirm the email address for community user
 \"$username\"
@@ -150,7 +150,7 @@ This message is sent to confirm the email address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
 
-  $host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
+$host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
 
 Thank you,
 Sol Genomics Network

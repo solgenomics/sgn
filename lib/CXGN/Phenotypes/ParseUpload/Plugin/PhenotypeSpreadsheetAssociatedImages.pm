@@ -82,11 +82,39 @@ sub validate {
     #StorePhenotypes verify checks that observationunitnames and observationvariablenames are in database.
     my %observationunits_seen;
     for my $row ( 1 .. $row_max ) {
-        my $observationunit_name = $worksheet->get_cell($row,0)->value();
-        my $observationvariable_name = $worksheet->get_cell($row,1)->value();
-        my $phenotype_value = $worksheet->get_cell($row,2)->value();
+        my $observationunit_name;
+        if ($worksheet->get_cell($row,0)) {
+            $observationunit_name = $worksheet->get_cell($row,0)->value();
+        }
+        else {
+            $parse_result{'error'} = "No observation unit name on row $row!";
+            return \%parse_result;
+        }
+        my $observationvariable_name;
+        if ($worksheet->get_cell($row,1)) {
+            $observationvariable_name = $worksheet->get_cell($row,1)->value();
+        }
+        else {
+            $parse_result{'error'} = "No observation variable name (trait) on row $row!";
+            return \%parse_result;
+        }
+        my $phenotype_value;
+        if ($worksheet->get_cell($row,2)) {
+            $phenotype_value = $worksheet->get_cell($row,2)->value();
+        }
+        else {
+            $parse_result{'error'} = "No phenotype value on row $row!";
+            return \%parse_result;
+        }
         my $phenotype_timestamp = $worksheet->get_cell($row,3) ? $worksheet->get_cell($row,3)->value() : '';
-        my $image_name = $worksheet->get_cell($row,4)->value();
+        my $image_name;
+        if ($worksheet->get_cell($row,4)) {
+            $image_name = $worksheet->get_cell($row,4)->value();
+        }
+        else {
+            $parse_result{'error'} = "No image name on row $row!";
+            return \%parse_result;
+        }
         my $username = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : '';
 
         $observationunits_seen{$observationunit_name}++;

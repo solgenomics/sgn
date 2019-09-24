@@ -358,7 +358,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 	    return;
     }
 
-    my $cross_obj = CXGN::Cross->new({bcs_schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
     my ($maternal_parent, $paternal_parent, $progeny) = $cross_obj->get_cross_relationships();
 
     $c->stash->{rest} = {
@@ -380,8 +380,11 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
     my $male_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plot_of', 'stock_relationship')->cvterm_id();
     my $female_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plant_of', 'stock_relationship')->cvterm_id();
     my $male_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plant_of', 'stock_relationship')->cvterm_id();
+    my $cross_combination_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_combination', 'stock_property')->cvterm_id();
 
-    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock_relationship1.value FROM stock
+
+    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock_relationship1.value, stockprop.value
+        FROM stock
         JOIN stock_relationship AS stock_relationship1 ON (stock.stock_id = stock_relationship1.object_id) and stock_relationship1.type_id = ?
         JOIN stock AS stock1 ON (stock_relationship1.subject_id = stock1.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship2 ON (stock.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
@@ -394,16 +397,16 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
         LEFT JOIN stock AS stock5 ON (stock_relationship5.subject_id =stock5.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship6 ON (stock.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
         LEFT JOIN stock AS stock6 ON (stock_relationship6.subject_id =stock6.stock_id)
-
-         WHERE stock.stock_id = ?";
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id =?
+        WHERE stock.stock_id = ?";
 
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($female_accession_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_id);
+    $h->execute($female_accession_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_combination_cvterm, $cross_id);
 
     my @cross_parents = ();
-    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type) = $h->fetchrow_array()){
-        push @cross_parents, [ $cross_type,
+    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type, $cross_combination) = $h->fetchrow_array()){
+        push @cross_parents, [$cross_combination, $cross_type,
             qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
             qq{<a href="/stock/$male_accession_id/view">$male_accession_name</a>},
             qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
@@ -584,6 +587,16 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 
 }
 
+
+#my $new_cross = CXGN::Cross->new({ schema=>schema });
+#$new_cross->female_parent($fjfj);
+#$new_cross->male_parent(kdkjf);
+#$new_cross->location(kjlsdlkjdfskj);
+#...type
+#...cross_name
+#...plots...
+#$new_cross->store();
+
 sub add_individual_cross {
     my $self = shift;
     my $c = shift;
@@ -657,7 +670,7 @@ sub add_individual_cross {
 
     #check that cross name does not already exist
     if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
-        $c->stash->{rest} = {error =>  "cross name already exists." };
+        $c->stash->{rest} = {error =>  "Cross Unique ID already exists." };
         return 0;
     }
 
@@ -809,7 +822,6 @@ sub add_crossingtrial_POST :Args(0){
         $c->stash->{rest} = {success => 1};
     }
 }
-
 
 sub upload_progenies : Path('/ajax/cross/upload_progenies') : ActionClass('REST'){ }
 
@@ -1184,6 +1196,33 @@ sub upload_family_names_POST : Args(0) {
     $c->stash->{rest} = {success => "1",};
 }
 
+
+sub delete_cross : Path('/ajax/cross/delete') : ActionClass('REST'){ }
+
+sub delete_cross_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $cross_stock_id = $c->req->param("cross_id");
+
+    my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+
+    if (!$cross->cross_stock_id()) {
+	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };
+	return;
+    }
+
+    my $error = $cross->delete();
+
+    print STDERR "ERROR = $error\n";
+
+    if ($error) {
+	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 ###
