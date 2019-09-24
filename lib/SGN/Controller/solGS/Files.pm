@@ -606,7 +606,7 @@ sub create_file_id {
     my $combo_pops_id    = $c->stash->{combo_pops_id};
     my $data_type        = $c->stash->{data_type};
     my $k_number         = $c->stash->{k_number};    
-    my $sindex_name      = $c->stash->{sindex_name};
+    my $sindex_wts       = $c->stash->{sindex_weigths};
     my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
@@ -657,9 +657,9 @@ sub create_file_id {
     $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
 
-    if ($sindex_name)
+    if ($sindex_wts)
     {
-	$file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
+	$file_id = $sindex_wts ? $file_id . '-' . $sindex_wts : $file_id;
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
     else

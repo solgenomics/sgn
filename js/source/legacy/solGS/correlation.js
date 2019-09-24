@@ -152,7 +152,6 @@ function formatGenCorInputData (popId, type, indexFile) {
 	traitsIds = traitsIds.split(',');
     }
 
-    console.log('formatGenCor: traitsIds ' + traitsIds)
     var modelId  = modelDetail.population_id;
     jQuery.ajax({
         type: 'POST',

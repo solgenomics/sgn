@@ -90,16 +90,16 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
         my $link       = $c->stash->{selection_index_download_url};                    
         my $index_file = $c->stash->{selection_index_only_file};
 	my $si_id      = $c->stash->{file_id};
-       
+	
         $ret->{status} = 'No GEBV values to rank.';
 
         if (@$top_10_si) 
         {
-            $ret->{status}     = 'success';
-            $ret->{top_10_genotypes}  = $top_10_genos;
-            $ret->{link}       = $link;
+            $ret->{status} = 'success';
+            $ret->{top_10_genotypes} = $top_10_genos;
+            $ret->{download_link} = $link;
             $ret->{index_file} = $index_file;
-	    $ret->{si_id}      = $si_id;
+	    $ret->{sindex_name} = $si_id;
         }                     
     }  
     else
@@ -201,7 +201,7 @@ sub download_sindex_url {
 sub gebv_rel_weights {
     my ($self, $c, $rel_wts) = @_;
          
-    my @si_id;
+    my @si_wts;
     my $rel_wts_txt = "trait" . "\t" . 'relative_weight' . "\n";
     
     foreach my $tr (keys %$rel_wts)
@@ -211,12 +211,12 @@ sub gebv_rel_weights {
         {
             $rel_wts_txt .= $tr . "\t" . $wt;
             $rel_wts_txt .= "\n";
-	    push @si_id, $tr, $wt;
+	    push @si_wts, $tr, $wt;
         }
     }
 
-    my $si_id = join('-', @si_id);
-    $c->stash->{sindex_name} = $si_id;
+    my $si_wts = join('-', @si_wts);
+    $c->stash->{sindex_weigths} = $si_wts;
 
     $self->rel_weights_file($c);
     my $file = $c->stash->{rel_weights_file};
