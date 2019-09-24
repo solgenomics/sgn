@@ -248,7 +248,7 @@ sub observation_variable_search {
                 reference => ''
 		    },
 		    name => $cvterm_name,
-			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
+			observationVariableDbId => $trait->term, #$cvterm_name."|".$db_name.":".$accession,
 			observationVariableName => $cvterm_name,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
@@ -282,7 +282,7 @@ sub observation_variable_search {
                 ontologyReference => \%ontologyReference,
                 status => '',
                 synonyms => [],
-				traitDbId => qq|$cvterm_id|,
+				traitDbId => $trait->term, #qq|$cvterm_id|,
 				traitName => $cvterm_name,
 				xref => '$db_name.":".$accession'
 			},
@@ -313,12 +313,12 @@ sub observation_variable_detail {
         my $trait_id = $trait->cvterm_id;
         my $trait_db_id = $trait->db_id;
 		%result = (
-			observationVariableDbId => qq|$trait_id|,
+			observationVariableDbId => $trait->term,
 			name => $trait->display_name,
 			ontologyDbId => qq|$trait_db_id|,
 			ontologyName => $trait->db,
 			trait => {
-				traitDbId => qq|$trait_id|,
+				traitDbId => $trait->term,
 				name => $trait->name,
 				description => $trait->definition,
                 class => ''
