@@ -154,7 +154,7 @@ sub _standard_response_construction {
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
-	$c->response->status($return_status == undef ? 200 : $return_status);
+	$c->response->status(($return_status == undef) ? 200 : $return_status);
     $c->detach;
 }
 
