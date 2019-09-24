@@ -68,13 +68,13 @@ sub list {
 	my @maps = $map_factory->get_all_maps();
 	my @data;
 
-    my $query = "SELECT map_id, date_loaded FROM sgn.map join sgn.map_version using(map_id) WHERE short_name=?";
+    my $query = "SELECT date_loaded, count(distinct(location_id)) FROM sgn.map_version JOIN marker_location using (map_version_id) WHERE map_version_id=? GROUP BY 1";
 	my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
 
 	foreach my $m (@maps) {
-        $sth->execute($m->get_short_name());
-        my ($map_id, $date_loaded) = $sth->fetchrow_array();
-        print STDERR "Date loaded is $date_loaded\n";
+        my $map_version_id = $m->get_id();
+        $sth->execute($map_version_id);
+        my ($date_loaded, $marker_count) = $sth->fetchrow_array();
         my $map_type = $m->get_type();
         my $map_units = $m->get_units();
         if ($map_type eq 'sequence'){
@@ -87,12 +87,12 @@ sub list {
         my $scientific_name = $m->get_organism();
         my ($genus,$species) = split(" ", $scientific_name);
         my %map_info = (
-		    mapDbId =>  qq|$map_id|,
+		    mapDbId =>  qq|$map_version_id|,
 			name => $m->get_long_name(),
 			species => $species,
 			type => $map_type,
 			unit => $map_units,
-			markerCount => $m->get_marker_count() + 0,
+			markerCount => $marker_count,
 			comments => $m->get_abstract(),
 			linkageGroupCount => $m->get_chromosome_count(),
             commonCropName => $m->get_common_name(),
@@ -128,13 +128,13 @@ sub list {
 
 sub detail {
 	my $self = shift;
-	my $map_id = shift;
+	my $map_version_id = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_id => $map_id });
+	my $map = $map_factory->create( { map_version_id => $map_version_id });
     my $map_type = $map->get_type();
     my $map_units = $map->get_units();
     if ($map_type eq 'sequence'){
@@ -157,7 +157,7 @@ sub detail {
 	    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 
 	my %result = (
-		mapDbId =>  qq|$map_id|,
+		mapDbId =>  qq|$map_version_id|,
 		mapName => $map->get_short_name(),
 		type => $map_type,
 		unit => $map_units,
@@ -165,6 +165,7 @@ sub detail {
         documentationURL => "https://brapi.org",
 		data => $data_window,
 	);
+
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Maps detail result constructed');
 }
@@ -184,7 +185,7 @@ sub detail {
 sub positions {
 	my $self = shift;
 	my $inputs = shift;
-	my $map_id = $inputs->{map_id};
+	my $map_version_id = $inputs->{map_id};
 	my $min = $inputs->{min};
 	my $max = $inputs->{max};
 	my @linkage_group_ids = $inputs->{linkage_group_ids} ? @{$inputs->{linkage_group_ids}} : ();
@@ -193,7 +194,7 @@ sub positions {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
-	my $map = $map_factory->create( { map_id => $map_id });
+	my $map = $map_factory->create( { map_version_id => $map_version_id });
 
 	my @data = ();
 
@@ -219,7 +220,8 @@ sub positions {
 		}
 	    }
 	}
-	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
+    my $marker_count = scalar(@data);
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$marker_count,$page); #set page size to total number of markers
 
 	my %result = ( data => $data_window );
 	my @data_files;
