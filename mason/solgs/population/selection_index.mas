@@ -50,7 +50,7 @@ $project_name
     <div id="selection_index_form"> </div>
     <div id="si_correlation_section" style="display:none">  
 
-      <& /solgs/model/top_genotypes.mas &> 
+      <& /solgs/population/top_genotypes.mas &> 
       <& /solgs/population/selection_index_correlation.mas &>
     </div>
 
