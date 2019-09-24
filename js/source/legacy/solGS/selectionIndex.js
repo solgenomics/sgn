@@ -214,7 +214,7 @@ solGS.sIndex = {
     },
 
 
-    applySelectionIndex: function(params, legend, trainingPopId, selectionPopId) {
+    calcSelectionIndex: function(params, legend, trainingPopId, selectionPopId) {
 	
 	if (params) {                      
             jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
@@ -240,16 +240,13 @@ solGS.sIndex = {
 		data: siArgs,
 		url: '/solgs/calculate/selection/index/',
 		success: function(res){                       
-                  
-                    var table;
-                    if (res.status  == 'success' ) {
+                    var table;                 
+                    if (res.status == 'success' ) {
 					
 			var genos = res.top_10_genotypes;
-			var download_link = res.link;
-			var indexFile     = res.index_file;
-			var siId = res.si_id;
-                        
-			table = '<table  style="text-align:left; border:0px; padding: 1px; width:75%;">';
+			var indexFile = res.index_file;
+			
+			table = '<br /><table class="table table-condensed">';
 			table += '<tr><th>Genotypes</th><th>Selection indices</th></tr>';
 			
 			var sorted = [];
@@ -267,34 +264,25 @@ solGS.sIndex = {
                             table += '</tr>';                          
 			}
                         
-			table += '</table>';                    
-			table += '<br>[ ' + download_link + ' ]';
-			table += '<br>' + legend + '<br/><br/>';
+			table += '</table>';
+			console.log('table '  + table)
+			table += res.download_link; 
+			table += ' <strong>| Index Name:</strong> ' + res.sindex_name;
+			table += legend;
                     } else {
 			table = res.status + ' Ranking the genotypes failed..Please report the problem.';
                     }
-                    
-                    jQuery('#si_canvas #top_genotypes').append(table).show(); 
-                    jQuery('#si_canvas #selected_pop').val('');
-                    
-                    var popId;
-                    var type;
-                    if (selectionPopId && selectionPopId !== trainingPopId) {
-			popId = selectionPopId;
-			type  = 'selection';                    
-                    } else {                    
-			popId = trainingPopId;
-			type  = 'training';
-                    }
+                 
+                    jQuery('#si_canvas #si_top_genotypes').append(table).show();
+		                     
+		    var popType = jQuery("#si_canvas #selected_population_type").val();
+		    var popId   = jQuery("#si_canvas #selected_population_id").val();
+                    formatGenCorInputData(popId, popType, indexFile);
 
-		    solGS.sIndex.saveIndexedPops(siId);
+		    jQuery('#si_canvas #selected_pop').val('');
+
+		    solGS.sIndex.saveIndexedPops(res.sindex_name);
 		    solGS.cluster.listClusterPopulations();
-                    formatGenCorInputData(popId, type, indexFile);
-                    
-                    // jQuery("#si_canvas #si_correlation_message")
-		    // 	.css({"padding-left": '0px'})
-		    // 	.html("Running correlation analysis..."); 
-                    
 		},
 		error: function(res){
                     alert('error occured calculating selection index.');
@@ -350,7 +338,7 @@ solGS.sIndex = {
 	var validate = legendValues.validate;
 	
 	if (params && validate) {
-            this.applySelectionIndex(params, legend, trainingPopId, selectionPopId);
+            this.calcSelectionIndex(params, legend, trainingPopId, selectionPopId);
 	}
 	
     },
@@ -358,10 +346,10 @@ solGS.sIndex = {
 
     legendParams: function() {
     
-	var predPopName   = jQuery("#si_canvas #selected_population_name").val();
+	var selectedPopName   = jQuery("#si_canvas #selected_population_name").val();
 	
-	if (!predPopName) {
-            predPopName = jQuery("#si_canvas #default_selected_population_name").val();
+	if (!selectedPopName) {
+            selectedPopName = jQuery("#si_canvas #default_selected_population_name").val();
 	}
 
 	var rel_form = document.getElementById('selection_index_form');
@@ -371,16 +359,12 @@ solGS.sIndex = {
 	var validate;
 	var allValues = [];
 	
-	var legend =  '<div id="si_legend_"' 
-            + predPopName.replace(/\s/g, "") 
-            + '">';
-
-	legend += '<b>Relative weights</b>:';
+	var trRelWts= '<b>Relative weights</b>:';
 
 	for (var i = 0; i < all.length; i++) {         
             var nm = all[i].name;
             var val = all[i].value;
-	    console.log('nm: ' + nm + ' val: ' + val)
+	 
             if (val != 'Calculate')  {
 		if (nm != 'prediction_pop_name') {
                     
@@ -389,7 +373,7 @@ solGS.sIndex = {
 		    
                     if (validate) {
 			params[nm] = val;
-			legend += '<b> ' + nm + '</b>' + ': '+ val;
+			trRelWts += '<b> ' + nm + '</b>' + ': '+ val;
                     }
 		}
             }            
@@ -406,9 +390,13 @@ solGS.sIndex = {
 		params = undefined;
             }
 	}
-        
-	if (predPopName) {
-            legend += '<br/><b>Name</b>: ' + predPopName + '<br/></div';
+        var legend;
+	if (selectedPopName) {
+	    var popName = '<strong>Population name:</strong> ' + selectedPopName;
+	    var divId = selectedPopName.replace(/\s/g, "");
+	    legend = '<div id="si_legend_"' + divId + '">'
+		+ popName + ' <strong>|</strong> ' +  trRelWts
+		+ '</div>';           
 	}      
 
 	return {
@@ -458,7 +446,6 @@ solGS.sIndex = {
 
 	var modelId   = jQuery("#si_canvas #model_id").val();
 	var modelName = jQuery("#si_canvas #model_name").val();
-//	var popType   = jQuery("#si_canvas #default_selected_population_type").val();
 
 	return {
 	    'id' : modelId,
@@ -483,13 +470,10 @@ jQuery(document).ready( function() {
        
 });
 
-
 jQuery(document).on("click", "#calculate_si", function() {        
     var modelId = jQuery("#si_canvas #model_id").val();
     var selectionPopId = jQuery("#si_canvas #selected_population_id").val();
     var popType = jQuery("#si_canvas #selected_population_type").val();
 
-    console.log('calling selection idex ' + modelId + ' ' + selectionPopId)
     solGS.sIndex.selectionIndex(modelId, selectionPopId);
-     console.log('calling selection idex')
 });
