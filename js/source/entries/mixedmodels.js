@@ -183,6 +183,7 @@ export function init(main_div){
         <textarea name="description" rows="4" cols="30" class="form-control" id="description"></textarea>
 	<input type="hidden" name="analysis_file" id="analysis_file" />
 	<input type="hidden" name="analysis_dir" id="analysis_dir" value="mixedmodels" />
+	<div name="analysis_type" id="analysis_type" value="?" style="display:none;"></div>
 	</div> <!-- form-group -->
       </div> <!-- modal-body -->
       <div class="modal-footer">
@@ -197,8 +198,9 @@ export function init(main_div){
     
     get_select_box("datasets", "mixed_model_dataset_select", {});
 
+    var analysis_type;
     $('#save_analysis_dialog').on('show.bs.modal', function(e) {
-	var analysis_type = e.relatedTarget.dataset.analysis_type;
+	analysis_type = e.relatedTarget.dataset.analysis_type;
 	alert(analysis_type);
 	$('#analysis_type').val(analysis_type);
     }); 
@@ -208,12 +210,15 @@ export function init(main_div){
 	var description = $('#description').val();
 	var file = $('#tempfile').html();
 	var basename = file.split('/').reverse()[0];
-	alert(basename);
+	var analysis_type = $('#analysis_type').val();
+	var final_filename = basename+"."+analysis_type;
+	alert(final_filename);
+	
 	jQuery.ajax( {
 	    'method' : 'POST',
 	    'url': '/ajax/analysis/store/file',
 	    'dir': 'mixedmodels',
-	    'data' : { 'file': basename,
+	    'data' : { 'file': final_filename,
 		       'dir' : 'mixedmodels',
 		       'analysis_type': 'mixed_model_analysis', 
 		       'analysis_name': name,
@@ -224,8 +229,12 @@ export function init(main_div){
 		if (r.error) {
 		    alert("An error occurred. ("+r.error+")");
 		}
-		else { 
-		    alert("Everything worked! Woohoo!" + file + " " +name);
+		else {
+		    if (r.warning) {
+			alert("Warning, "+r.warning);
+		    }
+		    
+		    alert("Successfully saved results from " + file + " " +name);
 		    return;
 		}
 	    },

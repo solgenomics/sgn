@@ -39,7 +39,15 @@ sub BUILD {
     my $args = shift;
 
     if ($args->{project_id}) {
-	# load analysis from db
+	my $row = $args->{bcs_schema}->resultset("Project::Project")->find( { project_id => $args->{project_id} });
+
+	$self->name($row->name());
+	$self->description($row->description());
+	
+	my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search( { project_id => $args->{project_id} });
+
+	
+	
 
     }
 }
@@ -70,12 +78,12 @@ sub retrieve_analyses_by_user {
     
     my $q = "SELECT userinfo.project_id FROM projectprop AS userinfo JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id) WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
 
-    my $h = $schema->dbc->dbh->prepare($q);
+    my $h = $schema->storage()->dbh()->prepare($q);
     $h->execute($user_info_type_id, $analysis_info_type_id, $user_id);
 
     my @analyses = ();
     while (my ($project_id) = $h->fetchrow_array()) {
-	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, trial_id=> $project_id });
+	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, project_id=> $project_id });
     }
 
     return @analyses;
@@ -166,6 +174,8 @@ sub create_and_store_analysis_design {
     # store project type info as projectprop, store metadata in value
     #
     my $analysis_project_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_project', 'project_property');
+
+    
     
     # store dataset info, if available. Copy the actual dataset json, 
     # so that dataset  info is frozen and does not reflect future 
@@ -173,26 +183,30 @@ sub create_and_store_analysis_design {
     #
 
     my $ds;
-
+    my $json_data;
+    
     if ($self->dataset_id()) {
 	print STDERR "Creating the dataset from the id ".$self->dataset_id()." ...\n";
 	$ds = CXGN::Dataset->new( { schema => $self->bcs_schema, people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
 
 	my $data = $ds->data();
-	print STDERR "Data = $data\n";
+	$data->{original_dataset_id} = $self->dataset_id();
+
+	$json_data = JSON::Any->encode($data);
+	print STDERR "Data = $json_data\n";
 	
-	$row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
+    }
+    $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
 	{
 	    project_id => $analysis_id, 
 	    type_id => $analysis_project_term->cvterm_id(), 
-	    value => { 
-		original_dataset_id => $self->dataset_id(), 
-		dataset_json => $ds->data(), 
-	    },
+	    value => $json_data,
 	});
-    }
+ 
     print STDERR Dumper($design);
     print STDERR "Done with design create & store.\n";
+
+    return $analysis_id;
 }
 
 sub store_analysis_values {

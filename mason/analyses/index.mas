@@ -44,7 +44,7 @@ Lukas Mueller <lam87@cornell.edu>
   $(document).ready( function() {
     $('#analyses_by_user_table').DataTable(
     {
-       url: '/ajax/analyses/by_user'
+       ajax: '/ajax/analyses/by_user'
     });
   
   });

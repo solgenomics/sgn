@@ -6,6 +6,7 @@ use Moose;
 use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::StorePhenotypes;
+use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -107,6 +108,7 @@ sub store_analysis_file_POST {
 
     foreach my $line (@lines) {
 	my ($acc, $value) = split /\t/, $line;
+	$acc =~ s/\"//g;
 	print STDERR "Reading data for $acc with value $value...\n";
 	my $plot_name = $analysis_name."_".$acc;
 	push @plots, $plot_name;
@@ -159,9 +161,17 @@ sub store_data {
     $a->accessions($stocks);
     #$a->plots($plots);
     
-    my ($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
-       
-    if ($verified_warning || $verified_error) {
+    my ($verified_warning, $verified_error);
+
+    eval { 
+	($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
+    };    
+
+    if ($@) {
+	$c->stash->{rest} = { error => $@ };
+	return;
+    }
+    elsif ($verified_warning || $verified_error) {
 	$c->stash->{rest} = { warnings => $verified_warning, error => $verified_error };
 	return;
     }
@@ -182,10 +192,16 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     if (!$user_id) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
-    my @a = CXGN::Analysis->retrieve_analyses_by_user($schema, $user_id);
+    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $user_id);
 
-    print STDERR Dumper(\@a);
-	
+    my @table;
+    foreach my $a (@analyses) {
+	push @table, [ $a->name(), $a->description() ];
+    }
+
+    print STDERR Dumper(\@table);
+    
+    $c->stash->{rest} = { data => \@table };
 
 }
 
