@@ -51,7 +51,7 @@ $project_name
     <div id="si_correlation_section" style="display:none">  
 
       <& /solgs/model/top_genotypes.mas &> 
-	<& /solgs/population/selection_index_correlation.mas &>
+      <& /solgs/population/selection_index_correlation.mas &>
     </div>
 
     <div id="selected_population_div" style="display:none">    
