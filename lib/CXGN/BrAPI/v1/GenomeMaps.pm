@@ -73,10 +73,9 @@ sub list {
 
 	foreach my $m (@maps) {
         my $map_version_id = $m->get_id();
-        print STDERR "Map version id is $map_version_id for map with name ".$m->get_short_name()."\n";
+        if ($map_version_id =~ /\D/) { next; } # not a valid id
         $sth->execute($map_version_id);
         my ($map_id, $date_loaded, $marker_count) = $sth->fetchrow_array();
-        #print STDERR "Map version id is $map_version_id and map id is $map_id\n";
         my $map_type = $m->get_type();
         my $map_units = $m->get_units();
         if ($map_type eq 'sequence'){
