@@ -450,9 +450,9 @@ sub studies_observation_variables {
 					scaleDbId =>'',
 					scaleName=>'',
 					validValues=> {
-						min=>$trait->minimum ? $trait->minimum + 0 : 0,
-							max=>$trait->maximum ? $trait->maximum + 0 : 0,
-							categories=>\@brapi_categories
+						min=>$trait->minimum ? $trait->minimum + 0 : undef,
+						max=>$trait->maximum ? $trait->maximum + 0 : undef,
+						categories=>\@brapi_categories
 					},
 					xref=>'',
 				},
