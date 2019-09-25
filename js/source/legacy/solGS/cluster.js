@@ -189,7 +189,7 @@ solGS.cluster = {
 	var selectionProp = clusterArgs.selection_proportion;
 	var selectId     = clusterArgs.select_id;
 	var dataStructureType = clusterArgs.data_structure_type;
-	
+
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
 	if (trainingTraitsIds) {
@@ -204,114 +204,151 @@ solGS.cluster = {
 	var popId   = jQuery("#cluster_selected_population_id").val();
 	var popType = jQuery("#cluster_selected_population_type").val();
 	var selectName = jQuery("#cluster_selected_population_name").val();
-	
-	if (document.URL.match(/solgs\/traits\/all\/population\//)) {
-	    if (popType.match(/training/)) {
-		popDetails['training_pop_id'] = popId;
-		popDetails['cluster_pop_id'] = popId;
-	    } else if (popType.match(/selection/)) {
-		popDetails['selection_pop_id'] = popId;
-		popDetails['cluster_pop_id'] = popId;
-	    }
-	}
 
-	if (document.URL.match(/solgs\/models\/combined\/trials\//)) {
-	    if (popType.match(/training/)) {
-		popDetails['combo_pops_id'] = popId;
-		popDetails['cluster_pop_id'] = popId;
-	    } else if (popType.match(/selection/)) {
-		popDetails['selection_pop_id'] = popId;
-		popDetails['cluster_pop_id'] = popId;
-	    }	    
-	}
+	var siMessage = this.validateSIndexParams(popType, dataType, selectionProp);
 
-	var listId;
-	var datasetId;
-	var datasetName;
-	var sIndexName;
-	var dataStructure = dataStructureType;
+	if (siMessage != undefined) {
+	    
+	    jQuery("#cluster_message").html(siMessage)
+		.show().fadeOut(9400);
+	    
+	} else {
 	
-	if (dataStructureType == 'list') {
-	    listId   = selectId;	   
-	    popDetails['training_pop_id'] = 'list_' + listId;
-	    popDetails['cluster_pop_id'] = 'list_' + listId;
-	
-	} else if (dataStructureType == 'dataset') {
-	    datasetId = selectId;	  
-	    popDetails['cluster_pop_id'] = 'dataset_' + selectId;
-	    popDetails['training_pop_id'] = 'dataset_' + selectId;
-	    datasetName = selectName;
-	}
-
-	if (popType.match(/selection_index/)) {
-	    sIndexName = selectName;
-	}
-	
-	if (listId
-	    || datasetId
-	    || popDetails.training_pop_id
-	    || popDetails.selection_pop_id
-	    || popDetails.combo_pops_id) {
-	 
-	    jQuery("#cluster_canvas .multi-spinner-container").show();
-	    jQuery("#cluster_message").html("Running K-means clustering... please wait...it may take minutes");
-	 
-	    jQuery("#run_cluster").hide();
-	}  
-
-	var clusteringArgs =  {'training_pop_id': popDetails.training_pop_id,
-			       'selection_pop_id': popDetails.selection_pop_id,
-			       'combo_pops_id': popDetails.combo_pops_id,
-			       'training_traits_ids': trainingTraitsIds,
-			       'cluster_pop_id': popDetails.cluster_pop_id,
-			       'list_id': listId, 
-			       'cluster_type': clusterType,
-			       'data_structure': dataStructure,
-			       'dataset_id': datasetId,
-			       'dataset_name': datasetName,
-			       'data_type': dataType,
-			       'k_number' : kNumber,
-			       'selection_proportion': selectionProp,
-			       'sindex_name': sIndexName
-			      };
-	
-	jQuery.ajax({
-            type: 'POST',
-            dataType: 'json',
-            data: clusteringArgs,
-            url: '/cluster/result',
-            success: function(res) {
-		if (res.result == 'success') {
-		    jQuery("#cluster_canvas .multi-spinner-container").hide();
-		  
-		    solGS.cluster.plotClusterOutput(res);
-				    
-		    jQuery("#cluster_message").empty();
-		    
-		    var pages = '/solgs/traits/all/population/'
-			+ '|solgs/models/combined/trials/'
-			+ '|/breeders/trial\/'
-			+ '|solgs/trait/\\d+/population/'
-			+ '|solgs/model/combined/populations/';
-		    
-		    if (document.URL.match(pages)) {
-			 jQuery("#run_cluster").show();
-		    }
-
-		} else {                
-		    jQuery("#cluster_message").html(res.result);
-		    jQuery("#cluster_canvas .multi-spinner-container").hide();
-		    jQuery("#run_cluster").show();		    
+	    if (document.URL.match(/solgs\/traits\/all\/population\//)) {
+		if (popType.match(/training/)) {
+		    popDetails['training_pop_id'] = popId;
+		    popDetails['cluster_pop_id'] = popId;
+		} else if (popType.match(/selection/)) {
+		    popDetails['selection_pop_id'] = popId;
+		    popDetails['cluster_pop_id'] = popId;
 		}
-	    },
-            error: function(res) {
-		jQuery("#cluster_message").html('Error occured running the clustering.');
-		jQuery("#cluster_canvas .multi-spinner-container").hide();
-		jQuery("#run_cluster").show();
-            }  
-	});	
+	    }
+
+	    if (document.URL.match(/solgs\/models\/combined\/trials\//)) {
+		if (popType.match(/training/)) {
+		    popDetails['combo_pops_id'] = popId;
+		    popDetails['cluster_pop_id'] = popId;
+		} else if (popType.match(/selection/)) {
+		    popDetails['selection_pop_id'] = popId;
+		    popDetails['cluster_pop_id'] = popId;
+		}	    
+	    }
+
+	    var listId;
+	    var datasetId;
+	    var datasetName;
+	    var sIndexName;
+	    var dataStructure = dataStructureType;
+	    
+	    if (dataStructureType == 'list') {
+		listId   = selectId;	   
+		popDetails['training_pop_id'] = 'list_' + listId;
+		popDetails['cluster_pop_id'] = 'list_' + listId;
+		
+	    } else if (dataStructureType == 'dataset') {
+		datasetId = selectId;	  
+		popDetails['cluster_pop_id'] = 'dataset_' + selectId;
+		popDetails['training_pop_id'] = 'dataset_' + selectId;
+		datasetName = selectName;
+	    }
+
+	    if (popType.match(/selection_index/)) {
+		sIndexName = selectName;
+	    }
+
+	    var clusterArgs =  {'training_pop_id': popDetails.training_pop_id,
+				'selection_pop_id': popDetails.selection_pop_id,
+				'combo_pops_id': popDetails.combo_pops_id,
+				'training_traits_ids': trainingTraitsIds,
+				'cluster_pop_id': popDetails.cluster_pop_id,
+				'list_id': listId, 
+				'cluster_type': clusterType,
+				'data_structure': dataStructure,
+				'dataset_id': datasetId,
+				'dataset_name': datasetName,
+				'data_type': dataType,
+				'k_number' : kNumber,
+				'selection_proportion': selectionProp,
+				'sindex_name': sIndexName
+			       };
+	    
+	    this.runClusterAnalysis(clusterArgs);
+	}
+	    
     },
 
+    runClusterAnalysis: function(clusterArgs) {
+
+	if (clusterArgs) {
+
+	    jQuery("#cluster_canvas .multi-spinner-container").show();
+	    jQuery("#cluster_message").html("Running K-means clustering... please wait...it may take minutes");
+		
+	    jQuery("#run_cluster").hide();
+	    
+	    jQuery.ajax({
+		type: 'POST',
+		dataType: 'json',
+		data: clusterArgs,
+		url: '/cluster/result',
+		success: function(res) {
+		    if (res.result == 'success') {
+			jQuery("#cluster_canvas .multi-spinner-container").hide();
+			
+			solGS.cluster.plotClusterOutput(res);
+			
+			jQuery("#cluster_message").empty();
+			
+			var pages = '/solgs/traits/all/population/'
+			    + '|solgs/models/combined/trials/'
+			    + '|/breeders/trial\/'
+			    + '|solgs/trait/\\d+/population/'
+			    + '|solgs/model/combined/populations/';
+			
+			if (document.URL.match(pages)) {
+			    jQuery("#run_cluster").show();
+			}
+
+		    } else {                
+			jQuery("#cluster_message").html(res.result);
+			jQuery("#cluster_canvas .multi-spinner-container").hide();
+			jQuery("#run_cluster").show();		    
+		    }
+		},
+		error: function(res) {
+		    jQuery("#cluster_message").html('Error occured running the clustering.');
+		    jQuery("#cluster_canvas .multi-spinner-container").hide();
+		    jQuery("#run_cluster").show();
+		}  
+	    });
+	} else {
+	    jQuery("#cluster_message").html('Missing cluster parameters.')
+		.show().fadeOut(8400); 
+	}
+	
+    },	
+
+    validateSIndexParams: function(popType, dataType, selectionProp) {
+
+	var siMessage;
+	if (popType.match(/selection_index/) != null) {
+	  
+	    if (dataType.match(/genotype/i) == null) {
+		siMessage = 'K-means clustering for selection index type'
+		    + ' data works with genotype data only.';	
+	    } 
+
+	    if (dataType.match(/genotype/i) != null
+		&& !selectionProp) {
+		
+		siMessage = 'The selection proportion value is empty.'
+		    + ' You need to define the fraction of the'
+		    +' population you want to select.';
+	    }
+	}
+	
+	return siMessage;
+    },
 
     plotClusterOutput: function(res) {
 	
@@ -629,8 +666,6 @@ jQuery(document).ready( function() {
 	    if(jQuery('#cluster_canvas #cluster_select_a_population_div').is(':visible')) {
 		jQuery('#cluster_canvas #cluster_options #data_type_opts').html(dataTypeOpts);
 		jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-	
-	//	jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();	
 		jQuery('#cluster_canvas #cluster_options').show();
 	    } else {
 		setTimeout(checkClusterPop, 6000);
