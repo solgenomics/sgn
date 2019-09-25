@@ -73,6 +73,7 @@ sub list {
 
 	foreach my $m (@maps) {
         my $map_version_id = $m->get_id();
+        print STDERR "Map version id is $map_version_id for map with name ".$m->get_short_name()."\n";
         $sth->execute($map_version_id);
         my ($map_id, $date_loaded, $marker_count) = $sth->fetchrow_array();
         #print STDERR "Map version id is $map_version_id and map id is $map_id\n";
