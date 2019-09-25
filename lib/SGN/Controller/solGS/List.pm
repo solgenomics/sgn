@@ -691,7 +691,6 @@ sub genotypes_list_genotype_query_job {
 }
 
 
-
 sub plots_list_phenotype_query_job {
     my ($self, $c) = @_;
 

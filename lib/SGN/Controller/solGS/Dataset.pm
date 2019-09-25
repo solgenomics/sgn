@@ -251,7 +251,6 @@ sub get_model {
 }
 
 
-
 sub dataset_population_summary {
     my ($self, $c) = @_;
 
