@@ -437,7 +437,7 @@ sub studies_observation_variables {
 					reference=>""
 				},
 				name => $trait->name,
-				observationVariableDbId => $trait->display_name,
+				observationVariableDbId => $trait->term,
 				observationVariableName => $trait->name,
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
@@ -470,7 +470,7 @@ sub studies_observation_variables {
 					ontologyReference=>\%ontologyReference,
 					status=>JSON::true,
 					synonyms=>[],
-					traitDbId => qq|$trait_id|,
+					traitDbId => $trait->term,
 					traitName=>$trait->name,
                     xref => $trait->term,
 				},
