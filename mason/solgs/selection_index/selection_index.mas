@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/selection_index.mas - displays a form for calculating selection index of individuals.
+/solgs/selection_index/selection_index.mas - displays a form for calculating selection index of individuals.
 
 =AUTHOR
 
@@ -50,8 +50,8 @@ $project_name
     <div id="selection_index_form"> </div>
     <div id="si_correlation_section" style="display:none">  
 
-      <& /solgs/population/top_genotypes.mas &> 
-      <& /solgs/population/selection_index_correlation.mas &>
+      <& /solgs/selection_index/top_genotypes.mas &> 
+      <& /solgs/selection_index/selection_index_correlation.mas &>
     </div>
 
     <div id="selected_population_div" style="display:none">    
