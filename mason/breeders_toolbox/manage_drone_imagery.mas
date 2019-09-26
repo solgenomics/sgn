@@ -19,7 +19,7 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
 <%perl>
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
@@ -983,19 +983,40 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_keras_cnn_dialog" name="drone_imagery_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryKerasCNNDialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryKerasCNNDialog">Predict Phenotype on Images using Keras CNN Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <button class="btn btn-primary" id="drone_imagery_keras_cnn_train_link">Train Keras CNN Model Using Images and Phenotypes In Database</button>
+            <br/><br/>
+            <button class="btn btn-primary" id="drone_imagery_keras_cnn_predict_link">Predict Phenotypes Using Images and Trained Keras Model CNN</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryTrainKerasCNNDialog">Select a dataset to train Keras CNN</h4>
+        <h4 class="modal-title" id="droneImageryTrainKerasCNNDialog">Train Keras CNN Model</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "drone_imagery_train_keras_model_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through training a keras model using images and phenotypes in the database" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through training a keras model using images and phenotypes in the database." &>
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -1086,6 +1107,114 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
 
                     <div id="drone_imagery_train_keras_model_results_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_predict_keras_cnn_dialog" name="drone_imagery_predict_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryPredictKerasCNNDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryPredictKerasCNNDialog">Predict Phenotypes Using Trained Keras CNN Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_predict_keras_model_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained Kera CNN Models and images in the database." &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in sourcing images from" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_predict_keras_cnn_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Keras CNN Model Selection" &>
+                    <& /page/page_title.mas, title=>"Select the Keras CNN Model for prediction" &>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
+                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_predict_keras_drone_runs_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Type</th>
+                                <th>Drone Run Description</th>
+                                <th>Drone Run Date</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_drone_run_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Images Selection" &>
+                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_predict_keras_plot_polygon_image_type_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Field Trial</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Band Name</th>
+                                <th>Drone Run Band Type</th>
+                                <th>Plot Polygon Type</th>
+                                <th>Number of Images</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_plot_polygon_type_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Confirm" &>
+                    <& /page/page_title.mas, title=>"Predict Phenotypes!" &>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_confirm_step">Submit</button>
+                    </center>
+
+                    <div id="drone_imagery_predict_keras_model_results_div">
                     </div>
                 </&>
             </&>
@@ -2150,8 +2279,17 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_train_keras_field_trial_id;
     var manage_drone_imagery_train_keras_trait_id;
     var manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
+    
+    var manage_drone_imagery_predict_keras_drone_run_ids = [];
+    var manage_drone_imagery_predict_keras_field_trial_id;
+    var manage_drone_imagery_predict_keras_trait_id;
+    var manage_drone_imagery_predict_keras_plot_polygon_type_ids = [];
 
     jQuery('#keras_cnn_drone_imagery_link').click(function(){
+        jQuery('#drone_imagery_keras_cnn_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_keras_cnn_train_link').click(function(){
         get_select_box('trials', 'drone_imagery_train_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_train_keras_cnn_field_trial_id', 'id' : 'drone_imagery_train_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
         jQuery('#drone_imagery_train_keras_cnn_dialog').modal('show');
 
@@ -2238,6 +2376,9 @@ jQuery(document).ready(function() {
                     html = html + "<tr><td>"+response.results[i]+"</td></tr>";
                 }
                 html = html + "</tbody></table>";
+
+                html = html + "<br/><button class='btn btn-primary' id='drone_imagery_keras_model_save'>Save Model (Required For Using For Prediction)</button>";
+
                 jQuery('#drone_imagery_train_keras_model_results_div').html(html);
             },
             error: function(response){
@@ -2245,6 +2386,33 @@ jQuery(document).ready(function() {
                 alert('Error training keras model!')
             }
         });
+    });
+
+    jQuery('#drone_imagery_keras_cnn_predict_link').click(function(){
+        get_select_box('trials', 'drone_imagery_predict_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'id' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
+        jQuery('#drone_imagery_predict_keras_cnn_dialog').modal('show');
+
+        manage_drone_imagery_predict_keras_drone_run_ids = [];
+        manage_drone_imagery_predict_keras_field_trial_id = undefined;
+        manage_drone_imagery_predict_keras_trait_id = undefined;
+        manage_drone_imagery_predict_keras_plot_polygon_type_ids = [];
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_field_trial_select_step').click(function(){
+        manage_drone_imagery_predict_keras_field_trial_id = jQuery('#drone_imagery_predict_keras_cnn_field_trial_id').val();
+        if (manage_drone_imagery_predict_keras_field_trial_id == '') {
+            alert('Please select a field trial first!');
+        } else {
+
+            jQuery('#drone_image_predict_keras_drone_runs_table').DataTable({
+                destroy : true,
+                ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=predict_keras_drone_imagery_drone_run_select&checkbox_select_all=1&field_trial_id='+manage_drone_imagery_predict_keras_field_trial_id
+            });
+
+            Workflow.complete("#drone_imagery_predict_keras_model_field_trial_select_step");
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 2);
+        }
+        return false;
     });
 
     //
