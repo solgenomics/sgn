@@ -303,10 +303,10 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my $female_plot_plant_header  = $worksheet->get_cell(0,4)->value();
-    my $male_plot_plant_header  = $worksheet->get_cell(0,5)->value();
+    my $female_plot_plant_header  = $worksheet->get_cell(0,5)->value();
+    my $male_plot_plant_header  = $worksheet->get_cell(0,6)->value();
 
-    for my $column ( 6 .. $col_max ) {
+    for my $column ( 7 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         $properties_columns{$column} = $header_string;

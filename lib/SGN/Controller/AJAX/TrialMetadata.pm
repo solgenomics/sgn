@@ -1864,9 +1864,9 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_trial();
+    my $result = $trial->get_crosses_and_details_in_crossingtrial();
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
@@ -1888,7 +1888,7 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_properties_trial();
 
@@ -1916,7 +1916,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
@@ -1926,6 +1926,31 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     }
 
     $c->stash->{rest} = { data => \@crosses };
+}
+
+
+sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_seedlots_from_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $seedlot_id, $seedlot_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
 }
 
 
