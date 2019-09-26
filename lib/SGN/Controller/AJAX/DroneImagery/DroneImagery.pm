@@ -1345,6 +1345,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
+    my $checkbox_select_all = $c->req->param('checkbox_select_all');
     my $field_trial_id = $c->req->param('field_trial_id');
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
@@ -1375,7 +1376,12 @@ sub get_drone_run_projects_GET : Args(0) {
     while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type) = $h->fetchrow_array()) {
         my @res;
         if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_project_id'>";
+            my $checkbox = "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_project_id' ";
+            if ($checkbox_select_all) {
+                $checkbox .= "checked";
+            }
+            $checkbox .= ">";
+            push @res, $checkbox;
         }
         my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
         push @res, (
@@ -3731,33 +3737,34 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     open(my $fh, '<', $archive_temp_output_file)
         or die "Could not open file '$archive_temp_output_file' $!";
 
-        my $header = <$fh>;
-        if ($csv->parse($header)) {
-            @header_cols = $csv->fields();
-        }
         while ( my $row = <$fh> ){
             my @columns;
             if ($csv->parse($row)) {
                 @columns = $csv->fields();
             }
-            push @result_agg, \@columns;
+            my $line = '';
+            foreach (@columns) {
+                if ($_ eq ' ') {
+                    $line .= '&nbsp;';
+                }
+                else {
+                    $line .= $_;
+                }
+            }
+            push @result_agg, $line;
         }
     close($fh);
     #print STDERR Dumper \@result_agg;
-    my $empty_line = shift @result_agg;
-    my @result_agg_string = ["              precision    recall  f1-score   support"];
 
     print STDERR Dumper $archive_temp_result_agg_file;
     open($F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
         foreach my $data (@result_agg){
-            my $line = join '', @$data;
-            push @result_agg_string, $line;
-            print $F $line;
+            print $F $data;
             print $F "\n";
         }
     close($F);
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg_string };
+    $c->stash->{rest} = { success => 1, results => \@result_agg };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
