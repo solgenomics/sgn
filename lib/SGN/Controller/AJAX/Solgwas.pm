@@ -11,6 +11,7 @@ use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
+use POSIX qw(log10);
 #use SGN::Model::Cvterm;
 #use CXGN::List;
 #use CXGN::List::Validate;
@@ -595,6 +596,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             backend => $c->config->{backend},
             temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
             queue => $c->config->{'web_cluster_queue'},
+            submit_host => $c->config->{slurm_host},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
@@ -616,11 +618,12 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # $cmd->wait;
 
     $vcf_cmd->run_cluster(
-#            "plink2 --bfile ~/Documents/gcta_1.92.0beta/test.bed --maf 0.05 --make-grm-bin --out " . $tempfile ."_Kinship --thread-num 1 > " . $tempfile . "_Kinship.log",
+#            "plink2 --bfile ~/Documents/gcta_1.92.0beta3/test.bed --maf 0.05 --make-grm-bin --out " . $tempfile ."_Kinship --thread-num 1 > " . $tempfile . "_Kinship.log",
 
 #            "plink2 --vcf " . $geno_filepath_transpose . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
 
-            $solgwas_tmp_output . "/../../bin/plink2 --vcf " . $sorted_vcf . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
+# real line of code:
+            "plink2 --vcf " . $sorted_vcf . " --make-bed --chr-set 90 --allow-extra-chr --const-fid --out " . $tempfile,
 
 #            "plink2 --vcf " . $geno_filepath_transpose . " --allow-extra-chr --const-fid --maf 0.05 --recode A --out " . $tempfile,
     );
@@ -657,7 +660,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $solgwas_tmp_output . "/../../bin/gcta64 --bfile",
 #            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $bfile,
             $tempfile,
-            "--chr 4 --make-grm --out",
+            "--make-grm --out",
 #            $c->config->{cluster_shared_tempdir} . "/solgwas_files/" . $grm_out,
             $tempfile,
     );
@@ -717,6 +720,67 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # $cmd4->alive;
     # $cmd4->is_cluster(1);
     # $cmd4->wait;
+
+    my $pval_filepath = $c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1.mlma";
+    my $pval_filepath_transform = $tempfile . "_transformed_pval.mlma";
+
+# calculate -log10 p-values for visualization in Manhattan plot
+    open (INPUT, "<$pval_filepath") || die "Cannot open INPUT file.\n";
+    open(my $fh, '>', $geno_filepath_transpose);
+    my $data   = [];
+    my $t_data = [];
+    while(<INPUT>){
+        chomp;
+        #skip lines without anything
+        next if /^$/;
+        #split lines on tabs
+        my @s = split(/\t/);
+        #store each line, which has been split on tabs
+        #in the array reference as an array reference
+        push(@{$data}, \@s);
+    }
+
+    #loop through array reference
+    for my $row (@{$data}){
+        #go through each array reference
+        #each array element is each row of the data
+        for my $col (0 .. $#{$row}){
+            #each row of $t_data is an array reference
+            #that is being populated with the $data columns
+            push(@{$t_data->[$col]}, $row->[$col]);
+        }
+    }
+
+    for my $row (@$t_data){
+        my $line_to_print = '';
+        for my $col (@{$row}){
+            if (index($col, "_") != -1) {
+                my @chr_pos = split /_/, $col;
+                my $chr_num;
+                ($chr_num = $chr_pos[0]) =~ s/[A-Z]//g;
+                $line_to_print .= "$chr_num\t$chr_pos[1]\t$col\tA\tC\t100\tPASS\t.\t.\t";
+            } elsif ($col eq 'row.names') {
+                my @chr_pos = split /_/, $col;
+                $line_to_print .= "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t";
+            } else {
+                my $col_num = $col + 0.0;
+                if ($col_num < 0.5) {
+                    $line_to_print .= "0\/0\t";
+                } elsif (($col_num >= 0.5) && ($col_num <= 1.5)) {
+                    $line_to_print .= "0\/1\t";
+                } elsif (($col_num > 1.5) && ($col_num <= 2.0)) {
+                    $line_to_print .= "1\/1\t";
+                } else {
+                    $line_to_print .= "$col\t";
+                }
+            }
+        }
+        $line_to_print =~ s/\t$//;
+        print $fh "$line_to_print\n";
+    }
+    close $fh;
+
+
 
     copy($c->config->{cluster_shared_tempdir} . "/solgwas_files/afpGWAStest1.mlma",$figure_path);
 
