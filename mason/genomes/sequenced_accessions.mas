@@ -1,0 +1,27 @@
+
+<%args>
+</%args>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+  
+<& /util/import_javascript.mas,
+
+  entries => ["sequenced_accessions"]
+&>
+
+
+<& /page/page_title.mas, title=> "Sequenced Accessions" &>
+  
+  <div id="sequenced_stocks_div">[loading...]</div>
+  
+  <script>
+    $(window).ready( function() {
+    alert("HELLO");
+    var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div");
+    alert("HELLO AGAIN!");
+    });
+  </script>
+
+  
+
+ 

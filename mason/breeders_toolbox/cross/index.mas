@@ -22,15 +22,17 @@ $user_id => undef
 <&| /page/info_section.mas, title => "Cross information" &>
 
 <& /page/form.mas,
-  object_type=>'cross',
-  object_id=> $cross_id,
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/cross/$cross_id" ,
-  alternate_new_button => '',
-  alternate_delete_button => ''
+    object_type=>'cross',
+    object_id=> $cross_id,
+    form_name=> 'stock_form',
+    server_side_script => '/phenome/stock/stock_ajax_form.pl',
+    form_div_name=>'stock_details',
+    js_object_name=> 'stockForm',
+    page_url => "/cross/$cross_id" ,
+    alternate_new_button => '',
+    alternate_ghosted_new_button => '',
+    alternate_delete_button => '',
+    alternate_ghosted_delete_button => ''
 &>
 
 </&>
@@ -55,6 +57,7 @@ $user_id => undef
                     <table id = "parent_information" class="table table-hover table-striped">
                         <thead>
                             <tr>
+                                <th>Cross Combination</th>
                                 <th>Cross Type</th>
                                 <th>Female Accession</th>
                                 <th>Male Accession</th>
@@ -75,7 +78,7 @@ $user_id => undef
 % my $edit_link = "[Edit]";
 % if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
 
-<&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
+<&| /page/info_section.mas, title => 'Cross Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -134,3 +137,34 @@ $user_id => undef
 
 
 </&>
+
+<&|  /page/info_section.mas, title => "Delete cross", collapsible => 1, collapsed => 0, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
+
+<button id="delete_cross_button" class="btn btn-default">Delete</button>
+
+</&>
+
+<script>
+
+  jQuery(document).ready( function() {
+    jQuery('#delete_cross_button').click( function() {
+       var response = confirm('Really delete this cross? This action cannot be undone.');
+       if (response) {
+         jQuery.ajax( {
+           url: '/ajax/cross/delete',
+           data: { 'cross_id' : <% $cross_id %>},
+           method: 'POST',
+           error: function(r) { alert('An error occurred.'); },
+           success: function(r) {
+             if (r.error) { alert(r.error); }
+             else {
+               alert('Deletion was successful.');
+             }
+           }
+         });
+       }
+    });
+
+  });
+
+</script>

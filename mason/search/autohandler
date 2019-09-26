@@ -1,3 +1,4 @@
+
 <%doc>
 
 =head1 NAME
@@ -24,17 +25,18 @@ Lukas Mueller &st;lam87@cornell.edu&gt;. Based on Perl code by Rob Buels.
 
 <& /page/mode_buttons.mas, buttons => [
 
-    ['/search/organisms', 'Organisms'],
-    ['/search/locus','Genes'],
-    ['/search/features','Genome Features'],
-    ['/search/phenotypes','QTLs &amp; Phenotypes'],
-    ['/search/transcripts','Transcripts'],
-    ['/search/family', 'Unigene Families' ],
-    ['/search/markers','Markers'],
-    ['/search/genomic/clones','Genomic Clones'],
+    ['/breeders/search', 'Wizard' ],
+    ['/search/phenotypes/stock','Accessions and plots'],
+    ['/search/organisms','Organisms'],
+    ['/search/cross','Progenies and Crosses'],
+    ['/search/trials', 'Field Trials' ],
+    ['/search/genotyping_trials', 'Genotyping Plates' ],
+    ['/search/genotyping_data_projects', 'Genotyping Data Projects' ],
+    ['/search/genotyping_protocols', 'Genotyping Protocols' ],
+    ['/search/traits', 'Traits' ],
+    #['/search/markers','Markers'],
     ['/search/images','Images'],
-    ['/search/expression', 'Expression'],
-    ['/search/traits', 'Traits'],
+    ['/search/people', 'People' ],
 
    ]
 &>

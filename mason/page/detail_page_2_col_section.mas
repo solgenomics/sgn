@@ -12,6 +12,7 @@ $info_section_id => "2col_id"
 $info_section_title => "A title"
 $info_section_subtitle => "A subtitle"
 $buttons_html => undef
+$locations_by_program_json => undef
 
 #Specific to trial detail page
 $has_plant_entries => undef
@@ -296,9 +297,24 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/cross/progenies_in_crossingtrial.mas, trial_id=>$trial_id &>
 % } #End progenies_in_crossingtrial_section
 
+% if ($info_section_id eq 'seedlots_from_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/seedlots_from_crossingtrial.mas, trial_id=>$trial_id, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, locations_by_program_json=>$locations_by_program_json &>
+% } #End seedlots_from_crossingtrial_section
+
 % if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
+
+% if ($info_section_id eq 'manage_drone_imagery_main'){
+                                <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
+% } #End manage_drone_imagery_main
+
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas &>
+% } #End manage_drone_imagery_generate_plot_polygons_section
+% if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
+% } #End manage_drone_imagery_generate_plot_polygons_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

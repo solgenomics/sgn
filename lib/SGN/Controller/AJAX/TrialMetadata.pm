@@ -24,6 +24,7 @@ use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
+use CXGN::Trial::TrialLayoutDownload;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1326,6 +1327,24 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     $c->stash->{rest} = {design => $design};
 }
 
+sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
+
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $c->stash->{trial_id},
+        data_level => 'plots',
+        #treatment_project_ids => [1,2],
+        selected_columns => $selected_cols,
+    });
+    my $output = $trial_layout_download->get_layout_output();
+
+    $c->stash->{rest} = $output;
+}
+
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1845,9 +1864,9 @@ sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_trial();
+    my $result = $trial->get_crosses_and_details_in_crossingtrial();
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
@@ -1869,7 +1888,7 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_properties_trial();
 
@@ -1897,7 +1916,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
@@ -1907,6 +1926,31 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     }
 
     $c->stash->{rest} = { data => \@crosses };
+}
+
+
+sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_seedlots_from_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $seedlot_id, $seedlot_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
 }
 
 

@@ -47,7 +47,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -102,7 +102,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -158,7 +158,7 @@ sub upload_phenotype_store_POST : Args(1) {
         push @$success_status, $stored_phenotype_success;
     }
 
-    if ($image_zip) {
+    if ($validate_type eq 'field book' && $image_zip) {
         my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
         my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
         if ($image_error) {
@@ -195,18 +195,25 @@ sub _prep_upload {
     my $image_zip;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or associated_images
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
         }
-        if ($spreadsheet_format eq 'simple'){
+        elsif ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
+        }
+        elsif ($spreadsheet_format eq 'associated_images'){
+            $validate_type = "phenotype spreadsheet associated_images";
+        }
+        else {
+            die "Spreadsheet format not supported! Only simple, detailed, or associated_images\n";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
+        $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
     }
     elsif ($file_type eq "fieldbook") {
         print STDERR "Fieldbook \n";
@@ -294,7 +301,7 @@ sub _prep_upload {
     }
 
     ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         return (\@success_status, \@error_status);
@@ -315,7 +322,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         return (\@success_status, \@error_status);
@@ -335,7 +342,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
