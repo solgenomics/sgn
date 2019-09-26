@@ -3744,16 +3744,20 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($fh);
     #print STDERR Dumper \@result_agg;
+    my $empty_line = shift @result_agg;
+    my @result_agg_string = ["              precision    recall  f1-score   support"];
 
     print STDERR Dumper $archive_temp_result_agg_file;
     open($F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
         foreach my $data (@result_agg){
-            print $F join ',', @$data;
+            my $line = join '', @$data;
+            push @result_agg_string, $line;
+            print $F $line;
             print $F "\n";
         }
     close($F);
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg };
+    $c->stash->{rest} = { success => 1, results => \@result_agg_string };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }

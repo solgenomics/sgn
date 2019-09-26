@@ -19,8 +19,7 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
 <%perl>
-#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button>";
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
@@ -1085,6 +1084,9 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Submit</button>
                     </center>
+
+                    <div id="drone_imagery_train_keras_model_results_div">
+                    </div>
                 </&>
             </&>
 
@@ -2230,6 +2232,13 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
+                var html = "<hr><h4>Results</h4><br/><br/>";
+                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
+                for (var i=0; i<response.results.length; i++) {
+                    html = html + "<tr><td>"+response.results[i]+"</td></tr>";
+                }
+                html = html + "</tbody></table>";
+                jQuery('#drone_imagery_train_keras_model_results_div').html(html);
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
