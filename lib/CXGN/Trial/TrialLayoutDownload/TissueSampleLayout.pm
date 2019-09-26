@@ -73,6 +73,9 @@ sub retrieve {
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
+
+    print STDERR "TrialLayoutDownload::TissueSample turning plot design into tissue design ".localtime()."\n";
 
     #Turn plot level design into a tissue sample level design that can be sorted on plot_number and then tissue sample index number..
     my @tissue_sample_design;
@@ -84,8 +87,7 @@ sub retrieve {
         }
         my $acc_pedigree = '';
         if (exists($selected_cols{'pedigree'})){
-            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-            $acc_pedigree = $accession->get_pedigree_string('Parents');
+            $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
@@ -142,10 +144,12 @@ sub retrieve {
             $i++;
         }
     }
-    #print STDERR Dumper \@plant_design;
+    print STDERR "TrialLayoutDownload::TissueSample sorting tissue design ".localtime()."\n";
 
     no warnings 'uninitialized';
     @tissue_sample_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} || $a->{tissue_sample_number} <=> $b->{tissue_sample_number} } @tissue_sample_design;
+
+    print STDERR "TrialLayoutDownload::TissueSample turning tissue design into output ".localtime()."\n";
 
     foreach my $design_info (@tissue_sample_design) {
         my $line;
@@ -172,6 +176,8 @@ sub retrieve {
         $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
         push @output, $line;
     }
+
+    print STDERR "TrialLayoutDownload::TissueSample returning output ".localtime()."\n";
 
     return \@output;
 }

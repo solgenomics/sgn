@@ -73,6 +73,7 @@ sub retrieve {
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     #Turn plot level design into a plant level design that can be sorted on plot_number and then plant index number..
     my @plant_design;
@@ -84,8 +85,7 @@ sub retrieve {
         }
         my $acc_pedigree = '';
         if (exists($selected_cols{'pedigree'})){
-            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-            $acc_pedigree = $accession->get_pedigree_string('Parents');
+            $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
@@ -107,6 +107,7 @@ sub retrieve {
         }
 
         my $plant_names = $design_info->{'plant_names'};
+        print STDERR "Plant names are ".Dumper($plant_names);
         my $plant_ids = $design_info->{'plant_ids'};
         my $plant_index_numbers = $design_info->{'plant_index_numbers'};
         my $i = 0;

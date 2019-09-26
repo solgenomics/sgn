@@ -84,7 +84,7 @@ has 'data_level' => (
     isa => 'Str',
     default => 'plots',
 );
-  
+
 has 'treatment_project_ids' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
@@ -137,7 +137,7 @@ has 'phenotype_performance_hash' => (
     is => 'rw',
 );
 
-sub get_layout_output { 
+sub get_layout_output {
     my $self = shift;
     my $trial_id = $self->trial_id();
     my $schema = $self->schema();
@@ -161,17 +161,18 @@ sub get_layout_output {
         $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
     };
     if (!$trial_layout) {
+        #print STDERR "Trial does not have valid field design.\n";
         push @error_messages, "Trial does not have valid field design.";
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
+    print STDERR "TrialLayoutDownload retrieving deisgn ".localtime."\n";
     my $design = $trial_layout->get_design();
     if (!$design){
         push @error_messages, "Trial does not have valid field design. Please contact us.";
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    #print STDERR Dumper $design;
 
     if ($data_level eq 'plot_fieldMap' ) {
         my %hash;
@@ -190,19 +191,23 @@ sub get_layout_output {
         return {output => \%hash, rows => \@rows, cols => \@cols};
     }
 
+    print STDERR "TrialLayoutDownload running stock type checks ".localtime."\n";
+
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $has_plants = $selected_trial->has_plant_entries();
     my $has_subplots = $selected_trial->has_subplot_entries();
     my $has_tissue_samples = $selected_trial->has_tissue_sample_entries();
+
+    print STDERR "TrialLayoutDownload retrieving accessions ".localtime."\n";
 
     my $accessions = $selected_trial->get_accessions();
     my @accession_ids;
     foreach (@$accessions){
         push @accession_ids, $_->{stock_id};
     }
-
+    print STDERR "TrialLayoutDownload retrieving trait performance if requested ".localtime."\n";
     my $summary_values = [];
-    if (scalar(@selected_traits)>0){ 
+    if (scalar(@selected_traits)>0){
         my $summary = CXGN::Phenotypes::Summary->new({
             bcs_schema=>$schema,
             trait_list=>\@selected_traits,
@@ -214,7 +219,8 @@ sub get_layout_output {
     foreach (@$summary_values){
         $fieldbook_trait_hash{$_->[0]}->{$_->[8]} = $_;
     }
-    #print STDERR Dumper \%fieldbook_trait_hash;
+
+    print STDERR "TrialLayoutDownload getting treatments ".localtime."\n";
 
     my @treatment_trials;
     my @treatment_names;
@@ -251,7 +257,6 @@ sub get_layout_output {
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('subplot', ['treatment_experiment']) : [];
-            print STDERR Dumper $treatment_units;
             push @treatment_units_array, $treatment_units;
         }
     } elsif ($data_level eq 'field_trial_tissue_samples') {
@@ -305,6 +310,9 @@ sub get_layout_output {
         phenotype_performance_hash => \%fieldbook_trait_hash
     };
     my $layout_output;
+
+    print STDERR "TrialLayoutDownload getting output object".localtime."\n";
+
     if ($data_level eq 'plots' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::PlotLayout->new($layout_build);
     }
@@ -320,8 +328,10 @@ sub get_layout_output {
     if ($data_level eq 'plate' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::GenotypingPlateLayout->new($layout_build);
     }
+
+    print STDERR "TrialLayoutDownload retrieving output ".localtime."\n";
+
     my $output = $layout_output->retrieve();
-    #print STDERR Dumper $output;
 
     print STDERR "TrialLayoutDownload End for Trial id: ($trial_id) ".localtime()."\n";
     return {output => $output};
@@ -357,6 +367,36 @@ sub _add_trait_performance_to_line {
         }
     }
     return $line;
+}
+
+sub _get_all_pedigrees {
+    my $self = shift;
+    my $design = shift;
+    my $schema = $self->schema();
+    my %design = %{$design};
+
+    print STDERR "TrialLayoutDownload running get_all_pedigrees ".localtime()."\n";
+
+    # collect all unique accession ids for pedigree retrieval
+    my %accession_id_hash;
+    foreach my $key (keys %design) {
+        $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
+    }
+    my @accession_ids = keys %accession_id_hash;
+
+    # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
+    my $stock = CXGN::Stock->new ( schema => $schema);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
+    my %pedigree_strings;
+    foreach my $row (@$pedigree_rows) {
+        my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+        my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
+        $pedigree_strings{$progeny} = $string;
+    }
+
+    print STDERR "TrialLayoutDownload get_all_pedigrees finished at ".localtime()."\n";
+
+    return \%pedigree_strings;
 }
 
 1;

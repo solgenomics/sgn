@@ -64,6 +64,7 @@ sub retrieve {
         })->search_related('nd_experiment')->search_related('nd_experimentprops',{
             'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
         })->first->value();
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     foreach my $key (sort { $a cmp $b} keys %design) {
         my $design_info = $design{$key};
@@ -86,8 +87,7 @@ sub retrieve {
                     my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, join ',', @{$accession->synonyms}
                 } elsif ($_ eq 'pedigree'){
-                    my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, $accession->get_pedigree_string('Parents');
+                    push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } elsif ($_ eq 'genotyping_project_name'){
                     my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, $accession->get_pedigree_string('Parents');

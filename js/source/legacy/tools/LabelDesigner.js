@@ -1374,10 +1374,8 @@ function showLoadOption() {
     $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh', undefined));
     $('#design_list_list_select').change(
       function() {
-        disable_ui();
-        loadDesign(this.value);
-        enable_ui();
         Workflow.complete(this);
+        loadDesign(this.value);
         jQuery('#design_label_button').prop('disabled', false);
     });
 }

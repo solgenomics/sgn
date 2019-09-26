@@ -76,11 +76,13 @@ sub retrieve {
 
     my @plot_design = values %design;
     @plot_design = sort { $a->{plot_number} <=> $b->{plot_number} } @plot_design;
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     foreach my $design_info (@plot_design) {
         my $line;
         foreach (@possible_cols){
             if ($selected_cols{$_}){
+                print STDERR "Working on column $_\n";
                 if ($_ eq 'location_name'){
                     push @$line, $location_name;
                 } elsif ($_ eq 'plot_geo_json'){
@@ -97,13 +99,15 @@ sub retrieve {
                     my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, join ',', @{$accession->synonyms}
                 } elsif ($_ eq 'pedigree'){
-                    my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, $accession->get_pedigree_string('Parents');
+                    push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {
                     push @$line, $design_info->{$_};
                 }
             }
         }
+
+        #print STDERR "Adding treatment and trait performance\n";
+
         $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{'plot_name'});
         $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
         push @output, $line;
