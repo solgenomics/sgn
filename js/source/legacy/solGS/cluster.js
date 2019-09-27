@@ -41,10 +41,8 @@ solGS.cluster = {
             success: function(res) {
 		if (res.result) {
 		   
-		    solGS.cluster.plotClusterOutput(res);
-				    
-		    jQuery("#cluster_message").empty();
-		    
+		    solGS.cluster.plotClusterOutput(res);				    
+		    jQuery("#cluster_message").empty();		    
 		    jQuery("#run_cluster").hide();
 		   
 		} else {		    
@@ -367,11 +365,13 @@ solGS.cluster = {
 	    var list = new CXGN.List();
 	    var listType = list.getListType(dataId);
 	   
-	    if (listType.match(/accessions/) && dataType.match(/phenotype/i)) {
+	    if (listType.match(/accessions/)
+		&& dataType.match(/phenotype/i)) {
 		msg = 'With list of clones, you can only cluster based on <em>genotype</em>.';		
 	    }
 	    
-	    if (listType.match(/plots/) && dataType.match(/genotype/i)) {
+	    if (listType.match(/plots/)
+		&& dataType.match(/genotype/i)) {
 		msg = 'With list of plots, you can only cluster based on <em>phenotype</em>.';		
 	    }
 	    

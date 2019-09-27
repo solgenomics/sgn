@@ -152,6 +152,7 @@ sub format_pca_output {
 		$ret->{pca_variances} = $pca_variances;
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
+		$ret->{list_id} = $c->stash->{list_id};
 		$ret->{trials_names} = $trial_names;
 		$ret->{output_link}  = $output_link;
 		$ret->{data_type} = $c->stash->{data_type};
