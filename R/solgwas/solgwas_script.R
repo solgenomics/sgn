@@ -17,8 +17,8 @@ study_trait <- args[3]
 study_trait
 figure3_file_name <- args[4]
 figure4_file_name <- args[5]
-pc_check <- args[6]
-kinship_check <- args[7]
+pc_check <- as.boolean(args[6])
+kinship_check <- as.boolean(args[7])
 
 
 
