@@ -358,7 +358,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 	    return;
     }
 
-    my $cross_obj = CXGN::Cross->new({bcs_schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
     my ($maternal_parent, $paternal_parent, $progeny) = $cross_obj->get_cross_relationships();
 
     $c->stash->{rest} = {
@@ -587,6 +587,16 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 
 }
 
+
+#my $new_cross = CXGN::Cross->new({ schema=>schema });
+#$new_cross->female_parent($fjfj);
+#$new_cross->male_parent(kdkjf);
+#$new_cross->location(kjlsdlkjdfskj);
+#...type
+#...cross_name
+#...plots...
+#$new_cross->store();
+
 sub add_individual_cross {
     my $self = shift;
     my $c = shift;
@@ -660,7 +670,7 @@ sub add_individual_cross {
 
     #check that cross name does not already exist
     if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
-        $c->stash->{rest} = {error =>  "cross name already exists." };
+        $c->stash->{rest} = {error =>  "Cross Unique ID already exists." };
         return 0;
     }
 
@@ -812,7 +822,6 @@ sub add_crossingtrial_POST :Args(0){
         $c->stash->{rest} = {success => 1};
     }
 }
-
 
 sub upload_progenies : Path('/ajax/cross/upload_progenies') : ActionClass('REST'){ }
 
@@ -1187,6 +1196,33 @@ sub upload_family_names_POST : Args(0) {
     $c->stash->{rest} = {success => "1",};
 }
 
+
+sub delete_cross : Path('/ajax/cross/delete') : ActionClass('REST'){ }
+
+sub delete_cross_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $cross_stock_id = $c->req->param("cross_id");
+
+    my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+
+    if (!$cross->cross_stock_id()) {
+	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };
+	return;
+    }
+
+    my $error = $cross->delete();
+
+    print STDERR "ERROR = $error\n";
+
+    if ($error) {
+	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 ###
