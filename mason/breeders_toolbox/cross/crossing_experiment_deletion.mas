@@ -1,0 +1,6 @@
+<%args>
+$trial_id
+</%args>
+
+<button class="btn btn-default" id="delete_crosses_in_crossing_experiment" role="button">1. Delete crosses</button><br/><br/>
+<button class="btn btn-default" id="delete_crossing_experiment" role="button">2. Delete crossing experiment</button><br/><br/>

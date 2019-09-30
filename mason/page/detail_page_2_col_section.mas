@@ -305,6 +305,12 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
 
+% if ($info_section_id eq 'crossing_experiment_deletion_section'){
+                                <&| /page/info_section.mas, title=>'<font color="red" role="">Deletion cannot be undone</font>'&>
+                                    <& /breeders_toolbox/cross/crossing_experiment_deletion.mas, trial_id => $trial_id  &>
+                                </&>
+%} #End crossing_experiment_deletion_section
+
 % if ($info_section_id eq 'manage_drone_imagery_main'){
                                 <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
 % } #End manage_drone_imagery_main
