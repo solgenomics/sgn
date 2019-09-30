@@ -8,3 +8,5 @@ Contact SGN using the contact form on the page https://solgenomics.net/contact/f
 You can also refer to the <a href="https://solgenomics.github.io/sgn/">manual</a>.
 
 :-)
+
+DevelopersGuide
