@@ -36,12 +36,13 @@ solGS.sIndex = {
             jQuery("#si_canvas #select_a_population_div ul").append(dbSelPopsList); 
 	}
 	
-	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-	if (userUploadedSelExists == true) {
-            var userSelPops = this.listUploadedSelPopulations();
+	var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
 
-	    if (userSelPops) {
-		jQuery("#si_canvas #select_a_population_div ul").append(userSelPops);  
+	if (listTypeSelPops == true) {
+            var listTypeSelPops = this.getListTypeSelPopulations();
+
+	    if (listTypeSelPops) {
+		jQuery("#si_canvas #select_a_population_div ul").append(listTypeSelPops);  
             }
 	}
 
@@ -141,7 +142,7 @@ solGS.sIndex = {
 		}
             }
 	}
-
+	
 	return popsList;
     },
 
@@ -265,7 +266,7 @@ solGS.sIndex = {
 			}
                         
 			table += '</table>';
-			console.log('table '  + table)
+		
 			table += res.download_link; 
 			table += ' <strong>| Index Name:</strong> ' + res.sindex_name;
 			table += legend;
@@ -380,7 +381,6 @@ solGS.sIndex = {
 	}
 
 	params = JSON.stringify(params);
-	console.log('params ' + params)
 	var sum = this.sumElements(allValues);
 	validate = this.validateRelativeWts('all', sum);
         
@@ -408,21 +408,21 @@ solGS.sIndex = {
     },
 
 
-    listUploadedSelPopulations: function()  {
-   
-	var selPopsDivUploaded   = document.getElementById("list_selection_populations");
-	var selPopsTableUploaded = selPopsDivUploaded.getElementsByTagName("table");
-	var selPopsRowsUploaded  = selPopsTableUploaded[0].rows;
-	var predictedPopUploaded = [];
+    getListTypeSelPopulations: function()  {
+    
+	var listTypeSelPopsDiv   = document.getElementById("list_type_selection_populations");
+	var listTypeSelPopsTable = listTypeSelPopsDiv.getElementsByTagName("table");
+	var listTypeSelPopsRows  = listTypeSelPopsTable[0].rows;
+	var predictedListTypePops = [];
 	
 	var popsList ='';
-	for (var i = 1; i < selPopsRowsUploaded.length; i++) {
-            var row    = selPopsRowsUploaded[i];
+	for (var i = 1; i < listTypeSelPopsRows.length; i++) {
+            var row    = listTypeSelPopsRows[i];
             var popRow = row.innerHTML;
             
-            predictedPopUploaded = popRow.match(/\/solgs\/selection\//g);
+            predictedListTypePops = popRow.match(/\/solgs\/selection\//g);
 	    
-            if (predictedPopUploaded) {
+            if (predictedListTypePops) {
 		var selPopsInput  = row.getElementsByTagName("input")[0];
 		var idPopName     = selPopsInput.value;     
 		var idPopNameCopy = idPopName;

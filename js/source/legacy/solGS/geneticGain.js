@@ -234,11 +234,11 @@ solGS.geneticGain = {
             jQuery("#gg_select_a_population_div ul").append(dbSelPopsList); 
 	}
 	
-	var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-	if (userUploadedSelExists == true) {	    
-            var userSelPops = solGS.sIndex.listUploadedSelPopulations();
-            if (userSelPops) {
-		jQuery("#gg_select_a_population_div ul").append(userSelPops);  
+	var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
+	if (listTypeSelPops) {	    
+            var selPopsList = solGS.sIndex.getListTypeSelPopulations();
+            if (selPopsList) {
+		jQuery("#gg_select_a_population_div ul").append(selPopsList);  
             }
 	}
 	

@@ -97,12 +97,13 @@ function listGenCorPopulations ()  {
             jQuery("#corre_select_a_population_div ul").append(dbSelPopsList); 
     }
       
-    var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-    if (userUploadedSelExists == true) {     
-        var userSelPops = solGS.sIndex.listUploadedSelPopulations();
-        if (userSelPops) {
+    var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
+   
+    if (listTypeSelPops) {
+        var selPopsList = solGS.sIndex.getListTypeSelPopulations();
 
-            jQuery("#corre_select_a_population_div ul").append(userSelPops);  
+        if (selPopsList) {
+            jQuery("#corre_select_a_population_div ul").append(selPopsList);  
         }
     }
 
