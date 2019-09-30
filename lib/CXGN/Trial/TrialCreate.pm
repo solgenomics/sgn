@@ -2,7 +2,7 @@ package CXGN::Trial::TrialCreate;
 
 =head1 NAME
 
-CXGN::Trial::TrialCreate - Module to create an entirely new trial based on a specified design. For field_layout experiments and genotyping_layout experiments. 
+CXGN::Trial::TrialCreate - Module to create an entirely new trial based on a specified design. For field_layout experiments and genotyping_layout experiments.
 
 Will do the following:
 1) Create a new project entry in Project table based on trial and description supplied to object. If there is a project with the name already saved, it will return an error and do nothing.
@@ -29,9 +29,13 @@ Will do the following:
         trial_location => $location->name(),
         trial_name => $trial_name,
         trial_type => $trialtype,
+
+        plants_per_plot => $plants_per_plot,
+        rows_per_plot => $rows_per_plot,
+        within_row_spacing => $within_row_spacing,
+        between_row_spacing => $between_row_spacing,
+
         field_size => $field_size, #(ha)
-        plot_width => $plot_width, #(m)
-        plot_length => $plot_length, #(m)
         field_trial_is_planned_to_cross => 'yes', #yes or no
         field_trial_is_planned_to_be_genotyped => 'no', #yes or no
         field_trial_from_field_trial => ['source_trial_id1', 'source_trial_id2'],
@@ -154,9 +158,15 @@ has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', re
 has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 has 'trial_has_plant_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_plant_entries', required => 0);
 has 'trial_has_subplot_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_subplot_entries', required => 0);
+
+has 'plants_per_plot' => (isa => 'Num', is => 'rw', predicate => 'has_plants_per_plot', required => 0);
+has 'rows_per_plot' => (isa => 'Num', is => 'rw', predicate => 'has_rows_per_plot', required => 0);
+has 'within_row_spacing' => (isa => 'Num', is => 'rw', predicate => 'has_within_row_spacing', required => 0);
+has 'between_row_spacing' => (isa => 'Num', is => 'rw', predicate => 'has_between_row_spacing', required => 0);
+
 has 'field_size' => (isa => 'Num', is => 'rw', predicate => 'has_field_size', required => 0);
-has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
-has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
+# has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
+# has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 
 #Trial linkage when saving a field trial
@@ -210,12 +220,12 @@ sub save_trial {
 	my %design = %{$self->get_design()};
     my $trial_name = $self->get_trial_name();
     $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
-    
+
 	if (!$trial_name) {
 		print STDERR "Trial not saved: Can't create trial without a trial name\n";
 		return { error => "Trial not saved: Can't create trial without a trial name" };
 	}
-    
+
     if ($self->trial_name_already_exists()) {
 		print STDERR "Can't create trial: Trial name already exists\n";
 		return { error => "Trial not saved: Trial name already exists" };
@@ -247,9 +257,17 @@ sub save_trial {
 
 	my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
 	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
+
+    my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property');
+	my $rows_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'rows_per_plot', 'project_property');
+    my $within_row_spacing_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'within_row_spacing', 'project_property');
+    my $between_row_spacing_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'between_row_spacing', 'project_property');
+
 	my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
-	my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
-	my $plot_length_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_length', 'project_property');
+
+	# my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
+	# my $plot_length_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_length', 'project_property');
+
 	my $field_trial_is_planned_to_be_genotyped_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_be_genotyped', 'project_property');
 	my $field_trial_is_planned_to_cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_cross', 'project_property');
 	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
@@ -320,21 +338,43 @@ sub save_trial {
 		$project_year_cvterm->name() => $self->get_trial_year(),
 		$project_design_cvterm->name() => $self->get_design_type()
 	});
+
+    if ($self->has_plants_per_plot && $self->get_plants_per_plot){
+        $project->create_projectprops({
+            $plants_per_plot_cvterm->name() => $self->get_plants_per_plot
+        });
+    }
+    if ($self->has_rows_per_plot && $self->get_rows_per_plot){
+        $project->create_projectprops({
+            $rows_per_plot_cvterm->name() => $self->get_rows_per_plot
+        });
+    }
+    if ($self->has_within_row_spacing && $self->get_within_row_spacing){
+        $project->create_projectprops({
+            $within_row_spacing_cvterm->name() => $self->get_within_row_spacing
+        });
+    }
+    if ($self->has_between_row_spacing && $self->get_between_row_spacing){
+        $project->create_projectprops({
+            $between_row_spacing_cvterm->name() => $self->get_between_row_spacing
+        });
+    }
+
     if ($self->has_field_size && $self->get_field_size){
 		$project->create_projectprops({
 			$field_size_cvterm->name() => $self->get_field_size
 		});
 	}
-    if ($self->has_plot_width && $self->get_plot_width){
-		$project->create_projectprops({
-			$plot_width_cvterm->name() => $self->get_plot_width
-		});
-	}
-    if ($self->has_plot_length && $self->get_plot_length){
-		$project->create_projectprops({
-			$plot_length_cvterm->name() => $self->get_plot_length
-		});
-	}
+    # if ($self->has_plot_width && $self->get_plot_width){
+	# 	$project->create_projectprops({
+	# 		$plot_width_cvterm->name() => $self->get_plot_width
+	# 	});
+	# }
+    # if ($self->has_plot_length && $self->get_plot_length){
+	# 	$project->create_projectprops({
+	# 		$plot_length_cvterm->name() => $self->get_plot_length
+	# 	});
+	# }
 	if ($self->has_trial_has_plant_entries && $self->get_trial_has_plant_entries){
 		$project->create_projectprops({
 			$has_plant_entries_cvterm->name() => $self->get_trial_has_plant_entries

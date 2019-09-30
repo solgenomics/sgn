@@ -370,8 +370,12 @@ jQuery(document).ready(function ($) {
         var westcott_check_2 = $('#westcott_check_2').val();
         var westcott_col = $('#westcott_col').val();
         var westcott_col_between_check = $('#westcott_col_between_check').val();
-        var plot_width = $('#add_project_plot_width').val();
-        var plot_length = $('#add_project_plot_length').val();
+
+        var plants_per_plot = $('#add_project_plants_per_plot').val();
+        var rows_per_plot = $('#add_project_rows_per_plot').val();
+        var within_row_spacing = $('#add_project_within_row_spacing').val();
+        var between_row_spacing = $('#add_project_between_row_spacing').val();
+
         var field_size = $('#new_trial_field_size').val();
 
         var seedlot_hash_combined = {};
@@ -485,8 +489,10 @@ jQuery(document).ready(function ($) {
                 'westcott_col': westcott_col,
                 'westcott_col_between_check': westcott_col_between_check,
                 'field_size': field_size,
-                'plot_width': plot_width,
-                'plot_length': plot_length,
+                'plants_per_plot' = plants_per_plot,
+                'rows_per_plot' = rows_per_plot,
+                'within_row_spacing' = within_row_spacing,
+                'between_row_spacing' = between_row_spacing,
                 'use_same_layout' : use_same_layout
             },
             success: function (response) {
@@ -1241,8 +1247,11 @@ jQuery(document).ready(function ($) {
         var westcott_col = $('#westcott_col').val();
         var westcott_col_between_check = $('#westcott_col_between_check').val();
 
-        var plot_width = $('#add_project_plot_width').val();
-        var plot_length = $('#add_project_plot_length').val();
+        var plants_per_plot = $('#add_project_plants_per_plot').val();
+        var rows_per_plot = $('#add_project_rows_per_plot').val();
+        var within_row_spacing = $('#add_project_within_row_spacing').val();
+        var between_row_spacing = $('#add_project_between_row_spacing').val();
+
         var field_size = $('#new_trial_field_size').val();
         var field_trial_is_planned_to_be_genotyped = $('#add_project_trial_will_be_genotyped').val();
         var field_trial_is_planned_to_cross = $('#add_project_trial_will_be_crossed').val();
@@ -1297,8 +1306,10 @@ jQuery(document).ready(function ($) {
                 'westcott_col': westcott_col,
                 'westcott_col_between_check': westcott_col_between_check,
                 'field_size': field_size,
-                'plot_width': plot_width,
-                'plot_length': plot_length,
+                'plants_per_plot' = plants_per_plot,
+                'rows_per_plot' = rows_per_plot,
+                'within_row_spacing' = within_row_spacing,
+                'between_row_spacing' = between_row_spacing,
                 'field_trial_is_planned_to_be_genotyped': field_trial_is_planned_to_be_genotyped,
                 'field_trial_is_planned_to_cross': field_trial_is_planned_to_cross,
                 'add_project_trial_source': selectedTrials,
