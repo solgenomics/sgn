@@ -22,15 +22,17 @@ $user_id => undef
 <&| /page/info_section.mas, title => "Cross information" &>
 
 <& /page/form.mas,
-  object_type=>'cross',
-  object_id=> $cross_id,
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/cross/$cross_id" ,
-  alternate_new_button => '',
-  alternate_delete_button => ''
+    object_type=>'cross',
+    object_id=> $cross_id,
+    form_name=> 'stock_form',
+    server_side_script => '/phenome/stock/stock_ajax_form.pl',
+    form_div_name=>'stock_details',
+    js_object_name=> 'stockForm',
+    page_url => "/cross/$cross_id" ,
+    alternate_new_button => '',
+    alternate_ghosted_new_button => '',
+    alternate_delete_button => '',
+    alternate_ghosted_delete_button => ''
 &>
 
 </&>
@@ -135,3 +137,34 @@ $user_id => undef
 
 
 </&>
+
+<&|  /page/info_section.mas, title => "Delete cross", collapsible => 1, collapsed => 0, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
+
+<button id="delete_cross_button" class="btn btn-default">Delete</button>
+
+</&>
+
+<script>
+
+  jQuery(document).ready( function() {
+    jQuery('#delete_cross_button').click( function() {
+       var response = confirm('Really delete this cross? This action cannot be undone.');
+       if (response) {
+         jQuery.ajax( {
+           url: '/ajax/cross/delete',
+           data: { 'cross_id' : <% $cross_id %>},
+           method: 'POST',
+           error: function(r) { alert('An error occurred.'); },
+           success: function(r) {
+             if (r.error) { alert(r.error); }
+             else {
+               alert('Deletion was successful.');
+             }
+           }
+         });
+       }
+    });
+
+  });
+
+</script>
