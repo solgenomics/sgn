@@ -1352,6 +1352,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
     my $drone_run_camera_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
     my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+    my $drone_run_gdd_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
 
     my $where_clause = '';
@@ -1359,10 +1360,11 @@ sub get_drone_run_projects_GET : Args(0) {
         $where_clause = ' WHERE field_trial.project_id IN ('.$field_trial_ids.') ';
     }
 
-    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description, drone_run_camera_type.value FROM project
+    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description, drone_run_camera_type.value, drone_run_gdd.value FROM project
         JOIN projectprop AS project_start_date ON (project.project_id=project_start_date.project_id AND project_start_date.type_id=$project_start_date_type_id)
         LEFT JOIN projectprop AS drone_run_type ON (project.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_cvterm_id)
         LEFT JOIN projectprop AS drone_run_camera_type ON (project.project_id=drone_run_camera_type.project_id AND drone_run_camera_type.type_id=$drone_run_camera_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_gdd ON (project.project_id=drone_run_gdd.project_id AND drone_run_gdd.type_id=$drone_run_gdd_cvterm_id)
         JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$project_relationship_type_id)
         JOIN project AS field_trial ON (field_trial.project_id=project_relationship.object_project_id)
         $where_clause
@@ -1373,7 +1375,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute();
     my @result;
-    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type) = $h->fetchrow_array()) {
+    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type, $drone_run_gdd) = $h->fetchrow_array()) {
         my @res;
         if ($checkbox_select_name){
             my $checkbox = "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_project_id' ";
@@ -1389,6 +1391,7 @@ sub get_drone_run_projects_GET : Args(0) {
             $drone_run_type,
             $drone_run_project_description,
             $drone_run_date_display,
+            $drone_run_gdd,
             $drone_run_camera_type,
             "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",
             $field_trial_project_description
@@ -3705,6 +3708,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my @data = $phenotypes_search->get_phenotype_matrix();
 
     my $phenotype_header = shift @data;
+    my $trait_name = $phenotype_header->[39];
     foreach (@data) {
         $data_hash{$_->[21]}->{trait_value} = $_->[39];
     }
@@ -3722,7 +3726,8 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
                 foreach (@$image_fullpaths) {
                     print $F '"'.$stock_id.'",';
                     print $F '"'.$_.'",';
-                    print $F '"'.$value.'"';
+                    print $F '"'.$value.'",';
+                    print $F '"'.$trait_name.'"';
                     print $F "\n";
                 }
             }
@@ -3765,6 +3770,27 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     close($F);
 
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file };
+}
+
+sub drone_imagery_save_keras_model : Path('/api/drone_imagery/save_keras_model') : ActionClass('REST') { }
+sub drone_imagery_save_keras_model_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
+    my $model_file = $c->req->param('model_file');
+    my $model_input_file = $c->req->param('model_input_file');
+    my $model_name = $c->req->param('model_name');
+    my $model_description = $c->req->param('model_description');
+    my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
+    my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
