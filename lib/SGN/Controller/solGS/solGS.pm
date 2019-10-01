@@ -3348,12 +3348,11 @@ sub format_phenotype_dataset_headers {
 }
 
 
-
-
 sub genotype_file  {
     my ($self, $c, $pop_id) = @_;
     
     $pop_id  = $c->stash->{pop_id} if !$pop_id;
+    
     my $training_pop_id = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
   

@@ -269,11 +269,14 @@ solGS.cluster = {
 		
 		clusterPopId = 'dataset_' + datasetId;
 		datasetName = selectName;
+	    } else {
+		clusterPopId = popId;
 	    }
 	    	    
 	    if (popType == 'selection_index') {
 		sIndexName = selectName;
 	    }
+	    
 
 	    var clusterArgs =  {'training_pop_id': popDetails.training_pop_id,
 				'selection_pop_id': popDetails.selection_pop_id,
@@ -672,9 +675,7 @@ jQuery(document).ready( function() {
     jQuery("#run_cluster").click(function() {
 	var dataStr = jQuery('#data_structure').val();
 	var selectId;
-	
-	
-	
+		
 	if (dataStr == 'dataset') {
 	    selectId = jQuery('#dataset_id').val();
 	} else if (dataStr == 'list') {
@@ -684,9 +685,9 @@ jQuery(document).ready( function() {
 	if (!dataStr) {
 	    var popType = jQuery("#cluster_selected_population_type").val();
 	 
-	    if (popType.match(/list/)) {
+	    if (popType == 'list') {
 		dataStr = 'list';
-	    } else if (popType.match(/dataset/)) {
+	    } else if (popType == 'dataset') {
 		dataStr = 'dataset';
 	    }
 	}

@@ -619,6 +619,10 @@ sub create_file_id {
         
     my $file_id;
     my $referer = $c->req->referer;
+
+    # if ($training_pop_id =~ /^$selection_pop_id$/) {
+    # 	$selection_pop_id = undef;
+    # }
     
     if ($referer =~ /solgs\/selection\//)
     {
@@ -636,7 +640,7 @@ sub create_file_id {
     } 
     elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
     {
-	$file_id =  $selection_pop_id ? $training_pop_id . '_' . $selection_pop_id : $training_pop_id;
+	$file_id =  $selection_pop_id ? $training_pop_id . '-' . $selection_pop_id : $training_pop_id;
     }
     else 
     {
@@ -652,12 +656,13 @@ sub create_file_id {
 	$file_id = "dataset_${dataset_id}";
     } 
 
-    $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
-    $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
-
     if ($sindex_name)
     {
-	$file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
+	if ($sindex_name !~ $selection_pop_id)
+	{
+	    $file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
+	}
+	
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
     else
@@ -665,6 +670,9 @@ sub create_file_id {
 	$file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
     }
 
+    $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
+    $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
+    
     $c->stash->{file_id} = $file_id;
     
 }

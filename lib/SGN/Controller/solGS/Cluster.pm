@@ -165,7 +165,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     my $list_type;   
     my $list_name;
-
+   
     if ($list_id) 
     {
 	$list_id =~ s/list_//;		   	
@@ -302,6 +302,8 @@ sub create_cluster_genotype_data {
     my $data_structure = $c->stash->{data_structure};
     my $referer = $c->req->referer;
     my $combo_pops_id = $c->stash->{combo_pops_id};
+
+    my $cluster_pop_id = $c->stash->{cluster_pop_id}; 
     
     if ($data_structure =~ /list/) 
     {
@@ -313,7 +315,7 @@ sub create_cluster_genotype_data {
     }
     elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
     {
-	$c->controller('solGS::solGS')->genotype_file($c);
+	$c->controller('solGS::solGS')->genotype_file($c, $cluster_pop_id);
     }
     elsif ($combo_pops_id)
     {
@@ -385,6 +387,7 @@ sub cluster_list_genotype_data {
     }	   
     else
     {
+	print STDERR "\n cluster_list_genotype_data list_id: $list_id\n";
 	if ($list_type eq 'accessions')
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $list_id);
@@ -818,7 +821,7 @@ sub create_cluster_genotype_data_query_jobs {
     }
     else
     {
-	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
+	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{cluster_pop_id}];
 	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials);
 	$c->stash->{cluster_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
