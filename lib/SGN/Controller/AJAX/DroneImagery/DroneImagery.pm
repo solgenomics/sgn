@@ -1346,7 +1346,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
-    my $field_trial_id = $c->req->param('field_trial_id');
+    my $field_trial_ids = $c->req->param('field_trial_ids');
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
@@ -1355,8 +1355,8 @@ sub get_drone_run_projects_GET : Args(0) {
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
 
     my $where_clause = '';
-    if ($field_trial_id) {
-        $where_clause = ' WHERE field_trial.project_id = ? ';
+    if ($field_trial_ids) {
+        $where_clause = ' WHERE field_trial.project_id IN ('.$field_trial_ids.') ';
     }
 
     my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description, drone_run_camera_type.value FROM project
@@ -1371,7 +1371,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
-    $h->execute($field_trial_id);
+    $h->execute();
     my @result;
     while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type) = $h->fetchrow_array()) {
         my @res;
@@ -1406,7 +1406,7 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
-    my $field_trial_id = $c->req->param('field_trial_id');
+    my $field_trial_ids = $c->req->param('field_trial_ids');
     my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json $c->req->param('drone_run_ids') : [];
 
     my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
@@ -1419,8 +1419,8 @@ sub get_plot_polygon_types_GET : Args(0) {
     my @where_clause;
     push @where_clause, "project_md_image.type_id in ($project_image_type_id_list_sql)";
 
-    if ($field_trial_id) {
-        push @where_clause, "field_trial.project_id = ?";
+    if ($field_trial_ids) {
+        push @where_clause, "field_trial.project_id IN ($field_trial_ids)";
     }
     if ($drone_run_ids && scalar(@$drone_run_ids)>0) {
         my $sql = join ("," , @$drone_run_ids);
@@ -1443,7 +1443,7 @@ sub get_plot_polygon_types_GET : Args(0) {
         ORDER BY drone_run_band.project_id;";
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
-    $h->execute($field_trial_id);
+    $h->execute();
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $project_md_image_type_id, $project_md_image_type_name, $plot_polygon_count) = $h->fetchrow_array()) {
         my @res;
@@ -3663,7 +3663,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $field_trial_id = $c->req->param('field_trial_id');
+    my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $trait_id = $c->req->param('trait_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
@@ -3698,7 +3698,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         search_type=>'MaterializedViewTable',
         data_level=>'plot',
         trait_list=>[$trait_id],
-        trial_list=>[$field_trial_id],
+        trial_list=>\@field_trial_ids,
         include_timestamp=>0,
         exclude_phenotype_outlier=>0,
     );
