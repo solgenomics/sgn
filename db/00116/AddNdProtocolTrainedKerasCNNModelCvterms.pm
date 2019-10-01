@@ -63,6 +63,9 @@ sub patch {
     my $terms = {
         'protocol_type' => [
             'trained_keras_cnn_model',
+        ],
+        'experiment_type' => [
+            'trained_keras_cnn_model_experiment'
         ]
     };
 

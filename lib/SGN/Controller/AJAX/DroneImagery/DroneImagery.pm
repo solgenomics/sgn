@@ -3788,7 +3788,35 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    
+    my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+
+    my $protocol_id;
+    my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find({
+        name => $model_name,
+        type_id => $keras_cnn_cvterm_id
+    });
+    if ($protocol_row) {
+        $c->stash->{rest} = { error => "The model name: $model_name has already been used! Please use a new name." };
+        $c->detach();
+    }
+    else {
+        $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
+            name => $model_name,
+            type_id => $keras_cnn_cvterm_id
+        });
+        my $protocol_id = $protocol_row->nd_protocol_id();
+    }
+
+    my $q = "UPDATE nd_protocol SET description = ? WHERE nd_protocol_id = ?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($model_description, $protocol_id);
+
+    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+        nd_geolocation_id => $location_id,
+        type_id => $keras_cnn_experiment_cvterm_id,
+        nd_experiment_protocols => [{nd_protocol_id => $protocol_id}],
+    });
 
     $c->stash->{rest} = { success => 1 };
 }

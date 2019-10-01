@@ -16,6 +16,7 @@ experiment_type	genotyping_layout				00052
 experiment_type	phenotyping_experiment				00052
 experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
+experiment_type	trained_keras_cnn_model_experiment	For linking a trained keras cnn model in nd_protocol to its model files in md_files	10/01/2019	nm529	00116
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
