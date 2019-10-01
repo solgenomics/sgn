@@ -3715,11 +3715,12 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        foreach my $data (values %data_hash){
+        while (my ($stock_id, $data) = each %data_hash){
             my $image_fullpaths = $data->{image_fullpaths};
             my $value = $data->{trait_value};
             if ($value) {
                 foreach (@$image_fullpaths) {
+                    print $F '"'.$stock_id.'",';
                     print $F '"'.$_.'",';
                     print $F '"'.$value.'"';
                     print $F "\n";
@@ -3756,7 +3757,6 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     close($fh);
     #print STDERR Dumper \@result_agg;
 
-    print STDERR Dumper $archive_temp_result_agg_file;
     open($F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
         foreach my $data (@result_agg){
             print $F $data;
@@ -3764,7 +3764,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($F);
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg };
+    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
