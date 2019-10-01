@@ -3718,6 +3718,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
     my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
+    my $archive_temp_class_map_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/classmapXXXX');
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         while (my ($stock_id, $data) = each %data_hash){
@@ -3735,11 +3736,10 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($F);
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/BasicCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/BasicCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    my @header_cols;
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_output_file)
         or die "Could not open file '$archive_temp_output_file' $!";
@@ -3770,7 +3770,20 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($F);
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file };
+    my %class_map;
+    open(my $fh2, '<', $archive_temp_class_map_file)
+        or die "Could not open file '$archive_temp_class_map_file' $!";
+
+        while ( my $row = <$fh2> ){
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            $class_map{$columns[0]} = $columns[1];
+        }
+    close($fh2);
+
+    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, class_map => \%class_map };
 }
 
 sub drone_imagery_save_keras_model : Path('/api/drone_imagery/save_keras_model') : ActionClass('REST') { }
@@ -3785,11 +3798,13 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $model_input_file = $c->req->param('model_input_file');
     my $model_name = $c->req->param('model_name');
     my $model_description = $c->req->param('model_description');
+    my $model_class_map = decode_json $c->req->param('class_map');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
     my $protocol_id;
@@ -3804,7 +3819,8 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     else {
         $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
             name => $model_name,
-            type_id => $keras_cnn_cvterm_id
+            type_id => $keras_cnn_cvterm_id,
+            nd_protocolprops => [{value => encode_json($model_class_map), type_id => $keras_cnn_class_map_cvterm_id}]
         });
         $protocol_id = $protocol_row->nd_protocol_id();
     }
@@ -3898,6 +3914,97 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     });
 
     $c->stash->{rest} = { success => 1 };
+}
+
+sub drone_imagery_predict_keras_model : Path('/api/drone_imagery/predict_keras_model') : ActionClass('REST') { }
+sub drone_imagery_predict_keras_model_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
+    my $model_id = $c->req->param('model_id');
+    my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
+    my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>$drone_run_ids,
+        project_image_type_id_list=>$plot_polygon_type_ids
+    });
+    my ($result, $total_count) = $images_search->search();
+
+    my %data_hash;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
+    }
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
+    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
+    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
+
+    my @image_paths;
+    my @stock_ids;
+    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        while (my ($stock_id, $data) = each %data_hash){
+            my $image_fullpaths = $data->{image_fullpaths};
+            foreach (@$image_fullpaths) {
+                print $F '"'.$stock_id.'",';
+                print $F '"'.$_.'"';
+                print $F "\n";
+                push @image_paths, $_;
+                push @stock_ids, $stock_id;
+            }
+        }
+    close($F);
+
+    my $model_q = "SELECT basename, dirname, class_map.value
+        FROM metadata.md_files
+        JOIN phenome.nd_experiment_md_files using(file_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_protocol using(nd_experiment_id)
+        JOIN nd_protocol using(nd_protocol_id)
+        JOIN nd_protocolprop AS class_map ON(nd_protocol.nd_protocol_id=class_map.nd_protocol_id AND class_map.type_id=$keras_cnn_class_map_cvterm_id)
+        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model';";
+    my $h = $schema->storage->dbh()->prepare($model_q);
+    $h->execute($model_id);
+    my ($basename, $filename, $class_map) = $h->fetchrow_array();
+    my $class_map_hash = decode_json $class_map;
+    my $model_file = $filename."/".$basename;
+
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\'';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my @result_agg;
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    open(my $fh, '<', $archive_temp_output_file)
+        or die "Could not open file '$archive_temp_output_file' $!";
+
+        my $iter = 0;
+        while ( my $row = <$fh> ){
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            my $prediction = $columns[0];
+            my $class = $class_map_hash->{$prediction};
+            push @result_agg, [$stock_ids[$iter], $image_paths[$iter], $prediction, $class];
+            $iter++;
+        }
+    close($fh);
+
+    $c->stash->{rest} = { success => 1, results => \@result_agg };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }

@@ -66,6 +66,9 @@ sub patch {
         ],
         'experiment_type' => [
             'trained_keras_cnn_model_experiment'
+        ],
+        'protocol_property' => [
+            'trained_keras_cnn_model_class_map_json'
         ]
     };
 

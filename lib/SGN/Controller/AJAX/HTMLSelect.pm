@@ -690,6 +690,34 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trained_keras_cnn_model_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+
+    my @keras_cnn_models;
+    my $q = "SELECT nd_protocol_id, name, description FROM nd_protocol WHERE type_id=$trained_keras_cnn_model_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    while (my ($nd_protocol_id, $name, $description) = $h->fetchrow_array()) {
+        push @keras_cnn_models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_keras_cnn_select";
+    my $name = $c->req->param("name") || "html_keras_cnn_select";
+
+    @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@keras_cnn_models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
