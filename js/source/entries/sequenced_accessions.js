@@ -9,20 +9,19 @@ export function init(main_div, stock_id, stockprop_id){
 	main_div = document.getElementById(
 	    main_div.startsWith("#") ? main_div.slice(1) : main_div
 	);
-    }  
+    }
 
-    alert("NOW: "+stock_id);
     // show the add button if the user is logged and and there we are on a stock page
     var button_html = "";
     if (isLoggedIn() && stock_id!==undefined) {
 	button_html = `<button id="show_sequencing_info_dialog_button" class="btn btn-primary" data-toggle="modal" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>`;
     }
     else {
-	if (stock_id !== undefined) { 
+	if (stock_id !== undefined) {
 	    button_html = `<button disabled id="show_sequencing_info_dialog_button" class="btn btn-primary" data-toggle="modal" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>`;
 	}
     }
-    
+
     main_div.innerHTML = `
      <div>
 	<table class="table table-condensed" cellspacing="20px" id="sequenced_stocks_table" >
@@ -32,7 +31,7 @@ export function init(main_div, stock_id, stockprop_id){
         <th>Year</th>
 	<th>Organization</th>
         <th>Website</th>
-	<th>Analyze</th>   
+	<th>Analyze</th>
 	<th>Manage</th>
         </tr>
 	</thead>
@@ -41,17 +40,17 @@ export function init(main_div, stock_id, stockprop_id){
 
 	<!-- Dialog for adding sequencing info -->
 
-    
+
       <div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
 	<div class="modal-dialog" role="modal">
 
 	  <div class="modal-content">
-	
+
 	    <div class="modal-header">
 	      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                  <div aria-hidden="true">&times;</div>
 	      </button>
-	
+
               <h5 class="modal-title">Enter sequencing info for accession:</h5>
 
 	    </div> <!-- modal-header -->
@@ -78,11 +77,11 @@ export function init(main_div, stock_id, stockprop_id){
                <div class="input-group mb-3">
 	         <input type="text" class="form-control" placeholder="Jbrowse link" name="jbrowse_link" id="jbrowse_link" size="20"></input><br />
 	       </div> <!-- input group -->
-               <br />	
+               <br />
 	       <div class="input-group mb-3">
 	         <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20"></input><br />
 	</div> <!-- input group -->
-	
+
 	<input id="stock_id"  name="stock_id" value="`+stock_id+`" />
 	<input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
         </div> <!-- form-search -->
@@ -92,7 +91,7 @@ export function init(main_div, stock_id, stockprop_id){
              <button id="save_sequencing_info_button" type="submit" class="btn btn-primary">Save changes</button>
              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 	   </div> <!-- modal-footer -->
- 	</form> <!-- sequencing_info form -->	
+ 	</form> <!-- sequencing_info form -->
 	 </div> <!-- modal-content -->
 	</div> <!-- modal-dialog -->
 	</div> <!-- modal -->
@@ -100,8 +99,8 @@ export function init(main_div, stock_id, stockprop_id){
 
     `+button_html;
 
-    
-    
+
+
     var stock_param = "";
     if (stock_id !== undefined && stock_id !== null) {
 	stock_param = "/"+stock_id;
@@ -117,7 +116,7 @@ export function init(main_div, stock_id, stockprop_id){
 
     jQuery("#sequencing_info_form").submit(function(event) {
 	event.preventDefault();
-	
+
 	var formdata = jQuery("#sequencing_info_form").serialize();
 	alert(formdata);
 	jQuery.ajax( {
@@ -135,7 +134,7 @@ export function delete_sequencing_info(stockprop_id) {
 	    url : '/ajax/genomes/sequencing_info/delete/'+stockprop_id,
 	    success: function(r) {
 		if (r.error) { alert(r.error); }
-		else { 
+		else {
 		    alert("The entry has been deleted.");
 		}
 	    },
@@ -172,8 +171,7 @@ export function edit_sequencing_info(stockprop_id) {
 	},
 	error : function(r) { alert("an error occurred"); }
     });
-    
+
 
 
 }
-
