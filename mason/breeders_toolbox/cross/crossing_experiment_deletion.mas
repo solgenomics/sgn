@@ -25,3 +25,24 @@ $trial_id
         </div>
     </div>
 </&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#delete_cross_section_onswitch').click(function(){
+
+        var cross_deletion_table = jQuery('#cross_deletion_table').DataTable({
+
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_crossingtrial',
+
+            columns: [
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteCross("+row.cross_id+")'>Delete</a>"; } },
+            ]
+        });
+    });
+});
+
+</script>
