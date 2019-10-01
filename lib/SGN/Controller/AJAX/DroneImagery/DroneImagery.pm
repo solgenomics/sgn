@@ -3783,6 +3783,12 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($fh2);
 
+    if ($c->req->param('save_model') == 1) {
+        my $model_name = $c->req->param('model_name');
+        my $model_description = $c->req->param('model_description');
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, \%class_map, $drone_run_ids, $plot_polygon_type_ids, $user_id, $user_name, $user_role);
+    }
+
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, class_map => \%class_map };
 }
 
@@ -3802,6 +3808,27 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_name, $model_description, $model_class_map, $drone_run_ids, $plot_polygon_type_ids, $user_id, $user_name, $user_role);
+}
+
+sub _perform_save_trained_keras_cnn_model {
+    my $c = shift;
+    my $schema = shift;
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
+    my $field_trial_ids = shift;
+    my $model_file = shift;
+    my $model_input_file = shift;
+    my $model_name = shift;
+    my $model_description = shift;
+    my $model_class_map = shift;
+    my $drone_run_ids = shift;
+    my $plot_polygon_type_ids = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my @field_trial_ids = @$field_trial_ids;
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();

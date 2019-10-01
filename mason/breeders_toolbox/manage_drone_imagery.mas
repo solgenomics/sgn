@@ -1104,8 +1104,24 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <& /page/page_title.mas, title=>"Train the model!" &>
 
                     <br/><br/>
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Model Name: </label>
+                            <div class="col-sm-7" >
+                                <input class="form-control" type="text" id="drone_image_train_keras_model_name" name="drone_image_train_keras_model_name" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Model Description: </label>
+                            <div class="col-sm-7" >
+                                <input class="form-control" type="text" id="drone_image_train_keras_model_desc" name="drone_image_train_keras_model_desc" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Submit</button>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Train and Save Keras CNN Model</button>
                     </center>
 
                     <div id="drone_imagery_train_keras_model_results_div">
@@ -2385,34 +2401,50 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_train_keras_model_confirm_step').click(function(){
-        jQuery.ajax({
-            url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids),
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                console.log(response);
-                jQuery("#working_modal").modal("hide");
-                var html = "<hr><h4>Results</h4><br/><br/>";
-                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
-                for (var i=0; i<response.results.length; i++) {
-                    html = html + "<tr><td>"+response.results[i]+"</td></tr>";
+        var drone_imagery_keras_model_name = jQuery('#drone_image_train_keras_model_name').val();
+        var drone_imagery_keras_model_desc = jQuery('#drone_image_train_keras_model_desc').val();
+        if (drone_imagery_keras_model_name == '' || drone_imagery_keras_model_desc == '') {
+            alert('Please give a model name and description!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&save_model=1&model_name='+drone_imagery_keras_model_name+'&model_description='+drone_imagery_keras_model_desc,
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        alert("Trained Keras CNN Model saved!");
+                    }
+
+                    var html = "<hr><h4>Results</h4><br/><br/>";
+                    html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
+                    for (var i=0; i<response.results.length; i++) {
+                        html = html + "<tr><td>"+response.results[i]+"</td></tr>";
+                    }
+                    html = html + "</tbody></table>";
+
+                    //html = html + '<hr><h3>Save Model for Predictions</h3><div class="form-horizontal"><div class="form-group"><label class="col-sm-6 control-label">Model Name: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_name" name="drone_imagery_save_keras_model_name" type="text" /></div></div><div class="form-group"><label class="col-sm-6 control-label">Model Description: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_desc" name="drone_imagery_save_keras_model_desc" type="text" /></div></div></div><button class="btn btn-primary" id="drone_imagery_keras_model_save">Save Model (Required For Using For Prediction)</button>';
+
+                    manage_drone_imagery_train_keras_temporary_model_input_file = response.model_input_file;
+                    manage_drone_imagery_train_keras_temporary_model_file = response.model_temp_file;
+                    manage_drone_imagery_train_keras_class_map = response.class_map;
+
+                    jQuery('#drone_imagery_train_keras_model_results_div').html(html);
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error training keras model!')
                 }
-                html = html + "</tbody></table>";
-
-                html = html + '<hr><h3>Save Model for Predictions</h3><div class="form-horizontal"><div class="form-group"><label class="col-sm-6 control-label">Model Name: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_name" name="drone_imagery_save_keras_model_name" type="text" /></div></div><div class="form-group"><label class="col-sm-6 control-label">Model Description: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_desc" name="drone_imagery_save_keras_model_desc" type="text" /></div></div></div><button class="btn btn-primary" id="drone_imagery_keras_model_save">Save Model (Required For Using For Prediction)</button>';
-
-                manage_drone_imagery_train_keras_temporary_model_input_file = response.model_input_file;
-                manage_drone_imagery_train_keras_temporary_model_file = response.model_temp_file;
-                manage_drone_imagery_train_keras_class_map = response.class_map;
-
-                jQuery('#drone_imagery_train_keras_model_results_div').html(html);
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert('Error training keras model!')
-            }
-        });
+            });
+        }
     });
 
     jQuery(document).on('click', '#drone_imagery_keras_model_save', function() {
