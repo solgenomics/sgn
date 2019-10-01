@@ -292,9 +292,7 @@ ALTER MATERIALIZED VIEW public.genotyping_projectsxyears OWNER TO web_usr;
 -- UPDATE refresh_materialized_views function
 
 CREATE OR REPLACE FUNCTION public.refresh_materialized_views()
- RETURNS void
- LANGUAGE sql
-AS $function$
+ RETURNS void AS '
 REFRESH MATERIALIZED VIEW public.materialized_phenoview;
 REFRESH MATERIALIZED VIEW public.materialized_genoview;
 REFRESH MATERIALIZED VIEW public.accessions;
@@ -400,15 +398,14 @@ REFRESH MATERIALIZED VIEW public.trial_typesXtrials;
 REFRESH MATERIALIZED VIEW public.trial_typesXyears;
 REFRESH MATERIALIZED VIEW public.trialsxgenotyping_projects;
 REFRESH MATERIALIZED VIEW public.trialsXyears;
-UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP;$function$
+UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP;'
+    LANGUAGE SQL;
 
 
 -- UPDATE refresh_materialized_views_concurrently function
 
 CREATE OR REPLACE FUNCTION public.refresh_materialized_views_concurrently()
- RETURNS void
- LANGUAGE sql
-AS $function$
+ RETURNS void AS '
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_phenoview;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_genoview;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
@@ -514,7 +511,8 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_typesXtrials;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_typesXyears;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsxgenotyping_projects;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsXyears;
-UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP;$function$
+UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP;'
+    LANGUAGE SQL;
 
 
 
