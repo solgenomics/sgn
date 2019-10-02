@@ -76,7 +76,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $cluster_type      = 'k-means' if !$cluster_type;
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
-  
+
+    print STDERR "\ndataset name: $dataset_name\n";
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -178,7 +179,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $cluster_type = 'k-means' if !$cluster_type;
     $data_type    = 'genotype' if !$data_type;
     $data_type    = lc($data_type);
-    
+  
+    print STDERR "\ndataset name: $dataset_name\n";
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{cluster_pop_id}   = $cluster_pop_id;

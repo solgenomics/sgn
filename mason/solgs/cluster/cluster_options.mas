@@ -26,7 +26,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
   
   <div style="padding-right: 1px; padding-left:1px;"
        class="form-group col-sm-2"
-       id="data_type_opts"
+       id="cluster_data_type_opts"
        value="">
   </div>
 
