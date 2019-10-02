@@ -122,6 +122,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     elsif ($datatype eq 'entry') {
         $error = $c->stash->{trial}->delete_project_entry();
     }
+    elsif ($datatype eq 'crossing_experiment') {
+        $error = $c->stash->{trial}->delete_empty_crossing_experiment();
+    }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
         return;

@@ -3521,4 +3521,60 @@ sub delete_assayed_trait {
     return $error;
 }
 
+=head2 function delete_empty_crossing_experiment()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_empty_crossing_experiment {
+    my $self = shift;
+
+    if ($self->cross_count() > 0) {
+	print STDERR "Cannot delete crossing experiment with associated crosses.\n";
+	return;
+    }
+
+    eval {
+	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+	$row->delete();
+    print STDERR "deleted project ".$self->get_trial_id."\n";
+    };
+    if ($@) {
+	print STDERR "An error occurred during deletion: $@\n";
+	return $@;
+    }
+}
+
+=head2 function cross_count()
+
+ Usage:
+ Desc:         The number of crosses associated with this crossing experiment
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub cross_count {
+    my $self = shift;
+    my $crossing_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'cross_experiment' })->cvterm_id();
+
+    my $q = "SELECT count(nd_experiment_project.nd_experiment_id)
+        FROM nd_experiment_project
+        JOIN nd_experiment on (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = $crossing_experiment_type_id
+        AND nd_experiment_project.project_id = ?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    my ($count) = $h->fetchrow_array();
+    return $count;
+}
+
 1;
