@@ -329,8 +329,9 @@ sub get_progeny_info {
 
 =head2 get_crosses_in_crossingtrial
 
-Class method.
-Example:       $crosses_ref = CXGN::Cross->get_crosses_in_crossingtrial($schema, $trial_id)
+    Class method.
+    Returns all cross names and ids in a specific crossing_experiment.
+    Example: my @crosses = CXGN::Cross->get_crosses_in_crossingtrial($schema, $trial_id)
 
 =cut
 
@@ -361,7 +362,8 @@ sub get_crosses_in_crossingtrial {
 =head2 get_crosses_and_details_in_crossingtrial
 
     Class method.
-    Example:       $crosses_ref = CXGN::Cross->get_crosses_and_details_in_crossingtrial($schema, $trial_id)
+    Returns all cross names, ids, cross_combinations, cross types and parent info in a specific crossing_experiment.
+    Example: my @crosses_details = CXGN::Cross->get_crosses_and_details_in_crossingtrial($schema, $trial_id)
 
 =cut
 
@@ -455,6 +457,9 @@ sub get_cross_properties_trial {
 
 =head2 get_seedlots_from_crossingtrial
 
+    Class method.
+    Returns all seedlots derived from crosses in a specific crossing_experiment.
+    Example: my @crosses_seedlots = CXGN::Cross->get_seedlots_from_crossingtrial($schema, $trial_id)
 
 =cut
 
@@ -488,8 +493,8 @@ sub get_seedlots_from_crossingtrial {
 =head2 get_cross_progenies_trial
 
     Class method.
-    Get all the progenies of all the crosses in a trial.
-    Example: my $progenies = CXGN::Cross->get_cross_progenies_trial($schema, $trial_id)
+    Get numbers of progenies and family names of all the crosses in a crossing_experiment.
+    Example: my @progenies_info = CXGN::Cross->get_cross_progenies_trial($schema, $trial_id)
 
 =cut
 
