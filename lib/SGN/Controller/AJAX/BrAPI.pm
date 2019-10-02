@@ -2845,6 +2845,15 @@ sub _store_observations {
     my $dbh = $c->dbc->dbh;
     my $auth = _authenticate_user($c);
     my ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($dbh)->query_from_cookie($c->stash->{session_token});
+
+	# Check that the user is authenticate. User_id is null if token was not valid.
+	if (!$user_id || $expired) {
+		my $status = $c->stash->{status};
+		my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
+		# Return unauthorized error
+		_standard_response_construction($c, $brapi_package_result, 401);
+	}
+
     my $p = CXGN::People::Person->new($dbh, $user_id);
     my $username = $p->get_username;
     my $clean_inputs = $c->stash->{clean_inputs};
