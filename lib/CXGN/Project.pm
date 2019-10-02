@@ -3536,8 +3536,7 @@ sub delete_empty_crossing_experiment {
     my $self = shift;
 
     if ($self->cross_count() > 0) {
-	print STDERR "Cannot delete crossing experiment with associated crosses.\n";
-	return;
+	return 'Cannot delete crossing experiment with associated crosses.';
     }
 
     eval {
