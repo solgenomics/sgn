@@ -69,7 +69,8 @@ sub patch {
         ],
         'protocol_property' => [
             'trained_keras_cnn_model_class_map_json',
-            'trained_keras_cnn_model_trait'
+            'trained_keras_cnn_model_trait',
+            'trained_keras_cnn_model_type'
         ]
     };
 

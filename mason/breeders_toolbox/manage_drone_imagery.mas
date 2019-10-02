@@ -1106,14 +1106,23 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Model Name: </label>
-                            <div class="col-sm-7" >
+                            <label class="col-sm-4 control-label">Model Type: </label>
+                            <div class="col-sm-8" >
+                                <select class="form-control" id="drone_image_train_keras_model_type" name="drone_image_train_keras_model_type" >
+                                    <option value="KerasCNNSequentialSoftmaxCategorical">Keras CNN Sequential 16-32-64-128-512 Softmax Categorical</option>
+                                    <option value="KerasCNNInceptionResNetV2">Keras CNN Pre-Trained InceptionResNetV2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Model Name: </label>
+                            <div class="col-sm-8" >
                                 <input class="form-control" type="text" id="drone_image_train_keras_model_name" name="drone_image_train_keras_model_name" />
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Model Description: </label>
-                            <div class="col-sm-7" >
+                            <label class="col-sm-4 control-label">Model Description: </label>
+                            <div class="col-sm-8" >
                                 <input class="form-control" type="text" id="drone_image_train_keras_model_desc" name="drone_image_train_keras_model_desc" />
                             </div>
                         </div>
@@ -2403,13 +2412,14 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_train_keras_model_confirm_step').click(function(){
         var drone_imagery_keras_model_name = jQuery('#drone_image_train_keras_model_name').val();
         var drone_imagery_keras_model_desc = jQuery('#drone_image_train_keras_model_desc').val();
-        if (drone_imagery_keras_model_name == '' || drone_imagery_keras_model_desc == '') {
-            alert('Please give a model name and description!');
+        var drone_imagery_keras_model_type = jQuery('#drone_image_train_keras_model_type').val();
+        if (drone_imagery_keras_model_type =='' || drone_imagery_keras_model_name == '' || drone_imagery_keras_model_desc == '') {
+            alert('Please give a model type, name, and description!');
             return false;
         }
         else {
             jQuery.ajax({
-                url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&save_model=1&model_name='+drone_imagery_keras_model_name+'&model_description='+drone_imagery_keras_model_desc,
+                url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&save_model=1&model_name='+drone_imagery_keras_model_name+'&model_description='+drone_imagery_keras_model_desc+'&model_type='+drone_imagery_keras_model_type,
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -2563,6 +2573,10 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                }
+
                 var html = "<hr><h4>Results</h4><br/><br/>";
                 html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
                 for (var i=0; i<response.results.length; i++) {

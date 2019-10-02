@@ -3669,6 +3669,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $trait_id = $c->req->param('trait_id');
+    my $model_type = $c->req->param('model_type');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -3736,7 +3737,13 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($F);
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/BasicCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\'';
+    my $cmd = '';
+    if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\'';
+    }
+    elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2';
+    }
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -3786,7 +3793,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     if ($c->req->param('save_model') == 1) {
         my $model_name = $c->req->param('model_name');
         my $model_description = $c->req->param('model_description');
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, \%class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $user_id, $user_name, $user_role);
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, \%class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
     }
 
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, class_map => \%class_map, trait_id => $trait_id };
@@ -3805,12 +3812,13 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $model_name = $c->req->param('model_name');
     my $model_description = $c->req->param('model_description');
     my $trait_id = $c->req->param('trait_id');
+    my $model_type = $c->req->param('model_type');
     my $model_class_map = decode_json $c->req->param('class_map');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_name, $model_description, $model_class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $user_id, $user_name, $user_role);
+    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_name, $model_description, $model_class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
 }
 
 sub _perform_save_trained_keras_cnn_model {
@@ -3827,15 +3835,18 @@ sub _perform_save_trained_keras_cnn_model {
     my $drone_run_ids = shift;
     my $plot_polygon_type_ids = shift;
     my $trait_id = shift;
+    my $model_type = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
     my @field_trial_ids = @$field_trial_ids;
     my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
+    print STDERR Dumper $model_class_map;
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
     my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
+    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
     my $protocol_id;
@@ -3851,7 +3862,7 @@ sub _perform_save_trained_keras_cnn_model {
         $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
             name => $model_name,
             type_id => $keras_cnn_cvterm_id,
-            nd_protocolprops => [{value => encode_json($model_class_map), type_id => $keras_cnn_class_map_cvterm_id}, {value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id}]
+            nd_protocolprops => [{value => encode_json($model_class_map), type_id => $keras_cnn_class_map_cvterm_id}, {value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id}, {value => encode_json({value=>$model_type}), type_id => $keras_cnn_model_type_cvterm_id}]
         });
         $protocol_id = $protocol_row->nd_protocol_id();
     }
@@ -3963,6 +3974,7 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
     my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
+    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -4000,7 +4012,7 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
         }
     close($F);
 
-    my $model_q = "SELECT basename, dirname, class_map.value, trained_trait.value
+    my $model_q = "SELECT basename, dirname, class_map.value, trained_trait.value, model_type.value
         FROM metadata.md_files
         JOIN phenome.nd_experiment_md_files using(file_id)
         JOIN nd_experiment using(nd_experiment_id)
@@ -4008,19 +4020,22 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
         JOIN nd_protocol using(nd_protocol_id)
         JOIN nd_protocolprop AS class_map ON(nd_protocol.nd_protocol_id=class_map.nd_protocol_id AND class_map.type_id=$keras_cnn_class_map_cvterm_id)
         JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
         WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model';";
     my $h = $schema->storage->dbh()->prepare($model_q);
     $h->execute($model_id);
-    my ($basename, $filename, $class_map, $trained_trait) = $h->fetchrow_array();
+    my ($basename, $filename, $class_map, $trained_trait, $model_type) = $h->fetchrow_array();
     my $class_map_hash = decode_json $class_map;
     my $trained_trait_hash = decode_json $trained_trait;
+    my $model_type_hash = decode_json $model_type;
     my $trait_id = $trained_trait_hash->{variable_id};
     my $trained_trait_name = $trained_trait_hash->{variable_name};
+    $model_type = $model_type_hash->{value};
     my $model_file = $filename."/".$basename;
 
-    print STDERR "Predicting $trained_trait_name from Keras CNN\n";
+    print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -4055,10 +4070,11 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
             if ($csv->parse($row)) {
                 @columns = $csv->fields();
             }
-            my $prediction = $columns[0];
+            my $prediction = shift @columns;
             my $class = $class_map_hash->{$prediction};
             my $stock_id = $stock_ids[$iter];
-            push @result_agg, [$stock_id, $image_paths[$iter], $prediction, $class, $data_hash{$stock_id}->{previous_data}];
+            my $class_probabilities = join ',', @columns;
+            push @result_agg, [$stock_id, $image_paths[$iter], $prediction, $class, $data_hash{$stock_id}->{previous_data}, $class_probabilities];
             $iter++;
         }
     close($fh);
