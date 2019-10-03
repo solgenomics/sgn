@@ -53,7 +53,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-body">
-                <div class="col-md-12" id="">
+                <div class="col-md-12">
                     <div class="col-md-1"></div>
                     <div class="col-md-10">
                         <center>
@@ -112,16 +112,9 @@
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-12 form-inline" id="">
+                <div class="col-md-12 form-inline">
                     <div class="col-md-1"></div>
-                    <div class="col-md-3">
-                        <center>
-                        <br><label>Filter by Rep:</label>
-                            <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
-                            </select><br>
-                        </center>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <center>
                         <br><label>Sort Labels by:</label>
                             <select class="form-control" id="sort_order" name="sort_by" style="max-width: 100%">
@@ -135,10 +128,29 @@
                             </select><br>
                         </center>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
                         <center>
-                            <br><label>Copies:</label>
+                        <br><label>Limit by Rep:</label>
+                            <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
+                            </select><br>
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
+                        <center>
+                            <br><label>Copies per label:</label>
                             <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" value="1" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
+                        <center>
+                            <br><label>Total # to download:</label>
+                            <input class="form-control" id="label_designer_labels_to_download" name="label_designer_labels_to_download" type="number" placeholder="10" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -147,6 +159,46 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button id="d3-edit-additional-settings" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="batchDownloadModal" tabindex="-1" role="dialog" aria-labelledby="batchDownloadModal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="col-md-12" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10">
+                        <center>
+                            <label>Batch Download:</label>
+                        <br>
+                        <p id="batch_download_message"></p>
+                    </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Start Number:</label><br>
+                            <input class="form-control" placeholder="0" type="number" id="label_designer_start_number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>End Number:</label><br>
+                            <input class="form-control" placeholder="1000" type="number" id="label_designer_end_number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="d3-batch-download-submit" type="button" class="btn btn-primary" data-dismiss="modal">Download</button>
             </div>
         </div>
     </div>

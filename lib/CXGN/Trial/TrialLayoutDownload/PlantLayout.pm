@@ -81,8 +81,8 @@ sub retrieve {
     my @plant_design;
     while (my($plot_number, $design_info) = each %design){
         my $acc_synonyms = '';
-        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
         if (exists($selected_cols{'synonyms'})){
+            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
             $acc_synonyms = join ',', @{$accession->synonyms};
         }
         my $acc_pedigree = '';
@@ -109,7 +109,6 @@ sub retrieve {
         }
 
         my $plant_names = $design_info->{'plant_names'};
-        print STDERR "Plant names are ".Dumper($plant_names);
         my $plant_ids = $design_info->{'plant_ids'};
         my $plant_index_numbers = $design_info->{'plant_index_numbers'};
         my $i = 0;

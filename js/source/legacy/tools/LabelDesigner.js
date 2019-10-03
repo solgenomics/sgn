@@ -179,6 +179,7 @@ font_styles = {
 }
 
 var add_fields = {}; // retrieved when data source is selected
+var num_units = 0; // updated when data source is selected
 
 resizer_behaviour = d3.behavior.drag().on(
     "drag",
@@ -501,69 +502,95 @@ $(document).ready(function($) {
     });
 
     $("#d3-pdf-button, #d3-zpl-button").on("click", function() {
-
-        var label_elements = document.getElementsByClassName('label-element');
-        label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        if (label_elements.length < 1) {
-            alert("No elements in the design. Please add design elements before downloading");
-            return;
-        }
-        var download_type = $(this).val();
-        var data_type = $('#source_select :selected').parent().attr('label');
-        var source_id = $("#source_select").val();
-        var source_name = $("#source_select :selected").text();
-        //console.log("Id is "+source_id+" and name is "+source_name);
-        if (!source_id || source_id == 'Please select a trial' || source_id == 'Select a plot list') {
-            alert("No data source selected. Please select a data source before downloading");
-            return;
-        }
-
         var design = retrievePageParams();
-        if (!design) {return;}
-        design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
-        var design_json = JSON.stringify(design);
+        var download_type = $(this).val();
+        console.log("Design is "+JSON.stringify(design));
 
-        var labels_to_download = jQuery('#label_designer_labels_to_print').val();
-        var data_level = jQuery('#label_designer_data_level').val();
+        // if over 1,000 to download, throw warning with editable start and end number and text recommending to download in batches of 1,000 or less
+        var label_count = num_units * design.copies_per_plot;
+        var labels_to_download = design.labels_to_download;
+        if (label_count < 1000 || (labels_to_download && labels_to_download < 1000)) {
+            downloadLabels(design, download_type);
+        } else if (label_count > 1000) {
+            //show warning with editable inputs for start and end
+            var message = "You are trying to download "+label_count+ " labels ("+label_count+" "+jQuery('#label_designer_data_level :selected').text()+"s x "+design.copies_per_plot+" copy(ies) each). Due to slow speeds it is not recommended to download more than 1000 labels at a time. Please use the input boxes below to download your labels in batches.";
+            $("#batch_download_message").text(message);
+            $("#d3-batch-download-submit").val(download_type);
+            $('#batchDownloadModal').modal('show');
+        }
 
-        //send to server to build pdf file
-        jQuery.ajax({
-            url: '/tools/label_designer/download',
-            timeout: 300000,
-            method: 'POST',
-            data: {
-                'download_type': download_type,
-                'data_type' : data_type,
-                'source_id': source_id,
-                'source_name': source_name,
-                'design_json': design_json,
-                'labels_to_download': labels_to_download,
-                'data_level': data_level
-            },
-            beforeSend: function() {
-                console.log("Downloading "+download_type+" file . . . ");
-                disable_ui();
-            },
-            complete: function() {
-                enable_ui();
-            },
-            success: function(response) {
-                if (response.error) {
-                    enable_ui();
-                    alert(response.error);
-                } else {
-                    console.log("Got file "+response.filename);
-                    enable_ui();
-                    window.location.href = "/download/" + response.filename;
-                }
-            },
-            error: function(request, status, err) {
-                enable_ui();
-                alert("Error. Unable to download labels.");
-            }
-        });
     });
+
+    $("#d3-batch-download-submit").on("click", function() {
+        var download_type = $(this).val();
+        var design = retrievePageParams();
+        downloadLabels(design, download_type);
+    });
+
 });
+
+function downloadLabels (design, download_type) {
+    var label_elements = document.getElementsByClassName('label-element');
+    label_elements = Array.prototype.slice.call(label_elements); // convert to array
+    if (label_elements.length < 1) {
+        alert("No elements in the design. Please add design elements before downloading");
+        return;
+    }
+    var data_type = $('#source_select :selected').parent().attr('label');
+    var source_id = $("#source_select").val();
+    var source_name = $("#source_select :selected").text();
+    //console.log("Id is "+source_id+" and name is "+source_name);
+    if (!source_id || source_id == 'Please select a trial' || source_id == 'Select a plot list') {
+        alert("No data source selected. Please select a data source before downloading");
+        return;
+    }
+
+    if (!design) {
+        alert("No design. Please define a design before downloading");
+        return;
+    }
+    design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
+
+    var design_json = JSON.stringify(design);
+    console.log("design is"+design_json);
+    var data_level = jQuery('#label_designer_data_level').val();
+
+    //send to server to build pdf file
+    jQuery.ajax({
+        url: '/tools/label_designer/download',
+        timeout: 300000,
+        method: 'POST',
+        data: {
+            'download_type': download_type,
+            'data_type' : data_type,
+            'source_id': source_id,
+            'source_name': source_name,
+            'design_json': design_json,
+            'data_level': data_level
+        },
+        beforeSend: function() {
+            console.log("Downloading "+download_type+" file . . . ");
+            disable_ui();
+        },
+        complete: function() {
+            enable_ui();
+        },
+        success: function(response) {
+            if (response.error) {
+                enable_ui();
+                alert(response.error);
+            } else {
+                console.log("Got file "+response.filename);
+                enable_ui();
+                window.location.href = "/download/" + response.filename;
+            }
+        },
+        error: function(request, status, err) {
+            enable_ui();
+            alert("Error. Unable to download labels.");
+        }
+    });
+}
 
 function updateFields(data_type, source_id, data_level){
 
@@ -598,6 +625,7 @@ function updateFields(data_type, source_id, data_level){
 
                 // if reps, add reps as options for filtering
                 reps = response.reps;
+                num_units = response.num_units;
                 addPlotFilter(reps);
 
                 createAdders(add_fields);
@@ -1265,6 +1293,9 @@ function retrievePageParams() {
         plot_filter: document.getElementById("plot_filter").value,
         sort_order: document.getElementById("sort_order").value,
         copies_per_plot: document.getElementById("copies_per_plot").value,
+        labels_to_download: document.getElementById("label_designer_labels_to_download").value,
+        start_number: document.getElementById("label_designer_start_number").value,
+        end_number: document.getElementById("label_designer_end_number").value,
         label_format: label,
         label_width: label_sizes[label].label_width,
         label_height: label_sizes[label].label_height,

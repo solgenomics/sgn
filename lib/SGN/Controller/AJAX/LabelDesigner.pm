@@ -42,27 +42,27 @@ __PACKAGE__->config(
        }
 
        my %design = %{$design};
-       # print STDERR "A plot before undef deletion is ".Dumper($design{(keys %design)[rand keys %design]});
+
        #delete any undefined fields
+       my $num_units = scalar(keys %design);
        foreach my $key (keys %design) {
            my %plot = %{$design{$key}};
            delete $design{$key}{$_} for grep { !defined $plot{$_} } keys %plot;
        }
-       # print STDERR "A plot after undef deletion is ".Dumper($design{(keys %design)[rand keys %design]});
+
        #get all fields in this trials design
        my $random_plot = $design{(keys %design)[rand keys %design]};
        my %reps;
        my @keys = keys %{$random_plot};
+
        foreach my $field (@keys) {
 
            # if rep_number, find unique options and return them
            if ($field eq 'rep_number') {
                print STDERR "Searching for unique rep numbers.\n";
-            #    foreach my $key (keys %design) {
                $reps{$_->{'rep_number'}}++ foreach values %design;
                print STDERR "Reps: ".Dumper(%reps);
            }
-
 
            print STDERR " Searching for longest $field\n";
            #for each field order values by descending length, then save the first one
@@ -73,7 +73,6 @@ __PACKAGE__->config(
                     $longest_hash{$field} = $longest;
                 } elsif (ref($longest) eq 'ARRAY') { # if array (ex. plants), sort array by length and take longest
                     print STDERR "Processing array " . Dumper($longest) . "\n";
-                    # my @array = @{$longest};
                     my @sorted = sort { length $a <=> length $b } @{$longest};
                     if (length($sorted[0]) > 0) {
                         $longest_hash{$field} = $sorted[0];
@@ -85,10 +84,10 @@ __PACKAGE__->config(
             }
         }
 
-        #print STDERR "Dumped data is: ".Dumper(%longest_hash);
         $c->stash->{rest} = {
             fields => \%longest_hash,
             reps => \%reps,
+            num_units => $num_units
         };
    }
 
@@ -110,35 +109,23 @@ __PACKAGE__->config(
        my $source_id = $c->req->param("source_id");
        my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
-       my $labels_to_download = $c->req->param("labels_to_download") || 10000000000;
-       my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
-
        # decode json
        my $json = new JSON;
        my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+       my $labels_to_download = $design_params->{'labels_to_download'} || undef;
+       my $start_number = $design_params->{'start_number'} || undef;
+       my $end_number = $design_params->{'end_number'} || undef;
+
+       if ($labels_to_download) {
+           $start_number = $start_number || 1;
+           $end_number = $start_number + $labels_to_download;
+       }
+
+       my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
        my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
-       # my ($trial_num, $trial_id, $plot_design, $plant_design, $subplot_design, $tissue_sample_design) = get_data($c, $schema, $data_type, $value);
-       #
-       # #if plant ids or names are used in design params, use plant design
-       #
-       # my $design = $plot_design;
        my $label_params = $design_params->{'label_elements'};
-       # foreach my $element (@$label_params) {
-       #     my %element = %{$element};
-       #     my $filled_value = $element{'value'};
-       #     print STDERR "Filled value is $filled_value\n";
-       #     if ($filled_value =~ m/{plant_id}/ || $filled_value =~ m/{plant_name}/  || $filled_value =~ m/{plant_index_number}/) {
-       #         $design = $plant_design;
-       #     }
-       #     if ($filled_value =~ m/{subplot_id}/ || $filled_value =~ m/{subplot_name}/ || $filled_value =~ m/{subplot_index_number}/) {
-       #         $design = $subplot_design;
-       #     }
-       #     if ($filled_value =~ m/{tissue_sample_id}/ || $filled_value =~ m/{tissue_sample_name}/ || $filled_value =~ m/{tissue_sample_index_number}/) {
-       #         $design = $tissue_sample_design;
-       #     }
-       # }
 
        if ($trial_num > 1) {
            $c->stash->{rest} = { error => "The selected list contains plots from more than one trial. This is not supported. Please select a different data source." };
@@ -151,32 +138,6 @@ __PACKAGE__->config(
            return;
        }
 
-       # my $design_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'design' })->first->cvterm_id();
-       # my $design_value = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $design_cvterm_id } )->first->value();
-       #
-       # my ($genotyping_facility, $genotyping_project_name);
-       # if ($design_value eq "genotyping_plate") { # for genotyping plates, get "Genotyping Facility" and "Genotyping Project Name"
-       #     my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
-       #     my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
-       #     $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $genotyping_facility_cvterm_id } )->first->value();
-       #     $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
-       #             project_id => $trial_id
-       #         })->search_related('nd_experiment')->search_related('nd_experimentprops',{
-       #             'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
-       #         })->first->value();
-       # }
-       #
-       # my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
-       # my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
-       #
-       # if needed retrieve pedigrees in bulk
-       # my $pedigree_strings;
-       # foreach my $element (@$label_params) {
-       #     if ($element->{'value'} =~ m/{pedigree_string}/ ) {
-       #         $pedigree_strings = get_all_pedigrees($schema, $design);
-       #     }
-       # }
-
        # Create a blank PDF file
        my $dir = $c->tempfiles_subdir('labels');
        my $file_prefix = $source_name;
@@ -187,12 +148,27 @@ __PACKAGE__->config(
        # initialize loop variables
        my $col_num = 1;
        my $row_num = 1;
-       my $key_number = 0;
+       my $key_number = 1;
        my $sort_order = $design_params->{'sort_order'};
 
+       # initialize barcode objs
+       my $barcode_object = Barcode::Code128->new();
+       my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
+       open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+
+       my $qrcode = Imager::QRCode->new(
+           margin        => 0,
+           version       => 0,
+           level         => 'M',
+           casesensitive => 1,
+           lightcolor    => Imager::Color->new(255, 255, 255),
+           darkcolor     => Imager::Color->new(0, 0, 0),
+       );
+       my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
        if ($download_type eq 'pdf') {
-           # Create pdf
-           print STDERR "Creating the PDF . . .\n";
+
+           print STDERR "Creating the PDF : ".localtime()."\n";
            my $pdf  = PDF::API2->new(-file => $FH);
            my $page = $pdf->page();
            my $text = $page->text();
@@ -201,21 +177,17 @@ __PACKAGE__->config(
 
            # loop through plot data in design hash
            foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
-
-               if ($key_number >= $labels_to_download){
+               if ($start_number && ($key_number < $start_number)){
+                   $key_number++;
+                   next;
+               }
+               if ($end_number && ($key_number > $end_number)){
                    last;
                }
 
-                #print STDERR "Design key is $key\n";
-                my %design_info = %{$design{$key}};
-                # $design_info{'trial_name'} = $trial_name;
-                # $design_info{'year'} = $year;
-                # $design_info{'genotyping_facility'} = $genotyping_facility;
-                # $design_info{'genotyping_project_name'} = $genotyping_project_name;
-                # $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
-                #print STDERR "Design info: " . Dumper(%design_info);
+               my %design_info = %{$design{$key}};
 
-                if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
+               if ( $design_params->{'plot_filter'} eq 'all' || $design_params->{'plot_filter'} eq $design_info{'rep_number'}) { # filter by rep if needed
 
                     for (my $i=0; $i < $design_params->{'copies_per_plot'}; $i++) {
                         #print STDERR "Working on label num $i\n";
@@ -229,19 +201,11 @@ __PACKAGE__->config(
                            my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
 
                            my $filled_value = $element{'value'};
-                           # print STDERR "Filled value b4: $filled_value";
                            $filled_value =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
-                           # print STDERR "\tFilled value after: $filled_value\n";
-                           #print STDERR "Element ".$element{'type'}."_".$element{'size'}." filled value is ".$filled_value." and coords are $elementx and $elementy\n";
-                           #print STDERR "Writing to the PDF . . .\n";
+
                            if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
                                 if ( $element{'type'} eq "Code128" ) {
-
-                                   my $barcode_object = Barcode::Code128->new();
-
-                                   my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
                                    binmode(PNG);
 
                                    $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
@@ -258,18 +222,10 @@ __PACKAGE__->config(
                                     #print STDERR 'adding Code 128 params $image, $elementx, $elementy, $width, $height with: '."$image, $elementx, $elementy, $width, $height\n";
                                     $gfx->image($image, $elementx, $elementy, $width, $height);
 
-
                               } else { #QRCode
 
-                                  my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
-                                  my $barcode_generator = CXGN::QRcode->new(
-                                      text => $filled_value,
-                                      size => $element{'size'},
-                                      margin => 0,
-                                      version => 0,
-                                      level => 'M'
-                                  );
-                                  my $barcode_file = $barcode_generator->get_barcode_file($jpeg_location);
+                                  my $barcode = $qrcode->plot( $filled_value );
+                                  my $barcode_file = $barcode->write(file => $jpeg_location);
 
                                    my $image = $pdf->image_jpeg($jpeg_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
@@ -313,7 +269,7 @@ __PACKAGE__->config(
              $key_number++;
              }
 
-           print STDERR "Saving the PDF . . .\n";
+           print STDERR "Saving the PDF : ".localtime()."\n";
            $pdf->save();
 
        } elsif ($download_type eq 'zpl') {
@@ -338,11 +294,7 @@ __PACKAGE__->config(
                    last;
                }
 
-            #    print STDERR "Design key is $key\n";
                my %design_info = %{$design{$key}};
-               # $design_info{'trial_name'} = $trial_name;
-               # $design_info{'year'} = $year;
-               # $design_info{'pedigree_string'} = $pedigree_strings->{$design_info{'accession_name'}};
 
                my $zpl = $zpl_template;
                $zpl =~ s/\{(.*?)\}/process_field($1,$key_number,\%design_info)/ge;
@@ -378,30 +330,6 @@ sub process_field {
         return $design_info{$field};
     }
 }
-
-# sub get_all_pedigrees {
-#     my $schema = shift;
-#     my $design = shift;
-#     my %design = %{$design};
-#
-#     # collect all unique accession ids for pedigree retrieval
-#     my %accession_id_hash;
-#     foreach my $key (keys %design) {
-#         $accession_id_hash{$design{$key}{'accession_id'}} = $design{$key}{'accession_name'};
-#     }
-#     my @accession_ids = keys %accession_id_hash;
-#
-#     # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
-#     my $stock = CXGN::Stock->new ( schema => $schema);
-#     my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
-#     my %pedigree_strings;
-#     foreach my $row (@$pedigree_rows) {
-#         my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
-#         my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
-#         $pedigree_strings{$progeny} = $string;
-#     }
-#     return \%pedigree_strings;
-# }
 
 sub convert_stock_list {
     my $c = shift;
@@ -587,21 +515,6 @@ sub get_data {
     }
     return $num_trials, $design;
 }
-
-# sub arraystostrings {
-#     my $hash = shift;
-#
-#     print STDERR "Design type is ".ref($hash)." and content is ".Dumper($hash);
-#     while (my ($key, $val) = each %$hash){
-#         while (my ($prop, $value) = each %$val){
-#             if (ref $value eq 'ARRAY'){
-#                 $hash->{$key}->{$prop} = join ',', @$value;
-#             }
-#         }
-#     }
-#     return $hash;
-# }
-
 
 #########
 1;
