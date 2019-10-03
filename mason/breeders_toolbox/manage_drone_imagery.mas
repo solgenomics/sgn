@@ -2577,12 +2577,21 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
 
-                var html = "<hr><h4>Results</h4><br/><br/>";
+                var html = "<hr><h4>Prediction Results</h4><br/><br/>";
                 html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
                 for (var i=0; i<response.results.length; i++) {
                     html = html + "<tr><td>"+response.results[i]+"</td></tr>";
                 }
                 html = html + "</tbody></table>";
+
+                if (response.evaluation_results.length > 0) {
+                    html = html + "<hr><h4>Model Evaluation Results</h4><br/><br/>";
+                    html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
+                    for (var i=0; i<response.evaluation_results.length; i++) {
+                        html = html + "<tr><td>"+response.evaluation_results[i]+"</td></tr>";
+                    }
+                    html = html + "</tbody></table>";
+                }
 
                 jQuery('#drone_imagery_predict_keras_model_results_div').html(html);
             },
