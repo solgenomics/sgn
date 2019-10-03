@@ -3993,25 +3993,6 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
         push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
     }
 
-    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
-    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
-    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
-
-    my @image_paths;
-    my @stock_ids;
-    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        while (my ($stock_id, $data) = each %data_hash){
-            my $image_fullpaths = $data->{image_fullpaths};
-            foreach (@$image_fullpaths) {
-                print $F '"'.$stock_id.'",';
-                print $F '"'.$_.'"';
-                print $F "\n";
-                push @image_paths, $_;
-                push @stock_ids, $stock_id;
-            }
-        }
-    close($F);
-
     my $model_q = "SELECT basename, dirname, class_map.value, trained_trait.value, model_type.value
         FROM metadata.md_files
         JOIN phenome.nd_experiment_md_files using(file_id)
@@ -4033,14 +4014,7 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     $model_type = $model_type_hash->{value};
     my $model_file = $filename."/".$basename;
 
-    print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
-
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\'';
-    print STDERR Dumper $cmd;
-    my $status = system($cmd);
-
     my @seen_plots = keys %data_hash;
-
     my $previous_phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$schema,
         search_type=>'MaterializedViewTable',
@@ -4058,6 +4032,33 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     foreach (@previous_data) {
         $data_hash{$_->[21]}->{previous_data} = $_->[39];
     }
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
+    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
+    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
+
+    my @image_paths;
+    my @stock_ids;
+    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        while (my ($stock_id, $data) = each %data_hash){
+            my $image_fullpaths = $data->{image_fullpaths};
+            my $previous_data = $data->{previous_data};
+            foreach (@$image_fullpaths) {
+                print $F '"'.$stock_id.'",';
+                print $F '"'.$_.'",';
+                print $F '"'.$previous_data.'"';
+                print $F "\n";
+                push @image_paths, $_;
+                push @stock_ids, $stock_id;
+            }
+        }
+    close($F);
+
+    print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
+
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\'';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
 
     my @result_agg;
     my $csv = Text::CSV->new({ sep_char => ',' });
