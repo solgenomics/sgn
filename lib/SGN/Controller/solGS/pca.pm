@@ -444,7 +444,7 @@ sub pca_query_jobs {
 	$jobs = $c->stash->{pca_geno_query_jobs};
     }
 
-     if (reftype $jobs ne 'ARRAY') 
+    if (reftype $jobs ne 'ARRAY') 
     {
 	$jobs = [$jobs];
     }

@@ -2938,6 +2938,7 @@ sub get_cluster_phenotype_query_job_args {
     my @queries;
     foreach my $trial_id (@$trials)
     {
+	print STDERR "\nget_cluster_phenotype_query_job_args: trial id: $trial_id\n";
 	$c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
 	
 	if (!-s $c->stash->{phenotype_file_name})
@@ -3318,9 +3319,9 @@ sub format_phenotype_dataset_headers {
     my $traits = $all_headers;
      
     foreach my $mh (@$meta_headers) {
-       $traits =~ s/($mh)//g;
+	$traits =~ s/($mh)//g;
     }
-
+ 
     write_file($traits_file, $traits) if $traits_file;   
     my  @filtered_traits = split(/\t/, $traits);
          
@@ -3891,21 +3892,25 @@ sub submit_job_cluster {
     my ($self, $c, $args) = @_;
 
     my $job;
-   
+
+    my $cmd = $args->{cmd};
+    
+    print STDERR "\n submit_job_cluster cmd: $cmd\n";
     eval 
     {
 	
 	$job = CXGN::Tools::Run->new($args->{config});
 	$job->do_not_cleanup(1);
 
+       
 	if ($args->{background_job}) 
-	{
+	{  print STDERR "\n submit_job_cluster bg job\n";
 	    if ($args->{async}) 
-	    {
+	    { print STDERR "\n submit_job_cluster async job\n";
 		$job->is_async(1);		 
 		$job->run_async($args->{cmd});
 	    } else 
-	    {
+	    { print STDERR "\n submit_job_cluster sync job\n";
 		$job->is_async(0);
 		$job->run_cluster($args->{cmd});
 	    }
@@ -3919,7 +3924,7 @@ sub submit_job_cluster {
 	
 	} 
 	else 
-	{
+	{ print STDERR "\n submit_job_cluster no background job\n";
 	    $job->is_cluster(1);
 	    $job->run_cluster($args->{cmd});
 	    $job->wait;
