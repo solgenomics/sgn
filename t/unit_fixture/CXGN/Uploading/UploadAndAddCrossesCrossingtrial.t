@@ -44,6 +44,11 @@ $mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossing
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+$mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossingtrial_name' => 'test_crossingtrial_deletion', 'crossingtrial_program_name' => 'test' ,
+    'crossingtrial_location' => 'test_location', 'year' => '2019', 'project_description' => 'test deletion' ]);
+
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
 # test adding cross and info
 my $crossing_trial_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial'});
@@ -190,7 +195,7 @@ my $test_add_cross_id = $test_add_cross_rs->stock_id();
 my $UG120001_id = $schema->resultset('Stock::Stock')->find({name =>'UG120001'})->stock_id();
 my $UG120002_id = $schema->resultset('Stock::Stock')->find({name =>'UG120002'})->stock_id();
 
-$mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/crosses_in_trial");
+$mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/crosses_and_details_in_trial");
 $response = decode_json $mech->content;
 
 is_deeply($response, {'data'=> [
@@ -322,6 +327,30 @@ is($after_deleting_stocks, $before_deleting_stocks - 3);
 is($after_deleting_relationship, $before_deleting_relationship - 9);
 is ($after_deleting_experiment, $before_deleting_experiment - 1);
 is ($after_deleting_experiment_stock, $before_deleting_experiment_stock - 1);
+
+# test deleting empty crossing experiment
+my $before_deleting_empty_experiment = $schema->resultset("Project::Project")->search({})->count();
+
+my $crossing_experiment_id = $schema->resultset("Project::Project")->find({name=>'test_crossingtrial_deletion'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_experiment_id.'/delete/crossing_experiment');
+$response = decode_json $mech->content;
+is_deeply($message_hash, {'success' => 1});
+
+my $after_deleting_empty_experiment = $schema->resultset("Project::Project")->search({})->count();
+
+is ($after_deleting_empty_experiment, $before_deleting_empty_experiment - 1);
+
+# test deleting crossing experiment with crosses
+my $before_deleting_experiment = $schema->resultset("Project::Project")->search({})->count();
+
+my $crossing_experiment_id_2 = $schema->resultset("Project::Project")->find({name=>'test_crossingtrial'})->project_id;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_experiment_id_2.'/delete/crossing_experiment');
+$response = decode_json $mech->content;
+ok($response->{'error'});
+
+my $after_deleting_experiment = $schema->resultset("Project::Project")->search({})->count();
+
+is ($after_deleting_experiment, $before_deleting_experiment);
 
 # remove added crossing trials after test so that they don't affect downstream tests
 $crossing_trial_rs->delete();
