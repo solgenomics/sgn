@@ -3563,13 +3563,14 @@ sub delete_empty_crossing_experiment {
 
 sub cross_count {
     my $self = shift;
-    my $crossing_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'cross_experiment' })->cvterm_id();
+    my $schema = $self->bcs_schema;
+    my $crossing_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
 
     my $q = "SELECT count(nd_experiment_project.nd_experiment_id)
         FROM nd_experiment_project
         JOIN nd_experiment on (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
         WHERE nd_experiment.type_id = $crossing_experiment_type_id
-        AND nd_experiment_project.project_id = ?;";
+        AND nd_experiment_project.project_id = ?";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
     $h->execute($self->get_trial_id());
     my ($count) = $h->fetchrow_array();

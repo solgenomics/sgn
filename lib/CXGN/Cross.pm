@@ -344,10 +344,10 @@ sub get_crosses_in_crossingtrial {
 
     my $q = "SELECT stock.stock_id, stock.uniquename FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-        JOIN stock on (nd_experiment_stock.stock_id = stock.stock_id) AND stock.type_id = ?
-        WHERE nd_experiment_project.project_id = ?";
+        JOIN stock on (nd_experiment_stock.stock_id = stock.stock_id)
+        WHERE stock.type_id = ? AND nd_experiment_project.project_id = ?";
 
-    my $h = $schema->storage->dbh()->prepare ($q);
+    my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($cross_stock_type_id, $trial_id);
 
     my @data = ();
@@ -434,7 +434,7 @@ sub get_cross_properties_trial {
         LEFT JOIN stockprop AS stockprop2 ON (stock.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
         WHERE nd_experiment_project.project_id = ?";
 
-    my $h = $schema->storage->dbh()->prepare ($q);
+    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($cross_combination_typeid, $cross_props_typeid, $trial_id);
 
@@ -477,7 +477,7 @@ sub get_seedlots_from_crossingtrial {
         LEFT JOIN stock as stock2 ON (stock_relationship.object_id = stock2.stock_id)
         WHERE nd_experiment_project.project_id = ?";
 
-    my $h = $schema->storage->dbh()->prepare ($q);
+    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($collection_of_type_id, $trial_id);
 
