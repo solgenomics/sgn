@@ -3971,6 +3971,25 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $user_id, $user_name, $user_role);
+
+    $c->stash->{rest} = $return;
+}
+
+sub _perform_keras_cnn_predict {
+    my $c = shift;
+    my $schema = shift;
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
+    my $field_trial_ids = shift;
+    my $model_id = shift;
+    my $drone_run_ids = shift;
+    my $plot_polygon_type_ids = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
+    my @field_trial_ids = @$field_trial_ids;
+
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
     my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
@@ -4082,10 +4101,10 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     close($fh);
 
     my @evaluation_results;
-    open(my $fh, '<', $archive_temp_output_evaluation_file)
+    open(my $fh_eval, '<', $archive_temp_output_evaluation_file)
         or die "Could not open file '$archive_temp_output_evaluation_file' $!";
 
-        while ( my $row = <$fh> ){
+        while ( my $row = <$fh_eval> ){
             my @columns;
             if ($csv->parse($row)) {
                 @columns = $csv->fields();
@@ -4101,9 +4120,9 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
             }
             push @evaluation_results, $line;
         }
-    close($fh);
+    close($fh_eval);
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results };
+    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
