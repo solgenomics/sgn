@@ -83,6 +83,7 @@ function deleteCross(cross_id){
             url: '/ajax/cross/delete',
             data: {'cross_id' : cross_id},
             method: 'POST',
+            destroy: true,
             beforeSend: function(response) {
                 jQuery('#working_modal').modal('show');
             },
