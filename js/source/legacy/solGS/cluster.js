@@ -203,8 +203,6 @@ solGS.cluster = {
 	var popId   = jQuery("#cluster_selected_population_id").val();
 	var popType = jQuery("#cluster_selected_population_type").val();
 	var popName = jQuery("#cluster_selected_population_name").val();
-
-	console.log('clusterresult  selectName'  + selectName)
 	
 	if(!selectName) {
 	    selectName = popName;
@@ -213,7 +211,7 @@ solGS.cluster = {
 	if (!selectId) {
 	    selectId = popId;
 	}
-	console.log('clusterresult  selectId'  + selectId)
+
 	var validateArgs =  {
 	    'data_id': selectId,
 	    'data_structure': dataStr,
@@ -246,8 +244,6 @@ solGS.cluster = {
 		    popDetails['selection_pop_id'] = popId;
 		}	    
 	    }
-
-	   // popDetails['cluster_pop_id'] = popId;
 	 	    
 	    var listId;
 	    var datasetId;
@@ -256,7 +252,6 @@ solGS.cluster = {
 	    var clusterPopId;
 	    
 	    if (dataStr == 'list') {	   
-		//popDetails['training_pop_id'] = 'list_' + listId;
 		if (isNaN(selectId)) {
 		    listId = selectId.replace('list_', '');
 		 	   
@@ -283,8 +278,6 @@ solGS.cluster = {
 	    if (popType == 'selection_index') {
 		sIndexName = selectName;
 	    }
-
-	    console.log('datasetName ' + datasetName)
 
 	    var clusterArgs =  {'training_pop_id': popDetails.training_pop_id,
 				'selection_pop_id': popDetails.selection_pop_id,
@@ -412,21 +405,18 @@ solGS.cluster = {
 
     plotClusterOutput: function(res) {
 
-	//var popDetails = solGS.getPopulationDetails();
-	var resultName = res.result_name; // || popDetails.population_name;
-	console.log('plot name ' + resultName)
+	var resultName = res.result_name; 
 	var plotId;
+
 	if (resultName != undefined) {
 	     plotId = resultName.replace(/\s/g, '-');
 	} else {
 	    plotId = res.cluster_pop_id;
 	}
 
-	imageId = 'id="k-means-plot-'  + plotId + '"';
+	var imageId = 'id="k-means-plot-'  + plotId + '"';
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
 
-	console.log('imageId ' + imageId + ' plotid ' + plotId);
-	console.log('imageId ' + imageId + ' plot ' + plot);
 	var filePlot  = res.kcluster_plot.split('/').pop();
 	
 	var plotType = 'K-means plot';
@@ -693,7 +683,7 @@ jQuery(document).ready( function() {
 	} else if (dataStr == 'list') {
 	     selectId = jQuery('#list_id').val();
 	}
-	console.log('run_cluster click dt str' + dataStr)
+
 	if (!dataStr) {
 	    var popType = jQuery("#cluster_selected_population_type").val();
 	 
@@ -714,11 +704,8 @@ jQuery(document).ready( function() {
 	}
 
 	if (selectName == undefined) {
-	    selectId = jQuery("#cluster_selected_population_name").val(); 
+	    selectName = jQuery("#cluster_selected_population_name").val(); 
 	}
-
-	console.log('run_cluster click selectId' + selectId)
-	console.log('run_cluster click selectName' + selectName)
 	
 	var clusterOptsId = 'cluster_options';
 	var clusterOpts = solGS.cluster.clusteringOptions(clusterOptsId);
