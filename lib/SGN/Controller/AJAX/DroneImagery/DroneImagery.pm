@@ -4056,6 +4056,7 @@ sub _perform_keras_cnn_predict {
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
     my $archive_temp_output_evaluation_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputevaluationfileXXXX');
+    my $archive_temp_output_activation_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputactivationfileXXXX');
 
     my @image_paths;
     my @stock_ids;
@@ -4076,7 +4077,7 @@ sub _perform_keras_cnn_predict {
 
     print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -4122,7 +4123,7 @@ sub _perform_keras_cnn_predict {
         }
     close($fh_eval);
 
-    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results };
+    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
