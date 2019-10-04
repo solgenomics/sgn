@@ -335,27 +335,6 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
 }
 
 
-# sub run_pheno_correlation_analysis {
-#     my ($self, $c) = @_;
-    
-#     my $pop_id = $c->stash->{pop_id};
-      
-#     $self->temp_pheno_corre_input_file($c);
-#     $self->temp_pheno_corre_output_file($c);
-   
-#     $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
-#     $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
-        
-#     $c->stash->{correlation_type} = "pheno-correlation";
-
-#     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
-    
-#     $self->run_correlation_analysis($c);
-
-#     #$self->trait_acronyms($c);
-# }
-
-
 sub run_genetic_correlation_analysis {
     my ($self, $c) = @_;
           
@@ -495,46 +474,7 @@ sub temp_geno_corre_input_file {
     $c->stash->{temp_geno_corre_input_file} = $tempfile;
 
 }
-# sub run_pheno_correlation_analysis {
-#     my ($self, $c) = @_;
-    
-#     my $pop_id = $c->stash->{pop_id};
-      
-#     $self->temp_pheno_corre_input_file($c);
-#     $self->temp_pheno_corre_output_file($c);
-   
-#     $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
-#     $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
-        
-#     $c->stash->{correlation_type} = "pheno-correlation";
 
-#     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
-    
-#     $self->run_correlation_analysis($c);
-
-#     #$self->trait_acronyms($c);
-# }
-
-# sub run_correlation_analysis {
-#     my ($self, $c) = @_;
-    
-#     my $pop_id = $c->stash->{pop_id};
-     
-#     my $input_file = $c->stash->{corre_input_files};
-#     my $output_file = $c->stash->{corre_output_files};
-    
-#     my $corre_type = $c->stash->{correlation_type};
-    
-#     $c->stash->{input_files}  = $input_file;
-#     $c->stash->{output_files} = $output_file;
-#     $c->stash->{r_temp_file}  = "${corre_type}-${pop_id}";
-#     $c->stash->{r_script}     = $c->stash->{correlation_script};
-    
-#     $c->stash->{analysis_tempfiles_dir} = $c->stash->{correlation_temp_dir};
-    
-#     $c->controller("solGS::solGS")->run_r_script($c);
-
-# }
 
 sub run_pheno_correlation_analysis {
     my ($self, $c) = @_;
