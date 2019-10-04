@@ -4063,7 +4063,7 @@ sub _perform_keras_cnn_predict {
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         while (my ($stock_id, $data) = each %data_hash){
             my $image_fullpaths = $data->{image_fullpaths};
-            my $previous_data = $data->{previous_data};
+            my $previous_data = $data->{previous_data} || '';
             foreach (@$image_fullpaths) {
                 print $F '"'.$stock_id.'",';
                 print $F '"'.$_.'",';
