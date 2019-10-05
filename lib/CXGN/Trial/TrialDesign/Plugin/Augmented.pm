@@ -69,8 +69,6 @@ sub create_design {
       $plot_layout_format = $self->get_plot_layout_format();
     }
     
-    print STDERR "DESIGN FIELDMAP LAYOUT FORMAT = ".$plot_layout_format."\n";
-    
     $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 	{
 	    name => 'stock_data_matrix',
@@ -115,10 +113,6 @@ sub create_design {
     @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max)};
     
     @fieldmap_row_numbers = @block_numbers;
-    print STDERR Dumper(\@block_numbers);
-    print STDERR "DESIGN FIELDMAP COLUMN NUMBER = ".$maximum_block_size."\n";
-    
-    
     if ($plot_layout_format eq "zigzag") {
       if (!$fieldmap_col_number){
         @col_number_fieldmaps = ((1..$maximum_block_size) x $max);
@@ -145,8 +139,6 @@ sub create_design {
         }
       }
     }
-    print STDERR "DESIGN FIELDMAP COLUMN NUMBER = ".$fieldmap_col_number."\n";
-    print STDERR "DESIGN FIELDMAP ROW NUMBER = ".$fieldmap_row_number."\n";
     
     my %seedlot_hash;
     if($self->get_seedlot_hash){
