@@ -4010,6 +4010,8 @@ sub _perform_keras_cnn_predict {
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
+        push @{$data_hash{$_->{stock_id}}->{image_urls}}, $image_url;
+        push @{$data_hash{$_->{stock_id}}->{image_ids}}, $image_id;
     }
 
     my $model_q = "SELECT basename, dirname, class_map.value, trained_trait.value, model_type.value
@@ -4050,6 +4052,7 @@ sub _perform_keras_cnn_predict {
     my $trait_name = $phenotype_header->[39];
     foreach (@previous_data) {
         $data_hash{$_->[21]}->{previous_data} = $_->[39];
+        $data_hash{$_->[21]}->{stock_name} = $_->[22];
     }
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
@@ -4060,19 +4063,30 @@ sub _perform_keras_cnn_predict {
     $archive_temp_output_activation_file .= ".pdf";
     my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
 
+    my @image_ids;
     my @image_paths;
+    my @image_urls;
     my @stock_ids;
+    my @stock_names;
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         while (my ($stock_id, $data) = each %data_hash){
-            my $image_fullpaths = $data->{image_fullpaths};
+            my $image_ids_ref = $data->{image_ids};
+            my $image_fullpaths_ref = $data->{image_fullpaths};
+            my $image_urls_ref = $data->{image_urls};
             my $previous_data = $data->{previous_data} || '';
-            foreach (@$image_fullpaths) {
+            my $stock_name = $data->{stock_name};
+            my $iterator = 0;
+            foreach (@$image_fullpaths_ref) {
                 print $F '"'.$stock_id.'",';
                 print $F '"'.$_.'",';
                 print $F '"'.$previous_data.'"';
                 print $F "\n";
                 push @image_paths, $_;
                 push @stock_ids, $stock_id;
+                push @stock_names, $stock_name;
+                push @image_urls, $image_urls_ref->[$iterator];
+                push @image_ids, $image_ids_ref->[$iterator];
+                $iterator++;
             }
         }
     close($F);
@@ -4098,7 +4112,7 @@ sub _perform_keras_cnn_predict {
             my $class = $class_map_hash->{$prediction};
             my $stock_id = $stock_ids[$iter];
             my $class_probabilities = join ',', @columns;
-            push @result_agg, [$stock_id, $image_paths[$iter], $prediction, $class, $data_hash{$stock_id}->{previous_data}, $class_probabilities];
+            push @result_agg, [$stock_names[$iter], $stock_id, $image_urls[$iter], $prediction, $class, $data_hash{$stock_id}->{previous_data}, $class_probabilities, $image_ids[$iter]];
             $iter++;
         }
     close($fh);
@@ -4125,7 +4139,7 @@ sub _perform_keras_cnn_predict {
         }
     close($fh_eval);
 
-    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file };
+    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file, trained_trait_name => $trained_trait_name };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }

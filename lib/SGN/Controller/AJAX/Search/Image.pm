@@ -101,9 +101,8 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         my $image_description = $image->get_description() || '';
         my $image_img = $image->get_image_url("medium");
         my $original_img = $image->get_image_url("large");
-        my $small_image = $image->get_image_url("tiny");
         my $image_page = "/image/view/$image_id";
-        my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" height="30" border="0" alt="$image_description" /></a>|;
+        my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$original_img" width="40" height="30" border="0" alt="$image_description" /></a>|;
 
         my @line;
         if ($params->{html_select_box}) {
