@@ -4,6 +4,7 @@ package CXGN::Trial::TrialDesign::Plugin::Augmented;
 use Moose::Role;
 use POSIX; # for ceil function
 use List::Util qw| max |;
+use Data::Dumper;
 
 sub create_design {
     my $self = shift;
@@ -22,6 +23,12 @@ sub create_design {
     my @block_numbers;
     my @converted_plot_numbers;
     my %control_names_lookup;
+    my $fieldmap_row_number;
+    my @fieldmap_row_numbers;
+    my $fieldmap_col_number;
+    my $plot_layout_format;
+    my @col_number_fieldmaps;
+    
     
     if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
@@ -48,6 +55,18 @@ sub create_design {
 	$number_of_blocks = ceil(scalar(@stock_list)/($maximum_block_size-scalar(@control_list)));
     } else {
 	die "No block size specified\n";
+    }
+    
+    if ($self->has_fieldmap_col_number()) {
+      $fieldmap_col_number = $self->get_fieldmap_col_number();
+    }
+    if ($self->has_fieldmap_row_number()) {
+      $fieldmap_row_number = $self->get_fieldmap_row_number();
+      my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
+      $fieldmap_col_number = CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
+    }
+    if ($self->has_plot_layout_format()) {
+      $plot_layout_format = $self->get_plot_layout_format();
     }
     
     $stock_data_matrix =  R::YapRI::Data::Matrix->new(
@@ -93,6 +112,34 @@ sub create_design {
     my $max = max( @block_numbers );
     @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max)};
     
+    @fieldmap_row_numbers = @block_numbers;
+    if ($plot_layout_format eq "zigzag") {
+      if (!$fieldmap_col_number){
+        @col_number_fieldmaps = ((1..$maximum_block_size) x $max);
+      } else {
+        @col_number_fieldmaps = ((1..$fieldmap_col_number) x $max);
+      }
+    }
+    elsif ($plot_layout_format eq "serpentine") {
+      if (!$fieldmap_row_number)  {
+        for my $rep (1 .. $max){
+          if ($rep % 2){
+            push @col_number_fieldmaps, (1..$maximum_block_size);
+          } else {
+            push @col_number_fieldmaps, (reverse 1..$maximum_block_size);
+          }
+        }
+      } else {
+        for my $rep (1 .. $max){
+          if ($rep % 2){
+            push @col_number_fieldmaps, (1..$max);
+          } else {
+            push @col_number_fieldmaps, (reverse 1..$max);
+          }
+        }
+      }
+    }
+    
     my %seedlot_hash;
     if($self->get_seedlot_hash){
 	%seedlot_hash = %{$self->get_seedlot_hash};
@@ -109,8 +156,15 @@ sub create_design {
 	$plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
 	$plot_info{'plot_number'} = $converted_plot_numbers[$i];
 	$plot_info{'plot_num_per_block'} = $converted_plot_numbers[$i];
-	$augmented_design{$converted_plot_numbers[$i]} = \%plot_info;
+    
+    if ($fieldmap_row_numbers[$i]){
+        $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+        $plot_info{'col_number'} = $col_number_fieldmaps[$i];
     }
+	$augmented_design{$converted_plot_numbers[$i]} = \%plot_info;
+    #print Dumper(\%plot_info);
+    }
+    
     %augmented_design = %{$self->_build_plot_names(\%augmented_design)};
     return \%augmented_design;
 }
