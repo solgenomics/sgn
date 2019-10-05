@@ -2584,6 +2584,8 @@ jQuery(document).ready(function() {
                 }
                 html = html + "</tbody></table>";
 
+                html = html + "<a href='"+response.activation_output+"' target=_blank>Download Activation Result</a>";
+
                 if (response.evaluation_results.length > 0) {
                     html = html + "<hr><h4>Model Evaluation Results</h4><br/><br/>";
                     html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
