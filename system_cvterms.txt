@@ -264,7 +264,9 @@ protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
-protocol_property	vcf_map_details	Information about protocol, such as marker set	6/20/2018	nm529	00098
+protocol_property	vcf_map_details	Information about protocol, such as marker names, header info lines, and reference_genome_name	6/20/2018	nm529	00098
+protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
+protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
 composable_cvs	trait_ontology		05/01/2017		00073
 composable_cvs	composed_trait_ontology		05/01/2017		00073
 composable_cvs	object_ontology		05/01/2017		00073

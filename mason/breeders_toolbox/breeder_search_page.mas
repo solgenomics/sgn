@@ -161,6 +161,20 @@ $dataset_id => undef
             <tr>
               <td><input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input></td>
             </tr>
+            <tr>
+              <td>
+                <span>Chromosome</span>
+                <input placeholder="" type="number" class="wizard-download-genotypes-chromosome-number form-control">
+              </td>
+              <td>
+                <span>Start Position</span>
+                <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control">
+              </td>
+              <td>
+                <span>End Position</span>
+                <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control">
+              </td>
+            </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-genotypes btn btn-sm btn-primary">
