@@ -506,28 +506,28 @@ def: "" []
 is_a: TIME:0000005
 
 [Term]
-id: TIME:0000141
+id: TIME:0000072
 name: month 13
 synonym: "Mo13" EXACT []
 def: "" []
 is_a: TIME:0000005
 
 [Term]
-id: TIME:0000142
+id: TIME:0000073
 name: month 14
 synonym: "Mo14" EXACT []
 def: "" []
 is_a: TIME:0000005
 
 [Term]
-id: TIME:0000143
+id: TIME:0000074
 name: month 15
 synonym: "Mo15" EXACT []
 def: "" []
 is_a: TIME:0000005
 
 [Term]
-id: TIME:0000144
+id: TIME:0000075
 name: month 16
 synonym: "Mon16" EXACT []
 def: "" []
