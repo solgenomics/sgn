@@ -32,7 +32,7 @@ __PACKAGE__->config(
         my $source_id = $c->req->param("source_id");
         my $data_level = $c->req->param("data_level");
         my %longest_hash;
-        #print STDERR "Data type is $data_type and id is $value\n";
+        print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
 
         my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
@@ -121,6 +121,9 @@ __PACKAGE__->config(
            $end_number = $start_number + $labels_to_download;
        }
 
+       if ($start_number) { $start_number--; } #zero index
+       if ($end_number) { $end_number--; } #zero index 
+
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
        my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
@@ -148,7 +151,7 @@ __PACKAGE__->config(
        # initialize loop variables
        my $col_num = 1;
        my $row_num = 1;
-       my $key_number = 1;
+       my $key_number = 0;
        my $sort_order = $design_params->{'sort_order'};
 
        # initialize barcode objs
@@ -290,7 +293,11 @@ __PACKAGE__->config(
            my $zpl_template = $zpl_obj->render();
            foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
 
-               if ($key_number >= $labels_to_download){
+               if ($start_number && ($key_number < $start_number)){
+                   $key_number++;
+                   next;
+               }
+               if ($end_number && ($key_number > $end_number)){
                    last;
                }
 
@@ -409,7 +416,8 @@ sub get_trial_design {
         data_level => $type,
         treatment_project_ids => \@treatment_ids,
         selected_columns => $selected_columns{$type},
-        selected_trait_ids => []
+        selected_trait_ids => [],
+        use_synonyms => 'false'
     });
     my $layout = $trial_layout_download->get_layout_output();
 

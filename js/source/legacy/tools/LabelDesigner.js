@@ -1330,10 +1330,16 @@ function initializeCustomModal(add_fields) {
     });
 
     $("#d3-custom-preview").on("click", function() {
-        var value = $(this).find('option:selected').text();
         var custom_field = $("#d3-custom-input").val() + value;
-
-        var result = custom_field.replace(/\{(.*?)\}/g, fillInPlaceholders);
+        var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
+            console.log("token is "+token);
+            if (token.match(/Number:/)) {
+                var parts = token.split(':');
+                return parts[1];
+            } else {
+                return add_fields[token];
+            }
+        });
         $("#d3-custom-content").text(result);
     });
 
@@ -1391,7 +1397,7 @@ function saveLabelDesign() {
 function fillInPlaceholders(match, placeholder) { // replace placeholders with actual values
         var filled = add_fields[placeholder];
         // console.log("Filling "+placeholder+" with "+filled);
-        if (typeof filled === 'undefined') {
+        if (typeof filled === 'undefined' && !placeholder.match(/Number:/)) {
             // console.log(placeholder+" is undefined. Alerting with warning");
             alert("Missing field. Your selected design includes the field "+placeholder+" which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area.")
         }

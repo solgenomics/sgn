@@ -259,12 +259,14 @@ sub get_layout_output {
     my $exact_performance_hash;
     if ($data_level eq 'plots') {
         if ($include_measured eq 'true') {
+            print STDERR "Getting exact trait values\n";
             my $exact = CXGN::Phenotypes::Exact->new({
                 bcs_schema=>$schema,
                 trial_id=>$trial_id,
                 data_level=>'plot'
             });
             $exact_performance_hash = $exact->search();
+            print STDERR "Exact Performance hash is ".Dumper($exact_performance_hash)."\n";
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plot', ['treatment_experiment']) : [];
@@ -337,6 +339,7 @@ sub get_layout_output {
         $selected_cols{'exported_tissue_sample_name'} = 1;
     }
 
+    print STDERR "Treatment stock hashes\n";
     my @treatment_stock_hashes;
     foreach my $u (@treatment_units_array){
         my %treatment_stock_hash;
@@ -358,6 +361,7 @@ sub get_layout_output {
     my @traits = (@exact_trait_names, @overall_trait_names);
 
     if ($use_synonyms eq 'true') {
+        print STDERR "Getting synonyms\n";
         my $t = CXGN::List::Transform->new();
         my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', \@traits);
         my @trait_ids = @{$trait_id_list->{'transform'}};
@@ -365,9 +369,10 @@ sub get_layout_output {
         my @missing = @{$synonym_list->{'missing'}};
 
         if (scalar @missing) {
-            push @error_messages, "Traits @missing don't have synonyms. Please turn off synonym option before proceeding\n";
-            $errors{'error_messages'} = \@error_messages;
-            return \%errors;
+            print STDERR "Traits @missing don't have synonyms. Sticking with full trait names instead\n";
+            #push @error_messages, "Traits @missing don't have synonyms. Please turn off synonym option before proceeding\n";
+            #$errors{'error_messages'} = \@error_messages;
+            #return \%errors;
         } else {
             @traits = @{$synonym_list->{'transform'}};
         }
