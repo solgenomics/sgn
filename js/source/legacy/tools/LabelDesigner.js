@@ -1330,7 +1330,7 @@ function initializeCustomModal(add_fields) {
     });
 
     $("#d3-custom-preview").on("click", function() {
-        var custom_field = $("#d3-custom-input").val() + value;
+        var custom_field = $("#d3-custom-input").val();
         var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
             console.log("token is "+token);
             if (token.match(/Number:/)) {

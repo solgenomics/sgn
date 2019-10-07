@@ -32,7 +32,7 @@ __PACKAGE__->config(
         my $source_id = $c->req->param("source_id");
         my $data_level = $c->req->param("data_level");
         my %longest_hash;
-        print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
+        #print STDERR "Data type is $data_type and id is $source_id and data level is $data_level\n";
 
         my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
 
@@ -122,7 +122,7 @@ __PACKAGE__->config(
        }
 
        if ($start_number) { $start_number--; } #zero index
-       if ($end_number) { $end_number--; } #zero index 
+       if ($end_number) { $end_number--; } #zero index
 
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
@@ -357,9 +357,13 @@ sub get_trial_from_stock_list {
     my $ids = shift;
     my @ids = @{$ids};
 
+    my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+    my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+
     my $trial_rs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({
         stock_id => { -in => \@ids }
-    })->search_related('nd_experiment')->search_related('nd_experiment_projects');
+    })->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id]
+    })->search_related('nd_experiment_projects');
     my %trials = ();
     while (my $row = $trial_rs->next()) {
         #print STDERR "Looking at id ".$row->project_id()."\n";
@@ -375,14 +379,16 @@ sub get_trial_from_stock_list {
 sub filter_by_list_items {
     my $full_design = shift;
     my $stock_ids = shift;
+    my $type = shift;
     my %full_design = %{$full_design};
     my @stock_ids = @{$stock_ids};
     my %plot_design;
 
     foreach my $i (0 .. $#stock_ids) {
+        print STDERR "Stock id is ".$stock_ids[$i]."\n";
         foreach my $key (keys %full_design) {
-            if ($full_design{$key}->{'plot_id'} eq $stock_ids[$i]) {
-                print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
+            if ($full_design{$key}->{$type} eq $stock_ids[$i]) {
+                #print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
                 $plot_design{$key} = $full_design{$key};
                 $plot_design{$key}->{'list_order'} = $i;
             }
@@ -402,6 +408,12 @@ sub get_trial_design {
         plants => {plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
         subplots => {subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,rep_number=>1,range_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1},
         field_trial_tissue_samples => {tissue_sample_name=>1,tissue_sample_id=>1,plant_name=>1,plant_id=>1,subplot_name=>1,subplot_id=>1,plot_name=>1,plot_id=>1,accession_name=>1,accession_id=>1,plot_number=>1,block_number=>1,is_a_control=>1,range_number=>1,rep_number=>1,row_number=>1,col_number=>1,seedlot_name=>1,seed_transaction_operator=>1,num_seed_per_plot=>1,subplot_number=>1,plant_number=>1,tissue_sample_number=>1,pedigree=>1,location_name=>1,trial_name=>1,year=>1,tier=>1,plot_geo_json=>1}
+    );
+    my %unique_identifier = (
+        plots => 'plot_id',
+        plants => 'plant_id',
+        subplots => 'subplot_id',
+        field_trial_tissue_samples => 'tissue_sample_id',
     );
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -446,14 +458,13 @@ sub get_trial_design {
                 }
             }
             $detail_hash{'management_factor'} = join(",", @applied_treatments);
-            $mapped_design{$i} = \%detail_hash;
+            $mapped_design{$detail_hash{$unique_identifier{$type}}} = \%detail_hash;
 
         }
         else {
             @keys = @{$inner_array};
         }
     }
-    #print STDERR "Mapped design hash is ".Dumper(%mapped_design);
     return \%mapped_design;
 }
 
@@ -471,7 +482,9 @@ sub get_data {
 
     if ($data_level eq "list") {
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
-        my @list_items = map { $_->[1] } $list_data;
+        foreach my $item (@{$list_data}) {
+            $design->{$item->[0]} = { 'list_item_name' => $item->[1], 'list_item_id' => $item->[0] };
+        }
     }
     elsif ($data_level eq "plate") {
         $design = get_trial_design($c, $schema, $id, 'plate');
@@ -484,19 +497,18 @@ sub get_data {
             my $list_ids = convert_stock_list($c, $schema, $id);
             my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'plots');
-            $design = filter_by_list_items($design, $list_ids);
+            $design = filter_by_list_items($design, $list_ids, 'plot_id');
         }
     }
     elsif ($data_level eq "plants") {
         if ($data_type =~ m/Field Trials/) {
             $design = get_trial_design($c, $schema, $id, 'plants');
-            # print STDERR "Design is ".Dumper($design);
         }
         elsif ($data_type =~ m/List/) {
             my $list_ids = convert_stock_list($c, $schema, $id);
             my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'plants');
-            $design = filter_by_list_items($design, $list_ids);
+            $design = filter_by_list_items($design, $list_ids, 'plant_id');
         }
     }
     elsif ($data_level eq "subplots") {
@@ -507,7 +519,7 @@ sub get_data {
             my $list_ids = convert_stock_list($c, $schema, $id);
             my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'subplots');
-            $design = filter_by_list_items($design, $list_ids);
+            $design = filter_by_list_items($design, $list_ids, 'subplot_id');
         }
     }
     elsif ($data_level eq "tissue_samples") {
@@ -518,9 +530,10 @@ sub get_data {
             my $list_ids = convert_stock_list($c, $schema, $id);
             my ($trial_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
             $design = get_trial_design($c, $schema, $trial_id, 'field_trial_tissue_samples');
-            $design = filter_by_list_items($design, $list_ids);
+            $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
         }
     }
+    #print STDERR "Design is ".Dumper($design)."\n";
     return $num_trials, $design;
 }
 
