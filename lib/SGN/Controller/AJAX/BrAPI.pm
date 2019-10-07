@@ -51,12 +51,15 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 	my $page = $c->req->param("page") || 0;
 	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
-	my $bearer_token = $c->req->headers->header("Authorization");
+	my $authorization_token = $c->req->headers->header("Authorization");
+	my $bearer_token = undef;
 
-	if (defined $bearer_token) {
-		my @bearer = split(" ", $bearer_token);
+	if (defined $authorization_token) {
+		my @bearer = split(/\s/, $authorization_token);
 		if (scalar @bearer == 2) {
-			$bearer_token = $bearer[1];
+			if ($bearer[0] eq "Bearer") {
+				$bearer_token = $bearer[1];
+			}
 		}
 	}
 
