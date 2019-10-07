@@ -118,7 +118,7 @@ __PACKAGE__->config(
 
        if ($labels_to_download) {
            $start_number = $start_number || 1;
-           $end_number = $start_number + $labels_to_download;
+           $end_number = $labels_to_download;
        }
 
        if ($start_number) { $start_number--; } #zero index
