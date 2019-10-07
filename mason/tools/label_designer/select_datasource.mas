@@ -1,0 +1,18 @@
+<br/>
+<p>This workflow will guide you through the steps to design your own custom labels.</p>
+<p>The first step is to select a data source. Select a field, genotyping, or crossing trial to populate your labels with the trial design information. Or select a list to populate your label with the list contents.</p>
+<p>For data sources with multiple levels of information you will also be asked to pick a level (plot, plant, etc.) before proceeding.</p>
+<p>If you have trouble at any point during the process, please reference the Label Designer section of the manual to see more detailed instructions and illustrative animations.</p>
+<br/><br/>
+<div class="col-md-2 text-center">
+    <label><b>Data Source:</b></label>
+</div>
+<div class="col-md-4" id="data_source">
+</div>
+<div class="col-md-2 text-center">
+    <label>Label For Every:</label>
+</div>
+<div class="col-md-4">
+    <div id="label_designer_data_level_select_div"></div>
+</div>
+<br/>
