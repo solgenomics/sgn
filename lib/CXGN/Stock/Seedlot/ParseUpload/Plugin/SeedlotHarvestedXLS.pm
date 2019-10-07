@@ -76,8 +76,8 @@ sub _validate_with_plugin {
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
         push @error_messages, "Cell A1: seedlot_name is missing from the header";
     }
-    if (!$cross_name_head || $cross_name_head ne 'cross_name') {
-        push @error_messages, "Cell B1: cross_name is missing from the header";
+    if (!$cross_name_head || $cross_name_head ne 'cross_unique_id') {
+        push @error_messages, "Cell B1: cross_unique_id is missing from the header";
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
         push @error_messages, "Cell C1: operator_name is missing from the header";
@@ -144,7 +144,7 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell B:$row_name: you must provide a cross_name for the contents of the seedlot.";
+            push @error_messages, "Cell B:$row_name: you must provide a cross_unique_id for the contents of the seedlot.";
         } else {
             if ($cross_name){
                 $seen_cross_names{$cross_name}++;

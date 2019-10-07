@@ -63,7 +63,7 @@ $cross_uniquename => ''
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="seedlot_cross_uniquename" placeholder="One Content Required" disabled value="<% $cross_uniquename %>">
                                         </div>
@@ -85,7 +85,7 @@ $cross_uniquename => ''
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="seedlot_cross_uniquename" placeholder="One Content Required">
                                         </div>
@@ -183,10 +183,10 @@ jQuery(document).ready(function(){
         else if (amount == '' && weight == '') { alert("Please provide an seed count amount or a weight in grams!"); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
         else if (accession_uniquename == '' && cross_uniquename == '') {
-            alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
+            alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
         }
         else if (accession_uniquename != '' && cross_uniquename != '') {
-            alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
+            alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
         }
         else {
 
@@ -209,9 +209,9 @@ jQuery(document).ready(function(){
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');
                 },
-                success: function(response) { 
+                success: function(response) {
                     jQuery('#working_modal').modal('hide');
-                    if (response.success == 1) { 
+                    if (response.success == 1) {
                         alert("The seedlot has been created.");
                         jQuery('#add_seedlot_dialog').modal('hide');
                         //seedlots_table.ajax.reload();

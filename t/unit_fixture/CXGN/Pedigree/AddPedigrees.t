@@ -48,7 +48,7 @@ ok($pedigree3->set_female_parent($female_parent3), "Set a female parent for a pe
 
 # sib
 #
-ok(my $pedigree4 = Bio::GeneticRelationships::Pedigree->new(name => "XG120262", cross_type => "sib"),"Create pedigree object");
+ok(my $pedigree4 = Bio::GeneticRelationships::Pedigree->new(name => "XG120261", cross_type => "sib"),"Create pedigree object");
 ok(my $female_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
 ok(my $male_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
 ok($pedigree4->set_female_parent($female_parent4), "Set a female parent for a pedigree");
@@ -56,7 +56,7 @@ ok($pedigree4->set_male_parent($male_parent4), "Set a male parent for a pedigree
 
 
 my @pedigrees;
-for my $p ($pedigree, $pedigree2, $pedigree3) {
+for my $p ($pedigree, $pedigree2, $pedigree3, $pedigree4) {
     push (@pedigrees, $p);
 }
 

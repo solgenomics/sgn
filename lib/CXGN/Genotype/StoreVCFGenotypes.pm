@@ -487,7 +487,17 @@ has 'snp_vcf_cvterm_id' => (
 has 'vcf_map_details_id' => (
     isa => 'Int',
     is => 'rw',
-    );
+);
+
+has 'vcf_map_details_markers_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
+has 'vcf_map_details_markers_array_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
 
 has 'design_cvterm' => (
     isa => 'Ref',
@@ -736,7 +746,13 @@ sub store_metadata {
     
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     $self->vcf_map_details_id($vcf_map_details_id);
-    
+
+    my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
+    $self->vcf_map_details_markers_cvterm_id($vcf_map_details_markers_cvterm_id);
+
+    my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
+    $self->vcf_map_details_markers_array_cvterm_id($vcf_map_details_markers_array_cvterm_id);
+
     my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
     $self->population_members_id($population_members_id);
     
@@ -811,11 +827,21 @@ sub store_metadata {
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($map_protocol_description, $protocol_id);
 
-        #Save the protocolprop. This json string contains the details for the maarkers used in the map.
-        my $json_string = encode_json $self->protocol_info;
+        my $new_protocol_info = $self->protocol_info;
+        my $nd_protocolprop_markers = $new_protocol_info->{markers};
+        my $nd_protocolprop_markers_array = $new_protocol_info->{markers_array};
+        my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers;
+        my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers_array;
+
+        delete($new_protocol_info->{markers});
+        delete($new_protocol_info->{markers_array});
+
+        my $nd_protocol_json_string = encode_json $new_protocol_info;
         my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, value) VALUES (?, ?, ?);";
         my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
-        $h_protocolprop->execute($protocol_id, $vcf_map_details_id, $json_string);
+        $h_protocolprop->execute($protocol_id, $vcf_map_details_id, $nd_protocol_json_string);
+        $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_cvterm_id, $nd_protocolprop_markers_json_string);
+        $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_array_cvterm_id, $nd_protocolprop_markers_array_json_string);
 
         print STDERR "Protocolprop stored...\n";
     }
