@@ -391,20 +391,23 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     my $default = $c->req->param("default") || 0;
 
     my $user_id = $c->user()->get_sp_person_id();
-    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'plots');
-    my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh(), 'plots');
+
+    # my $all_lists = CXGN::List::all_types($c->dbc->dbh());
+
+    my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id );
+    my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh() );
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
     my $projects = $p->get_breeding_programs();
 
-    my (@field_trials, @cross_trials, @genotyping_trials) = [];
+    my (@field_trials, @crossing_trials, @genotyping_trials) = [];
     foreach my $project (@$projects) {
-      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      my ($field_trials, $crossing_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
           push @field_trials, $_;
       }
-      foreach (@$cross_trials) {
-          push @cross_trials, $_;
+      foreach (@$crossing_trials) {
+          push @crossing_trials, $_;
       }
       foreach (@$genotyping_trials) {
           push @genotyping_trials, $_;
@@ -412,14 +415,6 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     }
 
     my @choices = [];
-    push @choices, '__Your Plot Lists';
-    foreach my $item (@$lists) {
-        push @choices, [@$item[0], @$item[1]];
-    }
-    push @choices, '__Public Plot Lists';
-    foreach my $item (@$public_lists) {
-        push @choices, [@$item[0], @$item[1]];
-    }
     push @choices, '__Field Trials';
     @field_trials = sort { $a->[1] cmp $b->[1] } @field_trials;
     foreach my $trial (@field_trials) {
@@ -430,11 +425,19 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $trial (@genotyping_trials) {
         push @choices, $trial;
     }
-    push @choices, '__Cross Trials';
-    @cross_trials = sort { $a->[1] cmp $b->[1] } @cross_trials;
-    foreach my $trial (@cross_trials) {
-        push @choices, $trial;
+    push @choices, '__Lists';
+    foreach my $item (@$lists) {
+        push @choices, [@$item[0], @$item[1]];
     }
+    push @choices, '__Public Lists';
+    foreach my $item (@$public_lists) {
+        push @choices, [@$item[0], @$item[1]];
+    }
+    # push @choices, '__Crossing Trials';
+    # @crossing_trials = sort { $a->[1] cmp $b->[1] } @crossing_trials;
+    # foreach my $trial (@crossing_trials) {
+    #     push @choices, $trial;
+    # }
     #
     print STDERR "Choices are:\n".Dumper(@choices);
 

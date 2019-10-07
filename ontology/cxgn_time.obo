@@ -3338,3 +3338,30 @@ name: day 365
 synonym: "D365" EXACT []
 def: "" []
 is_a: TIME:0000005
+
+[Term]
+id: TIME:0000477
+name: Event relations
+def: "Terms that can be linked with other time terms to specify their relation to breeding events" []
+is_a: TIME:0000000
+
+[Term]
+id: TIME:0000478
+name: after planting
+synonym: "AftPlt" EXACT []
+def: "" []
+is_a: TIME:0000477
+
+[Term]
+id: TIME:0000479
+name: before harvest
+synonym: "BfrHvt" EXACT []
+def: "" []
+is_a: TIME:0000477
+
+[Term]
+id: TIME:0000480
+name: after harvest
+synonym: "AftHvt" EXACT []
+def: "" []
+is_a: TIME:0000477

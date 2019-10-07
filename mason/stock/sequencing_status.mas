@@ -3,6 +3,10 @@
 $stock_id
 </%args>
 
+<& /util/import_javascript.mas,
+  entries => ["sequenced_accessions"]
+&>
+
 <div id="sequenced_stocks_div">[loading...]</div>
 
 <script>

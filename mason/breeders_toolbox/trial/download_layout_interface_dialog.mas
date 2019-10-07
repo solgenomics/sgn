@@ -90,10 +90,18 @@ $download_type
                 <div id="accession_average_performance">
                     <div class="well">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Optional: Include columns for average performance of accessions (for all measurements in database) for list of traits: </label>
-                            <div class="col-sm-9" >
+                            <label class="col-sm-2 control-label">Include existing plot phenotypes: </label>
+                            <div class="col-sm-1" >
+                                 <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
+                            </div>
+                            <label class="col-sm-3 control-label">Include summary of overall accession performance (for a list of traits): </label>
+                            <div class="col-sm-3" >
                                 <div id="create_fieldbook_with_trait_list_<% $download_type %>">
                                 </div>
+                            </div>
+                            <label class="col-sm-2 control-label">Use trait synonyms: </label>
+                            <div class="col-sm-1" >
+                                 <input id="create_fieldbook_use_synonyms_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
                             </div>
                         </div>
                     </div>
@@ -160,7 +168,7 @@ jQuery(document).ready(function() {
         jQuery('#create_fieldbook_dialog_TrialLayout').modal('show');
         show_fieldbook_treatments_TrialLayout();
     });
-    
+
     jQuery("#trial_fieldmap_download_layout_button").click( function () {
         jQuery('#management_factore').css("display", "none");
         jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xls']").prop('selected', true);
@@ -182,7 +190,7 @@ jQuery(document).ready(function() {
         jQuery('#create_fieldbook_dialog_Fieldbook').modal('show');
         show_fieldbook_treatments_Fieldbook();
     });
-        
+
     jQuery('#create_fieldbook_ok_button_<% $download_type %>').on('click', function() {
         open_create_fieldbook_dialog_<% $download_type %>();
     });
@@ -289,7 +297,7 @@ jQuery(document).ready(function() {
 function show_available_columns_<% $download_type %>(level){
     not_selected_columns_<% $download_type %> = {'synonyms':1,'trial_name':1,'location_name':1,'year':1,'pedigree':1,'tier':1,'seedlot_name':1,'seed_transaction_operator':1,'num_seed_per_plot':1,'range_number':1, 'plot_geo_json':1};
     var not_inc_html_<% $download_type %> = '<h2><span class="label label-info">synonyms &nbsp;<a onClick="include_column_<% $download_type %>(\'synonyms\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">trial_name &nbsp;<a onClick="include_column_<% $download_type %>(\'trial_name\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">location_name &nbsp;<a onClick="include_column_<% $download_type %>(\'location_name\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">year &nbsp;<a onClick="include_column_<% $download_type %>(\'year\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">pedigree &nbsp;<a onClick="include_column_<% $download_type %>(\'pedigree\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">tier &nbsp;<a onClick="include_column_<% $download_type %>(\'tier\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">seedlot_name &nbsp;<a onClick="include_column_<% $download_type %>(\'seedlot_name\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">seed_transaction_operator &nbsp;<a onClick="include_column_<% $download_type %>(\'seed_transaction_operator\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">num_seed_per_plot &nbsp;<a onClick="include_column_<% $download_type %>(\'num_seed_per_plot\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">range_number &nbsp;<a onClick="include_column_<% $download_type %>(\'range_number\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2><h2><span class="label label-info">plot_geo_json &nbsp;<a onClick="include_column_<% $download_type %>(\'plot_geo_json\')"><span title="Include" class="glyphicon glyphicon-ok-circle" style="color:green"></span></a></span></h2>';
-    
+
     selected_columns_<% $download_type %> = {};
     var included_html_<% $download_type %> = '';
     if(level == 'plots'){
@@ -370,6 +378,8 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
             'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
+            'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
+            'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
             'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val()
         },
         beforeSend: function() {
@@ -409,7 +419,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
     var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
-    console.log(format); 
+    console.log(format);
     //Calls SGN::Controller:BreedersToolbox::Trial
     window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id);
 }
