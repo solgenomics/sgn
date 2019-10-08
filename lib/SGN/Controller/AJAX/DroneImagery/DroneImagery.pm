@@ -3967,11 +3967,12 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $model_id = $c->req->param('model_id');
+    my $model_prediction_type = $c->req->param('model_prediction_type');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $user_id, $user_name, $user_role);
+    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -3985,6 +3986,7 @@ sub _perform_keras_cnn_predict {
     my $model_id = shift;
     my $drone_run_ids = shift;
     my $plot_polygon_type_ids = shift;
+    my $model_prediction_type = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -4012,6 +4014,42 @@ sub _perform_keras_cnn_predict {
         push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
         push @{$data_hash{$_->{stock_id}}->{image_urls}}, $image_url;
         push @{$data_hash{$_->{stock_id}}->{image_ids}}, $image_id;
+    }
+    my @unique_stock_ids = keys %data_hash;
+
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $replicate_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id;
+    my $block_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+
+    my $stock_ids_sql = join ',', @unique_stock_ids;
+    my $stock_metadata_q = "SELECT stock.stock_id, stock.uniquename, germplasm.uniquename, germplasm.stock_id, plot_number.value, rep.value, block_number.value, col_number.value, row_number.value
+        FROM stock
+        JOIN stock_relationship ON(stock.stock_id=stock_relationship.subject_id AND stock_relationship.type_id=$plot_of_cvterm_id)
+        JOIN stock AS germplasm ON(stock_relationship.object_id=germplasm.stock_id)
+        LEFT JOIN stockprop AS plot_number ON(stock.stock_id=plot_number.stock_id AND plot_number.type_id=$plot_number_cvterm_id)
+        LEFT JOIN stockprop AS rep ON(stock.stock_id=rep.stock_id AND rep.type_id=$replicate_cvterm_id)
+        LEFT JOIN stockprop AS block_number ON(stock.stock_id=block_number.stock_id AND block_number.type_id=$block_number_cvterm_id)
+        LEFT JOIN stockprop AS col_number ON(stock.stock_id=col_number.stock_id AND col_number.type_id=$col_number_cvterm_id)
+        LEFT JOIN stockprop AS row_number ON(stock.stock_id=row_number.stock_id AND row_number.type_id=$row_number_cvterm_id)
+        WHERE stock.type_id=$plot_cvterm_id AND stock.stock_id IN ($stock_ids_sql)";
+    my $stock_metadata_h = $schema->storage->dbh()->prepare($stock_metadata_q);
+    $stock_metadata_h->execute();
+    my %stock_info;
+    while (my ($stock_id, $stock_uniquename, $germplasm_uniquename, $germplasm_stock_id, $plot_number, $rep, $block, $col, $row) = $stock_metadata_h->fetchrow_array()) {
+        $stock_info{$stock_id} = {
+            uniquename => $stock_uniquename,
+            germplasm_uniquename => $germplasm_uniquename,
+            germplasm_stock_id => $germplasm_stock_id,
+            plot_number => $plot_number,
+            replicate => $rep,
+            block_number => $block,
+            row_number => $row,
+            col_number => $col
+        };
     }
 
     my $model_q = "SELECT basename, dirname, class_map.value, trained_trait.value, model_type.value
@@ -4052,7 +4090,6 @@ sub _perform_keras_cnn_predict {
     my $trait_name = $phenotype_header->[39];
     foreach (@previous_data) {
         $data_hash{$_->[21]}->{previous_data} = $_->[39];
-        $data_hash{$_->[21]}->{stock_name} = $_->[22];
     }
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
@@ -4067,14 +4104,12 @@ sub _perform_keras_cnn_predict {
     my @image_paths;
     my @image_urls;
     my @stock_ids;
-    my @stock_names;
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         while (my ($stock_id, $data) = each %data_hash){
             my $image_ids_ref = $data->{image_ids};
             my $image_fullpaths_ref = $data->{image_fullpaths};
             my $image_urls_ref = $data->{image_urls};
             my $previous_data = $data->{previous_data} || '';
-            my $stock_name = $data->{stock_name};
             my $iterator = 0;
             foreach (@$image_fullpaths_ref) {
                 print $F '"'.$stock_id.'",';
@@ -4083,7 +4118,6 @@ sub _perform_keras_cnn_predict {
                 print $F "\n";
                 push @image_paths, $_;
                 push @stock_ids, $stock_id;
-                push @stock_names, $stock_name;
                 push @image_urls, $image_urls_ref->[$iterator];
                 push @image_ids, $image_ids_ref->[$iterator];
                 $iterator++;
@@ -4098,11 +4132,15 @@ sub _perform_keras_cnn_predict {
     my $status = system($cmd);
 
     my @result_agg;
+    my $num_class_probabilities;
+    my @data_matrix;
+    my $iter = 0;
+    my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'previous_value');
+
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_output_file)
         or die "Could not open file '$archive_temp_output_file' $!";
 
-        my $iter = 0;
         while ( my $row = <$fh> ){
             my @columns;
             if ($csv->parse($row)) {
@@ -4112,10 +4150,47 @@ sub _perform_keras_cnn_predict {
             my $class = $class_map_hash->{$prediction};
             my $stock_id = $stock_ids[$iter];
             my $class_probabilities = join ',', @columns;
-            push @result_agg, [$stock_names[$iter], $stock_id, $image_urls[$iter], $prediction, $class, $data_hash{$stock_id}->{previous_data}, $class_probabilities, $image_ids[$iter]];
+            $num_class_probabilities = scalar(@columns);
+            my $previous_value = $data_hash{$stock_id}->{previous_data};
+            push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value);
+            push @data_matrix, @columns;
+            push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $class, $previous_value, $class_probabilities, $image_ids[$iter]];
             $iter++;
         }
     close($fh);
+
+    my @cnn_pred_colnames;
+    for (1..$num_class_probabilities) {
+        push @cnn_pred_colnames, "CNNp".$_;
+    }
+    push @data_matrix_colnames, @cnn_pred_colnames;
+
+    if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
+        print STDERR "CNN Feature Generator Mixed Model\n";
+
+        my $rmatrix = R::YapRI::Data::Matrix->new({
+            name => 'matrix1',
+            coln => scalar(@data_matrix_colnames),
+            rown => $iter,
+            colnames => \@data_matrix_colnames,
+            data => \@data_matrix
+        });
+        
+        my $rbase = R::YapRI::Base->new();
+        my $r_block = $rbase->create_block('r_block');
+        $rmatrix->send_rbase($rbase, 'r_block');
+        $r_block->add_command('library(lme4)');
+        my $cnn_pred_col_formula = join ' + ', @cnn_pred_colnames;
+        $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
+        $r_block->add_command('mixed.lmer <- lmer(previous_value ~ '.$cnn_pred_col_formula.' + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
+        $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+        $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+        $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
+        $r_block->run_block();
+        my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
+        print STDERR Dumper $result_matrix;
+        # push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+    }
 
     my @evaluation_results;
     open(my $fh_eval, '<', $archive_temp_output_evaluation_file)

@@ -1248,8 +1248,24 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 </&>
                 <&| /util/workflow.mas:step, title=> "Confirm" &>
                     <& /page/page_title.mas, title=>"Predict Phenotypes!" &>
-
                     <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Prediction Model: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="drone_imagery_keras_model_prediction_select">
+                                    <option value="standard_cnn">Standard CNN Prediction</option>
+                                    <option value="cnn_feature_generator_mixed_model">CNN Feature Generator For Mixed Model Prediction</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div" style="display:none">
+                        $$y_t = \beta_{CNNp1} + \beta_{CNNp2} + \dots + \beta_{CNNpd} + rep + 1|\mbox{GermplasmName}$$
+                    </div>
+                    <br/><br/>
+
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_predict_keras_model_confirm_step">Submit</button>
                     </center>
@@ -2564,9 +2580,18 @@ jQuery(document).ready(function() {
         return false;
     });
 
+    jQuery('#drone_imagery_keras_model_prediction_select').change(function(){
+        if (jQuery(this).val() == 'cnn_feature_generator_mixed_model') {
+            jQuery('#drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div').hide();
+        }
+    });
+
     jQuery('#drone_imagery_predict_keras_model_confirm_step').click(function(){
         jQuery.ajax({
-            url : '/api/drone_imagery/predict_keras_model?field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids)+'&model_id='+manage_drone_imagery_predict_keras_model_id,
+            url : '/api/drone_imagery/predict_keras_model?field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids)+'&model_id='+manage_drone_imagery_predict_keras_model_id+'&model_prediction_type='+jQuery('#drone_imagery_keras_model_prediction_select').val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
