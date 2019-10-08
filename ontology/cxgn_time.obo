@@ -988,16 +988,42 @@ def: "" []
 is_a: TIME:0000005
 
 [Term]
-id: TIME:0000141
+id: TIME:0000145
 name: at pre-flowering
 synonym: "PreFLW" EXACT []
 def: "" []
 is_a: TIME:0000076
 
 [Term]
-id: TIME:0000142
+id: TIME:0000146
 name: at post-flowering
 synonym: "PostFLW" EXACT []
 def: "" []
 is_a: TIME:0000076
 
+[Term]
+id: TIME:0000147
+name: Event relations
+def: "Terms that can be linked with other time terms to specify their relation to breeding events" []
+is_a: TIME:0000000
+
+[Term]
+id: TIME:0000148
+name: after planting
+synonym: "AftPlt" EXACT []
+def: "" []
+is_a: TIME:0000147
+
+[Term]
+id: TIME:0000149
+name: before harvest
+synonym: "BfrHvt" EXACT []
+def: "" []
+is_a: TIME:0000147
+
+[Term]
+id: TIME:0000150
+name: after harvest
+synonym: "AftHvt" EXACT []
+def: "" []
+is_a: TIME:0000147
