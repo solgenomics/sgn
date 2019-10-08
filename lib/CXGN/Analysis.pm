@@ -16,6 +16,8 @@ has 'bcs_schema' => (is => 'rw', isa => 'Ref' );
 
 has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema');
 
+has 'project_id' => (is => 'rw', isa => 'Int');
+
 has 'name' => (is => 'rw', isa => 'Str');
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
@@ -43,6 +45,8 @@ sub BUILD {
     if ($args->{project_id}) {
 	my $row = $args->{bcs_schema}->resultset("Project::Project")->find( { project_id => $args->{project_id} });
 
+	if (! $row) { return undef; }
+	
 	$self->name($row->name());
 	$self->description($row->description());
 	

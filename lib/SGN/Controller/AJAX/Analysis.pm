@@ -230,7 +230,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
 
     my @table;
     foreach my $a (@analyses) {
-	push @table, [ $a->name(), $a->description() ];
+	push @table, [ '<a href="/analyses/'.$a->project_id().'">'.$a->name()."</a>", $a->description() ];
     }
 
     print STDERR Dumper(\@table);
