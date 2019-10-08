@@ -21,28 +21,28 @@ my $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 my $expected_response = {
+          'num_units' => 692,
           'fields' => {
-                        'block_number' => '10',
-                        'year' => '2014',
-                        'plot_name' => 'KASESE_TP2013_1000',
-                        'fresh root weight|CO_334:0000012' => '15.37',
-                        'accession_name' => 'UG120054',
-                        'tier' => '/',
-                        'plot_id' => 39295,
-                        'pedigree' => 'NA/NA',
-                        'plot_number' => 35667,
+                        'plot_id' => 39252,
                         'trial_name' => 'Kasese solgs trial',
+                        'block_number' => '56',
+                        'tier' => '/',
+                        'location_name' => 'test_location',
                         'rep_number' => '1',
-                        'accession_id' => 38926,
-                        'fresh shoot weight measurement in kg|CO_334:0000016' => '13.5',
-                        'dry matter content percentage|CO_334:0000092' => '21.2',
-                        'location_name' => 'test_location'
+                        'year' => '2014',
+                        'dry matter content percentage|CO_334:0000092' => '24.4',
+                        'accession_name' => 'UG130095',
+                        'fresh shoot weight measurement in kg|CO_334:0000016' => '18.5',
+                        'pedigree' => 'NA/NA',
+                        'plot_number' => 36031,
+                        'fresh root weight|CO_334:0000012' => '11.34',
+                        'accession_id' => 39211,
+                        'plot_name' => 'KASESE_TP2013_1016'
                       },
           'reps' => {
-                      '2' => 322,
-                      '1' => 370
-                    },
-          'num_units' => 692
+                      '1' => 370,
+                      '2' => 322
+                    }
         };
 
 
