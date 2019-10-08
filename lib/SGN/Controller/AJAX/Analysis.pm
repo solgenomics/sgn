@@ -28,7 +28,8 @@ sub store_analysis_json_POST {
     my $dataset_id = $c->req->param("dataset_id");
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
-
+    my $trait => $c->req->param("trait");
+    
     if (my $error = $self->check_user($c)) {
 	$c->stash->{rest} = { error =>  $error };
 	return;
@@ -47,12 +48,13 @@ sub store_analysis_json_POST {
     my @traits;
     my %values;
     
-    my $analysis_type_id = $analysis_type_row->cvterm_id();    
-    push @traits, $analysis_type_id;
+    my $analysis_type_id = $analysis_type_row->cvterm_id();
+    
+    push @traits, $trait;
     
     my %values = JSON::Any->decode($params, $data); 
     
-    $self->store_data($c, $params, \%values, \@stocks, \@plots, $user_id);
+    $self->store_data($c, $params, \%values, \@stocks, \@plots, \@traits, $user_id);
 }
 
 sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
@@ -98,7 +100,6 @@ sub store_analysis_file_POST {
     my %values;
     
     my $analysis_type_id = $analysis_type_row->cvterm_id();    
-    push @traits, $analysis_type_id;
 
     my $fullpath = $c->tempfiles_base()."/".$dir."/".$file;
 
@@ -106,6 +107,10 @@ sub store_analysis_file_POST {
     
     my @lines = read_file($fullpath);
 
+    my $header = shift(@lines);
+
+    my ($accession, $trait) = split /\t/, $header;
+    
     foreach my $line (@lines) {
 	my ($acc, $value) = split /\t/, $line;
 	$acc =~ s/\"//g;
@@ -113,11 +118,11 @@ sub store_analysis_file_POST {
 	my $plot_name = $analysis_name."_".$acc;
 	push @plots, $plot_name;
 	push @stocks, $acc;
-        $values{$plot_name}->{$traits[0]} = $value;
+        $values{$plot_name}->{$trait} = $value;
     }
 
     print STDERR "Storing data...\n";
-    return $self->store_data($c, $params, \%values, \@stocks, \@plots, $user_id);
+    return $self->store_data($c, $params, \%values, \@stocks, \@plots, \@traits, $user_id);
 }
 
 
@@ -128,8 +133,12 @@ sub store_data {
     my $values = shift;
     my $stocks = shift;
     my $plots = shift;
+    my $traits = shift;
     my $user_id = shift;
 
+
+    my $user = $c->user()->get_object();
+    
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
@@ -143,41 +152,66 @@ sub store_data {
 	$params->{dataset_id} = undef;
     }
     
-    #if ($params->{dataset_id}) { 
-    # 	my $d = CXGN::Dataset->new( 
-    # 	    {
-    # 		schema => $bcs_schema,
-    # 		people_schema => $people_schema,
-    # 		dataset_id => $params->{dataset_id},
-    # 	    });
-    # 	$a->dataset_id($params->{dataset_id});
-    # 	print STDERR "Dataset info ".$d->data()."\n";
-    # 	$a->dataset_info($d->data());
-    # 	$a->accessions($d->retrieve_accessions());
-    # }
+    if ($params->{dataset_id}) { 
+	$a->dataset_id($params->{dataset_id});
+    }
     $a->name($params->{analysis_name});
     $a->description($params->{description});
     $a->user_id($user_id);
     $a->accessions($stocks);
-    #$a->plots($plots);
-    
+    $a->traits($traits);
     my ($verified_warning, $verified_error);
 
+    print STDERR "Storing the analysis...\n";
     eval { 
 	($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
-    };    
+    };
 
+    my @errors;
+    my @warnings;
+    
     if ($@) {
-	$c->stash->{rest} = { error => $@ };
-	return;
+	push @errors, $@;
     }
     elsif ($verified_warning || $verified_error) {
-	$c->stash->{rest} = { warnings => $verified_warning, error => $verified_error };
+	push @warnings, $verified_warning;
+	push @errors, $verified_error;
+    }
+
+    if (@errors) { 
+	$c->stash->{rest} = { error => join "; ", @errors };
 	return;
     }
-    else {
-	$c->stash->{rest} = { success => 1 };
+    
+    my $operator = $user->get_first_name()." ".$user->get_last_name();
+    print STDERR "Store analysis values...\n";
+
+    eval { 
+	$a->store_analysis_values(
+	    $c->dbic_schema("CXGN::Metadata::Schema"),
+	    $c->dbic_schema("CXGN::Phenome::Schema"),
+	    $values, # value_hash
+	    $plots, 
+	    $traits,
+	    $operator,
+	    $c->config->{basepath},
+	    $c->config->{dbhost},
+	    $c->config->{dbname},
+	    $c->config->{dbuser},
+	    $c->config->{dbpass},
+	    "/tmp/temppath-$$",
+	    
+	    );
+
+    };
+
+    if ($@) {
+	$c->stash->{rest} = { error => "An error occurred storing the values.\n"};
+	return;
     }
+    
+    $c->stash->{rest} = { success => 1 };
+
 }
 
 sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {

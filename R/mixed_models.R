@@ -68,12 +68,12 @@ print(head(adjusted_means))
 
 outfile = paste(datafile, ".adjusted_means", sep="")
 sink(outfile)
-write.table(select(adjusted_means, random_factors, dependent_variable), row.names = F)
+write.table(select(adjusted_means, random_factors, dependent_variable), row.names = F, sep='\t', quote=F)
 sink();
 
 outfile = paste(datafile, ".blups", sep="");
 sink(outfile)
-write.table(ranef(model, whichel=random_factors), quote=F)
+write.table(ranef(model, whichel=random_factors), quote=F, sep='\t')
 sink();
 
 # need to provide the fixed effect factors to
