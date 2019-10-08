@@ -381,6 +381,7 @@ solGS.cluster = {
 		    + ' You need to define the fraction of the'
 		    +' population you want to select.';
 	    }
+
 	}
 
 	if (dataStr == 'list') {
@@ -417,7 +418,6 @@ solGS.cluster = {
 	} else {
 	    plotId = res.cluster_pop_id;
 	}
-
 	
 	var imageId = 'k-means-plot-'  + plotId + '-'
 	    + res.data_type + '-'+ res.k_number;
@@ -426,16 +426,10 @@ solGS.cluster = {
 	    imageId = imageId + '-' + res.selection_proportion;
 	}
 	
-	imageId = 'id="' + imageId + '"';   
-	
-	console.log('imageId ' + imageId);
-	
+	imageId = 'id="' + imageId + '"';   	
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
-
 	var filePlot  = res.kcluster_plot.split('/').pop();
-	
-	var plotType = 'K-means plot';
-	
+	var plotType = 'K-means plot';	
 	var plotLink = "<a href=\""
 	    + res.kcluster_plot
 	    +  "\" download="
@@ -513,6 +507,10 @@ solGS.cluster = {
 	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
 	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
 
+	selectionProp = selectionProp.replace(/%/, '');
+	selectionProp = selectionProp.replace(/\s+/g, '');
+	kNumber = kNumber.replace(/\s+/g, '');
+	
 	return {'data_type' : dataType,
 		'cluster_type': clusterType,
 		'k_number': kNumber,
