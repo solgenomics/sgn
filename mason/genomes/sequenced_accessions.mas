@@ -5,7 +5,6 @@
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
   
 <& /util/import_javascript.mas,
-
   entries => ["sequenced_accessions"]
 &>
 
@@ -16,9 +15,9 @@
   
   <script>
     $(window).ready( function() {
-    alert("HELLO");
+    //alert("HELLO");
     var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div");
-    alert("HELLO AGAIN!");
+    //alert("HELLO AGAIN!");
     });
   </script>
 
