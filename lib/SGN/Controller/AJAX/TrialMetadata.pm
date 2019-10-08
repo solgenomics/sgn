@@ -1985,6 +1985,31 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
 }
 
 
+sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->stash->{trial_id};
+
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_crossingtrial();
+
+    foreach my $r (@$result){
+        my ($cross_stock_id, $cross_name) =@$r;
+        my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+        my $error = $cross->delete();
+        print STDERR "ERROR = $error\n";
+
+        if ($error) {
+            $c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+            return;
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
