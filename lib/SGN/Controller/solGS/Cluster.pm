@@ -291,6 +291,9 @@ sub _prepare_response {
     $ret->{trials_names}  = $c->stash->{trials_names};
     $ret->{result_name}   = $result_name;
     $ret->{output_link}   = $output_link;
+    $ret->{data_type}     = $c->stash->{data_type};
+    $ret->{k_number}      = $c->stash->{k_number};
+    $ret->{selection_proportion} = $c->stash->{selection_proportion};
 
     return $ret;
     

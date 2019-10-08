@@ -274,6 +274,10 @@ solGS.cluster = {
 	    } else {
 		clusterPopId = selectId || popId;
 	    }
+
+	    // if (!clusterPopId) {
+	    // 	clusterPopId = popId;
+	    // }
 	    	    
 	    if (popType == 'selection_index') {
 		sIndexName = selectName;
@@ -414,7 +418,18 @@ solGS.cluster = {
 	    plotId = res.cluster_pop_id;
 	}
 
-	var imageId = 'id="k-means-plot-'  + plotId + '"';
+	
+	var imageId = 'k-means-plot-'  + plotId + '-'
+	    + res.data_type + '-'+ res.k_number;
+
+	if (res.selection_proportion) {
+	    imageId = imageId + '-' + res.selection_proportion;
+	}
+	
+	imageId = 'id="' + imageId + '"';   
+	
+	console.log('imageId ' + imageId);
+	
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
 
 	var filePlot  = res.kcluster_plot.split('/').pop();

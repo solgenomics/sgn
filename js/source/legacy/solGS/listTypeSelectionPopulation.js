@@ -456,7 +456,7 @@ function loadPredictionOutput (url, listId, listSource) {
                 var page = document.URL; 
                     
                 if (page.match('/traits/all/population/') != null) {
-                    listSelectionIndexPopulations();
+                    solGS.sIndex.listSelectionIndexPopulations();
                     listGenCorPopulations();                 
                 }
                     
