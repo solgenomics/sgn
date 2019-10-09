@@ -350,7 +350,6 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    jQuery('#label_designer_data_level_select_div').html('<option value="list">List Items</option>');
                     if (response.list_type == 'plots') {
                         html = html + '<option value="plots">Plot Details</option>';
                     } else if (response.list_type == 'subplots') {
@@ -359,6 +358,24 @@ $(document).ready(function($) {
                         html = html + '<option value="plants">Plant Details</option>';
                     } else if (response.list_type == 'tissue_samples') {
                         html = html + '<option value="tissue_samples">Tissue Sample Details</option>';
+                    } else if (response.list_type == 'identifier_generation') {
+                        // remove list item select options and add options for each id batch
+                        html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option>';
+                        var lo = new CXGN.List();
+                        var list_data = lo.getListData(response.list_id);
+                        var elements = list_data.elements;
+                        var identifier_object = JSON.parse(elements[0][1]);
+                        var records = identifier_object.records;
+                        for (var x = 0; x < records.length; x++) {
+                            var generated_identifiers = records[x].generated_identifiers;
+                            if (generated_identifiers) {
+                                //console.log("current identifiers are: "+generated_identifiers);
+                                var min = generated_identifiers.shift();
+                                var max = generated_identifiers.pop();
+                                var id = records[x].next_number;
+                                html = html + '<option value="batch-'+id+'">ID Batch '+min+' - '+max+'</option>';
+                            }
+                        }
                     }
                     html = html + '</select>';
                     jQuery('#label_designer_data_level_select_div').html(html);
@@ -627,7 +644,7 @@ function updateFields(data_type, source_id, data_level){
                 reps = response.reps;
                 num_units = response.num_units;
                 addPlotFilter(reps);
-
+                addSortOrders(add_fields);
                 createAdders(add_fields);
                 initializeCustomModal(add_fields);
                 showLoadOption();
@@ -1204,6 +1221,20 @@ function addPlotFilter(reps) {
             return reps[d]
         });
 
+}
+
+function addSortOrders(add_fields) {
+    //load options
+    d3.select("#sort_order").selectAll("option").remove();
+    d3.select("#sort_order").selectAll("option")
+        .data(Object.keys(add_fields).sort())
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })
+        .attr("value", function(d) {
+            return d
+        });
 }
 
 function checkIfVisible(element) {

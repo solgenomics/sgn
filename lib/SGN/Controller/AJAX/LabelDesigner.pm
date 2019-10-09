@@ -178,8 +178,8 @@ __PACKAGE__->config(
            my $gfx = $page->gfx();
            $page->mediabox($design_params->{'page_width'}, $design_params->{'page_height'});
 
-           # loop through plot data in design hash
-           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or  $a <=> $b } keys %design) {
+           # loop through design hash, sorting via specified field or default
+           foreach my $key ( sort { versioncmp( $design{$a}{$sort_order} , $design{$b}{$sort_order} ) or versioncmp($a, $b) } keys %design) {
                if ($start_number && ($key_number < $start_number)){
                    $key_number++;
                    next;
@@ -371,7 +371,7 @@ sub get_trial_from_stock_list {
         $trials{$id} = 1;
     }
     my $num_trials = scalar keys %trials;
-    print STDERR "Number of linked trials is $num_trials\n";
+    #print STDERR "Number of linked trials is $num_trials\n";
     my $trial_id = $trial_rs->first->project_id();
     return $trial_id, $num_trials;
 }
@@ -385,7 +385,7 @@ sub filter_by_list_items {
     my %plot_design;
 
     foreach my $i (0 .. $#stock_ids) {
-        print STDERR "Stock id is ".$stock_ids[$i]."\n";
+        #print STDERR "Stock id is ".$stock_ids[$i]."\n";
         foreach my $key (keys %full_design) {
             if ($full_design{$key}->{$type} eq $stock_ids[$i]) {
                 #print STDERR "Plot name is ".$full_design{$key}->{'plot_name'}."\n";
@@ -480,6 +480,23 @@ sub get_data {
     # print STDERR "starting to get data,level is $data_level and type is $data_type\n";
     # use data level as well as type to determine and enact correct retrieval
 
+    if ($data_level =~ /batch-/) {  # handle batches of identifiers
+        my $match = substr($data_level, 6);
+        my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+        my @list_data = @{$list_data};
+        my $json = new JSON;
+        my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
+        my $records = $identifier_object->{'records'};
+        foreach my $record (@{$records}) {
+            my $next_number = $record->{'next_number'};
+            if ($next_number eq $match) {
+                my $generated_identifiers = $record->{'generated_identifiers'};
+                foreach my $identifier (@{$generated_identifiers}) {
+                    $design->{$identifier} = { 'identifier' => $identifier };
+                }
+            }
+        }
+    }
     if ($data_level eq "list") {
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         foreach my $item (@{$list_data}) {
