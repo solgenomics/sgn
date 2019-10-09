@@ -224,8 +224,9 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   my @tod_ids = $c->req->param("tod_ids[]");
   my @toy_ids = $c->req->param("toy_ids[]");
   my @gen_ids = $c->req->param("gen_ids[]");
+  my @evt_ids = $c->req->param("evt_ids[]");
 
-  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n";
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n evt ids are @evt_ids\n";
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
   my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
@@ -237,6 +238,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
       tod => \@tod_ids,
       toy => \@toy_ids,
       gen => \@gen_ids,
+      evt => \@evt_ids,
   });
 
   if (!$traits) {

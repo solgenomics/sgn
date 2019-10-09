@@ -23,7 +23,7 @@ sub _validate_with_plugin {
     $supported_cross_types{'biparental'} = 1; #both parents required
     $supported_cross_types{'self'} = 1; #only female parent required
     $supported_cross_types{'open'} = 1; #only female parent required
-    $supported_cross_types{'bulk'} = 1; #both parents required
+    $supported_cross_types{'sib'} = 1; #both parents required but can be the same.
     $supported_cross_types{'bulk_self'} = 1; #only female parent required
     $supported_cross_types{'bulk_open'} = 1; #only female parent required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
@@ -176,10 +176,10 @@ sub _validate_with_plugin {
             push @error_messages, "Cell D$row_name: female parent missing";
         }
 
-        #male parent must not be blank if type is biparental or bulk
+        #male parent must not be blank if type is biparental, sib or bulk
         if (!$male_parent || $male_parent eq '') {
-            if ($cross_type eq ( 'biparental' || 'bulk' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental and bulk crosses";
+            if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' )) {
+                push @error_messages, "Cell E$row_name: male parent required for biparental, sib and bulk crosses";
             }
         }
 
