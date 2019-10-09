@@ -160,8 +160,8 @@ sub run : Path('/tools/blast/run') Args(0) {
 							}),
 		);
 
-		return -i => $seqfile;
-	      }
+		return -query => $seqfile;
+	      
 	 },
 
 
@@ -169,26 +169,26 @@ sub run : Path('/tools/blast/run') Args(0) {
 	 expect =>
 	 sub {
 	     $params->{evalue} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
-	     return -e =>  $params->{evalue} ? $params->{evalue} : 1;
+	     return -evalue =>  $params->{evalue} ? $params->{evalue} : 1;
 	 },
 
 	 maxhits =>
 	 sub {
 	     my $h = $params->{maxhits} || 20;
 	     $h =~ s/\D//g; #only digits allowed
-	     return -b => $h;
+	     return -max_hsps => $h;
 	 },
 
-	 hits_list =>
-	 sub {
-	     my $h = $params->{maxhits} || 20;
-	     $h =~ s/\D//g; #only digits allowed
-	     return -v => $h;
-	 },
+	 # hits_list =>
+	 # sub {
+	 #     my $h = $params->{maxhits} || 20;
+	 #     $h =~ s/\D//g; #only digits allowed
+	 #     return -v => $h;
+	 # },
 
 	 filterq =>
 	 sub {
-	     return -F => $params->{filterq} ? 'T' : 'F';
+	     return -dust  => $params->{filterq} ? 'yes' : 'no';
 	 },
 
 	 # outformat =>
@@ -207,14 +207,14 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 
-	     return -d => $basename;
+	     return -db => $basename;
 	 },
 
-	 program =>
-	 sub {
-	     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
-	     return -p => $params->{program};
-	 },
+	 # program =>
+	 # sub {
+	 #     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
+	 #     return -p => $params->{program};
+	 # },
 	);
 
 
@@ -232,7 +232,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     # build our command with our arg handlers
     #
-    my @command = ('blastall');
+    my @command = ($params->{program});
     foreach my $k (keys %arg_handlers) {
 
       print STDERR "evaluating $k...";
