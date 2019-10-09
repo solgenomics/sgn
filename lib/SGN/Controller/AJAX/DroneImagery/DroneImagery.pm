@@ -4191,6 +4191,7 @@ sub _perform_keras_cnn_predict {
         $rmatrix->send_rbase($rbase, 'r_block');
         $r_block->add_command('library(lme4)');
         $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
+        $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
         $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
         $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
@@ -4224,6 +4225,7 @@ sub _perform_keras_cnn_predict {
         $r_block->add_command('library(lme4)');
         my $cnn_pred_col_formula = join ' + ', @cnn_pred_colnames;
         $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
+        $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
         $r_block->add_command('mixed.lmer <- lmer(previous_value ~ '.$cnn_pred_col_formula.' + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
         $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
