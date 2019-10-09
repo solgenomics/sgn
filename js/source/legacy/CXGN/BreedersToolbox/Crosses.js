@@ -315,6 +315,9 @@ jQuery(document).ready(function($) {
                 break;
         }
 
+        var maternal_parents_string = maternal_parents.toString();
+        var paternal_parents_string = paternal_parents.toString();
+
         $.ajax({
             url: '/ajax/cross/add_cross',
             timeout: 3000000,
@@ -325,8 +328,8 @@ jQuery(document).ready(function($) {
                 'cross_type': crossType,
                 'maternal': maternal,
                 'paternal': paternal,
-                'maternal_parents': maternal_parents,
-                'paternal_parents': paternal_parents,
+                'maternal_parents': maternal_parents_string,
+                'paternal_parents': paternal_parents_string,
                 'progeny_number': progenyNumber,
                 'prefix': prefix,
                 'suffix': suffix,
