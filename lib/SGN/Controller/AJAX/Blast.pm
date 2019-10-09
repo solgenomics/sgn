@@ -188,7 +188,13 @@ sub run : Path('/tools/blast/run') Args(0) {
 
 	 filterq =>
 	 sub {
-	     return -dust  => $params->{filterq} ? 'yes' : 'no';
+	     if ($params->{program} eq "blastn") { 
+		 return -dust  => $params->{filterq} ? 'yes' : 'no';
+	     }
+	     else { 
+		 return ""; 
+	     }
+	     
 	 },
 
 	 # outformat =>
