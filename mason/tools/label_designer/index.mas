@@ -7,7 +7,6 @@
 <&| /util/workflow.mas , id=> "label_designer_workflow"&>
 
     <&| /util/workflow.mas:step, title=>"Intro and Data Source" &>
-        <& /page/page_title.mas, title=>"Welcome to the Label Designer" &>
         <& /tools/label_designer/select_datasource.mas &>
         <br/><br/>
         <div class="col-md-12 text-center">
