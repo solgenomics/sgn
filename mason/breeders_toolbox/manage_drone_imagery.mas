@@ -1027,7 +1027,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_train_keras_cnn_trial_select_div"></div>
                             </div>
@@ -1084,7 +1084,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <table class="table table-bordered table-hover" id="drone_image_train_keras_plot_polygon_image_type_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
+                                <th>Select <br/><input type="checkbox" id="drone_image_train_keras_plot_polygon_image_type_table_select_all" checked>Select All</th>
                                 <th>Field Trial</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Band Name</th>
@@ -1230,7 +1230,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <table class="table table-bordered table-hover" id="drone_image_predict_keras_plot_polygon_image_type_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
+                                <th>Select <br/><input type="checkbox" id="drone_image_predict_keras_plot_polygon_image_type_table_select_all" checked>Select All</th>
                                 <th>Field Trial</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Band Name</th>
@@ -2416,6 +2416,12 @@ jQuery(document).ready(function() {
         return false;
     });
 
+    jQuery('#drone_image_train_keras_plot_polygon_image_type_table_select_all').change(function() {
+        jQuery('input[name="train_keras_drone_imagery_plot_polygon_type_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_train_keras_plot_polygon_image_type_table_select_all').prop("checked"));
+        });
+    });
+
     jQuery('#drone_imagery_train_keras_model_plot_polygon_type_select_step').click(function(){
         jQuery('input[name="train_keras_drone_imagery_plot_polygon_type_select"]:checked').each(function() {
             manage_drone_imagery_train_keras_plot_polygon_type_ids.push(jQuery(this).val());
@@ -2569,6 +2575,12 @@ jQuery(document).ready(function() {
             Workflow.focus('#drone_imagery_predict_keras_model_workflow', 4);
         }
         return false;
+    });
+
+    jQuery('#drone_image_predict_keras_plot_polygon_image_type_table_select_all').change(function() {
+        jQuery('input[name="predict_keras_drone_imagery_plot_polygon_type_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_predict_keras_plot_polygon_image_type_table_select_all').prop("checked"));
+        });
     });
 
     jQuery('#drone_imagery_predict_keras_model_plot_polygon_type_select_step').click(function(){
