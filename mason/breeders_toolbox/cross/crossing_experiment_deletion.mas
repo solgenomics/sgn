@@ -13,6 +13,7 @@ $trial_id
                 </table>
             </div>
         </div>
+        <button class="btn btn-default" id="delete_all_crosses" role="button">Delete all crosses in this experiment</button><br/><br/>
     </div>
 </&>
 
@@ -42,6 +43,35 @@ jQuery(document).ready(function(){
                 { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteCross("+row.cross_id+")'>Delete</a>"; } },
             ]
         });
+    });
+
+    jQuery('#delete_all_crosses').click(function() {
+
+        var trial_id = "<% $trial_id %>";
+        var confirmation = confirm("Are you sure you want to delete all crosses in this crossing experiment? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+ <% $trial_id %> + '/delete_all_crosses_in_crossingtrial',
+                destroy: true,
+                beforeSend: function(response) {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
     });
 
     jQuery('#delete_crossing_experiment').click(function() {

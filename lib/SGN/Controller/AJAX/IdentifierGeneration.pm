@@ -177,7 +177,7 @@ sub identifier_generation_download : Path('/ajax/breeders/identifier_generation_
 
     my $time = DateTime->now();
     my $timestamp = $time->ymd('/')."_".$time->hms();
-    push @$previous_records, {'timestamp' => $timestamp, 'username' => $c->user()->get_object->get_username(), 'next_number' => $next_number, 'type' => 'identifier_download' };
+    push @$previous_records, {'generated_identifiers' => [@new_identifiers], 'timestamp' => $timestamp, 'username' => $c->user()->get_object->get_username(), 'next_number' => $next_number, 'type' => 'identifier_download' };
 
     my $identifier = {
         identifier_prefix => $prefix,

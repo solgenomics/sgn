@@ -1,11 +1,8 @@
-<p>Below is a draw area where you can begin adding elements to your label. First select a type, then field, size, and font, then click 'Add'</p>
-<p>You can add text to an exisiting field or create a completely custom field by clicking 'Create Custom Field'</p>
-<p>Once added, you can drag and drop elements, or delete them by clicking on the red box in their upper left corners.</p>
-<p>Barcodes can also be resized by dragging on the green box in their lower right corners.</p>
-<p>If you are creating labels for a trial it is highly recommended to include a barcode encoding your plot, plant, or tissue sample names.</p>
-<p>These are your unique identifiers that will need to included with any phenotypic or genotypic measurements loaded into the database
-<p>When you are satisfied with your design, click next!</p>
-<br>
+<div class="text-center">
+    <p>Time to design! Start by selecting a type and field. Then click 'add' to generate your new label element in the draw area.</p>
+    <p>Add, drag, customize, resize, and delete as many elements as you like. A barcode containing your unique identifier (plot_name, plant_name, etc) is strongly recommended.</p>
+</div>
+</br>
 <div class="col-md-12" id="d3-draw-div" style="margin-bottom:20px;">
     <div class="col-md-offset-2 col-md-8" id="d3-draw-area"></div>
 </div>

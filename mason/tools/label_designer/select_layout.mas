@@ -1,22 +1,7 @@
-<div class="col-md-12" style="margin-bottom:20px;">
-    <div class="col-md-2 text-center">
-        <label> Data Source:</label>
-    </div>
-    <div class="col-md-4">
-        <b id="selected_data_source"></b>
-    </div>
-    <div class="col-md-2 text-center">
-        <label> Label for Every:</label>
-    </div>
-    <div class="col-md-4">
-        <b id="selected_data_level"></b>
-    </div>
+<div class="text-center">
+    <p>Now, define your layout. You may retrieve these settings from a saved design, or you can start a new design by selecting a page and label format.<p>
 </div>
-
-<p>Now choose whether to create a new design or load a saved design. If you choose new, you will be prompted to select a page size and label size.</p>
-<p>If you do not see your page or label size as an option, then select Custom and enter your desired dimensions in pixels, or 1/72nds of an inch.</p>
-<p>If you choose saved, you will be prompted to select a saved design then will be taken directly to the design step with the saved design elements preloaded.</p>
-
+</br></br>
 <div class="col-md-12" style="margin-bottom:20px;">
     <div class="col-md-2 col-md-offset-3 text-center">
         <label> New or Saved:</label>
