@@ -4134,6 +4134,7 @@ sub _perform_keras_cnn_predict {
     my @result_agg;
     my $num_class_probabilities;
     my @data_matrix;
+    my $data_matrix_rows = 0;
     my $iter = 0;
     my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'previous_value', 'prediction');
 
@@ -4152,9 +4153,12 @@ sub _perform_keras_cnn_predict {
             my $class_probabilities = join ',', @columns;
             $num_class_probabilities = scalar(@columns);
             my $previous_value = $data_hash{$stock_id}->{previous_data};
-            push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $prediction);
-            if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
-                push @data_matrix, @columns;
+            if (defined($previous_value)){
+                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $prediction);
+                if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
+                    push @data_matrix, @columns;
+                }
+                $data_matrix_rows++;
             }
             push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $class, $previous_value, $class_probabilities, $image_ids[$iter]];
             $iter++;
@@ -4177,7 +4181,7 @@ sub _perform_keras_cnn_predict {
         my $rmatrix = R::YapRI::Data::Matrix->new({
             name => 'matrix1',
             coln => scalar(@data_matrix_colnames),
-            rown => $iter,
+            rown => $data_matrix_rows,
             colnames => \@data_matrix_colnames,
             data => \@data_matrix_clean
         });
@@ -4209,7 +4213,7 @@ sub _perform_keras_cnn_predict {
         my $rmatrix = R::YapRI::Data::Matrix->new({
             name => 'matrix1',
             coln => scalar(@data_matrix_colnames),
-            rown => $iter,
+            rown => $data_matrix_rows,
             colnames => \@data_matrix_colnames,
             data => \@data_matrix_clean
         });
