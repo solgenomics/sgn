@@ -22,20 +22,20 @@ with 'MooseX::Runnable';
 
 
 has "data_type" => (
-    is       => 'ro',
+    is       => 'rw',
     isa      => 'Str',
     required => 1, 
     );
 
 
 has "population_type" => (
-    is       => 'ro',
+    is       => 'rw',
     isa      => 'Str',
     required => 1, 
     );
 
 has "args_file" => (
-     is       => 'ro',
+     is       => 'rw',
      isa      => 'Str',
      required => 1, 
  );

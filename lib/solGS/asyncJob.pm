@@ -50,12 +50,16 @@ sub run_jobs {
 	$jobs =  $self->run_prerequisite_jobs;    	  
     }
 
-    foreach my $job (@$jobs)
+    foreach my $job_id (@$jobs)
     {
 	while (1) 
-	{	  		  
-	    last if !$job->alive();
-	    sleep 30 if $job->alive();
+	{
+	    my $st = $self->check_job_status($job_id);
+	    last if $st =~ /done/;
+	    sleep if $st =~ /runnning/;
+	    #last if !$job->alive();	    
+	    #sleep 30 if $job->alive();
+	    
 	}
     }
 
@@ -79,8 +83,8 @@ sub run_prerequisite_jobs {
     my @jobs;
     foreach my $job (@$jobs) 
     {
-	my $job = $self->submit_job($job);
-	push @jobs, $job;
+	my $job_id = $self->submit_job($job);
+	push @jobs, $job_id;
     }
     
     return \@jobs;
@@ -102,8 +106,8 @@ sub run_dependent_jobs {
     my @jobs;
     foreach my $job (@$jobs) 
     {
-	my $job = $self->submit_job($job);
-	push @jobs, $job;
+	my $job_id = $self->submit_job($job);
+	push @jobs, $job_id;
     }
     
     return \@jobs;
@@ -125,8 +129,12 @@ sub send_analysis_report {
     {
 	while (1)
 	{
-	    last if !$job->alive();
-	    sleep 30 if $job->alive();
+	    my $st = $self->check_job_status($job_id);
+	    last if $st =~ /done/;
+	    sleep if $st =~ /runnning/;
+	    
+	   # last if !$job->alive();
+	   # sleep 30 if $job->alive();
 	}
     }
     
@@ -140,20 +148,55 @@ sub send_analysis_report {
 }
 
 
+sub check_job_status {
+    my ($self, $job_id) = @_;
+
+    my $status= qx /squeue -j $job_id 2>&1/;
+    #my $check = 'qstat: Unknown Job Id ' . $job_id;
+
+ print STDERR "\njob_id: $job_id - status: $status\n";   
+
+    if (!$status) {
+	return 'done';
+    } else {
+	return 'running';
+    }
+    
+}
+
+
 sub submit_job {
     my ($self, $args) = @_;
 
-    my $job;
+    my $job_id;
     
     eval 
-    {		
-    	$job = CXGN::Tools::Run->new($args->{config});
-    	$job->do_not_cleanup(1);
-	 
-    	$job->is_async(1);
-	$job->run_cluster($args->{cmd});
+    {	# print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
+	my $cmd = $args->{cmd};
+        # my $job = qx /$cmd 2>&1/;
 
-	print STDERR "Submitted job... $args->{cmd}\n";	   
+	# ($job_id) = split(/\t/, $job); 
+
+	# print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
+	# print STDERR "\n $job -- id: $job_id\n";
+
+	if ($cmd =~ /Rscript/) {
+	    print STDERR "\n\nSubmitted job... $cmd\n\n";	
+	      #my $cmd = $args->{cmd};
+	    my $job = qx /$cmd 2>&1/;
+
+	    my ($job_id) = split(/\t/, $job); 
+
+	    print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
+	    print STDERR "\n job: $job -- id: $job_id\n"; 
+	  } else {
+	      print STDERR "\n run: $cmd\n";
+	      $cmd->run;
+	      print STDERR "\n run job done\n";
+	  }
+
+
+	
     };
 
     if ($@) 
@@ -161,9 +204,34 @@ sub submit_job {
     	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
     }
 
-    return $job;
+    return $job_id;
     
 }
+
+# sub submit_job {
+#     my ($self, $args) = @_;
+
+#     my $job;
+    
+#     eval 
+#     {		
+#     	$job = CXGN::Tools::Run->new($args->{config});
+#     	$job->do_not_cleanup(1);
+	 
+#     	$job->is_async(1);
+# 	$job->run_cluster($args->{cmd});
+
+# 	print STDERR "Submitted job... $args->{cmd}\n";	   
+#     };
+
+#     if ($@) 
+#     {
+#     	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
+#     }
+
+#     return $job;
+    
+# }
 
 
 

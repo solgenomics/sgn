@@ -24,6 +24,7 @@ use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use SGN::Controller::solGS::Utils;
+use solGS::queryJobs;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -2957,11 +2958,20 @@ sub get_cluster_phenotype_query_job_args {
 	    
 	    nstore $args, $args_file 
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
+
+	    my $cmd = solGS::queryJobs->new({data_type => 'phenotype', 
+					       population_type => 'trial', 
+					       args_file=>$args_file}
+		);
+	   # $query->data_type('phenotype');
+	   # $query->population_type('trial');
+	   # $query->args_file($args_file);
 	    
-	    my $cmd = 'mx-run solGS::queryJobs ' 
-		. ' --data_type phenotype '
-		. ' --population_type trial '
-		. ' --args_file ' . $args_file;
+	    # my $cmd = 'mx-run solGS::queryJobs ' 
+	    # 	. ' --data_type phenotype '
+	    # 	. ' --population_type trial '
+	    # 	. ' --args_file ' . $args_file;
+	   # my $cmd = $query;
 
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
@@ -3119,11 +3129,16 @@ sub get_cluster_genotype_query_job_args {
 
 	    nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
-	    
-	    my $cmd = 'mx-run solGS::queryJobs ' 
-		. ' --data_type genotype '
-		. ' --population_type trial '
-		. ' --args_file ' . $args_file;
+ 
+	    my $cmd = solGS::queryJobs->new({data_type => 'genotype', 
+					     population_type => 'trial', 
+					     args_file=>$args_file}
+		);
+	   ### my $cmd = $query;
+	    # my $cmd = 'mx-run solGS::queryJobs ' 
+	    # 	. ' --data_type genotype '
+	    # 	. ' --population_type trial '
+	    # 	. ' --args_file ' . $args_file;
 
 
 	    my $config_args = {
@@ -3696,12 +3711,16 @@ sub get_cluster_query_job_args {
     nstore $query_args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
 	
-    my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type ' . $data_type
-	. ' --population_type ' . $pop_type
-	. ' --args_file ' . $args_file;
+    # my $cmd = 'mx-run solGS::queryJobs ' 
+    # 	. ' --data_type ' . $data_type
+    # 	. ' --population_type ' . $pop_type
+    # 	. ' --args_file ' . $args_file;
 
-
+    my $cmd = solGS::queryJobs->new({data_type => $data_type, 
+				       population_type => $pop_type, 
+				       args_file=>$args_file}
+	);
+    
     my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
@@ -3925,9 +3944,26 @@ sub submit_job_cluster {
 	} 
 	else 
 	{ print STDERR "\n submit_job_cluster no background job\n";
-	    $job->is_cluster(1);
-	    $job->run_cluster($args->{cmd});
-	    $job->wait;
+	    # $job->is_cluster(1);
+	    # $job->run_cluster($args->{cmd});
+	  # $job->wait;
+
+	  my $cmd = $args->{cmd};
+
+	  if ($cmd =~ /Rscript/) {
+	      print STDERR "\n\nSubmitted job... $cmd\n\n";	
+	      #my $cmd = $args->{cmd};
+	      my $job = qx /$cmd 2>&1/;
+
+	      my ($job_id) = split(/\t/, $job); 
+
+	      print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
+	      print STDERR "\n job: $job -- id: $job_id\n"; 
+	  } else {
+	      print STDERR "\n run: $cmd\n";
+	      $cmd->run;
+	      print STDERR "\n run job done\n";
+	  }
 	}
 	
     };
