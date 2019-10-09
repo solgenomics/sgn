@@ -4135,7 +4135,7 @@ sub _perform_keras_cnn_predict {
     my $num_class_probabilities;
     my @data_matrix;
     my $iter = 0;
-    my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'previous_value');
+    my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'previous_value', 'prediction');
 
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_output_file)
@@ -4152,21 +4152,49 @@ sub _perform_keras_cnn_predict {
             my $class_probabilities = join ',', @columns;
             $num_class_probabilities = scalar(@columns);
             my $previous_value = $data_hash{$stock_id}->{previous_data};
-            push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value);
-            push @data_matrix, @columns;
+            push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $prediction);
+            if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
+                push @data_matrix, @columns;
+            }
             push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $class, $previous_value, $class_probabilities, $image_ids[$iter]];
             $iter++;
         }
     close($fh);
 
-    my @cnn_pred_colnames;
-    for (1..$num_class_probabilities) {
-        push @cnn_pred_colnames, "CNNp".$_;
+    if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
+        print STDERR "CNN Prediction Mixed Model\n";
+
+        my $rmatrix = R::YapRI::Data::Matrix->new({
+            name => 'matrix1',
+            coln => scalar(@data_matrix_colnames),
+            rown => $iter,
+            colnames => \@data_matrix_colnames,
+            data => \@data_matrix
+        });
+        
+        my $rbase = R::YapRI::Base->new();
+        my $r_block = $rbase->create_block('r_block');
+        $rmatrix->send_rbase($rbase, 'r_block');
+        $r_block->add_command('library(lme4)');
+        $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
+        $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
+        $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+        $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+        $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
+        $r_block->run_block();
+        my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
+        print STDERR Dumper $result_matrix;
+        # push @results, [$t, ($result_matrix->{data}->[0] * 100)];
     }
-    push @data_matrix_colnames, @cnn_pred_colnames;
 
     if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
         print STDERR "CNN Feature Generator Mixed Model\n";
+
+        my @cnn_pred_colnames;
+        for (1..$num_class_probabilities) {
+            push @cnn_pred_colnames, "CNNp".$_;
+        }
+        push @data_matrix_colnames, @cnn_pred_colnames;
 
         my $rmatrix = R::YapRI::Data::Matrix->new({
             name => 'matrix1',

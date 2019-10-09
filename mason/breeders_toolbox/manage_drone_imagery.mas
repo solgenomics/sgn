@@ -1256,13 +1256,17 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <select class="form-control" id="drone_imagery_keras_model_prediction_select">
                                     <option value="standard_cnn">Standard CNN Prediction</option>
                                     <option value="cnn_feature_generator_mixed_model">CNN Feature Generator For Mixed Model Prediction</option>
+                                    <option value="cnn_prediction_mixed_model">CNN Prediction For Mixed Model Prediction</option>
                                 </select>
                             </div>
                         </div>
                     </form>
 
                     <div id="drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div" style="display:none">
-                        $$y_t = \beta_{CNNp1} + \beta_{CNNp2} + \dots + \beta_{CNNpd} + rep + 1|\mbox{GermplasmName}$$
+                        $$y_t = \beta_{CNN,p1} + \beta_{CNN,p2} + \dots + \beta_{CNN,pd} + rep + 1|\mbox{GermplasmName}$$
+                    </div>
+                    <div id="drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div" style="display:none">
+                        $$y_t = \beta_{CNN,pred} + rep + 1|\mbox{GermplasmName}$$
                     </div>
                     <br/><br/>
 
@@ -2583,9 +2587,15 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_keras_model_prediction_select').change(function(){
         if (jQuery(this).val() == 'cnn_feature_generator_mixed_model') {
             jQuery('#drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div').show();
+            jQuery('#drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div').hide();
+        }
+        else if (jQuery(this).val() == 'cnn_prediction_mixed_model') {
+            jQuery('#drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div').hide();
+            jQuery('#drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div').show();
         }
         else {
             jQuery('#drone_imagery_keras_model_prediction_cnn_feature_generator_mixed_model_div').hide();
+            jQuery('#drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div').hide();
         }
     });
 
