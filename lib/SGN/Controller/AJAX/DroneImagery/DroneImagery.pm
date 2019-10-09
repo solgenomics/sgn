@@ -4153,7 +4153,7 @@ sub _perform_keras_cnn_predict {
             my $class_probabilities = join ',', @columns;
             $num_class_probabilities = scalar(@columns);
             my $previous_value = $data_hash{$stock_id}->{previous_data};
-            if (defined($previous_value)){
+            if ($previous_value){
                 push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $prediction);
                 if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
                     push @data_matrix, @columns;
@@ -4167,8 +4167,8 @@ sub _perform_keras_cnn_predict {
 
     my @data_matrix_clean;
     foreach (@data_matrix) {
-        if (defined($_)) {
-            push @data_matrix_clean, $_;
+        if ($_) {
+            push @data_matrix_clean, $_ + 0;
         }
         else {
             push @data_matrix_clean, 'NA';
