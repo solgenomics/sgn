@@ -130,7 +130,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 		     -format   => 'fasta',
 		     -file       => $seqfile,
 		     );
-
+		 
 		 try {
 		     while ( my $s = $i->next_seq ) {
 			 $s->length or $c->throw(
@@ -151,19 +151,19 @@ sub run : Path('/tools/blast/run') Args(0) {
 				developer_message => $full_error,
 			 );
 		 };
-
+		 
 		 $seq_count >= 1 or $c->throw( message => 'no sequence submitted, cannot run BLAST',
 					       is_error => 0,
 					       developer_message => Data::Dumper::Dumper({
 						   '$seq_count' => $seq_count,
 						   '$seq_filename' => $seqfile,
-							}),
-		);
-
-		return -query => $seqfile;
-	      
+											 }),
+		     );
+		 
+		 return -query => $seqfile;
+		 
+	      }
 	 },
-
 
 
 	 expect =>
@@ -243,8 +243,8 @@ sub run : Path('/tools/blast/run') Args(0) {
     }
 
     # To get the proper format for gi sequences (CitrusGreening.org case)
-    push(@command, '-I');
-    push(@command, 'T');
+    push(@command, '-show_gis');
+#    push(@command, 'T');  # show_gis is a flag, no parameter needed
 
     print STDERR "COMMAND: ".join(" ", @command);
     print STDERR "\n";
