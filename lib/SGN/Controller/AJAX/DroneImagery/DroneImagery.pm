@@ -4161,6 +4161,16 @@ sub _perform_keras_cnn_predict {
         }
     close($fh);
 
+    my @data_matrix_clean;
+    foreach (@data_matrix) {
+        if (defined($_)) {
+            push @data_matrix_clean, $_;
+        }
+        else {
+            push @data_matrix_clean, 'NA';
+        }
+    }
+
     if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
         print STDERR "CNN Prediction Mixed Model\n";
 
@@ -4169,7 +4179,7 @@ sub _perform_keras_cnn_predict {
             coln => scalar(@data_matrix_colnames),
             rown => $iter,
             colnames => \@data_matrix_colnames,
-            data => \@data_matrix
+            data => \@data_matrix_clean
         });
         
         my $rbase = R::YapRI::Base->new();
@@ -4201,7 +4211,7 @@ sub _perform_keras_cnn_predict {
             coln => scalar(@data_matrix_colnames),
             rown => $iter,
             colnames => \@data_matrix_colnames,
-            data => \@data_matrix
+            data => \@data_matrix_clean
         });
         
         my $rbase = R::YapRI::Base->new();
