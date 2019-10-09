@@ -4175,6 +4175,7 @@ sub _perform_keras_cnn_predict {
         }
     }
 
+    my @model_results;
     if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
         print STDERR "CNN Prediction Mixed Model\n";
 
@@ -4199,7 +4200,7 @@ sub _perform_keras_cnn_predict {
         $r_block->run_block();
         my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
         print STDERR Dumper $result_matrix;
-        # push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+        push @model_results, $result_matrix->{data}->[0];
     }
 
     if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
@@ -4233,7 +4234,7 @@ sub _perform_keras_cnn_predict {
         $r_block->run_block();
         my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
         print STDERR Dumper $result_matrix;
-        # push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+        push @model_results, $result_matrix->{data}->[0];
     }
 
     my @evaluation_results;
@@ -4258,7 +4259,7 @@ sub _perform_keras_cnn_predict {
         }
     close($fh_eval);
 
-    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file, trained_trait_name => $trained_trait_name };
+    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file, trained_trait_name => $trained_trait_name, mixed_model_results => \@model_results };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }
