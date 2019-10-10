@@ -2959,19 +2959,19 @@ sub get_cluster_phenotype_query_job_args {
 	    nstore $args, $args_file 
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
 
-	    my $cmd = solGS::queryJobs->new({data_type => 'phenotype', 
-					       population_type => 'trial', 
-					       args_file=>$args_file}
-		);
-	   # $query->data_type('phenotype');
-	   # $query->population_type('trial');
-	   # $query->args_file($args_file);
+	    # my $cmd = solGS::queryJobs->new({data_type => 'phenotype', 
+	   # 				       population_type => 'trial', 
+	   # 				       args_file=>$args_file}
+	   # 	);
+	   # # $query->data_type('phenotype');
+	   # # $query->population_type('trial');
+	   # # $query->args_file($args_file);
 	    
-	    # my $cmd = 'mx-run solGS::queryJobs ' 
-	    # 	. ' --data_type phenotype '
-	    # 	. ' --population_type trial '
-	    # 	. ' --args_file ' . $args_file;
-	   # my $cmd = $query;
+	    my $cmd = 'mx-run solGS::queryJobs ' 
+	    	. ' --data_type phenotype '
+	    	. ' --population_type trial '
+	    	. ' --args_file ' . $args_file;
+	   
 
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
@@ -3130,15 +3130,15 @@ sub get_cluster_genotype_query_job_args {
 	    nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
  
-	    my $cmd = solGS::queryJobs->new({data_type => 'genotype', 
-					     population_type => 'trial', 
-					     args_file=>$args_file}
-		);
+	    # my $cmd = solGS::queryJobs->new({data_type => 'genotype', 
+	    # 				     population_type => 'trial', 
+	    # 				     args_file=>$args_file}
+	    # 	);
 	   ### my $cmd = $query;
-	    # my $cmd = 'mx-run solGS::queryJobs ' 
-	    # 	. ' --data_type genotype '
-	    # 	. ' --population_type trial '
-	    # 	. ' --args_file ' . $args_file;
+	    my $cmd = 'mx-run solGS::queryJobs ' 
+	    	. ' --data_type genotype '
+	    	. ' --population_type trial '
+	    	. ' --args_file ' . $args_file;
 
 
 	    my $config_args = {
@@ -3711,15 +3711,15 @@ sub get_cluster_query_job_args {
     nstore $query_args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
 	
-    # my $cmd = 'mx-run solGS::queryJobs ' 
-    # 	. ' --data_type ' . $data_type
-    # 	. ' --population_type ' . $pop_type
-    # 	. ' --args_file ' . $args_file;
+    my $cmd = 'mx-run solGS::queryJobs ' 
+    	. ' --data_type ' . $data_type
+    	. ' --population_type ' . $pop_type
+    	. ' --args_file ' . $args_file;
 
-    my $cmd = solGS::queryJobs->new({data_type => $data_type, 
-				       population_type => $pop_type, 
-				       args_file=>$args_file}
-	);
+    # my $cmd = solGS::queryJobs->new({data_type => $data_type, 
+    # 				       population_type => $pop_type, 
+    # 				       args_file=>$args_file}
+    # 	);
     
     my $config_args = {
 	'temp_dir' => $temp_dir,
@@ -3921,50 +3921,56 @@ sub submit_job_cluster {
 	$job = CXGN::Tools::Run->new($args->{config});
 	$job->do_not_cleanup(1);
 
-       
+	
 	if ($args->{background_job}) 
-	{  print STDERR "\n submit_job_cluster bg job\n";
-	    if ($args->{async}) 
-	    { print STDERR "\n submit_job_cluster async job\n";
-		$job->is_async(1);		 
-		$job->run_async($args->{cmd});
-	    } else 
-	    { print STDERR "\n submit_job_cluster sync job\n";
-		$job->is_async(0);
-		$job->run_cluster($args->{cmd});
-	    }
+	{  
+	    print STDERR "\n submit_job_cluster async job\n";
+	    $job->is_async(1);		 
+	    $job->run_cluster($args->{cmd});
 	    
 	    $c->stash->{r_job_tempdir} = $job->job_tempdir();
 	    $c->stash->{r_job_id}      = $job->jobid();
 	    $c->stash->{cluster_job_id} = $job->cluster_job_id();
 	    $c->stash->{cluster_job}   = $job;	
-
-	    my $jid = $job->cluster_job_id();
-	
 	} 
 	else 
-	{ print STDERR "\n submit_job_cluster no background job\n";
-	    # $job->is_cluster(1);
-	    # $job->run_cluster($args->{cmd});
-	  # $job->wait;
-
-	  my $cmd = $args->{cmd};
-
-	  if ($cmd =~ /Rscript/) {
-	      print STDERR "\n\nSubmitted job... $cmd\n\n";	
-	      #my $cmd = $args->{cmd};
-	      my $job = qx /$cmd 2>&1/;
-
-	      my ($job_id) = split(/\t/, $job); 
-
-	      print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
-	      print STDERR "\n job: $job -- id: $job_id\n"; 
-	  } else {
-	      print STDERR "\n run: $cmd\n";
-	      $cmd->run;
-	      print STDERR "\n run job done\n";
-	  }
+	{ 
+	    print STDERR "\n submit_job_cluster sync job\n";
+	    #$job->is_async(0);
+	    $job->is_cluster(1);
+	    $job->run_cluster($args->{cmd});
+	    $job->wait();
+	
 	}
+	    
+
+
+	
+	# } 
+	# else 
+	# { print STDERR "\n submit_job_cluster no background job\n";
+	#     #
+	#   $job->is_cluster(1);
+	#   $job->run_cluster($args->{cmd});
+	#   $job->wait;
+
+	#   # my $cmd = $args->{cmd};
+
+	#   # if ($cmd =~ /Rscript/) {
+	#   #     print STDERR "\n\nSubmitted job... $cmd\n\n";	
+	#   #     #my $cmd = $args->{cmd};
+	#   #     my $job = qx /$cmd 2>&1/;
+
+	#   #     my ($job_id) = split(/\t/, $job); 
+
+	#   #     print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
+	#   #     print STDERR "\n job: $job -- id: $job_id\n"; 
+	#   # } else {
+	#   #     print STDERR "\n run: $cmd\n";
+	#   #     $cmd->run;
+	#   #     print STDERR "\n run job done\n";
+	#   # }
+	# }
 	
     };
 
