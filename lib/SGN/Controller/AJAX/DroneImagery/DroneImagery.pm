@@ -4137,6 +4137,7 @@ sub _perform_keras_cnn_predict {
     my $data_matrix_rows = 0;
     my $iter = 0;
     my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'previous_value', 'prediction');
+    my @simple_data_matrix;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_output_file)
@@ -4158,12 +4159,35 @@ sub _perform_keras_cnn_predict {
                 if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
                     push @data_matrix, @columns;
                 }
+                push @simple_data_matrix, ($previous_value, $class);
                 $data_matrix_rows++;
             }
             push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $class, $previous_value, $class_probabilities, $image_ids[$iter]];
             $iter++;
         }
     close($fh);
+
+    print STDERR "CNN Prediction Correlation\n";
+    my @model_results;
+    my @simple_data_matrix_colnames = ("previous_value", "prediction");
+    my $rmatrix = R::YapRI::Data::Matrix->new({
+        name => 'matrix1',
+        coln => scalar(@simple_data_matrix_colnames),
+        rown => $data_matrix_rows,
+        colnames => \@simple_data_matrix_colnames,
+        data => \@simple_data_matrix
+    });
+
+    my $rbase = R::YapRI::Base->new();
+    my $r_block = $rbase->create_block('r_block');
+    $rmatrix->send_rbase($rbase, 'r_block');
+    $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
+    $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+    $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
+    $r_block->run_block();
+    my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
+    print STDERR Dumper $result_matrix;
+    push @model_results, $result_matrix->{data}->[0];
 
     my @data_matrix_clean;
     foreach (@data_matrix) {
@@ -4175,7 +4199,6 @@ sub _perform_keras_cnn_predict {
         }
     }
 
-    my @model_results;
     if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
         print STDERR "CNN Prediction Mixed Model\n";
 
