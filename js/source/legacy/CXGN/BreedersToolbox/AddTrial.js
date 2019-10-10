@@ -377,7 +377,6 @@ jQuery(document).ready(function ($) {
         var between_row_spacing = $('#add_project_between_row_spacing').val();
 
         var field_size = $('#new_trial_field_size').val();
-
         var seedlot_hash_combined = {};
         seedlot_hash_combined = extend_obj(accession_list_seedlot_hash, checks_list_seedlot_hash);
         seedlot_hash_combined = extend_obj(seedlot_hash_combined, crbd_checks_list_seedlot_hash);
@@ -881,7 +880,8 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "Augmented") {
-            $("#FieldMap").hide();
+            $("#field_map_row_aug").hide();
+            $("#FieldMap").show();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").show();
