@@ -1203,6 +1203,15 @@ sub delete_cross_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+        $c->detach();
+    }
+
     my $cross_stock_id = $c->req->param("cross_id");
 
     my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
