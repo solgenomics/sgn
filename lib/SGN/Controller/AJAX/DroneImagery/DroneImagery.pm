@@ -4182,6 +4182,8 @@ sub _perform_keras_cnn_predict {
     my $r_block = $rbase->create_block('r_block');
     $rmatrix->send_rbase($rbase, 'r_block');
     $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
+    $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
+    $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
     $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
     $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
     $r_block->run_block();

@@ -1167,7 +1167,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in sourcing images from" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in sourcing images from for prediction" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
@@ -1201,7 +1201,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
-                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from" &>
+                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from for prediction" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_predict_keras_drone_runs_table">
                         <thead>
@@ -1225,7 +1225,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Images Selection" &>
-                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from" &>
+                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from for prediction" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_predict_keras_plot_polygon_image_type_table">
                         <thead>
