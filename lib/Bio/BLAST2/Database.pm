@@ -440,7 +440,7 @@ sub get_sequence {
     croak "cannot call get_sequence on a database that has not been indexed for retrieval!"
         unless $self->indexed_seqs;
 
-    return Bio::BLAST::Database::Seq->new(
+    return Bio::BLAST2::Database::Seq->new(
         -bdb => $self,
         -id  => $seqname,
         );
@@ -536,11 +536,11 @@ __END__
 
 =head1 NAME
 
-Bio::BLAST::Database - work with formatted BLAST databases
+Bio::BLAST2::Database - work with formatted BLAST databases, updated for new NCBI-Blast+ Debian package
 
 =head1 SYNOPSIS
 
-  use Bio::BLAST::Database;
+  use Bio::BLAST2::Database;
 
   # open an existing bdb for reading
   my $fs = Bio::BLAST::Database->open(
@@ -551,7 +551,7 @@ Bio::BLAST::Database - work with formatted BLAST databases
   my @filenames = $fs->list_files;
 
   #reopen it for writing
-  $fs = Bio::BLAST::Database->open(
+  $fs = Bio::BLAST2::Database->open(
             full_file_basename => '/path/to/my_bdb',
             write => 1,
           );

@@ -83,7 +83,7 @@ sub trunc {
 
     my $ffbn    = $self->_bdb->full_file_basename;
     my $seqname = $self->id;
-    open my $fc, "blastdbcmd -db '$ffbn' -entry '$seqname' -L $start,$end 2>&1 |";
+    open my $fc, "blastdbcmd -db '$ffbn' -entry '$seqname' -range $start-$end 2>&1 |";
 
     return $length > 4_000_000
                 ? $self->_parse_large_seq( $fc )
@@ -165,12 +165,12 @@ sub _parse_defline {
     print STDERR "DEFLINE RETRIEVED = $defline\n";
     
     return if $defline =~ /ERROR:\s+Entry\s*"[^"]+"\s+not found/;
-#    ( my $id, $defline ) = $defline =~ m(
-#                                          >(?:lcl\|)?(\S+) \s+ (.*)
-    #                                        )x
-   ( my $id, $defline ) = $defline =~ m(
-                                          >(\S+)\s+(.*)
+    ( my $id, $defline ) = $defline =~ m(
+                                          >(?:lcl\|)?(\S+) \s+ (.*)
                                             )x
+   #( my $id, $defline ) = $defline =~ m(
+    #                                      >(\S+)\s+(.*)
+     #                                       )x
 
     
     
