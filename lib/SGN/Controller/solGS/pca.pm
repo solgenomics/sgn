@@ -90,7 +90,10 @@ sub pca_run :Path('/pca/run/') Args() {
     }
     
     $self->format_pca_output($c);
-    $ret = $c->stash->{formatted_pca_output};   
+    my $res = $c->stash->{formatted_pca_output};
+    if ($res) {
+	$ret = $res;
+    }   
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');

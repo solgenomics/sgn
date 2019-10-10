@@ -25,6 +25,7 @@ use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use SGN::Controller::solGS::Utils;
 use solGS::queryJobs;
+use solGS::asyncJob;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -3587,21 +3588,28 @@ sub run_async {
     nstore $job_config, $job_config_file 
 	or croak "job config file: $! serializing job config to $job_config_file ";
 	
-    my $cmd = 'mx-run solGS::asyncJob'
-	. ' --prerequisite_jobs '         . $prerequisite_jobs
-	. ' --dependent_jobs '            . $dependent_jobs
-    	. ' --analysis_report_job '       . $report_file;
+    #my $cmd = 'mx-run solGS::asyncJob'
+#	. ' --prerequisite_jobs '         . $prerequisite_jobs
+#	. ' --dependent_jobs '            . $dependent_jobs
+ #   	. ' --analysis_report_job '       . $report_file;
     
+    my $jobs = solGS::asyncJob->new({prerequisite_jobs => $prerequisite_jobs,
+				     dependent_jobs => $dependent_jobs,
+				     analysis_report_job => $report_file,
+				     config_file => $job_config_file}
+	);
+    print STDERR "\ncalling async job run\n";
+    $jobs->run;
+print STDERR "\nDONE callg async job run\n";    
+  #  my $cluster_job_args = {
+#	'cmd' => $cmd,
+#	'config' => $job_config,
+#	'background_job'  => $background_job,
+#	'temp_dir'     => $temp_dir,
+#	'async'        => $c->stash->{async},
+ #   };
 
-    my $cluster_job_args = {
-	'cmd' => $cmd,
-	'config' => $job_config,
-	'background_job'  => $background_job,
-	'temp_dir'     => $temp_dir,
-	'async'        => $c->stash->{async},
-    };
-
-   my $job = $self->submit_job_cluster($c, $cluster_job_args);
+  # my $job = $self->submit_job_cluster($c, $cluster_job_args);
   
 }
 
@@ -3892,6 +3900,7 @@ sub create_cluster_config {
 
     my $config = {
 	backend          => $c->config->{backend},
+	submit_host      => $c->config->{cluster_host},
 	temp_base        => $args->{temp_dir},
 	queue            => $c->config->{'web_cluster_queue'},
 	max_cluster_jobs => 1_000_000_000,

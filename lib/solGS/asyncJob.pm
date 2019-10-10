@@ -29,6 +29,11 @@ has "analysis_report_job" => (
     isa      => 'Str',
     );
 
+has "config_file" => (
+    is       => 'ro',
+    isa      => 'Str',
+    );
+
 
 
 sub run {
@@ -51,21 +56,21 @@ sub run_jobs {
 	$jobs =  $self->run_prerequisite_jobs;    	  
     }
 
-    # foreach my $job_id (@$jobs)
-    # {
-    # 	while (1) 
-    # 	{
+    foreach my $job (@$jobs)
+    {
+     	while (1) 
+     	{
     # 	    my $st = $self->check_job_status($job_id);
-    # 	    last if $st =~ /done/;
-    # 	    sleep if $st =~ /runnning/;
-    # 	    #last if !$job->alive();	    
-    # 	    #sleep 30 if $job->alive();
+     #	    last if $st =~ /done/;
+     #	    sleep if $st =~ /runnning/;
+     	    last if !$job->alive();	    
+     	    sleep 30 if $job->alive();
 	    
-    # 	}
-    # }
+    	}
+    }
 
-    $self->run_dependent_jobs;  
-    $self->send_analysis_report;
+   $jobs = $self->run_dependent_jobs;  
+    $self->send_analysis_report($jobs);
     
 }
 
@@ -84,8 +89,8 @@ sub run_prerequisite_jobs {
     my @jobs;
     foreach my $job (@$jobs) 
     {
-	my $job_id = $self->submit_job($job);
-	push @jobs, $job_id;
+	my $job = $self->submit_job($job);
+	push @jobs, $job;
     }
     
     return \@jobs;
@@ -107,8 +112,8 @@ sub run_dependent_jobs {
     my @jobs;
     foreach my $job (@$jobs) 
     {
-	my $job_id = $self->submit_job($job);
-	push @jobs, $job_id;
+	my $job = $self->submit_job($job);
+	push @jobs, $job;
     }
     
     return \@jobs;
@@ -121,23 +126,23 @@ sub send_analysis_report {
     my $self = shift;
     my $jobs = shift;
     
-    # if (reftype $jobs ne 'ARRAY') 
-    # {
-    # 	$jobs = [$jobs];
-    # }
-    # print STDERR "\n sending analyis report\n";
-    # foreach my $job (@$jobs) 
-    # {
-    # 	while (1)
-    # 	{
+    if (reftype $jobs ne 'ARRAY') 
+    {
+     	$jobs = [$jobs];
+    }
+     print STDERR "\n sending analyis report\n";
+     foreach my $job (@$jobs) 
+     {
+     	while (1)
+     	{
     # 	    my $st = $self->check_job_status($job);
-    # 	    last if $st =~ /done/;
+     #	    last if $st =~ /done/;
     # 	    sleep if $st =~ /runnning/;
 	    
-    # 	   # last if !$job->alive();
-    # 	   # sleep 30 if $job->alive();
-    # 	}
-    # }
+   	    last if !$job->alive();
+	    sleep 30 if $job->alive();
+   	}
+     }
     
     my $report_file    = $self->analysis_report_job;
     unless ($report_file =~ /none/) 
@@ -168,50 +173,60 @@ sub check_job_status {
 }
 
 
+#sub submit_job {
+ #   my ($self, $args) = @_;
+#
+ #   my $job_id;
+  #  print STDERR "\nasync submit_job\n";
+   # eval 
+    #{		
+#	my $job = qx /$args->{cmd}/;
+ #   };
+#
+ #    print STDERR "\nasync submit_job: jobid - $job_id\n";
+  #  if ($@) 
+   # {
+    #	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
+    #}
+
+    #return $job_id;
+    
+#}
+
 sub submit_job {
-    my ($self, $args) = @_;
+     my ($self, $args) = @_;
 
-    my $job_id;
-    print STDERR "\nasync submit_job\n";
+     my $job;
+     my $config = $self->config_file;
+     $config = retrieve($config);
     eval 
-    {		
-	my $job = qx /$args->{cmd}/;
-    };
+     {		
+     	$job = CXGN::Tools::Run->new($args->{config});
+     	$job->do_not_cleanup(1);
+	if ($args->{background}) {
+     	$job->is_async(1);
+ 	$job->run_cluster($args->{cmd});
 
-     print STDERR "\nasync submit_job: jobid - $job_id\n";
-    if ($@) 
-    {
-    	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
-    }
+ 	print STDERR "Submitted job... $args->{cmd}\n";	   
+	} else {
+	    
+	    
+		print STDERR "\n submit_job_cluster sync job\n";
+		#$job->is_async(0);
+		$job->is_cluster(1);
+		$job->run_cluster($args->{cmd});
+		$job->wait();
+	}
+     };
 
-    return $job_id;
+     if ($@) 
+     {
+     	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
+     }
+
+     return $job;
     
-}
-
-# sub submit_job {
-#     my ($self, $args) = @_;
-
-#     my $job;
-    
-#     eval 
-#     {		
-#     	$job = CXGN::Tools::Run->new($args->{config});
-#     	$job->do_not_cleanup(1);
-	 
-#     	$job->is_async(1);
-# 	$job->run_cluster($args->{cmd});
-
-# 	print STDERR "Submitted job... $args->{cmd}\n";	   
-#     };
-
-#     if ($@) 
-#     {
-#     	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
-#     }
-
-#     return $job;
-    
-# }
+ }
 
 
 
