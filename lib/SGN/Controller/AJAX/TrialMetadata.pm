@@ -1959,7 +1959,7 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_seedlots_from_crossingtrial();
     my @crosses;
