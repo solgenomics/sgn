@@ -170,13 +170,17 @@ sub create_correlation_phenodata_file {
     } 
     else
     {           
-	$self->corre_pheno_query_jobs($c);
-	my $queries =$c->stash->{corre_pheno_query_jobs};
+	$self->corre_pheno_query_jobs_file($c);
+	my $queries =$c->stash->{corre_pheno_query_jobs_file};
        
-	foreach my $job (@$queries) 
-	{
-	    $c->controller('solGS::solGS')->submit_job_cluster($c, $job);
-	}
+	# foreach my $job (@$queries) 
+	# {
+	#     $c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	# }
+
+	#$c->stash->{prerequisite_jobs} = $queries;
+	$c->stash->{dependent_jobs} = $queries;
+	$c->controller('solGS::solGS')->run_async($c);
 
 	$c->controller("solGS::Files")->phenotype_file_name($c, $pop_id); 
 	$phenotype_file = $c->stash->{phenotype_file_name};
@@ -505,11 +509,11 @@ sub run_correlation_analysis {
     
     #if ($corre_type =~ /pheno/)
     #{
-	$self->corre_pheno_query_jobs($c);
-	my $queries =$c->stash->{corre_pheno_query_jobs};
+	$self->corre_pheno_query_jobs_file($c);
+	my $queries =$c->stash->{corre_pheno_query_jobs_file};
 	
-	$self->corre_pheno_r_jobs($c);
-	my $r_jobs = $c->stash->{corre_pheno_r_jobs};
+	$self->corre_pheno_r_jobs_file($c);
+	my $r_jobs = $c->stash->{corre_pheno_r_jobs_file};
 	$c->stash->{prerequisite_jobs} = $queries;
 	$c->stash->{dependent_jobs} = $r_jobs;
 	$c->controller('solGS::solGS')->run_async($c);
@@ -568,19 +572,19 @@ sub corre_pheno_r_jobs {
 }
 
 
-sub corre_r_jobs_file {
+sub corre_pheno_r_jobs_file {
     my ($self, $c) = @_;
 
-    $self->corre_r_jobs($c);
-    my $jobs = $c->stash->{corre_r_jobs};
+    $self->corre_pheno_r_jobs($c);
+    my $jobs = $c->stash->{corre_pheno_r_jobs};
       
-    my $temp_dir = $c->stash->{correlation _temp_dir};
+    my $temp_dir = $c->stash->{correlation_temp_dir};
     my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'corre-r-jobs-file');	   
    
     nstore $jobs, $jobs_file
 	or croak "correlation r jobs : $! serializing correlation r jobs to $jobs_file";
 
-    $c->stash->{corre_r_jobs_file} = $jobs_file;
+    $c->stash->{corre_pheno_r_jobs_file} = $jobs_file;
     
 }
 
@@ -602,7 +606,7 @@ sub corre_pheno_query_jobs {
 sub corre_pheno_query_jobs_file {
     my ($self, $c) = @_;
 
-    $self->corre_pheno__query_jobs($c);
+    $self->corre_pheno_query_jobs($c);
     my $jobs = $c->stash->{corre_pheno_query_jobs};
   
     my $temp_dir = $c->stash->{correlation_temp_dir};

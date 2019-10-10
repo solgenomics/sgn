@@ -121,13 +121,16 @@ sub create_anova_phenodata_file {
     #$c->controller('solGS::solGS')->phenotype_file($c);
 
 
-    $self->anova_query_jobs($c);
-    my $queries =$c->stash->{anova_query_jobs};
+    $self->anova_query_jobs_file($c);
+    my $queries =$c->stash->{anova_query_jobs_file};
+   
+    $c->stash->{dependent_jobs} = $queries;
+    $c->controller('solGS::solGS')->run_async($c);
     
-    foreach my $job (@$queries)
-    {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
-    }
+    # foreach my $job (@$queries)
+    # {
+    # 	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+    # }
      
     $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{pop_id});
     my $pheno_file = $c->stash->{phenotype_file_name};
@@ -347,16 +350,24 @@ sub prep_download_files {
 sub run_anova {
     my ($self, $c) = @_;
  
-    my $cores = $c->controller('solGS::Utils')->count_cores();
+    # my $cores = $c->controller('solGS::Utils')->count_cores();
     
-    if ($cores > 1) 
-    {	
-    	$self->run_anova_multi_cores($c);
-    }
-    else
-    {
-	$self->run_anova_single_core($c);	
-    }
+    # if ($cores > 1) 
+    # {	
+    # 	$self->run_anova_multi_cores($c);
+    # }
+    # else
+    # {
+    # 	$self->run_anova_single_core($c);	
+    # }
+
+    $self->anova_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{anova_query_jobs_file};
+    
+    $self->anova_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{anova_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
     
 }
 

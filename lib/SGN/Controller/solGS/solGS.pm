@@ -3900,7 +3900,7 @@ sub create_cluster_config {
 
     my $config = {
 	backend          => $c->config->{backend},
-	submit_host      => $c->config->{cluster_host},
+###	submit_host      => $c->config->{cluster_host},
 	temp_base        => $args->{temp_dir},
 	queue            => $c->config->{'web_cluster_queue'},
 	max_cluster_jobs => 1_000_000_000,

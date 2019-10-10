@@ -863,17 +863,25 @@ sub cluster_query_jobs {
 sub run_cluster {
     my ($self, $c) = @_;
  
-    my $cores = $c->controller('solGS::Utils')->count_cores();
+    # my $cores = $c->controller('solGS::Utils')->count_cores();
      
-    if ($cores > 1) 
-    {
-    	$self->run_cluster_multi_cores($c);
-    }
-    else
-    {
-	$self->run_cluster_single_core($c);
+    # if ($cores > 1) 
+    # {
+    # 	$self->run_cluster_multi_cores($c);
+    # }
+    # else
+    # {
+    # 	$self->run_cluster_single_core($c);
 	
-    }
+    # }
+    $self->cluster_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
+    
+    $self->cluster_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
+    
     
 }
 

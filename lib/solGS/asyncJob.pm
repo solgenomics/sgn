@@ -70,7 +70,7 @@ sub run_jobs {
     }
 
    $jobs = $self->run_dependent_jobs;  
-    $self->send_analysis_report($jobs);
+   $self->send_analysis_report($jobs);
     
 }
 
@@ -126,23 +126,19 @@ sub send_analysis_report {
     my $self = shift;
     my $jobs = shift;
     
-    if (reftype $jobs ne 'ARRAY') 
-    {
-     	$jobs = [$jobs];
-    }
-     print STDERR "\n sending analyis report\n";
-     foreach my $job (@$jobs) 
-     {
-     	while (1)
-     	{
-    # 	    my $st = $self->check_job_status($job);
-     #	    last if $st =~ /done/;
-    # 	    sleep if $st =~ /runnning/;
-	    
-   	    last if !$job->alive();
-	    sleep 30 if $job->alive();
-   	}
-     }
+    # if (reftype $jobs ne 'ARRAY') 
+    # {
+    #  	$jobs = [$jobs];
+    # }
+    #  print STDERR "\n sending analyis report\n";
+    #  foreach my $job (@$jobs) 
+    #  {
+    #  	while (1)
+    #  	{	    
+    # 	    last if !$job->alive();
+    # 	    sleep 30 if $job->alive();
+    # 	}
+    #  }
     
     my $report_file    = $self->analysis_report_job;
     unless ($report_file =~ /none/) 
@@ -154,68 +150,30 @@ sub send_analysis_report {
 }
 
 
-sub check_job_status {
-    my ($self, $job_id) = @_;
-
-    my $status = qx /squeue -j $job_id 2>&1/;
-   
-    
-    my $check = 'slurm_load_jobs error: Invalid job id specified';
-
- print STDERR "\njob_id: $job_id - status: $status\n";   
-
-    if ($status =~ /$check/) {
-	return 'done';
-    } else {
-	return 'running';
-    }
-    
-}
-
-
-#sub submit_job {
- #   my ($self, $args) = @_;
-#
- #   my $job_id;
-  #  print STDERR "\nasync submit_job\n";
-   # eval 
-    #{		
-#	my $job = qx /$args->{cmd}/;
- #   };
-#
- #    print STDERR "\nasync submit_job: jobid - $job_id\n";
-  #  if ($@) 
-   # {
-    #	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
-    #}
-
-    #return $job_id;
-    
-#}
-
 sub submit_job {
      my ($self, $args) = @_;
 
      my $job;
      my $config = $self->config_file;
      $config = retrieve($config);
+     
+     print STDERR "job... $args->{cmd}\n";	
+   
     eval 
      {		
      	$job = CXGN::Tools::Run->new($args->{config});
      	$job->do_not_cleanup(1);
-	if ($args->{background}) {
-     	$job->is_async(1);
- 	$job->run_cluster($args->{cmd});
-
- 	print STDERR "Submitted job... $args->{cmd}\n";	   
-	} else {
-	    
-	    
-		print STDERR "\n submit_job_cluster sync job\n";
-		#$job->is_async(0);
-		$job->is_cluster(1);
-		$job->run_cluster($args->{cmd});
-		$job->wait();
+	$job->is_cluster(1);
+	$job->run_cluster($args->{cmd});
+		    
+	if (!$args->{background_job}) {
+	   
+	    print STDERR "\n WAITING job to finish\n";
+	    #$job->is_async(0);
+	   
+	    $job->wait();
+	    print STDERR "\n job COMPLETED\n";
+	      	    
 	}
      };
 
