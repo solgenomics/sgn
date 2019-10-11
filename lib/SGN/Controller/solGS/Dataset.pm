@@ -251,7 +251,6 @@ sub get_model {
 }
 
 
-
 sub dataset_population_summary {
     my ($self, $c) = @_;
 
@@ -340,7 +339,7 @@ sub create_dataset_pop_data_files {
     my ($self, $c) = @_;
 
     my $file_id = $self->dataset_file_id($c);
-
+    #my $dataset_id = $c->stash->{dataset_id}
     $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
@@ -394,10 +393,12 @@ sub dataset_plots_list_phenotype_file {
 sub dataset_file_id {
     my ($self, $c) = @_;
 
-    $c->stash->{data_structure} = 'dataset';
-    $c->controller('solGS::Files')->create_file_id($c);
-
-    return $c->stash->{file_id};
+    my $dataset_id = $c->stash->{dataset_id};
+    if ( $dataset_id =~ /dataset/) {
+	return $dataset_id;
+    }  else {
+	return 'dataset_' . $dataset_id;
+    }	  
     
 }
 
