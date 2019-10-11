@@ -324,7 +324,7 @@ $locations
                             </ul>
                         </li>
                         <li><b>female_parent</b> (accession names or population names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, polycross and bulk crosses. When specified, accession names or population names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession names or population names must exist as <b>uniquenames</b> in the database)</li>
                     </ul>
 
                     <!--
@@ -395,7 +395,7 @@ $locations
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, bulk, bulk_self, bulk_open, or doubled_haploid)
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)
                             <ul class="a">
                                 <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
@@ -403,6 +403,7 @@ $locations
                                     <li><b>self:</b> A self pollinated individual plant.</li>
                                     <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
                                     <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                                    <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
                                     <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
@@ -411,7 +412,7 @@ $locations
                             </ul>
                         </li>
                         <li><b>female_parent</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession or population names must exist as <b>uniquenames</b> in the database)</li>
                         <li><b>female_plot</b> (Plot names must exist in the database)</li>
                         <li><b>male_plot</b> (Plot names must exist in the database)</li>
                     </ul>
@@ -482,7 +483,7 @@ $locations
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
                         <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
-                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid)
                             <ul class="a">
                                 <li><b>cross type descriptions:</b></li>
                                 <ul class="b">
@@ -490,6 +491,7 @@ $locations
                                     <li><b>self:</b> A self pollinated individual plant.</li>
                                     <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
                                     <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                                    <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
                                     <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.</li>
                                     <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                     <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
@@ -498,7 +500,7 @@ $locations
                             </ul>
                         </li>
                         <li><b>female_parent</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
-                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>male_parent</b> (required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, polycross and bulk cross types. When specified, accession or population names must exist as <b>uniquenames</b> in the database)</li>
                         <li><b>female_plant</b> (Plant names must exist in the database)</li>
                         <li><b>male_plant</b> (Plant names must exist in the database)</li>
                     </ul>
