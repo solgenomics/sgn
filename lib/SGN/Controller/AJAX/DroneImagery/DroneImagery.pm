@@ -3692,10 +3692,12 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my %data_hash;
     foreach (@$result) {
         my $image_id = $_->{image_id};
+        my $project_image_type_name = $_->{project_image_type_name};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
+        push @{$data_hash{$_->{stock_id}}->{image_types}}, $project_image_type_name;
     }
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
@@ -3724,14 +3726,18 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         while (my ($stock_id, $data) = each %data_hash){
             my $image_fullpaths = $data->{image_fullpaths};
+            my $image_types = $data->{image_types};
             my $value = $data->{trait_value};
             if ($value) {
+                my $iter = 0;
                 foreach (@$image_fullpaths) {
                     print $F '"'.$stock_id.'",';
                     print $F '"'.$_.'",';
                     print $F '"'.$value.'",';
-                    print $F '"'.$trait_name.'"';
+                    print $F '"'.$trait_name.'",';
+                    print $F '"'.$image_types->[$iter].'"';
                     print $F "\n";
+                    $iter++;
                 }
             }
         }
