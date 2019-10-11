@@ -3693,11 +3693,13 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     foreach (@$result) {
         my $image_id = $_->{image_id};
         my $project_image_type_name = $_->{project_image_type_name};
+        my $drone_run_band_project_name = $_->{drone_run_band_project_name};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
         push @{$data_hash{$_->{stock_id}}->{image_types}}, $project_image_type_name;
+        push @{$data_hash{$_->{stock_id}}->{drone_run_band_project_names}}, $drone_run_band_project_name;
     }
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
@@ -3728,6 +3730,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
             my $image_fullpaths = $data->{image_fullpaths};
             my $image_types = $data->{image_types};
             my $value = $data->{trait_value};
+            my $drone_run_band_project_names = $data->{drone_run_band_project_names};
             if ($value) {
                 my $iter = 0;
                 foreach (@$image_fullpaths) {
@@ -3735,7 +3738,8 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
                     print $F '"'.$_.'",';
                     print $F '"'.$value.'",';
                     print $F '"'.$trait_name.'",';
-                    print $F '"'.$image_types->[$iter].'"';
+                    print $F '"'.$image_types->[$iter].'",';
+                    print $F '"'.$drone_run_band_project_names->[$iter].'"';
                     print $F "\n";
                     $iter++;
                 }
