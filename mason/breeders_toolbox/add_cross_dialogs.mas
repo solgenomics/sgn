@@ -35,7 +35,7 @@ $locations
                             <ul>
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
                                 <li>Each cross has a globally unique cross id.</li>
-                                <li>Supported cross types are: biparental, self, open, sib, bulk, bulk_self, bulk_open, or doubled_haploid</li>
+                                <li>Supported cross types are: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
                                 <li>A cross can have other data associated to it, such as number of flowers, pollination date, etc.</li>
