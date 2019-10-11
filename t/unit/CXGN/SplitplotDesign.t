@@ -40,10 +40,9 @@ is_deeply($trial_design->get_num_plants_per_plot(),$num_plants_per_plt, "Get num
 ok($trial_design->set_design_type($design_type), "Set design type");
 ok($trial_design->calculate_design(), "Calculate trial design");
 ok(%design = %{$trial_design->get_design()}, "Get trial design");
-ok($design{'1'}->{row_number} == 1, "First plot row_number is 1");
-ok($design{'1'}->{col_number} == 1, "First plot col_number is 1");
+is($design{'1004'}->{plot_number}, "1004");
 print STDERR scalar(keys %design)."\n";
-is(scalar(keys %design), 41, "Result of design");
+is(scalar(keys %design), 21, "Result of design");
 print STDERR Dumper \%design;
 
 done_testing();

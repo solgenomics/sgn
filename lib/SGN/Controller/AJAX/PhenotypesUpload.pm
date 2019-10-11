@@ -47,7 +47,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -57,7 +57,17 @@ sub upload_phenotype_verify_POST : Args(1) {
     if ($timestamp_included) {
         $timestamp = 1;
     }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -92,7 +102,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -106,7 +116,16 @@ sub upload_phenotype_store_POST : Args(1) {
         $timestamp = 1;
     }
 
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -139,7 +158,7 @@ sub upload_phenotype_store_POST : Args(1) {
         push @$success_status, $stored_phenotype_success;
     }
 
-    if ($image_zip) {
+    if ($validate_type eq 'field book' && $image_zip) {
         my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
         my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
         if ($image_error) {
@@ -175,27 +194,30 @@ sub _prep_upload {
     my $data_level;
     my $image_zip;
     if ($file_type eq "spreadsheet") {
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs or scio
-        print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs or scio or associated_images
+        # print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
         $metadata_file_type = "spreadsheet phenotype file";
+
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
-        }
-        if ($spreadsheet_format eq 'simple'){
+        } elsif ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
-        }
-        if ($spreadsheet_format eq 'nirs'){
+        } elsif ($spreadsheet_format eq 'nirs'){
             $validate_type = "phenotype spreadsheet nirs";
             $metadata_file_type = "nirs spreadsheet";
-        }
-        if ($spreadsheet_format eq 'scio'){
+        } elsif ($spreadsheet_format eq 'scio'){
             $validate_type = "scio spreadsheet nirs";
             $metadata_file_type = "nirs spreadsheet";
+        } elsif ($spreadsheet_format eq 'associated_images'){
+            $validate_type = "phenotype spreadsheet associated_images";
+        } else {
+            die "Spreadsheet format not supported! Only simple, detailed, nirs, scio, or associated_images\n";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
+        $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
     }
     elsif ($file_type eq "fieldbook") {
         # print STDERR "Fieldbook \n";
@@ -283,8 +305,7 @@ sub _prep_upload {
     }
 
     ## Validate and parse uploaded file
-    print STDERR "Validating file\n";
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         return (\@success_status, \@error_status);
@@ -305,8 +326,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
-    print STDERR "Parsing file\n";
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         return (\@success_status, \@error_status);
@@ -326,7 +346,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
@@ -387,7 +407,16 @@ sub update_plot_phenotype_POST : Args(0) {
   $phenotype_metadata{'date'}="$timestamp";
   my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
+  my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+  my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
   my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+      basepath=>$c->config->{basepath},
+      dbhost=>$c->config->{dbhost},
+      dbname=>$c->config->{dbname},
+      dbuser=>$c->config->{dbuser},
+      dbpass=>$c->config->{dbpass},
+      temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
       bcs_schema=>$schema,
       metadata_schema=>$metadata_schema,
       phenome_schema=>$phenome_schema,
@@ -449,6 +478,14 @@ sub retrieve_plot_phenotype_POST : Args(0) {
 
   $c->stash->{rest} = {trait_value => $trait_value};
 
+}
+
+sub view_all_uploads :Path('/ajax/phenotype/view_uploads') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $file_list = CXGN::Project->get_all_phenotype_metadata($c->dbic_schema("Bio::Chado::Schema"), 100);
+    $c->stash->{rest} = $file_list;
 }
 
 #########

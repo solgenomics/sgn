@@ -83,6 +83,7 @@ jQuery(document).ready(function($) {
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
+            $("#get_sib_parent").toggle($("#cross_type").val() == "sib");
             $("#get_bulk_maternal_population").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_paternal_parent").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_selfed_population").toggle($("#cross_type").val() == "bulk_self");
@@ -150,7 +151,7 @@ jQuery(document).ready(function($) {
         var crossName = $("#cross_name").val();
         crossName = crossName.trim();
         if (!crossName) {
-            alert("A cross name is required");
+            alert("A cross unique id is required");
             return;
         }
 
@@ -163,8 +164,9 @@ jQuery(document).ready(function($) {
         var visibleToRole = $("#visible_to_role").val();
         var female_plot = $("#female_plot").val();
         var male_plot = $("#male_plot").val();
+        var cross_combination = $("#dialog_cross_combination").val();
 
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination);
 
     });
 
@@ -250,13 +252,9 @@ jQuery(document).ready(function($) {
     });
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination) {
 
         var progenyNumber = $("#progeny_number").val();
-//        var pollinationDate = $("#pollination_date").val();
-//        var flowerNumber = $("#flower_number").val();
-//        var fruitNumber = $("#fruit_number").val();
-//        var seedNumber = $("#seed_number").val();
         var prefix = $("#prefix").val();
         var suffix = $("#suffix").val();
         var maternal;
@@ -277,6 +275,11 @@ jQuery(document).ready(function($) {
             case 'open':
                 maternal = $("#open_maternal_parent").val();
                 paternal = $("#open_paternal_population").val();
+                break;
+            case 'sib':
+                var sibParent = $("#sib_parent").val();
+                maternal = sibParent;
+                paternal = sibParent;
                 break;
             case 'bulk':
                 maternal = $("#bulk_maternal_population").val();
@@ -317,10 +320,22 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents +
-                '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&prefix=' + prefix +
-                '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&female_plot=' + female_plot +
-                '&male_plot=' + male_plot,
+            data:{
+                'cross_name': crossName,
+                'cross_type': crossType,
+                'maternal': maternal,
+                'paternal': paternal,
+                'maternal_parents': maternal_parents,
+                'paternal_parents': paternal_parents,
+                'progeny_number': progenyNumber,
+                'prefix': prefix,
+                'suffix': suffix,
+                'visible_to_role': visibleToRole,
+                'crossing_trial_id': crossing_trial_id,
+                'female_plot': female_plot,
+                'male_plot': male_plot,
+                'cross_combination': cross_combination,
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },

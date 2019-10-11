@@ -49,22 +49,50 @@ sub verify_accession_list_GET : Args(0) {
 }
 
 sub verify_accession_list_POST : Args(0) {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
 
-  my $accession_list_json = $c->req->param('accession_list');
-  my $organism_list_json = $c->req->param('organism_list');
-  my @accession_list = @{_parse_list_from_json($accession_list_json)};
-  my @organism_list = $organism_list_json ? @{_parse_list_from_json($organism_list_json)} : [];
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
 
-  my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
+    my $accession_list_json = $c->req->param('accession_list');
+    my $organism_list_json = $c->req->param('organism_list');
+    my @accession_list = @{_parse_list_from_json($accession_list_json)};
+    my @organism_list = $organism_list_json ? @{_parse_list_from_json($organism_list_json)} : [];
 
-  if ($do_fuzzy_search) {
-      $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
-  }
-  else {
-      $self->do_exact_search($c, \@accession_list, \@organism_list);
-  }
+    my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
+    if ($user_role ne 'curator' && !$do_fuzzy_search) {
+        $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
+        $c->detach();
+    }
 
+    if ($do_fuzzy_search) {
+        $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
+    }
+    else {
+        $self->do_exact_search($c, \@accession_list, \@organism_list);
+    }
 }
 
 sub do_fuzzy_search {
@@ -201,6 +229,11 @@ sub verify_accessions_file_POST : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $upload = $c->req->upload('new_accessions_upload_file');
+    my $do_fuzzy_search = $c->req->param('fuzzy_check_upload_accessions') ? 1 : 0;
+    if ($user_role ne 'curator' && !$do_fuzzy_search) {
+        $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
+        $c->detach();
+    }
     my $subdirectory = "accessions_spreadsheet_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -226,7 +259,7 @@ sub verify_accessions_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props);
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search);
     $parser->load_plugin('AccessionsXLS');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;

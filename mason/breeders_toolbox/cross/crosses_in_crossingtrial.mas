@@ -9,7 +9,8 @@ $trial_id
     <table class="table table-hover table-bordered" id="crosses_in_crossingtrial_table">
         <thead>
             <tr>
-                <th>Cross Name</th>
+                <th>Cross Unique ID</th>
+                <th>Cross Combination</th>
                 <th>Cross Type</th>
                 <th>Female Parent</th>
                 <th>Male Parent</th>
@@ -17,8 +18,6 @@ $trial_id
                 <th>Male Plot</th>
                 <th>Female Plant</th>
                 <th>Male Plant</th>
-                <th>Number of Progenies Generated</th>
-                <th>Family Name</th>
             </tr>
         </thead>
     </table>
@@ -32,7 +31,7 @@ jQuery(document).ready(function(){
     jQuery('#crosses_in_crossingtrial_section_onswitch').click(function(){
         jQuery('#crosses_in_crossingtrial_table').DataTable({
             'destroy': true,
-            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_and_details_in_trial',
         });
     });
 

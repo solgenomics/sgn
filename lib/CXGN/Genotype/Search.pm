@@ -14,11 +14,18 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
     protocol_id_list=>$protocol_id_list,
+    markerprofile_id_list=>$markerprofile_id_list,
+    genotype_data_project_list=>$genotype_data_project_list,
+    chromosome_list=>\@chromosome_numbers,
+    start_position=>$start_position,
+    end_position=>$end_position,
     marker_name_list=>['S80_265728', 'S80_265723'],
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     protocolprop_top_key_select=>['reference_genome_name', 'header_information_lines', 'marker_names', 'markers'], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
     protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
     return_only_first_genotypeprop_for_stock=>0, #THIS IS TO CONSERVE MEMORY USAGE
+    limit=>$limit,
+    offset=>$offset,
     # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}], NOT IMPLEMENTED
     # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}], NOT IMPLEMENTED
 });
@@ -45,6 +52,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use JSON;
 use CXGN::Stock::Accession;
+use CXGN::Genotype::Protocol;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -78,6 +86,21 @@ has 'trial_list' => (
 
 has 'genotype_data_project_list' => (
     isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'chromosome_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'start_position' => (
+    isa => 'Int|Undef',
+    is => 'ro',
+);
+
+has 'end_position' => (
+    isa => 'Int|Undef',
     is => 'ro',
 );
 
@@ -123,12 +146,12 @@ has 'marker_score_search_hash_list' => (
 );
 
 has 'limit' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw',
 );
 
 has 'offset' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw',
 );
 
@@ -142,11 +165,15 @@ sub get_genotype_info {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $trial_list = $self->trial_list;
+    my $genotype_data_project_list = $self->genotype_data_project_list;
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
     my $tissue_sample_list = $self->tissue_sample_list;
     my $marker_name_list = $self->marker_name_list;
+    my $chromosome_list = $self->chromosome_list;
+    my $start_position = $self->start_position;
+    my $end_position = $self->end_position;
     my $genotypeprop_hash_select = $self->genotypeprop_hash_select;
     my $protocolprop_top_key_select = $self->protocolprop_top_key_select;
     my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
@@ -162,6 +189,8 @@ sub get_genotype_info {
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
     my $igd_genotypeprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'igd number', 'genotype_property')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
@@ -189,14 +218,36 @@ sub get_genotype_info {
         }
     }
 
+    #For genotyping_data_project
+    if ($genotype_data_project_list && scalar($genotype_data_project_list)>0) {
+        my $sql = join ("," , @$genotype_data_project_list);
+        push @where_clause, "project.project_id in ($sql)";
+    }
+    my $stock_obs_type = 'accession';
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
         my $protocol_sql = join ("," , @$protocol_id_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
+
+        foreach (@$protocol_id_list) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $_
+            });
+            if ($protocol->sample_observation_unit_type_name eq 'tissue_sample' ) {
+                $stock_obs_type = 'tissue_sample';
+            }
+        }
     }
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
-        push @where_clause, "stock.stock_id in ($accession_sql)";
-        push @where_clause, "stock.type_id = $accession_cvterm_id";
+        if ($stock_obs_type eq 'accession') {
+            push @where_clause, "stock.stock_id in ($accession_sql)";
+            push @where_clause, "stock.type_id = $accession_cvterm_id";
+        }
+        elsif ($stock_obs_type eq 'tissue_sample') {
+            push @where_clause, "accession_of_tissue_sample.stock_id in ($accession_sql)";
+            push @where_clause, "accession_of_tissue_sample.type_id = $accession_cvterm_id";
+        }
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -256,7 +307,7 @@ sub get_genotype_info {
         LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id = $vcf_map_details_cvterm_id)
         JOIN genotype USING(genotype_id)
         LEFT JOIN genotypeprop AS igd_number_genotypeprop ON(igd_number_genotypeprop.genotype_id = genotype.genotype_id AND igd_number_genotypeprop.type_id = $igd_genotypeprop_cvterm_id)
-        JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id = $vcf_snp_genotyping_cvterm_id)
+        JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id IN ($vcf_snp_genotyping_cvterm_id))
         JOIN project USING(project_id)
         $where_clause
         ORDER BY stock.stock_id, genotype_values.genotypeprop_id ASC
@@ -314,15 +365,107 @@ sub get_genotype_info {
     }
     print STDERR "CXGN::Genotype::Search has genotypeprop_ids $total_count\n";
 
+    my @found_protocolprop_ids = keys %protocolprop_hash;
+    my @protocolprop_marker_hash_select_arr;
+    foreach (@$protocolprop_marker_hash_select){
+        push @protocolprop_marker_hash_select_arr, "s.value->>'$_'";
+    }
+    my @protocolprop_top_key_select_arr;
+    my %protocolprop_top_key_select_hash;
+    foreach (@$protocolprop_top_key_select){
+        if ($_ ne 'markers' && $_ ne 'markers_array') {
+            push @protocolprop_top_key_select_arr, "value->>'$_'";
+        }
+        $protocolprop_top_key_select_hash{$_}++;
+    }
+    my %selected_protocol_marker_info;
+    my %selected_protocol_top_key_info;
+    my %filtered_markers;
+    if (scalar(@found_protocolprop_ids)>0){
+        my $protocolprop_id_sql = join ("," , @found_protocolprop_ids);
+        my $protocolprop_where_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_cvterm_id";
+        my $protocolprop_where_markers_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_markers_cvterm_id";
+        my $protocolprop_where_markers_array_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_markers_array_cvterm_id";
+        my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
+
+        my $chromosome_where = '';
+        if ($chromosome_list && scalar(@$chromosome_list)>0) {
+            my $chromosome_list_sql = join ',', @$chromosome_list;
+            $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+        }
+        my $start_position_where = '';
+        if (defined($start_position)) {
+            $start_position_where = " AND (s.value->>'pos')::int >= $start_position";
+        }
+        my $end_position_where = '';
+        if (defined($end_position)) {
+            $end_position_where = " AND (s.value->>'pos')::int <= $end_position";
+        }
+
+        my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql
+            FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s
+            WHERE $protocolprop_where_markers_sql $chromosome_where $start_position_where $end_position_where;";
+        #print STDERR Dumper $protocolprop_q;
+        my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
+        $protocolprop_h->execute();
+        while (my ($protocol_id, $marker_name, @protocolprop_info_return) = $protocolprop_h->fetchrow_array()) {
+            for my $s (0 .. scalar(@protocolprop_marker_hash_select_arr)-1){
+                $selected_protocol_marker_info{$protocol_id}->{$marker_name}->{$protocolprop_marker_hash_select->[$s]} = $protocolprop_info_return[$s];
+            }
+            $filtered_markers{$marker_name}++;
+        }
+        my $protocolprop_top_key_select_sql = scalar(@protocolprop_top_key_select_arr) > 0 ? ', '.join ',', @protocolprop_top_key_select_arr : '';
+        my $protocolprop_top_key_q = "SELECT nd_protocol_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
+        my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
+        $protocolprop_top_key_h->execute();
+        while (my ($protocol_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
+            for my $s (0 .. scalar(@protocolprop_top_key_select_arr)-1){
+                my $protocolprop_i = $protocolprop_top_key_select->[$s];
+                my $val;
+                if ($protocolprop_i eq 'header_information_lines' || $protocolprop_i eq 'marker_names') {
+                    $val = decode_json $protocolprop_top_key_return[$s];
+                } else {
+                    $val = $protocolprop_top_key_return[$s];
+                }
+                $selected_protocol_top_key_info{$protocol_id}->{$protocolprop_i} = $val;
+            }
+        }
+        if (exists($protocolprop_top_key_select_hash{'markers'})) {
+            my $protocolprop_top_key_q = "SELECT nd_protocol_id, value from nd_protocolprop WHERE $protocolprop_where_markers_sql;";
+            my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
+            $protocolprop_top_key_h->execute();
+            while (my ($protocol_id, $markers_value) = $protocolprop_top_key_h->fetchrow_array()) {
+                $selected_protocol_top_key_info{$protocol_id}->{'markers'} = decode_json $markers_value;
+            }
+        }
+        if (exists($protocolprop_top_key_select_hash{'markers_array'})) {
+            my $protocolprop_top_key_q = "SELECT nd_protocol_id, value from nd_protocolprop WHERE $protocolprop_where_markers_array_sql;";
+            my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
+            $protocolprop_top_key_h->execute();
+            while (my ($protocol_id, $markers_value) = $protocolprop_top_key_h->fetchrow_array()) {
+                $selected_protocol_top_key_info{$protocol_id}->{'markers_array'} = decode_json $markers_value;
+            }
+        }
+    }
+
     my @found_genotypeprop_ids = keys %genotypeprop_hash;
     my @genotypeprop_hash_select_arr;
     foreach (@$genotypeprop_hash_select){
         push @genotypeprop_hash_select_arr, "s.value->>'$_'";
     }
+    my $filtered_markers_string = "'". join ("','", keys %filtered_markers) ."'";
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
-        my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql from genotypeprop, jsonb_each(genotypeprop.value) as s WHERE genotypeprop_id = ? and type_id = $vcf_snp_genotyping_cvterm_id;";
+
+        my $filtered_markers_sql = '';
+        if (scalar(keys %filtered_markers) >0) {
+            $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
+        }
+
+        my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
+            FROM genotypeprop, jsonb_each(genotypeprop.value) as s
+            WHERE genotypeprop_id = ? AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
         foreach my $genotypeprop_id (@found_genotypeprop_ids){
             $genotypeprop_h->execute($genotypeprop_id);
@@ -333,49 +476,6 @@ sub get_genotype_info {
             }
         }
     }
-    print STDERR "CXGN::Genotype::Search has genotypeprops\n";
-
-    my @found_protocolprop_ids = keys %protocolprop_hash;
-    my @protocolprop_marker_hash_select_arr;
-    foreach (@$protocolprop_marker_hash_select){
-        push @protocolprop_marker_hash_select_arr, "s.value->>'$_'";
-    }
-    my @protocolprop_top_key_select_arr;
-    foreach (@$protocolprop_top_key_select){
-        push @protocolprop_top_key_select_arr, "value->>'$_'";
-    }
-    my %selected_protocol_marker_info;
-    my %selected_protocol_top_key_info;
-    if (scalar(@found_protocolprop_ids)>0){
-        my $protocolprop_id_sql = join ("," , @found_protocolprop_ids);
-        my $protocolprop_where_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_cvterm_id";
-        my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
-        my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql from nd_protocolprop, jsonb_each(nd_protocolprop.value->'markers') as s WHERE $protocolprop_where_sql;";
-        my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
-        $protocolprop_h->execute();
-        while (my ($protocol_id, $marker_name, @protocolprop_info_return) = $protocolprop_h->fetchrow_array()) {
-            for my $s (0 .. scalar(@protocolprop_marker_hash_select_arr)-1){
-                $selected_protocol_marker_info{$protocol_id}->{$marker_name}->{$protocolprop_marker_hash_select->[$s]} = $protocolprop_info_return[$s];
-            }
-        }
-        my $protocolprop_top_key_select_sql = scalar(@protocolprop_top_key_select_arr) > 0 ? ', '.join ',', @protocolprop_top_key_select_arr : '';
-        my $protocolprop_top_key_q = "SELECT nd_protocol_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
-        my $protocolprop_top_key_h = $schema->storage->dbh()->prepare($protocolprop_top_key_q);
-        $protocolprop_top_key_h->execute();
-        while (my ($protocol_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
-            for my $s (0 .. scalar(@protocolprop_top_key_select_arr)-1){
-                my $protocolprop_i = $protocolprop_top_key_select->[$s];
-                my $val;
-                if ($protocolprop_i eq 'header_information_lines' || $protocolprop_i eq 'markers_array' || $protocolprop_i eq 'markers' || $protocolprop_i eq 'marker_names') {
-                    $val = decode_json $protocolprop_top_key_return[$s];
-                } else {
-                    $val = $protocolprop_top_key_return[$s];
-                }
-                $selected_protocol_top_key_info{$protocol_id}->{$protocolprop_i} = $val;
-            }
-        }
-    }
-    print STDERR "CXGN::Genotype::Search has protocolprops\n";
 
     foreach (@genotypeprop_array) {
         my $info = $genotypeprop_hash{$_};

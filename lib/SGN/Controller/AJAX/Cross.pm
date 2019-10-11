@@ -36,6 +36,7 @@ use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
+use CXGN::Pedigree::AddFamilyNames;
 use CXGN::Pedigree::AddPopulations;
 use CXGN::Pedigree::ParseUpload;
 use CXGN::Trial::Folder;
@@ -263,9 +264,10 @@ sub add_cross_POST :Args(0) {
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
     my $female_plot_id = $c->req->param('female_plot');
     my $male_plot_id = $c->req->param('male_plot');
+    my $cross_combination = $c->req->param('cross_combination');
     $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
-    #print STDERR "Female Plot=".Dumper($female_plot)."\n";
+    print STDERR "CROSS COMBINATION=".Dumper($cross_combination)."\n";
 
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a cross.\n";
@@ -280,7 +282,7 @@ sub add_cross_POST :Args(0) {
     }
 
     if ($cross_type eq "polycross") {
-      print STDERR "Handling a polycross\n";
+        print STDERR "Handling a polycross\n";
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
         print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
         my $paternal = $cross_name . '_parents';
@@ -289,16 +291,16 @@ sub add_cross_POST :Args(0) {
         $cross_type = 'open';
         print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
         for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-          my $maternal = $maternal_parents[$i];
-          my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
-          print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-          my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
-          if (!$success) {
-            return;
-          }
-          print STDERR "polycross addition  $polycross_name worked successfully\n";
+            my $maternal = $maternal_parents[$i];
+            my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
+            print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
+            my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+            if (!$success) {
+                return;
+            }
+            print STDERR "polycross addition  $polycross_name worked successfully\n";
         }
-      }
+    }
     elsif ($cross_type eq "reciprocal") {
         $cross_type = 'biparental';
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
@@ -327,20 +329,20 @@ sub add_cross_POST :Args(0) {
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
             my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
             if (!$success) {
-              return;
+                return;
             }
         }
     }
     else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $cross_combination);
         if (!$success) {
             return;
         }
     }
     $c->stash->{rest} = {success => "1",};
-  }
+}
 
 sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     my $self = shift;
@@ -356,7 +358,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 	    return;
     }
 
-    my $cross_obj = CXGN::Cross->new({bcs_schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
     my ($maternal_parent, $paternal_parent, $progeny) = $cross_obj->get_cross_relationships();
 
     $c->stash->{rest} = {
@@ -378,8 +380,11 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
     my $male_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plot_of', 'stock_relationship')->cvterm_id();
     my $female_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plant_of', 'stock_relationship')->cvterm_id();
     my $male_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plant_of', 'stock_relationship')->cvterm_id();
+    my $cross_combination_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_combination', 'stock_property')->cvterm_id();
 
-    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock_relationship1.value FROM stock
+
+    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock_relationship1.value, stockprop.value
+        FROM stock
         JOIN stock_relationship AS stock_relationship1 ON (stock.stock_id = stock_relationship1.object_id) and stock_relationship1.type_id = ?
         JOIN stock AS stock1 ON (stock_relationship1.subject_id = stock1.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship2 ON (stock.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
@@ -392,16 +397,16 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
         LEFT JOIN stock AS stock5 ON (stock_relationship5.subject_id =stock5.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship6 ON (stock.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
         LEFT JOIN stock AS stock6 ON (stock_relationship6.subject_id =stock6.stock_id)
-
-         WHERE stock.stock_id = ?";
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id =?
+        WHERE stock.stock_id = ?";
 
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($female_accession_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_id);
+    $h->execute($female_accession_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_combination_cvterm, $cross_id);
 
     my @cross_parents = ();
-    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type) = $h->fetchrow_array()){
-        push @cross_parents, [ $cross_type,
+    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type, $cross_combination) = $h->fetchrow_array()){
+        push @cross_parents, [$cross_combination, $cross_type,
             qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
             qq{<a href="/stock/$male_accession_id/view">$male_accession_name</a>},
             qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
@@ -582,38 +587,41 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 
 }
 
+
+#my $new_cross = CXGN::Cross->new({ schema=>schema });
+#$new_cross->female_parent($fjfj);
+#$new_cross->male_parent(kdkjf);
+#$new_cross->location(kjlsdlkjdfskj);
+#...type
+#...cross_name
+#...plots...
+#$new_cross->store();
+
 sub add_individual_cross {
-  my $self = shift;
-  my $c = shift;
-  my $chado_schema = shift;
-  my $cross_name = shift;
-  my $cross_type = shift;
-  my $crossing_trial_id = shift;
-  my $female_plot_id = shift;
-  my $female_plot;
-  my $male_plot_id = shift;
-  my $male_plot;
-  my $maternal = shift;
-  my $paternal = shift;
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = shift;
+    my $cross_name = shift;
+    my $cross_type = shift;
+    my $crossing_trial_id = shift;
+    my $female_plot_id = shift;
+    my $female_plot;
+    my $male_plot_id = shift;
+    my $male_plot;
+    my $maternal = shift;
+    my $paternal = shift;
+    my $cross_combination = shift;
 
-  my $owner_name = $c->user()->get_object()->get_username();
-  my @progeny_names;
-  my $progeny_increment = 1;
-  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-  my $dbh = $c->dbc->dbh;
-  my $prefix = $c->req->param('prefix');
-  my $suffix = $c->req->param('suffix');
-  my $progeny_number = $c->req->param('progeny_number');
-#  my $tag_number = $c->req->param('tag_number');
-#  my $pollination_date = $c->req->param('pollination_date');
-#  my $number_of_bags = $c->req->param('bag_number');
-#  my $number_of_flowers = $c->req->param('flower_number');
-#  my $number_of_fruits = $c->req->param('fruit_number');
-#  my $number_of_seeds = $c->req->param('seed_number');
-  my $visible_to_role = $c->req->param('visible_to_role');
-
-  #print STDERR Dumper "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type Number of Flowers: $number_of_flowers";
+    my $owner_name = $c->user()->get_object()->get_username();
+    my @progeny_names;
+    my $progeny_increment = 1;
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $prefix = $c->req->param('prefix');
+    my $suffix = $c->req->param('suffix');
+    my $progeny_number = $c->req->param('progeny_number');
+    my $visible_to_role = $c->req->param('visible_to_role');
 
     if ($female_plot_id){
         my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
@@ -626,56 +634,56 @@ sub add_individual_cross {
     }
 
 
-  #check that progeny number is an integer less than maximum allowed
-  my $maximum_progeny_number = 999; #higher numbers break cross name convention
-  if ($progeny_number) {
-    if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
-$c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
-return 0;
+    #check that progeny number is an integer less than maximum allowed
+    my $maximum_progeny_number = 999; #higher numbers break cross name convention
+    if ($progeny_number) {
+        if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
+            $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
+            return 0;
+        }
     }
-  }
 
-  #check that maternal name is not blank
-  if ($maternal eq "") {
-    $c->stash->{rest} = {error =>  "Female parent name cannot be blank." };
-    return 0;
-  }
-
-  #if required, check that paternal parent name is not blank;
-  if ($paternal eq "" && ($cross_type ne "open") && ($cross_type ne "bulk_open")) {
-    $c->stash->{rest} = {error =>  "Male parent name cannot be blank." };
-    return 0;
-  }
-
-  #check that parents exist in the database
-  if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$maternal,})){
-    $c->stash->{rest} = {error =>  "Female parent does not exist." };
-    return 0;
-  }
-
-  if ($paternal) {
-    if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$paternal,})){
-$c->stash->{rest} = {error =>  "Male parent does not exist." };
-return 0;
+    #check that maternal name is not blank
+    if ($maternal eq "") {
+        $c->stash->{rest} = {error =>  "Female parent name cannot be blank." };
+        return 0;
     }
-  }
 
-  #check that cross name does not already exist
-  if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
-    $c->stash->{rest} = {error =>  "cross name already exists." };
-    return 0;
-  }
+    #if required, check that paternal parent name is not blank;
+    if ($paternal eq "" && ($cross_type ne "open") && ($cross_type ne "bulk_open")) {
+        $c->stash->{rest} = {error =>  "Male parent name cannot be blank." };
+        return 0;
+    }
 
-  #check that progeny do not already exist
-  if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name.$prefix.'001'.$suffix,})){
-    $c->stash->{rest} = {error =>  "progeny already exist." };
-    return 0;
-  }
+    #check that parents exist in the database
+    if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$maternal,})){
+        $c->stash->{rest} = {error =>  "Female parent does not exist." };
+        return 0;
+    }
 
-  #objects to store cross information
-  my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type);
-  my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
-  $cross_to_add->set_female_parent($female_individual);
+    if ($paternal) {
+        if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$paternal,})){
+            $c->stash->{rest} = {error =>  "Male parent does not exist." };
+            return 0;
+        }
+    }
+
+    #check that cross name does not already exist
+    if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
+        $c->stash->{rest} = {error =>  "Cross Unique ID already exists." };
+        return 0;
+    }
+
+    #check that progeny do not already exist
+    if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name.$prefix.'001'.$suffix,})){
+        $c->stash->{rest} = {error =>  "progeny already exist." };
+        return 0;
+    }
+
+    #objects to store cross information
+    my $cross_to_add = Bio::GeneticRelationships::Pedigree->new(name => $cross_name, cross_type => $cross_type, cross_combination => $cross_combination,);
+    my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
+    $cross_to_add->set_female_parent($female_individual);
 
     if ($paternal) {
         my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
@@ -692,77 +700,57 @@ return 0;
         $cross_to_add->set_male_plot($male_plot_individual);
     }
 
+    $cross_to_add->set_cross_type($cross_type);
+    $cross_to_add->set_name($cross_name);
+    $cross_to_add->set_cross_combination($cross_combination);
 
-  $cross_to_add->set_cross_type($cross_type);
-  $cross_to_add->set_name($cross_name);
+    eval {
+        #create array of pedigree objects to add, in this case just one pedigree
+        my @array_of_pedigree_objects = ($cross_to_add);
+        my $cross_add = CXGN::Pedigree::AddCrosses
+        ->new({
+            chado_schema => $chado_schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            crossing_trial_id => $crossing_trial_id,
+            crosses =>  \@array_of_pedigree_objects,
+            owner_name => $owner_name,
+        });
 
-  eval {
-#create array of pedigree objects to add, in this case just one pedigree
-my @array_of_pedigree_objects = ($cross_to_add);
-my $cross_add = CXGN::Pedigree::AddCrosses
-    ->new({
-  chado_schema => $chado_schema,
-  phenome_schema => $phenome_schema,
-  dbh => $dbh,
-  crossing_trial_id => $crossing_trial_id,
-  crosses =>  \@array_of_pedigree_objects,
-  owner_name => $owner_name,
-    });
+        #add the crosses
+        $cross_add->add_crosses();
+    };
 
-
-#add the crosses
-$cross_add->add_crosses();
-  };
-  if ($@) {
-$c->stash->{rest} = { error => "Error creating the cross: $@" };
-return 0;
-  }
-
-  eval {
-#create progeny if specified
-if ($progeny_number) {
-
-    #create array of progeny names to add for this cross
-    while ($progeny_increment < $progeny_number + 1) {
-  $progeny_increment = sprintf "%03d", $progeny_increment;
-  my $stock_name = $cross_name.$prefix.$progeny_increment.$suffix;
-  push @progeny_names, $stock_name;
-  $progeny_increment++;
+    if ($@) {
+        $c->stash->{rest} = { error => "Error creating the cross: $@" };
+        return 0;
     }
 
-    #add array of progeny to the cross
-    my $progeny_add = CXGN::Pedigree::AddProgeny
-  ->new({
-      chado_schema => $chado_schema,
-      phenome_schema => $phenome_schema,
-      dbh => $dbh,
-      cross_name => $cross_name,
-      progeny_names => \@progeny_names,
-      owner_name => $owner_name,
-        });
-    $progeny_add->add_progeny();
+    eval {
+        #create progeny if specified
+        if ($progeny_number) {
+            #create array of progeny names to add for this cross
+            while ($progeny_increment < $progeny_number + 1) {
+                $progeny_increment = sprintf "%03d", $progeny_increment;
+                my $stock_name = $cross_name.$prefix.$progeny_increment.$suffix;
+                push @progeny_names, $stock_name;
+                $progeny_increment++;
+            }
 
-}
+            #add array of progeny to the cross
+            my $progeny_add = CXGN::Pedigree::AddProgeny
+            ->new({
+                chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                cross_name => $cross_name,
+                progeny_names => \@progeny_names,
+                owner_name => $owner_name,
+            });
+            $progeny_add->add_progeny();
+        }
+    };
 
-#    my @cross_props = (
-#        ['Pollination Date',$pollination_date],
-#        ['Number of Flowers',$number_of_flowers],
-#        ['Number of Fruits',$number_of_fruits],
-#        ['Number of Seeds',$number_of_seeds]
-#    );
-
-#    foreach (@cross_props){
-#        if ($_->[1]){
-#            my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
-#                chado_schema => $chado_schema,
-#                cross_name => $cross_name,
-#                key => $_->[0],
-#                value => $_->[1]
-#            });
-#        $cross_add_info->add_info();
-#        }
-#    }
-  };
     if ($@) {
         $c->stash->{rest} = { error => "An error occurred: $@"};
         return 0;
@@ -834,7 +822,6 @@ sub add_crossingtrial_POST :Args(0){
         $c->stash->{rest} = {success => 1};
     }
 }
-
 
 sub upload_progenies : Path('/ajax/cross/upload_progenies') : ActionClass('REST'){ }
 
@@ -1090,6 +1077,7 @@ sub upload_family_names_POST : Args(0) {
     my $c = shift;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $upload = $c->req->upload('family_name_upload_file');
     my $parser;
@@ -1187,13 +1175,18 @@ sub upload_family_names_POST : Args(0) {
         foreach my $cross_name(keys %family_name_hash){
             my $family_name = $family_name_hash{$cross_name};
 
-            my $family_name_add = CXGN::Pedigree::AddCrossInfo->new({
+            my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
                 chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
                 dbh => $dbh,
                 cross_name => $cross_name,
                 family_name => $family_name,
+                owner_name => $user_name,
             });
-            if (!$family_name_add->add_info()){
+
+            $family_name_add->add_family_name();
+
+            if (!$family_name_add->add_family_name()){
                 $c->stash->{rest} = {error_string => "Error adding family name",};
                 return;
             }
@@ -1203,6 +1196,33 @@ sub upload_family_names_POST : Args(0) {
     $c->stash->{rest} = {success => "1",};
 }
 
+
+sub delete_cross : Path('/ajax/cross/delete') : ActionClass('REST'){ }
+
+sub delete_cross_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $cross_stock_id = $c->req->param("cross_id");
+
+    my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+
+    if (!$cross->cross_stock_id()) {
+	$c->stash->{rest} = { error => "No such cross exists. Cannot delete." };
+	return;
+    }
+
+    my $error = $cross->delete();
+
+    print STDERR "ERROR = $error\n";
+
+    if ($error) {
+	$c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 ###

@@ -195,6 +195,9 @@ jQuery(document).ready(function ($) {
                 Workflow.focus("#trial_upload_workflow", 6);
                 $("#upload_trial_error_display_second_try").show();
             }
+            if (response.warnings) {
+                alert(response.warnings);
+            }
             if (response.success) {
                 refreshTrailJsTree(0);
                 jQuery("#upload_trial_error_display_second_try").hide();
