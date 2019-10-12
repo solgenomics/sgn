@@ -505,6 +505,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     while (my $line = <$blast_fh>) {
       chomp($line);
 
+      $line =~ s/lcl\|//g;
+      
       if ($line =~ /Query\=\s*(\S+)/) {
         $query = $1;
         unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3></center>");
@@ -512,7 +514,9 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
       }
 
       if ($query_line_on && $line =~ /Length=(\d+)/) {
-        $query_length = $1;
+	  $query_length = $1;
+	  print STDERR "Query length = $query_length\n";
+
       }
 
       if ($append_desc) {
