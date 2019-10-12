@@ -533,7 +533,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
       if ($line =~ /^>/) {
         $start_aln = 1;
         $append_desc = 1;
-
+	$query_line_on = 0;
+	
         if ($subject) {
           my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
           ($sstart,$send) = _check_coordinates($sstart,$send);
@@ -552,6 +553,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
           $description_hash{"description"} = $desc;
           $description_hash{"qstart"} = $qstart;
           $description_hash{"qend"} = $qend;
+	  print STDERR "HSPS: ".Dumper(\%description_hash);
           push(@json_array, \%description_hash);
 
         }
@@ -570,7 +572,6 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         if ($line =~ /^>(\S+)\s*(.*)/) {
           $subject = $1;
           $desc = $2;
-
           # print STDERR "subject: $subject\n";
         }
       }
@@ -594,6 +595,9 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $description_hash{"description"} = $desc;
         $description_hash{"qstart"} = $qstart;
         $description_hash{"qend"} = $qend;
+
+	print STDERR "FOUND HSP: ".Dumper(\%description_hash);
+	
         push(@json_array, \%description_hash);
 
         $id = 0.0;
