@@ -12,7 +12,7 @@ use CXGN::Tools::Run;
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Temp qw / tempfile tempdir /;
-use File::Slurp qw /write_file read_file :edit prepend_file/;
+use File::Slurp qw /write_file read_file/;
 use File::Copy;
 use File::Basename;
 use JSON;
@@ -251,10 +251,10 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller('solGS::solGS')->model_accuracy($c);
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-    $c->controller('solGS::Files')->blups_file($c);
+    $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
     $c->controller('solGS::solGS')->download_urls($c);
     $c->controller('solGS::Files')->marker_effects_file($c);
-    $c->controller('solGS::solGS')->top_markers($c);
+    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
     $c->controller('solGS::solGS')->model_parameters($c);
     
     $c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
@@ -318,7 +318,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
    
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
- 
+  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/selection/combined/selection_trait.mas');

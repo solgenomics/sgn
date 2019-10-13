@@ -691,7 +691,6 @@ sub genotypes_list_genotype_query_job {
 }
 
 
-
 sub plots_list_phenotype_query_job {
     my ($self, $c) = @_;
 
@@ -1046,10 +1045,12 @@ sub register_trials_list  {
 sub list_file_id {
     my ($self, $c) = @_;
 
-    $c->stash->{data_structure} = 'list';
-    $c->controller('solGS::Files')->create_file_id($c);
-
-    return $c->stash->{file_id};
+    my $list_id = $c->stash->{list_id};
+    if ( $list_id =~ /dataset/) {
+	return $list_id;
+    } else {
+	return 'list_' . $list_id;
+    }
     
 }
 

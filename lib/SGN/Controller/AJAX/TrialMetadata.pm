@@ -1966,7 +1966,7 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_seedlots_from_crossingtrial();
     my @crosses;
@@ -1990,6 +1990,15 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $trial_id = $c->stash->{trial_id};
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+        $c->detach();
+    }
 
     my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 

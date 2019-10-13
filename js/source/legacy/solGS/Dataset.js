@@ -215,7 +215,7 @@ solGS.dataset = {
 		    solGS.dataset.displayPredictedDatasetTypeSelectionPops(args, response.output); 
 		    
 		    if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-			listSelectionIndexPopulations();
+			solGS.sIndex.listSelectionIndexPopulations();
 			listGenCorPopulations();
 			solGS.geneticGain.ggSelectionPopulations();
 			solGS.cluster.listClusterPopulations();
@@ -258,11 +258,11 @@ solGS.dataset = {
 	popIdName       = JSON.stringify(popIdName);
 	var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
 	
-	var predictedListTypeSelectionPops = jQuery("#list_selection_pops_table").doesExist();
+	var predictedListTypeSelectionPops = jQuery("#list_type_selection_pops_table").doesExist();
         
 	if ( predictedListTypeSelectionPops == false) {  
             
-	    var predictedListTypeSelectionTable ='<table id="list_selection_pops_table" class="table"><thead><tr>'
+	    var predictedListTypeSelectionTable ='<table id="list_type_selection_pops_table" class="table"><thead><tr>'
 		+ '<th>List-based selection population</th>'
 		+ '<th>View GEBVs</th>'
 		+ '</tr></thead><tbody>'
@@ -274,13 +274,13 @@ solGS.dataset = {
 		+ output
 		+ '</td></tr></tbody></table>';
 	    
-	    jQuery("#list_selection_populations").append(predictedListTypeSelectionTable).show();
+	    jQuery("#list_type_selection_populations").append(predictedListTypeSelectionTable).show();
 
 	} else {
             var datasetIdArg = '\'' + datasetId +'\'';
             var datasetSource = '\'from_db\'';
 	    
-            var popIdName   = {id : 'dataset_' + datasetId, name: datasetName, pop_type: 'list_selection'};
+            var popIdName   = {id : 'dataset_' + datasetId, name: datasetName, pop_type: 'dataset_selection'};
             popIdName       = JSON.stringify(popIdName);
             var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
             
@@ -295,11 +295,11 @@ solGS.dataset = {
             var samePop = jQuery(trId).doesExist();
             
             if (samePop == false) {
-		jQuery("#list_selection_pops_table tr:last").after(addRow);
+		jQuery("#list_type_selection_pops_table tr:last").after(addRow);
 
             } else {
 		jQuery(trId).remove();
-		jQuery("#list_selection_pops_table").append(addRow).show();
+		jQuery("#list_type_selection_pops_table").append(addRow).show();
 	    }                          
             
 	}

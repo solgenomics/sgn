@@ -72,7 +72,7 @@ jQuery(document).on("click", "#run_genetic_correlation", function() {
 
 
 function listGenCorPopulations ()  {
-    var modelData = getTrainingPopulationData();
+    var modelData = solGS.sIndex.getTrainingPopulationData();
    
     var trainingPopIdName = JSON.stringify(modelData);
    
@@ -90,19 +90,20 @@ function listGenCorPopulations ()  {
      
     var dbSelPopsList;
     if (modelData.id.match(/list/) == null) {
-        dbSelPopsList = addSelectionPopulations();
+        dbSelPopsList = solGS.sIndex.addSelectionPopulations();
     }
 
     if (dbSelPopsList) {
             jQuery("#corre_select_a_population_div ul").append(dbSelPopsList); 
     }
       
-    var userUploadedSelExists = jQuery("#list_selection_pops_table").doesExist();
-    if (userUploadedSelExists == true) {     
-        var userSelPops = listUploadedSelPopulations();
-        if (userSelPops) {
+    var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
+   
+    if (listTypeSelPops) {
+        var selPopsList = solGS.sIndex.getListTypeSelPopulations();
 
-            jQuery("#corre_select_a_population_div ul").append(userSelPops);  
+        if (selPopsList) {
+            jQuery("#corre_select_a_population_div ul").append(selPopsList);  
         }
     }
 
@@ -152,7 +153,6 @@ function formatGenCorInputData (popId, type, indexFile) {
 	traitsIds = traitsIds.split(',');
     }
 
-    console.log('formatGenCor: traitsIds ' + traitsIds)
     var modelId  = modelDetail.population_id;
     jQuery.ajax({
         type: 'POST',
@@ -326,7 +326,7 @@ function runGenCorrelationAnalysis (args) {
                         + popName.replace(/\s/g, "") 
                         + "\"></div>";  
                 
-                    var legendValues = legendParams();                 
+                    var legendValues = solGS.sIndex.legendParams();                 
                     var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
             
                     jQuery("#si_correlation_canvas").append(corLegDivVal).show();
@@ -558,7 +558,6 @@ function plotCorrelation (data, divPlace) {
         .attr("text-anchor", "start");
 
 }
-
 
 
 function createAcronymsTable (tableId) {

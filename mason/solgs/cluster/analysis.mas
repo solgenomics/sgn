@@ -7,8 +7,8 @@
 To add the cluster analysis interface any where on the website
 add the template '/solgs/cluster/analysis.mas' in your mason template
 and pass any of the arguments listed below.
-Adding the 'data_structure_type' argument is also recommended.
-A data structure can any of this: 'list', if of list type; 'dataset',if of dataset type;
+Adding the 'data_structure' argument is also recommended.
+A data structure can be any of this: 'list', if of list type; 'dataset', if of dataset type;
 'trial', if of just a trial.
 
 =AUTHOR
@@ -24,7 +24,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $trial_id => undef
 $list_id => undef
 $dataset_id => undef
-$data_structure_type => undef
+$data_structure => undef
 
 $pop_name => undef
 $pop_type => undef
@@ -36,11 +36,11 @@ $pop_type => undef
 
 my $pop_id = $trial_id if $trial_id;
 
-if (!$data_structure_type) {
+if (!$data_structure) {
    if ($dataset_id) {
-      $data_structure_type = 'dataset';
+      $data_structure = 'dataset';
    } elsif ($list_id) {
-     $data_structure_type = 'list';
+     $data_structure = 'list';
    }
 }
 
@@ -77,7 +77,7 @@ my $url = $c->req->path;
    pop_id => $pop_id,
   list_id => $list_id,
   dataset_id => $dataset_id,
-  data_structure_type => $data_structure_type,
+  data_structure => $data_structure,
   &>
 
 

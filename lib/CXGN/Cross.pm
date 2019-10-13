@@ -465,7 +465,7 @@ sub get_cross_properties_trial {
 
 sub get_seedlots_from_crossingtrial {
     my $self = shift;
-    my $schema = $self->bcs_schema;
+    my $schema = $self->schema;
     my $trial_id = $self->trial_id;
 
     my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();

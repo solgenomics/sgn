@@ -356,7 +356,7 @@ CXGN.List.prototype = {
 
         jQuery('#private_list_data_table').DataTable({
             "destroy": true,
-            "columnDefs": [   { "orderable": false, "targets": [3,4,5,6,7,8] }  ]
+            "columnDefs": [   { "orderable": false, "targets": [4,5,6,7,8] }  ]
         });
 
         jQuery('#add_list_button').click(function() {
