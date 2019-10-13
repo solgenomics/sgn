@@ -10,11 +10,12 @@ my $f = SGN::Test::Fixture->new();
 
 # create a new SequencingInfo object
 #
-my $si = CXGN::Stock::SequencingInfo->new( { schema => $f->bcs_schema() } );
+my $si = CXGN::Stock::SequencingInfo->new( { schema => $f->bcs_schema()  } );
 
-$si->stock_id(38840);
+#$si->stock_id(38840);
 
 my $json = "{
+    \"stock_id\" : 38840,
     \"organization\" : \"BTI\",
     \"contact_email\" : \"mcclintock\@btiscience.org\",
     \"jbrowse_link\" : \"https://solgenomics.net/jbrowse/myfav\",

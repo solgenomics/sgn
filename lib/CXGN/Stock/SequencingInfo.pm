@@ -63,7 +63,7 @@ has 'schema' => (isa => 'Ref', is => 'rw', required => 1);
 
 has 'stockprop_id' => (isa => 'Maybe[Int]', is => 'rw');
 
-has 'stock_id' => (isa => 'Int', is => 'rw');
+has 'stock_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 has 'type_id' => (isa => 'Int', is => 'rw');
 
@@ -396,7 +396,7 @@ sub from_hash {
     
     foreach my $f (@$allowed_fields) {
 	print STDERR "Processing $f ($hash->{$f})...\n";
-	if ($hash->{$f} eq "undefined") { $hash->{$f} = undef; }
+	if ( ($hash->{$f} eq "undefined") || ($hash->{$f} eq "") ) { $hash->{$f} = undef; }
 	$self->$f($hash->{$f});
     }
 }
