@@ -41,6 +41,7 @@ use Parallel::ForkManager;
 use CXGN::GrowingDegreeDays;
 use CXGN::BreederSearch;
 use CXGN::Phenotypes::SearchFactory;
+use CXGN::BreedersToolbox::Accessions;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3670,6 +3671,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $trait_id = $c->req->param('trait_id');
     my $model_type = $c->req->param('model_type');
+    my $population_id = $c->req->param('population_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -3679,11 +3681,21 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_dir');
     my $archive_temp_result_agg_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/resultaggXXXX');
 
+    my @accession_ids;
+    if ($population_id) {
+        my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
+        my $population_members = $accession_manager->get_population_members($population_id);
+        foreach (@$population_members) {
+            push @accession_ids, $_->{stock_id};
+        }
+    }
+
     my @result_agg;
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_project_id_list=>$drone_run_ids,
-        project_image_type_id_list=>$plot_polygon_type_ids
+        project_image_type_id_list=>$plot_polygon_type_ids,
+        accession_list=>\@accession_ids
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
@@ -3708,6 +3720,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         data_level=>'plot',
         trait_list=>[$trait_id],
         trial_list=>\@field_trial_ids,
+        accession_ids=>\@accession_ids,
         include_timestamp=>0,
         exclude_phenotype_outlier=>0,
     );
@@ -3747,12 +3760,17 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         }
     close($F);
 
+    my $log_file_path = '';
+    if ($c->config->{error_log}) {
+        $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
+    }
+
     my $cmd = '';
     if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --log_file_path \''.$c->config->{error_log}.'\'';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path;
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 --log_file_path \''.$c->config->{error_log}.'\'';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path;
     }
     print STDERR Dumper $cmd;
     my $status = system($cmd);

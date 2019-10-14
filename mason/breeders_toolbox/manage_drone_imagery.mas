@@ -1054,6 +1054,22 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_trait_select_step">Go to Next Step</button>
                     </center>
                 </&>
+                <&| /util/workflow.mas:step, title=> "Population Selection" &>
+                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to train on images from all germplasm in the selected field trial(s)." &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Population(s) to include in training (Leave blank to include images from all germplasm in the selected field trials): </label>
+                            <div class="col-sm-7" >
+                                <div id="drone_imagery_train_keras_cnn_population_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_population_select_step">Go to Next Step</button>
+                    </center>
+                </&>
                 <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
                     <& /page/page_title.mas, title=>"Select the drone runs you are interested in using in the model" &>
 
@@ -1198,6 +1214,22 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_predict_keras_model_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Population Selection" &>
+                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to train on images from all germplasm in the selected field trial(s)." &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Population(s) to include in training (Leave blank to include images from all germplasm in the selected field trials): </label>
+                            <div class="col-sm-7" >
+                                <div id="drone_imagery_predict_keras_cnn_population_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_population_select_step">Go to Next Step</button>
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
@@ -2311,7 +2343,7 @@ jQuery(document).ready(function() {
                 jQuery('#drone_imagery_calculate_gdd_dialog').modal('show');
             },
             error: function(response){
-                alert('Error training keras model!')
+                alert('Error getting gdd!')
             }
         });
     });
@@ -2321,11 +2353,16 @@ jQuery(document).ready(function() {
         var manage_drone_imagery_calculate_gdd_formula = jQuery('#drone_imagery_calculate_gdd_formula_input').val();
         jQuery.ajax({
             url : '/api/drone_imagery/growing_degree_days?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id+'&formula='+manage_drone_imagery_calculate_gdd_formula+'&gdd_base_temperature='+manage_drone_imagery_calculate_gdd_base_temp+'&field_trial_id='+manage_drone_imagery_calculate_gdd_field_trial_id,
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
             success: function(response){
                 console.log(response);
+                jQuery('#working_modal').modal('hide');
                 location.reload();
             },
             error: function(response){
+                jQuery('#working_modal').modal('hide');
                 alert('Error calculating growing degree days!');
             }
         });
@@ -2390,10 +2427,18 @@ jQuery(document).ready(function() {
         if (manage_drone_imagery_train_keras_trait_id == undefined || manage_drone_imagery_train_keras_trait_id == 'null' || manage_drone_imagery_train_keras_trait_id == '') {
             alert('Please select a phenotyped trait first!');
         } else {
+
+            get_select_box('stocks', 'drone_imagery_train_keras_cnn_population_select_div', { 'name' : 'drone_imagery_train_keras_cnn_population_id', 'id' : 'drone_imagery_train_keras_cnn_population_id', 'empty':1, 'multiple':1, 'stock_type_name':'population' });
+
             Workflow.complete("#drone_imagery_train_keras_model_trait_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 3);
         }
         return false;
+    });
+
+    jQuery('#drone_imagery_train_keras_model_population_select_step').click(function(){
+        Workflow.complete("#drone_imagery_train_keras_model_population_select_step");
+        Workflow.focus('#drone_imagery_train_keras_model_workflow', 4);
     });
 
     jQuery('#drone_imagery_train_keras_model_drone_run_select_step').click(function(){
@@ -2411,7 +2456,7 @@ jQuery(document).ready(function() {
             });
 
             Workflow.complete("#drone_imagery_train_keras_model_drone_run_select_step");
-            Workflow.focus('#drone_imagery_train_keras_model_workflow', 4);
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
         }
         return false;
     });
@@ -2430,7 +2475,7 @@ jQuery(document).ready(function() {
             alert('Please select at least one plot polygon type!');
         } else {
             Workflow.complete("#drone_imagery_train_keras_model_plot_polygon_type_select_step");
-            Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 6);
         }
         return false;
     });
@@ -2445,7 +2490,7 @@ jQuery(document).ready(function() {
         }
         else {
             jQuery.ajax({
-                url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&save_model=1&model_name='+drone_imagery_keras_model_name+'&model_description='+drone_imagery_keras_model_desc+'&model_type='+drone_imagery_keras_model_type,
+                url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&save_model=1&model_name='+drone_imagery_keras_model_name+'&model_description='+drone_imagery_keras_model_desc+'&model_type='+drone_imagery_keras_model_type+'&population_id='+jQuery('#drone_imagery_train_keras_cnn_population_id').val(),
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -2551,10 +2596,17 @@ jQuery(document).ready(function() {
             alert('Please select a trained Keras CNN model before proceeding!');
         }
         else {
+            get_select_box('stocks', 'drone_imagery_predict_keras_cnn_population_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_population_id', 'id' : 'drone_imagery_predict_keras_cnn_population_id', 'empty':1, 'multiple':1, 'stock_type_name':'population' });
+
             Workflow.complete("#drone_imagery_predict_keras_model_select_step");
             Workflow.focus('#drone_imagery_predict_keras_model_workflow', 3);
         }
         return false;
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_population_select_step').click(function(){
+        Workflow.complete("#drone_imagery_predict_keras_model_population_select_step");
+        Workflow.focus('#drone_imagery_predict_keras_model_workflow', 4);
     });
 
     jQuery('#drone_imagery_predict_keras_model_drone_run_select_step').click(function(){
@@ -2572,7 +2624,7 @@ jQuery(document).ready(function() {
             });
 
             Workflow.complete("#drone_imagery_predict_keras_model_drone_run_select_step");
-            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 4);
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 5);
         }
         return false;
     });
@@ -2591,7 +2643,7 @@ jQuery(document).ready(function() {
             alert('Please select at least one plot polygon type!');
         } else {
             Workflow.complete("#drone_imagery_predict_keras_model_plot_polygon_type_select_step");
-            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 5);
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 6);
         }
         return false;
     });
@@ -2613,7 +2665,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_predict_keras_model_confirm_step').click(function(){
         jQuery.ajax({
-            url : '/api/drone_imagery/predict_keras_model?field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids)+'&model_id='+manage_drone_imagery_predict_keras_model_id+'&model_prediction_type='+jQuery('#drone_imagery_keras_model_prediction_select').val(),
+            url : '/api/drone_imagery/predict_keras_model?field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids)+'&model_id='+manage_drone_imagery_predict_keras_model_id+'&model_prediction_type='+jQuery('#drone_imagery_keras_model_prediction_select').val()+'&population_id='+jQuery('#drone_imagery_predict_keras_cnn_population_id').val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
