@@ -651,18 +651,6 @@ sub pca_pheno_input_files {
 
 sub run_pca {
     my ($self, $c) = @_;
- 
-    # my $cores = $c->controller('solGS::Utils')->count_cores();
-    
-    # if ($cores > 1) 
-    # {
-    # 	$self->run_pca_multi_cores($c);
-    # }
-    # else
-    # {
-    # 	$self->run_pca_single_core($c);
-	
-    # }
 
     $self->pca_query_jobs_file($c);
     $c->stash->{prerequisite_jobs} = $c->stash->{pca_query_jobs_file};

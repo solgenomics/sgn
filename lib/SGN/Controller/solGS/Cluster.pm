@@ -391,7 +391,6 @@ sub cluster_list_genotype_data {
     }	   
     else
     {
-	print STDERR "\n cluster_list_genotype_data list_id: $list_id\n";
 	if ($list_type eq 'accessions')
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $list_id);
@@ -863,17 +862,6 @@ sub cluster_query_jobs {
 sub run_cluster {
     my ($self, $c) = @_;
  
-    # my $cores = $c->controller('solGS::Utils')->count_cores();
-     
-    # if ($cores > 1) 
-    # {
-    # 	$self->run_cluster_multi_cores($c);
-    # }
-    # else
-    # {
-    # 	$self->run_cluster_single_core($c);
-	
-    # }
     $self->cluster_query_jobs_file($c);
     $c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
     
@@ -881,8 +869,7 @@ sub run_cluster {
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
     
     $c->controller('solGS::solGS')->run_async($c);
-    
-    
+       
 }
 
 

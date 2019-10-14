@@ -679,12 +679,6 @@ sub genotypes_list_genotype_query_job {
     	. ' --population_type ' . $pop_type
     	. ' --args_file ' . $args_file;
     
-
-     # my $cmd = solGS::queryJobs->new({data_type => 'genotype', 
-     # 					     population_type => $pop_type, 
-     # 					     args_file=>$args_file}
-     # 	 );
-    
     my $job_args = {
 	'cmd' => $cmd,
 	'config' => $config,
@@ -756,10 +750,6 @@ sub plots_list_phenotype_query_job {
     	. ' --population_type plots_list '
     	. ' --args_file ' . $args_file;
 
-     # my $cmd = solGS::queryJobs->new({data_type => 'phenotype', 
-     # 					     population_type => 'plots_list', 
-     # 					     args_file=>$args_file}
-     # 		);
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,

@@ -2959,14 +2959,6 @@ sub get_cluster_phenotype_query_job_args {
 	    
 	    nstore $args, $args_file 
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
-
-	    # my $cmd = solGS::queryJobs->new({data_type => 'phenotype', 
-	   # 				       population_type => 'trial', 
-	   # 				       args_file=>$args_file}
-	   # 	);
-	   # # $query->data_type('phenotype');
-	   # # $query->population_type('trial');
-	   # # $query->args_file($args_file);
 	    
 	    my $cmd = 'mx-run solGS::queryJobs ' 
 	    	. ' --data_type phenotype '
@@ -3132,11 +3124,6 @@ sub get_cluster_genotype_query_job_args {
 	    nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
  
-	    # my $cmd = solGS::queryJobs->new({data_type => 'genotype', 
-	    # 				     population_type => 'trial', 
-	    # 				     args_file=>$args_file}
-	    # 	);
-	   ### my $cmd = $query;
 	    my $cmd = 'mx-run solGS::queryJobs ' 
 	    	. ' --data_type genotype '
 	    	. ' --population_type trial '
@@ -3726,11 +3713,6 @@ sub get_cluster_query_job_args {
     	. ' --data_type ' . $data_type
     	. ' --population_type ' . $pop_type
     	. ' --args_file ' . $args_file;
-
-    # my $cmd = solGS::queryJobs->new({data_type => $data_type, 
-    # 				       population_type => $pop_type, 
-    # 				       args_file=>$args_file}
-    # 	);
     
     my $config_args = {
 	'temp_dir' => $temp_dir,

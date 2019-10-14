@@ -507,8 +507,7 @@ sub run_correlation_analysis {
     my $pop_id = $c->stash->{pop_id};   
     my $corre_type = $c->stash->{correlation_type};
     
-    #if ($corre_type =~ /pheno/)
-    #{
+   
 	$self->corre_pheno_query_jobs_file($c);
 	my $queries =$c->stash->{corre_pheno_query_jobs_file};
 	
@@ -518,27 +517,6 @@ sub run_correlation_analysis {
 	$c->stash->{dependent_jobs} = $r_jobs;
 	$c->controller('solGS::solGS')->run_async($c);
 	
-#	foreach my $job (@$queries) 
-#	{
-#	    $c->controller('solGS::solGS')->submit_job_cluster($c, $job);
-#	}
-#
-#	foreach my $job (@$r_jobs)
-#	{
-#	    $c->controller('solGS::solGS')->submit_job_cluster($c, $job);
-#	}
- #   } 
-  #  else
-   # {
-#	$self->corre_pheno_r_jobs($c);
-#	my $r_jobs = $c->stash->{corre_pheno_r_jobs};
-#
-#	foreach my $job (@$r_jobs)
-#	{
-#	    $c->controller('solGS::solGS')->submit_job_cluster($c, $job);
-#	}
- #   }
-
 }
 
 
@@ -622,14 +600,6 @@ sub corre_pheno_query_jobs_file {
 
 sub create_corre_phenotype_data_query_jobs {
     my ($self, $c) = @_;
-
-    #my $data_str = $c->stash->{data_structure};
-       
-    # if ($data_str =~ /dataset/)
-    # {
-    # 	$c->controller('solGS::Dataset')->create_dataset_pheno_data_query_jobs($c);
-    # 	$c->stash->{pca_pheno_query_jobs} = $c->stash->{dataset_pheno_data_query_jobs};
-    # }
        
     my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
     $c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
