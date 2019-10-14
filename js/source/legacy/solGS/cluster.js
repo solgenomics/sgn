@@ -140,7 +140,6 @@ solGS.cluster = {
 	var onClickVal =  '<a href="#" onclick="solGS.cluster.runCluster('
 	    + selectId + ",'" + selectName + "'" +  ",'" + dataStr
 	    + "'" + ');return false;">';
-
 	
 	var row = '<tr name="' + dataStr + '"' + ' id="' + rowId +  '">'
 	    + '<td>'
@@ -194,7 +193,11 @@ solGS.cluster = {
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
-	
+
+	if (trainingTraitsIds == undefined) {
+	    trainingTraitsIds = [jQuery('#trait_id').val()];
+	}
+
 	var popDetails  = solGS.getPopulationDetails();
 	if (popDetails == undefined) {
 	    popDetails = {};
@@ -275,9 +278,14 @@ solGS.cluster = {
 		clusterPopId = selectId || popId;
 	    }
 
-	    // if (!clusterPopId) {
-	    // 	clusterPopId = popId;
-	    // }
+
+	    if (!clusterPopId) {
+		if (document.URL.match(/solgs\/trait\//)) {
+		    clusterPopId = popDetails.training_pop_id;
+		} else if (document.URL.match(/solgs\/selection\//)) {
+		    clusterPopId = popDetails.selection_pop_id;
+		}
+	    }
 	    	    
 	    if (popType == 'selection_index') {
 		sIndexName = selectName;
@@ -425,8 +433,13 @@ solGS.cluster = {
 	if (res.selection_proportion) {
 	    imageId = imageId + '-' + res.selection_proportion;
 	}
+
 	
-	imageId = 'id="' + imageId + '"';   	
+	if (res.training_traits_ids) {
+	    imageId = imageId + '-' + res.training_traits_ids;
+	}
+	
+	imageId = 'id="' + imageId + '"';
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
 	var filePlot  = res.kcluster_plot.split('/').pop();
 	var plotType = 'K-means plot';	

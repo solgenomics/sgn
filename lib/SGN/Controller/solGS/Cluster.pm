@@ -294,6 +294,7 @@ sub _prepare_response {
     $ret->{data_type}     = $c->stash->{data_type};
     $ret->{k_number}      = $c->stash->{k_number};
     $ret->{selection_proportion} = $c->stash->{selection_proportion};
+    $ret->{training_traits_ids} =  $c->stash->{training_traits_ids};
 
     return $ret;
     
