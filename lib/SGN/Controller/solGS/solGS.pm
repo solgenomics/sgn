@@ -2977,7 +2977,8 @@ sub get_cluster_phenotype_query_job_args {
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
 		'out_file' => $out_temp_file,
-		'err_file' => $err_temp_file
+		'err_file' => $err_temp_file,
+		'cluster_host' => 'localhost'
 	    };
 	    
 	    my $config = $self->create_cluster_config($c, $config_args);
@@ -3145,7 +3146,8 @@ sub get_cluster_genotype_query_job_args {
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
 		'out_file' => $out_temp_file,
-		'err_file' => $err_temp_file
+		'err_file' => $err_temp_file,
+		'cluster_host' => 'localhost'
 	    };
 	    
 	    my $config = $self->create_cluster_config($c, $config_args);
@@ -3579,7 +3581,8 @@ sub run_async {
     my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
     };
     
     my $job_config = $self->create_cluster_config($c, $config_args);
@@ -3732,7 +3735,8 @@ sub get_cluster_query_job_args {
     my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $self->create_cluster_config($c, $config_args);
@@ -3899,8 +3903,6 @@ sub create_cluster_config {
     my ($self, $c, $args) = @_;
 
     my $config = {
-	backend          => $c->config->{backend},
-###	submit_host      => $c->config->{cluster_host},
 	temp_base        => $args->{temp_dir},
 	queue            => $c->config->{'web_cluster_queue'},
 	max_cluster_jobs => 1_000_000_000,
@@ -3911,6 +3913,16 @@ sub create_cluster_config {
 	sleep            => $args->{sleep}
     };
 
+    if ($args->{cluster_host} =~ /localhost/) {
+	$config->{backend} = 'Slurm';
+    } else {
+	my $backend =  $c->config->{backend};
+	my $cluster_host = $c->config->{cluster_host};
+	my $error_file = $config->{err_file};
+	print STDERR "\n\nsubmit job to remote cluster: backend - $backend : submit_host - $cluster_host\n\n";
+	$config->{backend} = $c->config->{backend};
+	$config->{submit_host} = $c->config->{cluster_host};
+    }
     
     return $config;
 }

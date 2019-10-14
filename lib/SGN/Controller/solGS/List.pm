@@ -662,7 +662,8 @@ sub genotypes_list_genotype_query_job {
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
@@ -762,7 +763,8 @@ sub plots_list_phenotype_query_job {
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
