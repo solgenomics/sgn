@@ -16,28 +16,42 @@ my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
-$mech->get_ok("http://localhost:3010//tools/label_designer/retrieve_longest_fields?data_type=Field%20Trials&value=139");
+$mech->get_ok("http://localhost:3010//tools/label_designer/retrieve_longest_fields?data_type=Field%20Trials&source_id=139&data_level=plots");
 my $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 my $expected_response = {
-    "accession_name" => "UG120054",
-    "trial_name" => "Kasese solgs trial",
-    "year" => "2014",
-    "plot_number" => "35667",
-    "rep_number" => "1",
-    "block_number" => "10",
-    "accession_id" => 38926,
-    "plot_id" => 39295,
-    "plot_name" => "KASESE_TP2013_1000",
-    "pedigree_string" => "NA/NA"
-};
+          'num_units' => 692,
+          'fields' => {
+                        'plot_id' => 39252,
+                        'trial_name' => 'Kasese solgs trial',
+                        'block_number' => '56',
+                        'tier' => '/',
+                        'location_name' => 'test_location',
+                        'rep_number' => '1',
+                        'year' => '2014',
+                        'dry matter content percentage|CO_334:0000092' => '24.4',
+                        'accession_name' => 'UG130095',
+                        'fresh shoot weight measurement in kg|CO_334:0000016' => '18.5',
+                        'pedigree' => 'NA/NA',
+                        'plot_number' => 36031,
+                        'fresh root weight|CO_334:0000012' => '11.34',
+                        'accession_id' => 39211,
+                        'plot_name' => 'KASESE_TP2013_1016'
+                      },
+          'reps' => {
+                      '1' => 370,
+                      '2' => 322
+                    }
+        };
 
-is_deeply($response->{fields}, $expected_response, 'retrieve longest fields test');
+
+is_deeply($response, $expected_response, 'retrieve longest fields test');
 
 my $download_type = 'pdf';
 my $data_type = 'Field Trials';
-my $value = 139;
+my $source_id = 139;
+my $data_level = 'plots';
 my $design_json = encode_json {
    "page_format" => "US Letter PDF",
    "page_width" => 611,
@@ -110,7 +124,7 @@ my $design_json = encode_json {
 
 # print STDERR Dumper $design_json;
 
-$mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'value'=> $value, 'design_json' => $design_json ]);
+$mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'source_id'=> $source_id, 'data_level' => $data_level, 'design_json' => $design_json ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
@@ -186,7 +200,7 @@ $design_json = encode_json {
    ]
 };
 
-$mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'value'=> $value, 'design_json' => $design_json ]);
+$mech->post_ok('http://localhost:3010/tools/label_designer/download', [ 'download_type' => $download_type, 'data_type' => $data_type, 'source_id'=> $source_id, 'data_level' => $data_level, 'design_json' => $design_json ]);
 $response = decode_json $mech->content;
 
 $file = $response->{'filepath'};

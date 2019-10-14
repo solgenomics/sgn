@@ -440,7 +440,7 @@ sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my %response;
     $response{'count'} = 0;
     foreach (@$cross_id_list) {
-        my $cross = CXGN::Cross->new({bcs_schema=>$c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
+        my $cross = CXGN::Cross->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
         my ($maternal_parent, $paternal_parent, $progeny) = $cross->get_cross_relationships();
 
         my @accession_names;
@@ -539,21 +539,18 @@ sub delete_list_action :Path('/list/delete') Args(0) {
 sub exists_list_action : Path('/list/exists') Args(0) {
     my $self =shift;
     my $c = shift;
-    my $name = $c->req->param("name");
+    my $name = $c->req->param("name") || undef;
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
 	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
     }
 
-    my $list_id = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
+    my $list_info = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
 
-    if ($list_id) {
-	$c->stash->{rest} = { list_id => $list_id };
-    }
-    else {
-	$c->stash->{rest} = { list_id => undef };
-    }
+    print STDERR "List info is ".Dumper($list_info);
+	$c->stash->{rest} = $list_info;
+
 }
 
 sub exists_item_action : Path('/list/exists_item') :Args(0) {
