@@ -1005,26 +1005,94 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
 sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $checkbox_name = $c->request->param("checkbox_name") || 'dataset_select_checkbox';
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
-    my $html = '<select><option disabled="1">None</option></select>';
     my $user_id;
+    my @datasets;
     if ($c->user()) {
-	if ($user_id = $c->user->get_object()->get_sp_person_id()) {
+        if ($user_id = $c->user->get_object()->get_sp_person_id()) {
 
-	    my $datasets = CXGN::Dataset->get_datasets_by_user(
-		$c->dbic_schema("CXGN::People::Schema"),
-		$user_id);
+            my $user_datasets = CXGN::Dataset->get_datasets_by_user(
+                $c->dbic_schema("CXGN::People::Schema"),
+                $user_id
+            );
+            #print STDERR "Retrieved datasets: ".Dumper($user_datasets);
 
-#	    print STDERR "Retrieved datasets: ".Dumper($datasets);
+            foreach (@$user_datasets) {
+                my $dataset_id = $_->[0];
+                my $dataset_name = $_->[1];
+                my $dataset_description = $_->[2];
 
-	    $html = simple_selectbox_html(
-		name => 'available_datasets',
-		id => 'available_datasets',
-		choices => $datasets,
-		);
+                my $ds = CXGN::Dataset->new({
+                    schema => $schema,
+                    people_schema => $people_schema,
+                    sp_dataset_id => $dataset_id
+                });
+                my $info = $ds->get_dataset_data();
 
-	}
+                my $dataset_info = {
+                    id => $dataset_id,
+                    name => $dataset_name,
+                    description => $dataset_description,
+                    info => $info
+                };
+
+                push @datasets, $dataset_info;
+            }
+        }
     }
+    #print STDERR Dumper \@datasets;
+
+    my $lt = CXGN::List::Transform->new();
+    my %transform_dict = (
+        'plots' => 'stock_ids_2_stocks',
+        'accessions' => 'stock_ids_2_stocks',
+        'traits' => 'trait_ids_2_trait_names',
+        'locations' => 'locations_ids_2_location',
+        'plants' => 'stock_ids_2_stocks',
+        'trials' => 'project_ids_2_projects',
+        'trial_types' => 'cvterm_ids_2_cvterms',
+        'breeding_programs' => 'project_ids_2_projects',
+        'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
+    );
+
+    my $html = '<table class="table table-bordered table-hover"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
+    foreach my $ds (@datasets) {
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
+
+        $html .= '<table class="table-bordered"><thead><tr>';
+        foreach my $cat (@{$ds->{info}->{category_order}}) {
+            $html .= '<th>'.ucfirst($cat).'</th>';
+        }
+        $html .= '</tr></thead><tbody><tr>';
+        foreach my $cat (@{$ds->{info}->{category_order}}) {
+            my $ids = $ds->{info}->{categories}->{$cat};
+
+            my @items;
+            if (exists($transform_dict{$cat})) {
+                my $transform = $lt->transform($schema, $transform_dict{$cat}, $ids);
+                @items = @{$transform->{transform}};
+            }
+            else {
+                @items = @$ids;
+            }
+
+            $html .= "<td><div class='well well-sm'>";
+            $html .= "<select class='form-control' multiple>";
+            foreach (@items) {
+                $html .= "<option value='$_' disabled>$_</option>";
+            }
+            $html .= "</select>";
+            $html .= "</td></div>";
+        }
+        $html .= "</tr></tbody></table>";
+        $html .= '</td></tr>';
+    }
+
+    $html .= "</tbody></table>";
+
     $c->stash->{rest} = { select => $html };
 }
 
