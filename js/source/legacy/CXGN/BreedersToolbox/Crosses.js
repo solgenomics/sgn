@@ -261,6 +261,8 @@ jQuery(document).ready(function($) {
         var paternal;
         var maternal_parents;
         var paternal_parents;
+        var maternal_parents_string;
+        var paternal_parents_string;
 
         switch (crossType) {
             case 'biparental':
@@ -315,8 +317,13 @@ jQuery(document).ready(function($) {
                 break;
         }
 
-        var maternal_parents_string = maternal_parents.toString();
-        var paternal_parents_string = paternal_parents.toString();
+        if (maternal_parents) {
+            maternal_parents_string = maternal_parents.toString();
+        }
+
+        if (paternal_parents) {
+            paternal_parents_string = paternal_parents.toString();
+        }
 
         $.ajax({
             url: '/ajax/cross/add_cross',
