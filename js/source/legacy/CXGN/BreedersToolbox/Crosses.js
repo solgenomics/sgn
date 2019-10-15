@@ -261,6 +261,8 @@ jQuery(document).ready(function($) {
         var paternal;
         var maternal_parents;
         var paternal_parents;
+        var maternal_parents_string;
+        var paternal_parents_string;
 
         switch (crossType) {
             case 'biparental':
@@ -315,6 +317,14 @@ jQuery(document).ready(function($) {
                 break;
         }
 
+        if (maternal_parents) {
+            maternal_parents_string = maternal_parents.toString();
+        }
+
+        if (paternal_parents) {
+            paternal_parents_string = paternal_parents.toString();
+        }
+
         $.ajax({
             url: '/ajax/cross/add_cross',
             timeout: 3000000,
@@ -325,8 +335,8 @@ jQuery(document).ready(function($) {
                 'cross_type': crossType,
                 'maternal': maternal,
                 'paternal': paternal,
-                'maternal_parents': maternal_parents,
-                'paternal_parents': paternal_parents,
+                'maternal_parents': maternal_parents_string,
+                'paternal_parents': paternal_parents_string,
                 'progeny_number': progenyNumber,
                 'prefix': prefix,
                 'suffix': suffix,

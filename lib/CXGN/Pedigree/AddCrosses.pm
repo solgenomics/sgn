@@ -2,7 +2,7 @@ package CXGN::Pedigree::AddCrosses;
 
 =head1 NAME
 
-CXGN::Pedigree::AddCrosses - a module to add cross experiments.
+CXGN::Pedigree::AddCrosses - a module to add cross.
 
 =head1 USAGE
 
