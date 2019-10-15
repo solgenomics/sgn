@@ -3943,8 +3943,9 @@ sub submit_job_cluster {
 	{ 
 	    print STDERR "\n submit_job_cluster sync job\n";
 	    #$job->is_async(0);
-	    $job->is_cluster(1);
-	    $job->run_cluster($args->{cmd});
+	    #$job->is_cluster(1);
+	    #$job->run_cluster($args->{cmd});
+	    $job->run_async($args->{cmd});
 	    $job->wait();
 	
 	}
