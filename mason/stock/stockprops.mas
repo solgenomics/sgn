@@ -26,7 +26,7 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
-  $stock_id 
+  $stock_id
   $subset => [  'stock_synonym' ]
   $props
   $editable => []
@@ -51,13 +51,13 @@ sub prop_select {
   my $editable = shift;
   my $div_name = shift;
   my $html = "<select id=\"$div_name"."_select"."\">";
-  foreach my $item (@$editable) { 
+  foreach my $item (@$editable) {
       $html .= qq{ <option>$item</option> };
   }
   $html .= qq{ </select> };
   return $html;
 }
-    
+
 
 </%perl>
 
@@ -71,7 +71,7 @@ Add <% $prop_select %>
 
 <script defer="defer" >
 
-jQuery(document).ready(function() { 
+jQuery(document).ready(function() {
 
   jQuery('#<% $div_name %>_add_dialog').dialog( {
      title: 'Add property',
@@ -81,13 +81,13 @@ jQuery(document).ready(function() {
   });
 
   <% $div_name %>_getProps();
-  
+
 });
 
 // note: the $div_name prefix is needed when several instances are created on a page
 
-function <% $div_name %>_getProps() { 
-  jQuery.ajax( { 
+function <% $div_name %>_getProps() {
+  jQuery.ajax( {
     type: 'GET',
     url: '/stock/prop/get',
     data: { stock_id: <% $stock_id %> },
@@ -97,59 +97,59 @@ function <% $div_name %>_getProps() {
 }
 
 
-function <% $div_name %>_renderProps(props) { 
+function <% $div_name %>_renderProps(props) {
    var subset = eval(<% $subset_json %>);
 
    // eliminate types without values
    var filteredSet = {};
-   for (var n=0; n<subset.length; n++) {				   
+   for (var n=0; n<subset.length; n++) {
      for (var i=0; i<props.length; i++) {
-       if (subset[n] ==  props[i]['type_name']) { 
+       if (subset[n] ==  props[i]['type_name']) {
          filteredSet[subset[n]]=1;
            }
        }
    }
-    
-   
+
+
    var html = '';
    var prop_string;
    var edit_privs = <% $edit_privs %>;
    for (var n in filteredSet) {
       var lines = new Array();
       for(var i=0; i<props.length; i++) {
-        if (n ===  props[i]['type_name']) { 
+        if (n ===  props[i]['type_name']) {
           var lineStr = props[i]['value'];
-          if (jQuery.cookie("sgn_session_id") && edit_privs === 1) { 
-            lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['stockprop_id']+')">X</a>]';		
+          if (jQuery.cookie("sgn_session_id") && edit_privs === 1) {
+            lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['stockprop_id']+')">X</a>]';
           }
 	  lines.push(lineStr);
         }
-          
+
       }
-      html = html + '<b>'+n+'</b>&nbsp;&nbsp;'; 
+      html = html + '<b>'+n+'</b>&nbsp;&nbsp;';
       //html  = html + lineStr;
       html = html + lines.join(", ");
       html = html + '<br />\n';
-      
+
    }
    jQuery('#<% $div_name %>_content').html(html);
-		
-}		 
 
-function <% $div_name %>_addPropDialog(prop, typeId) { 
+}
+
+function <% $div_name %>_addPropDialog(prop, typeId) {
   jQuery('#<% $div_name %>_add_dialog').dialog("open");
 
 }
 
 
 
-function <% $div_name %>_addProp() { 
+function <% $div_name %>_addProp() {
   var prop_type = jQuery('#<% $div_name %>_select').val();
   var prop = jQuery('#<% $div_name %>_prop').val();
   prop = prop.trim();
   if (prop === '') { alert("Please fill in the field."); return; }
-				 
-  jQuery.ajax( { 
+
+  jQuery.ajax( {
     type: 'POST',
     url: '/stock/prop/add',
     beforeSend: function(){
@@ -159,7 +159,10 @@ function <% $div_name %>_addProp() {
     success: function(response) {
         jQuery('#working_modal').modal('hide');
         if ("error" in response) { alert ('ERROR '+response.error); }
-        if ("message" in response) { alert('Successfully added property: ' + prop + '. ('+response.message+')'); }
+        if ("message" in response) {
+            alert('Successfully added property: ' + prop + '. ('+response.message+')');
+            location.reload();
+        }
     },
     error: function(response) {
         jQuery('#working_modal').modal('hide');
@@ -172,20 +175,24 @@ function <% $div_name %>_addProp() {
 }
 
 
-function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) { 
-  confirm('Delete stockprop '+stockprop_value+'?');
-  jQuery.ajax( { 
-    method: 'GET',
-    url: '/stock/prop/delete',
-    data: { 'stockprop_id' : stockprop_id },
-    success: function(response) {  
-      if ('message' in response) {  alert(response.message); } 
-      if ('error'   in response) {  alert(response.error);   }
-    },
-    error: function(response) { alert('An error occurred. Please try again later.'); }
-  });
-
-  <% $div_name %>_getProps();
+function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) {
+    var yes = confirm('Delete stockprop '+stockprop_value+'?');
+    if (yes) {
+        jQuery.ajax( {
+            method: 'GET',
+            url: '/stock/prop/delete',
+            data: { 'stockprop_id' : stockprop_id },
+            success: function(response) {
+            if ('message' in response) {
+                alert(response.message);
+                location.reload();
+            }
+            if ('error'   in response) {  alert(response.error);   }
+        },
+        error: function(response) { alert('An error occurred. Please try again later.'); }
+        });
+    }
+    <% $div_name %>_getProps();
 }
 
 </script>
