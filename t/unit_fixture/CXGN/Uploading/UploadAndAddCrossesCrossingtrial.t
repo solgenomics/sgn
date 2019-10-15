@@ -155,11 +155,11 @@ my $after_uploading_relationship_male = $schema->resultset("Stock::StockRelation
 my $after_uploading_relationship_femaleplot = $schema->resultset("Stock::StockRelationship")->search({type_id => $female_plot_type_id})->count();
 my $after_uploading_relationship_maleplot = $schema->resultset("Stock::StockRelationship")->search({type_id => $male_plot_type_id})->count();
 
-is ($after_uploading_relationship_all, $before_uploading_relationship_all + 8);
-is ($after_uploading_relationship_female, $before_uploading_relationship_female + 2);
-is ($after_uploading_relationship_male, $before_uploading_relationship_male +2);
-is ($after_uploading_relationship_femaleplot, $before_uploading_relationship_femaleplot + 2);
-is ($after_uploading_relationship_maleplot, $before_uploading_relationship_maleplot + 2);
+is($after_uploading_relationship_all, $before_uploading_relationship_all + 8);
+is($after_uploading_relationship_female, $before_uploading_relationship_female + 2);
+is($after_uploading_relationship_male, $before_uploading_relationship_male +2);
+is($after_uploading_relationship_femaleplot, $before_uploading_relationship_femaleplot + 2);
+is($after_uploading_relationship_maleplot, $before_uploading_relationship_maleplot + 2);
 
 #add plants for testing (a total of 38 entries)
 my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => 165});
@@ -193,8 +193,8 @@ is_deeply($message_hash, {'success' => 1});
 my $after_uploading_relationship_femaleplant = $schema->resultset("Stock::StockRelationship")->search({type_id => $female_plant_type_id})->count();
 my $after_uploading_relationship_maleplant = $schema->resultset("Stock::StockRelationship")->search({type_id => $male_plant_type_id})->count();
 
-is ($after_uploading_relationship_femaleplant, $before_uploading_relationship_femaleplant + 2);
-is ($after_uploading_relationship_maleplant, $before_uploading_relationship_maleplant + 2);
+is($after_uploading_relationship_femaleplant, $before_uploading_relationship_femaleplant + 2);
+is($after_uploading_relationship_maleplant, $before_uploading_relationship_maleplant + 2);
 
 # test retrieving crosses in a trial
 my $test_add_cross_rs = $schema->resultset('Stock::Stock')->find({name =>'test_add_cross'});
@@ -238,10 +238,10 @@ my $after_add_progenies_accession = $schema->resultset("Stock::Stock")->search({
 my $after_add_progenies_relationship_all = $schema->resultset("Stock::StockRelationship")->search({})->count();
 my $after_add_progenies_offspring = $schema->resultset("Stock::StockRelationship")->search({type_id => $offspring_type_id})->count();
 
-is ($after_add_progenies_stock, $before_add_progenies_stock + 6);
-is ($after_add_progenies_accession, $before_add_progenies_accession + 6);
-is ($after_add_progenies_relationship_all, $before_add_progenies_relationship_all + 18);
-is ($after_add_progenies_offspring, $before_add_progenies_offspring + 6);
+is($after_add_progenies_stock, $before_add_progenies_stock + 6);
+is($after_add_progenies_accession, $before_add_progenies_accession + 6);
+is($after_add_progenies_relationship_all, $before_add_progenies_relationship_all + 18);
+is($after_add_progenies_offspring, $before_add_progenies_offspring + 6);
 
 # test updating cross info by uploading
 my $before_updating_info_stocks = $schema->resultset("Stock::Stock")->search({})->count();
@@ -267,9 +267,9 @@ my $after_updating_info_stocks = $schema->resultset("Stock::Stock")->search({})-
 my $after_updating_info_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
 my $after_updating_info_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
-is ($after_updating_info_stocks, $before_updating_info_stocks);
-is ($after_updating_info_stockprop, $before_updating_info_stockprop+1);
-is ($after_updating_info_relationship, $before_updating_info_relationship);
+is($after_updating_info_stocks, $before_updating_info_stocks);
+is($after_updating_info_stockprop, $before_updating_info_stockprop+1);
+is($after_updating_info_relationship, $before_updating_info_relationship);
 
 # test retrieving crossing experimental info after updating
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
@@ -304,8 +304,8 @@ is_deeply($message_hash, {'success' => 1});
 my $after_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
 my $after_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
 
-is ($after_family_name_stocks, $before_family_name_stocks +4);
-is ($after_add_family_name, $before_add_family_name + 4);
+is($after_family_name_stocks, $before_family_name_stocks +4);
+is($after_add_family_name, $before_add_family_name + 4);
 
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
@@ -345,7 +345,7 @@ is_deeply($message_hash, {'success' => 1});
 
 my $after_deleting_empty_experiment = $schema->resultset("Project::Project")->search({})->count();
 
-is ($after_deleting_empty_experiment, $before_deleting_empty_experiment - 1);
+is($after_deleting_empty_experiment, $before_deleting_empty_experiment - 1);
 
 # test deleting crossing experiment with crosses
 my $before_deleting_experiment = $schema->resultset("Project::Project")->search({})->count();
@@ -357,7 +357,7 @@ ok($response->{'error'});
 
 my $after_deleting_experiment = $schema->resultset("Project::Project")->search({})->count();
 
-is ($after_deleting_experiment, $before_deleting_experiment);
+is($after_deleting_experiment, $before_deleting_experiment);
 
 #test deleting all crosses in test_crossingtrial and test_crossingtrial2
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_trial2_id.'/delete_all_crosses_in_crossingtrial');
@@ -368,14 +368,14 @@ my $after_delete_all_crosses_in_experiment = $schema->resultset("NaturalDiversit
 my $after_delete_all_crosses_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 my $stocks_after_delete_all_crosses = $schema->resultset("Stock::Stock")->search({})->count();
 
-is ($after_delete_all_crosses_crosses, $before_adding_cross);
-is ($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment);
+is($after_delete_all_crosses_crosses, $before_adding_cross);
+is($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment);
 
 # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info
-is ($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 38);
+is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 38);
 
 # stock table has 42 more rows after adding 4 family names and 38 plants
-is ($stocks_after_delete_all_crosses, $before_adding_stocks + 42);
+is($stocks_after_delete_all_crosses, $before_adding_stocks + 42);
 
 # remove added crossing trials after test so that they don't affect downstream tests
 $crossing_trial_rs->delete();
