@@ -38,59 +38,34 @@ has "config_file" => (
 
 sub run {
     my $self = shift;
-   
-    $self->run_jobs;
-          
-}
-
-
-sub run_jobs {
-    my $self = shift;
-
-    my $jobs = [];
-      
-    my $prerequisite_jobs = $self->prerequisite_jobs;
-	     
-    if ($prerequisite_jobs !~ /none/)
-    {
-	$jobs =  $self->run_prerequisite_jobs;    	  
-    }
-
-    foreach my $job (@$jobs)
-    {
-     	while (1) 
-     	{
-    # 	    my $st = $self->check_job_status($job_id);
-     #	    last if $st =~ /done/;
-     #	    sleep if $st =~ /runnning/;
-     	    last if !$job->alive();	    
-     	    sleep 30 if $job->alive();
-	    
-    	}
-    }
-
-   $jobs = $self->run_dependent_jobs;  
-   $self->send_analysis_report($jobs);
+ 
+    my $pre_jobs = $self->run_prerequisite_jobs;  
+    my $dep_jobs = $self->run_dependent_jobs($pre_jobs);  
+    $self->send_analysis_report($dep_jobs);
     
 }
 
 
 sub run_prerequisite_jobs {
     my $self = shift;
-
-    my $jobs_file = $self->prerequisite_jobs;
-    my $jobs = retrieve($jobs_file);
-
-    if (reftype $jobs ne 'ARRAY') 
-    {
-	$jobs = [$jobs];
-    }
-   
+    
     my @jobs;
-    foreach my $job (@$jobs) 
-    {
-	my $job = $self->submit_job($job);
-	push @jobs, $job;
+    my $jobs = $self->prerequisite_jobs;
+   
+    if ($jobs !~ /none/)
+    {  	     
+	$jobs = retrieve($jobs);
+
+	if (reftype $jobs ne 'ARRAY') 
+	{
+	    $jobs = [$jobs];
+	}
+		
+	foreach my $job (@$jobs) 
+	{
+	    my $job = $self->submit_job($job);
+	    push @jobs, $job;
+	}
     }
     
     return \@jobs;
@@ -100,7 +75,18 @@ sub run_prerequisite_jobs {
 
 sub run_dependent_jobs {
     my $self = shift;
-    
+    my $pre_jobs = shift;
+
+    my @jobs;
+    foreach my $pre_job (@$pre_jobs) 
+    {	
+	while (1) 
+	{
+	    last if !$pre_job->alive();
+	    sleep 30 if $pre_job->alive();
+	}
+    }
+
     my $jobs_file = $self->dependent_jobs;
     my $jobs = retrieve($jobs_file);
     
@@ -124,22 +110,18 @@ sub run_dependent_jobs {
 
 sub send_analysis_report {
     my $self = shift;
-    my $jobs = shift;
-    
-    # if (reftype $jobs ne 'ARRAY') 
-    # {
-    #  	$jobs = [$jobs];
-    # }
-    #  print STDERR "\n sending analyis report\n";
-    #  foreach my $job (@$jobs) 
-    #  {
-    #  	while (1)
-    #  	{	    
-    # 	    last if !$job->alive();
-    # 	    sleep 30 if $job->alive();
-    # 	}
-    #  }
-    
+    my $dep_jobs = shift;
+
+    my @jobs;
+    foreach my $dep_job (@$dep_jobs) 
+    {
+	while (1) 
+	{
+	    last if !$dep_job->alive();
+	    sleep 30 if $dep_job->alive();
+	}
+    }
+   
     my $report_file    = $self->analysis_report_job;
     unless ($report_file =~ /none/) 
     {
@@ -147,6 +129,7 @@ sub send_analysis_report {
 	my $job = $self->submit_job($report_job);
 	return $job;
     }
+    
 }
 
 
@@ -163,9 +146,11 @@ sub submit_job {
      {		
      	$job = CXGN::Tools::Run->new($args->{config});
      	$job->do_not_cleanup(1);
+	#$job->is_async(1);
 	$job->is_cluster(1);
 	$job->run_cluster($args->{cmd});
-		    
+	#$job->run_async($args->{cmd});
+	
 	if (!$args->{background_job}) {
 	   
 	    print STDERR "\n WAITING job to finish\n";
