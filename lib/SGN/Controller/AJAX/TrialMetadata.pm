@@ -1349,6 +1349,7 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
         data_level => 'plots',
         #treatment_project_ids => [1,2],
         selected_columns => $selected_cols,
+        include_measured => "false"
     });
     my $output = $trial_layout_download->get_layout_output();
 
