@@ -3579,23 +3579,31 @@ sub run_async {
 	or croak "job config file: $! serializing job config to $job_config_file ";
 	
     
-    my $jobs = solGS::asyncJob->new({prerequisite_jobs => $prerequisite_jobs,
-				     dependent_jobs => $dependent_jobs,
-				     analysis_report_job => $report_file,
-				     config_file => $job_config_file}
-	);
-    print STDERR "\ncalling async job run\n";
-    $jobs->run;
-print STDERR "\nDONE callg async job run\n";    
-  #  my $cluster_job_args = {
-#	'cmd' => $cmd,
-#	'config' => $job_config,
-#	'background_job'  => $background_job,
-#	'temp_dir'     => $temp_dir,
-#	'async'        => $c->stash->{async},
- #   };
+    # my $jobs = solGS::asyncJob->new({prerequisite_jobs => $prerequisite_jobs,
+    # 				     dependent_jobs => $dependent_jobs,
+    # 				     analysis_report_job => $report_file,
+    # 				     config_file => $job_config_file}
+    # 	);
+    # print STDERR "\ncalling async job run\n";
+    # $jobs->run;
 
-  # my $job = $self->submit_job_cluster($c, $cluster_job_args);
+    my $cmd = 'mx-run solGS::asyncJob'
+	. ' --prerequisite_jobs '   . $prerequisite_jobs
+	. ' --dependent_jobs '      . $dependent_jobs
+    	. ' --analysis_report_job ' . $report_file
+	. ' --config_file '         . $job_config_file;
+    
+
+    print STDERR "\nDONE callg async job run\n";    
+    my $cluster_job_args = {
+	'cmd' => $cmd,
+	'config' => $job_config,
+	'background_job'  => $background_job,
+	'temp_dir'     => $temp_dir,
+	'async'        => $c->stash->{async},
+    };
+
+    my $job = $self->submit_job_cluster($c, $cluster_job_args);
   
 }
 
@@ -3703,7 +3711,7 @@ sub get_cluster_query_job_args {
     my $data_type = 'genotype';
     
     nstore $query_args, $args_file 
-		or croak "data queryscript: $! serializing model details to $args_file ";
+		or croak "data query script: $! serializing model details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
     	. ' --data_type ' . $data_type
@@ -3915,8 +3923,7 @@ sub submit_job_cluster {
     
     print STDERR "\n submit_job_cluster cmd: $cmd\n";
     eval 
-    {
-	
+    {	
 	$job = CXGN::Tools::Run->new($args->{config});
 	$job->do_not_cleanup(1);
 
@@ -3925,7 +3932,7 @@ sub submit_job_cluster {
 	{  
 	    print STDERR "\n submit_job_cluster async job\n";
 	    $job->is_async(1);		 
-	    $job->run_cluster($args->{cmd});
+	    $job->run_async($args->{cmd});
 	    
 	    $c->stash->{r_job_tempdir} = $job->job_tempdir();
 	    $c->stash->{r_job_id}      = $job->jobid();
