@@ -588,7 +588,7 @@ sub corre_pheno_query_jobs_file {
     my $jobs = $c->stash->{corre_pheno_query_jobs};
   
     my $temp_dir = $c->stash->{correlation_temp_dir};
-    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'anova-query-jobs-file');	   
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-corre-query-jobs-file');	   
    
     nstore $jobs, $jobs_file
 	or croak "correlation pheno query jobs : $! serializing correlation phenoquery jobs to $jobs_file";
