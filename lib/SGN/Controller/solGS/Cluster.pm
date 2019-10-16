@@ -153,6 +153,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $cluster_pop_id   = $c->req->param('cluster_pop_id');
+    my $cluster_pop_name = $c->req->param('cluster_pop_name');
     my $dataset_id       = $c->req->param('dataset_id');
     my $dataset_name     = $c->req->param('dataset_name');
     my $data_structure   = $c->req->param('data_structure');
@@ -163,6 +164,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $cluster_type     = $c->req->param('cluster_type');
     my @traits_ids       = $c->req->param('training_traits_ids[]'); 
     my $list_id          = $c->req->param('list_id');
+    
 
     my $list_type;   
     my $list_name;
@@ -183,6 +185,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{cluster_pop_id}   = $cluster_pop_id;
+    $c->stash->{cluster_pop_name} = $cluster_pop_name;
     $c->stash->{data_structure}   = $data_structure;
     $c->stash->{list_id}          = $list_id;
     $c->stash->{list_name}        = $list_name;
@@ -278,7 +281,7 @@ sub _prepare_response {
 
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 
-    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name};
+    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name} || $c->stash->{cluster_pop_name} ;
     my $ret->{kcluster_plot} = $cluster_plot_file;
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;

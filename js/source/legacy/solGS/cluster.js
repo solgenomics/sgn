@@ -206,11 +206,11 @@ solGS.cluster = {
 	var popId   = jQuery("#cluster_selected_population_id").val();
 	var popType = jQuery("#cluster_selected_population_type").val();
 	var popName = jQuery("#cluster_selected_population_name").val();
-	
+	  
 	if(!selectName) {
 	    selectName = popName;
 	}
-
+  
 	if (!selectId) {
 	    selectId = popId;
 	}
@@ -304,7 +304,8 @@ solGS.cluster = {
 				'data_type': dataType,
 				'k_number' : kNumber,
 				'selection_proportion': selectionProp,
-				'sindex_name': sIndexName
+				'sindex_name': sIndexName,
+				'cluster_pop_name': selectName
 			       };
 	    
 	    this.runClusterAnalysis(clusterArgs);
@@ -605,7 +606,7 @@ solGS.cluster = {
             var selectedPopId   = idPopName.id;
             var selectedPopName = idPopName.name;
             var selectedPopType = idPopName.pop_type; 
-
+	    
             jQuery("#cluster_selected_population_name").val(selectedPopName);
             jQuery("#cluster_selected_population_id").val(selectedPopId);
             jQuery("#cluster_selected_population_type").val(selectedPopType);
