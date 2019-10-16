@@ -414,8 +414,13 @@ jQuery(document).ready(function($) {
         var list_data = lo.getListData(accession_list_id);
         var accessions = list_data.elements;
         var names = [];
-        for (i = 0; i < accessions.length; i++) {
-            names.push(accessions[i][1]);
+
+        if (accessions.length == 0) {
+            return "The selected list is empty";
+        } else {
+            for (i = 0; i < accessions.length; i++) {
+                names.push(accessions[i][1]);
+            }
         }
         return names;
     }
