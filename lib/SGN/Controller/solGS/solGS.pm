@@ -3919,8 +3919,7 @@ sub submit_job_cluster {
 
     my $job;
 
-    my $cmd = $args->{cmd};
-    
+    my $cmd = $args->{cmd};    
     print STDERR "\n submit_job_cluster cmd: $cmd\n";
     eval 
     {	
@@ -3930,7 +3929,7 @@ sub submit_job_cluster {
 	
 	if ($args->{background_job}) 
 	{  
-	    print STDERR "\n submit_job_cluster async job\n";
+	    print STDERR "\n background submit_job_cluster async job\n";
 	    $job->is_async(1);		 
 	    $job->run_async($args->{cmd});
 	    
@@ -3941,44 +3940,10 @@ sub submit_job_cluster {
 	} 
 	else 
 	{ 
-	    print STDERR "\n submit_job_cluster sync job\n";
-	    #$job->is_async(0);
-	    #$job->is_cluster(1);
-	    #$job->run_cluster($args->{cmd});
+	    print STDERR "\n WAIT submit_job_cluster async job\n";
 	    $job->run_async($args->{cmd});
-	    $job->wait();
-	
-	}
-	    
-
-
-	
-	# } 
-	# else 
-	# { print STDERR "\n submit_job_cluster no background job\n";
-	#     #
-	#   $job->is_cluster(1);
-	#   $job->run_cluster($args->{cmd});
-	#   $job->wait;
-
-	#   # my $cmd = $args->{cmd};
-
-	#   # if ($cmd =~ /Rscript/) {
-	#   #     print STDERR "\n\nSubmitted job... $cmd\n\n";	
-	#   #     #my $cmd = $args->{cmd};
-	#   #     my $job = qx /$cmd 2>&1/;
-
-	#   #     my ($job_id) = split(/\t/, $job); 
-
-	#   #     print STDERR "\n\nSubmitted job... $args->{cmd}\n\n";	
-	#   #     print STDERR "\n job: $job -- id: $job_id\n"; 
-	#   # } else {
-	#   #     print STDERR "\n run: $cmd\n";
-	#   #     $cmd->run;
-	#   #     print STDERR "\n run job done\n";
-	#   # }
-	# }
-	
+	    $job->wait();	
+	}	
     };
 
     if ($@) 

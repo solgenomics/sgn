@@ -137,28 +137,25 @@ sub submit_job {
      my ($self, $args) = @_;
 
      my $job;
-     my $config = $self->config_file;
-     $config = retrieve($config);
+     ###my $config = $self->config_file;
+     ###$config = retrieve($config);
      
-     print STDERR "job... $args->{cmd}\n";	
+     print STDERR "submitting job... $args->{cmd}\n";	
    
     eval 
      {		
      	$job = CXGN::Tools::Run->new($args->{config});
      	$job->do_not_cleanup(1);
-	#$job->is_async(1);
+	
 	$job->is_cluster(1);
 	$job->run_cluster($args->{cmd});
-	#$job->run_async($args->{cmd});
+
 	
-	if (!$args->{background_job}) {
-	   
-	    print STDERR "\n WAITING job to finish\n";
-	    #$job->is_async(0);
-	   
+	if (!$args->{background_job}) 
+	{	   
+	    print STDERR "\n WAITING job to finish\n";	   
 	    $job->wait();
-	    print STDERR "\n job COMPLETED\n";
-	      	    
+	    print STDERR "\n job COMPLETED\n";	      	    
 	}
      };
 
