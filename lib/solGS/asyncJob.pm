@@ -95,7 +95,6 @@ sub run_dependent_jobs {
 	$jobs = [$jobs];
     }
 
-    my @jobs;
     foreach my $job (@$jobs) 
     {
 	my $job = $self->submit_job($job);
