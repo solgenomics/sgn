@@ -16,13 +16,13 @@ my $trial_plant_layout = CXGN::Trial::TrialLayoutDownload::PlantLayout->new({
     design => $design,
     trial => $selected_trial,
     treatment_info_hash => \%treatment_info_hash,
-    phenotype_performance_hash => \%fieldbook_trait_hash
+    overall_performance_hash => \%fieldbook_trait_hash
 });
 my $result = $trial_plant_layout->retrieve();
 
 =head1 DESCRIPTION
 
-Will output an array of arrays, where each row is a plant in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial. additionally, trait performance can be included in column using the phenotype_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
+Will output an array of arrays, where each row is a plant in the trial. the columns are based on the supplied selected_cols and the columns will include any treatments (management factors) that are part of the trial. additionally, trait performance can be included in column using the overall_performance_hash. this should only be called from CXGN::Trial::TrialLayoutDownload
 
 =head1 AUTHORS
 
@@ -50,8 +50,9 @@ sub retrieve {
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
     my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
-    my $phenotype_performance_hash = $self->phenotype_performance_hash || {};
-    my @trait_names = sort keys %$phenotype_performance_hash;
+    my $trait_header = $self->trait_header || [];
+    my $exact_performance_hash = $self->exact_performance_hash || {};
+    my $overall_performance_hash = $self->overall_performance_hash || {};
     my @output;
 
     my @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
@@ -65,14 +66,16 @@ sub retrieve {
     foreach (@$treatment_name_list){
         push @header, "ManagementFactor:".$_;
     }
-    foreach (@trait_names){
+    foreach (@$trait_header){
         push @header, $_;
     }
+
     push @output, \@header;
 
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     #Turn plot level design into a plant level design that can be sorted on plot_number and then plant index number..
     my @plant_design;
@@ -84,8 +87,7 @@ sub retrieve {
         }
         my $acc_pedigree = '';
         if (exists($selected_cols{'pedigree'})){
-            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-            $acc_pedigree = $accession->get_pedigree_string('Parents');
+            $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
@@ -124,6 +126,9 @@ sub retrieve {
     }
     #print STDERR Dumper \@plant_design;
 
+    my @overall_trait_names = sort keys %$overall_performance_hash;
+    my @exact_trait_names = sort keys %$exact_performance_hash;
+
     no warnings 'uninitialized';
     @plant_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;
 
@@ -149,7 +154,8 @@ sub retrieve {
             }
         }
         $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{plant_name});
-        $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
+        $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{plant_name});
+        $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info);
         push @output, $line;
     }
 

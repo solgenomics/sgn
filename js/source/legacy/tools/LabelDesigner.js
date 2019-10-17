@@ -179,6 +179,7 @@ font_styles = {
 }
 
 var add_fields = {}; // retrieved when data source is selected
+var num_units = 0; // updated when data source is selected
 
 resizer_behaviour = d3.behavior.drag().on(
     "drag",
@@ -244,7 +245,7 @@ $(document).ready(function($) {
     $('#source_select').focus();
 
     //Add link to docs
-    jQuery('#pagetitle_h3').append('&nbsp;<a id="label_designer_docs_link" href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_12.html"><span class="glyphicon glyphicon-info-sign"></span></a>');
+    // jQuery('#pagetitle_h3').append('&nbsp;<a id="label_designer_docs_link" href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_12.html"><span class="glyphicon glyphicon-info-sign"></span></a>');
 
     // Always focus on autofocus elements when modals are opened.
     $('.modal').on('shown.bs.modal', function() {
@@ -255,6 +256,33 @@ $(document).ready(function($) {
         saveLabelDesign();
     });
 
+    $('#design_label_button').click(function() {
+        $("#d3-draw-area").prependTo("#save_and_download");
+    });
+
+    $('#design_label_button').click(function() {
+        $("#d3-draw-area").prependTo("#save_and_download");
+        $(".workflow-complete").click(function() {
+            var title = $(this).children().text();
+            //console.log("workflow element with title "+title+" was just clicked\n");
+
+            if (title == "Design Your Label") {
+                $("#d3-draw-area").prependTo("#d3-draw-div");
+            } else if (title == "More Options, Save, And Download") {
+                $("#d3-draw-area").prependTo("#save_and_download");
+            }
+
+        });
+        $("ol.workflow-prog li").click(function() {
+            var title = $(this).children().text();
+            //console.log("workflow element with title "+title+" was just clicked\n");
+            if (title == "More Options, Save, And Download") {
+                $("#d3-draw-area").prependTo("#save_and_download");
+            }
+
+        });
+    });
+
     getDataSourceSelect();
 
     $("#edit_additional_settings").on("click", function() {
@@ -262,11 +290,15 @@ $(document).ready(function($) {
     });
 
     $(document).on("change", "#source_select", function() {
+
+        var name = jQuery('#source_select :selected').text();
+        jQuery('#selected_data_source').text(name);
+
         var data_type = $('#source_select :selected').parent().attr('label');
 
-        updateFields(data_type, this.value, '');
+        // updateFields(data_type, this.value, '');
 
-        if (data_type == 'Field Trials'){
+        if (data_type == 'Field Trials') {
             jQuery.ajax({
                 url: '/ajax/breeders/trial/'+this.value+'/has_data_levels',
                 method: 'GET',
@@ -278,7 +310,7 @@ $(document).ready(function($) {
                     jQuery('#page_format').focus();
                 },
                 success: function(response) {
-                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="plots">Plot</option>';
+                    var html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="plots">Plot</option>';
                     if(response.has_plants){
                         html = html + '<option value="plants">Plant</option>';
                     }
@@ -290,22 +322,89 @@ $(document).ready(function($) {
                     }
                     html = html + '</select>';
                     jQuery('#label_designer_data_level_select_div').html(html);
-                    jQuery('#label_designer_data_level_div').show();
+                    jQuery("#label_designer_data_level").focus();
                 },
                 error: function(response) {
                     alert('There was a problem checking the data levels available for your field trial. Please contact us.');
                 }
             });
-        } else {
-            jQuery('#label_designer_data_level_select_div').html('');
-            jQuery('#label_designer_data_level_div').hide();
+        } else if (data_type == 'Genotyping Plates') {
+
+            jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="plate">Plate</option></select>');
+            jQuery("#label_designer_data_level").focus();
+
+        } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
+
+            var html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="list">List Items</option>';
+            // Check list type, if Plot, Plant, or Tissue Sample add details option
+            var name = $('#source_select :selected').text();
+
+            jQuery.ajax({
+                url: '/list/exists',
+                data: { 'name': name },
+                beforeSend: function() {
+                    disable_ui();
+                },
+                complete: function() {
+                    enable_ui();
+                    jQuery('#page_format').focus();
+                },
+                success: function(response) {
+                    if (response.list_type == 'plots') {
+                        html = html + '<option value="plots">Plot Details</option>';
+                    } else if (response.list_type == 'subplots') {
+                        html = html + '<option value="subplots">Subplot Details</option>';
+                    } else if (response.list_type == 'plants') {
+                        html = html + '<option value="plants">Plant Details</option>';
+                    } else if (response.list_type == 'tissue_samples') {
+                        html = html + '<option value="tissue_samples">Tissue Sample Details</option>';
+                    } else if (response.list_type == 'identifier_generation') {
+                        // remove list item select options and add options for each id batch
+                        html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option>';
+                        var lo = new CXGN.List();
+                        var list_data = lo.getListData(response.list_id);
+                        var elements = list_data.elements;
+                        var identifier_object = JSON.parse(elements[0][1]);
+                        var records = identifier_object.records;
+                        for (var x = 0; x < records.length; x++) {
+                            var generated_identifiers = records[x].generated_identifiers;
+                            if (generated_identifiers) {
+                                //console.log("current identifiers are: "+generated_identifiers);
+                                var min = generated_identifiers.shift();
+                                var max = generated_identifiers.pop();
+                                var id = records[x].next_number;
+                                html = html + '<option value="batch-'+id+'">ID Batch '+min+' - '+max+'</option>';
+                            }
+                        }
+                    }
+                    html = html + '</select>';
+                    jQuery('#label_designer_data_level_select_div').html(html);
+                    jQuery("#label_designer_data_level").focus();
+                },
+                error: function(response) {
+                    alert('There was a problem checking the data levels available for your field trial. Please contact us.');
+                }
+            });
         }
     });
 
     jQuery(document).on('change', '#label_designer_data_level', function(){
         var data_type = $('#source_select :selected').parent().attr('label');
-        var value = jQuery('#source_select').val();
-        updateFields(data_type, value, this.value);
+        var source_id = jQuery('#source_select').val();
+
+        var name = jQuery('#label_designer_data_level :selected').text();
+        jQuery('#selected_data_level').text(name);
+
+        if (this.value) { jQuery('#select_datasource_button').prop('disabled', false); }
+        updateFields(data_type, source_id, this.value);
+    });
+
+    jQuery(document).on('change', 'input[type=radio][name=optradio]', function(){
+        if (this.value == 'saved') {
+            document.getElementById("design_list").style.display = "inline";
+        } else {
+            document.getElementById("design_list").style.display = "none";
+        }
     });
 
     var page_format_select = d3.select("#page_format");
@@ -323,6 +422,7 @@ $(document).ready(function($) {
         var label = $(this).find('option:selected').val();
         if (!label || label == 'Select a label format') {
             disableDrawArea();
+            jQuery('#select_layout_button').prop('disabled',true)
         } else {
             switchLabelDependentOptions(label);
         }
@@ -331,6 +431,7 @@ $(document).ready(function($) {
     d3.select("#d3-apply-custom-label-size").on("click", function() {
 
         //save and apply custom label size
+        jQuery('#select_layout_button').prop('disabled', false)
         var page = d3.select("#page_format").node().value;
         var custom_label = page_formats[page].label_sizes['Custom'];
 
@@ -414,70 +515,103 @@ $(document).ready(function($) {
         var size = document.getElementById("d3-add-size-input").value;
         var font = document.getElementById("d3-add-font-input").value || 'Courier';
         addToLabel(field, text, type, size, font);
+        jQuery('#design_label_button').prop('disabled', false)
     });
 
     $("#d3-pdf-button, #d3-zpl-button").on("click", function() {
-
-        var label_elements = document.getElementsByClassName('label-element');
-        label_elements = Array.prototype.slice.call(label_elements); // convert to array
-        if (label_elements.length < 1) {
-            alert("No elements in the design. Please add design elements before downloading");
-            return;
-        }
-        var download_type = $(this).val();
-        var data_type = $('#source_select :selected').parent().attr('label');
-        var value = $("#source_select").val();
-        //console.log("Id is "+data_type+" and value is "+value);
-        if (!value || value == 'Please select a trial' || value == 'Select a plot list') {
-            alert("No data source selected. Please select a data source before downloading");
-            return;
-        }
-
         var design = retrievePageParams();
-        if (!design) {return;}
-        design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
-        var design_json = JSON.stringify(design);
+        var download_type = $(this).val();
+        console.log("Design is "+JSON.stringify(design));
 
-        var labels_to_download = jQuery('#label_designer_labels_to_print').val();
+        // if over 1,000 to download, throw warning with editable start and end number and text recommending to download in batches of 1,000 or less
+        var label_count = num_units * design.copies_per_plot;
+        var labels_to_download = design.labels_to_download;
+        if (label_count < 1000 || (labels_to_download && labels_to_download < 1000)) {
+            downloadLabels(design, download_type);
+        } else if (label_count > 1000) {
+            //show warning with editable inputs for start and end
+            var message = "You are trying to download "+label_count+ " labels ("+label_count+" "+jQuery('#label_designer_data_level :selected').text()+"s x "+design.copies_per_plot+" copy(ies) each). Due to slow speeds it is not recommended to download more than 1000 labels at a time. Please use the input boxes below to download your labels in batches.";
+            $("#batch_download_message").text(message);
+            $("#d3-batch-download-submit").val(download_type);
+            $('#batchDownloadModal').modal('show');
+        }
 
-        //send to server to build pdf file
-        jQuery.ajax({
-            url: '/tools/label_designer/download',
-            timeout: 300000,
-            method: 'POST',
-            data: {
-                'download_type': download_type,
-                'data_type' : data_type,
-                'value': value,
-                'design_json': design_json,
-                'labels_to_download': labels_to_download
-            },
-            beforeSend: function() {
-                console.log("Downloading "+download_type+" file . . . ");
-                disable_ui();
-            },
-            complete: function() {
-                enable_ui();
-            },
-            success: function(response) {
-                if (response.error) {
-                    enable_ui();
-                    alert(response.error);
-                } else {
-                    console.log("Got file "+response.filename);
-                    enable_ui();
-                    window.location.href = "/download/" + response.filename;
-                }
-            },
-            error: function(request, status, err) {
-                enable_ui();
-                alert("Error. Unable to download labels.");
-            }
-        });
     });
+
+    $("#d3-batch-download-submit").on("click", function() {
+        var download_type = $(this).val();
+        var design = retrievePageParams();
+        downloadLabels(design, download_type);
+    });
+
 });
 
-function updateFields(data_type, value, data_level){
+function downloadLabels (design, download_type) {
+    var label_elements = document.getElementsByClassName('label-element');
+    label_elements = Array.prototype.slice.call(label_elements); // convert to array
+    if (label_elements.length < 1) {
+        alert("No elements in the design. Please add design elements before downloading");
+        return;
+    }
+    var data_type = $('#source_select :selected').parent().attr('label');
+    var source_id = $("#source_select").val();
+    var source_name = $("#source_select :selected").text();
+    //console.log("Id is "+source_id+" and name is "+source_name);
+    if (!source_id || source_id == 'Please select a trial' || source_id == 'Select a plot list') {
+        alert("No data source selected. Please select a data source before downloading");
+        return;
+    }
+
+    if (!design) {
+        alert("No design. Please define a design before downloading");
+        return;
+    }
+    design.label_elements = label_elements.filter(checkIfVisible).map(getLabelDetails);
+
+    var design_json = JSON.stringify(design);
+    console.log("design is"+design_json);
+    var data_level = jQuery('#label_designer_data_level').val();
+
+    //send to server to build pdf file
+    jQuery.ajax({
+        url: '/tools/label_designer/download',
+        timeout: 300000,
+        method: 'POST',
+        data: {
+            'download_type': download_type,
+            'data_type' : data_type,
+            'source_id': source_id,
+            'source_name': source_name,
+            'design_json': design_json,
+            'data_level': data_level
+        },
+        beforeSend: function() {
+            console.log("Downloading "+download_type+" file . . . ");
+            disable_ui();
+        },
+        complete: function() {
+            enable_ui();
+        },
+        success: function(response) {
+            if (response.error) {
+                enable_ui();
+                alert(response.error);
+            } else {
+                console.log("Got file "+response.filename);
+                enable_ui();
+                window.location.href = "/download/" + response.filename;
+            }
+        },
+        error: function(request, status, err) {
+            enable_ui();
+            alert("Error. Unable to download labels.");
+        }
+    });
+}
+
+function updateFields(data_type, source_id, data_level){
+
+    //console.log("running update fields");
     if (data_type.match(/List/)) {
         jQuery('#sort_order').val('list_order');
     }
@@ -488,7 +622,7 @@ function updateFields(data_type, value, data_level){
         method: 'POST',
         data: {
             data_type: data_type,
-            value: value,
+            source_id: source_id,
             data_level: data_level
         },
         beforeSend: function() {
@@ -508,8 +642,9 @@ function updateFields(data_type, value, data_level){
 
                 // if reps, add reps as options for filtering
                 reps = response.reps;
+                num_units = response.num_units;
                 addPlotFilter(reps);
-
+                addSortOrders(add_fields);
                 createAdders(add_fields);
                 initializeCustomModal(add_fields);
                 showLoadOption();
@@ -755,6 +890,7 @@ function getDataSourceSelect() {
             id: 'source_select',
             default: 'Select a data source',
             live_search: 1,
+            // workflow_trigger: 1,
         });
 }
 
@@ -849,6 +985,7 @@ function switchLabelDependentOptions(label) {
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "visible";
         $('#label_width').focus();
     } else {
+        jQuery('#select_layout_button').prop('disabled', false)
         document.getElementById("d3-custom-dimensions-div").style.display = "none";
         document.getElementById("d3-label-custom-dimensions-div").style.visibility = "hidden";
         changeLabelSize( label_sizes[label].label_width,  label_sizes[label].label_height);
@@ -1086,6 +1223,20 @@ function addPlotFilter(reps) {
 
 }
 
+function addSortOrders(add_fields) {
+    //load options
+    d3.select("#sort_order").selectAll("option").remove();
+    d3.select("#sort_order").selectAll("option")
+        .data(Object.keys(add_fields).sort())
+        .enter().append("option")
+        .text(function(d) {
+            return d
+        })
+        .attr("value", function(d) {
+            return d
+        });
+}
+
 function checkIfVisible(element) {
     var label_width = document.getElementById("d3-label-area").viewBox.baseVal.width;
     var label_height = document.getElementById("d3-label-area").viewBox.baseVal.height;
@@ -1173,6 +1324,9 @@ function retrievePageParams() {
         plot_filter: document.getElementById("plot_filter").value,
         sort_order: document.getElementById("sort_order").value,
         copies_per_plot: document.getElementById("copies_per_plot").value,
+        labels_to_download: document.getElementById("label_designer_labels_to_download").value,
+        start_number: document.getElementById("label_designer_start_number").value,
+        end_number: document.getElementById("label_designer_end_number").value,
         label_format: label,
         label_width: label_sizes[label].label_width,
         label_height: label_sizes[label].label_height,
@@ -1207,10 +1361,16 @@ function initializeCustomModal(add_fields) {
     });
 
     $("#d3-custom-preview").on("click", function() {
-        var value = $(this).find('option:selected').text();
-        var custom_field = $("#d3-custom-input").val() + value;
-
-        var result = custom_field.replace(/\{(.*?)\}/g, fillInPlaceholders);
+        var custom_field = $("#d3-custom-input").val();
+        var result = custom_field.replace(/\{(.*?)\}/g, function(match, token) {
+            console.log("token is "+token);
+            if (token.match(/Number:/)) {
+                var parts = token.split(':');
+                return parts[1];
+            } else {
+                return add_fields[token];
+            }
+        });
         $("#d3-custom-content").text(result);
     });
 
@@ -1268,7 +1428,7 @@ function saveLabelDesign() {
 function fillInPlaceholders(match, placeholder) { // replace placeholders with actual values
         var filled = add_fields[placeholder];
         // console.log("Filling "+placeholder+" with "+filled);
-        if (typeof filled === 'undefined') {
+        if (typeof filled === 'undefined' && !placeholder.match(/Number:/)) {
             // console.log(placeholder+" is undefined. Alerting with warning");
             alert("Missing field. Your selected design includes the field "+placeholder+" which is not available from the selected data source. Please pick a different saved design or data source, or remove the undefined field from the design area.")
         }
@@ -1276,15 +1436,15 @@ function fillInPlaceholders(match, placeholder) { // replace placeholders with a
 }
 
 function showLoadOption() {
-    document.getElementById('design_label').style.display = "inline";
-    document.getElementById('design_list').style.display = "inline";
+    // document.getElementById('design_label').style.display = "inline";
+    // document.getElementById('design_list').style.display = "inline";
     var lo = new CXGN.List();
     $('#design_list').html(lo.listSelect('design_list', ['label_design'], 'Select a saved design', 'refresh', undefined));
     $('#design_list_list_select').change(
       function() {
-        disable_ui();
+        Workflow.complete(this);
         loadDesign(this.value);
-        enable_ui();
+        jQuery('#design_label_button').prop('disabled', false);
     });
 }
 

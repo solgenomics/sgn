@@ -187,8 +187,13 @@ my $test_url = "/" . $basepath . "/jbrowse.conf";
 my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
 
 </%perl>
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
 
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<& /util/import_javascript.mas,
+   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
+  entries => ["sequenced_accessions"]
+&>
 
 <script language="javascript">
 function jqueryStuff() {
@@ -238,6 +243,13 @@ function jqueryStuff() {
     </div>
 
 </&>
+
+
+<&| /page/info_section.mas, title => "Sequencing status", collapsible => 1, collapsed=>0 &>
+
+  <& /stock/sequencing_status.mas, stock_id => $stock_id &>
+
+    </&>
 
 <&| /page/info_section.mas, title => "Navigator" , collapsible=> 1, collapsed=>0 &>
 

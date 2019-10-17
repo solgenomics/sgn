@@ -1,0 +1,198 @@
+<div class="modal fade" id="customFieldModal" tabindex="-1" role="dialog" aria-labelledby="customFieldModal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <center><label>Custom_Field:</label></center>
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6">
+                        <center>
+                            <input type="text" class="form-control" id="d3-custom-input" placeholder="Type here" autofocus>
+                        </center>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-6">
+                        <center>
+                            <label>Add Variable:</label><br>
+                            <select id="d3-custom-add-field-input" class="form-control"></select>
+                        </center>
+                    </div>
+                    <div class="col-md-6">
+                        <center>
+                            <label>Add Custom Number:</label><br>
+                            <input type="number" class="form-control" id="start_number" placeholder="Start Number">
+                            <input type="number" class="form-control" id="increment_number" placeholder="Increment Number">
+                            <button class="btn btn-primary" id="d3-add-number">Add</button>
+                        </center>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <center><button class="btn btn-primary" id="d3-custom-preview">See Preview</button></center><br><br>
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6">
+                        <center><p id="d3-custom-content"></p></center>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="d3-custom-field-save" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="editAdditionalSettingsModal" tabindex="-1" role="dialog" aria-labelledby="editAdditionalSettingsModal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10">
+                        <center>
+                            <label>Additional Settings:</label>
+                        <br>
+                        <img src="/static/img/print_setting_options.png" class="img-responsive" alt="printer settings" height="196" width="480" style="border: 1px solid black;">
+                    </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Top Margin:</label><br>
+                            <input class="form-control" placeholder="Top Margin in pixels (72/inch)" type="number" id="top_margin" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Left Margin:</label><br>
+                            <input class="form-control" placeholder="Left Margin in pixels (72/inch)" type="number" id="left_margin" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            <label>Horizontal Gap:</label><br>
+                            <input class="form-control" placeholder="Horizontal Gap in pixels (72/inch)" type="number" id="horizontal_gap" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <label>Vertical Gap:</label><br>
+                            <input class="form-control" placeholder="Vertical Gap in pixels (72/inch)" type="number" id="vertical_gap" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Number of Columns:</label><br>
+                            <input class="form-control" placeholder="Num labels across" type="number" id="number_of_columns" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Number of Rows:</label><br>
+                            <input class="form-control" placeholder="Num labels down" type="number" id="number_of_rows" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12 form-inline">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                        <br><label>Sort Labels by:</label>
+                            <select class="form-control" id="sort_order" name="sort_by" style="max-width: 100%">
+                            </select><br>
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
+                        <center>
+                        <br><label>Limit by Rep:</label>
+                            <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
+                            </select><br>
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12 form-inline" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
+                        <center>
+                            <br><label>Copies per label:</label>
+                            <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" value="1" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                    <div class="col-md-4">
+                        <center>
+                            <br><label>Total # to download:</label>
+                            <input class="form-control" id="label_designer_labels_to_download" name="label_designer_labels_to_download" type="number" placeholder="10" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="d3-edit-additional-settings" type="button" class="btn btn-primary" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="batchDownloadModal" tabindex="-1" role="dialog" aria-labelledby="batchDownloadModal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="col-md-12" id="">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10">
+                        <center>
+                            <label>Batch Download:</label>
+                        <br>
+                        <p id="batch_download_message"></p>
+                    </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Start Number:</label><br>
+                            <input class="form-control" placeholder="0" type="number" id="label_designer_start_number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>End Number:</label><br>
+                            <input class="form-control" placeholder="1000" type="number" id="label_designer_end_number" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="d3-batch-download-submit" type="button" class="btn btn-primary" data-dismiss="modal">Download</button>
+            </div>
+        </div>
+    </div>
+</div>

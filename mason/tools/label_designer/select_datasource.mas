@@ -1,0 +1,20 @@
+<br/>
+<div class="text-center">
+    <p><b>Welcome to the Label Designer</b></p>
+    <br/>
+    <p>This workflow will guide you through each step of the design process. For detailed explanations of each step please refer to the <a href="http://solgenomics.github.io/sgn/03_managing_breeding_data/03_12.html">label designer section of the manual</a>.<p>
+    <p>To start, select a data source and a data level. When you are finished, click 'Next'<p>
+</div>
+<br/><br/>
+<div class="col-md-2 text-center">
+    <label><b>Data Source:</b></label>
+</div>
+<div class="col-md-4" id="data_source">
+</div>
+<div class="col-md-2 text-center">
+    <label>Label For Every:</label>
+</div>
+<div class="col-md-4">
+    <div id="label_designer_data_level_select_div"></div>
+</div>
+<br/>
