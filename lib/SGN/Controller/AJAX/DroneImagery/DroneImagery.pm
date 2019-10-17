@@ -3682,7 +3682,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $archive_temp_result_agg_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/resultaggXXXX');
 
     my @accession_ids;
-    if ($population_id) {
+    if ($population_id && $population_id ne 'null') {
         my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
         my $population_members = $accession_manager->get_population_members($population_id);
         foreach (@$population_members) {
@@ -3771,6 +3771,13 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path;
+    }
+    elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_weights imagenet';
+    }
+    else {
+        $c->stash->{rest} = {error => "$model_type not supported!"};
+        $c->detach();
     }
     print STDERR Dumper $cmd;
     my $status = system($cmd);
