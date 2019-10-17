@@ -3773,19 +3773,19 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path;
-        $model_type_name = 'InceptionResNetV2';
+        $model_type_name = 'KerasCNNInceptionResNetV2';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2_First8layers') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_layers 8';
-        $model_type_name = 'InceptionResNetV2';
+        $model_type_name = 'KerasCNNInceptionResNetV2';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_weights imagenet';
-        $model_type_name = 'InceptionResNetV2';
+        $model_type_name = 'KerasCNNInceptionResNetV2';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights_First8layers') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_weights imagenet --keras_model_layers 8';
-        $model_type_name = 'InceptionResNetV2';
+        $model_type_name = 'KerasCNNInceptionResNetV2';
     }
     else {
         $c->stash->{rest} = {error => "$model_type not supported!"};
