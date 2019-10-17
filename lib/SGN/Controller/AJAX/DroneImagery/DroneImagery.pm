@@ -3772,6 +3772,9 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path;
     }
+    elsif ($model_type eq 'KerasCNNInceptionResNetV2_First8layers') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_layers 8';
+    }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_weights imagenet';
     }
@@ -4003,11 +4006,12 @@ sub drone_imagery_predict_keras_model_GET : Args(0) {
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $model_id = $c->req->param('model_id');
     my $model_prediction_type = $c->req->param('model_prediction_type');
+    my $population_id = $c->req->param('population_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $user_id, $user_name, $user_role);
+    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -4022,6 +4026,7 @@ sub _perform_keras_cnn_predict {
     my $drone_run_ids = shift;
     my $plot_polygon_type_ids = shift;
     my $model_prediction_type = shift;
+    my $population_id = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -4033,10 +4038,20 @@ sub _perform_keras_cnn_predict {
     my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
+    my @accession_ids;
+    if ($population_id && $population_id ne 'null') {
+        my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
+        my $population_members = $accession_manager->get_population_members($population_id);
+        foreach (@$population_members) {
+            push @accession_ids, $_->{stock_id};
+        }
+    }
+
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_project_id_list=>$drone_run_ids,
-        project_image_type_id_list=>$plot_polygon_type_ids
+        project_image_type_id_list=>$plot_polygon_type_ids,
+        accession_list=>\@accession_ids
     });
     my ($result, $total_count) = $images_search->search();
 
@@ -4061,6 +4076,11 @@ sub _perform_keras_cnn_predict {
     my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
 
     my $stock_ids_sql = join ',', @unique_stock_ids;
+    my $accession_ids_sql = '';
+    if (scalar(@accession_ids)>0) {
+        my $accession_ids_sql_string = join ',', @accession_ids;
+        $accession_ids_sql = " AND germplasm.stock_id IN ($accession_ids_sql_string)";
+    }
     my $stock_metadata_q = "SELECT stock.stock_id, stock.uniquename, germplasm.uniquename, germplasm.stock_id, plot_number.value, rep.value, block_number.value, col_number.value, row_number.value
         FROM stock
         JOIN stock_relationship ON(stock.stock_id=stock_relationship.subject_id AND stock_relationship.type_id=$plot_of_cvterm_id)
@@ -4070,7 +4090,7 @@ sub _perform_keras_cnn_predict {
         LEFT JOIN stockprop AS block_number ON(stock.stock_id=block_number.stock_id AND block_number.type_id=$block_number_cvterm_id)
         LEFT JOIN stockprop AS col_number ON(stock.stock_id=col_number.stock_id AND col_number.type_id=$col_number_cvterm_id)
         LEFT JOIN stockprop AS row_number ON(stock.stock_id=row_number.stock_id AND row_number.type_id=$row_number_cvterm_id)
-        WHERE stock.type_id=$plot_cvterm_id AND stock.stock_id IN ($stock_ids_sql)";
+        WHERE stock.type_id=$plot_cvterm_id AND stock.stock_id IN ($stock_ids_sql) $accession_ids_sql";
     my $stock_metadata_h = $schema->storage->dbh()->prepare($stock_metadata_q);
     $stock_metadata_h->execute();
     my %stock_info;
@@ -4116,6 +4136,7 @@ sub _perform_keras_cnn_predict {
         trait_list=>[$trait_id],
         trial_list=>\@field_trial_ids,
         plot_list=>\@seen_plots,
+        accession_ids=>\@accession_ids,
         include_timestamp=>0,
         exclude_phenotype_outlier=>0,
     );
@@ -4162,7 +4183,12 @@ sub _perform_keras_cnn_predict {
 
     print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' --log_file_path \''.$c->config->{error_log}.'\'';
+    my $log_file_path = '';
+    if ($c->config->{error_log}) {
+        $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
+    }
+
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 

@@ -1127,6 +1127,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <select class="form-control" id="drone_image_train_keras_model_type" name="drone_image_train_keras_model_type" >
                                     <option value="KerasCNNSequentialSoftmaxCategorical">Keras CNN Sequential 16-32-64-128-512 Softmax Categorical</option>
                                     <option value="KerasCNNInceptionResNetV2">Keras CNN InceptionResNetV2</option>
+                                    <option value="KerasCNNInceptionResNetV2_First8layers">Keras CNN InceptionResNetV2 First 8 Layers</option>
                                     <option value="KerasCNNInceptionResNetV2ImageNetWeights">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights</option>
                                 </select>
                             </div>
