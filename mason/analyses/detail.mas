@@ -1,0 +1,54 @@
+
+<%doc>
+
+=head1 NAME
+
+/mason/analyses/detail.mas
+
+=head1 DESCRIPTION
+
+Displays a detail page for an analysis.
+
+Requires the parameter $analysis_id
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$analysis_id
+$analysis_name => 'untitled'
+$analysis_description => 'no description'
+</%args>
+
+
+<& /page/page_title.mas, title => "Analysis $analysis_name ($analysis_id)" &>
+
+
+<&| /page/info_section.mas, title=>"Analysis description", collapsible=>1, collapsed=>0 &>
+  <div  id="analysis_description"><% $analysis_description %></div>
+</&>
+
+<&| /page/info_section.mas, title=>"Input data", collapsible=>1, collapsed=>0 &>
+  <div id="analysis_input_data">Input data</div>
+</&>
+  
+<&| /page/info_section.mas, title=>"Accession list", collapsible=>1, collapsed=>0 &>
+  <div id="accession_list">...</div>
+</&>
+
+<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $analysis_id &>
+
+
+
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "Download", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name &>
+
+%# <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $analysis_id, trial_name => $analysis_name &>
+
+%# <& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $analysis_id &>
+
+%# <& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Delete Experiment Data</h4>", info_section_subtitle => 'Delete phenotypes, field layout, and/or the entire experiment from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "trial_deletion_section" &>
