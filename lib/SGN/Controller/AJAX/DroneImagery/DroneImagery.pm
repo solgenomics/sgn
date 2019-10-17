@@ -3766,7 +3766,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     }
 
     my $cmd = '';
-    my $model_type_name = ''
+    my $model_type_name = '';
     if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path;
         $model_type_name = 'KerasCNNSequentialSoftmaxCategorical';
