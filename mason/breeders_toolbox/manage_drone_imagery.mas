@@ -1129,6 +1129,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     <option value="KerasCNNInceptionResNetV2">Keras CNN InceptionResNetV2</option>
                                     <option value="KerasCNNInceptionResNetV2_First8layers">Keras CNN InceptionResNetV2 First 8 Layers</option>
                                     <option value="KerasCNNInceptionResNetV2ImageNetWeights">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights</option>
+                                    <option value="KerasCNNInceptionResNetV2ImageNetWeights_First8layers">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights First 8 Layers</option>
                                 </select>
                             </div>
                         </div>
