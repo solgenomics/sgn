@@ -41,8 +41,11 @@ export function init(main_div, stock_id, stockprop_id){
 	<!-- Dialog for adding sequencing info -->
 
 
-      <div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
+	<div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
+
 	<div class="modal-dialog" role="modal">
+			<div class="form-search">
+	<form id="sequencing_info_form">
 
 	  <div class="modal-content">
 
@@ -52,48 +55,116 @@ export function init(main_div, stock_id, stockprop_id){
 	      </button>
 
               <h5 class="modal-title">Enter sequencing info for accession:</h5>
+	
+    </div> <!-- modal-header -->
 
-	    </div> <!-- modal-header -->
-	<form id="sequencing_info_form">
-	    <div class="modal-body">
+    <div class="modal-body">
+	
 
-              <div class="form-search">
-                <input type="text" class="form-control" alt="Organization" placeholder="Sequencing organization" name="organization" id="organization" size="30"/>
-<br />
-	        <input type="text" class="form-control mb-4" placeholder="Sequencing year" name="sequencing_year" id="sequencing_year" size="6"></input><br />
+
+        <div class="row">
+     
+            <label class="col-sm-3 control-label">Organization: </label>
+            <div class="col-sm-9">                                  
+                <input type="text" class="form-control" alt="Organization" placeholder="Sequencing organization" name="organization" id="organization" size="30" /><br />
+ 	    </div>
+
+        </div>
+
+       <div class="row">
+    
+	    <label class="col-sm-3 control-label">Year: </label>
+	    <div class="col-sm-9">
+	        <input type="text" class="form-control" placeholder="Sequencing year" name="sequencing_year" id="sequencing_year" size="6" /><br />
+	    </div>
+	</div>
+
+    
+	<div class="row">
+    	    <label class="col-sm-3 control-label">Website: </label>
+	    <div class="col-sm-9">
 	        <div class="input-group">
-                  <span class="input-group-addon" id="https-prefix">https:&sol;&sol;</span>
-	          <input type="text" class="form-control" placeholder="Website" aria-label="https-prefix" aria-describedby="https-prefix" name="website"  id="website" size="10" />
+                    <span class="input-group-addon" id="https-prefix">https:&sol;&sol;</span>
+                    <input type="text" class="form-control" placeholder="Website" aria-label="https-prefix" aria-describedby="https-prefix" name="website"  id="website" size="10" />
+        	</div>
 	</div> <!-- input-group -->
-	<br />
-    	<input type="text" class="form-control" placeholder="Contact email" name="contact_email"  id="contact_email" size="10" />
-	<br />
-	<input type="text" class="form-control" placeholder="Genbank Accession" name="genbank_accession"  id="genbank_accession" size="10" />
-	<br />
-	<input type="text" class="form-control" placeholder="Funding organization" name="funded_by"  id="funded_by" size="10" />
-	<br />
-	<input type="text" class="form-control" placeholder="Funding organization project ID"  name="funder_project_id" id="funder_project_id" size="10" />
-        <br />
-               <div class="input-group mb-3">
-	         <input type="text" class="form-control" placeholder="Jbrowse link" name="jbrowse_link" id="jbrowse_link" size="20"></input><br />
-	       </div> <!-- input group -->
-               <br />
-	       <div class="input-group mb-3">
-	         <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20"></input><br />
-	</div> <!-- input group -->
 
-	<input id="stock_id"  name="stock_id" value="`+stock_id+`" />
-	<input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
-        </div> <!-- form-search -->
+         <br />
+        </div>
 
-	   </div> <!-- modal-body -->
-	   <div class="modal-footer">
-             <button id="save_sequencing_info_button" type="submit" class="btn btn-primary">Save changes</button>
-             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-	   </div> <!-- modal-footer -->
- 	</form> <!-- sequencing_info form -->
-	 </div> <!-- modal-content -->
+    
+	<div class="row">
+    	    	    <label class="col-sm-3 control-label">Contact email: </label>
+	    <div class="col-sm-9">	
+    	        <input type="text" class="form-control" placeholder="Contact email" name="contact_email"  id="contact_email" size="10" /><br />
+	    </div>
+	</div>
+
+    
+	<div class="row">
+   	    <label class="col-sm-3 control-label">Genbank accession: </label>
+	    <div class="col-sm-9">
+  	        <input type="text" class="form-control" placeholder="Genbank Accession" name="genbank_accession"  id="genbank_accession" size="10" /><br />
+	    </div>
+	</div>
+
+
+    <div class="row">
+	    <label class="col-sm-3 control-label">Funding agency: </label>
+	    <div class="col-sm-9">
+	        <input type="text" class="form-control" placeholder="Funding organization" name="funded_by"  id="funded_by" size="10" /><br />
+   	    </div>
+     </div>
+
+
+    <div class="row">
+    	<label class="col-sm-3 control-label">Funding agency project id: </label>
+	    <div class="col-sm-9">
+	        <input type="text" class="form-control" placeholder="Funding organization project ID"  name="funder_project_id" id="funder_project_id" size="10" /><br />
+	    </div>
+
+    </div>
+
+    <div class="row">
+    
+        <label class="col-sm-3 control-label">JBrowse link: </label>
+	<div class="col-sm-9">    
+	    <input type="text" class="form-control" placeholder="Jbrowse link" name="jbrowse_link" id="jbrowse_link" size="20" /><br />
+	</div>
+     </div>
+	
+
+    <div class="row">
+
+    	<label class="col-sm-3 control-label">BLAST link</label>
+	<div class="col-sm-9">
+	    <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20" /><br />
+	</div> 
+
+    </div>
+	
+	
+	<div>
+	    <input type="hidden" id="stock_id"  name="stock_id" value="`+stock_id+`" />
+	    <input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
+	</div>
+
+
+
+    </div> <!-- modal-body -->
+
+       <div class="modal-footer">
+             <button type="submit"  class="btn btn-primary">Save changes</button>
+             <button id="dismiss_sequencing_info_dialog" type="button" class="btn btn-secondary" >Close</button>
+       </div> <!-- modal-footer -->
+
+    </div> <!-- modal-content -->
+
+    
+    </form> <!-- sequencing_info form -->
+	       </div> <!-- form-search -->
 	</div> <!-- modal-dialog -->
+
 	</div> <!-- modal -->
 
 
@@ -114,17 +185,50 @@ export function init(main_div, stock_id, stockprop_id){
 	});
     }
 
-    jQuery("#sequencing_info_form").submit(function(event) {
-	event.preventDefault();
+    jQuery('#sequencing_info_form').submit(function(event) {
 
-	var formdata = jQuery("#sequencing_info_form").serialize();
-	alert(formdata);
-	jQuery.ajax( {
-	    url : '/ajax/genomes/store_sequencing_info?'+formdata
-	});
+     	event.preventDefault();
+
+     	var formdata = jQuery("#sequencing_info_form").serialize();
+	//alert(formdata);
+     	jQuery.ajax( {
+     	    url : '/ajax/genomes/store_sequencing_info?'+formdata,
+     	    success: function(r) {
+     		if (r.error) { alert(r.error + r); }
+     		else {
+     		    alert("The entry has been saved. Thank you!");
+     		    jQuery('#edit_sequencing_info_dialog').modal('toggle');
+		    clear_dialog_entries();
+		    jQuery('#sequenced_stocks_table').DataTable().ajax.reload();
+     		}
+     	    },
+     	    error: function(r,e) {
+		alert("An error occurred. (" +r.responseText+")" );
+		var err = eval("(" + r.responseText + ")");
+     	    }
+     	});
     });
 
+    jQuery('#dismiss_sequencing_info_dialog').click( function() {
+	jQuery('#edit_sequencing_info_dialog').modal('toggle');
+	clear_dialog_entries();
+    });
+}
 
+
+function clear_dialog_entries() {
+    jQuery('#organization').val(undefined);
+    jQuery('#website').val(undefined);
+    jQuery('#genbank_accession').val(undefined);
+    jQuery('#funded_by').val(undefined);
+    jQuery('#funder_project_id').val(undefined);
+    jQuery('#contact_email').val(undefined);
+    jQuery('#sequencing_year').val(undefined);
+    jQuery('#publication').val(undefined);
+    jQuery('#jbrowse_link').val(undefined);
+    jQuery('#blast_db_id').val(undefined);
+    jQuery('#stockprop_id').val(undefined);
+    jQuery('#website').val(undefined);
 }
 
 export function delete_sequencing_info(stockprop_id) {
@@ -136,6 +240,7 @@ export function delete_sequencing_info(stockprop_id) {
 		if (r.error) { alert(r.error); }
 		else {
 		    alert("The entry has been deleted.");
+		    jQuery('#sequenced_stocks_table').DataTable().ajax.reload();
 		}
 	    },
 	    error: function(r) {
@@ -146,13 +251,13 @@ export function delete_sequencing_info(stockprop_id) {
 }
 
 export function edit_sequencing_info(stockprop_id) {
-    alert(stockprop_id);
+    //alert(stockprop_id);
     jQuery.ajax( {
 	url : '/ajax/genomes/sequencing_info/'+stockprop_id,
 	success : function(r) {
 	    if (r.error) { alert(r.error); }
 	    else {
-		alert(JSON.stringify(r));
+		//alert(JSON.stringify(r));
 		jQuery('#organization').val(r.data.organization);
 		jQuery('#website').val(r.data.website);
 		jQuery('#genbank_accession').val(r.data.genbank_accession);
