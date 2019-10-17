@@ -2,12 +2,21 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.List', 'jquery.iframe-post-form' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="crosses_in_crossingtrial_table">
     </table>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Add Crosses to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding crosses currently showing in the table to a new or exisiting list</i>'&>
+        <br>
+        <div id="crosses_to_new_list" style="display:none"></div>
+        <div id="crosses_add_to_list"></div>
+        </&>
+    </div>
 </div>
 
 
@@ -29,7 +38,23 @@ jQuery(document).ready(function(){
                 { title: "Male Plot", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_plot_id+"/view'>"+row.male_plot_name+"</a>"; } },
                 { title: "Female Plant", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_plant_id+"/view'>"+row.female_plant_name+"</a>"; } },
                 { title: "Male Plant", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_plant_id+"/view'>"+row.male_plant_name+"</a>"; } },
-            ]
+            ],
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#crosses_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i].cross_name+"\n";
+                    }
+                    jQuery("#crosses_to_new_list").html(html);
+                    addToListMenu("crosses_add_to_list", "crosses_to_new_list", {
+                        selectText: true,
+                        listType: 'crosses',
+                    });
+                }
+            }
         });
     });
 
