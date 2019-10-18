@@ -214,7 +214,7 @@ sub parse {
     }
 
     foreach my $value (@values) {
-        if ($value eq '.' || ($value =~ m/[^a-zA-Z0-9,.\-\/\_]:; / && $value ne '.')) {
+        if ($value eq '.' || ($value =~ m/[^a-zA-Z0-9,.\-\/\_:;\s]/ && $value ne '.')) {
             $parse_result{'error'} = "Value $value is not valid. Trait values must be alphanumeric.";
             print STDERR "Invalid value: $value\n";
             return \%parse_result;
