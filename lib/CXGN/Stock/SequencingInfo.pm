@@ -20,13 +20,14 @@ The stockprop of type "sequencing_project_info" is stored as JSON. This class ma
 package CXGN::Stock::SequencingInfo;
 
 use Moose;
+
+extends 'CXGN::JSONProp';
+
 use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
 =head1 ACCESSORS
-
-=head2 schema
 
 =head2 stock_id
 
@@ -59,8 +60,6 @@ use SGN::Model::Cvterm;
 
 =cut
     
-has 'schema' => (isa => 'Ref', is => 'rw', required => 1);
-
 has 'stockprop_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 has 'stock_id' => (isa => 'Maybe[Int]', is => 'rw');
@@ -100,16 +99,16 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    if ($args->{stockprop_id} eq "undefined") { $args->{stockprop_id} = undef; }
 
-    print STDERR "STOCKPROPID: ".$self->stockprop_id.", TYPE: ".$self->type()."\n";
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_property')->cvterm_id();
+    $self->prop_table('stockprop');
+    $self->prop_namespace('Stock::Stockprop');
+    $self->prop_primary_key('stockprop_id');
+    $self->prop_type('sequencing_project_info');
+    $self->cv_name('stock_property');
+    $self->parent_table('stock');
+    $self->parent_primary_key('stock_id');
 
-    $self->type_id($type_id);
-
-    $self->_load_object();
-
-    $self->stockprop_id($args->{stockprop_id});
+    $self->load();
 }
 
 
@@ -187,133 +186,6 @@ sub all_sequenced_stocks {
     return @sequenced_stocks;
 }
 
-
-=head2 OBJECT METHODS
-
-=head2 method store()
-
- Usage:         $s->set_sequencing_project_info($si, $stockprop_id)
- Desc:          creates a sequencing project info in the stockprop
- Ret:           
- Args:          a CXGN::Stock::SequencingInfo object, and an optional
-                stockprop_id (which will trigger an update instead
-                of insert)
- Side Effects:
- Example:
-
-=cut
-
-sub store {
-    my $self = shift;
-
-    if (!$self->stock_id()) {
-	die "Need a stock_id to save SequencingInfo object.";
-    }
-
-    if ($self->stockprop_id()) {
-	# update
-	print STDERR "updating stockprop...\n";
-	my $row = $self->schema()->resultset("Stock::Stockprop")->find( { stockprop_id => $self->stockprop_id() } );
-	if ($row) {
-	    $row->value($self->to_json());
-	    $row->update();
-	}
-    }
-    else { 
-	# insert
-
-	#get highest rank from previous inserts...
-	my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $self->type_id() }); #SELECT max(rank) from stockprop where type_id=? and stock_id=?";
-	my $rank = $rs->get_column("rank")->max();
-
-	$rank++;
-	
-	print STDERR "inserting stockprop...\n";
-	my $row = $self->schema()->resultset("Stock::Stockprop")->create( 
-	    { 
-		stock_id => $self->stock_id(), 
-		type_id => $self->type_id(), 
-		value => $self->to_json(),
-		rank => $rank,
-		    
-	    });
-
-	$self->stockprop_id($row->stockprop_id());
-	$self->stock_id($row->stock_id());
-	return $row->stockprop_id();
-    }
-    
-}
-    
-=head2 method delete()
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub delete {
-    my $self = shift;
-
-    print STDERR "CXGN::Stock::SequencingInfo: Deleting sequencing info object ".$self->stockprop_id()."\n";
-    my $stockprop;
-
-    print STDERR "stock_id = ".$self->stock_id().", stockprop_id = ".$self->stockprop_id()."\n";
-    
-    eval { 
-	$stockprop = $self->schema()->resultset("Stock::Stockprop")->find({ type_id=>$self->type_id(), stock_id => $self->stock_id(), stockprop_id=>$self->stockprop_id() });
-
-    };
-    if ($@) { 
-	die "Delete failed!\n"; 
-    }
-    
-    if (!$stockprop) {
-	print STDERR "No such stockprop associated with such type or stock. Not deleting.\n";
-	return 0;
-    }
-    else {
-	print STDERR "Deleting stcokprop now.\n";
-	$stockprop->delete();
-	print STDERR "SequencingInfo successfully deleted.\n";
-	return 1;
-    }
-}
-
-=head2 _load_object
-
- Desc:
- Ret:
- Args:
- Side Effects:   requires stockprop_id and schema to be set
- Example:
-
-=cut
-
-sub _load_object {
-    my $self= shift;
-
-    print STDERR "_load_object...\n";
-
-    print STDERR "Stockprop_id is now ".$self->stockprop_id()."\n";
-    if ($self->stockprop_id()) {
-	print STDERR "configuring object...\n";
-	my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $self->type(), 'stock_property')->cvterm_id();
-	my $rs = $self->schema->resultset("Stock::Stockprop")->search({ stockprop_id => $self->stockprop_id(), type_id => $stockprop_type_id } );
-	
-	if ($rs->count() == 0) { die "No stockprops could be retrieved." }
-	
-	my $row = $rs->next(); # should only be one
-	
-	$self->type_id($stockprop_type_id);
-	$self->stock_id($row->stock_id());
-	$self->from_json($row->value());
-    }
-}
 
 
 
