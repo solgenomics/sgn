@@ -3833,7 +3833,10 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
             if ($csv->parse($row)) {
                 @columns = $csv->fields();
             }
-            $class_map{$columns[0]} = $columns[1];
+            $class_map{$columns[0]} = {
+                label => $columns[1],
+                training_count => $columns[2]
+            };
         }
     close($fh2);
 
