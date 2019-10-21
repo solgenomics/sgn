@@ -197,7 +197,8 @@ sub analysis_report_job_args {
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_file,
-	'err_file' => $err_file
+	'err_file' => $err_file,
+	'cluster_host' => 'localhost'
      };
 
     my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis-report-args');

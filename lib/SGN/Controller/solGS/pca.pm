@@ -90,7 +90,10 @@ sub pca_run :Path('/pca/run/') Args() {
     }
     
     $self->format_pca_output($c);
-    $ret = $c->stash->{formatted_pca_output};   
+    my $res = $c->stash->{formatted_pca_output};
+    if ($res) {
+	$ret = $res;
+    }   
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -648,18 +651,14 @@ sub pca_pheno_input_files {
 
 sub run_pca {
     my ($self, $c) = @_;
- 
-    my $cores = $c->controller('solGS::Utils')->count_cores();
+
+    $self->pca_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{pca_query_jobs_file};
     
-    if ($cores > 1) 
-    {
-    	$self->run_pca_multi_cores($c);
-    }
-    else
-    {
-	$self->run_pca_single_core($c);
-	
-    }
+    $self->pca_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{pca_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
     
 }
 
