@@ -4,11 +4,29 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.AddTrial'] &>
 
+<&| /page/info_section.mas, id=>'field_trial_used_for_crossing_section', title => 'Field trial(s) used for crossing', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div id="crossing_trial_to_field_trial_html">
+            </div>
+        </div>
+    </div>
+</&>
 
-<div id="crossing_trial_to_field_trial_html">
-</div>
+<&| /page/info_section.mas, id=>'crosses_to_field_trial_section', title => 'Field trial(s) used to evaluate crosses', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <button class="btn btn-primary" id="add_trial_for_crosses_button" role="button">Design new trial using crosses or family names</button><br/><br/>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table table-hover table-bordered" id="crosses_to_trial_table">
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
 
 <script>
 
