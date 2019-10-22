@@ -1,22 +1,7 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >About</a>
-<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">About Us<span class="caret"></span></a> -->
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >More</a>
   <ul class="dropdown-menu">
-    <li><a href="/about">About</a></li>
-    <li><a href="/contact/form">Contact</a></li>
-    <li><a href="/help/index.pl">Cite SGN</a></li>
-    
-    <li role="separator" class="divider"></li>
-    
-    <li><a href="/help/index.pl">Help</a></li>
-    <li><a href="/help/faq.pl">FAQ</a></li>
-    <li><a href="/phenome">Become SGN Editor</a></li>
-    <li><a href="/forum/topics.pl">Forum</a></li>
-    <li><a href="ftp://ftp.solgenomics.net/">FTP site</a></li>
-    
-    <li role="separator" class="divider"></li>
-    
-    <li><a href="http://www.slideshare.net/solgenomics" target="_blank">SlideShare</a></li>
-    <li><a href="https://twitter.com/solgenomics" target="_blank">Twitter</a></li>
-    <li><a href="https://www.facebook.com/solgenomics" target="_blank">Facebook</a></li>
+    <li><a href="https://solgenomics.github.io/sgn/">User Manual</a></li>
+    <li><a href="/contact/form">Contact Form</a></li>
+    <li><a href="https://github.com/solgenomics/sgn">Github</a></li>
   </ul>
 </li>

@@ -1,17 +1,10 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Search</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Tools</a>
   <ul class="dropdown-menu">
-    <li><a href="/breeders/search">Wizard</a></li>
-    <li><a href="/search/phenotypes/stock">Accessions and Plots</a></li>
-    <li><a href="/search/organisms">Organisms</a></li>
-    <li><a href="/search/cross">Progenies and Crosses</a></li>
-    <li><a href="/search/trials">Field Trials</a></li>
-    <li><a href="/search/genotyping_trials">Genotyping Plates</a></li>
-    <li><a href="/search/genotyping_data_projects">Genotyping Data Projects</a></li>
-    <li><a href="/search/genotyping_protocols">Genotyping Protocols</a></li>
-    <li><a href="/search/traits">Traits</a></li>
-    <!--<li><a href="/search/markers">Markers</a></li>-->
-    <li><a href="/search/images">Images</a></li>
-    <li><a href="/search/people">People</a></li>
-    <li><a href="/help/faq.pl">FAQ</a></li>
+    <li><a href="/breeders/search">Search Wizard</a></li>
+    <li><a href="/brapihome">BrAPI Home</a></li>
+      <li><a href="/fieldbook">Field Book App</a></li>
+      <li><a href="/tools/label_designer">Label Designer</a></li>
+      <li><a href="/tools/onto/">Ontology Browser</a></li>
+      <li><a href="/tools/compose/">Compose a New Trait</a></li>
   </ul>
 </li>
