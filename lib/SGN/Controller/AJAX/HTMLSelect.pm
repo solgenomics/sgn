@@ -1061,7 +1061,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
 
-    my $html = '<table class="table table-bordered table-hover"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
     foreach my $ds (@datasets) {
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
 
@@ -1095,6 +1095,8 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     }
 
     $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }
