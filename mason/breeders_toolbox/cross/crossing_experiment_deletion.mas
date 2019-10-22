@@ -1,0 +1,139 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, id=>'delete_cross_section', title => 'Delete crosses', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table class="table table-hover table-bordered" id="cross_deletion_table">
+                </table>
+            </div>
+        </div>
+        <button class="btn btn-default" id="delete_all_crosses" role="button">Delete all crosses in this experiment</button><br/><br/>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'delete_crossing_experiment_section', title => 'Delete crossing experiment', subtitle => '<font color="red">Deletion cannot be undone. Please delete crosses in this experiment first</font>', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-default" id="delete_crossing_experiment" role="button">Delete crossing experiment</button><br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#delete_cross_section_onswitch').click(function(){
+
+        var cross_deletion_table = jQuery('#cross_deletion_table').DataTable({
+
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_crossingtrial',
+
+            columns: [
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteCross("+row.cross_id+")'>Delete</a>"; } },
+            ]
+        });
+    });
+
+    jQuery('#delete_all_crosses').click(function() {
+
+        var trial_id = "<% $trial_id %>";
+        var confirmation = confirm("Are you sure you want to delete all crosses in this crossing experiment? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+ <% $trial_id %> + '/delete_all_crosses_in_crossingtrial',
+                destroy: true,
+                beforeSend: function(response) {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
+    jQuery('#delete_crossing_experiment').click(function() {
+
+        var trial_id = "<% $trial_id %>";
+        var confirmation = confirm("Are you sure you want to delete this crossing experiment? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/breeders/trial/'+trial_id+'/delete/crossing_experiment',
+                beforeSend: function(){
+                    jQuery('#working_modal').modal("show");
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Deletion was successful');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during deletion');
+                }
+            });
+        }
+    });
+
+});
+
+function deleteCross(cross_id){
+
+    var confirmation = confirm('Are you sure you want to delete this cross? The deletion cannot be undone.');
+
+    if (confirmation) {
+        jQuery.ajax({
+            url: '/ajax/cross/delete',
+            data: {'cross_id' : cross_id},
+            method: 'POST',
+            destroy: true,
+            beforeSend: function(response) {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('Deletion was successful');
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred during deletion');
+            }
+        });
+    }
+}
+
+
+</script>

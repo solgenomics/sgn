@@ -42,7 +42,10 @@ export function WizardDownloads(main_id,wizard){
         var accession_ids = accessions.map(d=>d.id);
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
-        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}`;
+        var chromosome_number = d3.select(".wizard-download-genotypes-chromosome-number").node().value;
+        var start_position = d3.select(".wizard-download-genotypes-start-position").node().value;
+        var end_position = d3.select(".wizard-download-genotypes-end-position").node().value;
+        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}`;
         window.open(url,'_blank');
       });
     

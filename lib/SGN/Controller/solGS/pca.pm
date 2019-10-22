@@ -138,8 +138,8 @@ sub format_pca_output {
 	if ( -s $pca_scores_file && -s $pca_variance_file)
 	{
 	    my $ret->{status} = undef;
-	    my $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
-	    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
+	    my $pca_scores    = $c->controller('solGS::Utils')->read_file_data($pca_scores_file);
+	    my $pca_variances = $c->controller('solGS::Utils')->read_file_data($pca_variance_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
         
@@ -152,6 +152,7 @@ sub format_pca_output {
 		$ret->{pca_variances} = $pca_variances;
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
+		$ret->{list_id} = $c->stash->{list_id};
 		$ret->{trials_names} = $trial_names;
 		$ret->{output_link}  = $output_link;
 		$ret->{data_type} = $c->stash->{data_type};
@@ -235,7 +236,7 @@ sub format_pca_scores {
    my ($self, $c) = @_;
 
    my $file = $c->stash->{pca_scores_file};
-   my $data = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $file);
+   my $data = $c->controller('solGS::Utils')->read_file_data($file);
   
    $c->stash->{pca_scores} = $data;
 
@@ -443,7 +444,7 @@ sub pca_query_jobs {
 	$jobs = $c->stash->{pca_geno_query_jobs};
     }
 
-     if (reftype $jobs ne 'ARRAY') 
+    if (reftype $jobs ne 'ARRAY') 
     {
 	$jobs = [$jobs];
     }
@@ -648,10 +649,8 @@ sub pca_pheno_input_files {
 sub run_pca {
     my ($self, $c) = @_;
  
-    my $cores = qx/lscpu | grep -e '^CPU(s)'/;   
-    my ($name, $cores) = split(':', $cores);
-    $cores =~ s/\s+//g;
-     
+    my $cores = $c->controller('solGS::Utils')->count_cores();
+    
     if ($cores > 1) 
     {
     	$self->run_pca_multi_cores($c);

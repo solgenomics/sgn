@@ -41,7 +41,7 @@ has 'bcs_schema' => (
 	is => 'rw',
 );
 
-my $DEFAULT_PAGE_SIZE=10;
+my $DEFAULT_PAGE_SIZE=1000;
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $self = shift;

@@ -155,7 +155,7 @@ $owners_string => undef
                                                                     </div>
 % }
 % if ($content_cross_name){
-                                                                    <label class="col-sm-3 control-label">Cross name: </label>
+                                                                    <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                                                     <div class="col-sm-9" >
                                                                         <input class="form-control" id="transaction_new_seedlot_cross_uniquename" disabled value="<% $content_cross_name %>">
                                                                     </div>
@@ -331,7 +331,7 @@ $owners_string => undef
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="edit_seedlot_details_cross" placeholder="One Content Required">
                                         </div>
@@ -363,7 +363,7 @@ $owners_string => undef
 
 <script>
   jQuery(document).ready(function () {
-  
+
     jQuery('#add_seedlot_transaction_button').click( function() {
         get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
         get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
@@ -468,10 +468,10 @@ $owners_string => undef
             to_new_seedlot_description = jQuery('#transaction_new_seedlot_description').val();
 
             if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
-                alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
+                alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
             }
             if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
-                alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
+                alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
             }
             if (to_new_seedlot_location_name == ''){
                 alert("Please provide a location for new seedlot."); return;
@@ -638,10 +638,10 @@ $owners_string => undef
         } else if (location == ''){
             alert('Location must not be blank');
         } else if (accession == '' && cross == '') {
-            alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
+            alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
         }
         else if (accession != '' && cross != '') {
-            alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
+            alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
         }
         else {
             jQuery.ajax({
@@ -704,5 +704,3 @@ function editSeedlotTransaction(transaction_id){
 }
 
 </script>
-
-

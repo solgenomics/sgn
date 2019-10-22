@@ -3109,15 +3109,15 @@ sub get_plots {
 sub get_observation_units_direct {
     my $self = shift;
     my $stock_type = shift;
-    my $nd_experiment_types = shift || ['field_layout','treatment_experiment','genotyping_layout'];
+    # my $nd_experiment_types = shift || ['field_layout','treatment_experiment','genotyping_layout'];
     my $schema = $self->bcs_schema;
     my @obs;
     my $obs_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, "stock_type")->cvterm_id();
-    my @nd_experiment_type_ids;
-    foreach (@$nd_experiment_types) {
-        push @nd_experiment_type_ids, SGN::Model::Cvterm->get_cvterm_row($schema, $_, "experiment_type")->cvterm_id();
-    }
-    my $q = "SELECT stock.uniquename, stock.stock_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? AND stock.type_id=? AND nd_experiment.type_id in (".(join ',',@nd_experiment_type_ids).") ORDER BY stock.uniquename ASC;";
+    # my @nd_experiment_type_ids;
+    # foreach (@$nd_experiment_types) {
+    #     push @nd_experiment_type_ids, SGN::Model::Cvterm->get_cvterm_row($schema, $_, "experiment_type")->cvterm_id();
+    # }
+    my $q = "SELECT stock.uniquename, stock.stock_id FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? AND stock.type_id=? ORDER BY stock.uniquename ASC;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($self->get_trial_id(), $obs_cvterm_id);
     while (my ($uniquename, $stock_id) = $h->fetchrow_array()) {
@@ -3519,6 +3519,62 @@ sub delete_assayed_trait {
         $error = "List of trait or phenotype ids was not provided for deletion.";
     }
     return $error;
+}
+
+=head2 function delete_empty_crossing_experiment()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_empty_crossing_experiment {
+    my $self = shift;
+
+    if ($self->cross_count() > 0) {
+	return 'Cannot delete crossing experiment with associated crosses.';
+    }
+
+    eval {
+	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+	$row->delete();
+    print STDERR "deleted project ".$self->get_trial_id."\n";
+    };
+    if ($@) {
+	print STDERR "An error occurred during deletion: $@\n";
+	return $@;
+    }
+}
+
+=head2 function cross_count()
+
+ Usage:
+ Desc:         The number of crosses associated with this crossing experiment
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub cross_count {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $crossing_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
+
+    my $q = "SELECT count(nd_experiment_project.nd_experiment_id)
+        FROM nd_experiment_project
+        JOIN nd_experiment on (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = $crossing_experiment_type_id
+        AND nd_experiment_project.project_id = ?";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+    my ($count) = $h->fetchrow_array();
+    return $count;
 }
 
 1;

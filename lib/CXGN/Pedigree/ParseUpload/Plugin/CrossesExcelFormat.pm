@@ -28,6 +28,7 @@ sub _validate_with_plugin {
     $supported_cross_types{'bulk_self'} = 1; #only female parent required
     $supported_cross_types{'bulk_open'} = 1; #only female parent required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
+    $supported_cross_types{'polycross'} = 1; #both parents required
 
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
@@ -204,8 +205,8 @@ sub _validate_with_plugin {
 
         #male parent must not be blank if type is biparental or bulk
         if (!$male_parent || $male_parent eq '') {
-            if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental, sib and bulk crosses";
+            if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' || 'polycross' )) {
+                push @error_messages, "Cell E$row_name: male parent required for biparental, sib, polycross and bulk cross types";
             }
         }
 
@@ -303,10 +304,10 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my $female_plot_plant_header  = $worksheet->get_cell(0,4)->value();
-    my $male_plot_plant_header  = $worksheet->get_cell(0,5)->value();
+    my $female_plot_plant_header  = $worksheet->get_cell(0,5)->value();
+    my $male_plot_plant_header  = $worksheet->get_cell(0,6)->value();
 
-    for my $column ( 6 .. $col_max ) {
+    for my $column ( 7 .. $col_max ) {
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
         $properties_columns{$column} = $header_string;

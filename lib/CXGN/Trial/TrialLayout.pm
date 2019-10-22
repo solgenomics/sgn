@@ -12,13 +12,13 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
     experiment_type => $experiment_type #Either 'field_layout' or 'genotyping_layout'
  });
  my $tl = $trial_layout->get_design();
- 
+
  This module handles both retrieval of field_layout and genotyping_layout experiments.
 
  If experiment_type is field_layout, get_design returns a hash representing
  all the plots, with their design info and plant info and samples info. The return is
  a HashRef of HashRef where the keys are the plot_number such as:
- 
+
  {
     '1001' => {
         "plot_name" => "plot1",
@@ -40,11 +40,11 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
         "plot_geo_json" => {}
     }
  }
- 
+
  If experiment_type is genotyping_layout, get_design returns a hash representing
  all wells in a plate, with the tissue_sample name in each well and its accession.
  The return is a HashRef of HashRef where the keys are the well number such as:
- 
+
  {
     'A01' => {
         "plot_name" => "mytissuesample_A01",
@@ -64,12 +64,12 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
         "source_observation_unit_id" => "9091"
     }
  }
- 
+
  By using get_design(), this module attempts to get the design from a
  projectprop called 'trial_layout_json', but if it cannot be found it calls
  generate_and_cache_layout() to generate the design, return it, and store it
  using that projectprop.
- 
+
 --------------------------------------------------------------------------
 
 This can also be used the verify that a layout has a physical map covering all
@@ -88,7 +88,7 @@ my $trial_errors = $trial_layout->generate_and_cache_layout();
 If there are errors, $trial_errors is a HashRef like:
 
 {
-    "errors" => 
+    "errors" =>
         {
             "layout_errors" => [ "the accession between plot 1 and seedlot 1 is out of sync", "the accession between plot 1 and plant 1 is out of sync" ],
             "seedlot_errors" => [ "plot1 does not have a seedlot linked" ],
@@ -202,7 +202,7 @@ sub _lookup_trial_id {
   $self->_set_accession_names($self->_get_unique_accession_names_from_trial || [] );
   $self->_set_control_names($self->_get_unique_control_accession_names_from_trial || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
-  #print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
+  print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
 
 sub _retrieve_trial_location {
@@ -287,7 +287,7 @@ sub _get_plot_info_fields_from_trial {
   my %unique_field_values;
   foreach my $key (sort { $a cmp $b} keys %design) {
     my %design_info = %{$design{$key}};
-    if (exists($design_info{$field_name})) { 
+    if (exists($design_info{$field_name})) {
 	if (! exists($unique_field_values{$design_info{$field_name}})) {
 	    #print STDERR "pushing $design_info{$field_name}...\n";
 	    push(@field_values, $design_info{$field_name});
@@ -413,7 +413,7 @@ sub generate_and_cache_layout {
       #print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
     my %design_info;
 
-    if ($self->get_experiment_type eq 'genotyping_trial'){    
+    if ($self->get_experiment_type eq 'genotyping_trial'){
         $design_info{genotyping_user_id} = $genotyping_user_id;
         #print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
         $design_info{genotyping_project_name} = $genotyping_project_name;
@@ -506,8 +506,8 @@ sub generate_and_cache_layout {
       if ($plot_number_prop) {
 	  $design_info{"plot_number"}=$plot_number_prop;
       }
-      else { 
-	  die "no plot number stockprop found for plot $plot_name"; 
+      else {
+	  die "no plot number stockprop found for plot $plot_name";
       }
 
     if ($block_number_prop) {
@@ -893,7 +893,7 @@ sub _get_plots {
 }
 
 
-# sub _get_genotyping_experiment_metadata { 
+# sub _get_genotyping_experiment_metadata {
 #     my $self = shift;
 
 #     my $project = $self->get_project();
@@ -906,7 +906,7 @@ sub _get_plots {
 # 	->search_related("nd_experimentprop")
 #    	->search({ 'type.name' => ['genotyping_user_id', 'genotyping_project_name']}, {join => 'type' });
 #     return $metadata_rs;
-    
+
 # }
 
 
