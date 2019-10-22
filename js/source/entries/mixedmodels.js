@@ -196,7 +196,7 @@ export function init(main_div){
 
     var mm = $(main_div);
     
-    get_select_box("datasets", "mixed_model_dataset_select", {});
+    get_select_box("datasets", "mixed_model_dataset_select", {"checkbox_name":"mixed_model_dataset_select_checkbox"});
 
     var analysis_type;
     $('#save_analysis_dialog').on('show.bs.modal', function(e) {
@@ -251,73 +251,86 @@ export function init(main_div){
 	alert("Everything worked! Woohoo!" + file + " " +name);
     });
 
-     $('#mixed_model_analysis_prepare_button').click( function() { 
-       var dataset_id=$('#available_datasets').val();
-       $.ajax({
-         url: '/ajax/mixedmodels/prepare',
-         data: { 'dataset_id' : dataset_id },
-         success: function(r) { 
-           if (r.error) { 
-             alert(r.error);
-           }
-             else {
-             $('#dependent_variable').html(r.dependent_variable);
-             var html = "";
+    $('#mixed_model_analysis_prepare_button').click( function() { 
+        var selected_datasets = [];
+        jQuery('input[name="mixed_model_dataset_select_checkbox"]:checked').each(function() {
+            selected_datasets.push(jQuery(this).val());
+        });
+        if (selected_datasets.length < 1){
+            alert('Please select at least one dataset!');
+            return false;
+        } else if (selected_datasets.length > 1){
+            alert('Please select only one dataset!');
+            return false;
+        } else {
 
-		 for (var n=0; n<r.factors.length; n++) { 
-                html += "<div id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
-             }
-             $('#factors').html(html);
+            var dataset_id=selected_datasets[0];
+            $.ajax({
+                url: '/ajax/mixedmodels/prepare',
+                data: { 'dataset_id' : dataset_id },
+                success: function(r) { 
+                    if (r.error) { 
+                        alert(r.error);
+                    }
+                    else {
+                        $('#dependent_variable').html(r.dependent_variable);
+                        var html = "";
 
-	     for (var n=0; n<r.factors.length; n++) { 
-	       $('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
-             }
+                        for (var n=0; n<r.factors.length; n++) { 
+                            html += "<div id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
+                        }
+                        $('#factors').html(html);
 
-             $('#tempfile').html(r.tempfile);
-           }
-	   $('#fixed_factors').droppable( {drop: function( event, ui ) {
-					       $( this )
-		   //.addClass( "ui-state-highlight" )
-					       .find( "p" )
-					       .html( "Dropped!" );
-					       var droppable = $(this);
-					       var draggable = ui.draggable;
-					       // Move draggable into droppable
-					       var clone = draggable.clone();
-                                               clone.draggable({ revert: "invalid", helper:"clone" });
-					       clone.css("z-index",3);
-                                               if (!isCloned(clone)) { 
-					          setClonedTagProperties(clone);
-                                               }
-                                              
-	                                       clone.appendTo(droppable);
-	                                       get_model_string();
-                                               }});
+                        for (var n=0; n<r.factors.length; n++) { 
+                            $('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
+                        }
 
-	   $('#random_factors').droppable( {drop: function( event, ui ) {
-					       $( this )
-					       //.addClass( "ui-state-highlight" )
-					       .find( "p" )
-					       .html( "Dropped!" );
-					       var droppable = $(this);
-					       var draggable = ui.draggable;
-					       // Move draggable into droppable
-					       var clone = draggable.clone();
-                                               clone.draggable({ revert: "invalid", helper:"clone" });
-					       clone.css("z-index",3);
-                                               if (!isCloned(clone)) { 
-					          setClonedTagProperties(clone);
-                                               }
-                                   
-	       clone.appendTo(droppable);
-	       get_model_string();
-                                               					       }});
+                        $('#tempfile').html(r.tempfile);
+                    }
+                    $('#fixed_factors').droppable( {drop: function( event, ui ) {
+                        $( this )
+                        //.addClass( "ui-state-highlight" )
+                        .find( "p" )
+                        .html( "Dropped!" );
+                        var droppable = $(this);
+                        var draggable = ui.draggable;
+                        // Move draggable into droppable
+                        var clone = draggable.clone();
+                        clone.draggable({ revert: "invalid", helper:"clone" });
+                        clone.css("z-index",3);
+                        if (!isCloned(clone)) { 
+                            setClonedTagProperties(clone);
+                        }
 
-        },
-        error: function(r) { 
-          alert("ERROR!!!!!");
+                        clone.appendTo(droppable);
+                        get_model_string();
+                    }});
+
+                    $('#random_factors').droppable( {drop: function( event, ui ) {
+                        $( this )
+                        //.addClass( "ui-state-highlight" )
+                        .find( "p" )
+                        .html( "Dropped!" );
+                        var droppable = $(this);
+                        var draggable = ui.draggable;
+                        // Move draggable into droppable
+                        var clone = draggable.clone();
+                        clone.draggable({ revert: "invalid", helper:"clone" });
+                        clone.css("z-index",3);
+                        if (!isCloned(clone)) { 
+                            setClonedTagProperties(clone);
+                        }
+
+                        clone.appendTo(droppable);
+                        get_model_string();
+                    }});
+
+                },
+                error: function(r) { 
+                    alert("ERROR!!!!!");
+                }
+            });
         }
-     });
    });
 
 
