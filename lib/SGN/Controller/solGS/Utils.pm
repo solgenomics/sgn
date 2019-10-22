@@ -107,7 +107,8 @@ sub acronymize_traits {
     my $acronym_table = {};  
     my $cnt = 0;
     my $acronymized_traits;
-
+    
+    no warnings 'uninitialized';
     foreach my $trait_name (@$traits)
     {
 	$cnt++;

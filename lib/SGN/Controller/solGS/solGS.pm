@@ -24,6 +24,8 @@ use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use SGN::Controller::solGS::Utils;
+use solGS::queryJobs;
+use solGS::asyncJob;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -2959,14 +2961,16 @@ sub get_cluster_phenotype_query_job_args {
 		or croak "data query script: $! serializing phenotype data query details to $args_file ";
 	    
 	    my $cmd = 'mx-run solGS::queryJobs ' 
-		. ' --data_type phenotype '
-		. ' --population_type trial '
-		. ' --args_file ' . $args_file;
+	    	. ' --data_type phenotype '
+	    	. ' --population_type trial '
+	    	. ' --args_file ' . $args_file;
+	   
 
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
 		'out_file' => $out_temp_file,
-		'err_file' => $err_temp_file
+		'err_file' => $err_temp_file,
+		'cluster_host' => 'localhost'
 	    };
 	    
 	    my $config = $self->create_cluster_config($c, $config_args);
@@ -3119,17 +3123,18 @@ sub get_cluster_genotype_query_job_args {
 
 	    nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
-	    
+ 
 	    my $cmd = 'mx-run solGS::queryJobs ' 
-		. ' --data_type genotype '
-		. ' --population_type trial '
-		. ' --args_file ' . $args_file;
+	    	. ' --data_type genotype '
+	    	. ' --population_type trial '
+	    	. ' --args_file ' . $args_file;
 
 
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
 		'out_file' => $out_temp_file,
-		'err_file' => $err_temp_file
+		'err_file' => $err_temp_file,
+		'cluster_host' => 'localhost'
 	    };
 	    
 	    my $config = $self->create_cluster_config($c, $config_args);
@@ -3563,7 +3568,8 @@ sub run_async {
     my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
     };
     
     my $job_config = $self->create_cluster_config($c, $config_args);
@@ -3572,12 +3578,23 @@ sub run_async {
     nstore $job_config, $job_config_file 
 	or croak "job config file: $! serializing job config to $job_config_file ";
 	
+    
+    # my $jobs = solGS::asyncJob->new({prerequisite_jobs => $prerequisite_jobs,
+    # 				     dependent_jobs => $dependent_jobs,
+    # 				     analysis_report_job => $report_file,
+    # 				     config_file => $job_config_file}
+    # 	);
+    # print STDERR "\ncalling async job run\n";
+    # $jobs->run;
+
     my $cmd = 'mx-run solGS::asyncJob'
-	. ' --prerequisite_jobs '         . $prerequisite_jobs
-	. ' --dependent_jobs '            . $dependent_jobs
-    	. ' --analysis_report_job '       . $report_file;
+	. ' --prerequisite_jobs '   . $prerequisite_jobs
+	. ' --dependent_jobs '      . $dependent_jobs
+    	. ' --analysis_report_job ' . $report_file
+	. ' --config_file '         . $job_config_file;
     
 
+    print STDERR "\nDONE callg async job run\n";    
     my $cluster_job_args = {
 	'cmd' => $cmd,
 	'config' => $job_config,
@@ -3586,7 +3603,7 @@ sub run_async {
 	'async'        => $c->stash->{async},
     };
 
-   my $job = $self->submit_job_cluster($c, $cluster_job_args);
+    my $job = $self->submit_job_cluster($c, $cluster_job_args);
   
 }
 
@@ -3694,18 +3711,18 @@ sub get_cluster_query_job_args {
     my $data_type = 'genotype';
     
     nstore $query_args, $args_file 
-		or croak "data queryscript: $! serializing model details to $args_file ";
+		or croak "data query script: $! serializing model details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type ' . $data_type
-	. ' --population_type ' . $pop_type
-	. ' --args_file ' . $args_file;
-
-
+    	. ' --data_type ' . $data_type
+    	. ' --population_type ' . $pop_type
+    	. ' --args_file ' . $args_file;
+    
     my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $self->create_cluster_config($c, $config_args);
@@ -3872,7 +3889,6 @@ sub create_cluster_config {
     my ($self, $c, $args) = @_;
 
     my $config = {
-	backend          => $c->config->{backend},
 	temp_base        => $args->{temp_dir},
 	queue            => $c->config->{'web_cluster_queue'},
 	max_cluster_jobs => 1_000_000_000,
@@ -3883,6 +3899,16 @@ sub create_cluster_config {
 	sleep            => $args->{sleep}
     };
 
+    if ($args->{cluster_host} =~ /localhost/) {
+	$config->{backend} = 'Slurm';
+    } else {
+	my $backend =  $c->config->{backend};
+	my $cluster_host = $c->config->{cluster_host};
+	my $error_file = $config->{err_file};
+	print STDERR "\n\nsubmit job to remote cluster: backend - $backend : submit_host - $cluster_host\n\n";
+	$config->{backend} = $c->config->{backend};
+	$config->{submit_host} = $c->config->{cluster_host};
+    }
     
     return $config;
 }
@@ -3893,43 +3919,31 @@ sub submit_job_cluster {
 
     my $job;
 
-    my $cmd = $args->{cmd};
-    
+    my $cmd = $args->{cmd};    
     print STDERR "\n submit_job_cluster cmd: $cmd\n";
     eval 
-    {
-	
+    {	
 	$job = CXGN::Tools::Run->new($args->{config});
 	$job->do_not_cleanup(1);
 
-       
+	
 	if ($args->{background_job}) 
-	{  print STDERR "\n submit_job_cluster bg job\n";
-	    if ($args->{async}) 
-	    { print STDERR "\n submit_job_cluster async job\n";
-		$job->is_async(1);		 
-		$job->run_async($args->{cmd});
-	    } else 
-	    { print STDERR "\n submit_job_cluster sync job\n";
-		$job->is_async(0);
-		$job->run_cluster($args->{cmd});
-	    }
+	{  
+	    print STDERR "\n background submit_job_cluster async job\n";
+	    $job->is_async(1);		 
+	    $job->run_async($args->{cmd});
 	    
 	    $c->stash->{r_job_tempdir} = $job->job_tempdir();
 	    $c->stash->{r_job_id}      = $job->jobid();
 	    $c->stash->{cluster_job_id} = $job->cluster_job_id();
 	    $c->stash->{cluster_job}   = $job;	
-
-	    my $jid = $job->cluster_job_id();
-	
 	} 
 	else 
-	{ print STDERR "\n submit_job_cluster no background job\n";
-	    $job->is_cluster(1);
-	    $job->run_cluster($args->{cmd});
-	    $job->wait;
-	}
-	
+	{ 
+	    print STDERR "\n WAIT submit_job_cluster async job\n";
+	    $job->run_async($args->{cmd});
+	    $job->wait();	
+	}	
     };
 
     if ($@) 
