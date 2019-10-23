@@ -245,12 +245,6 @@ function jqueryStuff() {
 </&>
 
 
-<&| /page/info_section.mas, title => "Sequencing status", collapsible => 1, collapsed=>0 &>
-
-  <& /stock/sequencing_status.mas, stock_id => $stock_id &>
-
-    </&>
-
 <&| /page/info_section.mas, title => "Navigator" , collapsible=> 1, collapsed=>0 &>
 
 % my $subtitle = $edit_privs ? "<button class=\"btn btn-sm btn-primary\" style=\"margin:3px\" id=\"stock_add_synonym\" >Add Synonym</button>" : "<button disabled class=\"btn btn-sm btn-primary\" style=\"margin:3px\" title=\"Login to add info\">Add Synonym</button>";
@@ -270,6 +264,17 @@ function jqueryStuff() {
 % }
 
 % if ($type_name eq 'accession' || $type_name eq 'plant' || $type_name eq 'plot' || $type_name eq 'tissue_sample'){
+
+%   my $sequencing_status_button = '';
+%   if ($c->user) {
+%       $sequencing_status_button = '<button id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>';
+%   }
+%   else {
+%       $sequencing_status_button = '<button disabled id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>';
+%   }
+
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Sequencing Status</h4>", info_section_subtitle => 'View and edit sequencing status info for this stock.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "stock_sequencing_status_section", buttons_html => "$sequencing_status_button", map_html => $map_html &>
+
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => '<a class="btn btn-default btn-sm" style="margin:3px" href = "/stock/'.$stock_id.'/genotypes">Download All Genotypes</a>', map_html => $map_html &>
 % }
 
