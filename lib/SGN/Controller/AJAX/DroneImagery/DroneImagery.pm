@@ -3676,6 +3676,64 @@ sub _perform_phenotype_calculation {
     };
 }
 
+sub drone_imagery_compare_images : Path('/api/drone_imagery/compare_images') : ActionClass('REST') { }
+sub drone_imagery_compare_images_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $stock_id = $c->req->param('stock_id');
+    my $comparison_type = $c->req->param('comparison_type');
+    my $plot_polygon_type_ids = decode_json($c->req->param('image_type_ids'));
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        project_image_type_id_list=>$plot_polygon_type_ids,
+        stock_id_list=>[$stock_id]
+    });
+    my ($result, $total_count) = $images_search->search();
+    #print STDERR Dumper $result;
+    print STDERR Dumper $total_count;
+
+    my %data_hash;
+    my %unique_drone_run_band_project_names;
+    my %unique_image_type_names;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $project_image_type_name = $_->{project_image_type_name};
+        my $drone_run_band_project_name = $_->{drone_run_band_project_name};
+        $unique_drone_run_band_project_names{$drone_run_band_project_name}++;
+        $unique_image_type_names{$project_image_type_name}++;
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        push @{$data_hash{$drone_run_band_project_name}->{$project_image_type_name}->{image_fullpaths}}, $image_fullpath;
+    }
+    print STDERR Dumper \%data_hash;
+    my @unique_drone_run_band_project_names_sort = sort keys %unique_drone_run_band_project_names;
+    my @unique_image_type_names_sort = sort keys %unique_image_type_names;
+    my $images1 = $data_hash{$unique_drone_run_band_project_names_sort[0]}->{$unique_image_type_names_sort[0]}->{image_fullpaths};
+    my $image1 = $images1->[0];
+    my $images2 = $data_hash{$unique_drone_run_band_project_names_sort[0]}->{$unique_image_type_names_sort[1]}->{image_fullpaths};
+    my $image2 = $images2->[0];
+    if (!$image2) {
+        $images2 = $data_hash{$unique_drone_run_band_project_names_sort[1]}->{$unique_image_type_names_sort[1]}->{image_fullpaths};
+        $image2 = $images2->[0];
+    }
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_compare_images_dir');
+    my $archive_temp_output = $c->tempfile( TEMPLATE => 'drone_imagery_compare_images_dir/outputfileXXXX');
+    my $archive_temp_output_file = $c->config->{basepath}."/".$archive_temp_output;
+
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CompareTwoImagesPixelValues.py --image_path1 \''.$image1.'\' --image_path2 \''.$image2.'\' --image_type1 \''.$unique_image_type_names_sort[0].'\' --image_type2 \''.$unique_image_type_names_sort[1].'\' --outfile_path \''.$archive_temp_output_file.'\' ';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = { success => 1, result => $c->config->{main_production_site_url}.$archive_temp_output.".png" };
+}
+
 sub drone_imagery_train_keras_model : Path('/api/drone_imagery/train_keras_model') : ActionClass('REST') { }
 sub drone_imagery_train_keras_model_GET : Args(0) {
     my $self = shift;

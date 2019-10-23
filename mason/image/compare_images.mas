@@ -53,6 +53,11 @@ $stock_id
                     <button class="btn btn-primary" id="stock_detail_page_compare_images_images_select_step">Go to Next Step</button>
                     </center>
                 </&>
+                <&| /util/workflow.mas:step, title=> "Result" &>
+                    <& /page/page_title.mas, title=>"Image comparison results" &>
+
+                    <div id="stock_detail_page_compare_images_result_div"></div>
+                </&>
             </&>
 
         </div>
@@ -82,6 +87,39 @@ jQuery(document).ready(function() {
 
         Workflow.complete("#stock_detail_page_compare_images_comparison_select_step");
         Workflow.focus('#stock_detail_page_compare_images_workflow', 1);
+    });
+
+    jQuery('#stock_detail_page_compare_images_images_select_step').click(function(){
+        var compare_images_selected_image_type_ids = []
+        jQuery('input[name="stock_detail_page_compare_images_plot_polygon_type_select"]:checked').each(function() {
+            compare_images_selected_image_type_ids.push(jQuery(this).val());
+        });
+        if (compare_images_selected_image_type_ids.length != 2){
+            alert('Please select two image types!');
+            return false;
+        } else {
+    
+            jQuery.ajax({
+                url : '/api/drone_imagery/compare_images?stock_id=<% $stock_id %>&image_type_ids='+JSON.stringify(compare_images_selected_image_type_ids)+'&comparison_type='+jQuery('#stock_detail_page_compare_images_comparison_select').val(),
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    var html = '<a target=_blank href="'+response.result+'">File</a>';
+                    jQuery('#stock_detail_page_compare_images_result_div').html(html);
+
+                    Workflow.complete("#stock_detail_page_compare_images_images_select_step");
+                    Workflow.focus('#stock_detail_page_compare_images_workflow', 2);
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error comparing images!')
+                }
+            });
+        }
     });
 
 });

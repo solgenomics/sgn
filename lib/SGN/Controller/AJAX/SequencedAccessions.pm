@@ -99,7 +99,7 @@ sub retrieve_sequencing_infos {
 	}
     }
 
-    print STDERR "Sequencing Data for this stock: ".Dumper(\@data);
+    #print STDERR "Sequencing Data for this stock: ".Dumper(\@data);
     return @data;
 }
 
