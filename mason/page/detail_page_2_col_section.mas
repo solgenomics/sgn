@@ -198,6 +198,8 @@ $sample_observation_unit_type_name => undef
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
 % if ($info_section_id eq 'stock_images_section'){
+                                <& /image/compare_images.mas, stock_id => $stock_id &>
+
                                 <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>0 &>
                                     <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh, additional_image_button_id=>'stock_images' &>
                                 </&>

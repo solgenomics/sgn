@@ -1043,7 +1043,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial: </label>
+                            <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial(s): </label>
                             <div class="col-sm-7" >
                                 <div id="drone_imagery_train_keras_cnn_trait_select_div"></div>
                             </div>

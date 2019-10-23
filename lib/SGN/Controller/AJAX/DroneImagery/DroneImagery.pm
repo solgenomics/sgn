@@ -1412,6 +1412,7 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $field_trial_ids = $c->req->param('field_trial_ids');
+    my $stock_ids = $c->req->param('stock_ids');
     my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json $c->req->param('drone_run_ids') : [];
 
     my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
@@ -1429,7 +1430,14 @@ sub get_plot_polygon_types_GET : Args(0) {
     }
     if ($drone_run_ids && scalar(@$drone_run_ids)>0) {
         my $sql = join ("," , @$drone_run_ids);
-        push @where_clause, "drone_run.project_id in ($sql)";
+        push @where_clause, "drone_run.project_id IN ($sql)";
+    }
+    my $stock_image_join = '';
+    if ($stock_ids) {
+        my @stock_ids_array = split ',', $stock_ids;
+        my $stock_id_sql = join (",", @stock_ids_array);
+        $stock_image_join = 'JOIN metadata.md_image AS md_image ON (md_image.image_id=project_md_image.image_id) JOIN phenome.stock_image AS stock_image ON (md_image.image_id=stock_image.image_id)';
+        push @where_clause, "stock_image IN ($stock_id_sql)";
     }
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
@@ -1443,6 +1451,7 @@ sub get_plot_polygon_types_GET : Args(0) {
         JOIN project AS field_trial ON (field_trial.project_id=field_trial_rel.object_project_id)
         JOIN phenome.project_md_image AS project_md_image ON (drone_run_band.project_id = project_md_image.project_id)
         JOIN cvterm AS project_md_image_type ON (project_md_image_type.cvterm_id = project_md_image.type_id)
+        $stock_image_join
         $where_clause
         GROUP BY drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_type.value, field_trial.project_id, field_trial.name, field_trial.description, project_md_image.type_id, project_md_image_type.name
         ORDER BY drone_run_band.project_id;";
