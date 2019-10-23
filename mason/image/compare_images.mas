@@ -31,12 +31,12 @@ $stock_id
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Image Selection" &>
-                    <& /page/page_title.mas, title=>"Select the images you are interested in" &>
+                    <& /page/page_title.mas, title=>"Select the images you are interested in comparing" &>
 
                     <table class="table table-bordered table-hover" id="stock_detail_page_compare_images_images_type_table">
                         <thead>
                             <tr>
-                                <th>Select <br/><input type="checkbox" id="stock_detail_page_compare_images_images_type_table_select_all" checked>Select All</th>
+                                <th>Select</th>
                                 <th>Field Trial</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Band Name</th>
@@ -72,15 +72,17 @@ jQuery(document).ready(function() {
         jQuery('#stock_detail_page_compare_images_dialog').modal('show');
     });
 
-    //jQuery('#stock_detail_page_compare_images_comparison_select_step').click(function(){
+    jQuery('#stock_detail_page_compare_images_comparison_select_step').click(function(){
 
         jQuery('#stock_detail_page_compare_images_images_type_table').DataTable({
             destroy : true,
             paging : false,
-            ajax : '/api/drone_imagery/plot_polygon_types?select_checkbox_name=stock_detail_page_compare_images_plot_polygon_type_select&stock_id=<% $stock_id %>'
+            ajax : '/api/drone_imagery/plot_polygon_types?select_checkbox_name=stock_detail_page_compare_images_plot_polygon_type_select&stock_ids=<% $stock_id %>'
         });
 
-    //});
+        Workflow.complete("#stock_detail_page_compare_images_comparison_select_step");
+        Workflow.focus('#stock_detail_page_compare_images_workflow', 1);
+    });
 
 });
 </script>

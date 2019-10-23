@@ -1411,6 +1411,7 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
+    my $checkbox_select_all = $c->req->param('checkbox_select_all');
     my $field_trial_ids = $c->req->param('field_trial_ids');
     my $stock_ids = $c->req->param('stock_ids');
     my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json $c->req->param('drone_run_ids') : [];
@@ -1437,7 +1438,7 @@ sub get_plot_polygon_types_GET : Args(0) {
         my @stock_ids_array = split ',', $stock_ids;
         my $stock_id_sql = join (",", @stock_ids_array);
         $stock_image_join = 'JOIN metadata.md_image AS md_image ON (md_image.image_id=project_md_image.image_id) JOIN phenome.stock_image AS stock_image ON (md_image.image_id=stock_image.image_id)';
-        push @where_clause, "stock_image IN ($stock_id_sql)";
+        push @where_clause, "stock_image.stock_id IN ($stock_id_sql)";
     }
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
@@ -1462,7 +1463,12 @@ sub get_plot_polygon_types_GET : Args(0) {
     while (my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $project_md_image_type_id, $project_md_image_type_name, $plot_polygon_count) = $h->fetchrow_array()) {
         my @res;
         if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$project_md_image_type_id' checked>";
+            my $input = "<input type='checkbox' name='$checkbox_select_name' value='$project_md_image_type_id' ";
+            if ($checkbox_select_all) {
+                $input .= "checked";
+            }
+            $input .= ">";
+            push @res, $input;
         }
         push @res, (
             "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",
