@@ -1405,6 +1405,107 @@ sub get_drone_run_projects_GET : Args(0) {
 }
 
 
+sub get_plot_polygon_types_images : Path('/api/drone_imagery/plot_polygon_types_images') : ActionClass('REST') { }
+sub get_plot_polygon_types_images_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_name = $c->req->param('select_checkbox_name');
+    my $checkbox_select_all = $c->req->param('checkbox_select_all');
+    my $field_trial_ids = $c->req->param('field_trial_ids');
+    my $stock_ids = $c->req->param('stock_ids');
+    my $field_trial_images_only = $c->req->param('field_trial_images_only');
+    my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json $c->req->param('drone_run_ids') : [];
+    my $drone_run_band_ids = $c->req->param('drone_run_band_ids') ? decode_json $c->req->param('drone_run_band_ids') : [];
+
+    my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+    my $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $drone_run_field_trial_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $project_image_type_id_list;
+    if (!$field_trial_images_only) {
+        $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    }
+    else {
+        $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($bcs_schema);
+    }
+    my $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
+
+    my @where_clause;
+    push @where_clause, "project_md_image.type_id in ($project_image_type_id_list_sql)";
+
+    if ($field_trial_ids) {
+        push @where_clause, "field_trial.project_id IN ($field_trial_ids)";
+    }
+    if ($drone_run_ids && scalar(@$drone_run_ids)>0) {
+        my $sql = join ("," , @$drone_run_ids);
+        push @where_clause, "drone_run.project_id IN ($sql)";
+    }
+    if ($drone_run_band_ids && scalar(@$drone_run_band_ids)>0) {
+        my $sql = join ("," , @$drone_run_band_ids);
+        push @where_clause, "drone_run_band.project_id IN ($sql)";
+    }
+    my $stock_image_join = '';
+    if ($stock_ids) {
+        my @stock_ids_array = split ',', $stock_ids;
+        my $stock_id_sql = join (",", @stock_ids_array);
+        $stock_image_join = 'JOIN metadata.md_image AS md_image ON (md_image.image_id=project_md_image.image_id) JOIN phenome.stock_image AS stock_image ON (md_image.image_id=stock_image.image_id)';
+        push @where_clause, "stock_image.stock_id IN ($stock_id_sql)";
+    }
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+
+    my $q = "SELECT drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_type.value, field_trial.project_id, field_trial.name, field_trial.description, project_md_image.type_id, project_md_image_type.name, project_md_image.image_id
+        FROM project AS drone_run_band
+        LEFT JOIN projectprop AS drone_run_band_type ON (drone_run_band.project_id=drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_project_type_cvterm_id)
+        JOIN project_relationship AS drone_run_band_rel ON (drone_run_band.project_id = drone_run_band_rel.subject_project_id AND drone_run_band_rel.type_id=$drone_run_band_drone_run_project_relationship_type_id)
+        JOIN project AS drone_run ON (drone_run.project_id=drone_run_band_rel.object_project_id)
+        LEFT JOIN projectprop AS drone_run_type ON (drone_run.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_cvterm_id)
+        JOIN project_relationship AS field_trial_rel ON (drone_run.project_id = field_trial_rel.subject_project_id AND field_trial_rel.type_id=$drone_run_field_trial_project_relationship_type_id)
+        JOIN project AS field_trial ON (field_trial.project_id=field_trial_rel.object_project_id)
+        JOIN phenome.project_md_image AS project_md_image ON (drone_run_band.project_id = project_md_image.project_id)
+        JOIN cvterm AS project_md_image_type ON (project_md_image_type.cvterm_id = project_md_image.type_id)
+        $stock_image_join
+        $where_clause
+        GROUP BY drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_type.value, field_trial.project_id, field_trial.name, field_trial.description, project_md_image.type_id, project_md_image_type.name, project_md_image.image_id
+        ORDER BY drone_run_band.project_id;";
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @result;
+    while (my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $project_md_image_type_id, $project_md_image_type_name, $image_id) = $h->fetchrow_array()) {
+        my @res;
+        if ($checkbox_select_name){
+            my $input = "<input type='checkbox' name='$checkbox_select_name' value='$image_id' ";
+            if ($checkbox_select_all) {
+                $input .= "checked";
+            }
+            $input .= ">";
+            push @res, $input;
+        }
+        my $image = SGN::Image->new($bcs_schema->storage->dbh, $image_id, $c);
+        my $image_id = $image->get_image_id;
+        my $image_name = $image->get_name() || '';
+        my $image_description = $image->get_description() || '';
+        my $image_img = $image->get_image_url("medium");
+        my $original_img = $image->get_image_url("large");
+        my $small_image = $image->get_image_url("tiny");
+        my $image_page = "/image/view/$image_id";
+        my $colorbox = qq|<a href="$image_img"  title="<a href=$image_page>Go to image page ($image_name)</a>" class="image_search_group" rel="gallery-figures"><img src="$small_image" width="40" height="30" border="0" alt="$image_description" /></a>|;
+
+        push @res, (
+            $colorbox,
+            "<a href=\"/breeders_toolbox/trial/$field_trial_project_id\">$field_trial_project_name</a>",
+            $drone_run_project_name,
+            $drone_run_band_project_name,
+            $drone_run_band_type,
+            $project_md_image_type_name
+        );
+        push @result, \@res;
+    }
+
+    $c->stash->{rest} = { data => \@result };
+}
+
 sub get_plot_polygon_types : Path('/api/drone_imagery/plot_polygon_types') : ActionClass('REST') { }
 sub get_plot_polygon_types_GET : Args(0) {
     my $self = shift;
@@ -3703,9 +3804,10 @@ sub drone_imagery_compare_images_GET : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $stock_id_list = $c->req->param('stock_id') ? [$c->req->param('stock_id')] : [];
     my $comparison_type = $c->req->param('comparison_type');
+    my $image_ids = $c->req->param('image_ids') ? decode_json($c->req->param('image_ids')) : [];
     my $drone_run_band_ids = $c->req->param('drone_run_band_ids') ? decode_json($c->req->param('drone_run_band_ids')) : [];
     my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json($c->req->param('drone_run_ids')) : [];
-    my $plot_polygon_type_ids = decode_json($c->req->param('image_type_ids'));
+    my $plot_polygon_type_ids = $c->req->param('image_type_ids') ? decode_json($c->req->param('image_type_ids')) : [];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -3713,7 +3815,8 @@ sub drone_imagery_compare_images_GET : Args(0) {
         project_image_type_id_list=>$plot_polygon_type_ids,
         drone_run_project_id_list=>$drone_run_ids,
         drone_run_band_project_id_list=>$drone_run_band_ids,
-        stock_id_list=>$stock_id_list
+        stock_id_list=>$stock_id_list,
+        image_id_list=>$image_ids
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;

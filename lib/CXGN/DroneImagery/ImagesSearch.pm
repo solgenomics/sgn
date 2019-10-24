@@ -13,6 +13,7 @@ my $images_search = CXGN::DroneImagery::ImagesSearch->new({
     drone_run_project_id_list=>\@drone_run_project_ids,
     drone_run_band_project_id_list=>\@drone_run_band_project_ids,
     stock_id_list=>\@stock_ids,
+    image_id_list=>\@image_ids,
     accession_list=>\@accession_ids,
     accession_name_list=>\@accessions,
     location_list=>\@locations,
@@ -53,6 +54,11 @@ has 'project_image_type_id' => (
 );
 
 has 'project_image_type_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'image_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -185,6 +191,7 @@ sub search {
     my $schema = $self->bcs_schema();
     my $project_image_type_id = $self->project_image_type_id();
     my $project_image_type_id_list = $self->project_image_type_id_list;
+    my $image_id_list = $self->image_id_list;
     my $drone_run_project_id_list = $self->drone_run_project_id_list;
     my $drone_run_band_project_id_list = $self->drone_run_band_project_id_list;
     my $program_list = $self->program_list;
@@ -272,6 +279,11 @@ sub search {
     if ($drone_run_project_id_list && scalar(@$drone_run_project_id_list)>0) {
         my $sql = join ("," , @$drone_run_project_id_list);
         push @where_clause, "drone_run.project_id in ($sql)";
+    }
+
+    if ($image_id_list && scalar(@$image_id_list)>0) {
+        my $sql = join ("," , @$image_id_list);
+        push @where_clause, "md_image.image_id in ($sql)";
     }
 
     if ($trial_has_tissue_samples){
