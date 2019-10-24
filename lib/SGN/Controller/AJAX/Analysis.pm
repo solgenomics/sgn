@@ -153,13 +153,13 @@ sub store_data {
     }
     
     if ($params->{dataset_id}) { 
-	$a->dataset_id($params->{dataset_id});
+	$a->metadata()->dataset_id($params->{dataset_id});
     }
     $a->name($params->{analysis_name});
     $a->description($params->{description});
     $a->user_id($user_id);
-    $a->accessions($stocks);
-    $a->traits($traits);
+    $a->metadata()->accessions($stocks);
+    $a->metadata()->traits($traits);
     my ($verified_warning, $verified_error);
 
     print STDERR "Storing the analysis...\n";

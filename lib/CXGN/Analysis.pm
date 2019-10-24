@@ -3,12 +3,14 @@ package CXGN::Analysis;
 
 use Moose;
 use Try::Tiny;
+use DateTime;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialDesignStore;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Analysis::AnalysisMetadata;
 use CXGN::Dataset;
-use DateTime;
+
 
 #BEGIN { extends 'CXGN::Project' }; # only conceptually for now
 
@@ -22,10 +24,6 @@ has 'name' => (is => 'rw', isa => 'Str');
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
-has 'dataset_id' => (is => 'rw', isa => 'Maybe[Int]');
-
-has 'dataset_info' => (is => 'rw', isa => 'Maybe[Str]');
-
 has 'accessions' => (is => 'rw', isa => 'ArrayRef');
 
 has 'data_hash' => (is => 'rw', isa => 'HashRef');
@@ -37,6 +35,9 @@ has 'traits' => (is => 'rw', isa => 'ArrayRef');
 has 'nd_geolocation_id' => (is => 'rw', isa=> 'Maybe[Int]');
 
 has 'user_id' => (is => 'rw', isa => 'Int');
+
+has 'metadata' => (isa => 'Maybe[CXGN::Analysis::AnalysisMetadata]', is => 'rw');
+
 
 sub BUILD {
     my $self = shift;
@@ -52,7 +53,16 @@ sub BUILD {
 	
 	my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search( { project_id => $args->{project_id} });
 
-	
+	# get metadata object
+	my $stockprop_id;
+	if ($rs->count() > 0) { 
+	    $stockprop_id = $rs->first()->projectprop_id();
+	}
+
+	print STDERR "Create AnalysisMetadata object...\n";
+	my $metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
+
+	$self->metadata($metadata);
 	
 
     }
@@ -156,35 +166,35 @@ sub create_and_store_analysis_design {
     print STDERR "Store analysis type...\n";
     my $analysis_project_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_project', 'project_property');
 
-    
-    
+
+    # Store metadata
+    #
+    my $time = DateTime->now();
+    if (!$self->metadata()) {
+	my $metadata = CXGN::Analysis::AnalysisMetadata->new({ bcs_schema => $self->bcs_schema() });
+	$metadata->parent_id($analysis_id);
+	$self->metadata( $metadata );
+	$self->metadata()->create_timestamp($time->ymd()." ".$time->hms());
+	$metadata->store();
+
+    }
+
     # store dataset info, if available. Copy the actual dataset json, 
     # so that dataset  info is frozen and does not reflect future 
     # changes.
     #
-    print STDERR "Store dataset (if available)...\n";
-    my $ds;
-    my $json_data;
-    
-    if ($self->dataset_id()) {
-	print STDERR "Creating the dataset from the id ".$self->dataset_id()." ...\n";
-	$ds = CXGN::Dataset->new( { schema => $self->bcs_schema, people_schema => $self->people_schema(), dataset_id=> $self->dataset_id() });
-	
+    if ($self->metadata()->dataset_id()) {
+	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema(), dataset_id => self->metadata()->dataset_id() });
 	my $data = $ds->data();
-	$data->{original_dataset_id} = $self->dataset_id();
-	
-	$json_data = JSON::Any->encode($data);
-	print STDERR "Data = $json_data\n";
-	
+	$self->metadata()->dataset_data($data);
     }
-    $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
-	{
-	    project_id => $analysis_id, 
-	    type_id => $analysis_project_term->cvterm_id(), 
-	    value => $json_data,
-	});
+
     
+    $self->metadata()->modified_timestamp($time->ymd()." ".$time->hms());
+    $self->metadata()->store();
     
+    # Create `trial design` for analysis...
+    #
     print STDERR "Create a new analysis design...\n";
     my $td = CXGN::Trial::TrialDesign->new();
     
