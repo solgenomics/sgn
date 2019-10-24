@@ -1355,13 +1355,25 @@ jQuery(document).ready(function ($) {
         document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
         document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
         document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+
         document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
+        document.getElementById("list_of_crosses_checks_section").innerHTML = list.listSelect("list_of_crosses_checks_section", [ 'crosses' ], '', 'refresh', undefined);
+
         document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_list", [ 'family_names' ], '', 'refresh', undefined);
+        document.getElementById("list_of_family_names_checks_section").innerHTML = list.listSelect("list_of_family_names_checks_section", [ 'family_names' ], '', 'refresh', undefined);
 
         //add lists to the list select and list of checks select dropdowns for CRBD.
         document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
         document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
+
+        document.getElementById("crbd_list_of_crosses_checks_section").innerHTML = list.listSelect("crbd_list_of_crosses_checks_section", [ 'crosses' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("list_of_unrep_crosses").innerHTML = list.listSelect("list_of_unrep_crosses", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
+        document.getElementById("list_of_rep_crosses").innerHTML = list.listSelect("list_of_rep_crosses", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
+
+        document.getElementById("crbd_list_of_family_names_checks_section").innerHTML = list.listSelect("crbd_list_of_family_names_checks_section", [ 'family_names' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("list_of_unrep_family_names").innerHTML = list.listSelect("list_of_unrep_family_names", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
+        document.getElementById("list_of_rep_family_names").innerHTML = list.listSelect("list_of_rep_family_names", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
 
         //add a blank line to location select dropdown that dissappears when dropdown is opened
         $("#add_project_location").prepend("<option value=''></option>").val('');
@@ -1372,6 +1384,16 @@ jQuery(document).ready(function ($) {
         //add a blank line to list select dropdown that dissappears when dropdown is opened
         $("#select_list_list_select").prepend("<option value=''></option>").val('');
         $("#select_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#select_cross_list_list_select").prepend("<option value=''></option>").val('');
+        $("#select_cross_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#select_family_name_list_list_select").prepend("<option value=''></option>").val('');
+        $("#select_family_name_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
@@ -1390,6 +1412,26 @@ jQuery(document).ready(function ($) {
 
         $("#crbd_list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
         $("#crbd_list_of_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#list_of_crosses_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#list_of_crosses_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#crbd_list_of_crosses_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#crbd_list_of_crosses_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#list_of_family_names_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#list_of_family_names_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#crbd_list_of_family_names_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#crbd_list_of_family_names_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
