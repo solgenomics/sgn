@@ -4,8 +4,7 @@ $stock_id
 </%args>
 
 <& /util/import_javascript.mas,
-   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
-   entries => ["sequenced_accessions"]
+  entries => ["sequenced_accessions"]
 &>
 
 <div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
@@ -108,7 +107,7 @@ $stock_id
 </div>
 
 <script>
-jQuery(document).ready( function() {
+jQuery(window).ready( function() {
     var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
 });
 </script>
