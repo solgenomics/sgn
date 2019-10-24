@@ -1414,13 +1414,21 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
     my $field_trial_ids = $c->req->param('field_trial_ids');
     my $stock_ids = $c->req->param('stock_ids');
+    my $field_trial_images_only = $c->req->param('field_trial_images_only');
     my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json $c->req->param('drone_run_ids') : [];
+    my $drone_run_band_ids = $c->req->param('drone_run_band_ids') ? decode_json $c->req->param('drone_run_band_ids') : [];
 
     my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
     my $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $drone_run_field_trial_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
     my $drone_run_band_drone_run_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
-    my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    my $project_image_type_id_list;
+    if (!$field_trial_images_only) {
+        $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    }
+    else {
+        $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($bcs_schema);
+    }
     my $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
 
     my @where_clause;
@@ -1432,6 +1440,10 @@ sub get_plot_polygon_types_GET : Args(0) {
     if ($drone_run_ids && scalar(@$drone_run_ids)>0) {
         my $sql = join ("," , @$drone_run_ids);
         push @where_clause, "drone_run.project_id IN ($sql)";
+    }
+    if ($drone_run_band_ids && scalar(@$drone_run_band_ids)>0) {
+        my $sql = join ("," , @$drone_run_band_ids);
+        push @where_clause, "drone_run_band.project_id IN ($sql)";
     }
     my $stock_image_join = '';
     if ($stock_ids) {
@@ -1497,6 +1509,7 @@ sub get_drone_run_band_projects_GET : Args(0) {
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $field_trial_id = $c->req->param('field_trial_id');
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $drone_run_project_ids = $c->req->param('drone_run_project_ids') ? decode_json $c->req->param('drone_run_project_ids') : [];
     my $exclude_drone_run_band_project_id = $c->req->param('exclude_drone_run_band_project_id') || 0;
     my $select_all = $c->req->param('select_all') || 0;
     my $disable = $c->req->param('disable') || 0;
@@ -1509,7 +1522,11 @@ sub get_drone_run_band_projects_GET : Args(0) {
 
     my $where_clause = '';
     if ($drone_run_project_id) {
-        $where_clause = ' WHERE project.project_id = ? ';
+        $where_clause = ' WHERE project.project_id = '.$drone_run_project_id.' ';
+    }
+    if ($drone_run_project_ids && scalar(@$drone_run_project_ids)>0) {
+        my $sql = join ",", @$drone_run_project_ids;
+        $where_clause = ' WHERE project.project_id IN ('.$sql.') ';
     }
 
     my $q = "SELECT drone_run_band.project_id, drone_run_band.name, drone_run_band.description, drone_run_band_type.value, project.project_id, project.name, project.description, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description
@@ -1526,7 +1543,7 @@ sub get_drone_run_band_projects_GET : Args(0) {
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
-    $h->execute($drone_run_project_id);
+    $h->execute();
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_description, $drone_run_band_type, $drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description) = $h->fetchrow_array()) {
         my @res;
@@ -1565,7 +1582,8 @@ sub get_drone_run_band_projects_GET : Args(0) {
             if ($checkbox_select_name){
                 my $checked = $select_all ? 'checked' : '';
                 my $disabled = $disable ? 'disabled' : '';
-                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' data-background_removed_threshold_type='$background_removed_threshold_type' $checked $disabled>";
+                my $extra_data = $background_removed_threshold_type ? "data-background_removed_threshold_type='$background_removed_threshold_type'" : '';
+                push @res, "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_band_project_id' $extra_data $checked $disabled>";
             }
             my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
             push @res, (
@@ -3683,15 +3701,19 @@ sub drone_imagery_compare_images_GET : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $stock_id = $c->req->param('stock_id');
+    my $stock_id_list = $c->req->param('stock_id') ? [$c->req->param('stock_id')] : [];
     my $comparison_type = $c->req->param('comparison_type');
+    my $drone_run_band_ids = $c->req->param('drone_run_band_ids') ? decode_json($c->req->param('drone_run_band_ids')) : [];
+    my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json($c->req->param('drone_run_ids')) : [];
     my $plot_polygon_type_ids = decode_json($c->req->param('image_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         project_image_type_id_list=>$plot_polygon_type_ids,
-        stock_id_list=>[$stock_id]
+        drone_run_project_id_list=>$drone_run_ids,
+        drone_run_band_project_id_list=>$drone_run_band_ids,
+        stock_id_list=>$stock_id_list
     });
     my ($result, $total_count) = $images_search->search();
     #print STDERR Dumper $result;
