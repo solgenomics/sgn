@@ -31,20 +31,22 @@ override('retrieve_genotypes',
 #		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
 		 my @accessions_list = @$accessions_list_ref;
 		 my $genotypes_search = CXGN::Genotype::Search->new(
-				 bcs_schema => $self->schema(),
-				 accession_list => $accessions_list_ref,
-				 trial_list => $self->trials(),
-				 protocol_id_list => [$protocol_id],
-				 genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
-				 protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
-				 protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
-				 return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
-			 );
-			 my $counter = 0;
-		 foreach my $next_accession ( @accessions_list ) {
+			bcs_schema => $self->schema(),
+			accession_list => $accessions_list_ref,
+			trial_list => $self->trials(),
+			protocol_id_list => [$protocol_id],
+			genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
+			protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
+			protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
+			return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
+		);
+		my $query_handle = $genotypes_search->get_new_genotype_info();
+		my $counter = 0;
+
+		foreach my $next_accession ( @accessions_list ) {
 #		 while($genotypes_search->get_next_genotype_info()){
 			my @curr_accession_array = [$next_accession];
-			my ($total_count, $genotypes) = $genotypes_search->get_next_genotype_info(@curr_accession_array);
+			my ($total_count, $genotypes) = $genotypes_search->get_next_genotype_info(@curr_accession_array,$query_handle);
 			my $genotype_string = "";
 		    my $genotype_example = $genotypes->[0];
 			if($counter == 0) {
