@@ -4,9 +4,9 @@ $stock_id
 </%args>
 
 <& /util/import_javascript.mas,
-  entries => ["sequenced_accessions"]
+   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
+   entries => ["sequenced_accessions"]
 &>
-
 
 <div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
     <div class="modal-dialog" role="modal">
