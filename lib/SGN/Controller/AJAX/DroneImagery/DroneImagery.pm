@@ -4425,6 +4425,9 @@ sub _perform_keras_cnn_predict {
             }
             my $prediction = shift @columns;
             my $class = $class_map_hash->{$prediction};
+            if (ref($class) eq 'HASH') {
+                $class = $class->{label};
+            }
             my $stock_id = $stock_ids[$iter];
             my $class_probabilities = join ',', @columns;
             $num_class_probabilities = scalar(@columns);
