@@ -356,8 +356,9 @@ sub convert_datatype_to_brapi {
 	my $num_brapi_categories = shift;
 
 	if ($num_brapi_categories > 0) {
-		# If the trait has categories, convert to Nominal
-		$trait_format = "Nominal";
+		# If the trait has categories, convert to Ordinal. Better to assume ordering,
+		# than lack of ordering. 
+		$trait_format = "Ordinal";
 	}
 	elsif ($trait_format eq "qualitative") {
 		# If the trait is qualitative convert to Text
