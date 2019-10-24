@@ -3744,6 +3744,10 @@ sub drone_imagery_compare_images_GET : Args(0) {
         $images2 = $data_hash{$unique_drone_run_band_project_names_sort[1]}->{$unique_image_type_names_sort[1]}->{image_fullpaths};
         $image2 = $images2->[0];
     }
+    if (!$image2) {
+        $images2 = $data_hash{$unique_drone_run_band_project_names_sort[1]}->{$unique_image_type_names_sort[0]}->{image_fullpaths};
+        $image2 = $images2->[0];
+    }
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_compare_images_dir');
     my $archive_temp_output = $c->tempfile( TEMPLATE => 'drone_imagery_compare_images_dir/outputfileXXXX');
