@@ -311,13 +311,26 @@ rect.bordered {
                             </&>
                             <&| /util/workflow.mas:step, title=> "Design Information" &>
                                 <& /page/page_title.mas, title=>"Design your trial layout" &>
-
                                 <div class="well well-sm">
-                                    <center><h4>Which accessions will be in the field?</h4></center>
-                                    <hr>
                                     <div class="form-group form-group-sm" id="show_list_of_accession_section" >
+                                        <center><h4>Which accessions will be in the field?</h4></center>
+                                        <hr>
                                         <label class="col-sm-7 control-label">List of accessions to include (required):</label>
                                         <div class="col-sm-5" id="select_list" name="select_list">
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_cross_section" >
+                                        <center><h4>Which crosses will be in the field?</h4></center>
+                                        <hr>
+                                        <label class="col-sm-7 control-label">List of crosses to include (required):</label>
+                                        <div class="col-sm-5" id="select_cross_list" name="select_cross_list">
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_family_name_section" >
+                                        <center><h4>Which crosses will be in the field?</h4></center>
+                                        <hr>
+                                        <label class="col-sm-7 control-label">List of family_names to include (required):</label>
+                                        <div class="col-sm-5" id="select_family_name_list" name="select_family_name_list">
                                         </div>
                                     </div>
                                     <div class="form-group" id="westcott_check_1_section" style="display: none">

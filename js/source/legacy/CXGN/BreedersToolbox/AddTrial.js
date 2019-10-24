@@ -102,6 +102,11 @@ jQuery(document).ready(function ($) {
             }
         });
     }
+    jQuery('#select_stock_type').change(function() {
+        jQuery('#show_list_of_accession_section').toggle($("#select_stock_type").val() == "accession");
+        jQuery('#show_list_of_cross_section').toggle($("#select_stock_type").val() == "cross");
+        jQuery('#show_list_of_family_name_section').toggle($("#select_stock_type").val() == "family_name");
+    });
 
     $(document).on('focusout', '#select_list_list_select', function() {
         if ($('#select_list_list_select').val()) {
