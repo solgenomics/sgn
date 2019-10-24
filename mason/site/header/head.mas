@@ -3,8 +3,6 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
-  <link rel="search" type="application/opensearchdescription+xml" title="Search Database" href="/documents/sgn_sol_search.xml" />
   <& /util/import_css.mas, paths => [
     '/css/new_sgn.css',
     '/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css',
@@ -19,11 +17,11 @@
     '/css/bootstrap3-xl-class.css',
     '/css/bootstrap-select.min.css'
   ] &>
-  
+
   <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->
 
-<script language="javascript" type="text/javascript"> 
+<script language="javascript" type="text/javascript">
    JSAN = {};
    JSAN.use = function() {};
    MochiKit = {__export__: false};
@@ -32,6 +30,7 @@
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables-min", "jquerymigrate", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
 
 <& /site/header/local_head.mas &>
+  <link rel="icon" href="documents/img/hfg/cropped-favicon-hfg-32x32.png" sizes="32x32">
 <& /site/header/analytics.mas &>
 
 
