@@ -82,6 +82,11 @@ $sample_observation_unit_type_name => undef
 
 </%args>
 
+<& /util/import_javascript.mas,
+   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
+  entries => ["sequenced_accessions"]
+&>
+
 <div class="row">
     <div class="col-sm-12">
         <div class="well">
