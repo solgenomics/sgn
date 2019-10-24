@@ -52,6 +52,8 @@ jQuery(document).ready(function ($) {
         var trial_year = $("#add_project_year").val();
         var description = $("#add_project_description").val();
         var design_type = $("#select_design_method").val();
+        var stock_type = $("#select_stock_type").val();
+
         if (trial_name === '') {
             alert("Please supply a trial name");
         }
@@ -69,6 +71,9 @@ jQuery(document).ready(function ($) {
         }
         else if (design_type === '') {
             alert("Please select a design type");
+        }
+        else if (stock_type === '') {
+            alert("Please select a stock type");
         }
         else {
             verify_create_trial_name(trial_name);
