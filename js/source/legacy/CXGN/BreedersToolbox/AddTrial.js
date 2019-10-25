@@ -292,6 +292,70 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    var cross_list_verified = 0;
+    function verify_cross_list(cross_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_cross_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'cross_list': cross_list,
+            },
+            success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    cross_list_verified = 0;
+                }
+                if (response.success){
+                    cross_list_verified = 1;
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred. sorry');
+                cross_list_verified = 0;
+            }
+        });
+    }
+
+    var family_name_list_verified = 0;
+    function verify_family_name_list(family_name_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_family_name_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'family_name_list': family_name_list,
+            },
+            success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    family_name_list_verified = 0;
+                }
+                if (response.success){
+                    family_name_list_verified = 1;
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred. sorry');
+                family_name_list_verified = 0;
+            }
+        });
+    }
+
     jQuery('#add_project_trial_sourced').change(function(){
         if(jQuery(this).val() == 'yes'){
             jQuery('#add_trial_source_trial_section').show();

@@ -720,6 +720,64 @@ sub verify_stock_list_POST : Args(0) {
     }
 }
 
+sub verify_cross_list : Path('/ajax/trial/verify_cross_list') : ActionClass('REST') { }
+
+sub verify_cross_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('cross_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('cross_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @crosses_missing = @{$lv->validate($schema,'crosses',\@stock_names)->{'missing'}};
+    if (scalar(@crosses_missing) > 0){
+        my $error = 'The following crosses are not valid in the database, so you must add them first: '.join ',', @crosses_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
+sub verify_family_name_list : Path('/ajax/trial/verify_family_name_list') : ActionClass('REST') { }
+
+sub verify_family_name_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('family_name_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('family_name_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @family_names_missing = @{$lv->validate($schema,'family_names',\@stock_names)->{'missing'}};
+    if (scalar(@family_names_missing) > 0){
+        my $error = 'The following family names are not valid in the database, so you must add them first: '.join ',', @family_names_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
 sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass('REST') { }
 
 sub verify_seedlot_list_POST : Args(0) {
