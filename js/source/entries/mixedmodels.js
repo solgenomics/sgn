@@ -5,7 +5,7 @@ import '../legacy/d3/d3Min.js';
 export function init(main_div){
   if (!(main_div instanceof HTMLElement)){
     main_div = document.getElementById(main_div.startsWith("#") ? main_div.slice(1) : main_div);
-  }  
+  }
 
     main_div.innerHTML = `
 
@@ -48,7 +48,7 @@ export function init(main_div){
 	    border-radius:8px;
 	}
 	</style>
-    
+
 	<div class="container">
 	<div class="row">
 	<div class="col-md-6">
@@ -87,7 +87,7 @@ export function init(main_div){
 	</div>
 
 
-    <hr />	
+    <hr />
 	<div class="container">
 	  <div class="row">
         <div id="left-margin" class="col-md-2"></div>
@@ -106,10 +106,10 @@ export function init(main_div){
 	<div id="fixed_factors" class="panel-body factor_panel">
 
     <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" --></div>
-           
+
                 </div>
 	<div id="interaction_factor_collection_panel" class="panel panel-default factor_interaction_panel">
-    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" --> 
+    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
                    <div class="panel-header">
 	               Fixed factors with interaction<br />
                        <button  id="add_interaction_factor_button">add new interaction</button>
@@ -117,7 +117,7 @@ export function init(main_div){
 	           <div id="interaction_factors_collection" name="interaction_factors_collection" class="panel-body">
 	           </div>
                 </div>
-	<div id="variable_slope_intersect_collection_panel" class="panel panel-default factor_interaction_panel"> 
+	<div id="variable_slope_intersect_collection_panel" class="panel panel-default factor_interaction_panel">
 
 <!--    style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
 
@@ -126,22 +126,22 @@ export function init(main_div){
               <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
 	            </div>
 	            <div id="variable_slope_intersect_collection" class="panel-body">
-	
+
 	            </div>
 	         </div>
-             
+
 	         <div style="height:30">&nbsp;</div>
                   <div id="random_factors_panel" class="panel panel-default" style="border-width:0px">
           	     <div class="panel-header">Random factors</div>
 	<div id="random_factors" class="panel-body factor_panel">
 
-    <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" -->          
+    <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" -->
                      </div>
                    </div>
 	       </div>
             </div>
 	</div>
-	
+
         <br />
         <div id="tempfile" style="display:none" >
         </div>
@@ -163,7 +163,7 @@ export function init(main_div){
         </td>
 	</tr>
 	</table>
-    
+
 	[ go throught steps 1-3 first ]
 </div>
 
@@ -195,7 +195,7 @@ export function init(main_div){
 </div><!-- /.modal -->`
 
     var mm = $(main_div);
-    
+
     get_select_box("datasets", "mixed_model_dataset_select", {"checkbox_name":"mixed_model_dataset_select_checkbox"});
 
     var analysis_type;
@@ -203,8 +203,8 @@ export function init(main_div){
 	analysis_type = e.relatedTarget.dataset.analysis_type;
 	alert(analysis_type);
 	$('#analysis_type').val(analysis_type);
-    }); 
-    
+    });
+
     $('#save_blups_button').click( function() {
 	var name = $('#analysis_name').val();
 	var description = $('#description').val();
@@ -213,14 +213,14 @@ export function init(main_div){
 	var analysis_type = $('#analysis_type').val();
 	var final_filename = basename+"."+analysis_type;
 	alert(final_filename);
-	
+
 	jQuery.ajax( {
 	    'method' : 'POST',
 	    'url': '/ajax/analysis/store/file',
 	    'dir': 'mixedmodels',
 	    'data' : { 'file': final_filename,
 		       'dir' : 'mixedmodels',
-		       'analysis_type': 'mixed_model_analysis', 
+		       'analysis_type': 'mixed_model_analysis',
 		       'analysis_name': name,
 		       'dataset_id' : $('#available_datasets').val(),
 		       'description' : description
@@ -233,7 +233,7 @@ export function init(main_div){
 		    if (r.warning) {
 			alert("Warning, "+r.warning);
 		    }
-		    
+
 		    alert("Successfully saved results from " + file + " " +name);
 		    return;
 		}
@@ -251,7 +251,7 @@ export function init(main_div){
 	alert("Everything worked! Woohoo!" + file + " " +name);
     });
 
-    $('#mixed_model_analysis_prepare_button').click( function() { 
+    $('#mixed_model_analysis_prepare_button').click( function() {
         var selected_datasets = [];
         jQuery('input[name="mixed_model_dataset_select_checkbox"]:checked').each(function() {
             selected_datasets.push(jQuery(this).val());
@@ -268,20 +268,20 @@ export function init(main_div){
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
                 data: { 'dataset_id' : dataset_id },
-                success: function(r) { 
-                    if (r.error) { 
+                success: function(r) {
+                    if (r.error) {
                         alert(r.error);
                     }
                     else {
                         $('#dependent_variable').html(r.dependent_variable);
                         var html = "";
 
-                        for (var n=0; n<r.factors.length; n++) { 
+                        for (var n=0; n<r.factors.length; n++) {
                             html += "<div id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
                         }
                         $('#factors').html(html);
 
-                        for (var n=0; n<r.factors.length; n++) { 
+                        for (var n=0; n<r.factors.length; n++) {
                             $('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
                         }
 
@@ -298,7 +298,7 @@ export function init(main_div){
                         var clone = draggable.clone();
                         clone.draggable({ revert: "invalid", helper:"clone" });
                         clone.css("z-index",3);
-                        if (!isCloned(clone)) { 
+                        if (!isCloned(clone)) {
                             setClonedTagProperties(clone);
                         }
 
@@ -317,7 +317,7 @@ export function init(main_div){
                         var clone = draggable.clone();
                         clone.draggable({ revert: "invalid", helper:"clone" });
                         clone.css("z-index",3);
-                        if (!isCloned(clone)) { 
+                        if (!isCloned(clone)) {
                             setClonedTagProperties(clone);
                         }
 
@@ -326,7 +326,7 @@ export function init(main_div){
                     }});
 
                 },
-                error: function(r) { 
+                error: function(r) {
                     alert("ERROR!!!!!");
                 }
             });
@@ -334,9 +334,9 @@ export function init(main_div){
    });
 
 
-   $('#add_interaction_factor_button').click( function(e) { 
+   $('#add_interaction_factor_button').click( function(e) {
 
-       add_sub_div("interaction_factors_collection", "interaction", "Interaction");	       
+       add_sub_div("interaction_factors_collection", "interaction", "Interaction");
    });
 
     $('#add_variable_slope_intersect_button').click( function(e) {
@@ -345,11 +345,11 @@ export function init(main_div){
 
 
     var factor_count;
-    
+
     function add_sub_div(collection_div, div_prefix, collection_name) {
-      
+
 	if (factor_count === undefined) { factor_count=0;}
-	
+
 	var previous_div = factor_count;
 	factor_count++;
 
@@ -367,10 +367,10 @@ export function init(main_div){
 		var clone = draggable.clone();
                 clone.draggable({ revert: "invalid", helper:"clone" });
 		clone.css("z-index",2);
-                if (!isCloned(clone)) { 
+                if (!isCloned(clone)) {
 		    setClonedTagProperties(clone);
                 }
-		
+
 		clone.appendTo(droppable);
 		get_model_string();
             }});
@@ -381,29 +381,41 @@ export function init(main_div){
 
 
    }
-    
-   function isCloned(e) { 
-     if (e.text().includes('X')) { 
+
+   function isCloned(e) {
+     if (e.text().includes('X')) {
    	return true;
      }
-  
+
      return false;
    }
 //onclick="this.parentNode.parentNode.removeChild(this.parentNode); return false;">
-   function setClonedTagProperties(e) { 
+   function setClonedTagProperties(e) {
        e.id = e.html()+'C';
        var html = '<span id="'+e.id+'_remove" class="remove_factor">X</a></span> '+e.html();
        e.html(html);
        $(document).on("click", "span.remove_factor", function(e) { this.parentNode.remove(); get_model_string()});
    }
 
-   $('#dependent_variable').on('change', '#dependent_variable_select', function() { 
-      var tempfile = $('#tempfile').html();
-      var trait = $('#dependent_variable_select').val();
+   $('#dependent_variable').click('#dependent_variable_select', function() {
+     var tempfile = $('#tempfile').html();
+     var trait_selected = [];
+     $('.trait_box:checked').each(function() {
+       trait_selected.push($(this).val());
+    });
+
+     if(trait_selected.length > 1){
+     alert("Histogram can only be displayed for one trait");
+     //var trait = trait_selected;
+   }else{
+      alert("trait selected is : " + trait_selected);
+      var trait = trait_selected[0];
+   }
+
       $.ajax( {
          url: '/ajax/mixedmodels/grabdata',
          data: { 'file' : tempfile },
-         success: function(r)  { 
+         success: function(r) {
            var v = {
              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
              "width": 200,
@@ -422,12 +434,12 @@ export function init(main_div){
                "type": "quantitative"
              }
             }
-           }; 
-           
+           };
+
            vegaEmbed("#trait_histogram", v);
          },
-       
-       
+
+
        error: function(e) { alert('error!'); }
      });
    });
@@ -453,19 +465,19 @@ export function init(main_div){
 	       "fixed_factors" : fixed_factors,
 	       "random_factors" : random_factors
 	   },
-           "success": function(r) { 
+           "success": function(r) {
                if (r.error) { alert(r.error);}
                else{
 		   $('#mixed_models_adjusted_means_results_div').html('<pre>' + r.adjusted_means_html + '</pre>');
 		   $('#mixed_models_blup_results_div').html('<pre>' + r.blup_html+'</pre>');
                }
            },
-           "error": function(r) { 
+           "error": function(r) {
                alert(r);
            }
-       });      
+       });
    });
-    
+
 
     function extract_model_parameters() {
 
@@ -476,7 +488,7 @@ export function init(main_div){
 	var variable_slope_intersects = parse_factor_collection("variable_slope_intersect_collection_panel");
 
 	var random_factors = parse_simple_factors("random_factors");
-	
+
         // var random_factors = $('#random_factors').text();
         // random_factors = random_factors.replace(/X /g, '","');
 	// random_factors = random_factors.replace(/\s/g, '');
@@ -494,10 +506,10 @@ export function init(main_div){
         var json =  {
 	    'fixed_factors' : fixed_factors,
             'fixed_factors_interaction' : interaction_factors,
-	    'variable_slope_intersects' : variable_slope_intersects, 
+	    'variable_slope_intersects' : variable_slope_intersects,
 	    'random_factors' : random_factors,
 	    'dependent_variable' : dependent_variable
-	    
+
 	};
         return json;
     }
@@ -505,14 +517,14 @@ export function init(main_div){
     function parse_simple_factors(simple_div) {
 	//alert("parsing div "+simple_div);
 	//alert($('#'+simple_div).html());
-	
+
 	var factors = $('#'+simple_div).children();
 	var factor_list = new Array();
 	for(var n=0; n<factors.length; n++) {
 	    var factor_string = $(factors[n]).text();
 	    //alert("FACTOR = "+factor_string);
 	    factor_string = factor_string.replace(/X /g, '');
-	    
+
 	    if (factor_string) {
 		factor_list.push(factor_string);
 	    }
@@ -524,7 +536,7 @@ export function init(main_div){
 
 	// Structure:
 	// interaction_factors_collection panel
-	//    interaction_factors_collection panel-header 
+	//    interaction_factors_collection panel-header
 	//    interaction_1_panel panel
 	//       interaction_1_header panel-header
 	//       interaction_1  panel-body
@@ -549,29 +561,29 @@ export function init(main_div){
 
 	    var top_panels = $div.children();
 
-	    for (var n=0; n< top_panels.length; n++) { 
+	    for (var n=0; n< top_panels.length; n++) {
 		//alert('top_panel '+$(top_panels[n]).text()+ ' LEN:'+$(top_panels[n]).length +' ID: '+$(top_panels[n]).attr('id'));
-		
+
 		var panel_components = $(top_panels[n]).children();
 		var $panel_body = $(panel_components[1]);
 		//alert("parsing interaction body..."+$panel_body.text()+ " ID: " +$panel_body.attr('id'));
-		
+
 		var factors = $panel_body.children();
-		
-		for (var m=0; m<factors.length; m++) {		
+
+		for (var m=0; m<factors.length; m++) {
 		    var $factor = $(factors[m]);
 		    var label = $factor.text();
-		    
+
 		    // remove X closing box
 		    label = label.substr(2);
 		    //alert("FACTOR"+label);
-		    grouped_factors.push(label);		
+		    grouped_factors.push(label);
 		}
 		collection.push(grouped_factors);
 		grouped_factors = new Array();
-	    }   
+	    }
 	}
-					  
+
 	///var fixed_factors_interaction_collection = interaction_collection.join('"],["');
 	//alert("finally: "+ JSON.stringify(collection));
 
@@ -584,11 +596,11 @@ export function init(main_div){
     }
 
     function parse_random_factors() {
-	
+
 
     }
-    
-    
+
+
     function get_model_string() {
 	var params = extract_model_parameters();
 	$.ajax( {
@@ -602,7 +614,7 @@ export function init(main_div){
 		if (r.error) {
 		    alert(error);
 		}
-		else { 
+		else {
 		    alert(r.model);
 		    jQuery('#model_string').text(r.model);
 		}
@@ -611,12 +623,9 @@ export function init(main_div){
     }
 
     function store_blup_file() {
-	
-	
+
+
 
 
     }
 };
-
-
-
