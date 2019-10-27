@@ -149,7 +149,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
     sleep(60);
     $d->find_element_ok('//img[@id="k-means-plot-139-genotype-5"]', 'xpath', 'check k-means plot')->click();
-    
+    sleep(2);
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
 
