@@ -232,9 +232,7 @@ sub search_results {
     }
 
     my %result = (data=>\@data_out);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies-search result constructed');
+    return (\%result, $status, $total_count)
 }
 
 sub studies_germplasm {
