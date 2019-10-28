@@ -1808,7 +1808,7 @@ sub studies_observations_granular_PUT {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $observations = $clean_inputs->{observations};
     #print STDERR "Observations are ". Dumper($observations) . "\n";
-    _store_observations($self, $c, $observations, 'v1');
+	save_results($self, $c, $observations, 'v1');
 }
 
 sub studies_observations_granular_GET {
@@ -2689,7 +2689,7 @@ sub phenotypes_POST {
             push @all_observations, $observation;
         }
     }
-    _store_observations($self, $c, \@all_observations, 'v1');
+	save_results($self, $c, \@all_observations, 'v1');
 }
 
 =head2 brapi/v2/observations
@@ -2753,7 +2753,7 @@ sub observations_PUT {
 	my $c = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
     my $observations = $clean_inputs->{observations};
-    _store_observations($self, $c, $observations, 'v2');
+	save_results($self, $c, $observations, 'v2');
 }
 
 sub observations_GET {
