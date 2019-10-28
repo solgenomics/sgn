@@ -271,16 +271,24 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status());
 }
 
-
  sub image_data_store {
     my $self = shift;
     my $image_dir = shift;
     my $image_id = shift;
     my $inputs = shift;
+    my $content_type = shift;
 
     print STDERR "Image ID: $image_id. inputs to image metadata store: ".Dumper($inputs);
 
+    my $file_extension = _get_extension($content_type);
+
+    if ($file_extension eq $content_type) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Unsupported image type');
+    }
+
     my $tempfile = $inputs->filename();
+    my $file_with_extension = $tempfile.$file_extension;
+    rename($tempfile, $file_with_extension);
 
     print STDERR "TEMP FILE : $tempfile\n";
 
@@ -289,7 +297,7 @@ sub detail {
     my $image = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir, image_id => $image_id);
 
     eval {
-	       $image->process_image($tempfile);
+	       $image->process_image($file_with_extension);
     };
 
     if ($@) {
@@ -319,6 +327,23 @@ sub _get_mimetype {
         return $mimetypes{$extension};
     } else {
         return $extension;
+    }
+}
+
+sub _get_extension {
+    my $mimetype = shift;
+    my %extensions = (
+        'image/jpeg'             => '.jpg',
+        'image/png'              => '.png',
+        'image/gif'              => '.gif',
+        'image/svg+xml'          => '.svg',
+        'application/pdf'        => '.pdf',
+        'application/postscript' => '.ps'
+    );
+    if ( defined $extensions{$mimetype} ) {
+        return $extensions{$mimetype};
+    } else {
+        return $mimetype;
     }
 }
 
