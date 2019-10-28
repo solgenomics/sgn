@@ -89,7 +89,7 @@ sub studies_search {
     #my $status = $self->status;
     my $schema = $self->bcs_schema;
     #my $auth = _authenticate_user($c);
-    my ($result, $status, $total_count) = search_results($search_params);
+    my ($result, $status, $total_count) = $self->search_results($search_params, $c);
 
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
@@ -123,6 +123,7 @@ sub studies_search_retrieve {
     my $self = shift;
     my $tempfiles_subdir = shift;
     my $search_id = shift;
+	my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $schema = $self->bcs_schema;
@@ -135,7 +136,7 @@ sub studies_search_retrieve {
     });
 
     my $search_params = $search_object->retrieve($search_id);
-    my ($result, $status, $total_count) = search_results($search_params);
+    my ($result, $status, $total_count) = $self->search_results($search_params, $c);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');
@@ -144,6 +145,7 @@ sub studies_search_retrieve {
 sub search_results {
     my $self = shift;
     my $search_params = shift;
+	my $c = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
