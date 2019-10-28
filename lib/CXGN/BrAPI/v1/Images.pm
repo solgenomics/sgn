@@ -19,8 +19,8 @@ sub search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $page = CXGN::Page->new();
-    my $hostname = $page->get_hostname();
+    my $page_obj = CXGN::Page->new();
+    my $hostname = $page_obj->get_hostname();
     my @data_files;
 
     my $image_ids_arrayref = $params->{imageDbId} || ($params->{imageDbIds} || ());
