@@ -116,6 +116,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#select_cross_list_list_select', function() {
+        if ($('#select_cross_list_list_select').val()) {
+            cross_list_id = $('#select_cross_list_list_select').val();
+            cross_list = JSON.stringify(list.getList(cross_list_id));
+            verify_cross_list(cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#select_family_name_list_list_select', function() {
+        if ($('#select_family_name_list_list_select').val()) {
+            cross_list_id = $('#select_family_name_list_list_select').val();
+            cross_list = JSON.stringify(list.getList(family_name_list_id));
+            verify_family_name_list(family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_checks_section_list_select', function() {
         if ($('#list_of_checks_section_list_select').val()) {
             check_stock_list_id = $('#list_of_checks_section_list_select').val();
@@ -394,20 +410,44 @@ jQuery(document).ready(function ($) {
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
        // alert(row_number);
-        var stock_list_id = $('#select_list_list_select').val();
+
+        // accession stock type
+        var accession_list_id = $('#select_list_list_select').val();
         var control_list_id = $('#list_of_checks_section_list_select').val();
         var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+
+        // cross stock type
+        var cross_list_id = $('#select_cross_list_list_select').val();
+        var control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
+        var control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
+
+        // family_name stock type
+        var family_name_list_id = $('#select_family_name_list_list_select').val();
+        var control_family_name_list_id = $('#list_offamily_name_checks_section_list_select').val();
+        var control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+
 
         var control_list_crbd;
         if (control_list_id_crbd != ""){
             control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
         }
+
+
         var stock_list;
         var stock_list_array;
-        if (stock_list_id != "") {
-            stock_list_array = list.getList(stock_list_id);
+
+        if (accession_list_id != "") {
+            stock_list_array = list.getList(accession_list_id);
+            stock_list = JSON.stringify(stock_list_array);
+        } else if (cross_list_id != "") {
+            stock_list_array = list.getList(cross_list_id);
+            stock_list = JSON.stringify(stock_list_array);
+        } else if (family_name_list_id != "") {
+            stock_list_array = list.getList(family_name_list_id);
             stock_list = JSON.stringify(stock_list_array);
         }
+
+
         var control_list;
         if (control_list_id != "") {
             control_list = JSON.stringify(list.getList(control_list_id));
@@ -792,8 +832,12 @@ jQuery(document).ready(function ($) {
         }
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
             generate_experimental_design();
+        } else if (cross_list_verified == 1 && stock_list_verified == 0 && family_name_list_verified == 0){
+            generate_experimental_design();
+        } else if (family_name_list_verified == 1 && cross_list_verified == 0 && stock_list_verified == 0){
+            generate_experimental_design();
         } else {
-            alert('Accession list or seedlot list is not valid!');
+            alert('Accession list, seedlot list, cross list or family name list is not valid!');
             return;
         }
     });
