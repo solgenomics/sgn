@@ -109,21 +109,32 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
+
 	foreach (keys %$params){
 		my $values = $params->{$_};
 		my $ret_val;
-		if (ref \$values eq 'SCALAR'){
-			push @$ret_val, $values;
-		} elsif (ref $values eq 'ARRAY'){
-			$ret_val = $values;
-		} else {
-			die "Input is not a scalar or an arrayref\n";
+		if (ref \$values eq 'SCALAR' || ref $values eq 'ARRAY'){
+
+			if (ref \$values eq 'SCALAR') {
+				push @$ret_val, $values;
+			} elsif (ref $values eq 'ARRAY'){
+				$ret_val = $values;
+			}
+
+			@$ret_val = grep {$_ ne undef} @$ret_val;
+			@$ret_val = grep {$_ ne ''} @$ret_val;
+			$_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
+			$params->{$_} = $ret_val;
 		}
-		@$ret_val = grep {$_ ne undef} @$ret_val;
-		@$ret_val = grep {$_ ne ''} @$ret_val;
-        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
-		$params->{$_} = $ret_val;
+		elsif (ref $values eq 'HASH') {
+			$params->{$_} = _clean_inputs($values);
+		}
+		else {
+			die "Input $_ is not a scalar, arrayref, or a single level hash\n";
+		}
+
 	}
+
 	return $params;
 }
 
