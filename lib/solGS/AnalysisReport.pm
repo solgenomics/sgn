@@ -21,6 +21,7 @@ has 'output_details_file' => (
     );
 
 
+our ($SEC, $MIN, $HR, $MDAY, $MON) = localtime();
 
 sub run {
  my $self = shift;   
@@ -143,10 +144,11 @@ sub check_pops_trait_data_combination {
 		    }
 		    else
 		    {
-			if ($job_tempdir) 
+			my $end_process = $self->end_status_check();
+			if ($job_tempdir || $end_process) 
 			{
 			    $died_file = $self->get_file($job_tempdir, 'died');
-			    if ($died_file) 
+			    if ($died_file || $end_process) 
 			    {
 				$output_details->{$k}->{pheno_success}   = 0;
 				$output_details->{$k}->{geno_success}    = 0;
@@ -225,10 +227,11 @@ sub check_multi_pops_data_download {
 		    }
 		    else
 		    {
-			if ($job_tempdir) 
+			my $end_process = $self->end_status_check();
+			if ($job_tempdir || $end_process) 
 			{
 			    $died_file = $self->get_file($job_tempdir, 'died');
-			    if ($died_file) 
+			    if ($died_file || $end_process) 
 			    {
 				$output_details->{$k}->{pheno_success} = 0;
 				$output_details->{$k}->{geno_success}  = 0;
@@ -261,7 +264,7 @@ sub check_selection_prediction {
     my ($self, $output_details) = @_;
 
     my $job_tempdir = $output_details->{r_job_tempdir};
-    
+  			  
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /trait_id/)
@@ -292,10 +295,11 @@ sub check_selection_prediction {
 			}
 			else
 			{
-			    if ($job_tempdir) 
+			    my $end_process = $self->end_status_check();
+			    if ($job_tempdir || $end_process) 
 			    {
 				$died_file = $self->get_file($job_tempdir, 'died');
-				if ($died_file) 
+				if ($died_file || $end_process) 
 				{
 				    $output_details->{$k}->{success} = 0;
 				    $output_details->{status} = 'Failed';
@@ -325,7 +329,7 @@ sub check_trait_modeling {
     my ($self, $output_details) = @_;
 
     my $job_tempdir = $output_details->{r_job_tempdir};
-    
+   
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /trait_id/)
@@ -356,10 +360,11 @@ sub check_trait_modeling {
 			}
 			else
 			{
-			    if ($job_tempdir) 
+			    my $end_process = $self->end_status_check();
+			    if ($job_tempdir || $end_process) 
 			    {
 				$died_file = $self->get_file($job_tempdir, 'died');
-				if ($died_file) 
+				if ($died_file || $end_process) 
 				{
 				    $output_details->{$k}->{success} = 0;
 				    $output_details->{status} = 'Failed';
@@ -389,7 +394,7 @@ sub check_population_download {
     my ($self, $output_details) = @_;
 
     my $job_tempdir = $output_details->{r_job_tempdir};
-    
+          
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /population_id/)
@@ -452,10 +457,12 @@ sub check_population_download {
 			    }		
 			    else
 			    {
-				if ($job_tempdir) 
+				my $end_process = $self->end_status_check();
+				     				
+				if ($job_tempdir || $end_process ) 
 				{
 				    $died_file = $self->get_file($job_tempdir, 'died');
-				    if ($died_file) 
+				    if ($died_file || $end_process) 
 				    {
 					$output_details->{$k}->{pheno_success}   = 0;
 					$output_details->{$k}->{geno_success}    = 0;
@@ -841,6 +848,22 @@ sub log_analysis_status {
 }
 
 
+sub end_status_check {
+    my ($self) = shift;
+
+    my $end_process;
+    my ($sec, $min, $hr, $mday, $mon) = localtime();
+    
+    my $start_dhr = $MDAY . $HR;
+    my $now_dhr = $mday . $hr;
+
+    my $diff = abs($now_dhr - $start_dhr);
+   
+    $end_process = 1 if $diff > 100;
+     
+    return $end_process;
+    
+}
 
 
 
