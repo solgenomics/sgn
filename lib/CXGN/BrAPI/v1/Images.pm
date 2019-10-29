@@ -301,8 +301,51 @@ sub detail {
 	       print STDERR "Image processed successfully.\n";
     }
 
+    my @image_ids;
+    push @image_ids, $image_id;
+    my $image_search = CXGN::Image::Search->new({
+     bcs_schema=>$self->bcs_schema(),
+     people_schema=>$self->people_schema(),
+     phenome_schema=>$self->phenome_schema(),
+     image_id_list=>\@image_ids
+    });
+
+    my ($search_result, $total_count) = $image_search->search();
+
+    my %result = ( image_id => $image_id);
+
+    foreach (@$search_result) {
+     %result = (
+         additionalInfo => {
+             observationLevel => $_->{'stock_type_name'},
+             observationUnitName => $_->{'stock_uniquename'},
+         },
+         copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
+         description => $_->{'image_description'},
+         imageDbId => $_->{'image_id'},
+         imageFileName => $_->{'image_original_filename'},
+         imageFileSize => 0,
+         imageHeight => 0,
+         imageWidth => 0,
+         imageName => $_->{'image_name'},
+         imageTimeStamp => $_->{'image_modified_date'},
+         imageURL => '',
+         mimeType => _get_mimetype($_->{'image_file_ext'}),
+         observationUnitDbId => $_->{'stock_id'},
+         # location and linked phenotypes are not yet available for images in the db
+         imageLocation => {
+             geometry => {
+                 coordinates => [],
+                 type=> '',
+             },
+             type => '',
+         },
+         observationDbIds => [],
+     );
+    }
+
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1, 10, 0);
-    return CXGN::BrAPI::JSONResponse->return_success( { image_id => $image_id }, $pagination, [], $self->status());
+    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, [], $self->status(), 'Image data store successful');
 }
 
 sub _get_mimetype {

@@ -14,7 +14,7 @@ use CXGN::Login;
 use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
 use CXGN::Location::LocationLookup;
-use JSON qw( decode_json );
+use JSON;
 use Data::Dumper;
 use Try::Tiny;
 use File::Slurp qw | read_file |;
@@ -26,9 +26,17 @@ use CXGN::BrAPI;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
-	default   => 'application/json',
-	stash_key => 'rest',
-	map       => { 'application/json' => 'JSON' },
+	stash_key     => 'rest',
+	map           => { 'application/json' => 'JSON',
+						# would be nice if we could do image/* instead of explicitly listing each type
+						# also should see if a single list of image types can be used for this and for _get_extension in Images.pm
+						'image/jpeg'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
+						'image/png'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
+						'image/gif'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
+						'image/svg+xml'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
+						'application/pdf'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
+						'application/postscript'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
+	},
 );
 
 has 'brapi_module' => (
@@ -42,6 +50,26 @@ has 'bcs_schema' => (
 );
 
 my $DEFAULT_PAGE_SIZE=10;
+
+# don't do anything, let catalyst handle putting body into a temp file
+sub deserialize_image {
+	my ( $self, $data, $c ) = @_;
+	# want $c->request->data to be undefined so that parsing in brapi sub skips it
+	return undef;
+}
+
+# have to serialize the json because using the callbacks in the config map
+sub serialize_image {
+	my ( $self, $data, $c ) = @_;
+	my $json = JSON->new->allow_nonref;
+	$json->allow_tags;
+	$json->allow_blessed;
+	$json->convert_blessed;
+	my $json_text = $json->encode( $c->stash->{rest} );
+
+	$c->response->content_type('application/json');
+	return $json_text;
+}
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $self = shift;
@@ -2939,7 +2967,7 @@ sub image_content_store_PUT {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 1;
+	my $force_authenticate = 0;
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
