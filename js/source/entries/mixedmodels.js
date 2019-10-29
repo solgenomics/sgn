@@ -404,13 +404,14 @@ export function init(main_div){
        trait_selected.push($(this).val());
     });
 
-     if(trait_selected.length > 1){
-     alert("Histogram can only be displayed for one trait");
+     if(trait_selected.length > 1 || trait_selected.length == 0){
+       jQuery('#trait_histogram').html('Please select only one trait at a time to see the histogram!');
+     //alert("Histogram can only be displayed for one trait");
      //var trait = trait_selected;
    }else{
-      alert("trait selected is : " + trait_selected);
+      //alert("trait selected is : " + trait_selected);
       var trait = trait_selected[0];
-   }
+
 
       $.ajax( {
          url: '/ajax/mixedmodels/grabdata',
@@ -442,6 +443,9 @@ export function init(main_div){
 
        error: function(e) { alert('error!'); }
      });
+
+  }
+
    });
 
     $('#run_mixed_model_button').click( function() {
@@ -453,7 +457,12 @@ export function init(main_div){
 	alert("RANDOM:"+random_factors);
        //alert('Model: '+model);
        var tempfile = $('#tempfile').text();
-       var dependent_variable = $('#dependent_variable_select').val();
+       //var dependent_variables = $('input[name=dependent_variable_select]').val();
+       var dependent_variables = [];
+       $('input[name=dependent_variable_select]:checked').each(function(){
+         dependent_variables.push(jQuery(this).val());
+       });
+       console.log(dependent_variables);
        //alert(model + " "+tempfile+" "+ dependent_variable);
        $.ajax( {
            "url": '/ajax/mixedmodels/run',
@@ -461,7 +470,7 @@ export function init(main_div){
            "data": {
 	       "model" : model,
 	       "tempfile" : tempfile,
-	       "dependent_variable": dependent_variable,
+	       "dependent_variables": dependent_variables,
 	       "fixed_factors" : fixed_factors,
 	       "random_factors" : random_factors
 	   },
@@ -501,16 +510,20 @@ export function init(main_div){
 	//     random_factors_json = JSON.parse(random_factors);
 	// }
 
-	var dependent_variable = $('#dependent_variable_select').val();
+	var dependent_variables = [];
+  $('input[name=dependent_variable_select]:checked').each(function(){
+    dependent_variables.push(jQuery(this).val());
+  });
 
         var json =  {
 	    'fixed_factors' : fixed_factors,
             'fixed_factors_interaction' : interaction_factors,
 	    'variable_slope_intersects' : variable_slope_intersects,
 	    'random_factors' : random_factors,
-	    'dependent_variable' : dependent_variable
+	    'dependent_variables' : dependent_variables
 
 	};
+  console.log(json);
         return json;
     }
 

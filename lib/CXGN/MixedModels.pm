@@ -8,7 +8,7 @@ use File::Slurp qw| slurp |;
 use CXGN::Tools::Run;
 use CXGN::Phenotypes::File;
 
-has 'dependent_variable' => (is => 'rw', isa => 'Str|Undef');
+has 'dependent_variables' => (is => 'rw', isa => 'ArrayRef[Str]|Undef');
 
 has 'fixed_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
@@ -32,19 +32,19 @@ sub BUILD {
     my $self = shift;
 
     my $phenotype_file;
-    
-    if ($self->tempfile()) { 
+
+    if ($self->tempfile()) {
 	$phenotype_file = CXGN::Phenotypes::File->new( { file => $self->tempfile() } );
     }
     $self->phenotype_file($phenotype_file);
-   
+
 }
 
 sub generate_model {
     my $self = shift;
 
     my $tempfile = $self->tempfile();
-    my $dependent_variable = $self->dependent_variable();
+    my $dependent_variables = $self->dependent_variables();
     my $fixed_factors = $self->fixed_factors();
     my $fixed_factors_interaction = $self->fixed_factors_interaction();
     my $variable_slope_intersects = $self->variable_slope_intersects();
@@ -53,18 +53,18 @@ sub generate_model {
     my $error;
 
     my @addends = ();
-    
-    print STDERR join("\n", ("DV", $dependent_variable, "FF", Dumper($fixed_factors), "RF", Dumper($random_factors), "TF", $tempfile, "FFI", Dumper($fixed_factors_interaction), "VSI: ", Dumper($variable_slope_intersects)));
+
+    print STDERR join("\n", ("DV", Dumper($dependent_variables), "FF", Dumper($fixed_factors), "RF", Dumper($random_factors), "TF", $tempfile, "FFI", Dumper($fixed_factors_interaction), "VSI: ", Dumper($variable_slope_intersects)));
 
     print STDERR Dumper($fixed_factors);
     my $model = "";
 
-    if (! $dependent_variable) {
-	die "Need a dependent variable set in CXGN::MixedModels... Ciao!";
+    if (! $dependent_variables || scalar(@$dependent_variables)==0) {
+	die "Need a dependent variable(s) set in CXGN::MixedModels... Ciao!";
     }
 
     my $formatted_fixed_factors = "";
-    if (@$fixed_factors) { 
+    if (@$fixed_factors) {
 	$formatted_fixed_factors = join(" + ", @$fixed_factors);
 	push @addends, $formatted_fixed_factors;
     }
@@ -83,7 +83,7 @@ sub generate_model {
 
     my $formatted_variable_slope_intersects = "";
     foreach my $variable_slope_groups (@$variable_slope_intersects) {
-	if (exists($variable_slope_groups->[0]) && exists($variable_slope_groups->[1])) { 
+	if (exists($variable_slope_groups->[0]) && exists($variable_slope_groups->[1])) {
 	    my $term = " (1+$variable_slope_groups->[0] \| $variable_slope_groups->[1]) ";
 	    print STDERR "TERM: $term\n";
 	    $formatted_variable_slope_intersects .= $term;
@@ -91,21 +91,21 @@ sub generate_model {
 	}
     }
 
-    
+
     my $formatted_random_factors = "";
-#    if ($random_factors_random_slope) { 
+#    if ($random_factors_random_slope) {
 #	$formatted_random_factors = " (1 + $random_factors->[0] | $random_factors->[1]) ";
 #
 #    }
  #   else {
-	if (@$random_factors) { 
+	if (@$random_factors) {
 	    $formatted_random_factors = join(" + ",  map { "(1|$_)" } @$random_factors);
 	    push @addends, $formatted_random_factors;
 	}
 
     #}
     $model .= join(" + ", @addends);
-    
+
     return $model;
 }
 
@@ -113,7 +113,7 @@ sub run_model {
     my $self = shift;
 
     my $tempfile = $self->tempfile();
-    
+
     # generate params_file
     #
     my $param_file = $tempfile.".params";
@@ -121,11 +121,13 @@ sub run_model {
     my $model = $self->generate_model();
     print $F $model;
     close($F);
-    
+
     # run r script to create model
     #
     my $cmd = "R CMD BATCH  '--args datafile=\"".$tempfile."\" paramfile=\"".$tempfile.".params\"' /R/mixed_models.R $tempfile.out";
-    
+
+    print STDERR Dumper($tempfile);
+
     print STDERR "running R command $cmd...\n";
     system($cmd);
     print STDERR "Done.\n";
