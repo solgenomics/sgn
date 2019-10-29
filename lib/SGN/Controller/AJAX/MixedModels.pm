@@ -42,11 +42,11 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     print STDERR "JSON for variable slope intersect: ".Dumper($variable_slope_intersects)."\n";
 
     my $random_factors = $params->{random_factors};
-    my $dependent_variable = $params->{dependent_variable};
+    my $dependent_variables = $params->{dependent_variables};
 
     my $mm = CXGN::MixedModels->new();
-    if ($dependent_variable) {
-	$mm->dependent_variable($dependent_variable);
+    if ($dependent_variables) {
+	$mm->dependent_variables($dependent_variables);
     }
     if ($fixed_factors) {
 	$mm->fixed_factors( $fixed_factors );
@@ -68,7 +68,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     $c->stash->{rest} = {
 	error => $error,
 	model => $model,
-	dependent_variable => $dependent_variable,
+	dependent_variables => $dependent_variables,
     };
 }
 
@@ -116,7 +116,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 
      foreach my $trait (@$traits) {
        if ($trait =~ m/.+\d{7}/){
-        $trait_html .= '<input type="checkbox" class= "trait_box" id="'.$dependent_variable_select.'" name="'.$dependent_variable_select.'" value="'.$trait.'">'.$trait.'</input> </br>';
+        $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$dependent_variable_select.'" value="'.$trait.'">'.$trait.'</input> </br>';
       }
        }
         #$html .= "</tbody></table>";
@@ -147,7 +147,10 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     print STDERR Dumper($params);
 
     my $tempfile = $params->{tempfile};
-    my $dependent_variable = $params->{dependent_variable};
+    my $dependent_variables = $params->{'dependent_variables[]'};
+    if (!ref($dependent_variables)) {
+  $dependent_variables = [ $dependent_variables ];
+    }
     my $model  = $params->{model};
     my $random_factors = $params->{'random_factors[]'}; #
     if (!ref($random_factors)) {
@@ -159,11 +162,13 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     }
     print STDERR "FIXED FACTOR = ".Dumper($fixed_factors);
     print STDERR "RANDOM factors = ".Dumper($random_factors);
+    print STDERR "DEPENDENT VARS = ".Dumper($dependent_variables);
 
     my $random_factors = '"'.join('","', @$random_factors).'"';
     my $fixed_factors = '"'.join('","',@$fixed_factors).'"';
+    my $dependent_variables = '"'.join('","',@$dependent_variables).'"';
 
-    print STDERR "DV: $dependent_variable Model: $model TF: $tempfile.\n";
+    print STDERR "DV: $dependent_variables Model: $model TF: $tempfile.\n";
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
@@ -171,7 +176,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     #
     my $param_file = $temppath.".params";
     open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
-    print $F "dependent_variable = \"$dependent_variable\"\n";
+    print $F "dependent_variables <- c($dependent_variables)\n";
     print $F "random_factors <- c($random_factors)\n";
     print $F "fixed_factors <- c($fixed_factors)\n";
 
@@ -182,6 +187,9 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     #
     my $cmd = "R CMD BATCH  '--args datafile=\"".$temppath."\" paramfile=\"".$temppath.".params\"' " . $c->config->{basepath} . "/R/mixed_models.R $temppath.out";
     print STDERR "running R command $cmd...\n";
+
+    print STDERR "running R command $temppath...\n";
+
     system($cmd);
     print STDERR "Done.\n";
 
