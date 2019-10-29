@@ -2936,10 +2936,41 @@ sub image_content_store_PUT {
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
-    my $brapi_package_result = $brapi_module->image_data_store($image_dir, $c->stash->{image_id}, $c->req->body());
-    _standard_response_construction($c, $brapi_package_result);
 
+    my $brapi_package_result = $brapi_module->image_data_store($image_dir, $c->stash->{image_id}, $c->req->body(), $c->req->content_type());
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
  }
+
+sub _get_http_status_code {
+	my $status = shift;
+	my $http_status_code = 200;
+
+	foreach(@$status) {
+
+		if ($_->{code} eq "403") {
+			$http_status_code = 403;
+			last;
+		}
+		elsif ($_->{code} eq "401") {
+			$http_status_code = 401;
+			last;
+		}
+		elsif ($_->{code} eq "400") {
+			$http_status_code = 400;
+			last;
+		}
+		elsif ($_->{code} eq "200") {
+			$http_status_code = 200;
+			last;
+		}
+	}
+
+	return $http_status_code;
+}
 
 sub save_results {
     my $self = shift;
@@ -2978,27 +3009,7 @@ sub save_results {
     });
 
 	my $status = $brapi_package_result->{status};
-	my $http_status_code = 200;
-
-	foreach(@$status) {
-
-		if ($_->{code} eq "403") {
-			$http_status_code = 403;
-			last;
-		}
-		elsif ($_->{code} eq "401") {
-			$http_status_code = 401;
-			last;
-		}
-		elsif ($_->{code} eq "400") {
-			$http_status_code = 400;
-			last;
-		}
-		elsif ($_->{code} eq "200") {
-			$http_status_code = 200;
-			last;
-		}
-	}
+	my $http_status_code = _get_http_status_code($status);
 
 	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 
