@@ -166,12 +166,6 @@ sub detail {
     my $status = $self->status;
     my $dbh = $self->bcs_schema()->storage()->dbh();
 
-    if (!$user_id || ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator')) {
-        print STDERR 'Must be logged in with submitter privileges to post images! Please contact us!';
-        push @$status, {'4003' => 'Permission Denied. Must have correct privilege.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must be logged in with submitter privileges to post images! Please contact us!');
-    }
-
     my $imageName = $params->{imageName} || "";
     my $description = $params->{description} || "";
     my $imageFileName = $params->{imageFileName} || "";
