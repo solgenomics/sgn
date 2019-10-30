@@ -444,6 +444,9 @@ sub studies_observation_variables {
 				}
 			);
 
+			# Convert our breedbase data types to BrAPI data types.
+			my $trait_format = CXGN::BrAPI::v1::ObservationVariables->convert_datatype_to_brapi($trait->format, scalar(@brapi_categories));
+
 			push @data, {
 				contextOfUse=>[],
 				crop => $crop,
@@ -469,7 +472,7 @@ sub studies_observation_variables {
 				ontologyName => $trait->db,
 				ontologyReference=>\%ontologyReference,
 				scale => {
-					dataType=>$trait->format,
+					dataType=>$trait_format,
 					decimalPlaces=>undef,
 					name =>'',
 					ontologyReference=>\%ontologyReference,
