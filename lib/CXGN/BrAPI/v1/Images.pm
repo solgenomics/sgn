@@ -183,6 +183,13 @@ sub detail {
     my $imageLocation_hashref = $params->{imageLocation} || ();
     my $additionalInfo_hashref = $params->{additionalInfo} || ();
 
+     # Prechecks before storing
+     # Check that our observation unit db id exists. If not return error.
+     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ stock_id => @{$observationUnitDbId}[0] });
+     if (! defined $stock) {
+         return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Stock id is not valid. Cannot generate image metadata');
+     }
+
     my $image_obj = CXGN::Image->new( dbh=>$dbh, image_dir => $image_dir, image_id => $image_id);
     unless ($image_id) { $image_obj->set_sp_person_id($user_id); }
     $image_obj->set_name(@{$imageName}[0]);

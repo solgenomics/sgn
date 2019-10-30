@@ -2884,9 +2884,12 @@ sub images_POST {
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
-    my $brapi_package_result = $brapi_module->image_metadata_store($c, $clean_inputs, $image_dir, $user_id, $user_type);
-    _standard_response_construction($c, $brapi_package_result);
 
+    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub images_by_id :  Chained('brapi') PathPart('images') CaptureArgs(1) {
