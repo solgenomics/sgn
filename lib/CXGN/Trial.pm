@@ -83,7 +83,6 @@ use Data::Dumper;
 sub new {
     my $class = shift;
     my $args = shift;
-<<<<<<< HEAD
     my $schema = $args->{bcs_schema};
     my $trial_id = $args->{trial_id};
 
