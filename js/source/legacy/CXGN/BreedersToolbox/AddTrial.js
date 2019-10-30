@@ -126,8 +126,8 @@ jQuery(document).ready(function ($) {
 
     $(document).on('focusout', '#select_family_name_list_list_select', function() {
         if ($('#select_family_name_list_list_select').val()) {
-            cross_list_id = $('#select_family_name_list_list_select').val();
-            cross_list = JSON.stringify(list.getList(family_name_list_id));
+            family_name_list_id = $('#select_family_name_list_list_select').val();
+            family_name_list = JSON.stringify(list.getList(family_name_list_id));
             verify_family_name_list(family_name_list);
         }
     });
@@ -1911,7 +1911,7 @@ jQuery(document).ready(function ($) {
         document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
         document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'crosses' ], '', 'refresh', undefined);
 
-        document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_list", [ 'family_names' ], '', 'refresh', undefined);
+        document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
         document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'family_names' ], '', 'refresh', undefined);
 
         //add lists to the list select and list of checks select dropdowns for CRBD.
