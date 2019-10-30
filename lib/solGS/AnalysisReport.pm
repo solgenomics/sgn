@@ -3,6 +3,8 @@ package solGS::AnalysisReport;
 use Moose;
 use namespace::autoclean;
 
+use DateTime;
+use DateTime::Format::Duration;
 use Email::Sender::Simple qw /sendmail/;
 use Email::Simple;
 use Email::Simple::Creator;
@@ -21,7 +23,7 @@ has 'output_details_file' => (
     );
 
 
-our ($SEC, $MIN, $HR, $MDAY, $MON) = localtime();
+our $START_TIME = DateTime->now;
 
 sub run {
  my $self = shift;   
@@ -99,8 +101,6 @@ sub check_combined_pops_trait_modeling {
 sub check_pops_trait_data_combination {
     my ($self, $output_details) = @_;
   
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /population_id/)
@@ -145,17 +145,13 @@ sub check_pops_trait_data_combination {
 		    else
 		    {
 			my $end_process = $self->end_status_check();
-			if ($job_tempdir || $end_process) 
+			if ($end_process) 
 			{
-			    $died_file = $self->get_file($job_tempdir, 'died');
-			    if ($died_file || $end_process) 
-			    {
-				$output_details->{$k}->{pheno_success}   = 0;
-				$output_details->{$k}->{geno_success}    = 0;
-				$output_details->{$k}->{success} = 0;
-				$output_details->{status} = 'Failed';
-				last;
-			    }
+			    $output_details->{$k}->{pheno_success}   = 0;
+			    $output_details->{$k}->{geno_success}    = 0;
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
 			}
 		    }	    
 		}	   	    
@@ -181,8 +177,6 @@ sub check_pops_trait_data_combination {
 sub check_multi_pops_data_download {
     my ($self, $output_details) = @_;
   
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
     my $no_match = $output_details->{no_match};
 
     foreach my $k (keys %{$output_details})
@@ -228,17 +222,13 @@ sub check_multi_pops_data_download {
 		    else
 		    {
 			my $end_process = $self->end_status_check();
-			if ($job_tempdir || $end_process) 
+			if ($end_process) 
 			{
-			    $died_file = $self->get_file($job_tempdir, 'died');
-			    if ($died_file || $end_process) 
-			    {
-				$output_details->{$k}->{pheno_success} = 0;
-				$output_details->{$k}->{geno_success}  = 0;
-				$output_details->{$k}->{success} = 0;
-				$output_details->{status} = 'Failed';
-				last;
-			    }
+			    $output_details->{$k}->{pheno_success} = 0;
+			    $output_details->{$k}->{geno_success}  = 0;
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
 			}
 		    }	    
 		}	   	    
@@ -262,8 +252,6 @@ sub check_multi_pops_data_download {
 
 sub check_selection_prediction {
     my ($self, $output_details) = @_;
-
-    my $job_tempdir = $output_details->{r_job_tempdir};
   			  
     foreach my $k (keys %{$output_details})
     {
@@ -296,15 +284,11 @@ sub check_selection_prediction {
 			else
 			{
 			    my $end_process = $self->end_status_check();
-			    if ($job_tempdir || $end_process) 
+			    if ($end_process) 
 			    {
-				$died_file = $self->get_file($job_tempdir, 'died');
-				if ($died_file || $end_process) 
-				{
-				    $output_details->{$k}->{success} = 0;
-				    $output_details->{status} = 'Failed';
-				    last;
-				}
+				$output_details->{$k}->{success} = 0;
+				$output_details->{status} = 'Failed';
+				last;
 			    }
 			}	    
 		    }	   	    
@@ -328,8 +312,6 @@ sub check_selection_prediction {
 sub check_trait_modeling {
     my ($self, $output_details) = @_;
 
-    my $job_tempdir = $output_details->{r_job_tempdir};
-   
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /trait_id/)
@@ -361,15 +343,11 @@ sub check_trait_modeling {
 			else
 			{
 			    my $end_process = $self->end_status_check();
-			    if ($job_tempdir || $end_process) 
+			    if ($end_process) 
 			    {
-				$died_file = $self->get_file($job_tempdir, 'died');
-				if ($died_file || $end_process) 
-				{
-				    $output_details->{$k}->{success} = 0;
-				    $output_details->{status} = 'Failed';
-				    last;
-				}
+				$output_details->{$k}->{success} = 0;
+				$output_details->{status} = 'Failed';
+				last;
 			    }
 			}	    
 		    }	   	    
@@ -392,8 +370,6 @@ sub check_trait_modeling {
 
 sub check_population_download {
     my ($self, $output_details) = @_;
-
-    my $job_tempdir = $output_details->{r_job_tempdir};
           
     foreach my $k (keys %{$output_details})
     {
@@ -459,18 +435,14 @@ sub check_population_download {
 			    {
 				my $end_process = $self->end_status_check();
 				     				
-				if ($job_tempdir || $end_process ) 
-				{
-				    $died_file = $self->get_file($job_tempdir, 'died');
-				    if ($died_file || $end_process) 
-				    {
-					$output_details->{$k}->{pheno_success}   = 0;
-					$output_details->{$k}->{geno_success}    = 0;
-					$output_details->{$k}->{success} = 0;
-					$output_details->{status} = 'Failed';
-					
-					last;
-				    }
+				if ($end_process ) 
+				{			    
+				    $output_details->{$k}->{pheno_success}   = 0;
+				    $output_details->{$k}->{geno_success}    = 0;
+				    $output_details->{$k}->{success} = 0;
+				    $output_details->{status} = 'Failed';
+				    
+				    last;				 
 				}
 			    }
 			}	   	    
@@ -849,17 +821,16 @@ sub log_analysis_status {
 
 
 sub end_status_check {
-    my ($self) = shift;
+    my $self = shift;
 
     my $end_process;
-    my ($sec, $min, $hr, $mday, $mon) = localtime();
     
-    my $start_dhr = $MDAY . $HR;
-    my $now_dhr = $mday . $hr;
-
-    my $diff = abs($now_dhr - $start_dhr);
-   
-    $end_process = 1 if $diff > 100;
+    my $now_time = DateTime->now;
+       
+    my $dur = DateTime::Format::Duration->new(pattern => '%H');
+    my $dur_hr = $dur->format_duration($now_time - $START_TIME);
+    
+    $end_process = 1 if $dur_hr >= 12;
      
     return $end_process;
     
