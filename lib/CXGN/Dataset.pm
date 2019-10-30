@@ -368,6 +368,31 @@ sub exists_dataset_name {
 
 =head1 METHODS
 
+
+=head2 to_hashref() 
+
+
+=cut
+ 
+sub to_hashref { 
+    my $self = shift;
+
+    my $dataref = $self->get_dataset_data();
+
+    my $json = JSON::Any->encode($dataref);
+    
+    my $data = { 
+	name => $self->name(),
+	description => $self->description(),
+	sp_person_id => $self->sp_person_id(),
+	dataset => $json,
+    };
+
+    return $data;
+
+
+}
+
 =head2 store()
 
 =cut
@@ -375,22 +400,12 @@ sub exists_dataset_name {
 sub store {
     my $self = shift;
 
-    my $dataref = $self->get_dataset_data();
-
-    my $json = JSON::Any->encode($dataref);
-
-    my $data = { name => $self->name(),
-		 description => $self->description(),
-		 sp_person_id => $self->sp_person_id(),
-		 dataset => $json,
-	};
-
-
+ 
 
     print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
 	print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->create($data);
+	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
 	$self->sp_dataset_id($row->sp_dataset_id());
 	return $row->sp_dataset_id();
     }
@@ -400,7 +415,7 @@ sub store {
 	if ($row) {
 	    $row->name($self->name());
 	    $row->description($self->description());
-	    $row->dataset($json);
+	    $row->dataset(JSON::Any->encode($self->to_hashref()));
 	    $row->sp_person_id($self->sp_person_id());
 	    $row->update();
 	    return $row->sp_dataset_id();

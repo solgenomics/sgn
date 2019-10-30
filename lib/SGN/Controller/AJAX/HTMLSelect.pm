@@ -1079,7 +1079,9 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
                 @items = @{$transform->{transform}};
             }
             else {
-                @items = @$ids;
+		if (defined($ids)) { 
+		    @items = @$ids;
+		}
             }
 
             $html .= "<td><div class='well well-sm'>";
