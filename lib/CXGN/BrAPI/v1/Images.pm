@@ -190,12 +190,19 @@ sub detail {
          return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Stock id is not valid. Cannot generate image metadata');
      }
 
+     # Check that the image type they want to pass in is supported.
+     # If it is not converted, and is the same after _get_extension, it is not supported.
+     my $extension_type = _get_extension(@{$mimeType}[0]);
+     if ($extension_type eq @{$mimeType}[0]) {
+         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Mime type %s is not supported.', @{$mimeType}[0]));
+     }
+
     my $image_obj = CXGN::Image->new( dbh=>$dbh, image_dir => $image_dir, image_id => $image_id);
     unless ($image_id) { $image_obj->set_sp_person_id($user_id); }
     $image_obj->set_name(@{$imageName}[0]);
     $image_obj->set_description(@{$description}[0]);
     $image_obj->set_original_filename(@{$imageFileName}[0]);
-    $image_obj->set_file_ext(@{$mimeType}[0]);
+    $image_obj->set_file_ext($extension_type);
 
     my $tag = CXGN::Tag->new($dbh);
     foreach (@$descriptiveOntologyTerms_arrayref) {
