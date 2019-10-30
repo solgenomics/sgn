@@ -43,6 +43,8 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
+    my $metadata;
+    
     if ($args->{project_id}) {
 	my $row = $args->{bcs_schema}->resultset("Project::Project")->find( { project_id => $args->{project_id} });
 
@@ -50,8 +52,9 @@ sub BUILD {
 	
 	$self->name($row->name());
 	$self->description($row->description());
+	my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
 	
-	my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search( { project_id => $args->{project_id} });
+	my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search( { project_id => $args->{project_id}, type_id => $metadata_json_id });
 
 	# get metadata object
 	my $stockprop_id;
@@ -60,12 +63,30 @@ sub BUILD {
 	}
 
 	print STDERR "Create AnalysisMetadata object...\n";
-	my $metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
+	$metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
 
-	$self->metadata($metadata);
+	$stockprop_id = $metadata->prop_id();
+
+	print STDERR "prop_id is $stockprop_id...\n";
+	# if object doesn't have metadata in the database, create an 
+	# empty object
+	#
+	if (! defined($stockprop_id)) {
+	    print STDERR "project_id = $args->{project_id} with stockprop_id = undefined...storing metadata...\n";
+	    $metadata->parent_id($args->{project_id});
+	    $metadata->store();
+	}
+
 	
 
     }
+    else {
+	print STDERR "Create an empty metadata object with parent_id $args->{project_id}...\n";
+	$metadata = CXGN::Analysis::AnalysisMetadata->new ( { bcs_schema => $args->{bcs_schema} });
+	$metadata->parent_id($args->{project_id});
+    }
+
+    $self->metadata($metadata);
 }
 
 
@@ -108,6 +129,8 @@ sub retrieve_analyses_by_user {
 sub create_and_store_analysis_design {
     my $self = shift;
 
+    print STDERR "CREATE AND STORE ANALYSIS DESIGN...\n";
+    
     if (!$self->user_id()) {
 	die "Need an sp_person_id to store an analysis.";
     }
@@ -171,12 +194,12 @@ sub create_and_store_analysis_design {
     #
     my $time = DateTime->now();
     if (!$self->metadata()) {
+	print STDERR "Storing metadata...\n";
 	my $metadata = CXGN::Analysis::AnalysisMetadata->new({ bcs_schema => $self->bcs_schema() });
+	print STDERR "Analysis ID = $analysis_id\n";
 	$metadata->parent_id($analysis_id);
 	$self->metadata( $metadata );
 	$self->metadata()->create_timestamp($time->ymd()." ".$time->hms());
-	$metadata->store();
-
     }
 
     # store dataset info, if available. Copy the actual dataset json, 
@@ -184,12 +207,18 @@ sub create_and_store_analysis_design {
     # changes.
     #
     if ($self->metadata()->dataset_id()) {
-	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema(), dataset_id => self->metadata()->dataset_id() });
-	my $data = $ds->data();
-	$self->metadata()->dataset_data($data);
+	print STDERR "Retrieving data for dataset_id ".$self->metadata->dataset_id()."\n";
+	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema(), people_schema => $self->people_schema(), sp_dataset_id => $self->metadata()->dataset_id() });
+	my $data = $ds->to_hashref();
+	print STDERR "DATA: $data\n";
+	$self->metadata()->dataset_data(JSON::Any->encode($data));
+	
+    }
+    else {
+	print STDERR "No dataset_id provided...\n";
     }
 
-    
+    $self->metadata()->parent_id($analysis_id);
     $self->metadata()->modified_timestamp($time->ymd()." ".$time->hms());
     $self->metadata()->store();
     

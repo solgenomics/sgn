@@ -25,6 +25,7 @@ sub BUILD {
     $self->prop_namespace('Project::Projectprop');
     $self->prop_primary_key('projectprop_id');
     $self->prop_type('analysis_metadata_json');
+    $self->prop_id($args->{prop_id});
     $self->cv_name('project_property');
     $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol accessions create_timestamp modified_timestamp | ]);
     $self->parent_table('project');

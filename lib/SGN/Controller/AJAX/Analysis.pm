@@ -151,7 +151,8 @@ sub store_data {
     if ($params->{dataset_id} !~ /^\d+$/) {
 	$params->{dataset_id} = undef;
     }
-    
+
+
     if ($params->{dataset_id}) { 
 	$a->metadata()->dataset_id($params->{dataset_id});
     }
@@ -160,6 +161,8 @@ sub store_data {
     $a->user_id($user_id);
     $a->metadata()->accessions($stocks);
     $a->metadata()->traits($traits);
+    $a->metadata()->analysis_protocol($params->{analysis_protocol});
+    
     my ($verified_warning, $verified_error);
 
     print STDERR "Storing the analysis...\n";
@@ -167,6 +170,7 @@ sub store_data {
 	($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
     };
 
+        
     my @errors;
     my @warnings;
     

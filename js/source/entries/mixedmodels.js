@@ -183,6 +183,7 @@ export function init(main_div){
         <textarea name="description" rows="4" cols="30" class="form-control" id="description"></textarea>
 	<input type="hidden" name="analysis_file" id="analysis_file" />
 	<input type="hidden" name="analysis_dir" id="analysis_dir" value="mixedmodels" />
+	<input type="hidden" name="analysis_protocol" id="analysis_protocol" value="[not set]" />
 	<div name="analysis_type" id="analysis_type" value="?" style="display:none;"></div>
 	</div> <!-- form-group -->
       </div> <!-- modal-body -->
@@ -223,6 +224,7 @@ export function init(main_div){
 		       'analysis_type': 'mixed_model_analysis',
 		       'analysis_name': name,
 		       'dataset_id' : $('#available_datasets').val(),
+		       'analysis_protocol' : $('#model_string').val(),
 		       'description' : description
 		     },
 	    'success' :	function(r) {

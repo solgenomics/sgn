@@ -81,28 +81,31 @@ has 'parent_primary_key' => (isa => 'Str', is => 'rw'); # set in subclass
 
 has 'parent_id' => (isa => 'Maybe[Int]', is => 'rw');
 
-sub BUILD {
-    my $self = shift;
-    my $args = shift;
 
-    $self->prop_type("analysis_metadata_json");
-    $self->cv_name("project_property");
- 
-}
-
-sub load {
+sub load {  # must be called from BUILD in subclass
     my $self = shift;
     print STDERR "prop_type ".$self->prop_type()." cv_name ".$self->cv_name()."\n";
-$self->_prop_type_id(SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name())->cvterm_id());
+    $self->_prop_type_id(SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name())->cvterm_id());
 
+    print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
+    
     if ($self->prop_id()) {
-	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->find( { $self->prop_primary_key() => $self->prop_id() });
-	my $parent_primary_key = $self->parent_primary_key();
-	my $parent_id = $row->$parent_primary_key;
-	$self->parent_id($parent_id);
-	print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
+	my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
+	while (my $row = $rs->next()) {
+	    if ($row->type_id() == $self->_prop_type_id()) { 
+		print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
+		 my $parent_primary_key = $self->parent_primary_key();
+		my $parent_id = $row->$parent_primary_key;
+		$self->parent_id($parent_id);
+		$self->from_json($row->value());
+	    }
+	    else {
+		print STDERR "Skipping property unrelated to metadata...\n";
+	    }
+	   
+	}
 	
-	$self->from_json($row->value());
+
     }
 }
 
@@ -110,7 +113,13 @@ sub from_json {
     my $self = shift;
     my $json = shift;
 
-    my $data = JSON::Any->decode($json);
+    my $data;
+    eval { 
+	$data = JSON::Any->decode($json);
+    };
+    if ($@) {
+	print STDERR "JSON not valid ($json) - ignoring.\n";
+    }
 
     $self->from_hash($data);
 
@@ -125,8 +134,10 @@ sub from_hash {
     print STDERR Dumper($hash);
     
     foreach my $f (@$allowed_fields) {
-	print STDERR "Processing $f ($hash->{$f})...\n";
-	$self->$f($hash->{$f});
+	if (exists($hash->{$f})) {
+	    print STDERR "Processing $f ($hash->{$f})...\n";
+	    $self->$f($hash->{$f});
+	}
     }
 }
 
@@ -144,7 +155,9 @@ sub to_json {
 	}
     }
 
-    my $json = JSON::Any->encode($data);
+    my $json;
+    eval { $json = JSON::Any->encode($data); };
+    if ($@) { print STDERR "Warning! Data is not valid json ($json)\n"; }
     return $json;
 }
 
@@ -232,7 +245,7 @@ sub store {
     }
     else { 
 	# insert
-	print STDERR "INSERTING JSONPROP ".$self->to_json()."\n";
+	print STDERR "INSERTING JSONPROP ".$self->to_json().", parent_id = ".$self->parent_id(),"\n";
 	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id() });
 	my $prop_primary_key = $self->prop_primary_key();
 	$self->prop_id($row->$prop_primary_key);
