@@ -90,7 +90,10 @@ sub pca_run :Path('/pca/run/') Args() {
     }
     
     $self->format_pca_output($c);
-    $ret = $c->stash->{formatted_pca_output};   
+    my $res = $c->stash->{formatted_pca_output};
+    if ($res) {
+	$ret = $res;
+    }   
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -138,8 +141,8 @@ sub format_pca_output {
 	if ( -s $pca_scores_file && -s $pca_variance_file)
 	{
 	    my $ret->{status} = undef;
-	    my $pca_scores    = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_scores_file);
-	    my $pca_variances = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $pca_variance_file);
+	    my $pca_scores    = $c->controller('solGS::Utils')->read_file_data($pca_scores_file);
+	    my $pca_variances = $c->controller('solGS::Utils')->read_file_data($pca_variance_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
         
@@ -152,6 +155,7 @@ sub format_pca_output {
 		$ret->{pca_variances} = $pca_variances;
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
+		$ret->{list_id} = $c->stash->{list_id};
 		$ret->{trials_names} = $trial_names;
 		$ret->{output_link}  = $output_link;
 		$ret->{data_type} = $c->stash->{data_type};
@@ -235,7 +239,7 @@ sub format_pca_scores {
    my ($self, $c) = @_;
 
    my $file = $c->stash->{pca_scores_file};
-   my $data = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $file);
+   my $data = $c->controller('solGS::Utils')->read_file_data($file);
   
    $c->stash->{pca_scores} = $data;
 
@@ -443,7 +447,7 @@ sub pca_query_jobs {
 	$jobs = $c->stash->{pca_geno_query_jobs};
     }
 
-     if (reftype $jobs ne 'ARRAY') 
+    if (reftype $jobs ne 'ARRAY') 
     {
 	$jobs = [$jobs];
     }
@@ -647,20 +651,14 @@ sub pca_pheno_input_files {
 
 sub run_pca {
     my ($self, $c) = @_;
- 
-    my $cores = qx/lscpu | grep -e '^CPU(s)'/;   
-    my ($name, $cores) = split(':', $cores);
-    $cores =~ s/\s+//g;
-     
-    if ($cores > 1) 
-    {
-    	$self->run_pca_multi_cores($c);
-    }
-    else
-    {
-	$self->run_pca_single_core($c);
-	
-    }
+
+    $self->pca_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{pca_query_jobs_file};
+    
+    $self->pca_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{pca_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
     
 }
 

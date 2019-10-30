@@ -10,15 +10,15 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 `rm -r /tmp/localhost/`;
 
-$d->get_ok('/solgs', 'solgs home page');
-sleep(2);
+#$d->get_ok('/solgs', 'solgs home page');
+#sleep(2);
 
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
-    $d->find_element_ok('Search for a trait', 'link_text', 'toggle trait search')->click();
-    sleep(5);
-    $d->find_element_ok('a list-based', 'partial_link_text', 'toogle list training pops')->click();
-    sleep(20);
+    #$d->find_element_ok('Search for a trait', 'link_text', 'toggle trait search')->click();
+    #sleep(5);
+    #$d->find_element_ok('use a list', 'partial_link_text', 'toogle list training pops')->click();
+    #sleep(20);
     $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="trial2 NaCRRI plots"]', 'xpath', 'select list tr pop')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list tr pop')->click();

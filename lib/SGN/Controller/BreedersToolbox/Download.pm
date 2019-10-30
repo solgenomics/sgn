@@ -679,11 +679,13 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 #Used from wizard page and manage download page for downloading gbs from accessions
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my ($self, $c) = @_;
-
-    print STDERR "Collecting download parameters ...  ".localtime()."\n";
+    # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $format = $c->req->param("format") || "list_id";
     my $download_format = $c->req->param("download_format") || 'VCF';
+    my $chromosome_numbers = $c->req->param("chromosome_number") ? [$c->req->param("chromosome_number")] : [];
+    my $start_position = $c->req->param("start_position") || undef;
+    my $end_position = $c->req->param("end_position") || undef;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -733,6 +735,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #tissue_sample_list=>$tissue_sample_list,
             trial_list=>\@trial_ids,
             protocol_id_list=>[$protocol_id],
+            chromosome_list=>$chromosome_numbers,
+            start_position=>$start_position,
+            end_position=>$end_position,
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],

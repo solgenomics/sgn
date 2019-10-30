@@ -10,6 +10,7 @@ $composable_cvs_allowed_combinations => undef
 $composable_tod_root_cvterm => undef
 $composable_toy_root_cvterm => undef
 $composable_gen_root_cvterm => undef
+$composable_evt_root_cvterm => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreederSearch', 'CXGN.ComposeTrait'] &>
@@ -107,6 +108,13 @@ $composable_gen_root_cvterm => undef
       <div id="gen_select_div"></div><br>
       <button class="btn btn-default btn-sm" id="gen_select_all" name="gen_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="gen_select_clear" name="gen_select_clear"/>Clear</button>
+    </div>
+    <div id="evt_div" class="col-md-6" style="display: none;">
+      <label for="evt_select_div" class="control-label">Event</label>
+      <p class="help-block"><small><i>Optional</i> Pick the breeding event to which you selected time term relates.</small></p>
+      <div id="evt_select_div"></div><br>
+      <button class="btn btn-default btn-sm" id="evt_select_all" name="evt_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="evt_select_clear" name="evt_select_clear"/>Clear</button>
     </div>
     </div>
   </div>
@@ -211,7 +219,7 @@ name = name.replace('_root_select', '');
 get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id, 'size':'10' });
 });
 
-jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select', function() { // retrieve matching traits each time component selection changes
+jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select, #evt_select', function() { // retrieve matching traits each time component selection changes
   if (jQuery(this).attr('name') == 'trait_select') {
     //console.log("trait select changed");
     //clearAllOptions(document.getElementById('object_select'));
@@ -226,7 +234,7 @@ jQuery(document).on('change','#object_select, #attribute_select, #method_select,
   display_matching_traits();
 });
 
-jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_select_all, #trait_select_all, #tod_select_all, #toy_select_all, #gen_select_all').click( // select all data in a panel
+jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_select_all, #trait_select_all, #tod_select_all, #toy_select_all, #gen_select_all, #evt_select_all').click( // select all data in a panel
   function() {
   var name = jQuery(this).attr('name');
   var select_id = name.substring(0, name.length - 4);
@@ -234,7 +242,7 @@ jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_sel
   display_matching_traits();
 });
 
-jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #unit_select_clear, #trait_select_clear, #gen_select_clear, #tod_select_clear, #toy_select_clear').click( // clear all selections in a panel
+jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #unit_select_clear, #trait_select_clear, #gen_select_clear, #tod_select_clear, #toy_select_clear, #evt_select_clear').click( // clear all selections in a panel
   function() {
   var name = jQuery(this).attr('name');
   var select_id = name.substring(0, name.length - 6);
@@ -315,6 +323,7 @@ function create_multi_selects(allowed_names) {
     jQuery('#tod_div').hide();
     jQuery('#toy_div').hide();
     jQuery('#gen_div').hide();
+    jQuery('#evt_div').hide();
     jQuery('#object_div').hide();
     jQuery('#trait_div').hide();
     jQuery('#attribute_div').hide();
@@ -323,6 +332,7 @@ function create_multi_selects(allowed_names) {
     jQuery('#tod_select').val([]);
     jQuery('#toy_select').val([]);
     jQuery('#gen_select').val([]);
+    jQuery('#evt_select').val([]);
     jQuery('#object_select').val([]);
     jQuery('#trait_select').val([]);
     jQuery('#attribute_select').val([]);
@@ -350,10 +360,11 @@ function create_multi_selects(allowed_names) {
                 jQuery('#method_div').show();
                 break;
             case "time":
-                jQuery("#tod_div,#toy_div,#gen_div").show();
+                jQuery("#tod_div,#toy_div,#gen_div","evt_div").show();
                 get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'evt_select_div', { 'selectbox_id' : 'evt_select', 'selectbox_name': 'evt_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_evt_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 break;
             case "tod":
                 jQuery("#tod_div").show();
@@ -366,6 +377,10 @@ function create_multi_selects(allowed_names) {
             case "gen":
                 jQuery("#gen_div").show();
                 get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "evt":
+                jQuery("#evt_div").show();
+                get_select_box('ontology_children', 'evt_select_div', { 'selectbox_id' : 'evt_select', 'selectbox_name': 'evt_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_evt_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 break;
             default:
                 if (window.console) console.log("Did not recognize "+name+" category");

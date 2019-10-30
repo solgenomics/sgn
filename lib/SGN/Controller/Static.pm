@@ -30,6 +30,7 @@ sub mason_forward :Path('/pages') Args(1) {
     my $page = shift;
 
     print STDERR "Forwarding to $page...\n";
+    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{template} = '/pages/'.$page.".mas";
 }
 
@@ -46,6 +47,11 @@ sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) {
     $c->stash->{template} = '/stock/ethz_cass_sync.mas';
 }
 
+sub tomato13_project_page :Path('/projects/tomato13/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/projects/tomato13.mas';
+}
 
 sub solcode_project_page :Path('/projects/solcode/') Args(0) { 
     my $self = shift;

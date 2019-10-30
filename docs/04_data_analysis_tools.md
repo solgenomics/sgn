@@ -267,9 +267,9 @@ There are three pathways to using this tool.
    
 (3) In the solGS pipeline:
 
-   (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above.
+   (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above (option 2).
  
- <img src='{{"assets/images/kmeans-cluster.png" | relative_url }}' width="522" />
+ <img src='{{"assets/images/k-means-cluster.png" | relative_url }}' width="522" />
 
 
 4.7 Genetic Gain
@@ -278,6 +278,33 @@ There are three pathways to using this tool.
 You can check for genetic gain by comparing the the GEBVs of a training and a selection population. You can do this in the solGS pipepline once you build a model and apply the model to predict the GEBVs of a selection population. Once at that stage, you will see a section 'Check Genetic Gain'. Select a selection population to compare with the training population and click the 'Check Genetic Gain' button. The genetic gain will be visualized in boxplots. You can download the boxplot(s) as well as the GEBVs data used for the plot(s).
 
 <img src='{{"assets/images/genetic-gain.png" | relative_url }}' width="522" />
+
+4.8 Creating Crossing Groups
+--------------
+
+If you calculate selection index based on GEBVs of multiple traits, and you want to select a certain proportion of the indexed individuals (e.g. top 10%, or bottom 10%) and then you want to partition the selected individuals into a number of groups based on their genotypes, you can use the k-means clustering method. 
+
+The procedure is:
+
+(1) predict GEBVs for 2 or more traits
+
+(2) In the models output page, calculate selection indices. Note the name of the selection index data.
+
+(3) Go to the clustering section, 
+
+   -- select the selection index data, 
+   
+   -- select 'K-means', 
+   
+   -- select 'Genotype',   
+   
+   -- in the K-numbers textbox, fill in the number of groups you want to create, 
+   
+   -- in the selection proportion textbox, fill in the proportion of the indexed individuals you want to select, e.g. for the top 15 percent, 15. if you wish to select bottom performing, prefix the number with minus sign (e.g. -15)
+   
+   -- then run clusterand wait for the result.
+
+<img src='{{"assets/images/selection_proportion_lustering.png" | relative_url }}' width="522" />
 
 
 

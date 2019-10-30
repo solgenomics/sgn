@@ -122,6 +122,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     elsif ($datatype eq 'entry') {
         $error = $c->stash->{trial}->delete_project_entry();
     }
+    elsif ($datatype eq 'crossing_experiment') {
+        $error = $c->stash->{trial}->delete_empty_crossing_experiment();
+    }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
         return;
@@ -1858,25 +1861,57 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     $c->stash->{rest} = {success => 1};
 }
 
-sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
+sub crosses_in_crossingtrial : Chained('trial') PathPart('crosses_in_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_trial();
+    my $result = $trial->get_crosses_in_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
+sub crosses_and_details_in_trial : Chained('trial') PathPart('crosses_and_details_in_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_and_details_in_crossingtrial();
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $cross_type,
-        qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
-        qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
-        qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
-        qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
-        qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
-        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>}];
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            cross_combination => $cross_combination,
+            cross_type => $cross_type,
+            female_parent_id => $female_parent_id,
+            female_parent_name => $female_parent_name,
+            male_parent_id => $male_parent_id,
+            male_parent_name => $male_parent_name,
+            female_plot_id => $female_plot_id,
+            female_plot_name => $female_plot_name,
+            male_plot_id => $male_plot_id,
+            male_plot_name => $male_plot_name,
+            female_plant_id => $female_plant_id,
+            female_plant_name => $female_plant_name,
+            male_plant_id => $male_plant_id,
+            male_plant_name => $male_plant_name
+        };
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -1888,7 +1923,7 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_properties_trial();
 
@@ -1916,7 +1951,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
@@ -1928,6 +1963,65 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     $c->stash->{rest} = { data => \@crosses };
 }
 
+
+sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_seedlots_from_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $seedlot_id, $seedlot_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
+}
+
+
+sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->stash->{trial_id};
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+        $c->detach();
+    }
+
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_crossingtrial();
+
+    foreach my $r (@$result){
+        my ($cross_stock_id, $cross_name) =@$r;
+        my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+        my $error = $cross->delete();
+        print STDERR "ERROR = $error\n";
+
+        if ($error) {
+            $c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+            return;
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;

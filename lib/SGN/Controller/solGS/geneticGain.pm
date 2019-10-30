@@ -224,18 +224,14 @@ sub get_gebv_arrayref {
     my ($self, $c) = @_;
 
     my $file = $c->stash->{gebv_file};
-    my $gebv_arrayref = $c->controller('solGS::solGS')->convert_to_arrayref_of_arrays($c, $file);
-
-    $c->stash->{gebv_arrayref} = $gebv_arrayref;
+    $c->stash->{gebv_arrayref} = $c->controller('solGS::Utils')->read_file_data($file);
 }
 
 
 sub check_population_type {
     my ($self, $c, $pop_id) = @_;
 
-    my $type = $c->model('solGS::solGS')->get_population_type($pop_id);
-
-    $c->stash->{population_type} = $type;
+    $c->stash->{population_type} = $c->model('solGS::solGS')->get_population_type($pop_id);
 }
 
 

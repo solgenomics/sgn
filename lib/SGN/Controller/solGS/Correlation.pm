@@ -3,6 +3,7 @@ package SGN::Controller::solGS::Correlation;
 use Moose;
 use namespace::autoclean;
 
+use Carp qw/ carp confess croak /;
 use Cache::File;
 use CXGN::Tools::Run;
 use File::Temp qw / tempfile tempdir /;
@@ -14,7 +15,8 @@ use File::Basename;
 use CXGN::Phenome::Population;
 use JSON;
 use Try::Tiny;
-
+use Scalar::Util qw /weaken reftype/;
+use Storable qw/ nstore retrieve /;
 BEGIN { extends 'Catalyst::Controller' }
 
 
@@ -50,32 +52,22 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
    
     my $phenotype_file;
     
-    if( $pop_id =~ /list/) 
-    {
-        my $phenotype_dir = $c->stash->{solgs_lists_dir};
-        my $userid        = $c->user->id;
-        $phenotype_file   = "phenotype_data_${userid}_${pop_id}";
-        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
-    }
-    elsif ($referer =~ /qtl/)
+    if ($referer =~ /qtl/)
     {    
-       # $self->create_correlation_phenodata_file($c);
-
-	my $phenotype_dir = $c->stash->{solqtl_cache_dir};
+  	my $phenotype_dir = $c->stash->{solqtl_cache_dir};
         $phenotype_file   = 'phenodata_' . $pop_id;
         $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
     }
     else
-    {
-        my $phenotype_dir = $c->stash->{solgs_cache_dir};
-        $phenotype_file   = 'phenotype_data_' . $pop_id;
-        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, '\'^' . $phenotype_file . '\'');
+    {    
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	$phenotype_file = $c->stash->{phenotype_file_name};
     }
 
-    unless ($phenotype_file)
+    unless (-s $phenotype_file)
     {     
         $self->create_correlation_phenodata_file($c);
-        $phenotype_file =  $c->stash->{phenotype_file};
+        $phenotype_file =  $c->stash->{phenotype_file_name};
     }
 
     my $ret->{result} = undef;
@@ -136,7 +128,8 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 
 sub trait_acronyms {
     my ($self, $c) = @_;
-
+    
+    $c->controller('solGS::solGS')->get_all_traits($c);
     $c->controller('solGS::solGS')->get_acronym_pairs($c);
     
 }
@@ -148,11 +141,10 @@ sub create_correlation_phenodata_file {
     my $referer = $c->req->referer;
 
     my $phenotype_file;
+    my $pop_id = $c->stash->{pop_id};
     
     if ($referer =~ /qtl/) 
-    {
-        my $pop_id = $c->stash->{pop_id};
-       
+    {    
         my $pheno_exp = "phenodata_${pop_id}";
         my $dir       = $c->stash->{solqtl_cache_dir};
        
@@ -167,9 +159,16 @@ sub create_correlation_phenodata_file {
     } 
     else
     {           
-      $c->controller("solGS::solGS")->phenotype_file($c); 
-      $phenotype_file = $c->stash->{phenotype_file};
+	$self->corre_pheno_query_jobs_file($c);
+	my $queries =$c->stash->{corre_pheno_query_jobs_file};
+       
+	$c->stash->{dependent_jobs} = $queries;
+	$c->controller('solGS::solGS')->run_async($c);
+
+	$c->controller("solGS::Files")->phenotype_file_name($c, $pop_id); 
+	$phenotype_file = $c->stash->{phenotype_file_name};
     }
+    
 
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
    
@@ -177,7 +176,7 @@ sub create_correlation_phenodata_file {
 	or die "could not copy $phenotype_file to $corre_cache_dir";
    
     my $file = basename($phenotype_file);
-    $c->stash->{phenotype_file} = catfile($corre_cache_dir, $file);
+    $c->stash->{phenotype_file_name} = catfile($corre_cache_dir, $file);
         
 }
 
@@ -323,27 +322,6 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
 }
 
 
-sub run_pheno_correlation_analysis {
-    my ($self, $c) = @_;
-    
-    my $pop_id = $c->stash->{pop_id};
-      
-    $self->temp_pheno_corre_input_file($c);
-    $self->temp_pheno_corre_output_file($c);
-   
-    $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
-    $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
-        
-    $c->stash->{correlation_type} = "pheno-correlation";
-
-    $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
-    
-    $self->run_correlation_analysis($c);
-
-    #$self->trait_acronyms($c);
-}
-
-
 sub run_genetic_correlation_analysis {
     my ($self, $c) = @_;
           
@@ -415,9 +393,11 @@ sub temp_pheno_corre_input_file {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
+
+    $c->controller("solGS::Files")->phenotype_file_name($c, $pop_id);
+    #$self->create_correlation_phenodata_file($c);
     
-    $self->create_correlation_phenodata_file($c);
-    my $pheno_file = $c->stash->{phenotype_file};
+    my $pheno_file = $c->stash->{phenotype_file_name};
    
     $c->controller("solGS::Files")->formatted_phenotype_file($c);
     my $formatted_pheno_file = $c->stash->{formatted_phenotype_file};
@@ -485,11 +465,52 @@ sub temp_geno_corre_input_file {
 }
 
 
-sub run_correlation_analysis {
+sub run_pheno_correlation_analysis {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
-     
+      
+    $self->temp_pheno_corre_input_file($c);
+    $self->temp_pheno_corre_output_file($c);
+   
+    $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
+    $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
+        
+    $c->stash->{correlation_type} = "pheno-correlation";
+
+    $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
+    
+    $self->run_correlation_analysis($c);
+
+    $self->trait_acronyms($c);
+}
+
+
+sub run_correlation_analysis {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};   
+    my $corre_type = $c->stash->{correlation_type};
+      
+    $self->corre_pheno_query_jobs_file($c);
+    my $queries_file = $c->stash->{corre_pheno_query_jobs_file};
+    
+    $self->corre_pheno_r_jobs_file($c);
+    my $r_jobs_file = $c->stash->{corre_pheno_r_jobs_file};   
+
+    $c->stash->{prerequisite_jobs} = $queries_file if $queries_file;    
+    $c->stash->{dependent_jobs} = $r_jobs_file;
+    
+    $c->controller('solGS::solGS')->run_async($c);
+	
+}
+
+
+sub corre_pheno_r_jobs {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{trial_id} || $c->stash->{pop_id};
+  
     my $input_file = $c->stash->{corre_input_files};
     my $output_file = $c->stash->{corre_output_files};
     
@@ -501,9 +522,73 @@ sub run_correlation_analysis {
     $c->stash->{r_script}     = $c->stash->{correlation_script};
     
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{correlation_temp_dir};
-    
-    $c->controller("solGS::solGS")->run_r_script($c);
 
+    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    my $jobs  = $c->stash->{cluster_r_job_args};
+
+    if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+
+    $c->stash->{corre_pheno_r_jobs} = $jobs;
+
+}
+
+
+sub corre_pheno_r_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->corre_pheno_r_jobs($c);
+    my $jobs = $c->stash->{corre_pheno_r_jobs};
+      
+    my $temp_dir = $c->stash->{correlation_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'corre-r-jobs-file');	   
+   
+    nstore $jobs, $jobs_file
+	or croak "correlation r jobs : $! serializing correlation r jobs to $jobs_file";
+
+    $c->stash->{corre_pheno_r_jobs_file} = $jobs_file;
+    
+}
+
+sub corre_pheno_query_jobs {
+    my ($self, $c) = @_;
+
+
+    my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
+    $c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
+    my $jobs = $c->stash->{cluster_phenotype_query_job_args};
+
+    if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+    
+    $c->stash->{corre_pheno_query_jobs} = $jobs;
+
+}
+
+
+sub corre_pheno_query_jobs_file {
+    my ($self, $c) = @_;
+    
+    $self->corre_pheno_query_jobs($c);
+    my $jobs = $c->stash->{corre_pheno_query_jobs};
+
+    my $jobs_file;
+  
+    if ($jobs->[0])
+    {
+	my $temp_dir = $c->stash->{correlation_temp_dir};
+	$jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-corre-query-jobs-file');	   
+   
+	nstore $jobs, $jobs_file
+	    or croak "correlation pheno query jobs : $! serializing correlation phenoquery jobs to $jobs_file";
+    }
+
+    $c->stash->{corre_pheno_query_jobs_file} = $jobs_file;
+    
 }
 
 

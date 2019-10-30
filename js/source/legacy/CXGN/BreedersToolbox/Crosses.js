@@ -83,6 +83,7 @@ jQuery(document).ready(function($) {
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
+            $("#get_sib_parent").toggle($("#cross_type").val() == "sib");
             $("#get_bulk_maternal_population").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_paternal_parent").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_selfed_population").toggle($("#cross_type").val() == "bulk_self");
@@ -150,7 +151,7 @@ jQuery(document).ready(function($) {
         var crossName = $("#cross_name").val();
         crossName = crossName.trim();
         if (!crossName) {
-            alert("A cross name is required");
+            alert("A cross unique id is required");
             return;
         }
 
@@ -260,6 +261,8 @@ jQuery(document).ready(function($) {
         var paternal;
         var maternal_parents;
         var paternal_parents;
+        var maternal_parents_string;
+        var paternal_parents_string;
 
         switch (crossType) {
             case 'biparental':
@@ -274,6 +277,11 @@ jQuery(document).ready(function($) {
             case 'open':
                 maternal = $("#open_maternal_parent").val();
                 paternal = $("#open_paternal_population").val();
+                break;
+            case 'sib':
+                var sibParent = $("#sib_parent").val();
+                maternal = sibParent;
+                paternal = sibParent;
                 break;
             case 'bulk':
                 maternal = $("#bulk_maternal_population").val();
@@ -309,6 +317,14 @@ jQuery(document).ready(function($) {
                 break;
         }
 
+        if (maternal_parents) {
+            maternal_parents_string = maternal_parents.toString();
+        }
+
+        if (paternal_parents) {
+            paternal_parents_string = paternal_parents.toString();
+        }
+
         $.ajax({
             url: '/ajax/cross/add_cross',
             timeout: 3000000,
@@ -319,8 +335,8 @@ jQuery(document).ready(function($) {
                 'cross_type': crossType,
                 'maternal': maternal,
                 'paternal': paternal,
-                'maternal_parents': maternal_parents,
-                'paternal_parents': paternal_parents,
+                'maternal_parents': maternal_parents_string,
+                'paternal_parents': paternal_parents_string,
                 'progeny_number': progenyNumber,
                 'prefix': prefix,
                 'suffix': suffix,
@@ -329,7 +345,7 @@ jQuery(document).ready(function($) {
                 'female_plot': female_plot,
                 'male_plot': male_plot,
                 'cross_combination': cross_combination,
-            },  
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -398,8 +414,13 @@ jQuery(document).ready(function($) {
         var list_data = lo.getListData(accession_list_id);
         var accessions = list_data.elements;
         var names = [];
-        for (i = 0; i < accessions.length; i++) {
-            names.push(accessions[i][1]);
+
+        if (accessions.length == 0) {
+            return "The selected list is empty";
+        } else {
+            for (i = 0; i < accessions.length; i++) {
+                names.push(accessions[i][1]);
+            }
         }
         return names;
     }
