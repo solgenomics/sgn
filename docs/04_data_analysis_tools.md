@@ -304,7 +304,7 @@ The procedure is:
    
    -- then run clusterand wait for the result.
 
-<img src='{{"assets/images/selection_proportion_lustering.png" | relative_url }}' width="522" />
+<img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
 
 
