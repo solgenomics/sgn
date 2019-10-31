@@ -185,9 +185,11 @@ sub detail {
 
      # Prechecks before storing
      # Check that our observation unit db id exists. If not return error.
-     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ stock_id => @{$observationUnitDbId}[0] });
-     if (! defined $stock) {
-         return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Stock id is not valid. Cannot generate image metadata');
+     if (@{$observationUnitDbId}[0]) {
+         my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ stock_id => @{$observationUnitDbId}[0] });
+         if (! defined $stock) {
+             return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Stock id is not valid. Cannot generate image metadata');
+         }
      }
 
      # Check that the image type they want to pass in is supported.
@@ -204,19 +206,47 @@ sub detail {
     $image_obj->set_original_filename(@{$imageFileName}[0]);
     $image_obj->set_file_ext($extension_type);
 
-    my $tag = CXGN::Tag->new($dbh);
-    foreach (@$descriptiveOntologyTerms_arrayref) {
-        $tag->set_name($_);
-        $tag->set_sp_person_id($user_id);
-        $image_obj->add_tag($tag);
-    }
+     # Remove tags previously connected to this image for updates
+     my @tags = $image_obj->get_tags();
+     foreach(@tags){
+         $image_obj->remove_tag($_);
+         my $tag_id = $_->get_tag_id();
 
+         # Check if this tag is associated with other images. If so, don't delete
+         my $tag = CXGN::Tag->new($dbh, $tag_id);
+         my $num_associations = $tag->get_associated_image_ids();
+         if ($num_associations <= 0) {
+             my $tag_row = $self->metadata_schema->resultset("MdTag")->find({ tag_id=>$tag_id });
+             $tag_row->delete();
+         }
+     }
+
+     # Save the image to the db
     $image_id = $image_obj->store();
 
+     #TODO: Store desceriptiveOntologyTerms in the cvterm after finding the cvterm here.
+
+     # Insert tags now that we have an image id
+     foreach (@$descriptiveOntologyTerms_arrayref) {
+         my $tag = CXGN::Tag->new($dbh);
+         $tag->set_name($_);
+         $tag->set_sp_person_id($user_id);
+         $tag->set_description("descriptiveOntologyTerm");
+         $tag->store();
+         $image_obj->add_tag($tag);
+     }
+
+     # Clear previously associated stocks.
+     my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
+     my @stocks = $image->get_stocks();
+     foreach(@stocks){
+        $image->remove_stock($_->stock_id);
+     }
+
+     # Associate our stock with the image, if a stock_id was provided.
     if (@{$observationUnitDbId}[0]) {
         my $person = CXGN::People::Person->new($dbh, $user_id);
         my $user_name = $person->get_username;
-        my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
         $image->associate_stock(@{$observationUnitDbId}[0], $user_name);
     }
 
@@ -242,6 +272,7 @@ sub detail {
             my $name = $taghashref->{'name'};
             push @tag_names, $name;
         }
+
         %result = (
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
@@ -249,12 +280,15 @@ sub detail {
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
+            #TODO: Include cvterms in here
             descriptiveOntologyTerms => \@tag_names,
             imageDbId => $_->{'image_id'},
             imageFileName => $_->{'image_original_filename'},
-            imageFileSize => 0,
-            imageHeight => 0,
-            imageWidth => 0,
+            # Since breedbase doesn't care what file size is saved when the actual saving happens,
+            # just return what the user passes in.
+            imageFileSize => $imageFileSize,
+            imageHeight => $imageHeight,
+            imageWidth => $imageWidth,
             imageName => $_->{'image_name'},
             imageTimeStamp => $_->{'image_modified_date'},
             imageURL => $url,

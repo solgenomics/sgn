@@ -2944,7 +2944,6 @@ sub images_single_GET {
 sub images_single_PUT {
     my $self = shift;
     my $c = shift;
-    print STDERR "Image store PUT...\n";
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
@@ -2952,7 +2951,6 @@ sub images_single_PUT {
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
-    print STDERR "Clean inputs at image_store_PUT: ".Dumper($clean_inputs);
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});

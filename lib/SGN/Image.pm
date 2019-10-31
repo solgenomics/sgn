@@ -552,6 +552,28 @@ sub associate_stock  {
     return undef;
 }
 
+=head2 remove_stock
+
+ Usage: $image->remove_stock($stock_id);
+ Desc:  remove an association to Bio::Chado::Schema::Result::Stock::Stock object with this image
+ Ret:   a database id (stock_image_id)
+ Args:  stock_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub remove_stock  {
+    my $self = shift;
+    my $stock_id = shift;
+    if ($stock_id) {
+        my $q = "DELETE FROM phenome.stock_image WHERE stock_id = ? AND image_id = ?";
+        my $sth = $self->get_dbh->prepare($q);
+        $sth->execute($stock_id, $self->get_image_id);
+    }
+    return undef;
+}
+
 =head2 get_stocks
 
  Usage: $image->get_stocks
