@@ -174,6 +174,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#crbd_list_of_cross_checks_section_list_select', function() {
+        if ($('#crbd_list_of_cross_checks_section_list_select').val()) {
+            crbd_check_cross_list_id = $('#crbd_list_of_cross_checks_section_list_select').val();
+            crbd_check_cross_list = JSON.stringify(list.getList(crbd_check_cross_list_id));
+            verify_cross_list(crbd_check_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#crbd_list_of_family_name_checks_section_list_select', function() {
+        if ($('#crbd_list_of_family_name_checks_section_list_select').val()) {
+            crbd_check_family_name_list_id = $('#crbd_list_of_family_name_checks_section_list_select').val();
+            crbd_check_family_name_list = JSON.stringify(list.getList(crbd_check_family_name_list_id));
+            verify_family_name_list(crbd_check_family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_unrep_accession_list_select', function() {
         if ($('#list_of_unrep_accession_list_select').val()) {
             unrep_stock_list_id = $('#list_of_unrep_accession_list_select').val();
@@ -187,6 +203,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#list_of_unrep_cross_list_select', function() {
+        if ($('#list_of_unrep_cross_list_select').val()) {
+            unrep_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+            unrep_cross_list = JSON.stringify(list.getList(unrep_cross_list_id));
+            verify_cross_list(unrep_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_unrep_family_name_list_select', function() {
+        if ($('#list_of_unrep_family_name_list_select').val()) {
+            unrep_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+            unrep_family_name_list = JSON.stringify(list.getList(unrep_family_name_list_id));
+            verify_family_name_list(unrep_family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_rep_accession_list_select', function() {
         if ($('#list_of_rep_accession_list_select').val()) {
             rep_stock_list_id = $('#list_of_rep_accession_list_select').val();
@@ -197,6 +229,22 @@ jQuery(document).ready(function ($) {
             } else {
                 rep_list_seedlot_hash = {};
             }
+        }
+    });
+
+    $(document).on('focusout', '#list_of_rep_cross_list_select', function() {
+        if ($('#list_of_rep_cross_list_select').val()) {
+            rep_cross_list_id = $('#list_of_rep_cross_list_select').val();
+            rep_cross_list = JSON.stringify(list.getList(rep_cross_list_id));
+            verify_cross_list(rep_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_rep_family_name_list_select', function() {
+        if ($('#list_of_rep_family_name_list_select').val()) {
+            rep_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
+            rep_family_name_list = JSON.stringify(list.getList(rep_family_name_list_id));
+            verify_family_name_list(rep_family_name_list);
         }
     });
 
@@ -498,8 +546,20 @@ jQuery(document).ready(function ($) {
         var fieldmap_col_number = $('#fieldMap_col_number').val();
         var fieldmap_row_number = $('#fieldMap_row_number').val();
         var plot_layout_format = $('#plot_layout_format').val();
+
+        // accession stock_type
         var replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
         var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
+
+        // cross stock_type
+        var replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
+        var unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+
+        // family_name stock_type
+        var replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
+        var unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+
+
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
         var no_of_rep_times = $('#no_of_rep_times').val();
@@ -525,14 +585,22 @@ jQuery(document).ready(function ($) {
             }
         }
 
-        var unreplicated_accession_list;
+        var unreplicated_stock_list;
         if (unreplicated_accession_list_id != "") {
-            unreplicated_accession_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
+        } else if (unreplicated_cross_list_id != "") {
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_cross_list_id));
+        } else if (unreplicated_family_name_list_id != "") {
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_family_name_list_id));
         }
 
-        var replicated_accession_list;
+        var replicated_stock_list;
         if (replicated_accession_list_id != "") {
-            replicated_accession_list = JSON.stringify(list.getList(replicated_accession_list_id));
+            replicated_stock_list = JSON.stringify(list.getList(replicated_accession_list_id));
+        } else if (replicated_cross_list_id != "") {
+            replicated_stock_list = JSON.stringify(list.getList(replicated_cross_list_id));
+        } else if (replicated_family_name_list_id != "") {
+            replicated_stock_list = JSON.stringify(list.getList(replicated_family_name_list_id));
         }
 
         var treatments = []
@@ -614,8 +682,8 @@ jQuery(document).ready(function ($) {
                 'col_in_design_number': col_in_design_number,
                 'no_of_rep_times': no_of_rep_times,
                 'no_of_block_sequence': no_of_block_sequence,
-                'unreplicated_accession_list': unreplicated_accession_list,
-                'replicated_accession_list': replicated_accession_list,
+                'unreplicated_accession_list': unreplicated_stock_list,
+                'replicated_accession_list': replicated_stock_list,
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
                 'seedlot_hash': JSON.stringify(seedlot_hash_combined),
                 'num_seed_per_plot': num_seed_per_plot,
