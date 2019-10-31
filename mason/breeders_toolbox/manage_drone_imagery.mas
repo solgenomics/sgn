@@ -1241,7 +1241,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <table class="table table-bordered table-hover" id="drone_image_predict_keras_drone_runs_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
+                                <th>Select <br/><input type="checkbox" id="drone_image_predict_keras_drone_runs_table_select_all" checked>Select All</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Type</th>
                                 <th>Drone Run Description</th>
@@ -2725,6 +2725,12 @@ jQuery(document).ready(function() {
             Workflow.focus('#drone_imagery_predict_keras_model_workflow', 2);
         }
         return false;
+    });
+
+    jQuery('#drone_image_predict_keras_drone_runs_table_select_all').change(function(){
+        jQuery('input[name="predict_keras_drone_imagery_drone_run_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_predict_keras_drone_runs_table_select_all').prop("checked"));
+        });
     });
 
     jQuery('#drone_imagery_predict_keras_model_select_step').click(function(){
