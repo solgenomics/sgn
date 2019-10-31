@@ -174,9 +174,9 @@ sub detail {
     my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
 
     # metadata store for the rest not yet implemented
-    my $imageFileSize = $params->{imageFileSize} || "";
-    my $imageHeight = $params->{imageHeight} || "";
-    my $imageWidth = $params->{imageWidth} || "";
+    my $imageFileSize = $params->{imageFileSize} || ();
+    my $imageHeight = $params->{imageHeight} || ();
+    my $imageWidth = $params->{imageWidth} || ();
     my $copyright = $params->{copyright} || "";
     my $imageTimeStamp = $params->{imageTimeStamp} || "";
     my $observationDbIds_arrayref = $params->{observationDbIds} || ();
@@ -286,9 +286,9 @@ sub detail {
             imageFileName => $_->{'image_original_filename'},
             # Since breedbase doesn't care what file size is saved when the actual saving happens,
             # just return what the user passes in.
-            imageFileSize => $imageFileSize,
-            imageHeight => $imageHeight,
-            imageWidth => $imageWidth,
+            imageFileSize => @$imageFileSize[0],
+            imageHeight => @$imageHeight[0],
+            imageWidth => @$imageWidth[0],
             imageName => $_->{'image_name'},
             imageTimeStamp => $_->{'image_modified_date'},
             imageURL => $url,
