@@ -336,10 +336,10 @@ sub detail {
 
     # process image data through CXGN::Image...
     #
-    my $image = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir, image_id => $image_id);
+    my $cxgn_img = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir, image_id => $image_id);
 
     eval {
-	       $image->process_image($file_with_extension);
+        $cxgn_img->process_image($file_with_extension);
     };
 
     if ($@) {
@@ -362,7 +362,15 @@ sub detail {
 
     my %result = ( image_id => $image_id);
 
+
     foreach (@$search_result) {
+        my $sgn_image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
+        my $page_obj = CXGN::Page->new();
+        my $hostname = $page_obj->get_hostname();
+        my $url = $hostname . $sgn_image->get_image_url('medium');
+        my $filename = $sgn_image->get_filename();
+        my $size = (stat($filename))[7];
+        my ($width, $height) = imgsize($filename);
      %result = (
          additionalInfo => {
              observationLevel => $_->{'stock_type_name'},
@@ -372,12 +380,12 @@ sub detail {
          description => $_->{'image_description'},
          imageDbId => $_->{'image_id'},
          imageFileName => $_->{'image_original_filename'},
-         imageFileSize => 0,
-         imageHeight => 0,
-         imageWidth => 0,
+         imageFileSize => $size,
+         imageHeight => $height,
+         imageWidth => $width,
          imageName => $_->{'image_name'},
          imageTimeStamp => $_->{'image_modified_date'},
-         imageURL => '',
+         imageURL => $url,
          mimeType => _get_mimetype($_->{'image_file_ext'}),
          observationUnitDbId => $_->{'stock_id'},
          # location and linked phenotypes are not yet available for images in the db

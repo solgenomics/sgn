@@ -27,7 +27,7 @@ BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
 	stash_key     => 'rest',
-	map           => { 'application/json' => 'JSON',
+	map           => {  'application/json' => 'JSON',
 						# would be nice if we could do image/* instead of explicitly listing each type
 						# also should see if a single list of image types can be used for this and for _get_extension in Images.pm
 						'image/jpeg'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
