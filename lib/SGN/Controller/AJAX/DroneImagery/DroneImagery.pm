@@ -4358,8 +4358,10 @@ sub _perform_keras_cnn_predict {
 
     my $phenotype_header = shift @previous_data;
     my $trait_name = $phenotype_header->[39];
+    my $has_previous_data = 0;
     foreach (@previous_data) {
         $data_hash{$_->[21]}->{previous_data} = $_->[39];
+        $has_previous_data = 1;
     }
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
@@ -4401,8 +4403,12 @@ sub _perform_keras_cnn_predict {
     if ($c->config->{error_log}) {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
+    my $has_previous_data_string = '';
+    if ($has_previous_data == 1) {
+        $has_previous_data_string = ' --plot_prediction_comparison True ';
+    }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path.$has_previous_data_string.' --class_map \''.$class_map.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
