@@ -145,6 +145,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#list_of_cross_checks_section_list_select', function() {
+        if ($('#list_of_cross_checks_section_list_select').val()) {
+            check_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
+            check_cross_list = JSON.stringify(list.getList(check_cross_list_id));
+            verify_cross_list(check_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_family_name_checks_section_list_select', function() {
+        if ($('#list_of_family_name_checks_section_list_select').val()) {
+            check_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
+            check_family_name_list = JSON.stringify(list.getList(check_family_name_list_id));
+            verify_family_name_list(check_family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#crbd_list_of_checks_section_list_select', function() {
         if ($('#crbd_list_of_checks_section_list_select').val()) {
             crbd_check_stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
@@ -413,8 +429,8 @@ jQuery(document).ready(function ($) {
 
         // accession stock type
         var accession_list_id = $('#select_list_list_select').val();
-        var control_list_id = $('#list_of_checks_section_list_select').val();
-        var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+        var control_accession_list_id = $('#list_of_checks_section_list_select').val();
+        var control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
 
         // cross stock type
         var cross_list_id = $('#select_cross_list_list_select').val();
@@ -423,15 +439,8 @@ jQuery(document).ready(function ($) {
 
         // family_name stock type
         var family_name_list_id = $('#select_family_name_list_list_select').val();
-        var control_family_name_list_id = $('#list_offamily_name_checks_section_list_select').val();
+        var control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
         var control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
-
-
-        var control_list_crbd;
-        if (control_list_id_crbd != ""){
-            control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
-        }
-
 
         var stock_list;
         var stock_list_array;
@@ -447,11 +456,33 @@ jQuery(document).ready(function ($) {
             stock_list = JSON.stringify(stock_list_array);
         }
 
-
         var control_list;
-        if (control_list_id != "") {
-            control_list = JSON.stringify(list.getList(control_list_id));
+        var control_list_array;
+        if (control_accession_list_id != '') {
+            control_list_array = list.getList(control_accession_list_id);
+            control_list = JSON.stringify(control_list_array);
+        } else if (control_cross_list_id != '') {
+            control_list_array = list.getList(control_cross_list_id);
+            control_list = JSON.stringify(control_list_array);
+        } else if (control_family_name_list_id != '') {
+            control_list_array = list.getList(control_family_name_list_id);
+            control_list = JSON.stringify(control_list_array);
         }
+
+        var control_list_crbd;
+        var control_list_crbd_array;
+        if (control_accession_list_id_crbd != '') {
+            control_list_crbd_array = list.getList(control_accession_list_id_crbd);
+            control_list_crbd = JSON.stringify(control_list_crbd_array);
+        } else if (control_cross_list_id_crbd != '') {
+            control_list_crbd_array = list.getList(control_cross_list_id_crbd);
+            control_list_crbd = JSON.stringify(control_list_crbd_array);
+        } else if (control_family_name_list_id_crbd != '') {
+            control_list_crbd_array = list.getList(control_family_name_list_id_crbd);
+            control_list_crbd = JSON.stringify(control_list_crbd_array);
+        }
+
+
 
         var design_type = $('#select_design_method').val();
         if (design_type == "") {
@@ -1923,7 +1954,7 @@ jQuery(document).ready(function ($) {
         document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
 
-        document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_check_section", [ 'family_names' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'family_names' ], "select optional check list", 'refresh', undefined);
         document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
 
