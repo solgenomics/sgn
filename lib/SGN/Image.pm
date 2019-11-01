@@ -1025,6 +1025,31 @@ sub get_cvterms {
     return @cvterms;
 }
 
+=head2 remove_associated_cvterm
 
+ Usage:   $self->remove_associated_cvterm($cvterm_id)
+ Desc:    removes the specified cvterm associated with this image
+ Ret:     none
+ Args:    none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub remove_associated_cvterm {
+
+    my $self = shift;
+    my $cvterm_id = shift;
+    my $query = "DELETE FROM metadata.md_image_cvterm
+                    WHERE cvterm_id=? and image_id=?";
+
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+        $cvterm_id,
+        $self->get_image_id,
+    );
+
+    return undef;
+}
 
 1;

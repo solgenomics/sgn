@@ -98,6 +98,67 @@ sub get_cvterm_row_from_trait_name {
     return $trait_cvterm;
 }
 
+# Checks for an ontology trait that has either the short name or matching full name
+sub find_trait_by_name {
+    my $self = shift;
+    my $schema = shift;
+    my $name = shift;
+
+    # Checks the cvterm table for traits that match the short name, long name, or id.
+    my $query = "select cvterm.cvterm_id from
+                cvterm
+                join
+                dbxref using (dbxref_id)
+                join
+                db using (db_id)
+                join
+                cvterm_relationship as rel on rel.subject_id=cvterm.cvterm_id
+                JOIN
+                cvterm as reltype on (rel.type_id = reltype.cvterm_id)
+                where
+                reltype.name = 'VARIABLE_OF'
+                and
+                (
+                cvterm.name ilike ?
+                or
+                (cvterm.name || '|' || db.name || ':' || dbxref.accession) ilike ?
+                )";
+    my $h = $schema->storage->dbh->prepare($query);
+    $h->execute($name, $name);
+    my $cvterm_id = $h->fetchrow();
+
+    return $cvterm_id;
+}
+
+# Get the ontology trait if there is an id for that trait
+sub find_trait_by_id {
+
+    my $self = shift;
+    my $schema = shift;
+    my $cvterm_id = shift;
+
+    # Checks the cvterm table for traits that match the short name, long name, or id.
+    my $query = "select cvterm.cvterm_id from
+                cvterm
+                join
+                dbxref using (dbxref_id)
+                join
+                db using (db_id)
+                join
+                cvterm_relationship as rel on rel.subject_id=cvterm.cvterm_id
+                JOIN
+                cvterm as reltype on (rel.type_id = reltype.cvterm_id)
+                where
+                reltype.name = 'VARIABLE_OF'
+                and
+                cvterm.cvterm_id=?;";
+    my $h = $schema->storage->dbh->prepare($query);
+    $h->execute($cvterm_id);
+    my $cvterm_id = $h->fetchrow();
+
+    return $cvterm_id;
+}
+
 sub get_trait_from_exact_components {
     my $self= shift;
     my $schema = shift;

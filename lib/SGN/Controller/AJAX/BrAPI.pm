@@ -2955,7 +2955,10 @@ sub images_single_PUT {
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
     my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type, $c->stash->{image_id});
-    _standard_response_construction($c, $brapi_package_result);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+    _standard_response_construction($c, $brapi_package_result, $http_status_code);
 
  }
 

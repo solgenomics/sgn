@@ -10,6 +10,7 @@ use SGN::Image;
 use CXGN::Image::Search;
 use CXGN::Page;
 use CXGN::Tag;
+use Scalar::Util qw(looks_like_number);
 
 extends 'CXGN::BrAPI::v1::Common';
 
@@ -51,6 +52,12 @@ sub search {
         my $size = (stat($filename))[7];
         my ($width, $height) = imgsize($filename);
 
+        # Process cvterms
+        my @cvterm_names;
+        foreach (@cvterms) {
+            push(@cvterm_names, $_->name);
+        }
+
         push @data, {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
@@ -59,7 +66,7 @@ sub search {
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
-            descriptiveOntologyTerms => \@cvterms,
+            descriptiveOntologyTerms => \@cvterm_names,
             imageDbId => $_->{'image_id'},
             imageFileName => $_->{'image_original_filename'},
             imageFileSize => $size,
@@ -166,17 +173,17 @@ sub detail {
     my $status = $self->status;
     my $dbh = $self->bcs_schema()->storage()->dbh();
 
-    my $imageName = $params->{imageName} || "";
-    my $description = $params->{description} || "";
-    my $imageFileName = $params->{imageFileName} || "";
-    my $mimeType = $params->{mimeType} || "";
-    my $observationUnitDbId = $params->{observationUnitDbId} || "";
+    my $imageName = $params->{imageName} ? $params->{imageName}[0] : "";
+    my $description = $params->{description} ? $params->{description}[0] : "";
+    my $imageFileName = $params->{imageFileName} ? $params->{imageFileName}[0] : "";
+    my $mimeType = $params->{mimeType} ? $params->{mimeType}[0] : undef;
+    my $observationUnitDbId = $params->{observationUnitDbId} ? $params->{observationUnitDbId}[0] : undef;
     my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
 
     # metadata store for the rest not yet implemented
-    my $imageFileSize = $params->{imageFileSize} || ();
-    my $imageHeight = $params->{imageHeight} || ();
-    my $imageWidth = $params->{imageWidth} || ();
+    my $imageFileSize = $params->{imageFileSize} ? $params->{imageFileSize}[0] : undef;
+    my $imageHeight = $params->{imageHeight} ? $params->{imageHeight}[0] : ();
+    my $imageWidth = $params->{imageWidth} ? $params->{imageWidth}[0] : ();
     my $copyright = $params->{copyright} || "";
     my $imageTimeStamp = $params->{imageTimeStamp} || "";
     my $observationDbIds_arrayref = $params->{observationDbIds} || ();
@@ -185,69 +192,86 @@ sub detail {
 
      # Prechecks before storing
      # Check that our observation unit db id exists. If not return error.
-     if (@{$observationUnitDbId}[0]) {
-         my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ stock_id => @{$observationUnitDbId}[0] });
+     if ($observationUnitDbId) {
+         my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({ stock_id => $observationUnitDbId });
          if (! defined $stock) {
              return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Stock id is not valid. Cannot generate image metadata');
          }
      }
 
-     # Check that the image type they want to pass in is supported.
-     # If it is not converted, and is the same after _get_extension, it is not supported.
-     my $extension_type = _get_extension(@{$mimeType}[0]);
-     if ($extension_type eq @{$mimeType}[0]) {
-         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Mime type %s is not supported.', @{$mimeType}[0]));
-     }
 
-    my $image_obj = CXGN::Image->new( dbh=>$dbh, image_dir => $image_dir, image_id => $image_id);
-    unless ($image_id) { $image_obj->set_sp_person_id($user_id); }
-    $image_obj->set_name(@{$imageName}[0]);
-    $image_obj->set_description(@{$description}[0]);
-    $image_obj->set_original_filename(@{$imageFileName}[0]);
-    $image_obj->set_file_ext($extension_type);
+     # Check that the cvterms are valid before continuing
+     my @cvterm_ids;
+     if (scalar @$descriptiveOntologyTerms_arrayref > 0) {
 
-     # Remove tags previously connected to this image for updates
-     my @tags = $image_obj->get_tags();
-     foreach(@tags){
-         $image_obj->remove_tag($_);
-         my $tag_id = $_->get_tag_id();
+         foreach (@$descriptiveOntologyTerms_arrayref) {
+             my $cvterm_id;
+             # If is like number, search for id
+             if (looks_like_number($_)){
+                 # Check if the trait exists
+                 $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($self->bcs_schema(), $_);
+             } else {
+                 # else search for string
+                 $cvterm_id = SGN::Model::Cvterm->find_trait_by_name($self->bcs_schema(), $_);
+             }
 
-         # Check if this tag is associated with other images. If so, don't delete
-         my $tag = CXGN::Tag->new($dbh, $tag_id);
-         my $num_associations = $tag->get_associated_image_ids();
-         if ($num_associations <= 0) {
-             my $tag_row = $self->metadata_schema->resultset("MdTag")->find({ tag_id=>$tag_id });
-             $tag_row->delete();
+             if (! defined $cvterm_id) {
+                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Descriptive ontology term %s not found. Cannot generate image metadata', $_));
+             }
+
+             push(@cvterm_ids, $cvterm_id);
          }
      }
+
+     # Check that the image type they want to pass in is supported.
+     # If it is not converted, and is the same after _get_extension, it is not supported.
+     my $extension_type = _get_extension($mimeType);
+     if ($extension_type eq $mimeType) {
+         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Mime type %s is not supported.', $mimeType));
+     }
+
+     # Check if an image id was passed in, and if that image exists
+     my $image_obj = CXGN::Image->new( dbh=>$dbh, image_dir => $image_dir, image_id => $image_id);
+     if ($image_id && ! defined $image_obj->get_create_date()) {
+         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Image with id of %s, does not exist', $image_id));
+     }
+
+     # End of prechecks
+
+     # Assign image properties
+    unless ($image_id) { $image_obj->set_sp_person_id($user_id); }
+    $image_obj->set_name($imageName);
+    $image_obj->set_description($description);
+    $image_obj->set_original_filename($imageFileName);
+    $image_obj->set_file_ext($extension_type);
 
      # Save the image to the db
     $image_id = $image_obj->store();
 
-     #TODO: Store desceriptiveOntologyTerms in the cvterm after finding the cvterm here.
+     my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
 
-     # Insert tags now that we have an image id
-     foreach (@$descriptiveOntologyTerms_arrayref) {
-         my $tag = CXGN::Tag->new($dbh);
-         $tag->set_name($_);
-         $tag->set_sp_person_id($user_id);
-         $tag->set_description("descriptiveOntologyTerm");
-         $tag->store();
-         $image_obj->add_tag($tag);
+     # Remove cvterms so we can reassign them later
+     my @prev_cvterms = $image->get_cvterms();
+     foreach (@prev_cvterms) {
+        $image->remove_associated_cvterm($_->cvterm_id);
+     }
+
+     # Store desceriptiveOntologyTerms in the cvterm after finding the cvterm here.
+     foreach (@cvterm_ids) {
+         $image->associate_cvterm($_);
      }
 
      # Clear previously associated stocks.
-     my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $image_id);
      my @stocks = $image->get_stocks();
      foreach(@stocks){
         $image->remove_stock($_->stock_id);
      }
 
      # Associate our stock with the image, if a stock_id was provided.
-    if (@{$observationUnitDbId}[0]) {
+    if ($observationUnitDbId) {
         my $person = CXGN::People::Person->new($dbh, $user_id);
         my $user_name = $person->get_username;
-        $image->associate_stock(@{$observationUnitDbId}[0], $user_name);
+        $image->associate_stock($observationUnitDbId, $user_name);
     }
 
     my $url = "";
@@ -265,14 +289,19 @@ sub detail {
     my %result;
 
     foreach (@$search_result) {
-        my $tags = $_->{'tags_array'};
-        my @tag_names;
-        foreach (@$tags) {
-            my $taghashref = $_;
-            my $name = $taghashref->{'name'};
-            push @tag_names, $name;
+
+        # Get the cv terms assigned
+        my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
+        my @cvterms = $image->get_cvterms();
+        # Process cvterms
+        my @cvterm_names;
+        foreach (@cvterms) {
+            if ($_->name) {
+                push(@cvterm_names, $_->name);
+            }
         }
 
+        # Construct the response
         %result = (
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
@@ -280,15 +309,14 @@ sub detail {
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
-            #TODO: Include cvterms in here
-            descriptiveOntologyTerms => \@tag_names,
+            descriptiveOntologyTerms => \@cvterm_names,
             imageDbId => $_->{'image_id'},
             imageFileName => $_->{'image_original_filename'},
             # Since breedbase doesn't care what file size is saved when the actual saving happens,
             # just return what the user passes in.
-            imageFileSize => @$imageFileSize[0],
-            imageHeight => @$imageHeight[0],
-            imageWidth => @$imageWidth[0],
+            imageFileSize => $imageFileSize,
+            imageHeight => $imageHeight,
+            imageWidth => $imageWidth,
             imageName => $_->{'image_name'},
             imageTimeStamp => $_->{'image_modified_date'},
             imageURL => $url,
@@ -305,8 +333,6 @@ sub detail {
             observationDbIds => [],
         );
     }
-
-    #print STDERR "Result is ".Dumper(%result)."\n";
 
     my $total_count = 1;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
