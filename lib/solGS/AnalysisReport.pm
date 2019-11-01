@@ -4,7 +4,6 @@ use Moose;
 use namespace::autoclean;
 
 use DateTime;
-use DateTime::Format::Duration;
 use Email::Sender::Simple qw /sendmail/;
 use Email::Simple;
 use Email::Simple::Creator;
@@ -21,6 +20,15 @@ has 'output_details_file' => (
     isa      => 'Str',
     required => 1, 
     );
+
+#for how long (in minutes) to check for outputs before
+#reporting analyses status
+has 'status_check_duration' => (
+    is       => 'ro',
+    isa      => 'Int',
+    default  => 5,
+    );
+
 
 
 our $START_TIME = DateTime->now;
@@ -823,15 +831,14 @@ sub log_analysis_status {
 sub end_status_check {
     my $self = shift;
 
-    my $end_process;
+    my $end_after = $self->status_check_duration;
     
-    my $now_time = DateTime->now;
+    my $now_time = DateTime->now;       
+    my $dur = $START_TIME->delta_ms($now_time);
+    
+    my $dur_mins = $dur->in_units('minutes');
+    my $end_process = $dur_mins >= $end_after ? 1 : 0;
        
-    my $dur = DateTime::Format::Duration->new(pattern => '%H');
-    my $dur_hr = $dur->format_duration($now_time - $START_TIME);
-    
-    $end_process = 1 if $dur_hr >= 12;
-     
     return $end_process;
     
 }

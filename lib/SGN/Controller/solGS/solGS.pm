@@ -3561,7 +3561,7 @@ sub run_async {
     if ($background_job)  
     {
 	$c->stash->{async} = 1;
-	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c);
+	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c, 2);
 	$report_file = $c->stash->{analysis_report_job_args_file};
     }									  
        
