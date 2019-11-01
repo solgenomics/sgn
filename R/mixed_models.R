@@ -31,10 +31,7 @@ library(effects)
 library(stringr)
 library(dplyr)
 
-headers = read.csv(datafile, sep="\t",skip = 3, header = F, nrows = 1, as.is = T)
-pd = read.csv(datafile, skip = 4, header = F)
-colnames(pd) = headers
-pd = data.frame(pd)
+pd = read.csv(datafile, sep=“\t”)
 
 source(paramfile)  # should give us dependent_variable and the model
 
