@@ -267,6 +267,7 @@ sub run : Path('/tools/blast/run') Args(0) {
     eval {
 	my $config = { 
 	    backend => $c->config->{backend},
+	    submit_host => $c->config->{cluster_host},
 	    temp_base => $blast_tmp_output,
 	    queue => $c->config->{'web_cluster_queue'},
 	    do_cleanup => 0,
