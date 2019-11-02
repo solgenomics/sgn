@@ -322,7 +322,12 @@ sub check : Path('/tools/blast/check') Args(1) {
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid, "job");
 
-    my $job = CXGN::Tools::Run->new( { job_file => $job_file} );
+    my $job = CXGN::Tools::Run->new( 
+	{ 
+	    job_file => $job_file, 
+	    submit_host => $c->config->{cluster_host},
+	    backend => $c->config->{backend},
+	});
 
     if ( $job->alive()) {
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
