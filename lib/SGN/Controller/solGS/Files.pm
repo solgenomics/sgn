@@ -765,7 +765,8 @@ sub get_solgs_dirs {
     my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
     my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($tmp_dir, 'solgs', 'tempfiles', 'datasets');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
+    my $histogram_cache = catdir($tmp_dir, 'histogram', 'cache');
+    my $histogram_temp  = catdir($tmp_dir, 'histogram', 'tempfiles');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
     my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
     my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
@@ -781,8 +782,7 @@ sub get_solgs_dirs {
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
-	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
-	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
+	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
 	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
@@ -800,7 +800,8 @@ sub get_solgs_dirs {
 	      cluster_temp_dir            => $cluster_temp,
               correlation_cache_dir       => $corre_cache,
 	      correlation_temp_dir        => $corre_temp,
-	      histogram_dir               => $histogram_dir,
+	      histogram_cache_dir         => $histogram_cache,
+	      histogram_temp_dir          => $histogram_temp,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,
 	      anova_temp_dir              => $anova_temp,
