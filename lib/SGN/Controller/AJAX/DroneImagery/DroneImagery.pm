@@ -3938,17 +3938,12 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
     #my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
-    my $archive_temp_output_model_file = $c->tempfiles_subdir('drone_imagery_keras_cnn_dir/TEST');
-    my $archive_temp_output_model_file_var = $c->tempfiles_subdir('drone_imagery_keras_cnn_dir/TEST/variables');
-    # print STDERR Dumper $archive_temp_output_model_file;
-    # my $archive_temp_output_model_file_basepath = basename($archive_temp_output_model_file);
-    # print STDERR Dumper $archive_temp_output_model_file_basepath;
-    # my $archive_temp_output_model_variables_dir = $c->tempfiles_subdir('drone_imagery_keras_cnn_dir/'.$archive_temp_output_model_file_basepath.'/variables');
     my $archive_temp_class_map_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/classmapXXXX');
 
-    my $keras_tuner_project_name = int(rand(1000));
-    my $keras_tuner_dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_tuner_dir');
-    my $keras_tuner_output_project_dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_tuner_dir/'.$keras_tuner_project_name);
+    my $keras_project_name = basename($c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/keras_tuner_XXXX'));
+    my $archive_temp_output_model_file = $c->config->{temp_keras_cnn_model_dir}.'/model/'.$keras_project_name.'.hdf5';
+    my $keras_tuner_dir = $c->config->{temp_keras_cnn_model_dir}.'/model_tuner/';
+    my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         while (my ($stock_id, $data) = each %data_hash){
@@ -3981,7 +3976,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $model_type_name = '';
     if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
         # $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path;
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_project_name.'\'';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\'';
         $model_type_name = 'KerasCNNSequentialSoftmaxCategorical';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
