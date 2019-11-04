@@ -3973,27 +3973,17 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     }
 
     my $cmd = '';
-    my $model_type_name = '';
     if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
-        # $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path;
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\'';
-        $model_type_name = 'KerasCNNSequentialSoftmaxCategorical';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1';
+    }
+    elsif ($model_type eq 'SimpleKerasCNNSequentialSoftmaxCategorical') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path;
-        $model_type_name = 'KerasCNNInceptionResNetV2';
-    }
-    elsif ($model_type eq 'KerasCNNInceptionResNetV2_First8layers') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_layers 8';
-        $model_type_name = 'KerasCNNInceptionResNetV2';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_weights imagenet';
-        $model_type_name = 'KerasCNNInceptionResNetV2';
-    }
-    elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights_First8layers') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/TransferLearningCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' --keras_model_type_name InceptionResNetV2 '.$log_file_path.' --keras_model_weights imagenet --keras_model_layers 8';
-        $model_type_name = 'KerasCNNInceptionResNetV2';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_dir \''.$keras_tuner_dir.'\' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2 --keras_model_weights imagenet';
     }
     else {
         $c->stash->{rest} = {error => "$model_type not supported!"};
@@ -4051,7 +4041,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     if ($c->req->param('save_model') == 1) {
         my $model_name = $c->req->param('model_name');
         my $model_description = $c->req->param('model_description');
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, \%class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type_name, $user_id, $user_name, $user_role);
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, \%class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
     }
 
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, class_map => \%class_map, trait_id => $trait_id };
