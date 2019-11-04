@@ -202,25 +202,23 @@ sub detail {
 
      # Check that the cvterms are valid before continuing
      my @cvterm_ids;
-     if (scalar @$descriptiveOntologyTerms_arrayref > 0) {
-
-         foreach (@$descriptiveOntologyTerms_arrayref) {
-             my $cvterm_id;
-             # If is like number, search for id
-             if (looks_like_number($_)){
-                 # Check if the trait exists
-                 $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($self->bcs_schema(), $_);
-             } else {
-                 # else search for string
-                 $cvterm_id = SGN::Model::Cvterm->find_trait_by_name($self->bcs_schema(), $_);
-             }
-
-             if (! defined $cvterm_id) {
-                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Descriptive ontology term %s not found. Cannot generate image metadata', $_));
-             }
-
-             push(@cvterm_ids, $cvterm_id);
+     foreach (@$descriptiveOntologyTerms_arrayref) {
+         my $cvterm_id;
+         # If is like number, search for id
+         if (looks_like_number($_)) {
+             # Check if the trait exists
+             $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($self->bcs_schema(), $_);
          }
+         else {
+             # else search for string
+             $cvterm_id = SGN::Model::Cvterm->find_trait_by_name($self->bcs_schema(), $_);
+         }
+
+         if (!defined $cvterm_id) {
+             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Descriptive ontology term %s not found. Cannot generate image metadata', $_));
+         }
+
+         push(@cvterm_ids, $cvterm_id);
      }
 
      # Check that the image type they want to pass in is supported.
