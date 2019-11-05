@@ -22,7 +22,7 @@ sub search {
     my @dbxref_terms = $inputs->{ontologyXrefs} ? @{$inputs->{ontologyXrefs}} : ();
     my @method_ids = $inputs->{methodDbIds} ? @{$inputs->{methodDbIds}} : ();
     my @scale_ids = $inputs->{scaleDbIds} ? @{$inputs->{scaleDbIds}} : ();
-    my @cvterm_names = $inputs->{names} ? @{$inputs->{names}} : ();
+    my @cvterm_names = $inputs->{observationVariableNames} ? @{$inputs->{observationVariableNames}} : ();
     my @datatypes = $inputs->{datatypes} ? @{$inputs->{datatypes}} : ();
     my @classes = $inputs->{traitClasses} ? @{$inputs->{traitClasses}} : ();
    
@@ -87,19 +87,19 @@ sub search {
         my @brapi_categories = split '/', $categories;
         push @data, {
             observationVariableDbId => qq|$cvterm_id|,
-            name => $cvterm_name."|".$db_name.":".$accession,
+            observationVariableName => $cvterm_name."|".$db_name.":".$accession,
             ontologyDbId => qq|$db_id|,
             ontologyName => $db_name,
             trait => {
                 traitDbId => qq|$cvterm_id|,
-                name => $cvterm_name,
+                traitName => $cvterm_name,
                 description => $cvterm_definition,
                 class => ''
             },
             method => {},
             scale => {
                 scaleDbId =>'',
-                name =>'',
+                scaleName =>'',
                 datatype=>$trait->format,
                 decimalPlaces=>undef,
                 xref=>'',
