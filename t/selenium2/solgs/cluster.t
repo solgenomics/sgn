@@ -150,9 +150,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(60);
     $d->find_element_ok('//img[@id="k-means-plot-139-genotype-5"]', 'xpath', 'check k-means plot')->click();
     sleep(2);
+  
+    
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
-
     my $solgs_data = $f->config->{basepath} . "/t/data/solgs/";  
     `cp -r $solgs_data /tmp/localhost/GBSApeKIgenotypingv4/`;
     sleep(10);  
