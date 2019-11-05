@@ -1,0 +1,19 @@
+Any::Moose is deprecated. Please use Moo instead at /home/isaak/perl5/lib/perl5/Config/JFDI.pm line 11.
+"my" variable $traits masks earlier declaration in same scope at /home/isaak/cxgn/sgn/lib/CXGN/Analysis.pm line 193.
+Smartmatch is experimental at /home/isaak/cxgn/sgn/lib/SGN/Controller/solGS/solGS.pm line 1416.
+
+run data type: phenotype
+
+run pop type: trial
+
+run report file: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/pheno-data-args_file-141-Kxd2P
+GET PHENOMATRIX MaterializedViewTable
+Search Start:Tue Oct 29 11:40:57 2019
+Synonym Start:Tue Oct 29 11:40:57 2019
+Synonym End:Tue Oct 29 11:40:58 2019
+QUERY: SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table  WHERE trial_id in (141) AND observationunit_type_name = 'plot' ORDER BY trial_name, observationunit_uniquename
+
+Search End:Tue Oct 29 11:40:58 2019
+No of lines retrieved: 307
+Construct Pheno Matrix Start:Tue Oct 29 11:40:58 2019
+Construct Pheno Matrix End:Tue Oct 29 11:40:58 2019

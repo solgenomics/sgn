@@ -1,0 +1,65 @@
+randomForest 4.6-14
+Type rfNews() to see new features/changes/bug fixes.
+Warning messages:
+1: replacing previous import ‘data.table::last’ by ‘dplyr::last’ when loading ‘genoDataFilter’ 
+2: replacing previous import ‘data.table::first’ by ‘dplyr::first’ when loading ‘genoDataFilter’ 
+3: replacing previous import ‘data.table::between’ by ‘dplyr::between’ when loading ‘genoDataFilter’ 
+Warning messages:
+1: replacing previous import ‘data.table::last’ by ‘dplyr::last’ when loading ‘phenoAnalysis’ 
+2: replacing previous import ‘data.table::first’ by ‘dplyr::first’ when loading ‘phenoAnalysis’ 
+3: replacing previous import ‘data.table::between’ by ‘dplyr::between’ when loading ‘phenoAnalysis’ 
+Loading required package: lattice
+Loading required package: ggplot2
+
+Attaching package: ‘ggplot2’
+
+The following object is masked from ‘package:randomForest’:
+
+    margin
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following object is masked from ‘package:randomForest’:
+
+    combine
+
+The following objects are masked from ‘package:plyr’:
+
+    arrange, count, desc, failwith, id, mutate, rename, summarise,
+    summarize
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘rlang’
+
+The following object is masked from ‘package:data.table’:
+
+    :=
+
+Read 5 items
+Read 7 items
+Read 2 items
+Warning message:
+In averageTrait(trialData, traitName, meansVariable = adjMeansVariable) :
+  This is just arthemetic average of the trait.
+Joining, by = "genotypes"
+Warning message:
+arrange_() is deprecated. 
+Please use arrange() instead
+
+The 'programming' vignette or the tidyeval book can help you
+to program with arrange() : https://tidyeval.tidyverse.org
+This warning is displayed once per session. 
+Done.

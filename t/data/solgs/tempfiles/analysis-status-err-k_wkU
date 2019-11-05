@@ -1,0 +1,5 @@
+
+ start_time: 14
+
+ start_dhr: 2914 - nowdhr: 2914 - diff: diff
+Use of uninitialized value in exit at /home/isaak/perl5/bin/mx-run line 9.

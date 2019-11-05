@@ -1,0 +1,13 @@
+Expected a hash or hash reference but a single object argument was passed to _check_new_params
+
+Trace begun at (eval 461) line 36
+DateTime::Duration::_check_new_params('DateTime::Duration=HASH(0x44189c8)') called at /home/isaak/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/DateTime/Duration.pm line 64
+DateTime::Duration::new('DateTime::Duration', 'DateTime::Duration=HASH(0x44189c8)') called at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 883
+solGS::AnalysisReport::end_status_check('solGS::AnalysisReport=HASH(0x4418a10)') called at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 365
+solGS::AnalysisReport::check_trait_modeling('solGS::AnalysisReport=HASH(0x4418a10)', 'HASH(0x4439110)') called at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 65
+solGS::AnalysisReport::check_success('solGS::AnalysisReport=HASH(0x4418a10)', 'HASH(0x4439110)') called at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 40
+solGS::AnalysisReport::check_analysis_status('solGS::AnalysisReport=HASH(0x4418a10)', 'HASH(0x4439110)') called at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 32
+solGS::AnalysisReport::run('solGS::AnalysisReport=HASH(0x4418a10)') called at /home/isaak/perl5/lib/perl5/MooseX/Runnable/Invocation.pm line 165
+MooseX::Runnable::Invocation::start_application('Moose::Meta::Class::__ANON__::SERIAL::5=HASH(0x1488778)', 'solGS::AnalysisReport=HASH(0x4418a10)') called at /home/isaak/perl5/lib/perl5/MooseX/Runnable/Invocation.pm line 176
+MooseX::Runnable::Invocation::run('Moose::Meta::Class::__ANON__::SERIAL::5=HASH(0x1488778)', '--output_details_file', '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-args-pTeS7') called at /home/isaak/perl5/bin/mx-run line 28
+main::run at /home/isaak/perl5/bin/mx-run line 9

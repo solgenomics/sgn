@@ -1,0 +1,26 @@
+CXGN::Tools::Run: start time: 2019-11-01 10:36:20 CET
+CXGN::Tools::Run: error time: 2019-11-01 10:36:56 CET
+CXGN::Tools::Run: command failed: 'mx-run solGS::asyncJob --prerequisite_jobs none --dependent_jobs /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs_model_args-2yZlC --analysis_report_job /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-job-args-EY1bK --config_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_config_file-Q8jk9'
+CXGN::Tools::Run: Command failed on host 'localhost.localdomain', user 'isaak', local monitor pid 108564, cmd pid 108567, $?=36864, exit value 144, signal ZERO (0), $r=108567, $!='Inappropriate ioctl for device' (string could be spurious)
+CXGN::Tools::Run: last few lines of stdout:
+CXGN::Tools::Run: last few lines of stderr:
+CXGN::Tools::Run: slurm job is complete...
+CXGN::Tools::Run: submitting job... mx-run solGS::AnalysisReport --output_details_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-args-w28rz --status_check_duration 2
+CXGN::Tools::Run: DIR: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_DNT2tG
+CXGN::Tools::Run: TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_DNT2tG...
+CXGN::Tools::Run: TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_DNT2tG...
+CXGN::Tools::Run: Start run_job
+CXGN::Tools::Run: OUTFILE IS /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-out-svL1W. Thanks.
+CXGN::Tools::Run: CMD TEMP FILE = /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_DNT2tG/cmd
+CXGN::Tools::Run: JOBID = job_DNT2tG
+CXGN::Tools::Run: Start _submit_cluster_job
+CXGN::Tools::Run: JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_DNT2tG/cmd
+CXGN::Tools::Run: Running it...
+CXGN::Tools::Run: Done...
+CXGN::Tools::Run: CLUSTER_JOB_ID = Submitted batch job 7487
+CXGN::Tools::Run: 
+CXGN::Tools::Run: COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_DNT2tG/cmd  Submitted batch job 7487
+CXGN::Tools::Run: 
+CXGN::Tools::Run: cluster_job_id = 7487
+CXGN::Tools::Run: End _submit_cluster_job
+CXGN::Tools::Run: End run_job

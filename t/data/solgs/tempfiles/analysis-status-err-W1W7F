@@ -1,0 +1,9 @@
+
+ start_time: 12
+Use of uninitialized value $end_process in concatenation (.) or string at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 864.
+
+ start_time: 12 -- now_hr: 12 -- sec: 14 -- end_process: 
+Use of uninitialized value $end_process in concatenation (.) or string at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 870.
+
+ start_time: 12 -- now_hr: 12 -- sec: 14 -- end_process: 
+Use of uninitialized value in exit at /home/isaak/perl5/bin/mx-run line 9.

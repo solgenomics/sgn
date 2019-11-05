@@ -1,0 +1,53 @@
+Any::Moose is deprecated. Please use Moo instead at /home/isaak/perl5/lib/perl5/Config/JFDI.pm line 11.
+"my" variable $traits masks earlier declaration in same scope at /home/isaak/cxgn/sgn/lib/CXGN/Analysis.pm line 193.
+Smartmatch is experimental at /home/isaak/cxgn/sgn/lib/SGN/Controller/solGS/solGS.pm line 1416.
+submitting job... Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-in-geaXP /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-out-JzQPR --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_141-xgaXb /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_FSWMIK_141-NAVyD
+DIR: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_wd0SFy
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_wd0SFy...
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_wd0SFy...
+Start run_job
+OUTFILE IS /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-out-JzQPR. Thanks.
+CMD TEMP FILE = /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_wd0SFy/cmd
+JOBID = job_wd0SFy
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_wd0SFy/cmd
+Running it...
+Done...
+CLUSTER_JOB_ID = Submitted batch job 7482
+
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_wd0SFy/cmd  Submitted batch job 7482
+
+cluster_job_id = 7482
+End _submit_cluster_job
+End run_job
+Slurm alive()... JobID: job_wd0SFy
+Slurm node is idle... Node: localhost
+Check job state...
+Slurm job is pending...
+Slurm alive()... JobID: job_wd0SFy
+Slurm node is idle... Node: localhost
+Check job state...
+Slurm job is pending...
+Slurm alive()... JobID: job_wd0SFy
+Slurm node is idle... Node: localhost
+Check job state...
+slurm job is complete...
+submitting job... mx-run solGS::AnalysisReport --output_details_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-args-3uzD1 --status_check_duration 
+DIR: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_o5pPxS
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_o5pPxS...
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_o5pPxS...
+Start run_job
+OUTFILE IS /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-out-AcAwD. Thanks.
+CMD TEMP FILE = /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_o5pPxS/cmd
+JOBID = job_o5pPxS
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_o5pPxS/cmd
+Running it...
+Done...
+CLUSTER_JOB_ID = Submitted batch job 7483
+
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_o5pPxS/cmd  Submitted batch job 7483
+
+cluster_job_id = 7483
+End _submit_cluster_job
+End run_job

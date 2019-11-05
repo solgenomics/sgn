@@ -1,0 +1,73 @@
+randomForest 4.6-14
+Type rfNews() to see new features/changes/bug fixes.
+Warning messages:
+1: replacing previous import ‘data.table::last’ by ‘dplyr::last’ when loading ‘genoDataFilter’ 
+2: replacing previous import ‘data.table::first’ by ‘dplyr::first’ when loading ‘genoDataFilter’ 
+3: replacing previous import ‘data.table::between’ by ‘dplyr::between’ when loading ‘genoDataFilter’ 
+Warning messages:
+1: replacing previous import ‘data.table::last’ by ‘dplyr::last’ when loading ‘phenoAnalysis’ 
+2: replacing previous import ‘data.table::first’ by ‘dplyr::first’ when loading ‘phenoAnalysis’ 
+3: replacing previous import ‘data.table::between’ by ‘dplyr::between’ when loading ‘phenoAnalysis’ 
+Loading required package: lattice
+Loading required package: ggplot2
+
+Attaching package: ‘ggplot2’
+
+The following object is masked from ‘package:randomForest’:
+
+    margin
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following object is masked from ‘package:randomForest’:
+
+    combine
+
+The following objects are masked from ‘package:plyr’:
+
+    arrange, count, desc, failwith, id, mutate, rename, summarise,
+    summarize
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘rlang’
+
+The following object is masked from ‘package:data.table’:
+
+    :=
+
+Read 5 items
+Read 8 items
+Read 2 items
+boundary (singular) fit: see ?isSingular
+Read 2 items
+No of markers before applying any filter: 501
+No. of markers after filtering out  >0.6 missing: 501
+No. of indls before applying any filter: 280
+No. of indls after filtering out >0.8 missing: 280
+No. of marker before applying monomorphic markers filter: 501
+No. of marker after filtering out monomorphic markers: 501
+No of markers before applying MAF filter: 501
+No. of marker after filtering out < 0.01 MAF: 500
+Warning messages:
+1: In `[.data.table`(gData, , `:=`(which(colSums(is.na(gData)) >= nrow(gData) *  :
+  length(LHS)==0; no columns to delete or assign RHS to.
+2: In `[.data.table`(gData, , `:=`(which(apply(gData, 2, function(x) length(unique(x))) <  :
+  length(LHS)==0; no columns to delete or assign RHS to.
+Warning message:
+`parse_quosure()` is deprecated as of rlang 0.2.0.
+Please use `parse_quo()` instead.
+This warning is displayed once per session. 
+Done.

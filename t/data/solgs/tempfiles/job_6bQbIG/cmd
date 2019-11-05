@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mx-run solGS::queryJobs  --data_type genotype  --population_type trial  --args_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/geno-data-args_file-139-U7a_L > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/genotype-data-query-139-out-rr1dW 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/genotype-data-query-139-err-13Ufh

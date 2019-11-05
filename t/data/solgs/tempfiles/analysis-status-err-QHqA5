@@ -1,0 +1,5 @@
+Option status_check_duration requires an argument
+usage: mx-run [-?h] [long options...]
+	-h -? --usage --help         Prints this usage information.
+	--output_details_file STR     
+	--status_check_duration INT   
