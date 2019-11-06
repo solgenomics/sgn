@@ -2,7 +2,7 @@ package CXGN::Trial::TrialCreate;
 
 =head1 NAME
 
-CXGN::Trial::TrialCreate - Module to create an entirely new trial based on a specified design. For field_layout experiments and genotyping_layout experiments. 
+CXGN::Trial::TrialCreate - Module to create an entirely new trial based on a specified design. For field_layout experiments and genotyping_layout experiments.
 
 Will do the following:
 1) Create a new project entry in Project table based on trial and description supplied to object. If there is a project with the name already saved, it will return an error and do nothing.
@@ -158,6 +158,7 @@ has 'field_size' => (isa => 'Num', is => 'rw', predicate => 'has_field_size', re
 has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
 has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
+has 'stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_stock_type', required => 1);
 
 #Trial linkage when saving a field trial
 has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 0);
@@ -210,12 +211,12 @@ sub save_trial {
 	my %design = %{$self->get_design()};
     my $trial_name = $self->get_trial_name();
     $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
-    
+
 	if (!$trial_name) {
 		print STDERR "Trial not saved: Can't create trial without a trial name\n";
 		return { error => "Trial not saved: Can't create trial without a trial name" };
 	}
-    
+
     if ($self->trial_name_already_exists()) {
 		print STDERR "Can't create trial: Trial name already exists\n";
 		return { error => "Trial not saved: Trial name already exists" };
@@ -373,7 +374,8 @@ sub save_trial {
 		is_genotyping => $self->get_is_genotyping,
 		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
 		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
-		operator => $self->get_operator
+		operator => $self->get_operator,
+        stock_type => $self->get_stock_type
 	});
 	my $error;
 	my $validate_design_error = $trial_design_store->validate_design();

@@ -1868,6 +1868,7 @@ jQuery(document).ready(function ($) {
         var desc = jQuery('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
+        var stock_type = jQuery('#select_stock_type').val();
 
         var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
@@ -1948,6 +1949,7 @@ jQuery(document).ready(function ($) {
                 'year': year,
                 'trial_type': trial_type,
                 'trial_location': trial_location,
+                'stock_type': stock_type,
                 'stock_list': stock_list,
                 'control_list': control_list,
                 'design_type': design_type,

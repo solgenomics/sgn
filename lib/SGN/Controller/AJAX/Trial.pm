@@ -506,6 +506,7 @@ sub save_experimental_design_POST : Args(0) {
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
     my $breeding_program = $c->req->param('breeding_program_name');
+    my $stock_type = $c->req->param('stock_type');
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
@@ -605,6 +606,7 @@ sub save_experimental_design_POST : Args(0) {
             field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            stock_type => $stock_type,
         );
 
         if ($field_size){
