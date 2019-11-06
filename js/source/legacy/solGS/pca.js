@@ -72,66 +72,127 @@ solGS.pca = {
 	    datasetName = selectName;
 	}
 
-	if (listId || popDetails.training_pop_id || popDetails.combo_pops_id || popDetails.selection_pop_id) {
-	    jQuery("#pca_canvas .multi-spinner-container").prependTo("#pca_canvas");
-	    jQuery("#pca_canvas .multi-spinner-container").show();
-	    jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));
-	    jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
-	    jQuery("#run_pca").hide();
-	}  
-
-	var pcaArgs = {
-	    'training_pop_id': popDetails.training_pop_id,
-	    'selection_pop_id': popDetails.selection_pop_id,
-	    'combo_pops_id': popDetails.combo_pops_id,
-	    'list_id': listId, 
-	    'data_type': dataType,
+	var validateArgs =  {
+	    'data_id': selectId,
 	    'data_structure': dataStructure,
-	    'dataset_id': datasetId,
-	    'dataset_name': datasetName
+	    'data_type': dataType,
 	};
+
 	
+	var message = this.validatePcaParams(validateArgs);
+
+	if (message != undefined) {
+	    jQuery("#pca_message")
+		.prependTo(jQuery("#pca_canvas"))
+		.html(message)
+		.show().fadeOut(9400);
+	    
+	} else {
+
+	    var pcaArgs = {
+		'training_pop_id': popDetails.training_pop_id,
+		'selection_pop_id': popDetails.selection_pop_id,
+		'combo_pops_id': popDetails.combo_pops_id,
+		'list_id': listId, 
+		'data_type': dataType,
+		'data_structure': dataStructure,
+		'dataset_id': datasetId,
+		'dataset_name': datasetName
+	    };
+	    
+	    this.runPcaAnalysis(pcaArgs);
+    }
+  
+    },
+
+    runPcaAnalysis: function (pcaArgs) {
+
+	console.log('runpcaanalysis')
+	
+	jQuery("#pca_canvas .multi-spinner-container").prependTo("#pca_canvas");
+	jQuery("#pca_canvas .multi-spinner-container").show();
+	jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));
+	jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
+	jQuery("#run_pca").hide();
+
+	 console.log('calling pca ajax')
+
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
             data: pcaArgs,
             url: '/pca/run',
-            success: function(response) {
+            success: function(res) {
 
 		jQuery("#pca_canvas .multi-spinner-container").hide();
-		if (response.pca_scores) {	
-		    var popId = response.pop_id;
-		    
-		    var plotData = { 'scores': response.pca_scores, 
-				     'variances': response.pca_variances, 
-				     'pop_id': popId, 
-				     'list_id': listId,
-				     'list_name': selectName,
-				     'trials_names': response.trials_names,
-				     'output_link' : response.output_link,
-				     'data_type' : response.data_type
-				   };
-		    
+		if (res.pca_scores) {	
+		  
+		    var listId = res.list_id;
+		    var listName; 
+
+		    if (listId != undefined) {
+			var list = new CXGN.List();
+			listName = list.listNameById(listId);
+		    }
+		
+		    var plotData = {
+			'scores': res.pca_scores, 
+			'variances': res.pca_variances, 
+			'pop_id': res.pop_id, 
+			'list_id': listId,
+			'list_name': listName,
+			'trials_names': res.trials_names,
+			'output_link' : res.output_link,
+			'data_type' : res.data_type
+		    };
+
+		  
                     solGS.pca.plotPca(plotData);
 		    jQuery("#pca_message").empty();
 		    jQuery("#run_pca").show();
 
 		} else {
                     jQuery("#pca_canvas .multi-spinner-container").hide();
-		    jQuery("#pca_message").html(response.status);
+		    jQuery("#pca_message").html(res.status);
+		    //jQuery("#pca_message").html('Error occured running the PCA.');
 		    jQuery("#run_pca").show();
 		}
 	    },
             error: function(response) {
                 jQuery("#pca_canvas .multi-spinner-container").hide();
-		jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
+		jQuery("#pca_message").html('Error occured running the PCA.');
 		jQuery("#run_pca").show();
 		
             }  
 	});
-  
+	
     },
 
+     validatePcaParams: function(valArgs) {
+
+	var dataType = valArgs.data_type;
+	var dataStr = valArgs.data_structure;
+	var dataId = valArgs.data_id;
+	
+	var msg;
+
+	if (dataStr && dataStr.match('list')) {
+	    var list = new CXGN.List();
+	    var listType = list.getListType(dataId);
+	   
+	    if (listType.match(/accessions/)
+		&& dataType.match(/phenotype/i)) {
+		msg = 'With list of clones, you can only do PCA based on <em>genotype</em>.';		
+	    }
+	    
+	    if (listType.match(/plots/)
+		&& dataType.match(/genotype/i)) {
+		msg = 'With list of plots, you can only do PCA based on <em>phenotype</em>.';		
+	    }
+	}
+	
+	return msg;
+    },
 
     createTable: function () {
 	var pcaTable ='<table id="pca_pops_table" class="table table-striped"><tr>'

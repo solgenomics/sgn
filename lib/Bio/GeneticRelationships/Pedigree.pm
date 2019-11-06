@@ -31,6 +31,7 @@ subtype 'CrossType',
       $_ eq 'self' ||
       $_ eq 'open' ||
       $_ eq 'sib' ||
+      $_ eq 'polycross' ||
       $_ eq 'bulk' ||
       $_ eq 'bulk_self' ||
       $_ eq 'bulk_open' ||
