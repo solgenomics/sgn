@@ -30,6 +30,7 @@ __PACKAGE__->config(
 	map           => {  'application/json' => 'JSON',
 						# would be nice if we could do image/* instead of explicitly listing each type
 						# also should see if a single list of image types can be used for this and for _get_extension in Images.pm
+						'image/_*'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
 						'image/jpeg'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
 						'image/png'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],
 						'image/gif'  => [ 'Callback', { deserialize => \&deserialize_image, serialize => \&serialize_image } ],

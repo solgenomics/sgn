@@ -346,10 +346,21 @@ sub detail {
 
     print STDERR "Image ID: $image_id. inputs to image metadata store: ".Dumper($inputs);
 
-    my $file_extension = _get_extension($content_type);
+    # Get our image file extension type from the database
+    my @image_ids;
+    push @image_ids, $image_id;
+    my $image_search = CXGN::Image::Search->new({
+     bcs_schema=>$self->bcs_schema(),
+     people_schema=>$self->people_schema(),
+     phenome_schema=>$self->phenome_schema(),
+     image_id_list=>\@image_ids
+    });
 
-    if ($file_extension eq $content_type) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Unsupported image type');
+    my ($search_result, $total_count) = $image_search->search();
+    my $file_extension = @$search_result[0]->{'image_file_ext'};
+
+    if (! defined $file_extension) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Unsupported image type, %s', $file_extension));
     }
 
     my $tempfile = $inputs->filename();
@@ -373,19 +384,7 @@ sub detail {
 	       print STDERR "Image processed successfully.\n";
     }
 
-    my @image_ids;
-    push @image_ids, $image_id;
-    my $image_search = CXGN::Image::Search->new({
-     bcs_schema=>$self->bcs_schema(),
-     people_schema=>$self->people_schema(),
-     phenome_schema=>$self->phenome_schema(),
-     image_id_list=>\@image_ids
-    });
-
-    my ($search_result, $total_count) = $image_search->search();
-
     my %result = ( image_id => $image_id);
-
 
     foreach (@$search_result) {
         my $sgn_image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
