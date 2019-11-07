@@ -734,6 +734,9 @@ sub structure_selection_prediction_output {
 	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 	my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $prediction_pop_id);
+	my $selection_geno_file = $c->stash->{genotype_file_name};
 		
 	$output_details{'trait_id_' . $trait_id} = {
 	    'training_pop_page'   => $training_pop_page,
@@ -745,6 +748,7 @@ sub structure_selection_prediction_output {
 	    'trait_id'            => $trait_id,
 	    'model_page'          => $model_page,	
 	    'gebv_file'           => $gebv_file,
+	    'selection_geno_file' => $selection_geno_file,
 	    'data_set_type'       => $data_set_type,
 	};
     }	
