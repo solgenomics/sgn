@@ -1,3 +1,4 @@
+##First read in the arguments listed at the command line
 args=commandArgs(TRUE)
 
 ##args is now a list of character vectors
@@ -25,7 +26,7 @@ library(lme4)
 library(lmerTest)
 library(emmeans)
 library(effects)
-library(phenoAnalysis)
+#library(phenoAnalysis)
 library(stringr)
 library(dplyr)
 
@@ -43,11 +44,11 @@ print(head(pd))
 BLUE = as.data.frame(unique(pd$germplasmName))
 colnames(BLUE) = "germplasmName"
 BLUP = BLUE
-adj_means = BLUE
+adjusted_means = BLUE
 
 
 for(i in 1:length(trait)){
-    
+  
   dependent_variables = trait[i]
   dependent_variables = gsub(" ", "\\.", dependent_variables) # replace space with "." in variable name
   dependent_variables = gsub("\\|", "\\.", dependent_variables) # replace | with .
@@ -56,8 +57,8 @@ for(i in 1:length(trait)){
   dependent_variables = gsub("\\/", "\\.", dependent_variables)
   
   print(paste("Dependent variables : ", dependent_variables))
-
- model_string = paste(dependent_variables, '~', model)
+  
+  model_string = paste(dependent_variables, '~', model)
   
   print(paste('MODEL STRING:', model_string));
   #mixmodel = lmer(as.formula(model_string), data=pd)
@@ -72,7 +73,7 @@ for(i in 1:length(trait)){
   print(paste('modeling genotypes as: ', genotypeEffectType))
   
   if(genotypeEffectType=="random")
-    {
+  {
     mixmodel = lmer(as.formula(model_string), data=pd)
     res <- (ranef(mixmodel)$germplasmName)
     
@@ -84,6 +85,11 @@ for(i in 1:length(trait)){
     
     BLUP <- merge(x = BLUP, y = blup, by ="germplasmName", all=TRUE)
     
+    adj = coef(mixmodel)$germplasmName
+    adj_means = adj%>%mutate("germplasmName" = rownames(adj))
+    names(adj_means)[1] = trait[i]
+    adj_means = as.data.frame(adj_means)
+    adjusted_means =  merge(x = adjusted_means, y = adj_means, by ="germplasmName", all=TRUE)
   }
   else{
     mixmodel = lm(as.formula(model_string), data=pd)
@@ -93,31 +99,24 @@ for(i in 1:length(trait)){
     blueadj = as.data.frame(blue)
     
     BLUE =  merge(x = BLUE, y = blueadj, by ="germplasmName", all=TRUE)
-   
+    
   }
   
- adjusted_means = getAdjMeans(modelOut=model,
-                               traitName=dependent_variables,
-                               genotypeEffectType=genotypeEffectType,
-                               adjMeansVariable='germplasmName')  
-  adj_means =  merge(x = adj_means, y = adjusted_means, by ="germplasmName", all=TRUE)
-  }
-
-adjusted_means = adj_means
-outfile_adjmeans = paste(datafile, ".adjusted_means", sep="")
-sink(outfile_adjmeans)
-write.table(adjusted_means, quote=F , sep='\t')
-sink();
+}
 
 if(genotypeEffectType=="fixed"){
-
-outfile_blue = paste(datafile, ".BLUEs", sep="")
-sink(outfile_blue)
-write.table(BLUE, quote=F , sep='\t')
-sink();
+  
+  outfile_blue = paste(datafile, ".BLUEs", sep="")
+  sink(outfile_blue)
+  write.table(BLUE, quote=F , sep='\t')
+  sink();
 }else{
   outfile_blup = paste(datafile, ".BLUPs", sep="");
   sink(outfile_blup)
   write.table(BLUP, quote=F, sep='\t')
+  sink();
+  outfile_adjmeans = paste(datafile, ".adjusted_means", sep="")
+  sink(outfile_adjmeans)
+  write.table(adjusted_means, quote=F , sep='\t')
   sink();
 }
