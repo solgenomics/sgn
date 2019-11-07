@@ -4286,6 +4286,7 @@ sub _perform_keras_cnn_predict {
         push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
         push @{$data_hash{$_->{stock_id}}->{image_urls}}, $image_url;
         push @{$data_hash{$_->{stock_id}}->{image_ids}}, $image_id;
+        push @{$data_hash{$_->{stock_id}}->{drone_run_related_time_cvterm_json}}, $_->{drone_run_related_time_cvterm_json};
     }
     my @unique_stock_ids = keys %data_hash;
 
@@ -4425,7 +4426,7 @@ sub _perform_keras_cnn_predict {
     my @data_matrix;
     my $data_matrix_rows = 0;
     my $iter = 0;
-    my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'previous_value', 'prediction');
+    my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'growing_degree_days', 'previous_value', 'prediction');
     my @simple_data_matrix;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
@@ -4447,7 +4448,7 @@ sub _perform_keras_cnn_predict {
             $num_class_probabilities = scalar(@columns);
             my $previous_value = $data_hash{$stock_id}->{previous_data};
             if ($previous_value){
-                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $class);
+                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $stock_info{$stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $class);
                 if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
                     push @data_matrix, @columns;
                 }
