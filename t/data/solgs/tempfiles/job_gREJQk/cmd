@@ -1,3 +1,0 @@
-#!/bin/bash
-
-mx-run solGS::queryJobs  --data_type genotype --population_type list --args_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/geno-data-args_file-list_24-ZDlvU > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/genotype-data-query-list_24-out-ebStl 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/genotype-data-query-list_24-err-PsLog

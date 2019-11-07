@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-in-rZzon /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-out-EJ9n3 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_141-KK6Am /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_FSWMIK_141-8PzYk > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-out-EJ9n3 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-141-70773-err-4FsYh

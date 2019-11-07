@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-in-RqTGC /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-out-MurO3 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-j08Sy /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-e0OaZ > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-out-MurO3 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-err-eOiLS

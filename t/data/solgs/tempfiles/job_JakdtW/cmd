@@ -1,3 +1,0 @@
-#!/bin/bash
-
-mx-run solGS::queryJobs  --data_type phenotype  --population_type trial  --args_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/pheno-data-args_file-141-Kxd2P > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/phenotype-data-query-141-out-uJr8n 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/phenotype-data-query-141-err-Z1zeJ

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-70666-in-FiD83 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-70666-out-EAha5 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-vPtNS /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_FRW_139-9Wy5H > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-70666-out-EAha5 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-70666-err-biWRD

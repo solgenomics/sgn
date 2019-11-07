@@ -1,3 +1,0 @@
-#!/bin/bash
-
-mx-run solGS::AnalysisReport --output_details_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-args-1tsBV > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-out-KgAgS 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-err-39t1B

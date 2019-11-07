@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/combine-pops-2804608595_70741-in-Ku8lF /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/combine-pops-2804608595_70741-out-51aRW --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_70741_combine-3Cdqg /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_70741_combine-kNmaP > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/combine-pops-2804608595_70741-out-51aRW 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/combine-pops-2804608595_70741-err-iW_V8

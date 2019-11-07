@@ -1,1 +1,0 @@
-Can't locate object method "new" via package "DateTime::Format::Duration" (perhaps you forgot to load "DateTime::Format::Duration"?) at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 883.

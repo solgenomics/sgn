@@ -1,6 +1,0 @@
-"my" variable $dur masks earlier declaration in same scope at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 836.
-Use of uninitialized value $end_process in concatenation (.) or string at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 840.
-
-dur_hr3: 0 -- minutes: 0 -- end_process: 
-
-dur_hr3: 0 -- minutes: 1 -- end_process: 1

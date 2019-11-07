@@ -1,1 +1,0 @@
-Use of uninitialized value $failure_reason in concatenation (.) or string at /home/isaak/cxgn/sgn/lib/solGS/AnalysisReport.pm line 684.

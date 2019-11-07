@@ -1,3 +1,0 @@
-#!/bin/bash
-
-mx-run solGS::AnalysisReport --output_details_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-args-5Z7aN > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-out-BWXmv 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-err-U9y3T

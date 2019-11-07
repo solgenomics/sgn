@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-combo-2804608595-70666-in-2Vc5F /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-combo-2804608595-70666-out-ngwsg --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_combo_FRW-62O3F /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_FRW_2804608595-KKpXz > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-combo-2804608595-70666-out-ngwsg 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-combo-2804608595-70666-err-1x2Co
