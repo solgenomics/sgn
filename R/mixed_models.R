@@ -25,7 +25,7 @@ library(lme4)
 library(lmerTest)
 library(emmeans)
 library(effects)
-#library(phenoAnalysis)
+library(phenoAnalysis)
 library(stringr)
 library(dplyr)
 
@@ -43,7 +43,7 @@ print(head(pd))
 BLUE = as.data.frame(unique(pd$germplasmName))
 colnames(BLUE) = "germplasmName"
 BLUP = BLUE
-#adj_means = BLUE
+adj_means = BLUE
 
 
 for(i in 1:length(trait)){
@@ -96,18 +96,18 @@ for(i in 1:length(trait)){
    
   }
   
-  #adjusted_means = getAdjMeans(modelOut=model,
-  #                             traitName=dependent_variables,
-  #                             genotypeEffectType=genotypeEffectType,
-  #                             adjMeansVariable='germplasmName')  
- # adj_means =  merge(x = adj_means, y = adjusted_means, by ="germplasmName", all=TRUE)
+ adjusted_means = getAdjMeans(modelOut=model,
+                               traitName=dependent_variables,
+                               genotypeEffectType=genotypeEffectType,
+                               adjMeansVariable='germplasmName')  
+  adj_means =  merge(x = adj_means, y = adjusted_means, by ="germplasmName", all=TRUE)
   }
 
-#adjusted_means = adj_means
-#outfile_adjmeans = paste(datafile, ".adjusted_means", sep="")
-#sink(outfile_adjmeans)
-#write.table(adjusted_means, quote=F , sep='\t')
-#sink();
+adjusted_means = adj_means
+outfile_adjmeans = paste(datafile, ".adjusted_means", sep="")
+sink(outfile_adjmeans)
+write.table(adjusted_means, quote=F , sep='\t')
+sink();
 
 if(genotypeEffectType=="fixed"){
 
