@@ -153,14 +153,25 @@ export function init(main_div){
 
 	<table>
 	<tr><td>
+	<div id="mixed_models_anova_results_div">&nbsp;</div>
+	</td></tr>
+	<tr><td>
+	<div id="mixed_models_varcomp_results_div">&nbsp;</div>
+	</td></tr>
+	<tr><td>
         Adjusted means 	     <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means" data-target="#save_analysis_dialog">Save adjusted means</button>
-        <div id="mixed_models_adjusted_means_results_div">
-	</td>
-	<td>&nbsp;&nbsp;</td>
+        <div id="mixed_models_adjusted_means_results_div">[loading...]</div>
+	</td></tr>
+	<tr>
 	<td>
             BLUPs 	     <button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#save_analysis_dialog">Save BLUPs</button>
-        <div id="mixed_models_blup_results_div">
+        <div id="mixed_models_blup_results_div">[not available]</div>
         </td>
+	</tr>
+	<tr><td>
+	    BLUEs
+	<div id="mixed_models_blues_results_div">[not available]</div>
+	</td>
 	</tr>
 	</table>
 
@@ -452,43 +463,45 @@ export function init(main_div){
 
     $('#run_mixed_model_button').click( function() {
 	alert("RUNNING!");
-       var model = $('#model_string').text();
+        var model = $('#model_string').text();
 	var fixed_factors = parse_simple_factors("fixed_factors");
-	alert("FIXED:"+fixed_factors);
 	var random_factors = parse_simple_factors("random_factors");;
-	alert("RANDOM:"+random_factors);
-       //alert('Model: '+model);
-       var tempfile = $('#tempfile').text();
-       //var dependent_variables = $('input[name=dependent_variable_select]').val();
-       var dependent_variables = [];
-       $('input[name=dependent_variable_select]:checked').each(function(){
-         dependent_variables.push(jQuery(this).val());
-       });
-       console.log(dependent_variables);
-       //alert(model + " "+tempfile+" "+ dependent_variable);
-       $.ajax( {
-           "url": '/ajax/mixedmodels/run',
-	   "method": "POST",
-           "data": {
-	       "model" : model,
-	       "tempfile" : tempfile,
-	       "dependent_variables": dependent_variables,
-	       "fixed_factors" : fixed_factors,
-	       "random_factors" : random_factors
-	   },
-           "success": function(r) {
-               if (r.error) { alert(r.error);}
-               else{
-		   $('#mixed_models_adjusted_means_results_div').html('<pre>' + r.adjusted_means_html + '</pre>');
-		   $('#mixed_models_blup_results_div').html('<pre>' + r.blup_html+'</pre>');
-               }
-           },
-           "error": function(r) {
-               alert(r);
-           }
-       });
-   });
+	
+	var tempfile = $('#tempfile').text();
 
+	var dependent_variables = [];
+	$('input[name=dependent_variable_select]:checked').each(function(){
+            dependent_variables.push(jQuery(this).val());
+	});
+	console.log(dependent_variables);
+	//alert(model + " "+tempfile+" "+ dependent_variable);
+	$.ajax( {
+            "url": '/ajax/mixedmodels/run',
+	    "method": "POST",
+            "data": {
+		"model" : model,
+		"tempfile" : tempfile,
+		"dependent_variables": dependent_variables,
+		"fixed_factors" : fixed_factors,
+		"random_factors" : random_factors
+	    },
+            "success": function(r) {
+		if (r.error) { alert(r.error);}
+		else{
+		    $('#mixed_models_adjusted_means_results_div').html('<pre>' + r.adjusted_means_html + '</pre>');
+		    $('#mixed_models_blup_results_div').html('<pre>' + r.blups_html+'</pre>');
+		    $('#mixed_models_blue_results_div').html('<pre>' + r.blues_html + '</pre>');
+		    $('#mixed_models_anova_results_div').html('<pre>'+ r.anova_html+'</pre>');
+		    $('#mixed_models_varcomp_results_div').html('<pre>'+r.varcomp_html+'</pre>');
+		    
+		}
+            },
+            "error": function(r) {
+		alert(r);
+            }
+	});
+    });
+    
 
     function extract_model_parameters() {
 
