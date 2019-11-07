@@ -1516,6 +1516,7 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $field_trial_ids = $c->req->param('field_trial_ids');
     my $stock_ids = $c->req->param('stock_ids');
     my $field_trial_images_only = $c->req->param('field_trial_images_only');
+    my $field_trial_images_only_2d = $c->req->param('field_trial_images_only_2d');
     my $drone_run_ids = $c->req->param('drone_run_ids') ? decode_json $c->req->param('drone_run_ids') : [];
     my $drone_run_band_ids = $c->req->param('drone_run_band_ids') ? decode_json $c->req->param('drone_run_band_ids') : [];
 
@@ -1523,14 +1524,25 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $drone_run_field_trial_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
     my $drone_run_band_drone_run_project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
-    my $project_image_type_id_list;
-    if (!$field_trial_images_only) {
-        $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    my $project_image_type_id_list_sql;
+    if ($field_trial_images_only_2d) {
+        my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+        my @image_type_ids;
+        while (my ($key, $val) = each %$project_image_type_id_list) {
+            if (scalar(@{$val->{channels}}) == 1) {
+                push @image_type_ids, $key;
+            }
+        }
+        $project_image_type_id_list_sql = join ",", @image_type_ids;
+    }
+    elsif (!$field_trial_images_only) {
+        my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+        $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
     }
     else {
-        $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($bcs_schema);
+        my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($bcs_schema);
+        $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
     }
-    my $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
 
     my @where_clause;
     push @where_clause, "project_md_image.type_id in ($project_image_type_id_list_sql)";
@@ -4435,7 +4447,7 @@ sub _perform_keras_cnn_predict {
             $num_class_probabilities = scalar(@columns);
             my $previous_value = $data_hash{$stock_id}->{previous_data};
             if ($previous_value){
-                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $prediction);
+                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $previous_value, $class);
                 if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
                     push @data_matrix, @columns;
                 }
@@ -4480,6 +4492,7 @@ sub _perform_keras_cnn_predict {
             push @data_matrix_clean, 'NA';
         }
     }
+    # print STDERR Dumper \@data_matrix_clean;
 
     if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
         print STDERR "CNN Prediction Mixed Model\n";
@@ -4499,13 +4512,18 @@ sub _perform_keras_cnn_predict {
         $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
         $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
         $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
-        $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-        $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
+        # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+        $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 2)');
         $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
+        
+        $r_block->add_command('mixed.lmer <- lmer(prediction ~ replicate + (1|germplasm_stock_id), data = dataframe.matrix1 )');
+        # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
+        $r_block->add_command('mixed.lmer.matrix[1,2] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
         $r_block->run_block();
         my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
         print STDERR Dumper $result_matrix;
         push @model_results, $result_matrix->{data}->[0];
+        push @model_results, $result_matrix->{data}->[1];
     }
 
     if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
