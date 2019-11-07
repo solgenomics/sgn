@@ -1,0 +1,26 @@
+CXGN::Tools::Run: start time: 2019-11-07 12:50:04 CET
+CXGN::Tools::Run: error time: 2019-11-07 12:50:41 CET
+CXGN::Tools::Run: command failed: 'mx-run solGS::asyncJob --prerequisite_jobs /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/selection_pop_query_args-VZFuj --dependent_jobs /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs_model_args-9RUjk --analysis_report_job /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-job-args-mfdt0 --config_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_config_file-SZGGB'
+CXGN::Tools::Run: Command failed on host 'localhost.localdomain', user 'isaak', local monitor pid 6306, cmd pid 6309, $?=512, exit value 2, signal ZERO (0), $r=6309, $!='Inappropriate ioctl for device' (string could be spurious)
+CXGN::Tools::Run: last few lines of stdout:
+CXGN::Tools::Run: last few lines of stderr:
+CXGN::Tools::Run: cluster_job_id = 7536
+CXGN::Tools::Run: End _submit_cluster_job
+CXGN::Tools::Run: End run_job
+CXGN::Tools::Run: Slurm alive()... JobID: job_NTcmVs
+CXGN::Tools::Run: Slurm node is idle... Node: localhost
+CXGN::Tools::Run: Check job state...
+CXGN::Tools::Run: Slurm job is pending...
+CXGN::Tools::Run: Slurm alive()... JobID: job_NTcmVs
+CXGN::Tools::Run: Slurm node is idle... Node: localhost
+CXGN::Tools::Run: Check job state...
+CXGN::Tools::Run: Slurm job is pending...
+CXGN::Tools::Run: Slurm alive()... JobID: job_NTcmVs
+CXGN::Tools::Run: Slurm node is idle... Node: localhost
+CXGN::Tools::Run: Check job state...
+CXGN::Tools::Run: Slurm job is finished...
+CXGN::Tools::Run: submitting job... Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-in-br8AW /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-out-Ix5uy --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-o7xq3 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-59ey7
+CXGN::Tools::Run: An error occurred submitting job Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-in-br8AW /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-out-Ix5uy --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-o7xq3 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-59ey7 
+CXGN::Tools::Run: Unable to locate plugin 'RemoteSlurm' at /home/isaak/cxgn/cxgn-corelibs/lib/CXGN/Tools/Run.pm line 191.
+CXGN::Tools::Run: 
+CXGN::Tools::Run: Can't call method "alive" on an undefined value at /home/isaak/cxgn/sgn/lib/solGS/asyncJob.pm line 119, <DATA> line 608.

@@ -1,0 +1,33 @@
+Any::Moose is deprecated. Please use Moo instead at /home/isaak/perl5/lib/perl5/Config/JFDI.pm line 11.
+"my" variable $traits masks earlier declaration in same scope at /home/isaak/cxgn/sgn/lib/CXGN/Analysis.pm line 193.
+Smartmatch is experimental at /home/isaak/cxgn/sgn/lib/SGN/Controller/solGS/solGS.pm line 1416.
+
+run data type: genotype
+
+run pop type: list
+
+run report file: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/geno-data-args_file-list_19-gyk7l
+Use of uninitialized value in concatenation (.) or string at /home/isaak/cxgn/sgn/lib/CXGN/Dataset.pm line 286.
+Processing dataset_id 
+Creating empty dataset object
+$VAR1 = 'SELECT distinct on (stock.stock_id) stock.stock_id, genotype_values.genotypeprop_id, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
+        FROM stock
+        JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
+        LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = 76476)
+        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
+        JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment USING(nd_experiment_id)
+        JOIN nd_experiment_protocol USING(nd_experiment_id)
+        JOIN nd_experiment_project USING(nd_experiment_id)
+        JOIN nd_experiment_genotype USING(nd_experiment_id)
+        JOIN nd_protocol USING(nd_protocol_id)
+        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id = 77242)
+        JOIN genotype USING(genotype_id)
+        LEFT JOIN genotypeprop AS igd_number_genotypeprop ON(igd_number_genotypeprop.genotype_id = genotype.genotype_id AND igd_number_genotypeprop.type_id = 76529)
+        JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id IN (77241))
+        JOIN project USING(project_id)
+         WHERE nd_protocol.nd_protocol_id in (1) AND stock.stock_id in (38911,38910,38909,38908,38907,38906,38905,38904,38903,38902,38901,38900,38899,38898,38897,38896,38895,38894,38893,38892,38891,38890,38889,38888,38887,38886,38885,38884,38883,38882,38881,38880,38879,38878) AND stock.type_id = 76392
+        ORDER BY stock.stock_id, genotype_values.genotypeprop_id ASC
+        
+        ;';
+CXGN::Genotype::Search has genotypeprop_ids 68

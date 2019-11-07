@@ -172,7 +172,29 @@ $d->while_logged_in_as("submitter", sub {
     sleep(70);
     $d->find_element_ok('//*[contains(text(), "PC1")]', 'xpath', 'check pheno pca plot')->click();
     sleep(5);
-   
+
+    $d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741', 'open combined trials model page');
+    sleep(10);
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('pca_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    sleep(10);
+    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    sleep(70);
+    $d->find_element_ok('//*[contains(text(), "PC1")]', 'xpath', 'check pheno pca plot')->click();
+    sleep(5);
+
+    $d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741', 'open combined trials model page');
+    my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
+    sleep(5);
+    $d->find_element_ok('pca_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
+    sleep(10);
+    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    sleep(70);
+    $d->find_element_ok('//*[contains(text(), "PC1")]', 'xpath', 'check pheno pca plot')->click();
+    sleep(5);
 
 });
 

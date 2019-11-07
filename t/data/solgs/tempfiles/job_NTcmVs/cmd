@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mx-run solGS::queryJobs  --data_type genotype --population_type list --args_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/geno-data-args_file-list_19-0PGmi > /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/genotype-data-query-list_19-out-P8hY8 2> /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/genotype-data-query-list_19-err-5M7XF

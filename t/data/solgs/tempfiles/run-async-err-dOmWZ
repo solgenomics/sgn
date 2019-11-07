@@ -1,0 +1,73 @@
+Any::Moose is deprecated. Please use Moo instead at /home/isaak/perl5/lib/perl5/Config/JFDI.pm line 11.
+"my" variable $traits masks earlier declaration in same scope at /home/isaak/cxgn/sgn/lib/CXGN/Analysis.pm line 193.
+Smartmatch is experimental at /home/isaak/cxgn/sgn/lib/SGN/Controller/solGS/solGS.pm line 1416.
+submitting job... Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_24-70741-in-2U5cZ /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_24-70741-out-CmKS1 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-85UF5 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-99cGA
+DIR: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs...
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs...
+Start run_job
+OUTFILE IS /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_24-70741-out-CmKS1. Thanks.
+CMD TEMP FILE = /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd
+JOBID = job_HfDJOs
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd
+Running it...
+ssh: Could not resolve hostname localdomain: Name or service not known
+Done...
+CLUSTER_JOB_ID = 
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd  
+CXGN::Tools::Run error running `sbatch`: 
+CXGN::Tools::Run retrying cluster job submission.
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd
+Running it...
+ssh: Could not resolve hostname localdomain: Name or service not known
+Done...
+CLUSTER_JOB_ID = 
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd  
+CXGN::Tools::Run error running `sbatch`: 
+CXGN::Tools::Run retrying cluster job submission.
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd
+Running it...
+ssh: Could not resolve hostname localdomain: Name or service not known
+Done...
+CLUSTER_JOB_ID = 
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd  
+CXGN::Tools::Run error running `sbatch`: 
+CXGN::Tools::Run retrying cluster job submission.
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd
+Running it...
+ssh: Could not resolve hostname localdomain: Name or service not known
+Done...
+CLUSTER_JOB_ID = 
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_HfDJOs/cmd  
+CXGN::Tools::Run error running `sbatch`: 
+An error occurred submitting job Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_24-70741-in-2U5cZ /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_24-70741-out-CmKS1 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-85UF5 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-99cGA 
+CXGN::Tools::Run: failed to submit cluster job, after 4 tries
+
+Use of uninitialized value $jobid in concatenation (.) or string at /home/isaak/cxgn/cxgn-corelibs/lib/CXGN/Tools/Run/Plugin/RemoteSlurm.pm line 410, <DATA> line 608.
+Slurm alive()... JobID: 
+Use of uninitialized value $jobid in concatenation (.) or string at /home/isaak/cxgn/cxgn-corelibs/lib/CXGN/Tools/Run/Plugin/RemoteSlurm.pm line 418, <DATA> line 608.
+ssh: Could not resolve hostname localdomain: Name or service not known
+OUTPUT: 
+submitting job... mx-run solGS::AnalysisReport --output_details_file /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-args-bkfsg --status_check_duration 2
+DIR: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_VJRj5c
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_VJRj5c...
+TEMPDIR IS: /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_VJRj5c...
+Start run_job
+OUTFILE IS /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-status-out-t1mfY. Thanks.
+CMD TEMP FILE = /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_VJRj5c/cmd
+JOBID = job_VJRj5c
+Start _submit_cluster_job
+JOB RUN CREATED: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_VJRj5c/cmd
+Running it...
+Done...
+CLUSTER_JOB_ID = Submitted batch job 7540
+
+COMMAND: sbatch -o /dev/null -e /dev/null --export=PATH,PERL5LIB -N 1 /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_VJRj5c/cmd  Submitted batch job 7540
+
+cluster_job_id = 7540
+End _submit_cluster_job
+End run_job

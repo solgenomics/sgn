@@ -1,0 +1,16 @@
+Any::Moose is deprecated. Please use Moo instead at /home/isaak/perl5/lib/perl5/Config/JFDI.pm line 11.
+"my" variable $traits masks earlier declaration in same scope at /home/isaak/cxgn/sgn/lib/CXGN/Analysis.pm line 193.
+Smartmatch is experimental at /home/isaak/cxgn/sgn/lib/SGN/Controller/solGS/solGS.pm line 1416.
+submitting job... Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-in-qDt5F /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-out-NZwk1 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-t0t9j /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-c3lJf
+An error occurred submitting job Rscript --slave /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-in-qDt5F /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs-rrblup-139-list_19-70741-out-NZwk1 --args /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/input_files_139-t0t9j /export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/output_files_DMCP_139-c3lJf 
+Attribute (submit_host) does not pass the type constraint because: Validation failed for 'Str' with value undef at /home/isaak/perl5/lib/perl5/x86_64-linux-gnu-thread-multi/Moose/Object.pm line 24
+	Moose::Object::new('CXGN::Tools::Run', 'HASH(0xc4abac8)') called at /home/isaak/cxgn/sgn/lib/solGS/asyncJob.pm line 146
+	eval {...} at /home/isaak/cxgn/sgn/lib/solGS/asyncJob.pm line 145
+	solGS::asyncJob::submit_job('solGS::asyncJob=HASH(0xc9f7ff0)', 'HASH(0xbd7c4e0)') called at /home/isaak/cxgn/sgn/lib/solGS/asyncJob.pm line 100
+	solGS::asyncJob::run_dependent_jobs('solGS::asyncJob=HASH(0xc9f7ff0)', 'ARRAY(0x39ca460)') called at /home/isaak/cxgn/sgn/lib/solGS/asyncJob.pm line 43
+	solGS::asyncJob::run('solGS::asyncJob=HASH(0xc9f7ff0)') called at /home/isaak/perl5/lib/perl5/MooseX/Runnable/Invocation.pm line 165
+	MooseX::Runnable::Invocation::start_application('Moose::Meta::Class::__ANON__::SERIAL::12=HASH(0x30845a0)', 'solGS::asyncJob=HASH(0xc9f7ff0)') called at /home/isaak/perl5/lib/perl5/MooseX/Runnable/Invocation.pm line 176
+	MooseX::Runnable::Invocation::run('Moose::Meta::Class::__ANON__::SERIAL::12=HASH(0x30845a0)', '--prerequisite_jobs', 'none', '--dependent_jobs', '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/gs_model_args-SugWj', '--analysis_report_job', '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/analysis-report-job-args-MqmRn', '--config_file', '/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/tempfiles/job_config_file-L6pmg') called at /home/isaak/perl5/bin/mx-run line 28
+	main::run at /home/isaak/perl5/bin/mx-run line 9
+
+Can't call method "alive" on an undefined value at /home/isaak/cxgn/sgn/lib/solGS/asyncJob.pm line 119.
