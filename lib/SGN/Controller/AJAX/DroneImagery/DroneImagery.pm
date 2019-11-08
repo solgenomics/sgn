@@ -3916,17 +3916,23 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     print STDERR Dumper $total_count;
 
     my %data_hash;
+    my %seen_day_times;
+    my %seen_image_types;
     foreach (@$result) {
         my $image_id = $_->{image_id};
+        my $stock_id = $_->{stock_id};
         my $project_image_type_name = $_->{project_image_type_name};
         my $drone_run_band_project_name = $_->{drone_run_band_project_name};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
-        push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
-        push @{$data_hash{$_->{stock_id}}->{image_types}}, $project_image_type_name;
-        push @{$data_hash{$_->{stock_id}}->{drone_run_band_project_names}}, $drone_run_band_project_name;
+        my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
+        my $time_days = (split '\|', $time_days_cvterm)[0];
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_fullpaths}}, $image_fullpath;
+        $seen_day_times{$time_days}++;
+        $seen_image_types{$project_image_type_name}++;
     }
+    print STDERR Dumper \%seen_day_times;
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$schema,
@@ -3942,8 +3948,9 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
 
     my $phenotype_header = shift @data;
     my $trait_name = $phenotype_header->[39];
+    my %phenotype_data_hash;
     foreach (@data) {
-        $data_hash{$_->[21]}->{trait_value} = $_->[39];
+        $phenotype_data_hash{$_->[21]} = $_->[39];
     }
     #print STDERR Dumper \%data_hash;
 
@@ -3958,22 +3965,25 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        while (my ($stock_id, $data) = each %data_hash){
-            my $image_fullpaths = $data->{image_fullpaths};
-            my $image_types = $data->{image_types};
-            my $value = $data->{trait_value};
-            my $drone_run_band_project_names = $data->{drone_run_band_project_names};
-            if ($value) {
-                my $iter = 0;
-                foreach (@$image_fullpaths) {
-                    print $F '"'.$stock_id.'",';
-                    print $F '"'.$_.'",';
-                    print $F '"'.$value.'",';
-                    print $F '"'.$trait_name.'",';
-                    print $F '"'.$image_types->[$iter].'",';
-                    print $F '"'.$drone_run_band_project_names->[$iter].'"';
-                    print $F "\n";
-                    $iter++;
+        while (my ($stock_id, $data_times) = each %data_hash){
+            foreach my $image_type (sort keys %seen_image_types) {
+                foreach my $day_time (sort keys %seen_day_times) {
+                    my $data = $data_times->{$image_type}->{$day_time};
+                    my $image_fullpaths = $data->{image_fullpaths};
+                    my $value = $phenotype_data_hash{$stock_id};
+                    if ($value) {
+                        my $iter = 0;
+                        foreach (@$image_fullpaths) {
+                            print $F '"'.$stock_id.'",';
+                            print $F '"'.$_.'",';
+                            print $F '"'.$value.'",';
+                            print $F '"'.$trait_name.'",';
+                            print $F '"'.$image_type.'",';
+                            print $F '"'.$day_time.'"';
+                            print $F "\n";
+                            $iter++;
+                        }
+                    }
                 }
             }
         }
@@ -3985,17 +3995,29 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     }
 
     my $cmd = '';
-    if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
+    if ($model_type eq 'KerasTunerCNNSequentialSoftmaxCategorical') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1';
     }
-    elsif ($model_type eq 'SimpleKerasCNNSequentialSoftmaxCategorical') {
+    elsif ($model_type eq 'SimpleKerasTunerCNNSequentialSoftmaxCategorical') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple';
     }
-    elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
+    elsif ($model_type eq 'KerasTunerCNNInceptionResNetV2') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2 --keras_model_weights imagenet';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2application --keras_model_weights imagenet';
+    }
+    elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2';
+    }
+    elsif ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm --keras_model_weights imagenet';
+    }
+    elsif ($model_type eq 'KerasCNNDenseNet121ImageNetWeights') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121application --keras_model_weights imagenet';
+    }
+    elsif ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type simple_1';
     }
     else {
         $c->stash->{rest} = {error => "$model_type not supported!"};
@@ -4278,15 +4300,24 @@ sub _perform_keras_cnn_predict {
     my ($result, $total_count) = $images_search->search();
 
     my %data_hash;
+    my %seen_day_times;
+    my %seen_image_types;
     foreach (@$result) {
         my $image_id = $_->{image_id};
+        my $stock_id = $_->{stock_id};
+        my $project_image_type_name = $_->{project_image_type_name};
+        my $drone_run_band_project_name = $_->{drone_run_band_project_name};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
-        push @{$data_hash{$_->{stock_id}}->{image_fullpaths}}, $image_fullpath;
-        push @{$data_hash{$_->{stock_id}}->{image_urls}}, $image_url;
-        push @{$data_hash{$_->{stock_id}}->{image_ids}}, $image_id;
-        push @{$data_hash{$_->{stock_id}}->{drone_run_related_time_cvterm_json}}, $_->{drone_run_related_time_cvterm_json};
+        my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
+        my $time_days = (split '\|', $time_days_cvterm)[0];
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_fullpaths}}, $image_fullpath;
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_urls}}, $image_url;
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_ids}}, $image_id;
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{drone_run_related_time_cvterm_json}}, $_->{drone_run_related_time_cvterm_json};
+        $seen_day_times{$time_days}++;
+        $seen_image_types{$project_image_type_name}++;
     }
     my @unique_stock_ids = keys %data_hash;
 
@@ -4368,8 +4399,9 @@ sub _perform_keras_cnn_predict {
     my $phenotype_header = shift @previous_data;
     my $trait_name = $phenotype_header->[39];
     my $has_previous_data = 0;
+    my %phenotype_data_hash;
     foreach (@previous_data) {
-        $data_hash{$_->[21]}->{previous_data} = $_->[39];
+        $phenotype_data_hash{$_->[21]} = $_->[39];
         $has_previous_data = 1;
     }
 
@@ -4386,22 +4418,29 @@ sub _perform_keras_cnn_predict {
     my @image_urls;
     my @stock_ids;
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        while (my ($stock_id, $data) = each %data_hash){
-            my $image_ids_ref = $data->{image_ids};
-            my $image_fullpaths_ref = $data->{image_fullpaths};
-            my $image_urls_ref = $data->{image_urls};
-            my $previous_data = $data->{previous_data} || '';
-            my $iterator = 0;
-            foreach (@$image_fullpaths_ref) {
-                print $F '"'.$stock_id.'",';
-                print $F '"'.$_.'",';
-                print $F '"'.$previous_data.'"';
-                print $F "\n";
-                push @image_paths, $_;
-                push @stock_ids, $stock_id;
-                push @image_urls, $image_urls_ref->[$iterator];
-                push @image_ids, $image_ids_ref->[$iterator];
-                $iterator++;
+        while (my ($stock_id, $data_image_types) = each %data_hash){
+            foreach my $image_type (sort keys %seen_image_types) {
+                foreach my $day_time (sort keys %seen_day_times) {
+                    my $data = $data_image_types->{$image_type}->{$day_time};
+                    my $image_ids_ref = $data->{image_ids};
+                    my $image_fullpaths_ref = $data->{image_fullpaths};
+                    my $image_urls_ref = $data->{image_urls};
+                    my $previous_data = $data->{previous_data} || '';
+                    my $iterator = 0;
+                    foreach (@$image_fullpaths_ref) {
+                        print $F '"'.$stock_id.'",';
+                        print $F '"'.$_.'",';
+                        print $F '"'.$previous_data.'",';
+                        print $F '"'.$image_type.'",';
+                        print $F '"'.$day_time.'"';
+                        print $F "\n";
+                        push @image_paths, $_;
+                        push @stock_ids, $stock_id;
+                        push @image_urls, $image_urls_ref->[$iterator];
+                        push @image_ids, $image_ids_ref->[$iterator];
+                        $iterator++;
+                    }
+                }
             }
         }
     close($F);
