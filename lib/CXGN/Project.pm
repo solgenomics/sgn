@@ -2886,7 +2886,7 @@ sub duplicate {
 
  Usage:        my $accessions = $t->get_accessions();
  Desc:         retrieves the accessions used in this trial.
- Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id }
+ Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id, stock_type => stock_type }
  Args:         none
  Side Effects:
  Example:
@@ -2906,8 +2906,9 @@ sub get_accessions {
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename, cvterm.name
 		FROM stock as accession
+        JOIN cvterm on (accession.type_id = cvterm.cvterm_id)
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
 		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
@@ -2917,15 +2918,13 @@ sub get_accessions {
 		WHERE accession.type_id IN ($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id)
 		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id)
 		AND project.project_id = ?
-		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
-	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
-		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id };
+	while (my ($stock_id, $uniquename, $stock_type) = $h->fetchrow_array()) {
+		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type};
 	}
-
 	return \@accessions;
 }
 
