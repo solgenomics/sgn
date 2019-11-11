@@ -612,17 +612,13 @@ sub create_file_id {
     my $traits_ids = $c->stash->{training_traits_ids};
     my $traits_selection_id;
    
-    if ($traits_ids->[0])
+    if (scalar(@$traits_ids > 1))
     {
 	$traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
     }
         
     my $file_id;
     my $referer = $c->req->referer;
-
-    # if ($training_pop_id =~ /^$selection_pop_id$/) {
-    # 	$selection_pop_id = undef;
-    # }
     
     if ($referer =~ /solgs\/selection\//)
     {
@@ -665,11 +661,10 @@ sub create_file_id {
 	
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
-    else
-    {
-	$file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
-    }
 
+    my $trait_id = @$traits_ids->[0];
+    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $trait_id ;
+  
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
     
