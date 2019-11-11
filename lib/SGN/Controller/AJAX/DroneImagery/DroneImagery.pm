@@ -3965,10 +3965,10 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
     my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        while (my ($stock_id, $data_times) = each %data_hash){
+        foreach my $stock_id (sort keys %data_hash){
             foreach my $image_type (sort keys %seen_image_types) {
                 foreach my $day_time (sort keys %seen_day_times) {
-                    my $data = $data_times->{$image_type}->{$day_time};
+                    my $data = $data_hash{$stock_id}->{$image_type}->{$day_time};
                     my $image_fullpaths = $data->{image_fullpaths};
                     my $value = $phenotype_data_hash{$stock_id};
                     if ($value) {
@@ -4418,10 +4418,10 @@ sub _perform_keras_cnn_predict {
     my @image_urls;
     my @stock_ids;
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        while (my ($stock_id, $data_image_types) = each %data_hash){
+        foreach my $stock_id (sort keys %data_hash) {
             foreach my $image_type (sort keys %seen_image_types) {
                 foreach my $day_time (sort keys %seen_day_times) {
-                    my $data = $data_image_types->{$image_type}->{$day_time};
+                    my $data = $data_hash{$stock_id}->{$image_type}->{$day_time};
                     my $image_ids_ref = $data->{image_ids};
                     my $image_fullpaths_ref = $data->{image_fullpaths};
                     my $image_urls_ref = $data->{image_urls};
