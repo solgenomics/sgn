@@ -4425,7 +4425,7 @@ sub _perform_keras_cnn_predict {
                     my $image_ids_ref = $data->{image_ids};
                     my $image_fullpaths_ref = $data->{image_fullpaths};
                     my $image_urls_ref = $data->{image_urls};
-                    my $previous_data = $data->{previous_data} || '';
+                    my $previous_data = $phenotype_data_hash{$stock_id} || '';
                     my $iterator = 0;
                     foreach (@$image_fullpaths_ref) {
                         print $F '"'.$stock_id.'",';
@@ -4485,7 +4485,7 @@ sub _perform_keras_cnn_predict {
             my $stock_id = $stock_ids[$iter];
             my $class_probabilities = join ',', @columns;
             $num_class_probabilities = scalar(@columns);
-            my $previous_value = $data_hash{$stock_id}->{previous_data};
+            my $previous_value = $phenotype_data_hash{$stock_id};
             if ($previous_value){
                 push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $stock_info{$stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $class);
                 if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
@@ -4551,6 +4551,7 @@ sub _perform_keras_cnn_predict {
         $r_block->add_command('library(lme4)');
         $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
         $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
+        $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
         $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 2)');
