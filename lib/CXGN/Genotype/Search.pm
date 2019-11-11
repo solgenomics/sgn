@@ -765,7 +765,7 @@ sub get_next_genotype_info {
 
         my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$germplasmDbId});
 
-        my $genotypeprop_info = {
+        my %genotypeprop_info = {
             markerProfileDbId => $genotypeprop_id,
             germplasmDbId => $germplasmDbId,
             germplasmName => $germplasmName,
@@ -904,6 +904,7 @@ sub get_next_genotype_info {
         $info->{resultCount} = scalar(keys %{$info->{selected_genotype_hash}});
         $info->{all_protocol_marker_names} = \@all_protocol_marker_names;
         $info->{selected_protocol_hash} = $selected_protocol_info;
+        $info->{germplasmDbId} = $germplasmDbId;
         return ($full_count, $info);
 
     }

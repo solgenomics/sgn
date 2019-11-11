@@ -40,38 +40,35 @@ override('retrieve_genotypes',
 			protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
 			return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
 		);
-		my $query_handle = $genotypes_search->get_new_genotype_info();
+		$genotypes_search->init_genotype_iterator();
 		my $counter = 0;
-
-		foreach my $next_accession ( @accessions_list ) {
-#		 while($genotypes_search->get_next_genotype_info()){
-			my @curr_accession_array = [$next_accession];
-			my ($total_count, $genotypes) = $genotypes_search->get_next_genotype_info(@curr_accession_array,$query_handle);
-			my $genotype_string = "";
-		    my $genotype_example = $genotypes->[0];
-			if($counter == 0) {
-				foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-					$genotype_string .= $key."\t";
-		    	}
-		    	$genotype_string .= "\n";
-		 	}
-#		     foreach my $element (@$genotypes) {
-			my $element = $genotype_example;
-			 my $genotype_id = $element->{germplasmDbId};
-			 print STDERR Dumper($genotype_id."\nNEXT LINE\n");
-			 my $genotype_data_string = "";
-			 foreach my $key (sort keys %{$element->{selected_genotype_hash}}) {
-			     my $value = $element->{selected_genotype_hash}->{$key}->{DS};
-			     my $current_genotype = $value;
-			     $genotype_data_string .= $current_genotype."\t";
-			 }
-			 my $s = join "\t", $genotype_id;
-			 $genotype_string .= $s."\t".$genotype_data_string."\n";
-#		     }
-			$counter++;
-#			write_file($file, $genotype_string);
+		while(my $geno = $genotypes_search->get_next_genotype_info) {
+			print STDERR Dumper($geno);
+ 			my $genotype_string = "";
+ 		    my $genotype_example = $geno;
+ 			if($counter == 0) {
+ 				foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+ 					$genotype_string .= $key."\t";
+ 		    	}
+ 		    	$genotype_string .= "\n";
+ 		 	}
+#		    foreach my $element (@$genotypes) {
+# 			my $element = $genotype_example;
+ 			my $genotype_id = $geno->{germplasmDbId};
+			print STDERR Dumper($genotype_id."\nNEXT LINE\n");
+			my $genotype_data_string = "";
+			foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
+				my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
+				my $current_genotype = $value;
+				$genotype_data_string .= $current_genotype."\t";
+			}
+			my $s = join "\t", $genotype_id;
+			$genotype_string .= $s."\t".$genotype_data_string."\n";
+#		    }
 			write_file($file, {append => 1}, $genotype_string);
-		 }
+			$counter++;
+
+	 	}
 
 #		     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, @accessions_list);
 # 		     my $genotype_string = "";
