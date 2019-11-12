@@ -4011,7 +4011,7 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2';
     }
     elsif ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm --keras_model_weights imagenet';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm_imagenet --keras_model_weights imagenet';
     }
     elsif ($model_type eq 'KerasCNNDenseNet121ImageNetWeights') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121application --keras_model_weights imagenet';
@@ -4382,6 +4382,18 @@ sub _perform_keras_cnn_predict {
     $model_type = $model_type_hash->{value};
     my $model_file = $filename."/".$basename;
 
+    my $model_q = "SELECT basename, dirname
+        FROM metadata.md_files
+        JOIN phenome.nd_experiment_md_files using(file_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_protocol using(nd_experiment_id)
+        JOIN nd_protocol using(nd_protocol_id)
+        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model_input_data_file';";
+    my $h = $schema->storage->dbh()->prepare($model_q);
+    $h->execute($model_id);
+    my ($basename, $filename) = $h->fetchrow_array();
+    my $training_input_data_file = $filename."/".$basename;
+
     my @seen_plots = keys %data_hash;
     my $previous_phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$schema,
@@ -4456,7 +4468,7 @@ sub _perform_keras_cnn_predict {
         $has_previous_data_string = ' --plot_prediction_comparison True ';
     }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path.$has_previous_data_string.' --class_map \''.$class_map.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path.$has_previous_data_string.' --class_map \''.$class_map.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -4488,9 +4500,6 @@ sub _perform_keras_cnn_predict {
             my $previous_value = $phenotype_data_hash{$stock_id};
             if ($previous_value){
                 push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $stock_info{$stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $class);
-                if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
-                    push @data_matrix, @columns;
-                }
                 push @simple_data_matrix, ($previous_value, $class);
                 $data_matrix_rows++;
             }
@@ -4565,40 +4574,6 @@ sub _perform_keras_cnn_predict {
         print STDERR Dumper $result_matrix;
         push @model_results, $result_matrix->{data}->[0];
         push @model_results, $result_matrix->{data}->[1];
-    }
-
-    if ($model_prediction_type eq 'cnn_feature_generator_mixed_model') {
-        print STDERR "CNN Feature Generator Mixed Model\n";
-
-        my @cnn_pred_colnames;
-        for (1..$num_class_probabilities) {
-            push @cnn_pred_colnames, "CNNp".$_;
-        }
-        push @data_matrix_colnames, @cnn_pred_colnames;
-
-        my $rmatrix = R::YapRI::Data::Matrix->new({
-            name => 'matrix1',
-            coln => scalar(@data_matrix_colnames),
-            rown => $data_matrix_rows,
-            colnames => \@data_matrix_colnames,
-            data => \@data_matrix_clean
-        });
-        
-        my $rbase = R::YapRI::Base->new();
-        my $r_block = $rbase->create_block('r_block');
-        $rmatrix->send_rbase($rbase, 'r_block');
-        $r_block->add_command('library(lme4)');
-        my $cnn_pred_col_formula = join ' + ', @cnn_pred_colnames;
-        $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
-        $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
-        $r_block->add_command('mixed.lmer <- lmer(previous_value ~ '.$cnn_pred_col_formula.' + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
-        $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-        $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-        $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
-        $r_block->run_block();
-        my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-        print STDERR Dumper $result_matrix;
-        push @model_results, $result_matrix->{data}->[0];
     }
 
     my @evaluation_results;
