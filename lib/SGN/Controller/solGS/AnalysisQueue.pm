@@ -182,7 +182,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 
 
 sub analysis_report_job_args {
-    my ($self, $c) = @_;
+    my ($self, $c, $status_check_duration) = @_;
 
     my $analysis_details = $c->stash->{bg_job_output_details};
 
@@ -207,8 +207,12 @@ sub analysis_report_job_args {
     
     my $job_config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
 
-    my $cmd = 'mx-run solGS::AnalysisReport '
-	. '--output_details_file ' . $report_file;
+    $status_check_duration =  ' --status_check_duration ' . $status_check_duration if $status_check_duration;
+   
+    my $cmd = 'mx-run solGS::AnalysisReport'
+	. ' --output_details_file ' . $report_file
+	. $status_check_duration;
+
     
     my $job_args = {
 	'cmd' => $cmd,
@@ -224,9 +228,9 @@ sub analysis_report_job_args {
 
 
 sub get_analysis_report_job_args_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $status_check_duration) = @_;
 
-    $self->analysis_report_job_args($c);
+    $self->analysis_report_job_args($c, $status_check_duration);
     my $analysis_job_args = $c->stash->{analysis_report_job_args};
        
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -730,6 +734,9 @@ sub structure_selection_prediction_output {
 	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 	my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $prediction_pop_id);
+	my $selection_geno_file = $c->stash->{genotype_file_name};
 		
 	$output_details{'trait_id_' . $trait_id} = {
 	    'training_pop_page'   => $training_pop_page,
@@ -741,6 +748,7 @@ sub structure_selection_prediction_output {
 	    'trait_id'            => $trait_id,
 	    'model_page'          => $model_page,	
 	    'gebv_file'           => $gebv_file,
+	    'selection_geno_file' => $selection_geno_file,
 	    'data_set_type'       => $data_set_type,
 	};
     }	

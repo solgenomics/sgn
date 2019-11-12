@@ -77,7 +77,6 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
 
-    print STDERR "\ndataset name: $dataset_name\n";
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -202,7 +201,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{training_traits_ids} = \@traits_ids;
    
     my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+
     $c->controller('solGS::Files')->create_file_id($c);
+    my $file_id = $c->stash->{file_id};
   
     $c->stash->{pop_id} = $cluster_pop_id || $pop_id;
    
@@ -675,7 +676,7 @@ sub cluster_pheno_input_files {
     my $files;
     
     if ($data_type =~ /phenotype/i)
-    {
+    {	    
 	$files = $c->stash->{phenotype_files_list} 
 	|| $c->stash->{phenotype_file} 
 	|| $c->stash->{phenotype_file_name};

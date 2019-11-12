@@ -1,0 +1,22 @@
+	Correlation
+CV Fold08.Rep1	0.588
+CV Fold03.Rep2	0.547
+CV Fold10.Rep2	0.482
+CV Fold06.Rep2	0.453
+CV Fold01.Rep2	0.407
+CV Fold09.Rep2	0.381
+CV Fold07.Rep1	0.326
+CV Fold06.Rep1	0.312
+CV Fold10.Rep1	0.278
+CV Fold01.Rep1	0.227
+CV Fold04.Rep1	0.216
+CV Fold05.Rep2	0.183
+CV Fold03.Rep1	0.161
+CV Fold02.Rep1	0.131
+CV Fold09.Rep1	0.105
+CV Fold02.Rep2	0.06
+CV Fold05.Rep1	0.03
+CV Fold04.Rep2	-0.02
+CV Fold07.Rep2	-0.052
+CV Fold08.Rep2	-0.081
+Average	0.24

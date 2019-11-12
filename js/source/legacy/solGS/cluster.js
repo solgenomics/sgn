@@ -224,7 +224,8 @@ solGS.cluster = {
 	};
 
 	var message = this.validateClusterParams(validateArgs);
-
+	var url = document.URL;
+	
 	if (message != undefined) {
 	    
 	    jQuery("#cluster_message").html(message)
@@ -232,7 +233,7 @@ solGS.cluster = {
 	    
 	} else {
 	
-	    if (document.URL.match(/solgs\/traits\/all\/population\//)) {
+	    if (url.match(/solgs\/traits\/all\/population\//)) {
 		if (popType.match(/training/)) {
 		    popDetails['training_pop_id'] = popId;	
 		} else if (popType.match(/selection/)) {
@@ -240,7 +241,7 @@ solGS.cluster = {
 		}
 	    }
 
-	    if (document.URL.match(/solgs\/models\/combined\/trials\//)) {
+	    if (url.match(/\solgs\/models\/combined\/trials\//)) {
 		if (popType.match(/training/)) {
 		    popDetails['combo_pops_id'] = popId;
 		} else if (popType.match(/selection/)) {
@@ -278,12 +279,13 @@ solGS.cluster = {
 		clusterPopId = selectId || popId;
 	    }
 
-
 	    if (!clusterPopId) {
-		if (document.URL.match(/solgs\/trait\//)) {
+		if (url.match(/solgs\/trait\//)) {
 		    clusterPopId = popDetails.training_pop_id;
-		} else if (document.URL.match(/solgs\/selection\//)) {
+		} else if (url.match(/solgs\/selection\//)) {
 		    clusterPopId = popDetails.selection_pop_id;
+		} else if (url.match(/combined/)) {
+		    clusterPopId = jQuery('#combo_pops_id').val();
 		}
 	    }
 	    	    
