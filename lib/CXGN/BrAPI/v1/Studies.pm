@@ -466,7 +466,7 @@ sub studies_observation_variables {
 					reference=>""
 				},
 				name => $trait->name,
-				observationVariableDbId => $trait->term,
+				observationVariableDbId => $trait->name . "|" . $trait->term,
 				observationVariableName => $trait->name,
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
