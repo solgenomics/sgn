@@ -111,17 +111,25 @@ solGS.dataset = {
 		
 		var trialsIds = res.trials_ids;
 		var comboPopsId = res.combo_pops_id; 
-
+		var genoProId = res.genotyping_protocol_id;
+		alert(genoProId);
 		if (trialsIds) {
 		    var args = {
 			'combo_pops_id'   : [ comboPopsId ],
 			'combo_pops_list' : trialsIds,
+			'genotyping_protocol_id' : genoProId,
+		    };
+
+		     var singleArgs = {
+			'trial_id' : trialsIds[0],
+			'genotyping_protocol_id' : genoProId,
 		    };
 		    
 		    if (trialsIds.length > 1) {
 			solGS.combinedTrials.downloadCombinedTrialsTrainingPopData(args);
 		    } else {
-			solGS.combinedTrials.downloadSingleTrialTrainingPopData(trialsIds[0])
+			console.log('geno pro id ' + genoProId)
+			solGS.combinedTrials.downloadSingleTrialTrainingPopData(singleArgs);
 		    }
 		} else {
 		    Alert('No trials ids were found for this dataset')

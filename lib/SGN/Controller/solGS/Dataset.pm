@@ -32,15 +32,11 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     
     $c->stash->{dataset_id} = $dataset_id;
     $self->get_dataset_trials_details($c);
-    
-    my $trials_ids = $c->stash->{trials_ids};
-    my $combo_pops_id = $c->stash->{combo_pops_id};
-    my $trials_names = $c->stash->{trials_names};
-    
-    $c->stash->{rest}{'trials_ids'} = $trials_ids;
-    $c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
-    $c->stash->{rest}{'trials_names'} = $trials_names;
-       
+      
+    $c->stash->{rest}{'trials_ids'} = $c->stash->{trials_ids};
+    $c->stash->{rest}{'combo_pops_id'} = $c->stash->{combo_pops_id};
+    $c->stash->{rest}{'trials_names'} = $c->stash->{trials_names};;
+    $c->stash->{rest}{'genotyping_protocol_id'} = $c->stash->{genotyping_protocol_id};  
 }
 
 
@@ -75,6 +71,10 @@ sub get_dataset_trials_ids {
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
     my $trials_ids = $data->{categories}->{trials};
+
+    my $geno_protocol = $data->{categories}->{genotyping_protocols};
+    print STDERR "\get_dataset_trials_ids: protocol -- $geno_protocol->[0]\n";
+    $c->stash->{genotyping_protocol_id} = $geno_protocol->[0];
     $c->stash->{dataset_trials_ids} = $trials_ids;
     $c->stash->{trials_ids} = $trials_ids;
 
@@ -120,7 +120,9 @@ sub submit_dataset_training_data_query {
    
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
-       
+     my $geno_protocol = $data->{categories}->{protocol};
+
+    print STDERR "\n submit_dataset_training_data_query: protocol -- $geno_protocol\n";   
     my $query_jobs_file;
 
     if (@{$data->{categories}->{plots}})	
@@ -207,6 +209,10 @@ sub create_dataset_geno_data_query_jobs {
 
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
+    
+    my $geno_protocol = $data->{categories}->{protocol};
+
+    print STDERR "\ncreate_dataset_geno_data_query_jobs: protocol -- $geno_protocol\n";
 
     if ($data->{categories}->{accessions}->[0])	
     {

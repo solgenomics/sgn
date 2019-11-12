@@ -47,7 +47,7 @@ solGS.waitPage = function (page, args) {
     function checkCachedResult(page, args) {
 
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-
+	alert('Geno V. ' + args.genotyping_protocol_id);
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	    
@@ -432,7 +432,7 @@ solGS.waitPage = function (page, args) {
 
 	var referer = document.URL;
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-	
+	alert('Geno V. ' + args.genotyping_protocol_id);
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(','); 
 	    args['training_traits_ids'] = trainingTraitsIds;	   
@@ -543,7 +543,8 @@ solGS.waitPage = function (page, args) {
 		args['data_set_type']    = dataSetType;	
 	    }
 	}
- 
+
+	args['genotyping_protocol_id'] = args.genotyping_protocol_id;
 	return args;
 
     }
@@ -594,7 +595,6 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.result) {
 		    runAnalysis(profile);
-		    ////confirmRequest();
 		    
 		} else {
 		    var message = 'Failed saving your analysis profile.';

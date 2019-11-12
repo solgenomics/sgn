@@ -3042,16 +3042,16 @@ sub submit_cluster_genotype_query {
 
 
 sub submit_cluster_training_pop_data_query {
-    my ($self, $c, $trials) = @_;
+    my ($self, $c, $trials, $geno_protocol) = @_;
 
-    $self->get_training_pop_data_query_job_args_file($c, $trials);
+    $self->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
     $c->stash->{dependent_jobs} = $c->stash->{training_pop_data_query_job_args_file}; 
     $self->run_async($c);
 }
 
 
 sub training_pop_data_query_job_args {
-    my ($self, $c, $trials) = @_;
+    my ($self, $c, $trials, $geno_protocol) = @_;
 
     my @queries;
     
@@ -3070,7 +3070,7 @@ sub training_pop_data_query_job_args {
 
 	if (!-s $c->stash->{genotype_file_name})
 	{
-	    $self->get_cluster_genotype_query_job_args($c, $trials);
+	    $self->get_cluster_genotype_query_job_args($c, $trials, $geno_protocol);
 	    my $geno_query = $c->stash->{cluster_genotype_query_job_args};
 	    push @queries, @$geno_query if $geno_query;
 	}
@@ -3082,9 +3082,9 @@ sub training_pop_data_query_job_args {
 
 
 sub get_training_pop_data_query_job_args_file {
-    my ($self, $c, $trials) = @_;
+    my ($self, $c, $trials, $geno_protocol) = @_;
 
-    $self->training_pop_data_query_job_args($c, $trials);
+    $self->training_pop_data_query_job_args($c, $trials, $geno_protocol);
     my $training_query_args = $c->stash->{training_pop_data_query_job_args};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -3098,7 +3098,7 @@ sub get_training_pop_data_query_job_args_file {
 
 
 sub get_cluster_genotype_query_job_args {
-    my ($self, $c, $trials) = @_;
+    my ($self, $c, $trials, $geno_protocol) = @_;
 
     my @queries;
 
@@ -3109,7 +3109,7 @@ sub get_cluster_genotype_query_job_args {
 	if (!-s $c->stash->{genotype_file_name})
 	{
 	    #my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
-	    my $args = $self->genotype_trial_query_args($c, $trial_id);
+	    my $args = $self->genotype_trial_query_args($c, $trial_id, $geno_protocol);
 	    
 	    $c->stash->{r_temp_file} = "genotype-data-query-${trial_id}";
 	    $self->create_cluster_accesible_tmp_files($c);
@@ -3214,7 +3214,7 @@ sub phenotype_file {
 
 
 sub genotype_trial_query_args {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c, $pop_id, $geno_protocol) = @_;
 
     $pop_id  = $c->stash->{pop_id} if !$pop_id;
     my $training_pop_id = $c->stash->{training_pop_id};
@@ -3246,6 +3246,7 @@ sub genotype_trial_query_args {
 	'selection_pop_id' => $selection_pop_id,
 	'training_geno_file'  => $training_geno_file,
 	'genotype_file'       => $geno_file,
+	'genotyping_protocol_id' => $geno_protocol,
 	'cache_dir'     => $c->stash->{solgs_cache_dir},
     };
 

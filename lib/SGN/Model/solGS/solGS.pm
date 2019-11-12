@@ -753,11 +753,13 @@ sub genotype_data {
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     my $tr_geno_file     = $args->{training_geno_file};
-   
+      
     my @genotypes;
     my $geno_data = {};
-    
-    my $protocol_id = $self->protocol_id();
+    my $geno_pr_id =  $args->{genotyping_protocol_id};
+     print STDERR "\nModel: genotype-data - args-protocol_id: $geno_pr_id\n";
+    my $protocol_id =  $args->{genotyping_protocol_id} ?  $args->{genotyping_protocol_id} : $self->protocol_id();
+    print STDERR "\nModel: genotype-data - prtocol_id: $protocol_id\n";
     
     if ($training_pop_id) 
     { 
@@ -868,9 +870,16 @@ sub structure_genotype_data {
 
 
 sub genotypes_list_genotype_data {
-    my ($self, $genotypes_ids) = @_;
+    my ($self, $genotypes_ids, $protocol_id) = @_;
 
-    my $protocol_id = $self->protocol_id();
+    print STDERR "\nModel: list genos genotype-data - args-protocol_id: $protocol_id\n";
+     
+    if (!$protocol_id) 
+    {	
+	$protocol_id = $self->protocol_id();
+    }
+
+    print STDERR "\nModel: list genos genotype-data - prtocol_id: $protocol_id\n";
 	    
     my $dataset = CXGN::Dataset->new({
  	people_schema => $self->people_schema,

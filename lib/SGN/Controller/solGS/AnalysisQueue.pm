@@ -395,6 +395,10 @@ sub parse_arguments {
 	  if ($k eq 'data_set_type') 
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
+	  }
+	  if ($k eq 'genotyping_protocol_id') 
+	  {
+	      $c->stash->{genotyping_protocol_id} =  $arguments->{$k};
 	  }	 	  	 
       }
   }
@@ -812,30 +816,33 @@ sub create_training_data {
     my ($self, $c) = @_;
 
     my $analysis_page = $c->stash->{analysis_page};
-    
+    my $geno_protocol = $c->stash->{genotyping_protocol_id};
     if ($analysis_page =~ /solgs\/population\//)
     {
 	my $pop_id = $c->stash->{model_id};	 
-    
+
+	print STDERR "\ncreate_training_data geno protocol: $geno_protocol\n";
 	if ($pop_id =~ /list/)		
 	{
+	    print STDERR "\ncreate_training_data list type geno protocol: $geno_protocol\n";
 	    $c->controller('solGS::List')->submit_list_training_data_query($c);
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	}
 	elsif ($pop_id =~ /dataset/)                
-	{
+	{  print STDERR "\ncreate_training_data dataset type geno protocol: $geno_protocol\n";
 	     $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c); 
 	     $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
 	}
 	else
 	{
-	    $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id]);
+	    $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $geno_protocol);
 	}
     }
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
-    {
+    { 
+	print STDERR "\ncreate_training_data combined trials type geno protocol: $geno_protocol\n";
 	my $trials = $c->stash->{combo_pops_list};	
-	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials);	
+	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $geno_protocol);	
     }
 
 }

@@ -82,17 +82,14 @@ sub run {
 sub trial_genotype_data {
     my $self = shift;
 
-    my $args       = retrieve($self->args_file);
-
-    my $geno_file  = $args->{genotype_file}; 
-    my $pop_id     = ($args->{selection_pop_id} ? $args->{selection_pop_id} : $args->{training_pop_id});
-
+    my $args  = retrieve($self->args_file);    
     my $model = $self->get_model();
 					      
     my $geno_data = $model->genotype_data($args);
    
     if ($geno_data)
     {
+	my $geno_file  = $args->{genotype_file};
 	write_file($geno_file, $geno_data);
     }
     
@@ -129,15 +126,14 @@ sub genotypes_list_genotype_data {
     
     my $args = retrieve($self->args_file);
     
-   # my $list_pop_id   = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
-   # my $genotypes     = $args->{genotypes_list};
     my $genotypes_ids = $args->{genotypes_ids};
     my $data_dir      = $args->{data_dir};
     my $geno_file     = $args->{genotype_file};
+    my $protocol_id   = $args->{genotyping_protocol_id};
 
     my $model = $self->get_model();
    
-    my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids);
+    my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
     write_file($geno_file, $geno_data);
 
 }

@@ -611,7 +611,7 @@ sub genotypes_list_genotype_file {
 
 
 sub genotypes_list_genotype_query_job {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
     my $list_id = $c->stash->{list_id};
     my $dataset_id = $c->stash->{dataset_id};
@@ -645,6 +645,7 @@ sub genotypes_list_genotype_query_job {
 	'genotypes_ids'  => $genotypes_ids,
 	'data_dir'  => $data_dir,
 	'genotype_file'  => $geno_file,
+	'genotyping_protocol_id'=> $protocol_id,
 	'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
     };
 
@@ -849,10 +850,10 @@ sub plots_list_phenotype_file {
 
 
 sub get_list_training_data_query_jobs {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
     $self->plots_list_phenotype_query_job($c);
-    $self->genotypes_list_genotype_query_job($c);
+    $self->genotypes_list_genotype_query_job($c, $protocol_id);
     
     my $pheno_job = $c->stash->{plots_list_phenotype_query_job};
     my $geno_job  = $c->stash->{genotypes_list_genotype_query_job};    
@@ -862,9 +863,9 @@ sub get_list_training_data_query_jobs {
 
 
 sub get_list_training_data_query_jobs_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
-    $self->get_list_training_data_query_jobs($c);
+    $self->get_list_training_data_query_jobs($c, $protocol_id);
     my $query_jobs = $c->stash->{list_training_data_query_jobs};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -878,7 +879,7 @@ sub get_list_training_data_query_jobs_file {
 
 
 sub submit_list_training_data_query {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
     my $list_id = $c->stash->{list_id};
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
@@ -888,14 +889,14 @@ sub submit_list_training_data_query {
 
     if ($list_type =~ /plots/) 
     {
-	$self->get_list_training_data_query_jobs_file($c);
+	$self->get_list_training_data_query_jobs_file($c, $protocol_id);
 	$query_jobs_file = $c->stash->{list_training_data_query_jobs_file};
     }
     elsif ($list_type =~ /trials/)	
     {
 	$self->get_list_trials_ids($c);
 	my $trials = $c->stash->{trials_ids};
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials);
+	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $protocol_id);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
     
