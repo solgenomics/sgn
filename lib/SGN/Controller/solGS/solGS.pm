@@ -3578,15 +3578,6 @@ sub run_async {
     
     nstore $job_config, $job_config_file 
 	or croak "job config file: $! serializing job config to $job_config_file ";
-	
-    
-    # my $jobs = solGS::asyncJob->new({prerequisite_jobs => $prerequisite_jobs,
-    # 				     dependent_jobs => $dependent_jobs,
-    # 				     analysis_report_job => $report_file,
-    # 				     config_file => $job_config_file}
-    # 	);
-    # print STDERR "\ncalling async job run\n";
-    # $jobs->run;
 
     my $cmd = 'mx-run solGS::asyncJob'
 	. ' --prerequisite_jobs '   . $prerequisite_jobs

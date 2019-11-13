@@ -239,6 +239,7 @@ sub get_analysis_report_job_args_file {
     
 }
 
+
 sub email_analysis_report {
     my ($self, $c) = @_;
 
@@ -248,47 +249,6 @@ sub email_analysis_report {
     my $job = $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);	
        
 }
-
-
-# sub email_analysis_report {
-#     my ($self, $c) = @_;
-
-#     my $output_details = $c->stash->{bg_job_output_details};
-      
-#     $c->stash->{r_temp_file} = 'analysis-status';
-#     $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
-#     my $out_temp_file = $c->stash->{out_file_temp};
-#     my $err_temp_file = $c->stash->{err_file_temp};
-   
-#     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-  
-#     my $output_details_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'analysis_report_args');
-#     nstore $output_details, $output_details_file 
-# 	or croak "check_analysis_status: $! serializing output_details to $output_details_file";
-    
-#     my $cmd = 'mx-run solGS::AnalysisReport '
-# 	. '--output_details_file ' . $output_details_file;
-
-
-#     my $config_args = {
-# 	'temp_dir' => $temp_dir,
-# 	'out_file' => $out_temp_file,
-# 	'err_file' => $err_temp_file,
-#     };
-
-#     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
-
-#     my $job_args = {
-# 	'cmd' => $cmd,
-# 	'config' => $config,
-# 	'background_job'=> $c->stash->{background_job},
-# 	'temp_dir' => $temp_dir,
-# 	'async'    => 1,
-#     };
-
-#     my $job = $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);	
-       
-# }
 
 
 sub parse_arguments {
@@ -444,11 +404,9 @@ sub structure_output_details {
     my $log_file = $c->stash->{analysis_log_file};
    
     $output_details->{analysis_profile}  = $analysis_data;
-    $output_details->{r_job_tempdir}     = $c->stash->{r_job_tempdir};
     $output_details->{contact_page}      = $base . 'contact/form';
     $output_details->{data_set_type}     = $c->stash->{data_set_type};
     $output_details->{analysis_log_file} = $log_file;
-    $output_details->{async_pid}         = $c->stash->{async_pid};
     $output_details->{host}              = qq | $base |;
     $output_details->{referer}           = qq | $referer |;
  

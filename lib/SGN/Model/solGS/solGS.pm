@@ -1338,23 +1338,6 @@ sub prediction_pops {
 }
 
 
-# sub plots_list_phenotype_data {
-#     my ($self, $plots_names) = @_;
-   
-#     if (@$plots_names) 
-#     {
-# 	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
-# 	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
-
-# 	return \$data;
-#     }
-#     else
-#     {
-# 	return;
-#     }
-   
-# }
-
 
 sub plots_list_phenotype_data {
     my ($self, $plots_ids) = @_;
@@ -1397,35 +1380,6 @@ sub project_traits {
 
 }
 
-
-# sub project_trait_phenotype_data_rs {
-#     my ($self, $project_id, $trait_id) = @_;
-  
-#     my $rs = $self->schema->resultset("Stock::Stock")->search(
-#         {
-#             'observable.cvterm_id' => $trait_id ,
-#             'project.project_id'   => $project_id,           
-#         }, {
-#             join => [
-#                 { stock_relationship_subjects => 'object',     
-# 		  nd_experiment_stocks => {
-# 		      nd_experiment => {
-# 			  nd_experiment_phenotypes => {
-# 			      phenotype => 'observable'                    
-# 			  },
-# 				  nd_experiment_projects => 'project',
-# 		      },
-# 		  },
-# 		},		 
-#                 ],
-#             select   => [ qw/ object.uniquename object.stock_id me.uniquename phenotype.value / ],
-#             as       => [ qw/ stock_name stock_id uniquename value / ],
-          
-#         });
-              
-#     return $rs;
-
-# }
 
 sub project_trait_phenotype_data_rs {
     my ($self, $project_id, $trait_id) = @_;
@@ -1634,19 +1588,6 @@ sub stock_phenotype_data_rs {
     return $rs;
 }
 
-
-# sub phenotype_data {
-#      my ($self, $pop_id ) = @_; 
-    
-#      my $data;
-#      if ($pop_id) 
-#      {
-# 	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
-# 	 $data           = $self->structure_phenotype_data($phenotypes);                   
-#      }
-    
-#      return  \$data; 
-# }
 
 sub phenotype_data {
     my ($self, $project_id) = @_;
@@ -2148,7 +2089,7 @@ sub get_dataset_name {
 
 
 sub get_dataset_genotype_data {
-    my ($self, $dataset_id) = @_;
+    my ($self, $dataset_id, $protocol_id) = @_;
    
     my $dataset = CXGN::Dataset->new({
 	people_schema => $self->people_schema,

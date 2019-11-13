@@ -171,12 +171,12 @@ sub dataset_genotype_data {
 
     if ($dataset_id)
     {
-    my $geno_file = $args->{genotype_file};
+	my $geno_file = $args->{genotype_file};
 
-    my $model = $self->get_model();  
-    my $geno_data = $model->get_dataset_genotype_data($dataset_id);
-    
-    write_file($geno_file, $geno_data);
+	my $model = $self->get_model();  
+	my $geno_data = $model->get_dataset_genotype_data($dataset_id);
+	
+	write_file($geno_file, $geno_data);
     } 
     elsif ($args->{genotypes_ids})
     {
