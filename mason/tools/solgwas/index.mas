@@ -75,7 +75,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+              <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
             </div>
             <br />
 
