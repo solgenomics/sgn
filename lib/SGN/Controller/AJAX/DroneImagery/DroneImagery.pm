@@ -4382,17 +4382,17 @@ sub _perform_keras_cnn_predict {
     $model_type = $model_type_hash->{value};
     my $model_file = $filename."/".$basename;
 
-    my $model_q = "SELECT basename, dirname
+    my $model_q_training_input = "SELECT basename, dirname
         FROM metadata.md_files
         JOIN phenome.nd_experiment_md_files using(file_id)
         JOIN nd_experiment using(nd_experiment_id)
         JOIN nd_experiment_protocol using(nd_experiment_id)
         JOIN nd_protocol using(nd_protocol_id)
         WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model_input_data_file';";
-    my $h = $schema->storage->dbh()->prepare($model_q);
-    $h->execute($model_id);
-    my ($basename, $filename) = $h->fetchrow_array();
-    my $training_input_data_file = $filename."/".$basename;
+    my $h_training_input = $schema->storage->dbh()->prepare($model_q_training_input);
+    $h_training_input->execute($model_id);
+    my ($basename_training_input, $filename_training_input) = $h_training_input->fetchrow_array();
+    my $training_input_data_file = $filename_training_input."/".$basename_training_input;
 
     my @seen_plots = keys %data_hash;
     my $previous_phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
@@ -4410,11 +4410,9 @@ sub _perform_keras_cnn_predict {
 
     my $phenotype_header = shift @previous_data;
     my $trait_name = $phenotype_header->[39];
-    my $has_previous_data = 0;
     my %phenotype_data_hash;
     foreach (@previous_data) {
         $phenotype_data_hash{$_->[21]} = $_->[39];
-        $has_previous_data = 1;
     }
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
@@ -4422,6 +4420,8 @@ sub _perform_keras_cnn_predict {
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
     my $archive_temp_output_evaluation_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputevaluationfileXXXX');
     my $archive_temp_output_activation_file = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputactivationfileXXXX');
+    my $archive_temp_output_corr_plot = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/corrplotXXXX');
+    $archive_temp_output_corr_plot = $c->config->{basepath}."/".$archive_temp_output_corr_plot.".png";
     $archive_temp_output_activation_file .= ".pdf";
     my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
 
@@ -4463,17 +4463,12 @@ sub _perform_keras_cnn_predict {
     if ($c->config->{error_log}) {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
-    my $has_previous_data_string = '';
-    if ($has_previous_data == 1) {
-        $has_previous_data_string = ' --plot_prediction_comparison True ';
-    }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path.$has_previous_data_string.' --class_map \''.$class_map.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path.' --class_map \''.$class_map.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
     my @result_agg;
-    my $num_class_probabilities;
     my @data_matrix;
     my $data_matrix_rows = 0;
     my $iter = 0;
@@ -4490,23 +4485,19 @@ sub _perform_keras_cnn_predict {
                 @columns = $csv->fields();
             }
             my $prediction = shift @columns;
-            my $class = $class_map_hash->{$prediction};
-            if (ref($class) eq 'HASH') {
-                $class = $class->{label};
-            }
             my $stock_id = $stock_ids[$iter];
-            my $class_probabilities = join ',', @columns;
-            $num_class_probabilities = scalar(@columns);
             my $previous_value = $phenotype_data_hash{$stock_id};
             if ($previous_value){
-                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $stock_info{$stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $class);
-                push @simple_data_matrix, ($previous_value, $class);
+                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $stock_info{$stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
+                push @simple_data_matrix, ($previous_value, $prediction);
                 $data_matrix_rows++;
             }
-            push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $class, $previous_value, $class_probabilities, $image_ids[$iter]];
+            push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $previous_value, $image_ids[$iter]];
             $iter++;
         }
     close($fh);
+
+    print STDERR Dumper \@simple_data_matrix;
 
     print STDERR "CNN Prediction Correlation\n";
     my @model_results;
@@ -4519,6 +4510,7 @@ sub _perform_keras_cnn_predict {
         data => \@simple_data_matrix
     });
 
+    print STDERR "CORR PLOT $archive_temp_output_corr_plot \n";
     my $rbase = R::YapRI::Base->new();
     my $r_block = $rbase->create_block('r_block');
     $rmatrix->send_rbase($rbase, 'r_block');
@@ -4527,6 +4519,10 @@ sub _perform_keras_cnn_predict {
     $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
     $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
     $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
+    
+    $r_block->add_command('png(filename=\''.$archive_temp_output_corr_plot.'\')');
+    $r_block->add_command('plot(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
+    $r_block->add_command('dev.off()');
     $r_block->run_block();
     my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
     print STDERR Dumper $result_matrix;
@@ -4598,7 +4594,7 @@ sub _perform_keras_cnn_predict {
         }
     close($fh_eval);
 
-    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file, trained_trait_name => $trained_trait_name, mixed_model_results => \@model_results };
+    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file, corr_plot => $archive_temp_output_corr_plot, trained_trait_name => $trained_trait_name, mixed_model_results => \@model_results };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }

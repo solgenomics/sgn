@@ -2815,13 +2815,13 @@ jQuery(document).ready(function() {
                 }
 
                 var html = "<hr><h4>Prediction Results: "+response.trained_trait_name+"</h4>";
-                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Image</th><th>Stock</th><th>Predicted Class</th><th>Prediction</th><th>Probabilities</th><th>True Phenotype Value</th></tr></thead><tbody>";
+                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Image</th><th>Stock</th><th>Prediction</th><th>True Phenotype Value</th></tr></thead><tbody>";
                 for (var i=0; i<response.results.length; i++) {
-                    html = html + "<tr><td><a href='/image/view/"+response.results[i][7]+"' target=_blank><img width='40' height='30' border='0' src='"+response.results[i][2]+"'></a></td><td><a href='/stock/"+response.results[i][1]+"/view' target=_blank>"+response.results[i][0]+"</a></td><td>"+response.results[i][3]+"</td><td>"+response.results[i][4]+"</td><td>"+response.results[i][6]+"</td><td>"+response.results[i][5]+"</td></tr>";
+                    html = html + "<tr><td><a href='/image/view/"+response.results[i][5]+"' target=_blank><img width='40' height='30' border='0' src='"+response.results[i][2]+"'></a></td><td><a href='/stock/"+response.results[i][1]+"/view' target=_blank>"+response.results[i][0]+"</a></td><td>"+response.results[i][3]+"</td><td>"+response.results[i][4]+"</td></tr>";
                 }
                 html = html + "</tbody></table>";
 
-                html = html + "<a href='"+response.activation_output+"' target=_blank>Download Activation Result</a>";
+                html = html + "<a href='"+response.activation_output+"' target=_blank>Download Activation Result</a><a href='"+response.corr_plot+"' target=_blank>Download Correlation</a>";
 
                 if (response.evaluation_results.length > 0) {
                     html = html + "<hr><h4>Model Evaluation Results</h4><br/><br/>";
