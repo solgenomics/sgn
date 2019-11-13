@@ -27,7 +27,6 @@ override('retrieve_genotypes',
 		 my $protocolprop_marker_hash_select = shift || [];
 		 my $return_only_first_genotypeprop_for_stock = shift || 1;
 
-#		 print STDERR Dumper(@accessions_list);
 #		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
 		 my @accessions_list = @$accessions_list_ref;
 		 my $genotypes_search = CXGN::Genotype::Search->new(
@@ -43,7 +42,6 @@ override('retrieve_genotypes',
 		$genotypes_search->init_genotype_iterator();
 		my $counter = 0;
 		while(my $geno = $genotypes_search->get_next_genotype_info) {
-			print STDERR Dumper($geno);
  			my $genotype_string = "";
  		    my $genotype_example = $geno;
  			if($counter == 0) {
@@ -55,7 +53,6 @@ override('retrieve_genotypes',
 #		    foreach my $element (@$genotypes) {
 # 			my $element = $genotype_example;
  			my $genotype_id = $geno->{germplasmDbId};
-			print STDERR Dumper($genotype_id."\nNEXT LINE\n");
 			my $genotype_data_string = "";
 			foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
 				my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
