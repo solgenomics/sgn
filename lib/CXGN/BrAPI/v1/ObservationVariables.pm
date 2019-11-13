@@ -230,7 +230,7 @@ sub observation_variable_search {
 		    },
 		    name => $cvterm_name."|".$db_name.":".$accession, #$cvterm_name,
 			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
-			observationVariableName => $cvterm_name,
+			observationVariableName => $cvterm_name."|".$db_name.":".$accession,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
 			ontologyReference => \%ontologyReference,
@@ -251,7 +251,7 @@ sub observation_variable_search {
             scientist => '',
             status => JSON::true,
             submissionTimestamp => undef,
-            synonyms => [ $cvterm_name ],
+            synonyms => [],
 			trait => {
 			    alternativeAbbreviations => [],
 			    attribute => $cvterm_name,
