@@ -76,13 +76,13 @@ sub search {
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
-    my @tissue_ids = $search_params->{sampleDbId} ? @{$search_params->{sampleDbId}} : ();
+    my @tissue_ids = $search_params->{sampleDbId} ? @{$search_params->{sampleDbIds}} : ();
     my @tissue_names = $search_params->{sampleName} ? @{$search_params->{sampleName}} : ();
-    my @geno_trial_ids = $search_params->{plateDbId} ? @{$search_params->{plateDbId}} : ();
+    my @geno_trial_ids = $search_params->{plateDbId} ? @{$search_params->{plateDbIds}} : ();
     my @geno_trial_names = $search_params->{plateName} ? @{$search_params->{plateName}} : ();
-    my @accession_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbId}} : ();
+    my @accession_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbIds}} : ();
     my @accession_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
-    my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbId}} : ();
+    my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbIds}} : ();
     my @obs_names = $search_params->{observationUnitName} ? @{$search_params->{observationUnitName}} : ();
 
     my $sample_search = CXGN::Stock::TissueSample::Search->new({

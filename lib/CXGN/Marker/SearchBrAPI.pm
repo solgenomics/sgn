@@ -2,12 +2,19 @@ package CXGN::Marker::SearchBrAPI;
 
 =head1 NAME
 
-CXGN::Marker::Search - an object to handle searching for markers given criteria
+CXGN::Marker::SearchBrAPI - an object to handle searching for markers given criteria
 
 =head1 USAGE
 
-my $marker_search = CXGN::Marker::Search->new({
-    bcs_schema=>$schema
+my $marker_search = CXGN::Marker::SearchBrAPI->new({
+    bcs_schema=>$schema,
+    marker_ids=>\@marker_ids,
+    marker_names=>\@marker_names,
+    get_synonyms=>$synonyms,
+    match_method=>$method,
+    types=>\@types, 
+    offset=>$page_size*$page,
+    limit=>$page_size
 });
 my ($result, $total_count) = $marker_search->search();
 
@@ -83,13 +90,13 @@ has 'offset' => (
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $limit = $self->limit;
-    my $offset = $self->offset;
     my $marker_ids = $self->marker_ids;
     my $marker_names = $self->marker_names;
     my $get_synonyms = $self->get_synonyms;
     my $match_method = $self->match_method;
     my $types = $self->types;
+    my $limit = $self->limit;
+    my $offset = $self->offset;
     my @where_clause;
     my $comparison;
 

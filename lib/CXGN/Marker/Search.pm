@@ -800,7 +800,7 @@ sub perform_search {
   my ($q, $places) = $self->_assemble_query($start, $end);
 
   #warn $self->query_text();
-print $q."hola\n";
+
   $self->{sth} = $self->{dbh}->prepare($q);
   $self->{sth}->execute(@$places);
 
@@ -808,7 +808,6 @@ print $q."hola\n";
   $self->{query} = $q;
 
 }
-print "hello\n";
 
 ##########################
 # result-getting functions

@@ -19,12 +19,15 @@ sub search {
     my @trait_ids = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
     my @db_names = $inputs->{ontology_db_names} ? @{$inputs->{ontology_db_names}} : ();
     my @db_ids = $inputs->{ontologyDbIds} ? @{$inputs->{ontologyDbIds}} : ();
-    my @dbxref_terms = $inputs->{ontologyXrefs} ? @{$inputs->{ontologyXrefs}} : ();
+    my @dbxref_terms = $inputs->{observationVariableXrefs} ? @{$inputs->{observationVariableXrefs}} : ();
     my @method_ids = $inputs->{methodDbIds} ? @{$inputs->{methodDbIds}} : ();
     my @scale_ids = $inputs->{scaleDbIds} ? @{$inputs->{scaleDbIds}} : ();
+    my @scalexref_terms = $inputs->{scaleXrefs} ? @{$inputs->{scaleXrefs}} : ();
     my @cvterm_names = $inputs->{observationVariableNames} ? @{$inputs->{observationVariableNames}} : ();
     my @datatypes = $inputs->{datatypes} ? @{$inputs->{datatypes}} : ();
     my @classes = $inputs->{traitClasses} ? @{$inputs->{traitClasses}} : ();
+    my @trait_dbids = $inputs->{traitDbIds} ? @{$inputs->{traitDbIds}} : ();
+    my @traitxref_terms = $inputs->{traitXrefs} ? @{$inputs->{traitXrefs}} : ();
    
     my $join = '';
     my @and_wheres;
@@ -90,16 +93,25 @@ sub search {
             observationVariableName => $cvterm_name."|".$db_name.":".$accession,
             ontologyDbId => qq|$db_id|,
             ontologyName => $db_name,
+            ontologyReference => undef,
             trait => {
                 traitDbId => qq|$cvterm_id|,
                 traitName => $cvterm_name,
                 description => $cvterm_definition,
-                class => ''
+                class => undef,
+                alternativeAbbreviations => undef,
+                attribute => undef,
+                entity => undef,
+                mainAbbreviation => undef,
+                ontologyReference => {},
+                status => undef,
+                synonyms => undef,
+                xref => undef
             },
             method => {},
             scale => {
-                scaleDbId =>'',
-                scaleName =>'',
+                scaleDbId =>undef,
+                scaleName =>undef,
                 datatype=>$trait->format,
                 decimalPlaces=>undef,
                 xref=>'',
@@ -110,7 +122,18 @@ sub search {
                 }
             },
             xref => $db_name.":".$accession,
-            defaultValue => $trait->default_value
+            defaultValue => $trait->default_value,
+            contextOfUse => undef,
+            crop => undef,
+            date => undef,
+            documentationURL => undef,
+            growthStage => undef,
+            institution  => undef,
+            language => undef,
+            scientist => undef,
+            status => undef,
+            submissionTimestamp => undef,
+            synonyms => undef
         };
     }
 

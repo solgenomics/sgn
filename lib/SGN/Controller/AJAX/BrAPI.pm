@@ -2638,7 +2638,7 @@ sub samples_list_search_POST {
     save_results($self,$c,$c->stash->{clean_inputs},'Samples');
 }
 
-sub samples_list_search_retrieve : Chained('brapi') PathPart('search/germplasm') Args(1) {
+sub samples_list_search_retrieve : Chained('brapi') PathPart('search/samples') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
@@ -2994,6 +2994,22 @@ sub image_content_store_PUT {
     _standard_response_construction($c, $brapi_package_result);
 
  }
+
+sub image_search_save  : Chained('brapi') PathPart('search/images') Args(0) : ActionClass('REST') { }
+
+sub image_search_save_POST {
+    my $self = shift;
+    my $c = shift; #print "--\n-" ; print Dumper($self); print "--\n-" ;
+    save_results($self,$c,$c->stash->{clean_inputs},'Images');
+}
+
+sub image_search_retrieve : Chained('brapi') PathPart('search/images') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Images');
+}
+
 
 sub save_results {
     my $self = shift;

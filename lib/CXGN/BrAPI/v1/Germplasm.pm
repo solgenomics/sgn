@@ -27,7 +27,8 @@ sub search {
     my $genera_arrayref = $params->{germplasmGenus} || ($params->{germplasmGenera} || ());
     my $germplasm_ids_arrayref  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
     my $germplasm_puis_arrayref = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ());
-    my $species_arrayref = $params->{germplasmSpecies} || ();
+    my $species_arrayref = $params->{germplasmSpecies} || ($params->{germplasmSpecies} || ());
+    my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';
 
@@ -59,6 +60,14 @@ sub search {
     if ($germplasm_puis_arrayref && scalar(@$germplasm_puis_arrayref)>0){
         foreach (@$germplasm_puis_arrayref) {
             $stockprops_values{'PUI'} = {
+                matchtype => 'contains',
+                value => $_
+            };
+        }
+    }
+    if ($synonyms_arrayref && scalar(@$synonyms_arrayref)>0){
+        foreach (@$synonyms_arrayref) {
+            $stockprops_values{'stock_synonym'} = {
                 matchtype => 'contains',
                 value => $_
             };
@@ -118,6 +127,11 @@ sub search {
             subtaxaAuthority=>$_->{subtaxaAuthority},
             donors=>$_->{donors},
             acquisitionDate=>$_->{'acquisition date'},
+            breedingMethodDbId=>undef,
+            documentationURL=>undef,
+            germplasmGenus=>$_->{genus},
+            germplasmSpecies=>$_->{species},
+            seedSource=>$_->{'seed source'}
         };
     }
 
