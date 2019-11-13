@@ -119,6 +119,11 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
+    my $log_file_path = '';
+    if ($c->config->{error_log}){
+        $log_file_path = "--log_file_path '".$c->config->{error_log}."'";
+    }
+
     if (!$selected_drone_run_id) {
         my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $selected_trial_id });
         my $planting_date = $trial->get_planting_date();
@@ -384,7 +389,8 @@ sub upload_drone_imagery_POST : Args(0) {
             print STDERR "Drone image stitch temp file panel $temp_file_image_file_names_panel\n";
 
             # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesMicasense.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre' --work_megapix $stitching_work_pix";
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesMicasense.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre'";
+
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesMicasense.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre'";
 
             @stitched_bands = (
                 ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
@@ -395,7 +401,7 @@ sub upload_drone_imagery_POST : Args(0) {
             );
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py --log_file_path '".$c->config->{error_log}."' --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb'";
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb'";
 
             @stitched_bands = (
                 ["Color Image", "RGB Color Image", "RGB Color Image", $temp_file_stitched_result_rgb],

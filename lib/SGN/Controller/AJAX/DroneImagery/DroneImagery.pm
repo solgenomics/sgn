@@ -696,7 +696,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
     my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_contours/imageXXXX');
     $archive_contours_temp_image .= '.png';
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/GetContours.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageContours/GetContours.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -899,7 +899,7 @@ sub _perform_plot_polygon_assign {
         my $archive_plot_polygons_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/imageXXXX');
         $archive_plot_polygons_temp_image .= '.png';
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons' $image_band_index_string --polygon_type rectangular_square";
+        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons' $image_band_index_string --polygon_type rectangular_square";
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
@@ -2746,7 +2746,7 @@ sub _perform_image_cropping {
     my $image_url = $image->get_image_url("original");
     my $image_fullpath = $image->get_filename('original_converted', 'full');
 
-    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons' --polygon_type rectangular_square";
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons' --polygon_type rectangular_square";
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -3996,13 +3996,13 @@ sub drone_imagery_train_keras_model_GET : Args(0) {
 
     my $cmd = '';
     if ($model_type eq 'KerasTunerCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1_tuner';
     }
     elsif ($model_type eq 'SimpleKerasTunerCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_tuner';
     }
     elsif ($model_type eq 'KerasTunerCNNInceptionResNetV2') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategoricalTuner.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2application_tuner';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
         $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2application --keras_model_weights imagenet';
@@ -4471,10 +4471,10 @@ sub _perform_keras_cnn_predict {
     my @result_agg;
     my @data_matrix;
     my $data_matrix_rows = 0;
-    my $iter = 0;
     my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'growing_degree_days', 'previous_value', 'prediction');
     my @simple_data_matrix;
 
+    my @predictions;
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_output_file)
         or die "Could not open file '$archive_temp_output_file' $!";
@@ -4485,17 +4485,22 @@ sub _perform_keras_cnn_predict {
                 @columns = $csv->fields();
             }
             my $prediction = shift @columns;
-            my $stock_id = $stock_ids[$iter];
-            my $previous_value = $phenotype_data_hash{$stock_id};
-            if ($previous_value){
-                push @data_matrix, ($stock_id, $stock_info{$stock_id}->{germplasm_stock_id}, $stock_info{$stock_id}->{replicate}, $stock_info{$stock_id}->{block_number}, $stock_info{$stock_id}->{row_number}, $stock_info{$stock_id}->{col_number}, $stock_info{$stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
-                push @simple_data_matrix, ($previous_value, $prediction);
-                $data_matrix_rows++;
-            }
-            push @result_agg, [$stock_info{$stock_id}->{uniquename}, $stock_id, $image_urls[$iter], $prediction, $previous_value, $image_ids[$iter]];
-            $iter++;
+            push @predictions, $prediction;
         }
     close($fh);
+
+    my $iter = 0;
+    foreach my $sorted_stock_id (sort keys %data_hash) {
+        my $prediction = $predictions[$iter];
+        my $previous_value = $phenotype_data_hash{$sorted_stock_id};
+        if ($previous_value){
+            push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, $stock_info{$sorted_stock_id}->{replicate}, $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
+            push @simple_data_matrix, ($previous_value, $prediction);
+            $data_matrix_rows++;
+        }
+        push @result_agg, [$stock_info{$sorted_stock_id}->{uniquename}, $sorted_stock_id, $prediction, $previous_value];
+        $iter++;
+    }
 
     print STDERR Dumper \@simple_data_matrix;
 

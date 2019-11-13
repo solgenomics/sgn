@@ -1132,6 +1132,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     <option value="KerasCNNLSTMDenseNet121ImageNetWeights">Keras LSTM DenseNet121 ImageNet Weights</option>
                                     <option value="KerasCNNInceptionResNetV2ImageNetWeights">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights</option>
                                     <option value="KerasCNNSequentialSoftmaxCategorical">Keras CNN Sequential 16-32-64-128-512 Softmax Categorical</option>
+                                    <option value="KerasCNNDenseNet121ImageNetWeights">Keras DenseNet ImageNet Weights</option>
                                 </select>
                             </div>
                         </div>
@@ -2815,9 +2816,9 @@ jQuery(document).ready(function() {
                 }
 
                 var html = "<hr><h4>Prediction Results: "+response.trained_trait_name+"</h4>";
-                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Image</th><th>Stock</th><th>Prediction</th><th>True Phenotype Value</th></tr></thead><tbody>";
+                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Stock</th><th>Prediction</th><th>True Phenotype Value</th></tr></thead><tbody>";
                 for (var i=0; i<response.results.length; i++) {
-                    html = html + "<tr><td><a href='/image/view/"+response.results[i][5]+"' target=_blank><img width='40' height='30' border='0' src='"+response.results[i][2]+"'></a></td><td><a href='/stock/"+response.results[i][1]+"/view' target=_blank>"+response.results[i][0]+"</a></td><td>"+response.results[i][3]+"</td><td>"+response.results[i][4]+"</td></tr>";
+                    html = html + "<tr><td><a href='/stock/"+response.results[i][1]+"/view' target=_blank>"+response.results[i][0]+"</a></td><td>"+response.results[i][2]+"</td><td>"+response.results[i][3]+"</td></tr>";
                 }
                 html = html + "</tbody></table>";
 
