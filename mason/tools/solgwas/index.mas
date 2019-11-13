@@ -273,11 +273,11 @@ jQuery(document).ready(function() {
   	      beforeSend: function() {
             jQuery("#working_modal").modal("show");
   	      },
-          timeout: 30000,
+          timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
-              $('#dataset_select').val('ERROR');
+              alert(response.error);
             }
             else {
               var fig3_response = response.figure3;
