@@ -762,6 +762,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     } elsif ($trial_ids ne 'all') {
         my @trial_ids = split ',', $trial_ids;
         my %unique_traits_ids;
+        my %unique_traits_ids_count;
         my %unique_traits_ids_drone_project;
         foreach (@trial_ids){
             my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
@@ -769,8 +770,10 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             foreach (@$traits_assayed) {
                 $unique_traits_ids{$_->[0]} = $_;
                 if ($_->[5]) {
-                    push @{$unique_traits_ids_drone_project{$_->[0]}->{imaging_project_name}}, $_->[5];
-                    $unique_traits_ids_drone_project{$_->[0]}->{phenotype_count} += $_->[3];
+                    push @{$unique_traits_ids_drone_project{$_->[0]}}, $_->[5];
+                }
+                if ($_->[3]) {
+                    $unique_traits_ids_count{$_->[0]} += $_->[3];
                 }
             }
         }
@@ -813,12 +816,12 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
         elsif ($select_format eq 'html_select') {
             foreach (values %unique_traits_ids) {
                 my $text = $_->[1];
+                my $phenotype_count = $unique_traits_ids_count{$_->[0]};
                 if (exists($unique_traits_ids_drone_project{$_->[0]})) {
-                    my $imaging_project_names = join ',', @{$unique_traits_ids_drone_project{$_->[0]}->{imaging_project_name}};
-                    my $phenotype_count = $unique_traits_ids_drone_project{$_->[0]}->{phenotype_count};
+                    my $imaging_project_names = join ',', @{$unique_traits_ids_drone_project{$_->[0]}};
                     $text .= " ($imaging_project_names $phenotype_count Phenotypes)";
                 } else {
-                    $text .= " (".$_->[3]." Phenotypes)";
+                    $text .= " (".$phenotype_count." Phenotypes)";
                 }
                 push @traits, [$_->[0], $text];
             }
