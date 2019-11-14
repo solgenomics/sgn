@@ -3876,14 +3876,14 @@ sub drone_imagery_compare_images_GET : Args(0) {
 }
 
 sub drone_imagery_train_keras_model : Path('/api/drone_imagery/train_keras_model') : ActionClass('REST') { }
-sub drone_imagery_train_keras_model_GET : Args(0) {
+sub drone_imagery_train_keras_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
-    my $trait_id = $c->req->param('trait_id');
+    my $trait_id = $c->req->param('trait_id[]');
     my $model_type = $c->req->param('model_type');
     my $population_id = $c->req->param('population_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
@@ -4241,7 +4241,7 @@ sub _perform_save_trained_keras_cnn_model {
 }
 
 sub drone_imagery_predict_keras_model : Path('/api/drone_imagery/predict_keras_model') : ActionClass('REST') { }
-sub drone_imagery_predict_keras_model_GET : Args(0) {
+sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -4420,8 +4420,8 @@ sub _perform_keras_cnn_predict {
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
     my $archive_temp_output_evaluation_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputevaluationfileXXXX');
     my $archive_temp_output_activation_file = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputactivationfileXXXX');
-    my $archive_temp_output_corr_plot = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/corrplotXXXX');
-    $archive_temp_output_corr_plot = $c->config->{basepath}."/".$archive_temp_output_corr_plot.".png";
+    my $archive_temp_output_corr_plot = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/corrplotXXXX').".png";
+    my $archive_temp_output_corr_plot_file = $c->config->{basepath}."/".$archive_temp_output_corr_plot;
     $archive_temp_output_activation_file .= ".pdf";
     my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
 
@@ -4515,7 +4515,7 @@ sub _perform_keras_cnn_predict {
         data => \@simple_data_matrix
     });
 
-    print STDERR "CORR PLOT $archive_temp_output_corr_plot \n";
+    print STDERR "CORR PLOT $archive_temp_output_corr_plot_file \n";
     my $rbase = R::YapRI::Base->new();
     my $r_block = $rbase->create_block('r_block');
     $rmatrix->send_rbase($rbase, 'r_block');
@@ -4525,7 +4525,7 @@ sub _perform_keras_cnn_predict {
     $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
     $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
     
-    $r_block->add_command('png(filename=\''.$archive_temp_output_corr_plot.'\')');
+    $r_block->add_command('png(filename=\''.$archive_temp_output_corr_plot_file.'\')');
     $r_block->add_command('plot(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
     $r_block->add_command('dev.off()');
     $r_block->run_block();

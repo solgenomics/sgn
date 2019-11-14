@@ -2630,7 +2630,19 @@ jQuery(document).ready(function() {
         }
         else {
             jQuery.ajax({
-                url : '/api/drone_imagery/train_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&save_model=1&model_name='+drone_imagery_keras_model_name+'&model_description='+drone_imagery_keras_model_desc+'&model_type='+drone_imagery_keras_model_type+'&population_id='+jQuery('#drone_imagery_train_keras_cnn_population_id').val(),
+                url : '/api/drone_imagery/train_keras_model',
+                type: "POST",
+                data : {
+                    'field_trial_ids' : manage_drone_imagery_train_keras_field_trial_id_string,
+                    'trait_id' : manage_drone_imagery_train_keras_trait_id,
+                    'drone_run_ids' : JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids),
+                    'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids),
+                    'save_model' : 1,
+                    'model_name' : drone_imagery_keras_model_name,
+                    'model_description' : drone_imagery_keras_model_desc,
+                    'model_type' : drone_imagery_keras_model_type,
+                    'population_id' : jQuery('#drone_imagery_train_keras_cnn_population_id').val()
+                },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -2804,7 +2816,16 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_predict_keras_model_confirm_step').click(function(){
         jQuery.ajax({
-            url : '/api/drone_imagery/predict_keras_model?field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids)+'&model_id='+manage_drone_imagery_predict_keras_model_id+'&model_prediction_type='+jQuery('#drone_imagery_keras_model_prediction_select').val()+'&population_id='+jQuery('#drone_imagery_predict_keras_cnn_population_id').val(),
+            url : '/api/drone_imagery/predict_keras_model',
+            type: "POST",
+            data: {
+                'field_trial_ids' : manage_drone_imagery_predict_keras_field_trial_id_string,
+                'drone_run_ids' : JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids),
+                'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids),
+                'model_id' : manage_drone_imagery_predict_keras_model_id,
+                'model_prediction_type' : jQuery('#drone_imagery_keras_model_prediction_select').val(),
+                'population_id' : jQuery('#drone_imagery_predict_keras_cnn_population_id').val()
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
