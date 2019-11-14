@@ -3928,11 +3928,13 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
-        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_fullpaths}}, $image_fullpath;
-        $seen_day_times{$time_days}++;
+        my $days = int((split ' ', $time_days)[1]);
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$days}->{image_fullpaths}}, $image_fullpath;
+        $seen_day_times{$days}++;
         $seen_image_types{$project_image_type_name}++;
     }
     print STDERR Dumper \%seen_day_times;
+    undef $result;
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=>$schema,
@@ -3953,6 +3955,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         $phenotype_data_hash{$_->[21]} = $_->[39];
     }
     #print STDERR Dumper \%data_hash;
+    undef @data;
 
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
@@ -3967,7 +3970,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         foreach my $stock_id (sort keys %data_hash){
             foreach my $image_type (sort keys %seen_image_types) {
-                foreach my $day_time (sort keys %seen_day_times) {
+                foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
                     my $data = $data_hash{$stock_id}->{$image_type}->{$day_time};
                     my $image_fullpaths = $data->{image_fullpaths};
                     my $value = $phenotype_data_hash{$stock_id};
@@ -3988,6 +3991,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             }
         }
     close($F);
+    undef %data_hash;
+    undef %phenotype_data_hash;
 
     my $log_file_path = '';
     if ($c->config->{error_log}) {
@@ -4312,14 +4317,16 @@ sub _perform_keras_cnn_predict {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
-        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_fullpaths}}, $image_fullpath;
-        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_urls}}, $image_url;
-        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{image_ids}}, $image_id;
-        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$time_days}->{drone_run_related_time_cvterm_json}}, $_->{drone_run_related_time_cvterm_json};
-        $seen_day_times{$time_days}++;
+        my $days = int((split ' ', $time_days)[1]);
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$days}->{image_fullpaths}}, $image_fullpath;
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$days}->{image_urls}}, $image_url;
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$days}->{image_ids}}, $image_id;
+        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$days}->{drone_run_related_time_cvterm_json}}, $_->{drone_run_related_time_cvterm_json};
+        $seen_day_times{$days}++;
         $seen_image_types{$project_image_type_name}++;
     }
     my @unique_stock_ids = keys %data_hash;
+    undef $result;
 
     my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -4414,6 +4421,7 @@ sub _perform_keras_cnn_predict {
     foreach (@previous_data) {
         $phenotype_data_hash{$_->[21]} = $_->[39];
     }
+    undef @previous_data;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
@@ -4432,7 +4440,7 @@ sub _perform_keras_cnn_predict {
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         foreach my $stock_id (sort keys %data_hash) {
             foreach my $image_type (sort keys %seen_image_types) {
-                foreach my $day_time (sort keys %seen_day_times) {
+                foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
                     my $data = $data_hash{$stock_id}->{$image_type}->{$day_time};
                     my $image_ids_ref = $data->{image_ids};
                     my $image_fullpaths_ref = $data->{image_fullpaths};
@@ -4456,6 +4464,8 @@ sub _perform_keras_cnn_predict {
             }
         }
     close($F);
+    undef %data_hash;
+    undef %phenotype_data_hash;
 
     print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
 
@@ -4501,8 +4511,6 @@ sub _perform_keras_cnn_predict {
         push @result_agg, [$stock_info{$sorted_stock_id}->{uniquename}, $sorted_stock_id, $prediction, $previous_value];
         $iter++;
     }
-
-    print STDERR Dumper \@simple_data_matrix;
 
     print STDERR "CNN Prediction Correlation\n";
     my @model_results;
