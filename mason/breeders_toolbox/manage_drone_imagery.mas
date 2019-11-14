@@ -2657,7 +2657,7 @@ jQuery(document).ready(function() {
                         alert("Trained Keras CNN Model saved!");
                     }
 
-                    var html = "<hr><h4>Results</h4><br/><br/>";
+                    var html = "<hr><a href='"+response.loss_history_file+"' target=_blank>Loss History</a><hr><h4>Results</h4><br/><br/>";
                     html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
                     for (var i=0; i<response.results.length; i++) {
                         html = html + "<tr><td>"+response.results[i]+"</td></tr>";
