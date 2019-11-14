@@ -8,29 +8,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use SGN::Model::Cvterm;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub observation_levels {
 	my $self = shift;
@@ -251,8 +229,8 @@ sub observation_variable_search {
                 reference => ''
 		    },
 		    name => $cvterm_name."|".$db_name.":".$accession, #$cvterm_name,
-			observationVariableDbId => $trait->term, #$cvterm_name."|".$db_name.":".$accession,
-			observationVariableName => $cvterm_name,
+			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
+			observationVariableName => $cvterm_name."|".$db_name.":".$accession,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
 			ontologyReference => \%ontologyReference,
@@ -273,7 +251,7 @@ sub observation_variable_search {
             scientist => '',
             status => JSON::true,
             submissionTimestamp => undef,
-            synonyms => [ $cvterm_name ],
+            synonyms => [],
 			trait => {
 			    alternativeAbbreviations => [],
 			    attribute => $cvterm_name,
