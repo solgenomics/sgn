@@ -74,20 +74,21 @@ sub search_results {
     my $search_params = shift;
     my $schema = $self->bcs_schema;
     my $data;
-	#my $auth = _authenticate_user($c);
+    my $status = $self->status();
+    #my $auth = _authenticate_user($c);
 
-	my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
-	my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
+    my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
+    my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
 
-	my %location_id_list;
-	if (scalar(@location_dbids)>0){
-		%location_id_list = map { $_ => 1} @location_dbids;
-	}
+    my %location_id_list;
+    if (scalar(@location_dbids)>0){
+        %location_id_list = map { $_ => 1} @location_dbids;
+    }
 
-	my %program_id_list;
-	if (scalar(@program_dbids)>0){
-		%program_id_list = map { $_ => 1} @program_dbids;
-	}
+    my %program_id_list;
+    if (scalar(@program_dbids)>0){
+        %program_id_list = map { $_ => 1} @program_dbids;
+    }
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
     my $programs = $p->get_breeding_programs();
@@ -99,10 +100,8 @@ sub search_results {
         }
     }
     my $total_count = scalar @{$data};
-	my %result = (data => $data);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
+    my %result = (data => $data);
+    return (\%result, $status, $total_count);
 }
 
 sub trial_details {

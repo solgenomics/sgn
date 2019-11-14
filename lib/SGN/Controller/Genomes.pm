@@ -243,4 +243,25 @@ sub _annotation_cvterms {
     return [ @terms, map $_->recursive_children, @terms ];
 }
 
+
+=head2 view_sequenced_accessions
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub view_sequenced_accessions :Path('/genomes/sequenced_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/genomes/sequenced_accessions.mas';
+}
+
+
+
 1;

@@ -80,7 +80,7 @@ sub study_types {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'StudyTypes list result constructed');
 }
 
-sub studies_search {
+sub search {
     my $self = shift;
     my $search_params = shift;
 	my $c = shift;
@@ -150,7 +150,6 @@ sub search_results {
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema;
-    #my $auth = _authenticate_user($c);
 
     my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
     my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
@@ -158,14 +157,16 @@ sub search_results {
     my @study_names = $search_params->{studyNames} ? @{$search_params->{studyNames}} : ();
     my @folder_dbids = $search_params->{trialDbIds} ? @{$search_params->{trialDbIds}} : ();
     my @folder_names = $search_params->{trialNames} ? @{$search_params->{trialNames}} : ();
-    my @location_ids = $search_params->{studyLocationDbIds} ? @{$search_params->{studyLocationDbIds}} : ();
+    my @location_ids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
     my @location_names = $search_params->{studyLocationNames} ? @{$search_params->{studyLocationNames}} : ();
+    my @study_type_ids = $search_params->{studyTypeDbIds} ? @{$search_params->{studyTypeDbIds}} : ();
     my @study_type_list = $search_params->{studyTypeName} ? @{$search_params->{studyTypeName}} : ();
     my @germplasm_dbids = $search_params->{germplasmDbIds} ? @{$search_params->{germplasmDbIds}} : ();
     my @germplasm_names = $search_params->{germplasmNames} ? @{$search_params->{germplasmNames}} : ();
-    my @years = $search_params->{seasons} ? @{$search_params->{seasons}} : ();
+    my @years = $search_params->{seasonDbIds} ? @{$search_params->{seasonDbIds}} : ();
     my @obs_variable_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
     my @obs_variable_names = $search_params->{observationVariableNames} ? @{$search_params->{observationVariableNames}} : ();
+    my $crop = $search_params->{commonCropNames};
     my $active = $search_params->{active};
     my $sortBy = $search_params->{sortBy};
     my $sortOrder = $search_params->{sortOrder};
@@ -176,6 +177,7 @@ sub search_results {
         location_list=>\@location_names,
         location_id_list=>\@location_ids,
         trial_type_list=>\@study_type_list,
+        trial_type_ids=>\@study_type_ids,
         trial_id_list=>\@study_dbids,
         trial_name_list=>\@study_names,
         trial_name_is_exact=>1,
@@ -234,6 +236,7 @@ sub search_results {
     my %result = (data=>\@data_out);
     return (\%result, $status, $total_count)
 }
+
 
 sub studies_germplasm {
 	my $self = shift;
@@ -553,7 +556,7 @@ sub studies_layout {
             my $image_id = CXGN::Stock->new({
     			schema => $self->bcs_schema,
     			stock_id => $design->{$plot_number}->{plot_id},
-    		}); 
+    		});
     		my @plot_image_ids = $image_id->get_image_ids();
             my @ids;
             foreach my $arrayimage (@plot_image_ids){
@@ -562,7 +565,7 @@ sub studies_layout {
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
-             
+
 			$formatted_plot = {
 				studyDbId => $study_id,
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
@@ -581,7 +584,7 @@ sub studies_layout {
             $window_count++;
 		}
 		$count++;
-	} 
+	}
 	my %result;
     my @data_files;
     if ($format eq 'json'){

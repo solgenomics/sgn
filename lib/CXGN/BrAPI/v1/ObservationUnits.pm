@@ -118,7 +118,9 @@ sub search {
             entryType => $entry_type,
             entryNumber => '',
             treatments => \@brapi_treatments,
-            observations => \@brapi_observations
+            observations => \@brapi_observations,
+            observationUnitXref => [],
+            pedigree => undef
         };
         $total_count = $obs_unit->{full_count};
     }
