@@ -610,9 +610,10 @@ sub create_file_id {
     my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
+    my @traits_ids = $traits_ids->[0] ? @{$traits_ids} : 0;
+    
     my $traits_selection_id;
-   
-    if (scalar(@$traits_ids > 1))
+    if (scalar(@traits_ids > 1))
     {
 	$traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
     }
@@ -662,9 +663,7 @@ sub create_file_id {
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
 
-    my $trait_id = $traits_ids->[0];
-    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $trait_id ;
-  
+    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . @traits_ids[0]; 
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
     
