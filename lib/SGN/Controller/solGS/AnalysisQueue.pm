@@ -78,17 +78,17 @@ sub save_profile {
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
 
-    $self->add_headers($c);
+    $self->add_log_headers($c);
 
-    $self->format_profile_entry($c);
-    my $formatted_profile = $c->stash->{formatted_profile};
+    $self->format_log_entry($c);
+    my $log_entry = $c->stash->{formatted_log_entry};
     
-    write_file($log_file, {append => 1}, $formatted_profile);
+    write_file($log_file, {append => 1}, $log_entry);
    
 }
 
 
-sub add_headers {
+sub add_log_headers {
   my ($self, $c) = @_;
 
   $self->analysis_log_file($c);
@@ -136,11 +136,42 @@ sub index_log_file_headers {
 
 }
 
+sub create_selection_pop_page {
+    my ($self, $c) = @_;
 
-sub format_profile_entry {
+    $self->parse_arguments($c);
+     
+    my $tr_pop_id     = $c->stash->{training_pop_id};
+    my $sel_pop_id    = $c->stash->{selection_pop_id};
+    my $trait_id      = $c->stash->{trait_id};
+    my $data_set_type = $c->stash->{data_set_type};
+    my $sel_pop_page;
+   
+    if ($data_set_type =~ /combined populations/)
+    {	   
+	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id";	   
+    }
+    else
+    {	
+	$sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id";
+    }
+  
+    $c->stash->{selection_pop_page} = $sel_pop_page;
+}
+
+
+sub format_log_entry {
     my ($self, $c) = @_; 
     
+   
     my $profile = $c->stash->{analysis_profile};
+    if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+    {
+	 $self->create_selection_pop_page($c);
+	 my $sel_pop_page = $c->stash->{selection_pop_page};
+	 $profile->{analysis_page} = $sel_pop_page;
+    }
+   
     my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
     my $entry   = join("\t", 
 		       (
@@ -156,7 +187,7 @@ sub format_profile_entry {
 
     $entry .= "\n";
 	
-    $c->stash->{formatted_profile} = $entry; 
+    $c->stash->{formatted_log_entry} = $entry; 
 
 }
 
@@ -690,14 +721,12 @@ sub structure_selection_prediction_output {
 	{	
 	    $training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 	    if ($training_pop_id =~ /list/)
-	    {
-		
+	    {		
 		$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
 	    elsif ($training_pop_id =~ /dataset/)
-	    {
-		
+	    {		
 		$c->controller('solGS::Dataset')->dataset_population_summary($c);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
@@ -903,6 +932,7 @@ sub predict_selection_traits {
     }	    
     
 }
+
 
 sub update_analysis_progress {
     my ($self, $c) = @_;
