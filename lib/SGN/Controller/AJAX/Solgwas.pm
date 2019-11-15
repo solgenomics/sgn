@@ -402,8 +402,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $pc_check,
             $kinship_check,
     );
-    $cmd->alive;
-    $cmd->is_cluster(1);
     $cmd->wait;
 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
