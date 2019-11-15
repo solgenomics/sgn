@@ -663,7 +663,7 @@ sub create_file_id {
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
 
-    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . @traits_ids[0]; 
+    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $traits_ids[0]; 
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
     
