@@ -27,6 +27,9 @@ use CXGN::BrAPI;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
+	# Leaving default Content-Type to not break everything. If data is passed that is not parsable as json, and the
+	# data type is not handled in the map below, we get a catalyst error with a 200 response which is not ideal.
+	default		  => 'application/json',
 	stash_key     => 'rest',
 	map           => {  'application/json' => 'JSON',
 						# would be nice if we could do image/* instead of explicitly listing each type
@@ -961,7 +964,7 @@ sub studies_search_GET {
         active => $clean_inputs->{active}->[0],
         sortBy => $clean_inputs->{sortBy}->[0],
         sortOrder => $clean_inputs->{sortOrder}->[0],
-    });
+    }, $c);
     _standard_response_construction($c, $brapi_package_result);
 }
 

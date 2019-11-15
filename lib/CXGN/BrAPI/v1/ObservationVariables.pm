@@ -230,7 +230,7 @@ sub observation_variable_search {
 		    },
 		    name => $cvterm_name."|".$db_name.":".$accession, #$cvterm_name,
 			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
-			observationVariableName => $cvterm_name."|".$db_name.":".$accession,
+			observationVariableName => $cvterm_name,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
 			ontologyReference => \%ontologyReference,
