@@ -706,6 +706,7 @@ sub observation_units_granular {
                 germplasmDbId => $d->{germplasm_stock_id},
                 germplasmName => $d->{germplasm_uniquename},
                 value => $o->{value},
+                season => {}
             };
         }
     }

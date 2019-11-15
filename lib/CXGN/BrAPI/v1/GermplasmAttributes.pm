@@ -92,6 +92,7 @@ sub germplasm_attributes_categories_list {
 		push @data, {
 			attributeCategoryDbId => "$attributeCategoryDbId",
 			name => $attributeCategoryName,
+			attributeCategoryName => $attributeCategoryName
 		};
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
@@ -145,6 +146,24 @@ sub germplasm_attributes_germplasm_detail {
 			attributeCategoryName => $attributeCategoryName,
 			value => $value,
 			dateDetermined => '',
+			contextOfUse => [],
+	        crop => undef,
+	        defaultValue => undef,
+	        documentationURL => undef,
+	        growthStage => undef,
+	        institution => undef,
+	        language => undef,
+	        method => {},
+	        ontologyDbId =>,
+	        ontologyName =>,
+	        ontologyReference => {},
+	        scale=> {},
+	        scientist=> undef,
+	        status=> undef,
+	        submissionTimestamp=> undef,
+	        synonyms => [],
+	        trait => {},
+	        xref=> undef
 		};
 	}
 	my %result = (

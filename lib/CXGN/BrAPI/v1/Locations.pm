@@ -22,6 +22,7 @@ sub locations_list {
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
+			locationName=> $_->[1],
 			name=> $_->[1],
 			abbreviation=>$_->[9],
 			countryCode=> $_->[6],
@@ -31,7 +32,8 @@ sub locations_list {
 			altitude=>$_->[4],
             instituteName=>'',
             instituteAddress=>$_->[10],
-			additionalInfo=> $_->[7]
+			additionalInfo=> $_->[7],
+			documentationURL=> undef
 		};
 	}
 

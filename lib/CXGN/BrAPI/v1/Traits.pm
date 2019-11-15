@@ -44,6 +44,7 @@ sub list {
 		push @data, {
 			traitDbId => qq|$cvterm_id|,
 			traitId => $db_name.":".$accession,
+			traitName => $cvterm_name,
 			name => $cvterm_name,
 			description => $cvterm_definition,
 			observationVariables => [
@@ -74,6 +75,7 @@ sub detail {
 	my %result = (
 		traitDbId => $trait->cvterm_id,
 		traitId => $trait->term,
+		traitName => $trait->name,
 		name => $trait->name,
 		description => $trait->definition,
 		observationVariables => [
