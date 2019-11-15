@@ -17,18 +17,19 @@ extends 'CXGN::BrAPI::v1::Common';
 sub observations_store {
     my $self = shift;
     my $params = shift;
-    my $observations = $params->{observations} ? $params->{observations} : ();
-
-    #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
+    my $observations = $params->{observations};
+    my $version = $params->{version};
     my $user_id = $params->{user_id};
     my $username = $params->{username};
     my $user_type = $params->{user_type};
     my $archive_path = $params->{archive_path};
     my $tempfiles_subdir = $params->{tempfiles_subdir};
+
+    #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -37,7 +38,7 @@ sub observations_store {
     my $status = $self->status;
     my @data = [];
     my @data_files = ();
-    my %result = (data => \@data);
+    my %result;
 
     my @success_status = [];
 
@@ -45,7 +46,7 @@ sub observations_store {
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        push @$status, {'4003' => 'Permission Denied. Must have correct privilege.'};
+        push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
     }
 
@@ -143,7 +144,11 @@ sub observations_store {
     }
     if ($stored_observation_success) {
         print STDERR "Success: $stored_observation_success\n";
-        $result{data} = $stored_observation_details;
+        if ($version eq 'v1') {
+            $result{observations} = $stored_observation_details;
+        } elsif ($version eq 'v2') {
+            $result{data} = $stored_observation_details;
+        }
     }
 
     ## Will need to initiate refresh matviews in controller instead
