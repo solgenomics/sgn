@@ -2,11 +2,15 @@
 import '../legacy/jquery.js';
 import '../legacy/d3/d3Min.js';
 
+
+
+
 export function init(main_div){
   if (!(main_div instanceof HTMLElement)){
     main_div = document.getElementById(main_div.startsWith("#") ? main_div.slice(1) : main_div);
   }
-
+    var dataset_id;
+    
     main_div.innerHTML = `
 
 	<style>
@@ -223,8 +227,11 @@ export function init(main_div){
 	var file = $('#tempfile').html();
 	var basename = file.split('/').reverse()[0];
 	var analysis_type = $('#analysis_type').val();
+	//alert("analysis type"+analysis_type);
 	var final_filename = basename+"."+analysis_type;
 	alert(final_filename);
+	
+	var selected_datasets = $('#available_datasets').val();
 
 	jQuery.ajax( {
 	    'method' : 'POST',
@@ -234,7 +241,7 @@ export function init(main_div){
 		       'dir' : 'mixedmodels',
 		       'analysis_type': 'mixed_model_analysis',
 		       'analysis_name': name,
-		       'dataset_id' : $('#available_datasets').val(),
+		       'dataset_id' : get_dataset_id(),
 		       'analysis_protocol' : $('#model_string').val(),
 		       'description' : description
 		     },
@@ -265,22 +272,12 @@ export function init(main_div){
     });
 
     $('#mixed_model_analysis_prepare_button').click( function() {
-        var selected_datasets = [];
-        jQuery('input[name="mixed_model_dataset_select_checkbox"]:checked').each(function() {
-            selected_datasets.push(jQuery(this).val());
-        });
-        if (selected_datasets.length < 1){
-            alert('Please select at least one dataset!');
-            return false;
-        } else if (selected_datasets.length > 1){
-            alert('Please select only one dataset!');
-            return false;
-        } else {
 
-            var dataset_id=selected_datasets[0];
+	dataset_id=get_dataset_id();
+	if (dataset_id != false) { 
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
-                data: { 'dataset_id' : dataset_id },
+                data: { 'dataset_id' : get_dataset_id() },
                 success: function(r) {
                     if (r.error) {
                         alert(r.error);
@@ -288,23 +285,23 @@ export function init(main_div){
                     else {
                         $('#dependent_variable').html(r.dependent_variable);
                         var html = "";
-
+			
                         for (var n=0; n<r.factors.length; n++) {
                             html += "<div id=\"factor_"+n+"\" class=\"container factor\">"+r.factors[n]+"</div>";
                         }
                         $('#factors').html(html);
-
+			
                         for (var n=0; n<r.factors.length; n++) {
                             $('#factor_'+n).draggable({ helper:"clone",revert:"invalid"} );
                         }
-
+			
                         $('#tempfile').html(r.tempfile);
                     }
                     $('#fixed_factors').droppable( {drop: function( event, ui ) {
                         $( this )
                         //.addClass( "ui-state-highlight" )
-                        .find( "p" )
-                        .html( "Dropped!" );
+                            .find( "p" )
+                            .html( "Dropped!" );
                         var droppable = $(this);
                         var draggable = ui.draggable;
                         // Move draggable into droppable
@@ -343,8 +340,8 @@ export function init(main_div){
                     alert("ERROR!!!!!");
                 }
             });
-        }
-   });
+           }
+    });
 
 
    $('#add_interaction_factor_button').click( function(e) {
@@ -501,7 +498,25 @@ export function init(main_div){
             }
 	});
     });
-    
+
+}
+
+function get_dataset_id() {
+    var selected_datasets = [];
+    jQuery('input[name="mixed_model_dataset_select_checkbox"]:checked').each(function() {
+        selected_datasets.push(jQuery(this).val());
+    });
+    if (selected_datasets.length < 1){
+        alert('Please select at least one dataset!');
+        return false;
+    } else if (selected_datasets.length > 1){
+        alert('Please select only one dataset!');
+        return false;
+    } else {	
+	var dataset_id=selected_datasets[0];
+	return dataset_id;
+    }
+}
 
     function extract_model_parameters() {
 
@@ -656,4 +671,4 @@ export function init(main_div){
 
 
     }
-};
+

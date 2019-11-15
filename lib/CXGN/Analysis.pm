@@ -9,6 +9,7 @@ use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialDesignStore;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Analysis::AnalysisMetadata;
+use CXGN::List::Transform;
 use CXGN::Dataset;
 
 
@@ -24,7 +25,9 @@ has 'name' => (is => 'rw', isa => 'Str');
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
-has 'accessions' => (is => 'rw', isa => 'ArrayRef');
+has 'accession_ids' => (is => 'rw', isa => 'ArrayRef');
+
+has 'accession_names' => (is => 'rw', isa => 'ArrayRef');
 
 has 'data_hash' => (is => 'rw', isa => 'HashRef');
 
@@ -67,6 +70,24 @@ sub BUILD {
 
 	$stockprop_id = $metadata->prop_id();
 
+	# Extract the list of accessions from the dataset
+	#
+	if (my $dataset_id = $self->metadata()->dataset_id()) {
+	    my $ds = CXGN::Dataset->new( 
+		{ 
+		    schema => $self->bcs_schema(), 
+		    people_schema => $self->people_schema(),
+		    sp_dataset_id => $dataset_id,	
+		});
+
+	    my $accession_ids = $ds->retrieve_accessions();
+	    $self->accession_ids($accession_ids);
+	    my $lt = CXGN::List::Transform->new();
+	    my $transform = $lt->can_transform("accession_id", "accession");
+	    my $accession_names = $lt->tranform($args->{bcs_schema}, $transform, $accession_ids );
+	    $self->accession_names($accession_names);
+        }
+	
 	print STDERR "prop_id is $stockprop_id...\n";
 	# if object doesn't have metadata in the database, create an 
 	# empty object
@@ -77,6 +98,7 @@ sub BUILD {
 	    $metadata->store();
 	}
 
+	
 	
 
     }
@@ -226,11 +248,24 @@ sub create_and_store_analysis_design {
     #
     print STDERR "Create a new analysis design...\n";
     my $td = CXGN::Trial::TrialDesign->new();
+
+    my $accession_names;
+    print STDERR "Retrieving accession names...\n";
+    print STDERR "Using ids ".join(", ",@{$self->accession_ids()})."\n";
+    my $tf = CXGN::List::Transform->new();
+    my $transform_name = $tf->can_transform("accession_ids", "accessions");
+    print STDERR "Transform name = $transform_name\n";
+    if ($transform_name) {
+	$accession_names = $tf->transform($self->bcs_schema(), $transform_name, $self->accession_ids());
+	print STDERR "Accession names now: ".join(", ", @$accession_names)."\n";
+	$self->accession_names($accession_names);
+    }
+    
     
     $td->set_trial_name($self->name());
-    $td->set_stock_list($self->accessions());
+    $td->set_stock_list($self->accession_names());
 
-    print STDERR "Accessions in design: ".Dumper($self->accessions)."\n";
+    print STDERR "Accessions in design: ".Dumper($self->accession_names())."\n";
     $td->set_design_type("Analysis");
 
     my $design;

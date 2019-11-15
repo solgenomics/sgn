@@ -149,6 +149,7 @@ sub store_data {
 	});
 
     if ($params->{dataset_id} !~ /^\d+$/) {
+	print STDERR "Dataset ID $params->{dataset_id} not accetable.\n";
 	$params->{dataset_id} = undef;
     }
 
@@ -159,7 +160,7 @@ sub store_data {
     $a->name($params->{analysis_name});
     $a->description($params->{description});
     $a->user_id($user_id);
-    $a->metadata()->accessions($stocks);
+    $a->accession_ids($stocks);
     $a->metadata()->traits($traits);
     $a->metadata()->analysis_protocol($params->{analysis_protocol});
     

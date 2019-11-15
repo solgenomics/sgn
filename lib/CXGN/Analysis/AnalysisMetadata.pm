@@ -11,7 +11,7 @@ has 'dataset_data' => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'analysis_protocol' => (isa => 'Maybe[Str]', is => 'rw');
 
-has 'accessions' => (isa => 'Maybe[Ref]', is => 'rw');
+has 'traits' => (isa => 'Maybe[Ref]', is => 'rw');
 
 has 'create_timestamp' => (isa => 'Maybe[Str]', is =>'rw');
 
@@ -27,7 +27,7 @@ sub BUILD {
     $self->prop_type('analysis_metadata_json');
     $self->prop_id($args->{prop_id});
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol accessions create_timestamp modified_timestamp | ]);
+    $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol create_timestamp modified_timestamp | ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 
