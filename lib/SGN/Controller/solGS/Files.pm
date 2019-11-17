@@ -311,12 +311,13 @@ sub relationship_matrix_file {
 }
 
 
-sub blups_file {
-    my ($self, $c) = @_;
+# sub blups_file {
+#     my ($self, $c) = @_;
     
-    my $blups_file = $c->stash->{rrblup_training_gebvs_file};
-    $c->controller('solGS::solGS')->top_blups($c, $blups_file);
-}
+#     my $blups_file = $c->stash->{rrblup_training_gebvs_file};
+#     my $top_blups = $c->controller('solGS::Utils')->top_10($blups_file);
+#     $c->stash->{top_blups} = $top_blups;
+# }
 
 
 sub validation_file {
@@ -367,23 +368,6 @@ sub combined_gebvs_file {
 
     $self->cache_file($c, $cache_data);
 
-}
-
-
-sub selection_index_file {
-    my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-   
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $selection_pop_id  if $selection_pop_id;
-
-    my $name = "selection_index_only_${training_pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $self->create_tempfile($temp_dir, $name);
-    $c->stash->{selection_index_only_file} = $file;
-   
 }
 
 
@@ -497,23 +481,6 @@ sub rrblup_selection_gebvs_file {
 
     $self->cache_file($c, $cache_data);
 
-}
-
-
-sub gebvs_selection_index_file {
-    my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-    
-    my $pred_file_suffix;
-    $pred_file_suffix = '_' . $selection_pop_id  if $selection_pop_id;
-  
-    my $name = "gebvs_selection_index_${training_pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $file = $self->create_tempfile($temp_dir, $name);
-    $c->stash->{gebvs_selection_index_file} = $file;
-   
 }
 
 
@@ -638,12 +605,15 @@ sub create_file_id {
     my $cluster_type     = $c->stash->{cluster_type};
     my $combo_pops_id    = $c->stash->{combo_pops_id};
     my $data_type        = $c->stash->{data_type};
-    my $k_number         = $c->stash->{k_number};
+    my $k_number         = $c->stash->{k_number};    
+    my $sindex_name      = $c->stash->{sindex_weigths} || $c->stash->{sindex_name};
+    my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
+    my @traits_ids = $traits_ids->[0] ? @{$traits_ids} : 0;
+    
     my $traits_selection_id;
-   
-    if ($traits_ids->[0])
+    if (scalar(@traits_ids > 1))
     {
 	$traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
     }
@@ -656,21 +626,20 @@ sub create_file_id {
 	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
 	$c->controller('solGS::List')->register_trials_list($c);
 	$combo_pops_id =  $c->stash->{combo_pops_id};
-	#$c->stash->{pop_id} =  $combo_pops_id;
 	$file_id = $combo_pops_id;
     }
     elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	#$c->stash->{pop_id} = $combo_pops_id;
 	$file_id = $combo_pops_id;
 	$c->stash->{data_set_type} = 'combined_populations';
     } 
     elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
     {
-	$file_id =  $selection_pop_id ? $training_pop_id . '_' . $selection_pop_id : $training_pop_id;
-    }else 
+	$file_id =  $selection_pop_id ? $training_pop_id . '-' . $selection_pop_id : $training_pop_id;
+    }
+    else 
     {
 	$file_id = $training_pop_id;
     }
@@ -684,9 +653,20 @@ sub create_file_id {
 	$file_id = "dataset_${dataset_id}";
     } 
 
-    $file_id = $data_type ? $file_id . '_' . $data_type : $file_id;
-    $file_id = $k_number  ? $file_id . '_K' . $k_number : $file_id;
-    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
+    if ($sindex_name)
+    {
+	if ($sindex_name !~ $selection_pop_id)
+	{
+	    $file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
+	}
+	
+	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
+    }
+
+    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $traits_ids[0]; 
+    $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
+    $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
+    
     $c->stash->{file_id} = $file_id;
     
 }
@@ -779,7 +759,8 @@ sub get_solgs_dirs {
     my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
     my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($tmp_dir, 'solgs', 'tempfiles', 'datasets');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
+    my $histogram_cache = catdir($tmp_dir, 'histogram', 'cache');
+    my $histogram_temp  = catdir($tmp_dir, 'histogram', 'tempfiles');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
     my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
     my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
@@ -789,14 +770,15 @@ sub get_solgs_dirs {
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
     my $cluster_cache   = catdir($tmp_dir, 'cluster', 'cache');
     my $cluster_temp    = catdir($tmp_dir, 'cluster', 'tempfiles');
+    my $sel_index_cache = catdir($tmp_dir, 'selectionIndex', 'cache');
+    my $sel_index_temp  = catdir($tmp_dir, 'selectionIndex', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
-	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
-	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
+	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
 	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
-	 $cluster_cache, $cluster_temp,
+	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
 	0, 0755
 	);
@@ -812,13 +794,16 @@ sub get_solgs_dirs {
 	      cluster_temp_dir            => $cluster_temp,
               correlation_cache_dir       => $corre_cache,
 	      correlation_temp_dir        => $corre_temp,
-	      histogram_dir               => $histogram_dir,
+	      histogram_cache_dir         => $histogram_cache,
+	      histogram_temp_dir          => $histogram_temp,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,
 	      anova_temp_dir              => $anova_temp,
 	      solqtl_cache_dir            => $solqtl_cache,
               solqtl_tempfiles_dir        => $solqtl_tempfiles,
 	      cache_dir                   => $solgs_cache,
+	      selection_index_cache_dir   => $sel_index_cache,
+	      selection_index_temp_dir    => $sel_index_temp,
 
         );
 
@@ -828,3 +813,4 @@ sub get_solgs_dirs {
 ###
 1;#
 ##
+ 

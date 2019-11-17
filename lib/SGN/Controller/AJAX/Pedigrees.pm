@@ -94,7 +94,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1);
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1);
     my %errors;
 
     while (<$F>) {
@@ -120,7 +120,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         }
         # check if the cross types are recognized...
         if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-            $errors{"not legal cross type: $acc[3] (should be biparental, self, open or sib)"}=1;
+            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib or polycross)"}=1;
         }
     }
     close($F);
@@ -128,11 +128,11 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
     if (scalar(@accessions_missing)>0){
-        $errors{"The following accessions are not in the database: ".(join ",", @accessions_missing)} = 1;
+        $errors{"The following accessions or populations are not in the database: ".(join ",", @accessions_missing)} = 1;
     }
 
     if (%errors) {
-        $c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
+        $c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
         return;
     }
 
@@ -215,11 +215,11 @@ sub _get_pedigrees_from_file {
             $c->detach();
         }
         if (!$cross_type){
-            $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental,open,self,sib." };
+            $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental, open, self, sib, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib'){
-            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental,open,self, sib." };
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross'){
+            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, sib, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
@@ -248,6 +248,14 @@ sub _get_pedigrees_from_file {
         elsif($cross_type eq "sib") {
             if (!$male){
                 $c->stash->{rest} = { error => "For $progeny Cross Type is sib, but no male parent given" };
+                $c->detach();
+            }
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        }
+        elsif($cross_type eq "polycross") {
+            if (!$male){
+                $c->stash->{rest} = { error => "For $progeny Cross Type is polycross, but no male parent given" };
                 $c->detach();
             }
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });

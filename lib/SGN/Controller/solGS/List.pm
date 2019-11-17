@@ -32,7 +32,7 @@ use Storable qw/ nstore retrieve /;
 use String::CRC;
 use Try::Tiny;
 
-
+use solGS::queryJobs;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -662,7 +662,8 @@ sub genotypes_list_genotype_query_job {
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
@@ -674,11 +675,10 @@ sub genotypes_list_genotype_query_job {
 		or croak "data query script: $! serializing model details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type genotype '
-	. ' --population_type ' . $pop_type
-	. ' --args_file ' . $args_file;
+    	. ' --data_type genotype '
+    	. ' --population_type ' . $pop_type
+    	. ' --args_file ' . $args_file;
     
-
     my $job_args = {
 	'cmd' => $cmd,
 	'config' => $config,
@@ -689,7 +689,6 @@ sub genotypes_list_genotype_query_job {
     $c->stash->{genotypes_list_genotype_query_job} = $job_args;
     $c->stash->{genotype_file} = $geno_file;
 }
-
 
 
 sub plots_list_phenotype_query_job {
@@ -747,14 +746,15 @@ sub plots_list_phenotype_query_job {
 		or croak "data query script: $! serializing data query details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type phenotype '
-	. ' --population_type plots_list '
-	. ' --args_file ' . $args_file;
+    	. ' --data_type phenotype '
+    	. ' --population_type plots_list '
+    	. ' --args_file ' . $args_file;
 
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
@@ -1046,10 +1046,12 @@ sub register_trials_list  {
 sub list_file_id {
     my ($self, $c) = @_;
 
-    $c->stash->{data_structure} = 'list';
-    $c->controller('solGS::Files')->create_file_id($c);
-
-    return $c->stash->{file_id};
+    my $list_id = $c->stash->{list_id};
+    if ( $list_id =~ /dataset/) {
+	return $list_id;
+    } else {
+	return 'list_' . $list_id;
+    }
     
 }
 

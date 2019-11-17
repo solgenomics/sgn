@@ -15,6 +15,7 @@ package SGN::Controller::solGS::Anova;
 use Moose;
 use namespace::autoclean;
 
+use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Trial;
@@ -23,6 +24,10 @@ use File::Basename;
 use File::Spec::Functions;
 use File::Path qw / mkpath  /;
 use URI::FromHash 'uri';
+
+use Scalar::Util qw /weaken reftype/;
+use Storable qw/ nstore retrieve /;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -113,9 +118,23 @@ sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
         
     $c->stash->{pop_id} = $c->stash->{trial_id};
-    $c->controller('solGS::solGS')->phenotype_file($c);
-      
-    my $pheno_file =  $c->stash->{phenotype_file};
+    #$c->controller('solGS::solGS')->phenotype_file($c);
+
+
+    $self->anova_query_jobs_file($c);
+    my $queries =$c->stash->{anova_query_jobs_file};
+   
+    $c->stash->{dependent_jobs} = $queries;
+    $c->controller('solGS::solGS')->run_async($c);
+    
+    # foreach my $job (@$queries)
+    # {
+    # 	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+    # }
+     
+    $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{pop_id});
+    my $pheno_file = $c->stash->{phenotype_file_name};
+    #my $pheno_file =  $c->stash->{phenotype_file};
       
     if (!-s $pheno_file) {
 	$c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
@@ -180,15 +199,18 @@ sub supported_designs {
     
 }
 
+
 sub get_traits_abbrs {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{trial_id};
     my $traits_ids = $c->stash->{traits_ids};
   
-    $c->stash->{pop_id} = $trial_id;   
+    $c->stash->{pop_id} = $trial_id;  
+    $c->controller('solGS::solGS')->get_all_traits($c);
     $c->controller('solGS::Files')->all_traits_file($c);
     my $traits_file = $c->stash->{all_traits_file};
+   
     my @traits = read_file($traits_file);
 
     my @traits_abbrs;
@@ -325,13 +347,61 @@ sub prep_download_files {
 
 }
 
-
 sub run_anova {
+    my ($self, $c) = @_;
+
+    $self->anova_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{anova_query_jobs_file};
+    
+    $self->anova_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{anova_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
+    
+}
+
+sub run_anova_single_core {
+    my ($self, $c) = @_;
+
+    $self->anova_query_jobs($c);
+    my $queries =$c->stash->{anova_query_jobs};
+    
+    $self->anova_r_jobs($c);
+    my $r_jobs = $c->stash->{anova_r_jobs};
+
+    foreach my $job (@$queries) 
+    {
+	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+    }
+
+    foreach my $job (@$r_jobs)
+    {
+	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+    }
+ 
+}
+
+
+sub run_anova_multi_cores {
+    my ($self, $c) = @_;
+    
+    $self->anova_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{anova_query_jobs_file};
+    
+    $self->anova_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{anova_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
+    
+}
+
+
+sub anova_r_jobs {
     my ($self, $c) = @_;
     
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
-   
+    
     $self->anova_input_files($c);
     my $input_file = $c->stash->{anova_input_files};
 
@@ -345,7 +415,82 @@ sub run_anova {
     $c->stash->{r_temp_file}  = "anova-${trial_id}-${trait_id}";
     $c->stash->{r_script}     = 'R/solGS/anova.r';
 
-    $c->controller("solGS::solGS")->run_r_script($c);
+    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    my $jobs  = $c->stash->{cluster_r_job_args};
+
+    if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+
+    $c->stash->{anova_r_jobs} = $jobs;
+
+}
+
+
+sub anova_r_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->anova_r_jobs($c);
+    my $jobs = $c->stash->{anova_r_jobs};
+      
+    my $temp_dir = $c->stash->{anova_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'anova-r-jobs-file');	   
+   
+    nstore $jobs, $jobs_file
+	or croak "anova r jobs : $! serializing anova r jobs to $jobs_file";
+
+    $c->stash->{anova_r_jobs_file} = $jobs_file;
+    
+}
+
+
+sub anova_query_jobs {
+    my ($self, $c) = @_;
+
+    $self->create_anova_phenotype_data_query_jobs($c);
+    my $jobs = $c->stash->{anova_pheno_query_jobs};
+ 
+    if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+
+    $c->stash->{anova_query_jobs} = $jobs;
+}
+
+
+sub anova_query_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->anova_query_jobs($c);
+    my $jobs = $c->stash->{anova_query_jobs};
+  
+    my $temp_dir = $c->stash->{anova_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'anova-query-jobs-file');	   
+   
+    nstore $jobs, $jobs_file
+	or croak "anova query jobs : $! serializing anova query jobs to $jobs_file";
+
+    $c->stash->{anova_query_jobs_file} = $jobs_file;
+    
+}
+
+
+sub create_anova_phenotype_data_query_jobs {
+    my ($self, $c) = @_;
+       
+    my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
+    
+    $c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
+    my $jobs = $c->stash->{cluster_phenotype_query_job_args};
+
+    if (reftype $jobs ne 'ARRAY') 
+    {
+	$jobs = [$jobs];
+    }
+    
+    $c->stash->{anova_pheno_query_jobs} = $jobs;
 
 }
 
@@ -375,7 +520,7 @@ sub anova_input_files {
     my $trait_id = $c->stash->{trait_id};   
     
     $self->anova_pheno_file($c);
-    my $pheno_file = $c->stash->{phenotype_file};
+    my $pheno_file = $c->stash->{phenotype_file_name};
 
     $self->anova_traits_file($c);   
     my $traits_file = $c->stash->{anova_traits_file};
@@ -403,7 +548,7 @@ sub anova_pheno_file {
     my ($self, $c) = @_;
     
     $self->create_anova_phenodata_file($c);
-   
+   #$c->
 }
 
 

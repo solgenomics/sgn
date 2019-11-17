@@ -288,7 +288,7 @@ sub add_cross_POST :Args(0) {
         my $paternal = $cross_name . '_parents';
         my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
         $population_add->add_population();
-        $cross_type = 'open';
+        $cross_type = 'polycross';
         print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
         for (my $i = 0; $i < scalar @maternal_parents; $i++) {
             my $maternal = $maternal_parents[$i];
@@ -1202,6 +1202,15 @@ sub delete_cross : Path('/ajax/cross/delete') : ActionClass('REST'){ }
 sub delete_cross_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+        $c->detach();
+    }
 
     my $cross_stock_id = $c->req->param("cross_id");
 

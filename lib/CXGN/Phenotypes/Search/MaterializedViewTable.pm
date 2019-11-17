@@ -356,6 +356,8 @@ sub search {
             push @return_observations, $o;
         }
 
+        no warnings 'uninitialized';
+        
         if ($notes) { $notes =~ s/\R//g; }
         if ($trial_description) { $trial_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };

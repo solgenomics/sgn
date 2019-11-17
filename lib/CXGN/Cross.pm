@@ -327,10 +327,43 @@ sub get_progeny_info {
 }
 
 
+=head2 get_crosses_in_crossingtrial
+
+    Class method.
+    Returns all cross names and ids in a specific crossing_experiment.
+    Example: my @crosses = CXGN::Cross->get_crosses_in_crossingtrial($schema, $trial_id)
+
+=cut
+
+sub get_crosses_in_crossingtrial {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $cross_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id;
+
+    my $q = "SELECT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock on (nd_experiment_stock.stock_id = stock.stock_id)
+        WHERE stock.type_id = ? AND nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($cross_stock_type_id, $trial_id);
+
+    my @data = ();
+    while(my($cross_id, $cross_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name]
+    }
+
+    return \@data;
+}
+
+
 =head2 get_crosses_and_details_in_crossingtrial
 
     Class method.
-    Example:       $crosses_ref = CXGN::Cross->get_crosses_in_trial($schema, $trial_id)
+    Returns all cross names, ids, cross_combinations, cross types and parent info in a specific crossing_experiment.
+    Example: my @crosses_details = CXGN::Cross->get_crosses_and_details_in_crossingtrial($schema, $trial_id)
 
 =cut
 
@@ -401,7 +434,7 @@ sub get_cross_properties_trial {
         LEFT JOIN stockprop AS stockprop2 ON (stock.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
         WHERE nd_experiment_project.project_id = ?";
 
-    my $h = $schema->storage->dbh()->prepare ($q);
+    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($cross_combination_typeid, $cross_props_typeid, $trial_id);
 
@@ -424,12 +457,15 @@ sub get_cross_properties_trial {
 
 =head2 get_seedlots_from_crossingtrial
 
+    Class method.
+    Returns all seedlots derived from crosses in a specific crossing_experiment.
+    Example: my @crosses_seedlots = CXGN::Cross->get_seedlots_from_crossingtrial($schema, $trial_id)
 
 =cut
 
 sub get_seedlots_from_crossingtrial {
     my $self = shift;
-    my $schema = $self->bcs_schema;
+    my $schema = $self->schema;
     my $trial_id = $self->trial_id;
 
     my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
@@ -441,7 +477,7 @@ sub get_seedlots_from_crossingtrial {
         LEFT JOIN stock as stock2 ON (stock_relationship.object_id = stock2.stock_id)
         WHERE nd_experiment_project.project_id = ?";
 
-    my $h = $schema->storage->dbh()->prepare ($q);
+    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($collection_of_type_id, $trial_id);
 
@@ -457,8 +493,8 @@ sub get_seedlots_from_crossingtrial {
 =head2 get_cross_progenies_trial
 
     Class method.
-    Get all the progenies of all the crosses in a trial.
-    Example: my $progenies = CXGN::Cross->get_cross_progenies_trial($schema, $trial_id)
+    Get numbers of progenies and family names of all the crosses in a crossing_experiment.
+    Example: my @progenies_info = CXGN::Cross->get_cross_progenies_trial($schema, $trial_id)
 
 =cut
 

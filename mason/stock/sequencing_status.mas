@@ -3,18 +3,115 @@
 $stock_id
 </%args>
 
-<div id="sequenced_stocks_div">[loading...]</div>
+<& /util/import_javascript.mas,
+  entries => ["sequenced_accessions"]
+&>
+
+
+<div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
+    <div class="modal-dialog" role="modal">
+        <div class="form-search">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><div aria-hidden="true">&times;</div></button>
+                    <h5 class="modal-title">Enter sequencing info for accession:</h5>
+                </div> <!-- modal-header -->
+                <form id="sequencing_info_form" class="form-horizontal">
+                    <div class="modal-body">
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Organization: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" alt="Organization" placeholder="Sequencing organization" name="organization" id="organization" size="30" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Year: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Sequencing year" name="sequencing_year" id="sequencing_year" size="6" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Website: </label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="https-prefix">https:&sol;&sol;</span>
+                                    <input type="text" class="form-control" placeholder="Website" aria-label="https-prefix" aria-describedby="https-prefix" name="website"  id="website" size="10" />
+                                </div>
+                            </div> <!-- input-group -->
+                            <br />
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Contact email: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Contact email" name="contact_email"  id="contact_email" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Genbank accession: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Genbank Accession" name="genbank_accession"  id="genbank_accession" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Funding agency: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Funding organization" name="funded_by"  id="funded_by" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Funding agency project id: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Funding organization project ID"  name="funder_project_id" id="funder_project_id" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">JBrowse link: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Jbrowse link" name="jbrowse_link" id="jbrowse_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">BLAST link</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div>
+                            <input type="hidden" id="sequencing_status_stock_id"  name="sequencing_status_stock_id" value="<% $stock_id %>" />
+                            <input type="hidden" id="stockprop_id"  name="stockprop_id" />
+                        </div>
+                    </div> <!-- modal-body -->
+                    <div class="modal-footer">
+                        <button type="submit"  class="btn btn-primary">Save changes</button>
+                        <button id="dismiss_sequencing_info_dialog" type="button" class="btn btn-secondary" >Close</button>
+                    </div> <!-- modal-footer -->
+                </form> <!-- sequencing_info form -->
+            </div> <!-- modal-content -->
+        </div> <!-- form-search -->
+    </div> <!-- modal-dialog -->
+</div> <!-- modal -->
+
+<table id="sequenced_stocks_table" class="display" style="width:100%">
+    <thead>
+        <tr>
+            <th>Accession</th>
+            <th>Year</th>
+            <th>Organization</th>
+            <th>Website</th>
+            <th>Analyze</th>
+            <th>Manage</th>
+        </tr>
+    </thead>
+</table>
+
+<div id="sequenced_stocks_div">
+</div>
 
 <script>
-  alert("stock_id "+<% $stock_id %>);
-  jQuery(document).ready( function() { 
+jQuery(document).ready( function() {
     var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
-  });
+});
 </script>
 
 
 <br />
-
-
-
-

@@ -7,6 +7,7 @@ $progeny_count => undef
 $trial_id => undef
 $trial_name => undef
 $user_id => undef
+$identifier_prefix => ''
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
@@ -21,19 +22,32 @@ $user_id => undef
 
 <&| /page/info_section.mas, title => "Cross information" &>
 
-<& /page/form.mas,
-    object_type=>'cross',
-    object_id=> $cross_id,
-    form_name=> 'stock_form',
-    server_side_script => '/phenome/stock/stock_ajax_form.pl',
-    form_div_name=>'stock_details',
-    js_object_name=> 'stockForm',
-    page_url => "/cross/$cross_id" ,
-    alternate_new_button => '',
-    alternate_ghosted_new_button => '',
-    alternate_delete_button => '',
-    alternate_ghosted_delete_button => ''
-&>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <& /page/form.mas,
+                        object_type=>'cross',
+                        object_id=> $cross_id,
+                        form_name=> 'stock_form',
+                        server_side_script => '/phenome/stock/stock_ajax_form.pl',
+                        form_div_name=>'stock_details',
+                        js_object_name=> 'stockForm',
+                        page_url => "/cross/$cross_id" ,
+                        alternate_new_button => '',
+                        alternate_ghosted_new_button => '',
+                        alternate_delete_button => '',
+                        alternate_ghosted_delete_button => ''
+                    &>
+                </div>
+                <div class="col-sm-6">
+                    <br /><br />
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$cross_id", text=> "$identifier_prefix stock $cross_id ($cross_name)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+            </div>
+        </div>
+    </div>
 
 </&>
 

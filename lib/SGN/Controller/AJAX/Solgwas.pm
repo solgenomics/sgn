@@ -383,6 +383,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $cmd = CXGN::Tools::Run->new(
         {
             backend => $c->config->{backend},
+            submit_host => $c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
@@ -401,8 +402,6 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $pc_check,
             $kinship_check,
     );
-    $cmd->alive;
-    $cmd->is_cluster(1);
     $cmd->wait;
 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
