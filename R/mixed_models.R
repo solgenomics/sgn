@@ -108,15 +108,15 @@ if(genotypeEffectType=="fixed"){
   
   outfile_blue = paste(datafile, ".BLUEs", sep="")
   sink(outfile_blue)
-  write.table(BLUE, quote=F , sep='\t')
+  write.table(BLUE, quote=F , sep='\t', row.names=FALSE)
   sink();
 }else{
   outfile_blup = paste(datafile, ".BLUPs", sep="");
   sink(outfile_blup)
-  write.table(BLUP, quote=F, sep='\t')
+  write.table(BLUP, quote=F, sep='\t', row.names=FALSE)
   sink();
   outfile_adjmeans = paste(datafile, ".adjusted_means", sep="")
   sink(outfile_adjmeans)
-  write.table(adjusted_means, quote=F , sep='\t')
+  write.table(adjusted_means, quote=F , sep='\t', row.names=FALSE)
   sink();
 }
