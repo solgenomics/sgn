@@ -1,0 +1,56 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.List', 'jquery.iframe-post-form' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="trial_stocks_table">
+    </table>
+</div>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Add stocks to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding stocks in this trial to a new or exisiting list</i>'&>
+        <br>
+        <div id="stocks_to_new_list" style="display:none"></div>
+        <div id="stocks_add_to_list"></div>
+        </&>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_stocks_onswitch').click(function(){
+        jQuery('#trial_stocks_table').DataTable({
+            'destroy': true,
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stocks',
+            columns: [
+                { title: "Stock Name", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>"; } },
+                { title: "Stock Type", "data": "stock_type" },
+            ],
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#stocks_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i].accession_name+"\n";
+                    }
+                    jQuery("#stocks_to_new_list").html(html);
+                    addToListMenu("stocks_add_to_list", "stocks_to_new_list", {
+                        selectText: true,
+                        listType: 'stock_type',
+                    });
+                }
+            }
+        });
+    });
+
+});
+
+</script>
