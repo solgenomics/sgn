@@ -1125,13 +1125,13 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             <label class="col-sm-4 control-label">Model Type: </label>
                             <div class="col-sm-8" >
                                 <select class="form-control" id="drone_image_train_keras_model_type" name="drone_image_train_keras_model_type" >
-                                    <option value="SimpleKerasTunerCNNSequentialSoftmaxCategorical">Simple Keras Tuner CNN Sequential 16-32-64-128-512 Softmax Categorical</option>
-                                    <option value="KerasTunerCNNSequentialSoftmaxCategorical">Keras Tuner CNN Sequential 16-32-64-128-512 Softmax Categorical</option>
-                                    <option value="KerasCNNInceptionResNetV2">Keras CNN InceptionResNetV2</option>
-                                    <option value="KerasCNNLSTMDenseNet121ImageNetWeights">Keras LSTM DenseNet121 ImageNet Weights</option>
-                                    <option value="KerasCNNInceptionResNetV2ImageNetWeights">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights</option>
-                                    <option value="KerasCNNSequentialSoftmaxCategorical">Keras CNN Sequential 16-32-64-128-512 Softmax Categorical</option>
-                                    <option value="KerasCNNDenseNet121ImageNetWeights">Keras DenseNet ImageNet Weights</option>
+                                    <option value="SimpleKerasTunerCNNSequentialSoftmaxCategorical">Simple Keras Tuner CNN Sequential 16-32-64-128-512 Linear Regression</option>
+                                    <option value="KerasTunerCNNSequentialSoftmaxCategorical">Keras Tuner CNN Sequential 16-32-64-128-512 Linear Regression</option>
+                                    <option value="KerasCNNInceptionResNetV2">Keras CNN InceptionResNetV2 Linear Regression</option>
+                                    <option value="KerasCNNLSTMDenseNet121ImageNetWeights">Keras LSTM DenseNet121 ImageNet Weights Linear Regression</option>
+                                    <option value="KerasCNNInceptionResNetV2ImageNetWeights">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights Linear Regression</option>
+                                    <option value="KerasCNNSequentialSoftmaxCategorical">Keras CNN Sequential 16-32-64-128-512 Linear Regression</option>
+                                    <option value="KerasCNNDenseNet121ImageNetWeights">Keras DenseNet121 ImageNet Weights Linear Regression</option>
                                 </select>
                             </div>
                         </div>
