@@ -10,7 +10,7 @@ $has_tissue_sample_entries
 
     <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
-    <&| /page/info_section.mas, id => "trial_stocks", title=>"Stocks", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_stocks", title=>"Stocks and Stock Type used in Trial", is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
     </&>
 

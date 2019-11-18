@@ -29,7 +29,10 @@ jQuery(document).ready(function(){
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stocks',
             columns: [
-                { title: "Stock Name", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>"; } },
+                { title: "Stock Name", "data": null, "render": function ( data, type, row ) {
+                    if (row.stock_type == 'cross') { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>";
+                    } else { return "<a href='/stock/"+row.stock_id+"/view'>"+row.accession_name+"</a>";}
+                }},
                 { title: "Stock Type", "data": "stock_type" },
             ],
             "fnInitComplete": function(oSettings, json) {
@@ -43,7 +46,6 @@ jQuery(document).ready(function(){
                     }
                     jQuery("#stocks_to_new_list").html(html);
                     addToListMenu("stocks_add_to_list", "stocks_to_new_list", {
-                        selectText: true,
                         listType: 'stock_type',
                     });
                 }
