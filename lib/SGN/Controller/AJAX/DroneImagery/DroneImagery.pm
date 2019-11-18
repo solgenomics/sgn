@@ -3960,7 +3960,6 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
     #my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
-    my $archive_temp_class_map_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/classmapXXXX');
     my $archive_temp_loss_history_file_string = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/losshistoryXXXX');
     my $archive_temp_loss_history_file = $c->config->{basepath}."/".$archive_temp_loss_history_file_string;
 
@@ -4003,28 +4002,28 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
 
     my $cmd = '';
     if ($model_type eq 'KerasTunerCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'SimpleKerasTunerCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
-    elsif ($model_type eq 'KerasTunerCNNInceptionResNetV2') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2application_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
-    }
+    # elsif ($model_type eq 'KerasTunerCNNInceptionResNetV2') {
+    #     $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2application_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+    # }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm_imagenet --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm_imagenet --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNDenseNet121ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type densenet121application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type densenet121application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' --output_class_map \''.$archive_temp_class_map_file.'\' '.$log_file_path.' --keras_model_type simple_1 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type simple_1 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     else {
         $c->stash->{rest} = {error => "$model_type not supported!"};
@@ -4063,22 +4062,6 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         }
     close($F);
 
-    my %class_map;
-    open(my $fh2, '<', $archive_temp_class_map_file)
-        or die "Could not open file '$archive_temp_class_map_file' $!";
-
-        while ( my $row = <$fh2> ){
-            my @columns;
-            if ($csv->parse($row)) {
-                @columns = $csv->fields();
-            }
-            $class_map{$columns[0]} = {
-                label => $columns[1],
-                training_count => $columns[2]
-            };
-        }
-    close($fh2);
-
     my @loss_history;
     open(my $fh3, '<', $archive_temp_loss_history_file)
         or die "Could not open file '$archive_temp_loss_history_file' $!";
@@ -4114,10 +4097,10 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     if ($c->req->param('save_model') == 1) {
         my $model_name = $c->req->param('model_name');
         my $model_description = $c->req->param('model_description');
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, \%class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
     }
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, class_map => \%class_map, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string };
+    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string };
 }
 
 sub drone_imagery_save_keras_model : Path('/api/drone_imagery/save_keras_model') : ActionClass('REST') { }
@@ -4134,12 +4117,11 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $model_description = $c->req->param('model_description');
     my $trait_id = $c->req->param('trait_id');
     my $model_type = $c->req->param('model_type');
-    my $model_class_map = decode_json $c->req->param('class_map');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_name, $model_description, $model_class_map, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
+    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
 }
 
 sub _perform_save_trained_keras_cnn_model {
@@ -4152,7 +4134,6 @@ sub _perform_save_trained_keras_cnn_model {
     my $model_input_file = shift;
     my $model_name = shift;
     my $model_description = shift;
-    my $model_class_map = shift;
     my $drone_run_ids = shift;
     my $plot_polygon_type_ids = shift;
     my $trait_id = shift;
@@ -4162,10 +4143,8 @@ sub _perform_save_trained_keras_cnn_model {
     my $user_role = shift;
     my @field_trial_ids = @$field_trial_ids;
     my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
-    print STDERR Dumper $model_class_map;
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
     my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
     my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
@@ -4183,7 +4162,7 @@ sub _perform_save_trained_keras_cnn_model {
         $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
             name => $model_name,
             type_id => $keras_cnn_cvterm_id,
-            nd_protocolprops => [{value => encode_json($model_class_map), type_id => $keras_cnn_class_map_cvterm_id}, {value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id}, {value => encode_json({value=>$model_type}), type_id => $keras_cnn_model_type_cvterm_id}]
+            nd_protocolprops => [{value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id}, {value => encode_json({value=>$model_type}), type_id => $keras_cnn_model_type_cvterm_id}]
         });
         $protocol_id = $protocol_row->nd_protocol_id();
     }
@@ -4316,7 +4295,6 @@ sub _perform_keras_cnn_predict {
     my @field_trial_ids = @$field_trial_ids;
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_class_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_class_map_json', 'protocol_property')->cvterm_id();
     my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
     my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
@@ -4402,20 +4380,18 @@ sub _perform_keras_cnn_predict {
         };
     }
 
-    my $model_q = "SELECT basename, dirname, class_map.value, trained_trait.value, model_type.value
+    my $model_q = "SELECT basename, dirname, trained_trait.value, model_type.value
         FROM metadata.md_files
         JOIN phenome.nd_experiment_md_files using(file_id)
         JOIN nd_experiment using(nd_experiment_id)
         JOIN nd_experiment_protocol using(nd_experiment_id)
         JOIN nd_protocol using(nd_protocol_id)
-        JOIN nd_protocolprop AS class_map ON(nd_protocol.nd_protocol_id=class_map.nd_protocol_id AND class_map.type_id=$keras_cnn_class_map_cvterm_id)
         JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
         JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
         WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model';";
     my $h = $schema->storage->dbh()->prepare($model_q);
     $h->execute($model_id);
-    my ($basename, $filename, $class_map, $trained_trait, $model_type) = $h->fetchrow_array();
-    my $class_map_hash = decode_json $class_map;
+    my ($basename, $filename, $trained_trait, $model_type) = $h->fetchrow_array();
     my $trained_trait_hash = decode_json $trained_trait;
     my $model_type_hash = decode_json $model_type;
     my $trait_id = $trained_trait_hash->{variable_id};
@@ -4498,8 +4474,6 @@ sub _perform_keras_cnn_predict {
             }
         }
     close($F);
-    undef %data_hash;
-    undef %phenotype_data_hash;
 
     print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
 
@@ -4508,7 +4482,7 @@ sub _perform_keras_cnn_predict {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path.' --class_map \''.$class_map.'\'';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -4532,6 +4506,7 @@ sub _perform_keras_cnn_predict {
             push @predictions, $prediction;
         }
     close($fh);
+    print STDERR Dumper \@predictions;
 
     my $iter = 0;
     foreach my $sorted_stock_id (sort keys %data_hash) {
@@ -4545,10 +4520,13 @@ sub _perform_keras_cnn_predict {
         push @result_agg, [$stock_info{$sorted_stock_id}->{uniquename}, $sorted_stock_id, $prediction, $previous_value];
         $iter++;
     }
+    undef %data_hash;
+    undef %phenotype_data_hash;
 
     print STDERR "CNN Prediction Correlation\n";
     my @model_results;
     my @simple_data_matrix_colnames = ("previous_value", "prediction");
+    print STDERR Dumper \@simple_data_matrix;
     my $rmatrix = R::YapRI::Data::Matrix->new({
         name => 'matrix1',
         coln => scalar(@simple_data_matrix_colnames),

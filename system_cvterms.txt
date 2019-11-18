@@ -272,7 +272,6 @@ protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
 protocol_property	vcf_map_details	Information about protocol, such as marker names, header info lines, and reference_genome_name	6/20/2018	nm529	00098
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
-protocol_property	trained_keras_cnn_model_class_map_json	A json object with the classes used to train a keras CNN model	9/30/2019	nm529	00116
 protocol_property	trained_keras_cnn_model_trait	The trait for which the Keras CNN model was trained	9/30/2019	nm529	00116
 protocol_property	trained_keras_cnn_model_type	The type of Keras CNN model trained e.g. InceptionResNetV2	9/30/2019	nm529	00116
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
