@@ -3910,18 +3910,14 @@ sub submit_job_cluster {
     my ($self, $c, $args) = @_;
 
     my $job;
-
-    my $cmd = $args->{cmd};    
-    print STDERR "\n submit_job_cluster cmd: $cmd\n";
+ 
     eval 
     {	
 	$job = CXGN::Tools::Run->new($args->{config});
 	$job->do_not_cleanup(1);
 
-	
 	if ($args->{background_job}) 
 	{  
-	    print STDERR "\n background submit_job_cluster async job\n";
 	    $job->is_async(1);		 
 	    $job->run_async($args->{cmd});
 	    
@@ -3932,7 +3928,6 @@ sub submit_job_cluster {
 	} 
 	else 
 	{ 
-	    print STDERR "\n WAIT submit_job_cluster async job\n";
 	    $job->run_async($args->{cmd});
 	    $job->wait();	
 	}	
