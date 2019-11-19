@@ -732,6 +732,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $contains_composable_cv_type = $c->req->param('contains_composable_cv_type');
     my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $multiple = $c->req->param('multiple');
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
@@ -831,7 +832,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     @traits = sort { $a->[1] cmp $b->[1] } @traits;
 
     my $html = simple_selectbox_html(
-      multiple => 1,
+      multiple => $multiple,
       name => $name,
       id => $id,
       choices => \@traits,

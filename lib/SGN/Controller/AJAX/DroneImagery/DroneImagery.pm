@@ -3879,11 +3879,13 @@ sub drone_imagery_train_keras_model : Path('/api/drone_imagery/train_keras_model
 sub drone_imagery_train_keras_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
-    my $trait_id = $c->req->param('trait_id[]');
+    my $trait_id = $c->req->param('trait_id');
+    my @aux_trait_id = $c->req->param('aux_trait_id[]') ? $c->req->param('aux_trait_id[]') : ();
     my $model_type = $c->req->param('model_type');
     my $population_id = $c->req->param('population_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
@@ -3918,44 +3920,70 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my %data_hash;
     my %seen_day_times;
     my %seen_image_types;
+    my %seen_drone_run_band_project_ids;
+    my %seen_drone_run_project_ids;
+    my %seen_field_trial_ids;
     foreach (@$result) {
         my $image_id = $_->{image_id};
         my $stock_id = $_->{stock_id};
-        my $project_image_type_name = $_->{project_image_type_name};
-        my $drone_run_band_project_name = $_->{drone_run_band_project_name};
+        my $field_trial_id = $_->{trial_id};
+        my $project_image_type_id = $_->{project_image_type_id};
+        my $drone_run_band_project_id = $_->{drone_run_band_project_id};
+        my $drone_run_project_id = $_->{drone_run_project_id};
         my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
         my $image_url = $image->get_image_url("original");
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
         my $days = int((split ' ', $time_days)[1]);
-        push @{$data_hash{$stock_id}->{$project_image_type_name}->{$days}->{image_fullpaths}}, $image_fullpath;
+        $data_hash{$stock_id}->{$project_image_type_id}->{$drone_run_project_id}->{$days} = {
+            image => $image_fullpath,
+            field_trial_id => $field_trial_id
+        };
         $seen_day_times{$days}++;
-        $seen_image_types{$project_image_type_name}++;
+        $seen_image_types{$project_image_type_id}++;
+        $seen_drone_run_band_project_ids{$drone_run_band_project_id}++;
+        $seen_drone_run_project_ids{$drone_run_project_id}++;
+        $seen_field_trial_ids{$field_trial_id}++;
     }
     print STDERR Dumper \%seen_day_times;
     undef $result;
 
-    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-        bcs_schema=>$schema,
-        search_type=>'MaterializedViewTable',
-        data_level=>'plot',
-        trait_list=>[$trait_id],
-        trial_list=>\@field_trial_ids,
-        accession_ids=>\@accession_ids,
-        include_timestamp=>0,
-        exclude_phenotype_outlier=>0,
-    );
-    my @data = $phenotypes_search->get_phenotype_matrix();
+    my @trait_ids = ($trait_id);
+    if (scalar(@aux_trait_id) > 0) {
+        push @trait_ids, @aux_trait_id;
+    }
 
-    my $phenotype_header = shift @data;
-    my $trait_name = $phenotype_header->[39];
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>'plot',
+            trait_list=>\@trait_ids,
+            trial_list=>\@field_trial_ids,
+            accession_list=>\@accession_ids,
+            exclude_phenotype_outlier=>0,
+            include_timestamp=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
     my %phenotype_data_hash;
-    foreach (@data) {
-        $phenotype_data_hash{$_->[21]} = $_->[39];
+    foreach my $d (@$data) {
+        $phenotype_data_hash{$d->{observationunit_stock_id}}->{germplasm_stock_id} = $d->{germplasm_stock_id};
+        foreach my $o (@{$d->{observations}}) {
+            if ($o->{trait_id} == $trait_id) {
+                $phenotype_data_hash{$d->{observationunit_stock_id}}->{trait_value} = {
+                    trait_name => $o->{trait_name},
+                    value => $o->{value}
+                };
+            } else {
+                $phenotype_data_hash{$d->{observationunit_stock_id}}->{aux_trait_value}->{$o->{trait_id}} = $o->{value};
+            }
+        }
     }
     #print STDERR Dumper \%data_hash;
-    undef @data;
+    undef $data;
 
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
@@ -3971,21 +3999,34 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         foreach my $stock_id (sort keys %data_hash){
             foreach my $image_type (sort keys %seen_image_types) {
-                foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
-                    my $data = $data_hash{$stock_id}->{$image_type}->{$day_time};
-                    my $image_fullpaths = $data->{image_fullpaths};
-                    my $value = $phenotype_data_hash{$stock_id};
-                    if ($value) {
-                        my $iter = 0;
-                        foreach (@$image_fullpaths) {
+                foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
+                    foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                        my $data = $data_hash{$stock_id}->{$image_type}->{$drone_run_project_id}->{$day_time};
+                        my $image_fullpath = $data->{image};
+                        my $field_trial_id = $data->{field_trial_id};
+                        my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                        my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        if ($value) {
                             print $F '"'.$stock_id.'",';
-                            print $F '"'.$_.'",';
+                            print $F '"'.$image_fullpath.'",';
                             print $F '"'.$value.'",';
                             print $F '"'.$trait_name.'",';
                             print $F '"'.$image_type.'",';
-                            print $F '"'.$day_time.'"';
+                            print $F '"'.$day_time.'",';
+                            print $F '"'.$drone_run_project_id.'",';
+                            print $F '"'.$field_trial_id.'",';
+                            print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
+                            if (scalar(@aux_trait_id)>0) {
+                                print $F ',"';
+                                my @aux_values;
+                                foreach my $aux_trait (@aux_trait_id) {
+                                    my $aux_value = $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait};
+                                    push @aux_values, $aux_value;
+                                }
+                                my $aux_values_string = join '","', @aux_values;
+                                print $F $aux_values_string.'"';
+                            }
                             print $F "\n";
-                            $iter++;
                         }
                     }
                 }

@@ -1043,9 +1043,15 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial(s): </label>
-                            <div class="col-sm-7" >
+                            <label class="col-sm-3 control-label">Trait Phenotyped in the Selected Field Trial(s) To Predict: </label>
+                            <div class="col-sm-9" >
                                 <div id="drone_imagery_train_keras_cnn_trait_select_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s) As Auxiliary Trait(s): </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_train_keras_cnn_aux_trait_select_div"></div>
                             </div>
                         </div>
                     </form>
@@ -2512,6 +2518,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_train_keras_field_trial_id_array = [];
     var manage_drone_imagery_train_keras_field_trial_id_string = '';
     var manage_drone_imagery_train_keras_trait_id;
+    var manage_drone_imagery_train_keras_aux_trait_ids;
     var manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
     var manage_drone_imagery_train_keras_temporary_model_file = '';
     var manage_drone_imagery_train_keras_temporary_model_input_file = '';
@@ -2541,7 +2548,9 @@ jQuery(document).ready(function() {
         if (manage_drone_imagery_train_keras_field_trial_id_string == '') {
             alert('Please select a field trial first!');
         } else {
-            get_select_box('traits', 'drone_imagery_train_keras_cnn_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_trait_id', 'id' : 'drone_imagery_train_keras_cnn_trait_id', 'empty':1, 'multiple':0, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id_string, 'stock_type':'plot' });
+            get_select_box('traits', 'drone_imagery_train_keras_cnn_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_trait_id', 'id' : 'drone_imagery_train_keras_cnn_trait_id', 'empty':1, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_train_keras_cnn_aux_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_aux_trait_ids', 'id' : 'drone_imagery_train_keras_cnn_aux_trait_ids', 'empty':1, 'multiple':1, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id_string, 'stock_type':'plot' });
 
             jQuery('#drone_image_train_keras_drone_runs_table').DataTable({
                 destroy : true,
@@ -2556,7 +2565,9 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_train_keras_model_trait_select_step').click(function(){
         manage_drone_imagery_train_keras_trait_id = undefined;
+        manage_drone_imagery_train_keras_aux_trait_ids = undefined;
         manage_drone_imagery_train_keras_trait_id = jQuery('#drone_imagery_train_keras_cnn_trait_id').val();
+        manage_drone_imagery_train_keras_aux_trait_ids = jQuery('#drone_imagery_train_keras_cnn_aux_trait_ids').val();
         if (manage_drone_imagery_train_keras_trait_id == undefined || manage_drone_imagery_train_keras_trait_id == 'null' || manage_drone_imagery_train_keras_trait_id == '') {
             alert('Please select a phenotyped trait first!');
         } else {
@@ -2634,6 +2645,7 @@ jQuery(document).ready(function() {
                 data : {
                     'field_trial_ids' : manage_drone_imagery_train_keras_field_trial_id_string,
                     'trait_id' : manage_drone_imagery_train_keras_trait_id,
+                    'aux_trait_id' : manage_drone_imagery_train_keras_aux_trait_ids,
                     'drone_run_ids' : JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids),
                     'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids),
                     'save_model' : 1,
