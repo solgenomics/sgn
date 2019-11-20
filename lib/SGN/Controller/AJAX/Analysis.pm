@@ -20,6 +20,9 @@ __PACKAGE__->config(
 sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") Args(0) {}
 
 sub store_analysis_json_POST {
+
+    # this is not yet functional....
+    
     my $self = shift;
     my $c = shift;
 
@@ -28,7 +31,6 @@ sub store_analysis_json_POST {
     my $dataset_id = $c->req->param("dataset_id");
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
-    my $trait => $c->req->param("trait");
     
     if (my $error = $self->check_user($c)) {
 	$c->stash->{rest} = { error =>  $error };
@@ -49,8 +51,6 @@ sub store_analysis_json_POST {
     my %values;
     
     my $analysis_type_id = $analysis_type_row->cvterm_id();
-    
-    push @traits, $trait;
     
     my %values = JSON::Any->decode($params, $data); 
     
@@ -73,11 +73,11 @@ sub store_analysis_file_POST {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     print STDERR "Storing analysis file: $dir / $file...\n";
-    print STDERR <<;
+    print STDERR <<INFO;
     Analysis name: $analysis_name
     Analysis type: $analysis_type
     Description:   $description
-
+INFO
     
     if (my $error = $self->check_user($c)) {
 	print STDERR "Sorry you are not logged in... not storing.\n";
@@ -97,7 +97,7 @@ sub store_analysis_file_POST {
     my @plots;
     my @stocks;
     my @traits;
-    my %values;
+    my %value_hash;
     
     my $analysis_type_id = $analysis_type_row->cvterm_id();    
 
@@ -108,21 +108,47 @@ sub store_analysis_file_POST {
     my @lines = read_file($fullpath);
 
     my $header = shift(@lines);
-
-    my ($accession, $trait) = split /\t/, $header;
+    chomp($header);
     
+    my ($accession, @traits) = split /\t/, $header;
+
+    my %good_terms = ();
+
+    # remove illegal trait columns
+    #
+    my @good_traits;
+    foreach my $t (@traits) {
+	my ($human_readable, $accession) = split /\|/, $t;
+
+	print "Checking term $t ($human_readable, $accession)...\n";
+	my $term = CXGN::Cvterm->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), accession => $accession });
+
+	if ($term->cvterm_id()) {
+	    $good_terms{$t} = 1;
+	    push @good_traits, $t;
+	}
+	else {
+	    $good_terms{$t} = 0; 
+	}
+    }
+
     foreach my $line (@lines) {
-	my ($acc, $value) = split /\t/, $line;
+	my ($acc, @values) = split /\t/, $line;
 	$acc =~ s/\"//g;
-	print STDERR "Reading data for $acc with value $value...\n";
+	print STDERR "Reading data for $acc with value ".join(",", @values)."...\n";
 	my $plot_name = $analysis_name."_".$acc;
 	push @plots, $plot_name;
 	push @stocks, $acc;
-        $values{$plot_name}->{$trait} = $value;
+	for(my $i=0; $i<@traits; $i++) {
+	    if ($good_terms{$traits[$i]}) {  # only save good terms
+		print STDERR "Building hash with trait $traits[$i] and value $values[$i]...\n";
+		push @{$value_hash{$plot_name}->{$traits[$i]}}, $values[$i];
+	    }
+	}
     }
 
     print STDERR "Storing data...\n";
-    return $self->store_data($c, $params, \%values, \@stocks, \@plots, \@traits, $user_id);
+    return $self->store_data($c, $params, \%value_hash, \@stocks, \@plots, \@good_traits, $user_id);
 }
 
 
@@ -160,7 +186,9 @@ sub store_data {
     $a->name($params->{analysis_name});
     $a->description($params->{description});
     $a->user_id($user_id);
-    $a->accession_ids($stocks);
+
+    #print STDERR Dumper("STOCKS HERE: ".$stocks);
+    $a->accession_names($stocks);
     $a->metadata()->traits($traits);
     $a->metadata()->analysis_protocol($params->{analysis_protocol});
     
@@ -178,19 +206,25 @@ sub store_data {
     if ($@) {
 	push @errors, $@;
     }
-    elsif ($verified_warning || $verified_error) {
+    elsif ($verified_warning) {
 	push @warnings, $verified_warning;
+    }
+    elsif ($verified_error) {
 	push @errors, $verified_error;
     }
 
-    if (@errors) { 
+    if (@errors) {
+	print STDERR "SORRY! Errors: ".join("\n", @errors);
 	$c->stash->{rest} = { error => join "; ", @errors };
 	return;
     }
     
     my $operator = $user->get_first_name()." ".$user->get_last_name();
     print STDERR "Store analysis values...\n";
+    print STDERR "value hash: ".Dumper($values);
+    print STDERR "traits: ".join(",",@$traits);
 
+    
     eval { 
 	$a->store_analysis_values(
 	    $c->dbic_schema("CXGN::Metadata::Schema"),
@@ -205,17 +239,21 @@ sub store_data {
 	    $c->config->{dbuser},
 	    $c->config->{dbpass},
 	    "/tmp/temppath-$$",
-	    
 	    );
-
     };
 
     if ($@) {
-	$c->stash->{rest} = { error => "An error occurred storing the values.\n"};
+	print STDERR "An error occurred storing analysis values ($@).\n";
+	$c->stash->{rest} = { 
+	    error => "An error occurred storing the values ($@).\n"
+	};
 	return;
     }
     
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { 
+	success => 1,
+	traits_stored => $traits,
+    };
 
 }
 
@@ -238,7 +276,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
 	push @table, [ '<a href="/analyses/'.$a->project_id().'">'.$a->name()."</a>", $a->description() ];
     }
 
-    print STDERR Dumper(\@table);
+    #print STDERR Dumper(\@table);
     
     $c->stash->{rest} = { data => \@table };
 
