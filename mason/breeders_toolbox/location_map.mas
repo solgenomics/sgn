@@ -449,7 +449,13 @@ function initialize_map (id, locationJSON, table) {
 
     mymap.addControl(new locateUser({ position: 'topleft' }));
 
-    mymap.fitBounds(location_layer.getBounds());
+    // Set Map Bounds if provided, otherwise fit the map to the world
+    if ( Object.entries(location_layer.getBounds()).length !== 0 ) {
+        mymap.fitBounds(location_layer.getBounds());
+    }
+    else {
+        mymap.fitWorld();
+    }
     var layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'bottomright'}).addTo(mymap);
     var scale = L.control.scale().addTo(mymap);
 

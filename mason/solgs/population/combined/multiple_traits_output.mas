@@ -83,7 +83,7 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
  
-<& /solgs/population/selection_index.mas,
+<& /solgs/selection_index/selection_index.mas,
    analyzed_traits               => $analyzed_traits,
   pop_id                         => $combo_pops_id,
   project_name                   => $project_name,
