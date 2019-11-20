@@ -44,9 +44,19 @@ jQuery(document).ready(function(){
                     for(var i=0; i<json.data.length; i++){
                         html += json.data[i].accession_name+"\n";
                     }
+
+                    var list_type;
+                    if (json.data[0].stock_type == 'cross') {
+                        list_type = 'crosses'
+                    } else if (json.data[0].stock_type == 'family_name') {
+                        list_type = 'family_names'
+                    } else if (json.data[0].stock_type == 'accession') {
+                        list_type = 'accessions'
+                    }
+
                     jQuery("#stocks_to_new_list").html(html);
                     addToListMenu("stocks_add_to_list", "stocks_to_new_list", {
-                        listType: 'stock_type',
+                        listType: list_type
                     });
                 }
             }
