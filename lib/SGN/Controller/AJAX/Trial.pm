@@ -1007,6 +1007,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     # my $add_project_trial_crossing_trial;
     # my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     # my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
+
+
+
+
+    
     my $upload = $c->req->upload('multiple_trial_designs_upload_file');
     my $parser;
     my $parsed_data;
@@ -1071,6 +1076,14 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $upload_metadata{'archived_file_type'}="trial upload file";
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
+
+
+
+
+
+
+
+
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);

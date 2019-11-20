@@ -563,6 +563,8 @@ $locations
                                 <td>field_size</td>
                                 <td>description</td>
                                 <td>design_type</td>
+                                <td>planting_date</td>
+                                <td>harvest_date</td>
                                 <td>plot_name</td>
                                 <td>accession_name</td>
                                 <td>plot_number</td>
@@ -602,7 +604,9 @@ $locations
                     <li>plot_width (plot width in meters)</li>
                     <li>plot_length (plot length in meters)</li>
                     <li>field_size (field size in hectares)</li>
-                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
+                    <li>planting_date (Date of Planting in YYYY-MM-DD format)</li>
+                    <li>harvest_date (Date of Harvest in YYYY-MM-DD format)</li>
+                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
                     <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
