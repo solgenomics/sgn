@@ -7,6 +7,7 @@ use DateTime;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialDesignStore;
+use CXGN::Trial::TrialLayout;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Analysis::AnalysisMetadata;
 use CXGN::List::Transform;
@@ -25,7 +26,7 @@ has 'name' => (is => 'rw', isa => 'Str');
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
-has 'accession_ids' => (is => 'rw', isa => 'ArrayRef');
+has 'accession_ids' => (is => 'rw', isa => 'Maybe[ArrayRef]');
 
 has 'accession_names' => (is => 'rw', isa => 'ArrayRef');
 
@@ -49,17 +50,25 @@ sub BUILD {
     my $metadata;
     
     if ($args->{project_id}) {
+	
+	# with a project ID, we load all associated metadata
+	# first, get project row and retrieve name
+	#
 	my $row = $args->{bcs_schema}->resultset("Project::Project")->find( { project_id => $args->{project_id} });
 
 	if (! $row) { return undef; }
 	
 	$self->name($row->name());
 	$self->description($row->description());
+
+	# retrieve associated metadata from projectprop
+	#
 	my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
 	
 	my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search( { project_id => $args->{project_id}, type_id => $metadata_json_id });
 
-	# get metadata object
+	#  create the  metadata object
+	#
 	my $stockprop_id;
 	if ($rs->count() > 0) { 
 	    $stockprop_id = $rs->first()->projectprop_id();
@@ -68,27 +77,23 @@ sub BUILD {
 	print STDERR "Create AnalysisMetadata object...\n";
 	$metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
 
+	$self->metadata($metadata);
+
 	$stockprop_id = $metadata->prop_id();
 
-	# Extract the list of accessions from the dataset
+	# Load the design
 	#
-	if (my $dataset_id = $self->metadata()->dataset_id()) {
-	    my $ds = CXGN::Dataset->new( 
-		{ 
-		    schema => $self->bcs_schema(), 
-		    people_schema => $self->people_schema(),
-		    sp_dataset_id => $dataset_id,	
-		});
+	my $design = CXGN::Trial::TrialLayout->new( { schema => $args->{bcs_schema}, trial_id => $args->{project_id}, experiment_type=> 'field_layout'} );
 
-	    my $accession_ids = $ds->retrieve_accessions();
-	    $self->accession_ids($accession_ids);
-	    my $lt = CXGN::List::Transform->new();
-	    my $transform = $lt->can_transform("accession_id", "accession");
-	    my $accession_names = $lt->tranform($args->{bcs_schema}, $transform, $accession_ids );
-	    $self->accession_names($accession_names);
-        }
+	print STDERR "READ DESIGN: ".Dumper($design->get_design());
+	$self->design($design->get_design());
+
+	# get the accessions from the design (not the dataset!)
+	#
+	$self->accession_names($self->design()->accession_names());	
 	
 	print STDERR "prop_id is $stockprop_id...\n";
+	
 	# if object doesn't have metadata in the database, create an 
 	# empty object
 	#
@@ -97,17 +102,15 @@ sub BUILD {
 	    $metadata->parent_id($args->{project_id});
 	    $metadata->store();
 	}
-
-	
-	
-
     }
     else {
+
+	# otherwise create an empty project object with an empty metadata object...
+	#
 	print STDERR "Create an empty metadata object with parent_id $args->{project_id}...\n";
 	$metadata = CXGN::Analysis::AnalysisMetadata->new ( { bcs_schema => $args->{bcs_schema} });
 	$metadata->parent_id($args->{project_id});
     }
-
     $self->metadata($metadata);
 }
 
@@ -232,7 +235,7 @@ sub create_and_store_analysis_design {
 	print STDERR "Retrieving data for dataset_id ".$self->metadata->dataset_id()."\n";
 	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema(), people_schema => $self->people_schema(), sp_dataset_id => $self->metadata()->dataset_id() });
 	my $data = $ds->to_hashref();
-	print STDERR "DATA: $data\n";
+	#print STDERR "DATA: $data\n";
 	$self->metadata()->dataset_data(JSON::Any->encode($data));
 	
     }
@@ -249,23 +252,26 @@ sub create_and_store_analysis_design {
     print STDERR "Create a new analysis design...\n";
     my $td = CXGN::Trial::TrialDesign->new();
 
-    my $accession_names;
-    print STDERR "Retrieving accession names...\n";
-    print STDERR "Using ids ".join(", ",@{$self->accession_ids()})."\n";
-    my $tf = CXGN::List::Transform->new();
-    my $transform_name = $tf->can_transform("accession_ids", "accessions");
-    print STDERR "Transform name = $transform_name\n";
-    if ($transform_name) {
-	$accession_names = $tf->transform($self->bcs_schema(), $transform_name, $self->accession_ids());
-	print STDERR "Accession names now: ".join(", ", @$accession_names)."\n";
-	$self->accession_names($accession_names);
-    }
+#    my $accession_names;
+    # print STDERR "Retrieving accession names...\n";
+    # print STDERR "Using ids ".join(", ",@{$self->accession_ids()})."\n";
+    # my $tf = CXGN::List::Transform->new();
+    # my $transform_name = $tf->can_transform("accession_ids", "accessions");
+    # print STDERR "Transform name = $transform_name\n";
+    # if ($transform_name) {
+    # 	$accession_names = $tf->transform($self->bcs_schema(), $transform_name, $self->accession_ids());
+    # 	print STDERR "Accession names now: ".join(", ", $accession_names)."\n";
+    # 	if ($accession_names->{missing}) {
+    # 	    die "There are accessions in the analysis that cannot be found in the database.";
+    # 	}
+    # 	$self->accession_names($accession_names->{transform});
+    # }
     
     
     $td->set_trial_name($self->name());
     $td->set_stock_list($self->accession_names());
 
-    print STDERR "Accessions in design: ".Dumper($self->accession_names())."\n";
+    #print STDERR "Accessions in design: ".Dumper($self->accession_names())."\n";
     $td->set_design_type("Analysis");
 
     my $design;
@@ -329,6 +335,8 @@ sub store_analysis_values {
     my $dbpass = shift;
     my $tempfile_path = shift;
 
+    print STDERR "Storing analysis values...\n";
+    
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my %phenotype_metadata;
@@ -367,6 +375,10 @@ sub store_analysis_values {
     }
     
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+    if ($stored_phenotype_error) {
+	die "An error occurred storing the phenotypes: $stored_phenotype_error\n";
+    }
     
 }
 
