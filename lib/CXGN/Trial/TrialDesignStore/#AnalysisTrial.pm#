@@ -1,0 +1,11 @@
+
+package CXGN::Trial::TrialDesignStore::AnalysisTrial;
+
+extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';
+
+sub validate_design {
+    my $self = shift;
+    
+
+
+}
