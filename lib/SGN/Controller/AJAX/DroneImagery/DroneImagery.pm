@@ -1513,6 +1513,8 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
+    my $checkbox_select_standard_9 = $c->req->param('checkbox_select_standard_9');
+    my $checkbox_select_standard_9_threshold = $c->req->param('checkbox_select_standard_9_threshold');
     my $field_trial_ids = $c->req->param('field_trial_ids');
     my $stock_ids = $c->req->param('stock_ids');
     my $field_trial_images_only = $c->req->param('field_trial_images_only');
@@ -1543,6 +1545,29 @@ sub get_plot_polygon_types_GET : Args(0) {
         my $project_image_type_id_list = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_types_whole_images($bcs_schema);
         $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
     }
+
+    my %standard_9 = (
+        'observation_unit_polygon_blue_imagery' => 1,
+        'observation_unit_polygon_green_imagery' => 1,
+        'observation_unit_polygon_red_imagery' => 1,
+        'observation_unit_polygon_red_edge_imagery' => 1,
+        'observation_unit_polygon_nir_imagery' => 1,
+        'observation_unit_polygon_ndvi_imagery' => 1,
+        'observation_unit_polygon_ndre_imagery' => 1,
+        'observation_unit_polygon_vari_imagery' => 1,
+        'observation_unit_polygon_tgi_imagery' => 1
+    );
+    my %standard_9_thresholded = (
+        'observation_unit_polygon_blue_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_green_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_red_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_ndvi_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_ndre_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_vari_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_tgi_background_removed_threshold_imagery' => 1
+    );
 
     my @where_clause;
     push @where_clause, "project_md_image.type_id in ($project_image_type_id_list_sql)";
@@ -1591,6 +1616,16 @@ sub get_plot_polygon_types_GET : Args(0) {
             my $input = "<input type='checkbox' name='$checkbox_select_name' value='$project_md_image_type_id' ";
             if ($checkbox_select_all) {
                 $input .= "checked";
+            }
+            elsif ($checkbox_select_standard_9) {
+                if (exists($standard_9{$project_md_image_type_name})) {
+                    $input .= "checked disabled";
+                }
+            }
+            elsif ($checkbox_select_standard_9_threshold) {
+                if (exists($standard_9_thresholded{$project_md_image_type_name})) {
+                    $input .= "checked disabled";
+                }
             }
             $input .= ">";
             push @res, $input;
@@ -3996,43 +4031,85 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $keras_tuner_dir = $c->config->{temp_keras_cnn_model_dir}.'/model_tuner/';
     my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
-    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        foreach my $stock_id (sort keys %data_hash){
-            foreach my $image_type (sort keys %seen_image_types) {
-                foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
-                    foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
-                        my $data = $data_hash{$stock_id}->{$image_type}->{$drone_run_project_id}->{$day_time};
-                        my $image_fullpath = $data->{image};
-                        my $field_trial_id = $data->{field_trial_id};
-                        my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
-                        my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
-                        if ($value) {
-                            print $F '"'.$stock_id.'",';
-                            print $F '"'.$image_fullpath.'",';
-                            print $F '"'.$value.'",';
-                            print $F '"'.$trait_name.'",';
-                            print $F '"'.$image_type.'",';
-                            print $F '"'.$day_time.'",';
-                            print $F '"'.$drone_run_project_id.'",';
-                            print $F '"'.$field_trial_id.'",';
-                            print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
-                            if (scalar(@aux_trait_id)>0) {
-                                print $F ',"';
-                                my @aux_values;
-                                foreach my $aux_trait (@aux_trait_id) {
-                                    my $aux_value = $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait};
-                                    push @aux_values, $aux_value;
+
+    if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
+        open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+            foreach my $stock_id (sort keys %data_hash){
+                foreach my $image_type (sort keys %seen_image_types) {
+                    foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
+                        foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                            my $data = $data_hash{$stock_id}->{$image_type}->{$drone_run_project_id}->{$day_time};
+                            my $image_fullpath = $data->{image};
+                            my $field_trial_id = $data->{field_trial_id};
+                            my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                            my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                            if ($value) {
+                                print $F '"'.$stock_id.'",';
+                                print $F '"'.$image_fullpath.'",';
+                                print $F '"'.$value.'",';
+                                print $F '"'.$trait_name.'",';
+                                print $F '"'.$image_type.'",';
+                                print $F '"'.$day_time.'",';
+                                print $F '"'.$drone_run_project_id.'",';
+                                print $F '"'.$field_trial_id.'",';
+                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
+                                if (scalar(@aux_trait_id)>0) {
+                                    print $F ',"';
+                                    my @aux_values;
+                                    foreach my $aux_trait (@aux_trait_id) {
+                                        my $aux_value = $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait};
+                                        push @aux_values, $aux_value;
+                                    }
+                                    my $aux_values_string = join '","', @aux_values;
+                                    print $F $aux_values_string.'"';
                                 }
-                                my $aux_values_string = join '","', @aux_values;
-                                print $F $aux_values_string.'"';
+                                print $F "\n";
                             }
-                            print $F "\n";
                         }
                     }
                 }
             }
-        }
-    close($F);
+        close($F);
+    }
+    else {
+        open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+            foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
+                foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                    foreach my $stock_id (sort keys %data_hash){
+                        foreach my $image_type (sort keys %seen_image_types) {
+                            my $data = $data_hash{$stock_id}->{$image_type}->{$drone_run_project_id}->{$day_time};
+                            my $image_fullpath = $data->{image};
+                            my $field_trial_id = $data->{field_trial_id};
+                            my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                            my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                            if ($value) {
+                                print $F '"'.$stock_id.'",';
+                                print $F '"'.$image_fullpath.'",';
+                                print $F '"'.$value.'",';
+                                print $F '"'.$trait_name.'",';
+                                print $F '"'.$image_type.'",';
+                                print $F '"'.$day_time.'",';
+                                print $F '"'.$drone_run_project_id.'",';
+                                print $F '"'.$field_trial_id.'",';
+                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
+                                if (scalar(@aux_trait_id)>0) {
+                                    print $F ',"';
+                                    my @aux_values;
+                                    foreach my $aux_trait (@aux_trait_id) {
+                                        my $aux_value = $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait};
+                                        push @aux_values, $aux_value;
+                                    }
+                                    my $aux_values_string = join '","', @aux_values;
+                                    print $F $aux_values_string.'"';
+                                }
+                                print $F "\n";
+                            }
+                        }
+                    }
+                }
+            }
+        close($F);
+    }
     undef %data_hash;
     undef %phenotype_data_hash;
 
@@ -4096,7 +4173,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     close($fh);
     #print STDERR Dumper \@result_agg;
 
-    open($F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
+    open(my $F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
         foreach my $data (@result_agg){
             print $F $data;
             print $F "\n";
