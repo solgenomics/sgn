@@ -334,6 +334,7 @@ sub search {
             push @return_observations, $o;
         }
 
+	no warnings 'uninitialized';
         $notes =~ s/\R//g;
         $trial_description =~ s/\R//g;
         $breeding_program_description =~ s/\R//g;

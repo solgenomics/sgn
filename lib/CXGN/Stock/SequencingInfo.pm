@@ -52,13 +52,18 @@ use SGN::Model::Cvterm;
 
 =head2 blast_db_id
 
+=head2 sp_person_id
+
+=head2 timestamp
+
+
 =cut
     
 has 'schema' => (isa => 'Ref', is => 'rw', required => 1);
 
 has 'stockprop_id' => (isa => 'Maybe[Int]', is => 'rw');
 
-has 'stock_id' => (isa => 'Int', is => 'rw');
+has 'stock_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 has 'type_id' => (isa => 'Int', is => 'rw');
 
@@ -84,7 +89,11 @@ has 'jbrowse_link' => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'blast_db_id' => (isa => 'Maybe[Int]', is => 'rw');
 
-has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link blast_db_id stockprop_id stock_id | ] } );
+has 'sp_person_id' => (isa => 'Maybe[Int]', is => 'rw');
+
+has 'timestamp' => (isa => 'Maybe[Str]', is => 'rw');
+
+has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link blast_db_id stockprop_id stock_id sp_person_id timestamp | ] } );
 
 
 sub BUILD {
@@ -93,7 +102,7 @@ sub BUILD {
 
     if ($args->{stockprop_id} eq "undefined") { $args->{stockprop_id} = undef; }
 
-    print STDtERR "STOCKPROPID: ".$self->stockprop_id.", TYPE: ".$self->type()."\n";
+    print STDERR "STOCKPROPID: ".$self->stockprop_id.", TYPE: ".$self->type()."\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_property')->cvterm_id();
 
     $self->type_id($type_id);
@@ -212,12 +221,21 @@ sub store {
     }
     else { 
 	# insert
+
+	#get highest rank from previous inserts...
+	my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $self->type_id() }); #SELECT max(rank) from stockprop where type_id=? and stock_id=?";
+	my $rank = $rs->get_column("rank")->max();
+
+	$rank++;
+	
 	print STDERR "inserting stockprop...\n";
 	my $row = $self->schema()->resultset("Stock::Stockprop")->create( 
 	    { 
 		stock_id => $self->stock_id(), 
 		type_id => $self->type_id(), 
-		value => $self->to_json() 
+		value => $self->to_json(),
+		rank => $rank,
+		    
 	    });
 
 	$self->stockprop_id($row->stockprop_id());
@@ -378,7 +396,7 @@ sub from_hash {
     
     foreach my $f (@$allowed_fields) {
 	print STDERR "Processing $f ($hash->{$f})...\n";
-	if ($hash->{$f} eq "undefined") { $hash->{$f} = undef; }
+	if ( ($hash->{$f} eq "undefined") || ($hash->{$f} eq "") ) { $hash->{$f} = undef; }
 	$self->$f($hash->{$f});
     }
 }

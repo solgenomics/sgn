@@ -4,6 +4,7 @@ package SGN::Controller::AJAX::SequencedAccessions;
 use Moose;
 
 use Data::Dumper;
+use DateTime;
 use CXGN::Stock::SequencingInfo;
 
 __PACKAGE__->config(
@@ -63,17 +64,17 @@ sub retrieve_sequencing_infos {
 		
 		my $website = "";
 		if ($info->{website}) {
-		    $website = qq | <a href="'.$info->{website}.'">$website</a> |;
+		    $website = qq | <a href="https://$info->{website}">$info->{website}</a> |;
 		}
 		    
 		my $blast_link = "BLAST";
 		if ($info->{blast_link}) {
-		    $blast_link = qq | <a href="'.$info->{blast_link}.'">BLAST</a> |;
+		    $blast_link = qq | <a href="$info->{blast_link}">BLAST</a> |;
 		}
 		
 		my $jbrowse_link = "Jbrowse";
 		if ($info->{jbrowse_link}) {
-		    $jbrowse_link = qq | <a href="'.$info->{jbrowse_link}.'">JBrowse</a> |;
+		    $jbrowse_link = qq | <a href="$info->{jbrowse_link}">JBrowse</a> |;
 		}
 
 		my $delete_link_js = "window.jsMod['sequenced_accessions'].delete_sequencing_info(".$info->{stockprop_id}.");";
@@ -81,14 +82,14 @@ sub retrieve_sequencing_infos {
 		my $edit_link_js = "window.jsMod['sequenced_accessions'].edit_sequencing_info(".$info->{stockprop_id}.");";
 		my $edit_delete_html = "Edit | Delete";
 
-		if ($user_id) {
+		if ($user_id && ($info->{sp_person_id} == $user_id)) {
 		    $edit_delete_html = '<a href="javascript:'.$edit_link_js.'">Edit</a> | <a href="javascript:'.$delete_link_js.'">Delete</a>';
 		}
 		    
 		    
 		push @data, [
 		    "<a href=\"/stock/$stock_id\">".$info->{uniquename}."</a>",
-		    $info->{year},
+		    $info->{sequencing_year},
 		    $info->{organization},
 		    $website,
 		    $blast_link." | ".$jbrowse_link,
@@ -122,20 +123,36 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
     my $params = $c->req->params();
 
     print STDERR "Params for store: ".Dumper($params);
-    
+
+    if (!$c->user()) {
+	$c->stash->{rest} = { error => "You need to be logged in to add sequencing inforaiton" };
+	return;
+    }
     if (!$c->user()->check_roles("curator")) {
-	$c->stash->{error => "You need to be logged in as a curator to submit this information" };
+	$c->stash->{rest} = { error => "You need to be logged in as a curator to submit this information" };
+	return;
     }
 	
     print STDERR "store_sequecing_info PARAMS = ".Dumper($params);
     
-    my $stockprop_id = $params->{stockprop_id}; # if available, then we update
-    my $stock_id = $params->{stock_id};
-    
+    if (!$params->{stockprop_id}) { $params->{stockprop_id} = undef; } # force it to undef if it is a ""
+
     my $si = CXGN::Stock::SequencingInfo->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
+    my $timestamp = DateTime->now();
+    $params->{sp_person_id} = $c->user()->get_object()->get_sp_person_id();
+    $params->{timestamp} = $timestamp->ymd()." ".$timestamp->hms();
     $si->from_hash($params);
-    $si->store();
+    
+    eval { 
+	$si->store();
+    };
+    if ($@) {
+	$c->stash->{rest} = { error => "Error. The operation could not be completed. ($@)" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1};
 }
 
 
@@ -158,6 +175,11 @@ tion." };
 	    schema => $c->dbic_schema("Bio::Chado::Schema"), 
 	    stockprop_id => $stockprop_id,
 	});
+
+    if ($si->sp_person_id() && $si->sp_person_id() != $c->user()->get_object()->get_sp_person_id()) {
+	$c->stash->{rest} = { error => "You don't own this entry so it cannot be deleted." };
+	return;
+    }
     
     print STDERR "Starting delete of stockprop_id $stockprop_id...(in object: ".$si->stockprop_id()."), type_id =". $si->type_id()."\n";
     
