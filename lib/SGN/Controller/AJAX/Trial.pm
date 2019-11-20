@@ -126,7 +126,7 @@ sub generate_experimental_design_POST : Args(0) {
         return;
     }
 
-    if ($design_type eq 'westcott'){
+    if ($design_type eq 'Westcott'){
         if (!$westcott_check_1){
             $c->stash->{rest} = { error => "You need to provide name of check 1 for westcott design."};
             return;
@@ -810,6 +810,204 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
 
     my $upload = $c->req->upload('trial_uploaded_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "trial_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_id;
+    my $user_name;
+    my $error;
+
+    print STDERR "Check 2: ".localtime()."\n";
+
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading a trial.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
+        return;
+    }
+
+    $user_id = $c->user()->get_object()->get_sp_person_id();
+    $user_name = $c->user()->get_object()->get_username();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    print STDERR "Check 3: ".localtime()."\n";
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="trial upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialExcelFormat');
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+
+        if (! $parser->has_parse_errors() ){
+            $return_error = "Could not get parsing errors";
+            $c->stash->{rest} = {error_string => $return_error,};
+        }
+        else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+        }
+
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
+        return;
+    }
+
+    my $return_warnings;
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
+            $return_warnings=$return_warnings.$warning_string."<br>";
+        }
+    }
+
+    print STDERR "Check 4: ".localtime()."\n";
+
+    #print STDERR Dumper $parsed_data;
+
+    my $save;
+    my $coderef = sub {
+
+        my %trial_info_hash = (
+            chado_schema => $chado_schema,
+            dbh => $dbh,
+            trial_year => $trial_year,
+            trial_description => $trial_description,
+            trial_location => $trial_location,
+            trial_type => $trial_type,
+            trial_name => $trial_name,
+            user_name => $user_name, #not implemented
+            design_type => $trial_design_method,
+            design => $parsed_data,
+            program => $program,
+            upload_trial_file => $upload,
+            operator => $c->user()->get_object()->get_username(),
+            field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
+            field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
+            field_trial_from_field_trial => \@add_project_trial_source,
+            genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
+            crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+        );
+
+        if ($field_size){
+            $trial_info_hash{field_size} = $field_size;
+        }
+        if ($plot_width){
+            $trial_info_hash{plot_width} = $plot_width;
+        }
+        if ($plot_length){
+            $trial_info_hash{plot_length} = $plot_length;
+        }
+
+        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
+        $save = $trial_create->save_trial();
+
+        if ($save->{error}){
+            $chado_schema->txn_rollback();
+        }
+
+    };
+
+    try {
+        $chado_schema->txn_do($coderef);
+    } catch {
+        print STDERR "Transaction Error: $_\n";
+        $save->{'error'} = $_;
+    };
+
+    #print STDERR "Check 5: ".localtime()."\n";
+    if ($save->{'error'}) {
+        print STDERR "Error saving trial: ".$save->{'error'};
+        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
+        return;
+    } elsif ($save->{'trial_id'}) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
+        return;
+    }
+
+}
+
+sub upload_multiple_trial_designs_file : Path('/ajax/trial/upload_multiple_trial_designs_file') : ActionClass('REST') { }
+
+sub upload_multiple_trial_designs_file_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    print STDERR "Check 1: ".localtime()."\n";
+
+    #print STDERR Dumper $c->req->params();
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    # my $program = $c->req->param('trial_upload_breeding_program');
+    # my $trial_location = $c->req->param('trial_upload_location');
+    # my $trial_name = $c->req->param('trial_upload_name');
+    # my $trial_year = $c->req->param('trial_upload_year');
+    # my $trial_type = $c->req->param('trial_upload_trial_type');
+    # my $trial_description = $c->req->param('trial_upload_description');
+    # my $trial_design_method = $c->req->param('trial_upload_design_method');
+    # my $field_size = $c->req->param('trial_upload_field_size');
+    # my $plot_width = $c->req->param('trial_upload_plot_width');
+    # my $plot_length = $c->req->param('trial_upload_plot_length');
+
+    #
+    # my $add_project_trial_genotype_trial;
+    # my $add_project_trial_crossing_trial;
+    # my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
+    # my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
+    my $upload = $c->req->upload('multiple_trial_designs_upload_file');
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
