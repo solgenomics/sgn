@@ -2,6 +2,8 @@ package CXGN::List::Transform::Plugin::TraitIds2Synonyms;
 
 use Moose;
 
+use CXGN::Cvterm;
+
 sub name {
     return "trait_ids_2_synonyms";
 }

@@ -102,7 +102,7 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
     my @years;
     if ($auto_generate) {
       my $next_year = 1901 + (localtime)[5];
-      my $oldest_year = $next_year - 30;
+      my $oldest_year = $next_year - 50;
       @years = sort { $b <=> $a } ($oldest_year..$next_year);
     }
     else {
