@@ -73,7 +73,7 @@ $identifier => ''
                                          jQuery("#2D_fieldbook_option").hide();
                                        }
                                    });
-                                   
+
                                    jQuery('#custom_barcode_trial_link').click(function () {
                                        location.href = '/tools/label_designer';
                                    });
@@ -245,7 +245,7 @@ $identifier => ''
             <div class="container-fluid">
                 <p>
                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                    Generate barcode for plots and accessions.
+                    Generate barcode for plots, plants and accessions/crosses/family names used in this trial.
                 </p>
                     <center>
                     <div class="well">
@@ -254,7 +254,7 @@ $identifier => ''
                 <p>
                     <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
-                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions/Crosses/Family Names Barcode</button>
                     <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcode</button>
                 </p>
 
