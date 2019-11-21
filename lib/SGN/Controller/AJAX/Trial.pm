@@ -1011,7 +1011,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
 
 
-    
+
     my $upload = $c->req->upload('multiple_trial_designs_upload_file');
     my $parser;
     my $parsed_data;
@@ -1087,8 +1087,9 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('TrialExcelFormat');
+    $parser->load_plugin('MultipleTrialTrialExcelFormat');
     $parsed_data = $parser->parse();
+    my %all_designs = %{$parsed_data};
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -1106,7 +1107,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             }
         }
 
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_breeding_programs => $parse_errors->{'missing_breeding_programs'}, missing_locations => $parse_errors->{'missing_locations'}, missing_trial_types => $parse_errors->{'missing_trial_types'}, missing_design_types => $parse_errors->{'missing_design_types'}, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
         return;
     }
 
@@ -1122,46 +1123,55 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     #print STDERR Dumper $parsed_data;
 
-    my $save;
+    my %save;
+    $save{'errors'} = [];
     my $coderef = sub {
 
+      for my $trial_name ( keys %all_designs ) {
+        my $trial_design = $all_designs{$trial_name};
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
-            trial_year => $trial_year,
-            trial_description => $trial_description,
-            trial_location => $trial_location,
-            trial_type => $trial_type,
+            trial_year => $trial_design->{'year'},
+            trial_description => $trial_design->{'description'},
+            trial_location => $trial_design->{'location'},
             trial_name => $trial_name,
             user_name => $user_name, #not implemented
-            design_type => $trial_design_method,
-            design => $parsed_data,
-            program => $program,
+            design_type => $trial_design->{'design_type'},
+            design => $trial_design->{'design_details'},
+            program => $trial_design->{'breeding_program'},
             upload_trial_file => $upload,
-            operator => $c->user()->get_object()->get_username(),
-            field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
-            field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
-            field_trial_from_field_trial => \@add_project_trial_source,
-            genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
-            crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            operator => $c->user()->get_object()->get_username()
         );
 
-        if ($field_size){
-            $trial_info_hash{field_size} = $field_size;
+        if ($trial_design->{'trial_type'}){
+          $trial_info_hash{trial_type} => $trial_design->{'trial_type'};
         }
-        if ($plot_width){
-            $trial_info_hash{plot_width} = $plot_width;
+        if ($trial_design->{'plot_width'}){
+            $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
         }
-        if ($plot_length){
-            $trial_info_hash{plot_length} = $plot_length;
+        if ($trial_design->{'plot_length'}){
+            $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
+        }
+        if ($trial_design->{'field_size'}){
+            $trial_info_hash{field_size} = $trial_design->{'field_size'};
+        }
+        if ($trial_design->{'planting_date'}){
+            $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
+        }
+        if ($trial_design->{'harvest_date'}){
+            $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
         }
 
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
-        $save = $trial_create->save_trial();
+        my $current_save = $trial_create->save_trial();
 
-        if ($save->{error}){
+        if ($current_save->{error}){
             $chado_schema->txn_rollback();
+            push @{$save{'errors'}}, $current_save->{'error'};
         }
+
+      }
 
     };
 
@@ -1169,16 +1179,16 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         $chado_schema->txn_do($coderef);
     } catch {
         print STDERR "Transaction Error: $_\n";
-        $save->{'error'} = $_;
+        push @{$save{'errors'}}, $_;
     };
 
     #print STDERR "Check 5: ".localtime()."\n";
-    if ($save->{'error'}) {
-        print STDERR "Error saving trial: ".$save->{'error'};
-        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
+    if (scalar @{$save{'errors'}} > 0) {
+        print STDERR "Errors saving trials: ".@{$save{'errors'}};
+        $c->stash->{rest} = {warnings => $return_warnings, error => $save{'errors'}};
         return;
-    } elsif ($save->{'trial_id'}) {
-
+    # } elsif ($save->{'trial_id'}) {
+    } else {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

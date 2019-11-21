@@ -556,13 +556,13 @@ $locations
                                 <td>trial_name</td>
                                 <td>breeding_program</td>
                                 <td>location</td>
-                                <td>trial_type</td>
                                 <td>year</td>
+                                <td>design_type</td>
+                                <td>description</td>
+                                <td>trial_type</td>
                                 <td>plot_width</td>
                                 <td>plot_length</td>
                                 <td>field_size</td>
-                                <td>description</td>
-                                <td>design_type</td>
                                 <td>planting_date</td>
                                 <td>harvest_date</td>
                                 <td>plot_name</td>
@@ -582,17 +582,16 @@ $locations
                     </table>
 
                     <b>Header as a string:</b><br/>
-                    <p>trial_name,breeding_program,location,trial_type,year,plot_width,plot_length,field_size,description,design_type,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                    <p>trial_name,breeding_program,location,year,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
 
                     <b> Required fields:</b>
                     <ul>
                     <li>trial_name (must be unique across entire database. this is often a concatenation of the year, purpose, unique number, and location)</li>
                     <li>breeding_program (must exist in the database. this is the name of breeding program that managed the trial.)</li>
                     <li>location (must exist in the database. this is the name of the location where the trial was held.)</li>
-                    <li>trial_type (must exist in the database. this is the name of the trial type. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
                     <li>year (the year the trial was held)</li>
-                    <li>description (additional text with any other relevant information)</li>
                     <li>design_type (must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
+                    <li>description (additional text with any other relevant information)</li>
                     <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name and the plot number.)</li>
                     <li>accession_name (must exist in the database. this is the accession being tested in the plot.)</li>
                     <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). these numbers should be unique for the trial.)</li>
@@ -601,6 +600,7 @@ $locations
 
                     <b>Additional optional fields:</b>
                     <ul>
+                    <li>trial_type (must exist in the database. this is the name of the trial type. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
                     <li>plot_width (plot width in meters)</li>
                     <li>plot_length (plot length in meters)</li>
                     <li>field_size (field size in hectares)</li>

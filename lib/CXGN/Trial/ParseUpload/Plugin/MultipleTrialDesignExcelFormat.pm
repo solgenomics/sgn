@@ -75,13 +75,13 @@ sub _validate_with_plugin {
   my $trial_name;
   my $breeding_program;
   my $location;
-  my $trial_type;
   my $year;
+  my $design_type;
+  my $description;
+  my $trial_type;
   my $plot_width;
   my $plot_length;
   my $field_size;
-  my $description;
-  my $design_type;
   my $planting_date;
   my $harvest_date;
 
@@ -125,45 +125,45 @@ sub _validate_with_plugin {
       }
 
       if ($worksheet->get_cell($row,3)) {
-        $trial_type = $worksheet->get_cell($row,3)->value();
-      } else {
-        $trial_type = undef;
-      }
-
-      if ($worksheet->get_cell($row,4)) {
-        $year = $worksheet->get_cell($row,4)->value();
+        $year = $worksheet->get_cell($row,3)->value();
       } else {
         $year = undef;
       }
 
+      if ($worksheet->get_cell($row,4)) {
+        $design_type = $worksheet->get_cell($row,4)->value();
+      } else {
+        $design_type = undef;
+      }
+
       if ($worksheet->get_cell($row,5)) {
-        $plot_width = $worksheet->get_cell($row,5)->value();
-      } else {
-        $plot_width = undef;
-      }
-
-      if ($worksheet->get_cell($row,6)) {
-        $plot_length = $worksheet->get_cell($row,6)->value();
-      } else {
-        $plot_length = undef;
-      }
-
-      if ($worksheet->get_cell($row,7)) {
-        $field_size = $worksheet->get_cell($row,7)->value();
-      } else {
-        $field_size = undef;
-      }
-
-      if ($worksheet->get_cell($row,8)) {
-        $description = $worksheet->get_cell($row,8)->value();
+        $description = $worksheet->get_cell($row,5)->value();
       } else {
         $description = undef;
       }
 
-      if ($worksheet->get_cell($row,9)) {
-        $design_type = $worksheet->get_cell($row,9)->value();
+      if ($worksheet->get_cell($row,6)) {
+        $trial_type = $worksheet->get_cell($row,6)->value();
       } else {
-        $design_type = undef;
+        $trial_type = undef;
+      }
+
+      if ($worksheet->get_cell($row,7)) {
+        $plot_width = $worksheet->get_cell($row,7)->value();
+      } else {
+        $plot_width = undef;
+      }
+
+      if ($worksheet->get_cell($row,8)) {
+        $plot_length = $worksheet->get_cell($row,8)->value();
+      } else {
+        $plot_length = undef;
+      }
+
+      if ($worksheet->get_cell($row,9)) {
+        $field_size = $worksheet->get_cell($row,9)->value();
+      } else {
+        $field_size = undef;
       }
 
       if ($worksheet->get_cell($row,10)) {
@@ -217,7 +217,7 @@ sub _validate_with_plugin {
     }
 
     #skip blank lines
-    if (!$trial_name && !$breeding_program && !$location && !$trial_type && !$year && !$description && !$design_type && !plot_name && !$accession_name && !$plot_number && !$block_number !$plot_name && !$accession_name && !$plot_number && !$block_number) {
+    if (!$trial_name && !$breeding_program && !$location && !$year && !$design_type && !$description && !plot_name && !$accession_name && !$plot_number && !$block_number !$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
     }
 
@@ -257,47 +257,44 @@ sub _validate_with_plugin {
         $seen_locations{$location}=$row_name;
       }
 
-      ## TRIAL TYPE CHECK
-      if (!$trial_type || $trial_type eq '' ) {
-          push @error_messages, "Cell D$row_name: trial_type missing.";
-      }
-      else {
-        $trial_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-        $seen_trial_types{$trial_type}=$row_name;
-      }
-
       ## YEAR CHECK
       if (!($year =~ /^\d{4}$/)) {
-          push @error_messages, "Cell E$row_name: $year is not a valid year, must be a 4 digit positive integer.";
-      }
-
-      ## PLOT WIDTH CHECK
-      if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell F$row_name: plot_width must be a positive number: $plot_width";
-      }
-
-      ## PLOT LENGTH CHECK
-      if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell G$row_name: plot_length must be a positive number: $plot_length";
-      }
-
-      ## FIELD SIZE CHECK
-      if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell H$row_name: field_size must be a positive number: $field_size";
-      }
-
-      ## DESCRIPTION CHECK
-      if (!$description || $description eq '' ) {
-          push @error_messages, "Cell I$row_name: description missing.";
+          push @error_messages, "Cell D$row_name: $year is not a valid year, must be a 4 digit positive integer.";
       }
 
       ## DESIGN TYPE CHECK
       if (!$design_type || $design_type eq '' ) {
-          push @error_messages, "Cell J$row_name: design_type missing.";
+          push @error_messages, "Cell E$row_name: design_type missing.";
       }
       else {
-        $trial_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $design_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_design_types{$design_type}=$row_name;
+      }
+
+      ## DESCRIPTION CHECK
+      if (!$description || $description eq '' ) {
+          push @error_messages, "Cell F$row_name: description missing.";
+      }
+
+      ## TRIAL TYPE CHECK
+      if ($trial_type) {
+        $trial_type =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $seen_trial_types{$trial_type}=$row_name;
+      }
+
+      ## PLOT WIDTH CHECK
+      if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)){
+          push @error_messages, "Cell H$row_name: plot_width must be a positive number: $plot_width";
+      }
+
+      ## PLOT LENGTH CHECK
+      if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)){
+          push @error_messages, "Cell I$row_name: plot_length must be a positive number: $plot_length";
+      }
+
+      ## FIELD SIZE CHECK
+      if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)){
+          push @error_messages, "Cell J$row_name: field_size must be a positive number: $field_size";
       }
 
       ## PLANTING DATE CHECK
@@ -447,21 +444,6 @@ sub _validate_with_plugin {
       push @error_messages, "The following locations are not in the database: ".join(',',@locations_missing);
   }
 
-  ## TRIAL TYPES OVERALL VALIDATION
-  my @trial_types = keys %seen_trial_types;
-  my %valid_trial_types;
-  my @trial_types_missing;
-  my @valid_trial_types = CXGN::Trial::get_all_project_types($self->bcs_schema())
-  my @valid_trial_type_names = map {$_[1]} @valid_trial_types;
-  @valid_trial_types{@valid_trial_type_names};
-  foreach $type (@trial_types) {
-      push(@trial_types_missing, $type) unless exists $valid_trial_types{$type};
-  }
-  if (scalar(@trial_types_missing) > 0) {
-      $errors{'missing_locations'} = \@trial_types_missing;
-      push @error_messages, "The following trial_types are not in the database: ".join(',',@trial_types_missing);
-  }
-
   ## DESIGN TYPES OVERALL VALIDATION
   my @design_types = keys %seen_design_types;
   my %valid_design_types = (
@@ -485,6 +467,21 @@ sub _validate_with_plugin {
   if (scalar(@design_types_missing) > 0) {
       $errors{'missing_design_types'} = \@design_types_missing;
       push @error_messages, "The following design types are not in the database: ".join(',',@design_types_missing);
+  }
+
+  ## TRIAL TYPES OVERALL VALIDATION
+  my @trial_types = keys %seen_trial_types;
+  my %valid_trial_types;
+  my @trial_types_missing;
+  my @valid_trial_types = CXGN::Trial::get_all_project_types($self->bcs_schema())
+  my @valid_trial_type_names = map {$_[1]} @valid_trial_types;
+  @valid_trial_types{@valid_trial_type_names};
+  foreach $type (@trial_types) {
+      push(@trial_types_missing, $type) unless exists $valid_trial_types{$type};
+  }
+  if (scalar(@trial_types_missing) > 0) {
+      $errors{'missing_trial_types'} = \@trial_types_missing;
+      push @error_messages, "The following trial_types are not in the database: ".join(',',@trial_types_missing);
   }
 
   ## ACCESSIONS OVERALL VALIDATION
@@ -593,16 +590,17 @@ sub _parse_with_plugin {
 
   my %all_designs;
   my %single_design;
-  my $trial_name;
+  my %design_detail;
+  my $trial_name = $worksheet->get_cell(1,0)->value();
   my $breeding_program;
   my $location;
-  my $trial_type;
   my $year;
+  my $design_type;
+  my $description;
+  my $trial_type;
   my $plot_width;
   my $plot_length;
   my $field_size;
-  my $description;
-  my $design_type;
   my $planting_date;
   my $harvest_date;
 
@@ -627,37 +625,39 @@ sub _parse_with_plugin {
 
     if ($current_trial_name ne $trial_name) {
       ## Save old single trial hash in all trials hash
+      $single_design{'design_details'} = %design_details;
       $all_designs{$trial_name} = %single_design;
 
       ## Create new single trial hash and add metadata
-      %single_design = {};
+      %single_design = ();
       $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
       $single_design{'location'} = $worksheet->get_cell($row,2)->value();
-      $single_design{'trial_type'} = $worksheet->get_cell($row,3)->value();
-      $single_design{'year'} = $worksheet->get_cell($row,4)->value();
+      $single_design{'year'} = $worksheet->get_cell($row,3)->value();
+      $single_design{'design_type'} = $worksheet->get_cell($row,4)->value();
+      $single_design{'description'} = $worksheet->get_cell($row,5)->value();
 
-      if ($worksheet->get_cell($row,5)) {
-        $single_design{'plot_width'} = $worksheet->get_cell($row,5)->value();
-      }
       if ($worksheet->get_cell($row,6)) {
-        $single_design{'plot_length'} = $worksheet->get_cell($row,6)->value();
+        $single_design{'trial_type'} = $worksheet->get_cell($row,6)->value();
       }
       if ($worksheet->get_cell($row,7)) {
-        $single_design{'field_size'} = $worksheet->get_cell($row,7)->value();
+        $single_design{'plot_width'} = $worksheet->get_cell($row,7)->value();
       }
-
-      $single_design{'description'} = $worksheet->get_cell($row,8)->value();
-      $single_design{'design_type'} = $worksheet->get_cell($row,9)->value();
-
+      if ($worksheet->get_cell($row,8)) {
+        $single_design{'plot_length'} = $worksheet->get_cell($row,8)->value();
+      }
+      if ($worksheet->get_cell($row,9)) {
+        $single_design{'field_size'} = $worksheet->get_cell($row,9)->value();
+      }
       if ($worksheet->get_cell($row,10)) {
         $single_design{'planting_date'} = $worksheet->get_cell($row,10)->value();
       }
-
       if ($worksheet->get_cell($row,11)) {
         $single_design{'harvest_date'} = $worksheet->get_cell($row,11)->value();
       }
-      ## Update trial name
+
+      ## Update trial name and create new design_detail hash
       $trial_name = $current_trial_name
+      %design_detail = ();
     }
 
 
@@ -712,7 +712,7 @@ sub _parse_with_plugin {
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
-                push @{$single_design{treatments}->{$treatment_name}}, $plot_name;
+                push @{$design_detail{treatments}->{$treatment_name}}, $plot_name;
             }
         }
         $treatment_col++;
@@ -727,31 +727,31 @@ sub _parse_with_plugin {
     }
 
     my $key = $row;
-    $single_design{$key}->{plot_name} = $plot_name;
-    $single_design{$key}->{stock_name} = $accession_name;
-    $single_design{$key}->{plot_number} = $plot_number;
-    $single_design{$key}->{block_number} = $block_number;
+    $design_detail{$key}->{plot_name} = $plot_name;
+    $design_detail{$key}->{stock_name} = $accession_name;
+    $design_detail{$key}->{plot_number} = $plot_number;
+    $design_detail{$key}->{block_number} = $block_number;
     if ($is_a_control) {
-      $single_design{$key}->{is_a_control} = 1;
+      $design_detail{$key}->{is_a_control} = 1;
     } else {
-      $single_design{$key}->{is_a_control} = 0;
+      $design_detail{$key}->{is_a_control} = 0;
     }
     if ($rep_number) {
-      $single_design{$key}->{rep_number} = $rep_number;
+      $design_detail{$key}->{rep_number} = $rep_number;
     }
     if ($range_number) {
-      $single_design{$key}->{range_number} = $range_number;
+      $design_detail{$key}->{range_number} = $range_number;
     }
     if ($row_number) {
-	     $single_design{$key}->{row_number} = $row_number;
+	     $design_detail{$key}->{row_number} = $row_number;
     }
     if ($col_number) {
-	     $single_design{$key}->{col_number} = $col_number;
+	     $design_detail{$key}->{col_number} = $col_number;
     }
     if ($seedlot_name){
-        $single_design{$key}->{seedlot_name} = $seedlot_name;
-        $single_design{$key}->{num_seed_per_plot} = $num_seed_per_plot;
-        $single_design{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
+        $design_detail{$key}->{seedlot_name} = $seedlot_name;
+        $design_detail{$key}->{num_seed_per_plot} = $num_seed_per_plot;
+        $design_detail{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
     }
 
   }
@@ -768,13 +768,13 @@ sub parse_header() {
   my $trial_name_head;
   my $breeding_program_head;
   my $location_head;
-  my $trial_type_head;
   my $year_head;
+  my $design_type_head;
+  my $description_head;
+  my $trial_type_head;
   my $plot_width_head;
   my $plot_length_head;
   my $field_size_head;
-  my $description_head;
-  my $design_type_head;
   my $planting_date_head;
   my $harvest_date_head;
   my $plot_name_head;
@@ -800,25 +800,25 @@ sub parse_header() {
     $location_head= $worksheet->get_cell(0,2)->value();
   }
   if ($worksheet->get_cell(0,3)) {
-    $trial_type_head= $worksheet->get_cell(0,3)->value();
+    $year_head= $worksheet->get_cell(0,3)->value();
   }
   if ($worksheet->get_cell(0,4)) {
-    $year_head= $worksheet->get_cell(0,4)->value();
+    $design_type_head= $worksheet->get_cell(0,4)->value();
   }
   if ($worksheet->get_cell(0,5)) {
-    $plot_width_head= $worksheet->get_cell(0,5)->value();
+    $description_head= $worksheet->get_cell(0,5)->value();
   }
   if ($worksheet->get_cell(0,6)) {
-    $plot_length_head= $worksheet->get_cell(0,6)->value();
+    $trial_type_head= $worksheet->get_cell(0,6)->value();
   }
   if ($worksheet->get_cell(0,7)) {
-    $field_size_head= $worksheet->get_cell(0,7)->value();
+    $plot_width_head= $worksheet->get_cell(0,7)->value();
   }
   if ($worksheet->get_cell(0,8)) {
-    $description_head= $worksheet->get_cell(0,8)->value();
+    $plot_length_head= $worksheet->get_cell(0,8)->value();
   }
   if ($worksheet->get_cell(0,9)) {
-    $design_type_head= $worksheet->get_cell(0,9)->value();
+    $field_size_head= $worksheet->get_cell(0,9)->value();
   }
   if ($worksheet->get_cell(0,10)) {
     $planting_date_head= $worksheet->get_cell(0,10)->value();
@@ -874,26 +874,26 @@ sub parse_header() {
   if (!$location_head || $location_head ne 'location' ) {
     push @error_messages, "Cell C1: location is missing from the header";
   }
-  if (!$trial_type_head || $trial_type_head ne 'trial_type' ) {
-    push @error_messages, "Cell D1: trial_type is missing from the header";
-  }
   if (!$year_head || $year_head ne 'year' ) {
-    push @error_messages, "Cell E1: year is missing from the header";
-  }
-  if (!$plot_width_head || $plot_width_head ne 'plot_width' ) {
-    push @error_messages, "Cell F1: plot_width is missing from the header";
-  }
-  if (!$plot_length_head || $plot_length_head ne 'plot_length' ) {
-    push @error_messages, "Cell G1: plot_length is missing from the header";
-  }
-  if (!$field_size_head || $field_size_head ne 'field_size' ) {
-    push @error_messages, "Cell H1: field_size is missing from the header";
-  }
-  if (!$description_head || $description_head ne 'description' ) {
-    push @error_messages, "Cell I1: description is missing from the header";
+    push @error_messages, "Cell D1: year is missing from the header";
   }
   if (!$design_type_head || $design_type_head ne 'design_type' ) {
-    push @error_messages, "Cell J1: design_type is missing from the header";
+    push @error_messages, "Cell E1: design_type is missing from the header";
+  }
+  if (!$description_head || $description_head ne 'description' ) {
+    push @error_messages, "Cell F1: description is missing from the header";
+  }
+  if (!$trial_type_head || $trial_type_head ne 'trial_type' ) {
+    push @error_messages, "Cell G1: trial_type is missing from the header";
+  }
+  if (!$plot_width_head || $plot_width_head ne 'plot_width' ) {
+    push @error_messages, "Cell H1: plot_width is missing from the header";
+  }
+  if (!$plot_length_head || $plot_length_head ne 'plot_length' ) {
+    push @error_messages, "Cell I1: plot_length is missing from the header";
+  }
+  if (!$field_size_head || $field_size_head ne 'field_size' ) {
+    push @error_messages, "Cell J1: field_size is missing from the header";
   }
   if (!$planting_date_head || $planting_date_head ne 'planting_date' ) {
     push @error_messages, "Cell K1: planting_date is missing from the header";
