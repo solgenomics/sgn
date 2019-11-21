@@ -155,7 +155,13 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	my (%hash1, %hash2, %hash3, @trait_values1, @trait_values2, @trait_values3);
 	while ($msg_formula =~ /(\w*\:\d+)/g){
 		push @dependent_trait_ids, [$1];
-		($db_id,$accession) = split (/:/, $1);
+		($db_id,$accession) = split (/:/, $1);	
+			
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		$db_id =~ s/\s+$//;
+		$db_id =~ s/^\s+//;
+			
 		push @accessions, $accession;
 	}
 	print "DB ID: $db_id\n";
