@@ -4071,7 +4071,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                         my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
                                         push @aux_values, $aux_value;
                                     }
-                                    my $aux_values_string = join '","', @aux_values;
+                                    my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
                                     print $F $aux_values_string.'"';
                                 }
                                 print $F "\n";
@@ -4106,12 +4106,12 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
                                 if (scalar(@aux_trait_id)>0) {
                                     print $F ',"';
-                                    my @aux_values;
+                                    my @aux_values = ();
                                     foreach my $aux_trait (@aux_trait_id) {
                                         my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
                                         push @aux_values, $aux_value;
                                     }
-                                    my $aux_values_string = join '","', @aux_values;
+                                    my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
                                     print $F $aux_values_string.'"';
                                 }
                                 print $F "\n";
@@ -4629,7 +4629,7 @@ sub _perform_keras_cnn_predict {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
                                     push @aux_values, $aux_value;
                                 }
-                                my $aux_values_string = join '","', @aux_values;
+                                my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
                                 print $F $aux_values_string.'"';
                             }
                             print $F "\n";
@@ -4667,7 +4667,7 @@ sub _perform_keras_cnn_predict {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
                                     push @aux_values, $aux_value;
                                 }
-                                my $aux_values_string = join '","', @aux_values;
+                                my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
                                 print $F $aux_values_string.'"';
                             }
                             print $F "\n";
