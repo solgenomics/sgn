@@ -1199,7 +1199,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <label class="col-sm-3 control-label">Field Trial: </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_predict_keras_cnn_trial_select_div"></div>
                             </div>
@@ -1274,7 +1274,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <table class="table table-bordered table-hover" id="drone_image_predict_keras_plot_polygon_image_type_table">
                         <thead>
                             <tr>
-                                <th>Select <br/><input type="checkbox" id="drone_image_predict_keras_plot_polygon_image_type_table_select_all" checked>Select All</th>
+                                <!--th>Select <br/><input type="checkbox" id="drone_image_predict_keras_plot_polygon_image_type_table_select_all" checked>Select All</th-->
+                                <th>Select</th>
                                 <th>Field Trial</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Band Name</th>
@@ -2724,7 +2725,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_keras_cnn_predict_link').click(function(){
-        get_select_box('trials', 'drone_imagery_predict_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'id' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'empty':1, 'multiple':1 });
+        get_select_box('trials', 'drone_imagery_predict_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'id' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
         get_select_box('trained_keras_cnn_models', 'drone_imagery_predict_keras_cnn_model_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_model_id', 'id' : 'drone_imagery_predict_keras_cnn_model_id', 'empty':1 });
 
         jQuery('#drone_imagery_predict_keras_cnn_dialog').modal('show');
@@ -2733,8 +2734,9 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_predict_keras_model_field_trial_select_step').click(function(){
         manage_drone_imagery_predict_keras_field_trial_id_array = [];
         manage_drone_imagery_predict_keras_field_trial_id_string = '';
-        manage_drone_imagery_predict_keras_field_trial_id_array = jQuery('#drone_imagery_predict_keras_cnn_field_trial_id').val();
-        manage_drone_imagery_predict_keras_field_trial_id_string = manage_drone_imagery_predict_keras_field_trial_id_array.join(",");
+        manage_drone_imagery_predict_keras_field_trial_id_string = jQuery('#drone_imagery_predict_keras_cnn_field_trial_id').val();
+        //manage_drone_imagery_predict_keras_field_trial_id_array = jQuery('#drone_imagery_predict_keras_cnn_field_trial_id').val();
+        //manage_drone_imagery_predict_keras_field_trial_id_string = manage_drone_imagery_predict_keras_field_trial_id_array.join(",");
         if (manage_drone_imagery_predict_keras_field_trial_id_string == '') {
             alert('Please select a field trial first!');
         } else {
@@ -2788,7 +2790,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_image_predict_keras_plot_polygon_image_type_table').DataTable({
                 destroy : true,
                 paging : false,
-                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_all=1&select_checkbox_name=predict_keras_drone_imagery_plot_polygon_type_select&field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)
+                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_standard_9=1&select_checkbox_name=predict_keras_drone_imagery_plot_polygon_type_select&field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)
             });
 
             Workflow.complete("#drone_imagery_predict_keras_model_drone_run_select_step");
