@@ -1552,13 +1552,10 @@ sub get_plot_polygon_types_GET : Args(0) {
         'observation_unit_polygon_nren_imagery' => 1,
         'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1,
         'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_red_background_removed_threshold_imagery' => 1,
         'observation_unit_polygon_green_background_removed_threshold_imagery' => 1,
-        # 'observation_unit_polygon_blue_background_removed_threshold_imagery' => 1,
-        # 'observation_unit_polygon_ndvi_imagery' => 1,
+        'observation_unit_polygon_ndvi_imagery' => 1,
         'observation_unit_polygon_ndre_imagery' => 1,
-        # 'observation_unit_polygon_vari_imagery' => 1,
-        'observation_unit_polygon_tgi_imagery' => 1
+        'observation_unit_polygon_vari_imagery' => 1,
     );
     my %standard_9_thresholded = (
         'observation_unit_polygon_blue_background_removed_threshold_imagery' => 1,
