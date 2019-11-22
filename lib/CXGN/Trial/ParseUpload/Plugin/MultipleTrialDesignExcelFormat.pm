@@ -322,13 +322,13 @@ sub _validate_with_plugin {
       }
 
       ## PLANTING DATE CHECK
-      if (my $planting_event = $calendar_funcs->check_value_format($planting_date) ) {
+      if ($planting_date && $calendar_funcs->check_value_format($planting_date) ) {
       } else {
         push @error_messages, "Cell K$row_name: planting_date must be in the format YYYY-MM-DD: $planting_date";
       }
 
       ## HARVEST DATE CHECK
-      if (my $harvest_event = $calendar_funcs->check_value_format($harvest_date) ) {
+      if ($harvest_date && $calendar_funcs->check_value_format($harvest_date) ) {
       } else {
         push @error_messages, "Cell L$row_name: harvest_date must be in the format YYYY-MM-DD: $harvest_date";
       }
