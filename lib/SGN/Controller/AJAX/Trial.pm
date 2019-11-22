@@ -935,6 +935,8 @@ sub upload_trial_file_POST : Args(0) {
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
         );
 
+        print STDERR "Trial type is ".$trial_info_hash{'trial_type'}."\n";
+
         if ($field_size){
             $trial_info_hash{field_size} = $field_size;
         }
@@ -983,9 +985,9 @@ sub upload_multiple_trial_designs_file : Path('/ajax/trial/upload_multiple_trial
 sub upload_multiple_trial_designs_file_POST : Args(0) {
     my ($self, $c) = @_;
 
-    print STDERR "Check 1 in upload_multiple_trial_designs_file ".localtime()."\n";
+    # print STDERR "Check 1: ".localtime()."\n";
 
-    print STDERR Dumper $c->req->params();
+    # print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -1010,7 +1012,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $user_name;
     my $error;
 
-    print STDERR "Check 2: ".localtime()."\n";
+    # print STDERR "Check 2: ".localtime()."\n";
 
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
         print STDERR "File name must not have spaces or slashes.\n";
@@ -1049,7 +1051,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    print STDERR "Check 3: ".localtime()."\n";
+    # print STDERR "Check 3: ".localtime()."\n";
 
     $upload_metadata{'archived_file'} = $archived_filename_with_path;
     $upload_metadata{'archived_file_type'}="trial upload file";
@@ -1090,40 +1092,17 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         }
     }
 
-    print STDERR "Check 4: ".localtime()."\n";
+    # print STDERR "Check 4: ".localtime()."\n";
 
-    #print STDERR Dumper $parsed_data;
     my %all_designs = %{$parsed_data};
     my %save;
     $save{'errors'} = [];
-
-    for my $trial_name ( keys %all_designs ) {
-      my $trial_design = $all_designs{$trial_name};
-
-      print STDERR "\nCreating trial info hash for trial $trial_name using:\n";
-      my %trial_design = %{$trial_design};
-      my %design_details;
-      for my $field ( keys %trial_design ) {
-        my $value = $trial_design{$field};
-        if ($field eq 'design_details') {
-          %design_details = %{$value};
-        } else {
-          print STDERR "$field: $value\n";
-        }
-      }
-      for my $plot_key (keys %design_details) {
-        my $plot_details = $design_details{$plot_key};
-        print STDERR "$plot_key: ".Dumper($plot_details);
-        last;
-      }
-      print STDERR "Done!\n";
-    }
 
     my $coderef = sub {
 
       for my $trial_name ( keys %all_designs ) {
         my $trial_design = $all_designs{$trial_name};
-        print STDERR "\nSaving trial $trial_name:\n";
+        # print STDERR "\nSaving trial $trial_name:\n";
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
@@ -1140,7 +1119,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         );
 
         if ($trial_design->{'trial_type'}){
-          $trial_info_hash{trial_type} => $trial_design->{'trial_type'};
+            $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
         }
         if ($trial_design->{'plot_width'}){
             $trial_info_hash{plot_width} = $trial_design->{'plot_width'};

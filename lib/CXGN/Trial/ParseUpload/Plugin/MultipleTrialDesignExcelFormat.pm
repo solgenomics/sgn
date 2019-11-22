@@ -12,7 +12,7 @@ use CXGN::Trial;
 
 sub _validate_with_plugin {
 
-  print STDERR "Starting validation\t".localtime()."\n";
+  # print STDERR "Starting validation\t".localtime()."\n";
 
   my $self = shift;
   my $filename = $self->get_filename();
@@ -35,8 +35,6 @@ sub _validate_with_plugin {
     return;
   }
 
-  print STDERR "Mid validation\t".localtime()."\n";
-
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   if (!$worksheet) {
       push @error_messages, "Spreadsheet must be on 1st tab in Excel (.xls) file";
@@ -56,7 +54,6 @@ sub _validate_with_plugin {
   my $header_errors = _parse_header($worksheet);
   if (scalar(@{$header_errors}) >= 1) {
     foreach my $error (@{$header_errors}) {
-      print STDERR "Found header error ".Dumper($error);
       push @error_messages, $error;
     }
   }
@@ -95,22 +92,6 @@ sub _validate_with_plugin {
   my $harvest_date;
 
   for my $row ( 1 .. $row_max ) {
-
-    if (
-      !$worksheet->get_cell($row,0)
-      && !$worksheet->get_cell($row,1)
-      && !$worksheet->get_cell($row,2)
-      && !$worksheet->get_cell($row,3)
-      && !$worksheet->get_cell($row,4)
-      && !$worksheet->get_cell($row,5)
-      && !$worksheet->get_cell($row,12)
-      && !$worksheet->get_cell($row,13)
-      && !$worksheet->get_cell($row,14)
-      && !$worksheet->get_cell($row,15)
-    ) {
-      next;
-    }
-
 
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
@@ -202,6 +183,22 @@ sub _validate_with_plugin {
       }
     }
 
+    #skip blank rows
+    if (
+      !$worksheet->get_cell($row,0)
+      && !$worksheet->get_cell($row,1)
+      && !$worksheet->get_cell($row,2)
+      && !$worksheet->get_cell($row,3)
+      && !$worksheet->get_cell($row,4)
+      && !$worksheet->get_cell($row,5)
+      && !$worksheet->get_cell($row,12)
+      && !$worksheet->get_cell($row,13)
+      && !$worksheet->get_cell($row,14)
+      && !$worksheet->get_cell($row,15)
+    ) {
+      next;
+    }
+
     if ($worksheet->get_cell($row,12)) {
       $plot_name = $worksheet->get_cell($row,12)->value();
     }
@@ -251,8 +248,6 @@ sub _validate_with_plugin {
       ## reset counting hash
       %seen_plot_numbers = ();
       $trial_name = $current_trial_name;
-
-      print STDERR "validating trial $trial_name\t".localtime()."\n";
 
       ## TRIAL NAME CHECK
       if (!$trial_name || $trial_name eq '' ) {
@@ -359,8 +354,6 @@ sub _validate_with_plugin {
         $seen_plot_names{$row_name}=$plot_name;
     }
 
-      #print STDERR "Check 03 ".localtime();
-
     ## ACCESSSION NAME CHECK
     if (!$accession_name || $accession_name eq '') {
       push @error_messages, "Cell N$row_name: accession name missing";
@@ -368,8 +361,6 @@ sub _validate_with_plugin {
       $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
       $seen_accession_names{$accession_name}++;
     }
-
-      #print STDERR "Check 04 ".localtime();
 
     ## PLOT NUMBER CHECK
     if (!$plot_number || $plot_number eq '') {
@@ -436,12 +427,9 @@ sub _validate_with_plugin {
 
   }
 
-  print STDERR "starting overall validation\t".localtime()."\n";
-
   ## END ROW BY ROW VALIDATION, BEGIN OVERALL VALIDATION
   my $validator = CXGN::List::Validate->new();
 
-  print STDERR "starting trial name validation\t".localtime()."\n";
   ## TRIAL NAMES OVERALL VALIDATION
   my @trial_names = keys %seen_trial_names;
   my @already_used_trial_names;
@@ -456,7 +444,6 @@ sub _validate_with_plugin {
     push @error_messages, "The following trial names are invalid because they are already used in the database: ".join(',',@already_used_trial_names);
   }
 
-  print STDERR "starting breeding_program validation\t".localtime()."\n";
   ## BREEDING PROGRAMS OVERALL VALIDATION
   my @breeding_programs = keys %seen_breeding_programs;
   my $breeding_programs_missing = $validator->validate($schema,'breeding_programs',\@breeding_programs)->{'missing'};
@@ -466,7 +453,6 @@ sub _validate_with_plugin {
       push @error_messages, "The following breeding programs are not in the database: ".join(',',@breeding_programs_missing);
   }
 
-  print STDERR "starting location validation\t".localtime()."\n";
   ## LOCATIONS OVERALL VALIDATION
   my @locations = keys %seen_locations;
   my @locations_missing = @{$validator->validate($schema,'locations',\@locations)->{'missing'}};
@@ -475,7 +461,6 @@ sub _validate_with_plugin {
       push @error_messages, "The following locations are not in the database: ".join(',',@locations_missing);
   }
 
-  print STDERR "starting design types validation\t".localtime()."\n";
   ## DESIGN TYPES OVERALL VALIDATION
   my @design_types = keys %seen_design_types;
   my %valid_design_types = (
@@ -501,7 +486,6 @@ sub _validate_with_plugin {
       push @error_messages, "The following design types are not in the database: ".join(',',@design_types_missing);
   }
 
-  print STDERR "starting trial types validation\t".localtime()."\n";
   ## TRIAL TYPES OVERALL VALIDATION
   my @trial_types = keys %seen_trial_types;
   my @trial_types_missing;
@@ -516,7 +500,6 @@ sub _validate_with_plugin {
       push @error_messages, "The following trial_types are not in the database: ".join(',',@trial_types_missing);
   }
 
-  print STDERR "starting accession validation\t".localtime()."\n";
   ## ACCESSIONS OVERALL VALIDATION
   my @accessions = keys %seen_accession_names;
   my @accessions_missing = @{$validator->validate($schema,'accessions',\@accessions)->{'missing'}};
@@ -526,7 +509,6 @@ sub _validate_with_plugin {
       push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
   }
 
-  print STDERR "starting seedlot validation\t".localtime()."\n";
   ## SEEDLOTS OVERALL VALIDATION
   my @seedlot_names = keys %seen_seedlot_names;
   if (scalar(@seedlot_names)>0){
@@ -539,12 +521,10 @@ sub _validate_with_plugin {
 
       my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
       if (exists($return->{error})){
-        print STDERR "error E\n";
           push @error_messages, $return->{error};
       }
   }
 
-  print STDERR "starting plot name validation\t".localtime()."\n";
   ## PLOT NAMES OVERALL VALIDATION
   my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
   my @plots = keys %seen_plot_names;
@@ -564,16 +544,12 @@ sub _validate_with_plugin {
 
   #store any errors found in the parsed file to parse_errors accessor
   if (scalar(@error_messages) >= 1) {
-      print STDERR "storing following errors to parse_errors: ".Dumper(@error_messages);
       $errors{'error_messages'} = \@error_messages;
       $self->_set_parse_errors(\%errors);
       return;
   }
 
   # print STDERR "Check 3.1.3 ".localtime();
-
-  print STDERR "Ending validation\t".localtime()."\n";
-
   return 1; #returns true if validation is passed
 
 }
@@ -586,8 +562,6 @@ sub _parse_with_plugin {
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
-
-  print STDERR "Beginning parsing step\t".localtime()."\n";
 
   $excel_obj = $parser->parse($filename);
   if ( !$excel_obj ) {
@@ -638,6 +612,8 @@ sub _parse_with_plugin {
   my $year;
   my $design_type;
   my $description;
+  my @valid_trial_types = CXGN::Trial::get_all_project_types($schema);
+  my %trial_type_map = map { @{$_}[1] => @{$_}[0] } @valid_trial_types;
   my $trial_type;
   my $plot_width;
   my $plot_length;
@@ -646,21 +622,6 @@ sub _parse_with_plugin {
   my $harvest_date;
 
   for my $row ( 1 .. $row_max ) {
-
-    if (
-      !$worksheet->get_cell($row,0)
-      && !$worksheet->get_cell($row,1)
-      && !$worksheet->get_cell($row,2)
-      && !$worksheet->get_cell($row,3)
-      && !$worksheet->get_cell($row,4)
-      && !$worksheet->get_cell($row,5)
-      && !$worksheet->get_cell($row,12)
-      && !$worksheet->get_cell($row,13)
-      && !$worksheet->get_cell($row,14)
-      && !$worksheet->get_cell($row,15)
-    ) {
-      next;
-    }
 
     my $current_trial_name;
     my $plot_name;
@@ -682,8 +643,6 @@ sub _parse_with_plugin {
 
     if ($current_trial_name && $current_trial_name ne $trial_name) {
 
-      print STDERR "Parsing new trial $current_trial_name\t".localtime()."\n";
-
       if ($current_trial_name ne $worksheet->get_cell(1,0)->value()) {
         ## Save old single trial hash in all trials hash; reinitialize temp hashes
         my %final_design_details = %design_details;
@@ -692,7 +651,6 @@ sub _parse_with_plugin {
         my %final_single_design = %single_design;
         %single_design = ();
         $all_designs{$trial_name} = \%final_single_design;
-        # print STDERR "\n\nLatest all designs:\n".Dumper(%all_designs)."\n";
       }
       $single_design{'breeding_program'} = $worksheet->get_cell($row,1)->value();
       $single_design{'location'} = $worksheet->get_cell($row,2)->value();
@@ -700,8 +658,9 @@ sub _parse_with_plugin {
       $single_design{'design_type'} = $worksheet->get_cell($row,4)->value();
       $single_design{'description'} = $worksheet->get_cell($row,5)->value();
 
-      if ($worksheet->get_cell($row,6)) {
-        $single_design{'trial_type'} = $worksheet->get_cell($row,6)->value();
+      if ($worksheet->get_cell($row,6)) { # get and save trial type cvterm_id using trial type name
+        my $trial_type_id = $trial_type_map{$worksheet->get_cell($row,6)->value()};
+        $single_design{'trial_type'} = $trial_type_id;
       }
       if ($worksheet->get_cell($row,7)) {
         $single_design{'plot_width'} = $worksheet->get_cell($row,7)->value();
@@ -718,13 +677,25 @@ sub _parse_with_plugin {
       if ($worksheet->get_cell($row,11)) {
         $single_design{'harvest_date'} = $worksheet->get_cell($row,11)->value();
       }
-      # print STDERR "New trial metadata is:\n";
-      # print STDERR Dumper \%single_design;
-
       ## Update trial name
       $trial_name = $current_trial_name;
     }
 
+    #skip blank rows
+    if (
+      !$worksheet->get_cell($row,0)
+      && !$worksheet->get_cell($row,1)
+      && !$worksheet->get_cell($row,2)
+      && !$worksheet->get_cell($row,3)
+      && !$worksheet->get_cell($row,4)
+      && !$worksheet->get_cell($row,5)
+      && !$worksheet->get_cell($row,12)
+      && !$worksheet->get_cell($row,13)
+      && !$worksheet->get_cell($row,14)
+      && !$worksheet->get_cell($row,15)
+    ) {
+      next;
+    }
 
     if ($worksheet->get_cell($row,12)) {
       $plot_name = $worksheet->get_cell($row,12)->value();
@@ -816,29 +787,10 @@ sub _parse_with_plugin {
 
   }
 
-  print STDERR "Done parsing\t".localtime()."\n";
-  for my $trial_name ( keys %all_designs ) {
-    my $trial_design = $all_designs{$trial_name};
+  # add last trial design to all_designs and save parsed data, then return
+  $single_design{'design_details'} = \%design_details;
+  $all_designs{$trial_name} = \%single_design;
 
-    print STDERR "\nReturning with following data for $trial_name:\n";
-    my %trial_design = %{$trial_design};
-    my %design_details;
-    for my $field ( keys %trial_design ) {
-      my $value = $trial_design{$field};
-      if ($field eq 'design_details') {
-        %design_details = %{$value};
-      } else {
-        print STDERR "$field: $value\n";
-      }
-    }
-    for my $plot_key (keys %design_details) {
-      my $plot_details = $design_details{$plot_key};
-      print STDERR "$plot_key: ".Dumper($plot_details);
-      last;
-    }
-    print STDERR "Done!\n";
-  }
-  # print STDERR "\n\nFinal all designs:\n".Dumper(%all_designs)."\n";
   $self->_set_parsed_data(\%all_designs);
 
   return 1;
