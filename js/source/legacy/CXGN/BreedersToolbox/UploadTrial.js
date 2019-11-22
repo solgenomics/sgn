@@ -97,6 +97,12 @@ jQuery(document).ready(function ($) {
         $("#upload_trial_form").submit();
     }
 
+    function upload_multiple_trial_designs_file() {
+      console.log("submitting upload_multiple_trial_designs_file ajax call");
+      $('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
+      $("#upload_multiple_trial_designs_form").submit();
+    }
+
     function open_upload_trial_dialog() {
         $('#upload_trial_dialog').modal("show");
         //add a blank line to design method select dropdown that dissappears when dropdown is opened
@@ -127,8 +133,17 @@ jQuery(document).ready(function ($) {
         upload_trial_file();
     });
 
-    $("#trial_upload_spreadsheet_format_info").click( function () {
+    $('#multiple_trial_designs_upload_submit').click(function () {
+      console.log("Registered click on multiple_trial_designs_upload_submit button");
+        upload_multiple_trial_designs_file();
+    });
+
+    $("#upload_single_trial_design_format_info").click( function () {
         $("#trial_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+    $("#upload_multiple_trial_designs_format_info").click( function () {
+        $("#multiple_trial_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
     $('#upload_trial_form').iframePostForm({
@@ -209,6 +224,44 @@ jQuery(document).ready(function ($) {
                 Workflow.focus("#trial_upload_workflow", -1); //Go to success page
                 Workflow.check_complete("#trial_upload_workflow");
             }
+        }
+    });
+
+    $('#upload_multiple_trial_designs_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedTrialLayoutFile = $("#multiple_trial_designs_upload_file").val();
+            $('#working_modal').modal("show");
+            if (uploadedTrialLayoutFile === '') {
+                $('#working_modal').modal("hide");
+                alert("No file selected");
+                return;
+            }
+        },
+        complete: function(response) {
+            console.log(response);
+
+            $('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            else if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.warnings) {
+                alert(response.warnings);
+                return;
+            }
+            if (response.success) {
+                refreshTrailJsTree(0);
+                alert(response.success);
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occurred while trying to upload this file. Please check the formatting and try again');
         }
     });
 

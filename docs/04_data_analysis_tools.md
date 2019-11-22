@@ -269,7 +269,7 @@ There are three pathways to using this tool.
 
    (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above (option 2).
  
- <img src='{{"assets/images/kmeans-cluster.png" | relative_url }}' width="522" />
+ <img src='{{"assets/images/k-means-cluster.png" | relative_url }}' width="522" />
 
 
 4.7 Genetic Gain
@@ -287,16 +287,24 @@ If you calculate selection index based on GEBVs of multiple traits, and you want
 The procedure is:
 
 (1) predict GEBVs for 2 or more traits
-(2) In the models output page, calculate selection indices. Note the name of the selection index data.
-(3) Go to the clustering section, 
-   -- select the selection index data, 
-   -- select 'K-means', 
-   -- select 'Genotype', 
-   -- in the K-numbers textbox, fill in the number of groups you want to create, 
-   -- in the selection proportion textbox, fill in the proportion of the indexed individuals you want to select, e.g. for the top 15 percent, 15. if you wish to select bottom performing, prefix the number with minus sign (e.g. -15)
-   -- then run clusterand wait for the result.
 
-<img src='{{"assets/images/selection-proportion-clustering.png" | relative_url }}' width="522" />
+(2) In the models output page, calculate selection indices. Note the name of the selection index data.
+
+(3) Go to the clustering section, 
+
+   -- select the selection index data, 
+   
+   -- select 'K-means', 
+   
+   -- select 'Genotype',   
+   
+   -- in the K-numbers textbox, fill in the number of groups you want to create, 
+   
+   -- in the selection proportion textbox, fill in the proportion of the indexed individuals you want to select, e.g. for the top 15 percent, 15. if you wish to select bottom performing, prefix the number with minus sign (e.g. -15)
+   
+   -- then run cluster and wait for the result.
+
+<img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
 
 

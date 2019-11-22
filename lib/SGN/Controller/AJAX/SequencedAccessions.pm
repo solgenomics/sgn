@@ -38,7 +38,7 @@ sub get_sequencing_info_for_stock :Path('/ajax/genomes/sequenced_stocks') Args(1
     print STDERR "Retrieving sequencing info for stock $stock_id...\n";
     my @info = $self->retrieve_sequencing_infos($c->dbic_schema("Bio::Chado::Schema"), $user_id, $stock_id);
 
-    print STDERR "SEQ INFOS: ".Dumper(\@info);
+    # print STDERR "SEQ INFOS: ".Dumper(\@info);
     
     $c->stash->{rest} = { data => \@info };
 }
@@ -57,7 +57,7 @@ sub retrieve_sequencing_infos {
 	print STDERR "retrieving data for stock stock_id...\n";
 	my $infos = CXGN::Stock::SequencingInfo->get_sequencing_project_infos($schema, $stock_id);
 
-	print STDERR "INFO = ".Dumper($infos);
+	# print STDERR "INFO = ".Dumper($infos);
 
 	if ($infos) {
 	    foreach my $info (@$infos) {
@@ -122,7 +122,7 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
 
     my $params = $c->req->params();
 
-    print STDERR "Params for store: ".Dumper($params);
+    # print STDERR "Params for store: ".Dumper($params);
 
     if (!$c->user()) {
 	$c->stash->{rest} = { error => "You need to be logged in to add sequencing inforaiton" };
@@ -133,8 +133,6 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
 	return;
     }
 	
-    print STDERR "store_sequecing_info PARAMS = ".Dumper($params);
-    
     if (!$params->{stockprop_id}) { $params->{stockprop_id} = undef; } # force it to undef if it is a ""
 
     my $si = CXGN::Stock::SequencingInfo->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
@@ -142,6 +140,7 @@ sub store_sequencing_info :Path('/ajax/genomes/store_sequencing_info') Args(0) {
     my $timestamp = DateTime->now();
     $params->{sp_person_id} = $c->user()->get_object()->get_sp_person_id();
     $params->{timestamp} = $timestamp->ymd()." ".$timestamp->hms();
+    $params->{stock_id} = $params->{sequencing_status_stock_id};
     $si->from_hash($params);
     
     eval { 
