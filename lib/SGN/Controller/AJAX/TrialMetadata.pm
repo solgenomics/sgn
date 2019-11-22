@@ -1267,7 +1267,6 @@ sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
 sub trial_phenotype_metadata : Chained('trial') PathPart('phenotype_metadata') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial = $c->stash->{trial};
     my $data = $trial->get_phenotype_metadata();
