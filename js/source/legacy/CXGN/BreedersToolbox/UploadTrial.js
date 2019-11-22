@@ -98,31 +98,9 @@ jQuery(document).ready(function ($) {
     }
 
     function upload_multiple_trial_designs_file() {
+      console.log("submitting upload_multiple_trial_designs_file form");
       $('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
       $("#upload_multiple_trial_designs_form").submit();
-
-      // var uploadFile = $("#multiple_trial_designs_upload_file").val();
-      // jQuery.ajax( {
-      //     url: '/ajax/trial/upload_multiple_trial_designs_file?file_name='+uploadFile,
-      //     beforeSend: function() {
-      //         jQuery("#working_modal").modal("show");
-      //     },
-      //     success: function(response) {
-      //         jQuery("#working_modal").modal("hide");
-      //         if (response.error){
-      //             alert(response.error);
-      //             // jQuery('[name="upload_trial_submit"]').attr('disabled', true);
-      //         }
-      //         else {
-      //           alert("Success");
-      //             // jQuery('[name="upload_trial_submit"]').attr('disabled', false);
-      //         }
-      //     },
-      //     error: function(response) {
-      //         jQuery("#working_modal").modal("hide");
-      //         alert('An error occurred uploading file '+uploadFile);
-      //     }
-      // });
     }
 
     function open_upload_trial_dialog() {
@@ -156,6 +134,7 @@ jQuery(document).ready(function ($) {
     });
 
     $('#multiple_trial_designs_upload_submit').click(function () {
+      console.log("Registered click on multiple_trial_designs_upload_submit button");
         upload_multiple_trial_designs_file();
     });
 

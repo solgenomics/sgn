@@ -16,7 +16,7 @@ $locations
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+                    <!-- <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form"> -->
 
                         <&| /util/workflow.mas, id=> "trial_upload_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
@@ -64,9 +64,10 @@ $locations
                                             </&>
                                             <br>
                                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_multiple_trial_designs_form" name="upload_multiple_trial_designs_form">
-                                            <div class="form-group">
-                                                <input type="file" name="multiple_trial_designs_upload_file" id="multiple_trial_designs_upload_file" encoding="multipart/form-data" />
-                                            </div>
+                                              <div class="form-group">
+                                                  <input type="file" name="multiple_trial_designs_upload_file" id="multiple_trial_designs_upload_file" encoding="multipart/form-data" />
+                                              </div>
+                                            </form>
                                             <br>
                                             <button type="button" class="btn btn-primary" id="multiple_trial_designs_upload_submit" >Upload Trial Designs</button>
                                         </center>
@@ -77,7 +78,7 @@ $locations
 
                             <&| /util/workflow.mas:step, title=> "Enter trial information" &>
                                 <& /page/page_title.mas, title=>"Enter information about the experiment and upload your trial layout" &>
-
+                              <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Trial Name: </label>
                                     <div class="col-sm-9" >

@@ -983,34 +983,13 @@ sub upload_multiple_trial_designs_file : Path('/ajax/trial/upload_multiple_trial
 sub upload_multiple_trial_designs_file_POST : Args(0) {
     my ($self, $c) = @_;
 
-    print STDERR "Check 1: ".localtime()."\n";
+    print STDERR "Check 1 in upload_multiple_trial_designs_file ".localtime()."\n";
 
-    #print STDERR Dumper $c->req->params();
+    print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-
-    # my $program = $c->req->param('trial_upload_breeding_program');
-    # my $trial_location = $c->req->param('trial_upload_location');
-    # my $trial_name = $c->req->param('trial_upload_name');
-    # my $trial_year = $c->req->param('trial_upload_year');
-    # my $trial_type = $c->req->param('trial_upload_trial_type');
-    # my $trial_description = $c->req->param('trial_upload_description');
-    # my $trial_design_method = $c->req->param('trial_upload_design_method');
-    # my $field_size = $c->req->param('trial_upload_field_size');
-    # my $plot_width = $c->req->param('trial_upload_plot_width');
-    # my $plot_length = $c->req->param('trial_upload_plot_length');
-
-    #
-    # my $add_project_trial_genotype_trial;
-    # my $add_project_trial_crossing_trial;
-    # my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
-    # my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
-
-
-
-
 
     my $upload = $c->req->upload('multiple_trial_designs_upload_file');
     my $parser;
@@ -1078,18 +1057,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
 
-
-
-
-
-
-
-
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('MultipleTrialTrialExcelFormat');
+    $parser->load_plugin('MultipleTrialDesignExcelFormat');
     $parsed_data = $parser->parse();
-    my %all_designs = %{$parsed_data};
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -1122,13 +1093,37 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     print STDERR "Check 4: ".localtime()."\n";
 
     #print STDERR Dumper $parsed_data;
-
+    my %all_designs = %{$parsed_data};
     my %save;
     $save{'errors'} = [];
+
+    for my $trial_name ( keys %all_designs ) {
+      my $trial_design = $all_designs{$trial_name};
+
+      print STDERR "\nCreating trial info hash for trial $trial_name using:\n";
+      my %trial_design = %{$trial_design};
+      my %design_details;
+      for my $field ( keys %trial_design ) {
+        my $value = $trial_design{$field};
+        if ($field eq 'design_details') {
+          %design_details = %{$value};
+        } else {
+          print STDERR "$field: $value\n";
+        }
+      }
+      for my $plot_key (keys %design_details) {
+        my $plot_details = $design_details{$plot_key};
+        print STDERR "$plot_key: ".Dumper($plot_details);
+        last;
+      }
+      print STDERR "Done!\n";
+    }
+
     my $coderef = sub {
 
       for my $trial_name ( keys %all_designs ) {
         my $trial_design = $all_designs{$trial_name};
+        print STDERR "\nSaving trial $trial_name:\n";
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
