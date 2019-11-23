@@ -1561,7 +1561,7 @@ sub get_plot_polygon_types_GET : Args(0) {
         #'observation_unit_polygon_vari_imagery' => 1, #78003, 77716
         #'observation_unit_polygon_ndvi_imagery' => 1, #78004, 77717
         'observation_unit_polygon_ndre_imagery' => 1, #78005, 77718
-        'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
+        #'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
     );
     my %standard_9_thresholded = (
         'observation_unit_polygon_blue_background_removed_threshold_imagery' => 1,
