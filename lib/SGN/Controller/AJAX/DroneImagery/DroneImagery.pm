@@ -1547,15 +1547,17 @@ sub get_plot_polygon_types_GET : Args(0) {
     }
 
     my %standard_9 = (
-        'observation_unit_polygon_rgb_imagery' => 1,
-        'observation_unit_polygon_nrn_imagery' => 1,
-        'observation_unit_polygon_nren_imagery' => 1,
-        'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_green_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_ndvi_imagery' => 1,
-        'observation_unit_polygon_ndre_imagery' => 1,
-        'observation_unit_polygon_vari_imagery' => 1,
+        'observation_unit_polygon_rgb_imagery' => 1, #77976, 77689
+        'observation_unit_polygon_nrn_imagery' => 1, #77980, 77693
+        'observation_unit_polygon_nren_imagery' => 1, #77981, 77694
+        # 'observation_unit_polygon_green_background_removed_threshold_imagery' => 1, #77995, 77708
+        # 'observation_unit_polygon_red_background_removed_threshold_imagery' => 1, #77996, 77709
+        'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1, #77997, 77710
+        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1, #77998, 77711
+        'observation_unit_polygon_vari_imagery' => 1, #78003, 77716
+        'observation_unit_polygon_ndvi_imagery' => 1, #78004, 77717
+        'observation_unit_polygon_ndre_imagery' => 1, #78005, 77718
+        'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
     );
     my %standard_9_thresholded = (
         'observation_unit_polygon_blue_background_removed_threshold_imagery' => 1,
@@ -1564,7 +1566,7 @@ sub get_plot_polygon_types_GET : Args(0) {
         'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1,
         'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1,
         'observation_unit_polygon_ndvi_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_ndre_background_removed_threshold_imagery' => 1,
+        'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
         'observation_unit_polygon_vari_background_removed_threshold_imagery' => 1,
         'observation_unit_polygon_tgi_background_removed_threshold_imagery' => 1
     );
