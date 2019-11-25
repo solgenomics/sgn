@@ -49,6 +49,8 @@ use CXGN::Genotype::Search;
 use CXGN::Stock::StockLookup;
 use DateTime;
 use File::Slurp qw | write_file |;
+use File::Temp qw | tempfile |;
+use File::Copy;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -130,6 +132,7 @@ has 'offset' => (
 
 sub download {
     my $self = shift;
+    my $c = shift;
     my $schema = $self->bcs_schema;
     my $filename = $self->filename;
     my $trial_list = $self->trial_list;
@@ -163,6 +166,16 @@ sub download {
         limit=>$limit,
         offset=>$offset
     });
+
+# Set the temp dir and temp output file
+    my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_wizard_genotype_download";
+    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+    my ($tmp_fh, $tempfile) = tempfile(
+      "wizard_download_XXXXX",
+      DIR=> $tmp_output_dir,
+    );
+    my $tmp_genotype_filepath = $tempfile . "_genotype.txt";
+
     $genotypes_search->init_genotype_iterator();
     my $counter = 0;
     while(my $geno = $genotypes_search->get_next_genotype_info) {
@@ -174,8 +187,6 @@ sub download {
             }
             $genotype_string .= "\n";
         }
-#		    foreach my $element (@$genotypes) {
-# 			my $element = $genotype_example;
         my $genotype_id = $geno->{germplasmDbId};
         my $genotype_data_string = "";
         foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
@@ -186,11 +197,11 @@ sub download {
         my $s = join "\t", $genotype_id;
         $genotype_string .= $s."\t".$genotype_data_string."\n";
 #		    }
-        write_file($filename, {append => 1}, $genotype_string);
+        write_file($tempfile, {append => 1}, $genotype_string);
         $counter++;
-
     }
 
+    copy($tempfile, $filename);
     # my %unique_protocols;
     # my %unique_stocks;
     # my %unique_germplasm;

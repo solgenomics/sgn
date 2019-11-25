@@ -745,7 +745,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $status = $geno->download();
+    my $status = $geno->download($c);
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
