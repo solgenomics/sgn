@@ -47,6 +47,7 @@ use JSON;
 use Text::CSV;
 use CXGN::Genotype::Search;
 use CXGN::Stock::StockLookup;
+use CXGN::Tools::Run;
 use DateTime;
 use File::Slurp qw | write_file |;
 use File::Temp qw | tempfile |;
@@ -201,7 +202,34 @@ sub download {
         $counter++;
     }
 
-    copy($tempfile, $filename);
+    my $transpose_tempfile = $tempfile . "_transpose";
+
+    my $cmd = CXGN::Tools::Run->new(
+        {
+            backend => $c->config->{backend},
+            submit_host => $c->config->{cluster_host},
+            temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_wizard_genotype_download",
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            out_file => $filename,
+#            out_file => $transpose_tempfile,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+
+# Do the transposition job on the cluster
+    $cmd->run_cluster(
+            "perl ",
+            $c->config->{basepath} . "/../gbs/transpose_matrix.pl",
+            $tempfile,
+    );
+    $cmd->wait;
+
+
+#    copy($transpose_tempfile, $filename);
+
+
     # my %unique_protocols;
     # my %unique_stocks;
     # my %unique_germplasm;
