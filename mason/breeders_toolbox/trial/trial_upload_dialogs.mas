@@ -63,13 +63,31 @@ $locations
                                                 </p>
                                             </&>
                                             <br>
+
                                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_multiple_trial_designs_form" name="upload_multiple_trial_designs_form">
                                               <div class="form-group">
                                                   <input type="file" name="multiple_trial_designs_upload_file" id="multiple_trial_designs_upload_file" encoding="multipart/form-data" />
                                               </div>
+                                              <div class="form-group">
+                                                  <div class="col-sm-4"></div>
+                                                  <label class="col-sm-2 control-label">Ignore Warnings: </label>
+                                                  <div class="col-sm-2" >
+                                                      <input id="upload_multiple_trials_ignore_warnings" name="upload_multiple_trials_ignore_warnings" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                                                  </div>
+                                                  <div class="col-sm-4"></div>
+                                              </div>
                                             </form>
+
+                                            <div style="display:none" id="upload_multiple_trials_warning_messages" class="alert-warning" role="alert">
+                                            </div>
+                                            <div style="display:none" id="upload_multiple_trials_error_messages" class="alert-danger" role="alert">
+                                            </div>
+                                            <div style="display:none" id="upload_multiple_trials_success_messages" class="alert-success" role="alert">
+                                            </div>
+
                                             <br>
-                                            <button type="button" class="btn btn-primary" id="multiple_trial_designs_upload_submit" >Upload Trial Designs</button>
+                                            <button type="button" class="btn btn-primary" id="multiple_trial_designs_upload_submit" disabled>Upload Trial Designs</button>
+                                            <button style="display:none" class="btn btn-primary" id="upload_multiple_trials_success_button">Reload Page</button>
                                         </center>
                                     </div>
 
@@ -438,7 +456,7 @@ $locations
                                 </ul>
                                 <br/>
                                 <center>
-                                <button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                                <button class="btn btn-primary" id="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
                                 </center>
                             </&>
                         </&>
@@ -587,29 +605,29 @@ $locations
 
                     <b> Required fields:</b>
                     <ul>
-                    <li>trial_name (must be unique across entire database. this is often a concatenation of the year, purpose, unique number, and location)</li>
-                    <li>breeding_program (must exist in the database. this is the name of breeding program that managed the trial.)</li>
-                    <li>location (must exist in the database. this is the name of the location where the trial was held.)</li>
-                    <li>year (the year the trial was held)</li>
-                    <li>design_type (must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
-                    <li>description (additional text with any other relevant information)</li>
-                    <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name and the plot number.)</li>
-                    <li>accession_name (must exist in the database. this is the accession being tested in the plot.)</li>
-                    <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). these numbers should be unique for the trial.)</li>
-                    <li>block_number (a design parameter indicating which block the plot is in)</li>
+                    <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
+                    <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
+                    <li>location (The name of the location where the trial was held, must exist in the database.)</li>
+                    <li>year (The year the trial was held.)</li>
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
+                    <li>description (Additional text with any other relevant information about the trial.)</li>
+                    <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>
+                    <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
+                    <li>plot_number (A sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
+                    <li>block_number (A design parameter indicating which block the plot is in.)</li>
                     </ul>
 
                     <b>Additional optional fields:</b>
                     <ul>
-                    <li>trial_type (must exist in the database. this is the name of the trial type. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
+                    <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
                     <li>plot_width (plot width in meters)</li>
                     <li>plot_length (plot length in meters)</li>
                     <li>field_size (field size in hectares)</li>
                     <li>planting_date (Date of Planting in YYYY-MM-DD format)</li>
                     <li>harvest_date (Date of Harvest in YYYY-MM-DD format)</li>
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
-                    <li>rep_number (replicate number, numeric)</li>
-                    <li>range_number (range number. often synonymous with col_number, numeric)</li>
+                    <li>rep_number (replicate number, must be numeric)</li>
+                    <li>range_number (range number. often synonymous with col_number, must be numeric)</li>
                     <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
                     <li>col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
                     <li>seedlot_name (the seedlot from where the planted seed originated. must exist in the database)</li>
@@ -619,7 +637,7 @@ $locations
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty.)</li>
+                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty if not applied.)</li>
                     </ul>
 
                 </div>
@@ -642,10 +660,18 @@ jQuery(document).ready(function(){
         filter_options(jQuery(this).val(), 'program', 'trial_upload_location');
     });
 
-    // jQuery('#guided_help_trial_upload_format_button').click(function(){
-    //     jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
-    //     return false;
-    // });
+    jQuery('#multiple_trial_designs_upload_file').change(function() {
+        if (jQuery(this).val()) {
+          jQuery('#multiple_trial_designs_upload_submit').prop("disabled",false);
+        } else {
+          jQuery('#multiple_trial_designs_upload_submit').prop("disabled",true);
+        }
+    });
 
-})
+    jQuery('#upload_multiple_trials_ignore_warnings').change(function() {
+      if (this.checked) {
+        jQuery('#upload_multiple_trials_warning_messages').hide();
+      }
+    });
+});
 </script>

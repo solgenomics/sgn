@@ -992,8 +992,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-
     my $upload = $c->req->upload('multiple_trial_designs_upload_file');
+    my $ignore_warnings = $c->req->param('upload_multiple_trials_ignore_warnings');
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -1013,20 +1013,20 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $error;
 
     # print STDERR "Check 2: ".localtime()."\n";
-
+    print STDERR "Ignore warnings is $ignore_warnings\n";
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
         print STDERR "File name must not have spaces or slashes.\n";
-        $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
         return;
     }
 
     if (!$c->user()) {
         print STDERR "User not logged in... not uploading a trial.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
+        $c->stash->{rest} = {errors => "You need to be logged in to upload a trial." };
         return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
+        $c->stash->{rest} = {errors =>  "You have insufficient privileges to upload a trial." };
         return;
     }
 
@@ -1046,13 +1046,12 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $archived_filename_with_path = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
         return;
     }
     unlink $upload_tempfile;
 
     # print STDERR "Check 3: ".localtime()."\n";
-
     $upload_metadata{'archived_file'} = $archived_filename_with_path;
     $upload_metadata{'archived_file_type'}="trial upload file";
     $upload_metadata{'user_id'}=$user_id;
@@ -1068,32 +1067,27 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         my $return_error = '';
 
         if (! $parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
-            $c->stash->{rest} = {error_string => $return_error,};
+            $c->stash->{rest} = {errors => "Could not get parsing errors"};
+            return;
         }
         else {
+            print STDERR "Parse errors are:\n";
+            print STDERR Dumper $parse_errors;
             $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
-
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
-            }
+            $c->stash->{rest} = {errors => $parse_errors->{'error_messages'}};
+            return;
         }
-
-        $c->stash->{rest} = {error_string => $return_error, missing_breeding_programs => $parse_errors->{'missing_breeding_programs'}, missing_locations => $parse_errors->{'missing_locations'}, missing_trial_types => $parse_errors->{'missing_trial_types'}, missing_design_types => $parse_errors->{'missing_design_types'}, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
-        return;
     }
 
-    my $return_warnings;
     if ($parser->has_parse_warnings()) {
-        my $warnings = $parser->get_parse_warnings();
-        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
-            $return_warnings=$return_warnings.$warning_string."<br>";
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = {warnings => $warnings->{'warning_messages'}};
+            return;
         }
     }
 
     # print STDERR "Check 4: ".localtime()."\n";
-
     my %all_designs = %{$parsed_data};
     my %save;
     $save{'errors'} = [];
@@ -1159,7 +1153,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     #print STDERR "Check 5: ".localtime()."\n";
     if (scalar @{$save{'errors'}} > 0) {
         print STDERR "Errors saving trials: ".@{$save{'errors'}};
-        $c->stash->{rest} = {warnings => $return_warnings, error => $save{'errors'}};
+        $c->stash->{rest} = {errors => $save{'errors'}};
         return;
     # } elsif ($save->{'trial_id'}) {
     } else {
@@ -1167,7 +1161,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
+        $c->stash->{rest} = {success => "1"};
         return;
     }
 

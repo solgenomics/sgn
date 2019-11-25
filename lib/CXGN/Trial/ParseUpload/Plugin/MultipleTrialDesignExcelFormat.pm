@@ -242,7 +242,7 @@ sub _validate_with_plugin {
       foreach $plot_number ( keys %seen_plot_numbers ) {
         my $count = $seen_plot_numbers{$plot_number};
         if ($count > 1) {
-          push @error_messages, "Plot number $plot_number must be unique within the trial. You used this plot number more than once in trial $trial_name";
+          push @error_messages, "Plot number <b>$plot_number</b> must be unique within the trial. You used this plot number more than once in trial $trial_name";
         }
       }
       ## reset counting hash
@@ -254,10 +254,10 @@ sub _validate_with_plugin {
           push @error_messages, "Cell A$row_name: trial_name missing.";
       }
       elsif ($trial_name =~ /\s/ ) {
-          push @error_messages, "Cell A$row_name: trial_name must not contain spaces.";
+          push @error_messages, "Cell A$row_name: trial_name <b>$trial_name</b> must not contain spaces.";
       }
       elsif ($trial_name =~ /\// || $trial_name =~ /\\/) {
-          push @warning_messages, "Cell A$row_name: trial_name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+          push @warning_messages, "Cell A$row_name: trial_name <b>$trial_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
       } else {
           $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
           $seen_trial_names{$trial_name} = $row_name;
@@ -283,7 +283,7 @@ sub _validate_with_plugin {
 
       ## YEAR CHECK
       if (!($year =~ /^\d{4}$/)) {
-          push @error_messages, "Cell D$row_name: $year is not a valid year, must be a 4 digit positive integer.";
+          push @error_messages, "Cell D$row_name: <b>$year</b> is not a valid year, must be a 4 digit positive integer.";
       }
 
       ## DESIGN TYPE CHECK
@@ -308,30 +308,30 @@ sub _validate_with_plugin {
 
       ## PLOT WIDTH CHECK
       if ($plot_width && !($plot_width =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell H$row_name: plot_width must be a positive number: $plot_width";
+          push @error_messages, "Cell H$row_name: plot_width <b>$plot_width</b> must be a positive number.";
       }
 
       ## PLOT LENGTH CHECK
       if ($plot_length && !($plot_length =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell I$row_name: plot_length must be a positive number: $plot_length";
+          push @error_messages, "Cell I$row_name: plot_length <b>$plot_length</b> must be a positive number.";
       }
 
       ## FIELD SIZE CHECK
       if ($field_size && !($field_size =~ /^([\d]*)([\.]?)([\d]+)$/)){
-          push @error_messages, "Cell J$row_name: field_size must be a positive number: $field_size";
+          push @error_messages, "Cell J$row_name: field_size <b>$field_size</b> must be a positive number.";
       }
 
       ## PLANTING DATE CHECK
       if ($planting_date) {
         unless ($calendar_funcs->check_value_format($planting_date)) {
-          push @error_messages, "Cell K$row_name: planting_date must be in the format YYYY-MM-DD: $planting_date";
+          push @error_messages, "Cell K$row_name: planting_date <b>$planting_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
       ## HARVEST DATE CHECK
       if ($harvest_date) {
         unless ($calendar_funcs->check_value_format($harvest_date)) {
-          push @error_messages, "Cell L$row_name: harvest_date must be in the format YYYY-MM-DD: $harvest_date";
+          push @error_messages, "Cell L$row_name: harvest_date <b>$harvest_date</b> must be in the format YYYY-MM-DD.";
         }
       }
 
@@ -343,15 +343,15 @@ sub _validate_with_plugin {
         push @error_messages, "Cell M$row_name: plot name missing.";
     }
     elsif ($plot_name =~ /\s/ ) {
-        push @error_messages, "Cell M$row_name: plot name must not contain spaces.";
+        push @error_messages, "Cell M$row_name: plot name <b>$plot_name</b> must not contain spaces.";
     }
     elsif ($plot_name =~ /\// || $plot_name =~ /\\/) {
-        push @warning_messages, "Cell M$row_name: plot name contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
+        push @warning_messages, "Cell M$row_name: plot name <b>$plot_name</b> contains slashes. Note that slashes can cause problems for third-party applications; however, plotnames can be saved with slashes.";
     }
     else {
         $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         if ($seen_plot_names{$plot_name}) {
-            push @error_messages, "Cell M$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+            push @error_messages, "Cell M$row_name: duplicate plot name <b>$plot_name</b> at cell A".$seen_plot_names{$plot_name}.".";
         }
         $seen_plot_names{$row_name}=$plot_name;
     }
@@ -369,7 +369,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell O$row_name: plot number missing";
     }
     if (!($plot_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell O$row_name: plot number is not a positive integer: $plot_number";
+        push @error_messages, "Cell O$row_name: plot number <b>$plot_number</b> is not a positive integer.";
     }
     $seen_plot_numbers{$plot_number}++;
 
@@ -378,28 +378,28 @@ sub _validate_with_plugin {
         push @error_messages, "Cell P$row_name: block number missing";
     }
     if (!($block_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell P$row_name: block number is not a positive integer: $block_number";
+        push @error_messages, "Cell P$row_name: block number <b>$block_number</b> is not a positive integer.";
     }
 
     ## IS A CONTROL CHECK
     if ($is_a_control) {
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-          push @error_messages, "Cell Q$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+          push @error_messages, "Cell Q$row_name: is_a_control <b>$is_a_control</b> is not either yes, no 1, 0, or blank.";
       }
     }
 
     ## REP, ROW, RANGE AND COLUMN CHECKS
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-        push @error_messages, "Cell R$row_name: rep_number must be a positive integer: $rep_number";
+        push @error_messages, "Cell R$row_name: rep_number <b>$rep_number</b> must be a positive integer.";
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-        push @error_messages, "Cell S$row_name: range_number must be a positive integer: $range_number";
+        push @error_messages, "Cell S$row_name: range_number <b>$range_number</b> must be a positive integer.";
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-        push @error_messages, "Cell T$row_name: row_number must be a positive integer: $row_number";
+        push @error_messages, "Cell T$row_name: row_number <b>$row_number</b> must be a positive integer.";
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-        push @error_messages, "Cell U$row_name: col_number must be a positive integer: $col_number";
+        push @error_messages, "Cell U$row_name: col_number <b>$col_number</b> must be a positive integer.";
     }
 
     ## SEEDLOT CHECKS
@@ -409,10 +409,10 @@ sub _validate_with_plugin {
         push @pairs, [$seedlot_name, $accession_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell W$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
+        push @error_messages, "Cell W$row_name: num_seed_per_plot <b>$num_seed_per_plot</b> must be a positive integer.";
     }
     if (defined($weight_gram_seed_per_plot) && $weight_gram_seed_per_plot ne '' && !($weight_gram_seed_per_plot =~ /^\d+?$/)){
-        push @error_messages, "Cell X$row_name: weight_gram_seed_per_plot must be a positive integer: $weight_gram_seed_per_plot";
+        push @error_messages, "Cell X$row_name: weight_gram_seed_per_plot <b>$weight_gram_seed_per_plot</b> must be a positive integer.";
     }
 
     ## TREATMENT CHECKS
@@ -421,7 +421,7 @@ sub _validate_with_plugin {
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
             if (defined($apply_treatment) && $apply_treatment ne '1'){
-                push @error_messages, "Treatment value in row $row_name should be either 1 or empty";
+                push @error_messages, "Treatment value for treatment <b>$treatment_name</b> in row $row_name should be either 1 or empty";
             }
         }
         $treatment_col++;
@@ -442,8 +442,8 @@ sub _validate_with_plugin {
       push(@already_used_trial_names, $name) unless exists $unused_trial_names{$name};
   }
   if (scalar(@already_used_trial_names) > 0) {
-    $errors{'invalid_trial_names'} = \@already_used_trial_names;
-    push @error_messages, "The following trial names are invalid because they are already used in the database: ".join(',',@already_used_trial_names);
+    # $errors{'invalid_trial_names'} = \@already_used_trial_names;
+    push @error_messages, "Trial name(s) <b>".join(',',@already_used_trial_names)."</b> are invalid because they are already used in the database.";
   }
 
   ## BREEDING PROGRAMS OVERALL VALIDATION
@@ -451,16 +451,16 @@ sub _validate_with_plugin {
   my $breeding_programs_missing = $validator->validate($schema,'breeding_programs',\@breeding_programs)->{'missing'};
   my @breeding_programs_missing = @{$breeding_programs_missing};
   if (scalar(@breeding_programs_missing) > 0) {
-      $errors{'missing_breeding_programs'} = \@breeding_programs_missing;
-      push @error_messages, "The following breeding programs are not in the database: ".join(',',@breeding_programs_missing);
+      # $errors{'missing_breeding_programs'} = \@breeding_programs_missing;
+      push @error_messages, "Breeding program(s) <b>".join(',',@breeding_programs_missing)."</b> are not in the database.";
   }
 
   ## LOCATIONS OVERALL VALIDATION
   my @locations = keys %seen_locations;
   my @locations_missing = @{$validator->validate($schema,'locations',\@locations)->{'missing'}};
   if (scalar(@locations_missing) > 0) {
-      $errors{'missing_locations'} = \@locations_missing;
-      push @error_messages, "The following locations are not in the database: ".join(',',@locations_missing);
+      # $errors{'missing_locations'} = \@locations_missing;
+      push @error_messages, "Location(s) <b>".join(',',@locations_missing)."</b> are not in the database.";
   }
 
   ## DESIGN TYPES OVERALL VALIDATION
@@ -484,8 +484,8 @@ sub _validate_with_plugin {
       push(@design_types_missing, $type) unless exists $valid_design_types{$type};
   }
   if (scalar(@design_types_missing) > 0) {
-      $errors{'missing_design_types'} = \@design_types_missing;
-      push @error_messages, "The following design types are not in the database: ".join(',',@design_types_missing);
+      # $errors{'missing_design_types'} = \@design_types_missing;
+      push @error_messages, "Design type(s) <b>".join(',',@design_types_missing)."</b> are not in the database.";
   }
 
   ## TRIAL TYPES OVERALL VALIDATION
@@ -498,8 +498,8 @@ sub _validate_with_plugin {
       push(@trial_types_missing, $type) unless exists $valid_trial_types{$type};
   }
   if (scalar(@trial_types_missing) > 0) {
-      $errors{'missing_trial_types'} = \@trial_types_missing;
-      push @error_messages, "The following trial_types are not in the database: ".join(',',@trial_types_missing);
+      # $errors{'missing_trial_types'} = \@trial_types_missing;
+      push @error_messages, "Trial type(s) <b>".join(',',@trial_types_missing)."</b> are not in the database.";
   }
 
   ## ACCESSIONS OVERALL VALIDATION
@@ -507,8 +507,8 @@ sub _validate_with_plugin {
   my @accessions_missing = @{$validator->validate($schema,'accessions',\@accessions)->{'missing'}};
 
   if (scalar(@accessions_missing) > 0) {
-      $errors{'missing_accessions'} = \@accessions_missing;
-      push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+      # $errors{'missing_accessions'} = \@accessions_missing;
+      push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";
   }
 
   ## SEEDLOTS OVERALL VALIDATION
@@ -517,8 +517,8 @@ sub _validate_with_plugin {
       my @seedlots_missing = @{$validator->validate($schema,'seedlots',\@seedlot_names)->{'missing'}};
 
       if (scalar(@seedlots_missing) > 0) {
-          $errors{'missing_seedlots'} = \@seedlots_missing;
-          push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+          # $errors{'missing_seedlots'} = \@seedlots_missing;
+          push @error_messages, "Seedlot(s) <b>".join(',',@seedlots_missing)."</b> are not in the database.";
       }
 
       my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
@@ -536,7 +536,7 @@ sub _validate_with_plugin {
       'uniquename' => { -in => \@plots }
   });
   while (my $r=$rs->next){
-      push @error_messages, "Cell M".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
+      push @error_messages, "Cell M".$seen_plot_names{$r->uniquename}.": plot name <b>".$r->uniquename."</b> already exists.";
   }
 
   if (scalar(@warning_messages) >= 1) {
