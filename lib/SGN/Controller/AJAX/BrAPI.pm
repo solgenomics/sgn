@@ -54,7 +54,7 @@ has 'bcs_schema' => (
 	is => 'rw',
 );
 
-my $DEFAULT_PAGE_SIZE=1000;
+my $DEFAULT_PAGE_SIZE=10;
 
 # don't do anything, let catalyst handle putting body into a temp file
 sub deserialize_image {
