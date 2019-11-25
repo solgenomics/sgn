@@ -13,7 +13,7 @@ use CXGN::Cross;
 
 extends 'CXGN::BrAPI::v1::Common';
 
-sub germplasm_search {
+sub search {
     my $self = shift;
     my $params = shift;
     my $page_size = $self->page_size;

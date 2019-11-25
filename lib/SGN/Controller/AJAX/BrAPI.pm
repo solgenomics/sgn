@@ -564,7 +564,7 @@ sub germplasm_search_old_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->germplasm_search({
+    my $brapi_package_result = $brapi_module->search({
         germplasmName => $clean_inputs->{germplasmName},
         accessionNumber => $clean_inputs->{accessionNumber},
         germplasmGenus => $clean_inputs->{germplasmGenus},
@@ -584,7 +584,7 @@ sub germplasm_search_old_POST {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->germplasm_search({
+    my $brapi_package_result = $brapi_module->search({
         germplasmName => $clean_inputs->{germplasmNames},
         accessionNumber => $clean_inputs->{accessionNumbers},
         germplasmGenus => $clean_inputs->{germplasmGenus},
@@ -606,7 +606,7 @@ sub germplasm_search_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->germplasm_search({
+    my $brapi_package_result = $brapi_module->search({
         germplasmName => $clean_inputs->{germplasmName},
         germplasmDbId => $clean_inputs->{germplasmDbId},
         germplasmPUI => $clean_inputs->{germplasmPUI},
