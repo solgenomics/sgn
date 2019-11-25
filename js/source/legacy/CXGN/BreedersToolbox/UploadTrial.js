@@ -141,14 +141,6 @@ jQuery(document).ready(function ($) {
         upload_multiple_trial_designs_file();
     });
 
-    $("#upload_single_trial_design_format_info").click( function () {
-        $("#trial_upload_spreadsheet_info_dialog" ).modal("show");
-    });
-
-    $("#upload_multiple_trial_designs_format_info").click( function () {
-        $("#multiple_trial_upload_spreadsheet_info_dialog" ).modal("show");
-    });
-
     $('#upload_trial_form').iframePostForm({
         json: true,
         post: function () {

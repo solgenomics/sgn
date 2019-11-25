@@ -45,7 +45,7 @@ $locations
                                                 <p>
                                                     <b>File format information</b>
                                                     <br>
-                                                    <a id="upload_single_trial_design_format_info">Single trial spreadsheet</a>
+                                                    <a data-target="#single_trial_format_modal" data-toggle="modal" class="MainNavText" id="single_trial_design_format" href="#single_trial_format_modal">Single trial spreadsheet</a>
                                                 </p>
                                             </&>
                                             <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -59,7 +59,7 @@ $locations
                                                 <p>
                                                     <b>File format information</b>
                                                     <br>
-                                                    <a id="upload_multiple_trial_designs_format_info">Multiple trial spreadsheet</a>
+                                                    <a data-target="#multiple_trial_format_modal" data-toggle="modal" class="MainNavText" id="multiple_trial_designs_format" href="#multiple_trial_format_modal">Multiple trial spreadsheet</a>
                                                 </p>
                                             </&>
                                             <br>
@@ -470,12 +470,12 @@ $locations
     </div>
 </div>
 
-<div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
+<div class="modal fade" id="single_trial_format_modal" name="single_trial_format_modal" tabindex="-1" role="dialog" aria-labelledby="singleTrialFormatModal">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialInfoDialog">Upload Template Information</h4>
+                <h4 class="modal-title" id="singleTrialFormatModal">Upload Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -540,19 +540,19 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_single_trial_format_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 
-<div class="modal fade" id="multiple_trial_upload_spreadsheet_info_dialog" name="multiple_trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadMultipleTrialInfoDialog">
+<div class="modal fade" id="multiple_trial_format_modal" name="multiple_trial_format_modal" tabindex="-1" role="dialog" aria-labelledby="multipleTrialFormatModal">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadMultipleTrialInfoDialog">Upload Template Information</h4>
+                <h4 class="modal-title" id="multipleTrialFormatModal">Upload Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -643,7 +643,7 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_multiple_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_multiple_trial_format_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
