@@ -1,5 +1,5 @@
 package CXGN::Trial::TrialDesign;
- 
+
 =head1 NAME
 
 CXGN::Trial::TrialDesign - a module to create a trial design using the R CRAN package Agricolae.
@@ -123,7 +123,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "westcott" || $_ eq "Analysis" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -140,7 +140,7 @@ sub calculate_design {
     my $self = shift;
 
     my $design;
-    
+
     if ($self->has_design_type()) {
 	my $design_type = $self->get_design_type();
 	if ($design_type eq "p-rep") { $design_type="Prep"; }
@@ -148,7 +148,7 @@ sub calculate_design {
 	$self->load_plugin($design_type);
 	$design = $self->create_design();
     }
-    
+
     if ($design) {
 	$self->{design} = $design;
 	return 1;
@@ -156,7 +156,7 @@ sub calculate_design {
     else  {
 	return 0;
     }
-}    
+}
 
 sub isint{
   my $val = shift;
@@ -196,7 +196,7 @@ sub _convert_plot_numbers {
         if ($self->has_plot_number_increment()){
           $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
         }
-        
+
         my $cheking = ($rep_numbers[$i] * $rep_plot_count) / $rep_plot_count;
         #print STDERR Dumper($cheking);
         my $new_plot;
@@ -211,8 +211,8 @@ sub _convert_plot_numbers {
                 $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
             }
         }
-        
-        
+
+
         else {
           $plot_number = $first_plot_number + $i;
         }
