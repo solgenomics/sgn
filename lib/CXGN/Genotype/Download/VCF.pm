@@ -260,7 +260,7 @@ sub download {
 # Do the transposition job on the cluster
     $cmd->run_cluster(
             "perl ",
-            $c->config->{basepath} . "/../gbs/transpose_matrix.pl",
+            $c->config->{basepath} . "/bin/transpose_matrix.pl",
             $tempfile,
     );
     $cmd->is_cluster(1);
