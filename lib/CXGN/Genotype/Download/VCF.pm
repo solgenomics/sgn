@@ -183,6 +183,8 @@ sub download {
         my $genotype_string = "";
         my $genotype_example = $geno;
         if($counter == 0) {
+
+            $genotype_string .= "ID\t";
             foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
                 $genotype_string .= $key."\t";
             }
@@ -191,8 +193,11 @@ sub download {
         my $genotype_id = $geno->{germplasmDbId};
         my $genotype_data_string = "";
         foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
-            my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
-            my $current_genotype = $value;
+            my $dsvalue = $geno->{selected_genotype_hash}->{$key}->{DS};
+#            my $gtvalue = $geno->{selected_genotype_hash}->{$key}->{GT};
+#            my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
+#            my $current_genotype = $dsvalue . ":" . $gtvalue;
+            my $current_genotype = $dsvalue;
             $genotype_data_string .= $current_genotype."\t";
         }
         my $s = join "\t", $genotype_id;
@@ -211,7 +216,7 @@ sub download {
             temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_wizard_genotype_download",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
-            out_file => $filename,
+            out_file => $transpose_tempfile,
 #            out_file => $transpose_tempfile,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
@@ -224,10 +229,11 @@ sub download {
             $c->config->{basepath} . "/../gbs/transpose_matrix.pl",
             $tempfile,
     );
+    $cmd->is_cluster(1);
     $cmd->wait;
 
 
-#    copy($transpose_tempfile, $filename);
+    copy($transpose_tempfile, $filename);
 
 
     # my %unique_protocols;
