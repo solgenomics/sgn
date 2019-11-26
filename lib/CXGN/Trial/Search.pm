@@ -369,6 +369,8 @@ sub search {
             folder_name => $folder_name,
             folder_description => $folder_description,
             trial_type => $trial_type_name,
+            trial_type_name => $trial_type_name,
+            trial_type_id => $trial_type_id,
             year => $year,
             location_id => $location_id,
             location_name => $location_name,

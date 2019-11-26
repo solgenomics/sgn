@@ -11,69 +11,30 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
 
-has 'bcs_schema' => (
-    isa => 'Bio::Chado::Schema',
-    is => 'rw',
-    required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
-has 'metadata_schema' => (
-    isa => 'CXGN::Metadata::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'phenome_schema' => (
-    isa => 'CXGN::Phenome::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'people_schema' => (
-    isa => 'CXGN::People::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page_size' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'status' => (
-    isa => 'ArrayRef[Maybe[HashRef]]',
-    is => 'rw',
-    required => 1,
-);
-
-sub germplasm_search {
+sub search {
     my $self = shift;
-    my $search_params = shift;
-
+    my $params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-
-    my @germplasm_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
-    my @accession_numbers = $search_params->{accessionNumber} ? @{$search_params->{accessionNumber}} : ();
-    my @genus = $search_params->{germplasmGenus} ? @{$search_params->{germplasmGenus}} : ();
-    my $subtaxa = $search_params->{germplasmSubTaxa}->[0];
-    my @species = $search_params->{germplasmSpecies} ? @{$search_params->{germplasmSpecies}} : ();
-    my @germplasm_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbId}} : ();
-    my @germplasm_puis = $search_params->{germplasmPUI} ? @{$search_params->{germplasmPUI}} : ();
-    my $match_method = $search_params->{matchMethod}->[0] || 'wildcard';
     my @data_files;
+
+    my $crop_names_arrayref = $params->{commonCropName} || ($params->{commonCropNames} || ());
+    my $germplasm_names_arrayref = $params->{germplasmName} || ($params->{germplasmNames} || ());
+    my $accession_numbers_arrayref = $params->{accessionNumber} || ($params->{accessionNumbers} || ());
+    my $genera_arrayref = $params->{germplasmGenus} || ($params->{germplasmGenera} || ());
+    my $germplasm_ids_arrayref  = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my $germplasm_puis_arrayref = $params->{germplasmPUI} || ($params->{germplasmPUIs} || ());
+    my $species_arrayref = $params->{germplasmSpecies} || ($params->{germplasmSpecies} || ());
+    my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
+    my $subtaxa = $params->{germplasmSubTaxa}->[0];
+    my $match_method = $params->{matchMethod}->[0] || 'exact';
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
-	}
+    }
     my $match_type;
     if ($match_method eq 'exact'){
         $match_type = 'exactly';
@@ -88,17 +49,25 @@ sub germplasm_search {
     my $offset = $page_size*$page;
 
     my %stockprops_values;
-    if (scalar(@accession_numbers)>0){
-        foreach (@accession_numbers) {
+    if ($accession_numbers_arrayref && scalar(@$accession_numbers_arrayref)>0){
+        foreach (@$accession_numbers_arrayref) {
             $stockprops_values{'accession number'} = {
                 matchtype => 'contains',
                 value => $_
             };
         }
     }
-    if (scalar(@germplasm_puis)>0){
-        foreach (@germplasm_puis) {
+    if ($germplasm_puis_arrayref && scalar(@$germplasm_puis_arrayref)>0){
+        foreach (@$germplasm_puis_arrayref) {
             $stockprops_values{'PUI'} = {
+                matchtype => 'contains',
+                value => $_
+            };
+        }
+    }
+    if ($synonyms_arrayref && scalar(@$synonyms_arrayref)>0){
+        foreach (@$synonyms_arrayref) {
+            $stockprops_values{'stock_synonym'} = {
                 matchtype => 'contains',
                 value => $_
             };
@@ -110,10 +79,11 @@ sub germplasm_search {
         people_schema=>$self->people_schema,
         phenome_schema=>$self->phenome_schema,
         match_type=>$match_type,
-        uniquename_list=>\@germplasm_names,
-        genus_list=>\@genus,
-        species_list=>\@species,
-        stock_id_list=>\@germplasm_ids,
+        uniquename_list=>$germplasm_names_arrayref,
+        genus_list=>$genera_arrayref,
+        species_list=>$species_arrayref,
+        crop_name_list=>$crop_names_arrayref,
+        stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
@@ -157,6 +127,11 @@ sub germplasm_search {
             subtaxaAuthority=>$_->{subtaxaAuthority},
             donors=>$_->{donors},
             acquisitionDate=>$_->{'acquisition date'},
+            breedingMethodDbId=>undef,
+            documentationURL=>undef,
+            germplasmGenus=>$_->{genus},
+            germplasmSpecies=>$_->{species},
+            seedSource=>$_->{'seed source'}
         };
     }
 
@@ -228,7 +203,6 @@ sub germplasm_detail {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
 }
-
 
 sub germplasm_pedigree {
     my $self = shift;
@@ -402,6 +376,5 @@ sub germplasm_markerprofiles {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm markerprofiles result constructed');
 }
-
 
 1;

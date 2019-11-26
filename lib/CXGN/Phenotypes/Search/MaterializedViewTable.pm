@@ -13,6 +13,8 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         data_level=>$data_level,
         trait_list=>$trait_list,
         trial_list=>$trial_list,
+        program_list=>$program_list,
+        folder_list=>$folder_list,
         year_list=>$year_list,
         location_list=>$location_list,
         accession_list=>$accession_list,
@@ -61,6 +63,16 @@ has 'data_level' => (
 );
 
 has 'trial_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'program_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'folder_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -180,6 +192,14 @@ sub search {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
         push @where_clause, "trial_id in ($trial_sql)";
     }
+    if ($self->program_list && scalar(@{$self->program_list})>0) {
+        my $program_sql = _sql_from_arrayref($self->program_list);
+        push @where_clause, "breeding_program_id in ($program_sql)";
+    }
+    if ($self->folder_list && scalar(@{$self->folder_list})>0) {
+        my $folder_sql = _sql_from_arrayref($self->folder_list);
+        push @where_clause, "folder_id in ($folder_sql)";
+    }
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $arrayref = $self->accession_list;
         my $sql = join ("','" , @$arrayref);
@@ -208,8 +228,10 @@ sub search {
     my $filter_trait_ids;
     my @or_clause;
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
+        print STDERR "A trait list was included\n";
         foreach (@{$self->trait_list}){
             if ($_){
+                print STDERR "Working on trait $_\n";
                 push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;
@@ -334,15 +356,15 @@ sub search {
             push @return_observations, $o;
         }
 
-	no warnings 'uninitialized';
-        $notes =~ s/\R//g;
-        $trial_description =~ s/\R//g;
-        $breeding_program_description =~ s/\R//g;
-        $folder_description =~ s/\R//g;
+        no warnings 'uninitialized';
+        
+        if ($notes) { $notes =~ s/\R//g; }
+        if ($trial_description) { $trial_description =~ s/\R//g; }
+        if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
+        if ($folder_description) { $folder_description =~ s/\R//g };
+
         my $seedlot_transaction_description = $seedlot_transaction->{description};
-        if ($seedlot_transaction_description) {
-            $seedlot_transaction_description =~ s/\R//g;
-        }
+        if ($seedlot_transaction_description) { $seedlot_transaction_description =~ s/\R//g; }
 
         push @result, {
             observationunit_stock_id => $observationunit_stock_id,
