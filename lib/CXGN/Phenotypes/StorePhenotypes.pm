@@ -205,7 +205,7 @@ sub create_hash_lookups {
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
     print STDERR "trait list @trait_list\n";
-    #@trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra hash from trait validation
+    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra hash from trait validation
     #print STDERR "trait list after map: @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
