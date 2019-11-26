@@ -15,41 +15,7 @@ use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
 use JSON;
 
-has 'bcs_schema' => (
-    isa => 'Bio::Chado::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'metadata_schema' => (
-    isa => 'CXGN::Metadata::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'phenome_schema' => (
-    isa => 'CXGN::Phenome::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page_size' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'status' => (
-    isa => 'ArrayRef[Maybe[HashRef]]',
-    is => 'rw',
-    required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub seasons {
     my $self = shift;
@@ -114,14 +80,76 @@ sub study_types {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'StudyTypes list result constructed');
 }
 
-sub studies_search {
+sub search {
     my $self = shift;
+    my $search_params = shift;
+	my $c = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    #my $status = $self->status;
+    my $schema = $self->bcs_schema;
+    #my $auth = _authenticate_user($c);
+    my ($result, $status, $total_count) = $self->search_results($search_params, $c);
+
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies-search result constructed');
+}
+
+sub studies_search_save {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
     my $search_params = shift;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema;
-    #my $auth = _authenticate_user($c);
+    my @data_files;
+
+    #create save object and save search params in db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'studies'
+    });
+
+    my $save_id = $search_object->save($search_params);
+    my $result = ( searchResultsDbId => $save_id );
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');
+}
+
+sub studies_search_retrieve {
+    my $self = shift;
+    my $tempfiles_subdir = shift;
+    my $search_id = shift;
+	my $c = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $schema = $self->bcs_schema;
+    my @data_files;
+
+	#create save object and retrieve search params from db
+    my $search_object = CXGN::BrAPI::Search->new({
+        tempfiles_subdir => $tempfiles_subdir,
+        search_type => 'studies'
+    });
+
+    my $search_params = $search_object->retrieve($search_id);
+    my ($result, $status, $total_count) = $self->search_results($search_params, $c);
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');
+}
+
+sub search_results {
+    my $self = shift;
+    my $search_params = shift;
+	my $c = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $schema = $self->bcs_schema;
 
     my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
     my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
@@ -129,14 +157,16 @@ sub studies_search {
     my @study_names = $search_params->{studyNames} ? @{$search_params->{studyNames}} : ();
     my @folder_dbids = $search_params->{trialDbIds} ? @{$search_params->{trialDbIds}} : ();
     my @folder_names = $search_params->{trialNames} ? @{$search_params->{trialNames}} : ();
-    my @location_ids = $search_params->{studyLocationDbIds} ? @{$search_params->{studyLocationDbIds}} : ();
+    my @location_ids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
     my @location_names = $search_params->{studyLocationNames} ? @{$search_params->{studyLocationNames}} : ();
+    my @study_type_ids = $search_params->{studyTypeDbIds} ? @{$search_params->{studyTypeDbIds}} : ();
     my @study_type_list = $search_params->{studyTypeName} ? @{$search_params->{studyTypeName}} : ();
     my @germplasm_dbids = $search_params->{germplasmDbIds} ? @{$search_params->{germplasmDbIds}} : ();
     my @germplasm_names = $search_params->{germplasmNames} ? @{$search_params->{germplasmNames}} : ();
-    my @years = $search_params->{seasons} ? @{$search_params->{seasons}} : ();
+    my @years = $search_params->{seasonDbIds} ? @{$search_params->{seasonDbIds}} : ();
     my @obs_variable_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
     my @obs_variable_names = $search_params->{observationVariableNames} ? @{$search_params->{observationVariableNames}} : ();
+    my $crop = $search_params->{commonCropNames};
     my $active = $search_params->{active};
     my $sortBy = $search_params->{sortBy};
     my $sortOrder = $search_params->{sortOrder};
@@ -147,6 +177,7 @@ sub studies_search {
         location_list=>\@location_names,
         location_id_list=>\@location_ids,
         trial_type_list=>\@study_type_list,
+        trial_type_ids=>\@study_type_ids,
         trial_id_list=>\@study_dbids,
         trial_name_list=>\@study_names,
         trial_name_is_exact=>1,
@@ -164,36 +195,48 @@ sub studies_search {
     my ($data, $total_count) = $trial_search->search();
     #print STDERR Dumper $data;
 
+	my $supported_crop = $c->config->{"supportedCrop"};
+
     my @data_out;
     foreach (@$data){
         my %additional_info = (
             design => $_->{design},
             description => $_->{description},
         );
+		my %season = (
+			season     => "",
+			seasonDbId => "",
+			year       => $_->{"year"}
+		);
+
         my %data_obj = (
+			active=>JSON::true,
+			additionalInfo=>\%additional_info,
+			commonCropName => $supported_crop,
+			documentationURL => "",
+			endDate => $_->{project_planting_date} == "" ? undef : $_->{project_planting_date},
+			locationDbId => $_->{location_id},
+			locationName => $_->{location_name},
+			name => $_->{trial_name},
+			programDbId => qq|$_->{breeding_program_id}|,
+			programName => $_->{breeding_program_name},
+			seasons => [\%season],
+			startDate => $_->{project_harvest_date} == "" ? undef : $_->{project_harvest_date},
             studyDbId => qq|$_->{trial_id}|,
-            name => $_->{trial_name},
+			studyName => $_->{trial_name},
+			studyType => $_->{trial_type},
+			studyTypeDbId => "",
+			studyTypeName => "",
             trialDbId => qq|$_->{folder_id}|,
             trialName => $_->{folder_name},
-            studyType => $_->{trial_type},
-            seasons => [$_->{year}],
-            locationDbId => $_->{location_id},
-            locationName => $_->{location_name},
-            programDbId => qq|$_->{breeding_program_id}|,
-            programName => $_->{breeding_program_name},
-            startDate => $_->{project_harvest_date},
-            endDate => $_->{project_planting_date},
-            active=>JSON::true,
-            additionalInfo=>\%additional_info
         );
         push @data_out, \%data_obj;
     }
 
     my %result = (data=>\@data_out);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies-search result constructed');
+    return (\%result, $status, $total_count)
 }
+
 
 sub studies_germplasm {
 	my $self = shift;
@@ -237,6 +280,7 @@ sub studies_detail {
 	my $self = shift;
 	my $study_id = shift;
     my $main_production_site_url = shift;
+	my $supported_crop = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -292,6 +336,7 @@ sub studies_detail {
             my @data_links;
             foreach (@$additional_files){
                 push @data_links, {
+					dataLinkName => $_->[4],
                     type => 'Additional File',
                     name => $_->[4],
                     url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
@@ -301,6 +346,7 @@ sub studies_detail {
             my $phenotype_files = $t->get_phenotype_metadata();
             foreach (@$additional_files){
                 push @data_links, {
+					dataLinkName => $_->[4],
                     type => 'Uploaded Phenotype File',
                     name => $_->[4],
                     url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0]
@@ -312,42 +358,46 @@ sub studies_detail {
             my $folder_db_id = $folder->project_parent->project_id();
             my $breeding_program_id = $folder->breeding_program->project_id();
 			%result = (
+				active=>JSON::true,
+				additionalInfo=>\%additional_info,
+				commonCropName=> $supported_crop,
+				contacts=>$brapi_contacts,
+				dataLinks=>\@data_links,
+				documentationURL=>"",
+				endDate => $harvest_date == "" ? undef : $harvest_date,
+				lastUpdate=>{
+					version => '',
+					timestamp => undef
+				},
+				license=>$data_agreement,
+				location=> {
+					abbreviation=>$location->[9],
+					additionalInfo=> $location->[7],
+					altitude=>$location->[4],
+					countryCode=> $location->[6],
+					countryName=> $location->[5],
+					documentationURL=>"",
+					instituteAddress=>$location->[10],
+					instituteName=>'',
+					latitude=>$location->[2],
+					locationDbId => qq|$location->[0]|,
+					locationName=> $location->[1],
+					locationType=>$location->[8],
+					longitude=>$location->[3],
+					name=>$location->[1],
+				},
+				seasons=>\@years,
+				startDate => $planting_date == "" ? undef : $planting_date,
 				studyDbId=>qq|$study_db_id|,
+				studyDescription=>$t->get_description(),
 				studyName=>$t->get_name(),
+				studyType=>$project_type,
+				studyTypeDbId=>"",
+				studyTypeName=>"",
 				trialDbId=>qq|$folder_db_id|,
 				trialName=>$folder->project_parent->name(),
-				studyType=>$project_type,
-				seasons=>\@years,
-                studyDescription=>$t->get_description(),
-				locationDbId=>qq|$location_id|,
-				locationName=>$location_name,
 				programDbId=>qq|$breeding_program_id|,
 				programName=>$folder->breeding_program->name(),
-				startDate => $planting_date,
-				endDate => $harvest_date,
-				additionalInfo=>\%additional_info,
-				active=>JSON::true,
-                license=>$data_agreement,
-				location=> {
-					locationDbId => qq|$location->[0]|,
-					locationType=>$location->[8],
-					name=> $location->[1],
-					abbreviation=>$location->[9],
-					countryCode=> $location->[6],
-                    instituteName=>'',
-                    instituteAddress=>$location->[10],
-					countryName=> $location->[5],
-					latitude=>$location->[2],
-					longitude=>$location->[3],
-					altitude=>$location->[4],
-					additionalInfo=> $location->[7]
-				},
-				contacts=>$brapi_contacts,
-                dataLinks=>\@data_links,
-                lastUpdate=>{
-                    version => '',
-                    timestamp => ''
-                }
 			);
 		} else {
 			return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not a study');
@@ -386,36 +436,77 @@ sub studies_observation_variables {
 			my @brapi_categories = split '/', $categories;
             my $trait_id = $trait->cvterm_id;
             my $trait_db_id = $trait->db_id;
-			push @data, {
-				observationVariableDbId => qq|$trait_id|,
-				name => $trait->display_name,
+
+			my %ontologyReference = (
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
-                language => 'EN',
-                synonyms => [],
-                crop => $crop,
-				trait => {
-					traitDbId => qq|$trait_id|,
-					name => $trait->name,
-					description => $trait->definition,
-                    xref => $trait->term,
-                    class => ''
+				version => '',
+				documentationURL => {
+					URL  => '',
+					type => ''
+				}
+			);
+
+			# Convert our breedbase data types to BrAPI data types.
+			my $trait_format = CXGN::BrAPI::v1::ObservationVariables->convert_datatype_to_brapi($trait->format, scalar(@brapi_categories));
+
+			push @data, {
+				contextOfUse=>[],
+				crop => $crop,
+				defaultValue => $trait->default_value,
+				documentationURL=> $trait->uri,
+				growthStage=>"",
+				institution=>"",
+				language => 'EN',
+				method => {
+					class=>"",
+					description=>"",
+					formula=>"",
+					methodDbId=>"",
+					methodName=>"",
+					name=>"",
+					ontologyReference=>\%ontologyReference,
+					reference=>""
 				},
-				method => {},
+				name => $trait->name . "|" . $trait->term,
+				observationVariableDbId => $trait->name . "|" . $trait->term,
+				observationVariableName => $trait->name,
+				ontologyDbId => qq|$trait_db_id|,
+				ontologyName => $trait->db,
+				ontologyReference=>\%ontologyReference,
 				scale => {
-					scaleDbId =>'',
-					name =>'',
-					datatype=>$trait->format,
+					dataType=>$trait_format,
 					decimalPlaces=>undef,
-					xref=>'',
+					name =>'',
+					ontologyReference=>\%ontologyReference,
+					scaleDbId =>'',
+					scaleName=>'',
 					validValues=> {
-						min=>$trait->minimum ? $trait->minimum + 0 : 0,
-						max=>$trait->maximum ? $trait->maximum + 0 : 0,
+						min=>$trait->minimum ? $trait->minimum + 0 : undef,
+						max=>$trait->maximum ? $trait->maximum + 0 : undef,
 						categories=>\@brapi_categories
-					}
+					},
+					xref=>'',
+				},
+				scientist=>"",
+				status=>JSON::true,
+				submissionTimeStamp=>undef,
+				synonyms => [],
+				trait => {
+					alternativeAbbreviations=>[],
+					class => '',
+					description => $trait->definition,
+					entity=>'',
+					mainAbbreviation=>'',
+					name => $trait->name,
+					ontologyReference=>\%ontologyReference,
+					status=>JSON::true,
+					synonyms=>[],
+					traitDbId => $trait->term,
+					traitName=>$trait->name,
+                    xref => $trait->term,
 				},
 				xref => $trait->term,
-				defaultValue => $trait->default_value
 			};
 		}
 		$result{data} = \@data;
@@ -465,7 +556,7 @@ sub studies_layout {
             my $image_id = CXGN::Stock->new({
     			schema => $self->bcs_schema,
     			stock_id => $design->{$plot_number}->{plot_id},
-    		}); 
+    		});
     		my @plot_image_ids = $image_id->get_image_ids();
             my @ids;
             foreach my $arrayimage (@plot_image_ids){
@@ -474,7 +565,7 @@ sub studies_layout {
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
-             
+
 			$formatted_plot = {
 				studyDbId => $study_id,
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
@@ -493,7 +584,7 @@ sub studies_layout {
             $window_count++;
 		}
 		$count++;
-	} 
+	}
 	my %result;
     my @data_files;
     if ($format eq 'json'){
@@ -559,12 +650,16 @@ sub observation_units {
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             push @brapi_observations, {
+				collector => $_->{operator},
                 observationDbId => qq|$_->{phenotype_id}|,
+				observationTimestamp => $obs_timestamp,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimestamp => $obs_timestamp,
-                season => $obs_unit->{year},
-                collector => $_->{operator},
+                season => {
+					season=>'',
+					seasonDbId=>'',
+					year=>$obs_unit->{year}
+				},
                 value => qq|$_->{value}|,
             };
         }
@@ -576,29 +671,39 @@ sub observation_units {
                 modality => $modality,
             };
         }
+
+		# Get the pedigree of the germplasm
+		my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
+		my $pedigree_string = "";
+		if ($s) {
+			$pedigree_string = $s->get_pedigree_string('Parents');
+		}
+
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {
+			X => $obs_unit->{obsunit_col_number},
+			Y => $obs_unit->{obsunit_row_number},
+			blockNumber => $obs_unit->{obsunit_block_number},
+			entryNumber => '',
+			entryType => $entry_type,
+			germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
+			germplasmName => $obs_unit->{germplasm_uniquename},
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+			observationUnitName => $obs_unit->{observationunit_uniquename},
+			observationUnitXref => [],
+			observations => \@brapi_observations,
+			pedigree=>$pedigree_string,
+			plantNumber => $obs_unit->{obsunit_plant_number},
+			plotNumber => $obs_unit->{obsunit_plot_number},
+			replicate => $obs_unit->{obsunit_rep_number},
             observationLevel => $obs_unit->{observationunit_type_name},
             observationLevels => $obs_unit->{observationunit_type_name},
-            plotNumber => $obs_unit->{obsunit_plot_number},
-            plantNumber => $obs_unit->{obsunit_plant_number},
-            blockNumber => $obs_unit->{obsunit_block_number},
-            replicate => $obs_unit->{obsunit_rep_number},
-            observationUnitName => $obs_unit->{observationunit_uniquename},
-            germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
-            germplasmName => $obs_unit->{germplasm_uniquename},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             studyLocationDbId => qq|$obs_unit->{trial_location_id}|,
             studyLocation => $obs_unit->{trial_location_name},
             programName => $obs_unit->{breeding_program_name},
-            X => $obs_unit->{obsunit_col_number},
-            Y => $obs_unit->{obsunit_row_number},
-            entryType => $entry_type,
-            entryNumber => '',
             treatments => \@brapi_treatments,
-            observations => \@brapi_observations
         };
         $total_count = $obs_unit->{full_count};
     }
@@ -732,6 +837,7 @@ sub observation_units_granular {
                 germplasmDbId => $d->{germplasm_stock_id},
                 germplasmName => $d->{germplasm_uniquename},
                 value => $o->{value},
+                season => {}
             };
         }
     }

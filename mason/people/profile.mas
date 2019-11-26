@@ -28,7 +28,7 @@ $user_status => undef
     <&| /page/info_section.mas, title=>'General Tools', collapsible=>0, collapsed=>0 &>
         <div class="well">
             <a href="/solpeople/personal-info.pl?action=edit&sp_person_id=<% $sp_person_id %>">View or update personal (contact and research) information</a><br />
-            <a href="/solpeople/change-account.pl?action=edit&sp_person_id=<% $sp_person_id %>">Update account information</a><br />
+            <a href="/user/update">Update account information</a><br />
             <a href="/forum/topics.pl">Post to SGN forum</a><br />
         </div>
     </&>
