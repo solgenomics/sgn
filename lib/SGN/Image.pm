@@ -1052,4 +1052,35 @@ sub remove_associated_cvterm {
     return undef;
 }
 
+sub associate_phenotype {
+
+    my $self = shift;
+    my $image_hash = shift;
+
+    # Copied from CXGN::Phenotypes:StorePhenotypes->save_archived_images_metadata because
+    # the class required too many parameters to instantiate.
+    my $query = "INSERT into phenome.nd_experiment_md_images (nd_experiment_id, image_id) VALUES (?, ?);";
+    my $sth = $self->get_dbh()->prepare($query);
+
+    while (my ($nd_experiment_id, $image_id) = each %$image_hash) {
+        $sth->execute($nd_experiment_id, $image_id);
+    }
+
+    return undef;
+}
+
+sub remove_associated_phenotypes {
+
+    my $self = shift;
+
+    # Find the information for creating our association row
+    my $query = "DELETE from phenome.nd_experiment_md_images where image_id = ?";
+
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+        $self->get_image_id,
+    );
+
+}
+
 1;

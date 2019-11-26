@@ -10,6 +10,7 @@ use SGN::Image;
 use CXGN::Image::Search;
 use CXGN::Page;
 use CXGN::Tag;
+use CXGN::Phenotypes::StorePhenotypes;
 use Scalar::Util qw(looks_like_number);
 
 extends 'CXGN::BrAPI::v1::Common';
@@ -58,6 +59,15 @@ sub search {
             push(@cvterm_names, $_->name);
         }
 
+        # Get the observation variable db ids
+        my @observationDbIds;
+        my $observations_array = $_->{'observations_array'};
+
+        foreach (@$observations_array) {
+            my $observationDbId = $_->{'phenotype_id'};
+            push @observationDbIds, $observationDbId
+        }
+
         push @data, {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
@@ -85,7 +95,7 @@ sub search {
                 },
                 type => '',
             },
-            observationDbIds => [],
+            observationDbIds => [@observationDbIds],
         };
     }
 
@@ -125,6 +135,22 @@ sub detail {
     my %result;
 
     foreach (@$search_result) {
+
+        # Process cvterms
+        my @cvterm_names;
+        foreach (@cvterms) {
+            push(@cvterm_names, $_->name);
+        }
+
+        # Get the observation variable db ids
+        my @observationDbIds;
+        my $observations_array = $_->{'observations_array'};
+
+        foreach (@$observations_array) {
+            my $observationDbId = $_->{'phenotype_id'};
+            push @observationDbIds, $observationDbId
+        }
+
         %result = (
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
@@ -133,7 +159,7 @@ sub detail {
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
-            descriptiveOntologyTerms => \@cvterms,
+            descriptiveOntologyTerms => \@cvterm_names,
             imageDbId => $_->{'image_id'},
             imageFileName => $_->{'image_original_filename'},
             imageFileSize => $size,
@@ -152,7 +178,7 @@ sub detail {
                 },
                 type => '',
             },
-            observationDbIds => [],
+            observationDbIds => [@observationDbIds],
         );
     }
 
@@ -179,6 +205,7 @@ sub detail {
     my $mimeType = $params->{mimeType} ? $params->{mimeType}[0] : undef;
     my $observationUnitDbId = $params->{observationUnitDbId} ? $params->{observationUnitDbId}[0] : undef;
     my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
+    my $observationDbIds_arrayref = $params->{observationDbIds} || ();
 
     # metadata store for the rest not yet implemented
     my $imageFileSize = $params->{imageFileSize} ? $params->{imageFileSize}[0] : undef;
@@ -186,7 +213,6 @@ sub detail {
     my $imageWidth = $params->{imageWidth} ? $params->{imageWidth}[0] : ();
     my $copyright = $params->{copyright} || "";
     my $imageTimeStamp = $params->{imageTimeStamp} || "";
-    my $observationDbIds_arrayref = $params->{observationDbIds} || ();
     my $imageLocation_hashref = $params->{imageLocation} || ();
     my $additionalInfo_hashref = $params->{additionalInfo} || ();
 
@@ -234,6 +260,15 @@ sub detail {
          return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Image with id of %s, does not exist', $image_id));
      }
 
+     # Check that the observationDbIds they passed exists
+     foreach (@$observationDbIds_arrayref) {
+         my $phenotype = $self->bcs_schema()->resultset("Phenotype::Phenotype")->find({ phenotype_id => $_ });
+         if (! defined $phenotype) {
+             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Observation with id of %s, does not exist', $_));
+         }
+     }
+
+
      # End of prechecks
 
      # Assign image properties
@@ -272,6 +307,22 @@ sub detail {
         $image->associate_stock($observationUnitDbId, $user_name);
     }
 
+    # Clear previously associated phenotypes
+    $image->remove_associated_phenotypes();
+
+    # Associate the image with the observations specified
+    foreach (@$observationDbIds_arrayref) {
+
+        my $nd_experiment_phenotype = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->find({ phenotype_id => $_ });
+
+        if ($nd_experiment_phenotype) {
+            my %image_hash = ($nd_experiment_phenotype->nd_experiment_id => $image_id);
+            $image->associate_phenotype(\%image_hash);
+        } else {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Cannot find experiment associated with observation with id of %s, does not exist', $_));
+        }
+    }
+
     my $url = "";
 
     my @image_ids;
@@ -297,6 +348,15 @@ sub detail {
             if ($_->name) {
                 push(@cvterm_names, $_->name);
             }
+        }
+
+        # Get the observation variable db ids
+        my @observationDbIds;
+        my $observations_array = $_->{'observations_array'};
+
+        foreach (@$observations_array) {
+            my $observationDbId = $_->{'phenotype_id'};
+            push @observationDbIds, $observationDbId
         }
 
         # Construct the response
@@ -328,7 +388,7 @@ sub detail {
                 },
                 type => '',
             },
-            observationDbIds => [],
+            observationDbIds => [@observationDbIds],
         );
     }
 
@@ -394,6 +454,16 @@ sub detail {
         my $filename = $sgn_image->get_filename();
         my $size = (stat($filename))[7];
         my ($width, $height) = imgsize($filename);
+
+        # Get the observation variable db ids
+        my @observationDbIds;
+        my $observations_array = $_->{'observations_array'};
+
+        foreach (@$observations_array) {
+            my $observationDbId = $_->{'phenotype_id'};
+            push @observationDbIds, $observationDbId
+        }
+
      %result = (
          additionalInfo => {
              observationLevel => $_->{'stock_type_name'},
@@ -419,7 +489,7 @@ sub detail {
              },
              type => '',
          },
-         observationDbIds => [],
+         observationDbIds => [@observationDbIds],
      );
     }
 
