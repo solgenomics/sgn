@@ -183,10 +183,44 @@ sub download {
         my $genotype_string = "";
         my $genotype_example = $geno;
         if($counter == 0) {
-
+            $genotype_string .= "#CHROM\t";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= " \t";
+            }
+            $genotype_string .= "\n";
+            $genotype_string .= "POS\t";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= " \t";
+            }
+            $genotype_string .= "\n";
             $genotype_string .= "ID\t";
             foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
                 $genotype_string .= $key."\t";
+            }
+            $genotype_string .= "\n";
+            $genotype_string .= "REF";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= "\t";
+            }
+            $genotype_string .= "\n";
+            $genotype_string .= "ALT";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= "\t";
+            }
+            $genotype_string .= "\n";
+            $genotype_string .= "QUAL";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= "\t";
+            }
+            $genotype_string .= "\n";
+            $genotype_string .= "FILTER";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= "\t";
+            }
+            $genotype_string .= "\n";
+            $genotype_string .= "FORMAT\t";
+            foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+                $genotype_string .= "DS\t";
             }
             $genotype_string .= "\n";
         }
