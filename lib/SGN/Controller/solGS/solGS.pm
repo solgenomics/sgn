@@ -1721,7 +1721,7 @@ sub check_population_has_phenotype {
 
     if ($is_gs !~ /genomic selection/)
     {
-	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pr_id);
 	my $pheno_file = $c->stash->{genotype_file_name};
 
 	if (!-s $pheno_file)
