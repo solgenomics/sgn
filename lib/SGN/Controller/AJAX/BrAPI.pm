@@ -2592,7 +2592,7 @@ sub _observationvariable_search_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->observation_variable_search({
+	my $brapi_package_result = $brapi_module->search({
 		observationvariable_db_ids => $clean_inputs->{observationVariableDbId},
 		ontology_db_names => $clean_inputs->{ontologyXref},
 		ontology_dbxref_terms => $clean_inputs->{ontologyDbId},
@@ -2610,14 +2610,14 @@ sub variables_search_save  : Chained('brapi') PathPart('search/variables') Args(
 sub variables_search_save_POST {
     my $self = shift;
     my $c = shift; 
-    save_results($self,$c,$c->stash->{clean_inputs},'Variables');
+    save_results($self,$c,$c->stash->{clean_inputs},'ObservationVariables');
 }
 
 sub variables_search_retrieve : Chained('brapi') PathPart('search/variables') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    retrieve_results($self, $c, $search_id, 'Variables');
+    retrieve_results($self, $c, $search_id, 'ObservationVariables');
 }
 
 sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') { }
@@ -2630,7 +2630,7 @@ sub observationvariable_list_GET {
 	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->observation_variable_search(undef, $c);
+	my $brapi_package_result = $brapi_module->search(undef, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -3279,7 +3279,7 @@ sub save_results {
     my $auth = _authenticate_user($c);
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
-    my $search_result = $brapi_module->search($search_params);
+    my $search_result = $brapi_module->search($search_params,$c);
 
     my $dir = $c->tempfiles_subdir('/brapi_searches');
     my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'brapi_searches/XXXXXXXXXXXXXXXX');
