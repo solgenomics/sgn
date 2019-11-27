@@ -26,6 +26,7 @@ use Carp qw/ carp confess croak /;
 use SGN::Controller::solGS::Utils;
 use solGS::queryJobs;
 use solGS::asyncJob;
+use CXGN::Genotype::Search;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -1720,8 +1721,8 @@ sub check_population_has_phenotype {
 
     if ($is_gs !~ /genomic selection/)
     {
-	my $cache_dir  = $c->stash->{solgs_cache_dir};
-	my $pheno_file = $c->controller('solGS::Files')->grep_file($cache_dir, "phenotype_data_${pr_id}.txt");		 		 
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	my $pheno_file = $c->stash->{genotype_file_name};
 
 	if (!-s $pheno_file)
 	{
@@ -1742,28 +1743,32 @@ sub check_population_has_genotype {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
-
+  
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+  
     my $has_genotype;
-   
-    my $geno_file;
-    if ($pop_id =~ /list/) 
-    {	  	
-	my $dir       = $c->stash->{solgs_lists_dir};
-	my $user_id   = $c->user->id;
-	my $file_name = "genotype_data_${pop_id}";
-	$geno_file    = $c->controller('solGS::Files')->grep_file($dir,  $file_name);
-	$has_genotype = 1 if -s $geno_file;  	
+    
+    if (-s $geno_file)
+    {  
+	$has_genotype = 1;
     }
-
-    unless ($has_genotype) 
+    else 
+    {
+	$c->controller('solGS::Files')->first_stock_genotype_file($c, $pop_id);
+	my $first_stock_file = $c->stash->{first_stock_genotype_file};
+	
+	$has_genotype = 1 if -s $first_stock_file;
+    }
+    
+    if (!$has_genotype)
     {
 	$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id);
-    }	
+    }
   
     $c->stash->{population_has_genotype} = $has_genotype;
 
 }
-
 
 sub check_selection_population_relevance :Path('/solgs/check/selection/population/relevance') Args() {
     my ($self, $c) = @_;
@@ -1772,10 +1777,9 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $training_pop_id    = $c->req->param('training_pop_id');
     my $selection_pop_name = $c->req->param('selection_pop_name');
     my $trait_id           = $c->req->param('trait_id');    
-
-    my$referer = $c->req->referer;
-    
-   
+ 
+    my $referer = $c->req->referer;
+  
     if ($referer =~ /combined\//) 
     {
 	$c->stash->{data_set_type} = 'combined populations';
@@ -1785,10 +1789,11 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $pr_rs = $c->model("solGS::solGS")->project_details_by_exact_name($selection_pop_name);
    
     my $selection_pop_id;
+
     while (my $row = $pr_rs->next) {  
 	$selection_pop_id = $row->project_id;
     }
-       
+
     my $ret = {};
 
     if ($selection_pop_id !~ /$training_pop_id/)
@@ -1804,11 +1809,11 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	my $similarity;
 	if ($has_genotype)
 	{
-	    $c->stash->{pop_id} = $selection_pop_id;
-
 	    $self->first_stock_genotype_data($c, $selection_pop_id);
+
+	    $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id);
 	    my $selection_geno_file = $c->stash->{first_stock_genotype_file};
-	    
+
 	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
 	    my $training_geno_file = $c->stash->{genotype_file_name};
 	
@@ -3128,11 +3133,13 @@ sub get_cluster_genotype_query_job_args {
 	    nstore $args, $args_file 
 		or croak "data queryscript: $! serializing model details to $args_file ";
  
+	    my $check_data_exists =  $c->stash->{check_data_exists} ? 1 : 0;
+
 	    my $cmd = 'mx-run solGS::queryJobs ' 
 	    	. ' --data_type genotype '
 	    	. ' --population_type trial '
-	    	. ' --args_file ' . $args_file;
-
+	    	. ' --args_file ' . $args_file
+		. ' --check_data_exists ' . $check_data_exists;
 
 	    my $config_args = {
 		'temp_dir' => $temp_dir,
@@ -3160,16 +3167,9 @@ sub get_cluster_genotype_query_job_args {
 
 sub first_stock_genotype_data {
     my ($self, $c, $pr_id) = @_;
- 
-    $c->controller('solGS::Files')->first_stock_genotype_file($c, $pr_id);
-    my $geno_file  = $c->stash->{first_stock_genotype_file};
- 
-    my $geno_data = $c->model('solGS::solGS')->first_stock_genotype_data($pr_id);
-
-    if ($geno_data)
-    {
-	write_file($geno_file, $geno_data);
-    }
+    
+    $c->stash->{check_data_exists} = 1;
+    $self->submit_cluster_genotype_query($c, [$pr_id]);  
 }
 
 
@@ -3226,8 +3226,19 @@ sub genotype_trial_query_args {
  
     $pop_id  = $training_pop_id || $selection_pop_id if !$pop_id;
     
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    my $geno_file = $c->stash->{genotype_file_name};
+    my $geno_file;
+    my $check_data_exists = $c->stash->{check_data_exists};
+
+    if ($c->stash->{check_data_exists}) 
+    {
+	$c->controller('solGS::Files')->first_stock_genotype_file($c, $pop_id);
+	$geno_file = $c->stash->{first_stock_genotype_file};	
+    }
+    else 
+    {
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+	$geno_file = $c->stash->{genotype_file_name};
+    }
       
     my $referer = $c->req->referer;
      
