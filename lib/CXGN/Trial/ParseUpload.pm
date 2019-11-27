@@ -54,7 +54,6 @@ sub parse {
   }
 
   # print STDERR "Check 3.1: ".localtime();
-  print STDERR "Between validating and parsing\t".localtime()."\n";
 
   if (!$self->_parse_with_plugin($args)) {
 		my $errors = $self->get_parse_errors();
@@ -63,7 +62,6 @@ sub parse {
   }
 
   # print STDERR "Check 3.2: ".localtime();
-  print STDERR "Between parsing and errors\t".localtime()."\n";
 
   if (!$self->_has_parsed_data()) {
 		my $errors = $self->get_parse_errors();
@@ -74,7 +72,6 @@ sub parse {
   }
 
   #print STDERR "Check 3.3: ".localtime();
-  print STDERR "Between errors and returning\t".localtime()."\n";
 
 	my $errors = $self->get_parse_errors();
   print STDERR "\nError parsing trial file: ".$self->get_filename()."\nError:".Dumper($errors)."\n";

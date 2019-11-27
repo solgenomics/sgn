@@ -194,29 +194,33 @@ sub _prep_upload {
     my $data_level;
     my $image_zip;
     if ($file_type eq "spreadsheet") {
-        print STDERR "Spreadsheet \n";
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or associated_images
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs or scio or associated_images
+        # print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
+        $metadata_file_type = "spreadsheet phenotype file";
+
         if ($spreadsheet_format eq 'detailed'){
             $validate_type = "phenotype spreadsheet";
-        }
-        elsif ($spreadsheet_format eq 'simple'){
+        } elsif ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
-        }
-        elsif ($spreadsheet_format eq 'associated_images'){
+        } elsif ($spreadsheet_format eq 'nirs'){
+            $validate_type = "phenotype spreadsheet nirs";
+            $metadata_file_type = "nirs spreadsheet";
+        } elsif ($spreadsheet_format eq 'scio'){
+            $validate_type = "scio spreadsheet nirs";
+            $metadata_file_type = "nirs spreadsheet";
+        } elsif ($spreadsheet_format eq 'associated_images'){
             $validate_type = "phenotype spreadsheet associated_images";
-        }
-        else {
-            die "Spreadsheet format not supported! Only simple, detailed, or associated_images\n";
+        } else {
+            die "Spreadsheet format not supported! Only simple, detailed, nirs, scio, or associated_images\n";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
-        $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
         $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
     }
     elsif ($file_type eq "fieldbook") {
-        print STDERR "Fieldbook \n";
+        # print STDERR "Fieldbook \n";
         $subdirectory = "tablet_phenotype_upload";
         $validate_type = "field book";
         $metadata_file_type = "tablet phenotype file";
@@ -226,7 +230,7 @@ sub _prep_upload {
         $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
     }
     elsif ($file_type eq "datacollector") {
-        print STDERR "Datacollector \n";
+        # print STDERR "Datacollector \n";
         $subdirectory = "data_collector_phenotype_upload";
         $validate_type = "datacollector spreadsheet";
         $metadata_file_type = "data collector phenotype file";
@@ -242,7 +246,7 @@ sub _prep_upload {
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
-        #print STDERR $user_type."\n"; 
+        #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
             return (\@success_status, \@error_status);
@@ -364,7 +368,7 @@ sub update_plot_phenotype_POST : Args(0) {
   print "MY LIST OPTION:  $trait_list_option\n";
   my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $plot_type_id = $plot->type_id();
-  
+
   if (!$c->user()) {
     print STDERR "User not logged in... not uploading phenotype.\n";
     $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };

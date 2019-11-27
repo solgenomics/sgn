@@ -98,10 +98,13 @@ jQuery(document).ready(function ($) {
     }
 
     function upload_multiple_trial_designs_file() {
-      console.log("submitting upload_multiple_trial_designs_file ajax call");
+      $("#upload_multiple_trials_warning_messages").html('');
+      $("#upload_multiple_trials_error_messages").html('');
+      $("#upload_multiple_trials_success_messages").html('');
       $('#upload_multiple_trial_designs_form').attr("action", "/ajax/trial/upload_multiple_trial_designs_file");
       $("#upload_multiple_trial_designs_form").submit();
-    }
+  }
+
 
     function open_upload_trial_dialog() {
         $('#upload_trial_dialog').modal("show");
@@ -240,33 +243,47 @@ jQuery(document).ready(function ($) {
         },
         complete: function(response) {
             console.log(response);
-
             $('#working_modal').modal("hide");
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            else if (response.error_string) {
-                alert(response.error_string);
-                return;
-            }
+
             if (response.warnings) {
-                alert(response.warnings);
+                warnings = response.warnings;
+                warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
+                $("#upload_multiple_trials_warning_messages").show();
+                $("#upload_multiple_trials_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br>'+warning_html);
+                return;
+            }
+            if (response.errors) {
+                errors = response.errors;
+                error_html = "<li>"+errors.join("</li><li>")+"</li>"
+                $("#upload_multiple_trials_error_messages").show();
+                $("#upload_multiple_trials_error_messages").html('<b>Errors. Fix the following errors and try again.</b><br><br>'+error_html);
                 return;
             }
             if (response.success) {
+                console.log("Success!!");
                 refreshTrailJsTree(0);
-                alert(response.success);
+                $("#upload_multiple_trials_success_messages").show();
+                $("#upload_multiple_trials_success_messages").html("Success! All trial successfully loaded.");
+                $("#multiple_trial_designs_upload_submit").hide();
+                $("#upload_multiple_trials_success_button").show();
+                return;
             }
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
-            alert('An error occurred while trying to upload this file. Please check the formatting and try again');
+            $("#upload_multiple_trials_error_messages").html("An error occurred while trying to upload this file. Please check the formatting and try again");
+            return;
         }
     });
 
+    jQuery('#upload_multiple_trials_success_button').on('click', function(){
+        //alert('Trial was saved in the database');
+        jQuery('#upload_trial_dialog').modal('hide');
+        location.reload();
+    });
+
     jQuery(document).on('click', '[name="upload_trial_success_complete_button"]', function(){
-        alert('Trial was saved in the database');
+        //alert('Trial was saved in the database');
         jQuery('#upload_trial_dialog').modal('hide');
         location.reload();
     });
