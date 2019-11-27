@@ -411,6 +411,7 @@ solGS.waitPage = function (page, args) {
 			    
 			    saveAnalysisProfile(analysisProfile);
 			},
+			id   :'submit_job',
 			class: 'btn btn-success',
 			text: 'Submit'
 		    },
