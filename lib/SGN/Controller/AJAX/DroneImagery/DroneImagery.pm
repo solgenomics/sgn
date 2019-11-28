@@ -1506,6 +1506,47 @@ sub get_plot_polygon_types_images_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+sub _get_standard_4_polygon_types {
+    return (
+        'observation_unit_polygon_rgb_imagery' => 1, #77976, 77689
+        'observation_unit_polygon_nrn_imagery' => 1, #77980, 77693
+        'observation_unit_polygon_nren_imagery' => 1, #77981, 77694
+        # 'observation_unit_polygon_green_background_removed_threshold_imagery' => 1, #77995, 77708
+        # 'observation_unit_polygon_red_background_removed_threshold_imagery' => 1, #77996, 77709
+        # 'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1, #77997, 77710
+        # 'observation_unit_polygon_green_imagery' => 1, #77983, 77696
+        # 'observation_unit_polygon_red_imagery' => 1, #77984, 77697
+        # 'observation_unit_polygon_red_edge_imagery' => 1, #77985, 77698
+        # 'observation_unit_polygon_nir_imagery' => 1, #77986, 77699
+        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1, #77998, 77711
+        #'observation_unit_polygon_vari_imagery' => 1, #78003, 77716
+        #'observation_unit_polygon_ndvi_imagery' => 1, #78004, 77717
+        # 'observation_unit_polygon_ndre_imagery' => 1, #78005, 77718
+        #'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
+    );
+}
+
+sub _get_standard_9_polygon_types {
+    return (
+        'observation_unit_polygon_rgb_imagery' => 1, #77976, 77689
+        'observation_unit_polygon_nrn_imagery' => 1, #77980, 77693
+        'observation_unit_polygon_nren_imagery' => 1, #77981, 77694
+        # 'observation_unit_polygon_green_background_removed_threshold_imagery' => 1, #77995, 77708
+        # 'observation_unit_polygon_red_background_removed_threshold_imagery' => 1, #77996, 77709
+        'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1, #77997, 77710
+        # 'observation_unit_polygon_green_imagery' => 1, #77983, 77696
+        # 'observation_unit_polygon_red_imagery' => 1, #77984, 77697
+        # 'observation_unit_polygon_red_edge_imagery' => 1, #77985, 77698
+        # 'observation_unit_polygon_nir_imagery' => 1, #77986, 77699
+        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1, #77998, 77711
+        'observation_unit_polygon_vari_imagery' => 1, #78003, 77716
+        'observation_unit_polygon_ndvi_imagery' => 1, #78004, 77717
+        'observation_unit_polygon_ndre_imagery' => 1, #78005, 77718
+        'observation_unit_polygon_tgi_imagery' => 1, #78005, 77718
+        #'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
+    );
+}
+
 sub get_plot_polygon_types : Path('/api/drone_imagery/plot_polygon_types') : ActionClass('REST') { }
 sub get_plot_polygon_types_GET : Args(0) {
     my $self = shift;
@@ -1513,8 +1554,8 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
+    my $checkbox_select_standard_4 = $c->req->param('checkbox_select_standard_4');
     my $checkbox_select_standard_9 = $c->req->param('checkbox_select_standard_9');
-    my $checkbox_select_standard_9_threshold = $c->req->param('checkbox_select_standard_9_threshold');
     my $field_trial_ids = $c->req->param('field_trial_ids');
     my $stock_ids = $c->req->param('stock_ids');
     my $field_trial_images_only = $c->req->param('field_trial_images_only');
@@ -1546,34 +1587,8 @@ sub get_plot_polygon_types_GET : Args(0) {
         $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
     }
 
-    my %standard_9 = (
-        'observation_unit_polygon_rgb_imagery' => 1, #77976, 77689
-        'observation_unit_polygon_nrn_imagery' => 1, #77980, 77693
-        'observation_unit_polygon_nren_imagery' => 1, #77981, 77694
-        # 'observation_unit_polygon_green_background_removed_threshold_imagery' => 1, #77995, 77708
-        # 'observation_unit_polygon_red_background_removed_threshold_imagery' => 1, #77996, 77709
-        # 'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1, #77997, 77710
-        # 'observation_unit_polygon_green_imagery' => 1, #77983, 77696
-        # 'observation_unit_polygon_red_imagery' => 1, #77984, 77697
-        # 'observation_unit_polygon_red_edge_imagery' => 1, #77985, 77698
-        # 'observation_unit_polygon_nir_imagery' => 1, #77986, 77699
-        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1, #77998, 77711
-        #'observation_unit_polygon_vari_imagery' => 1, #78003, 77716
-        #'observation_unit_polygon_ndvi_imagery' => 1, #78004, 77717
-        # 'observation_unit_polygon_ndre_imagery' => 1, #78005, 77718
-        #'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
-    );
-    my %standard_9_thresholded = (
-        'observation_unit_polygon_blue_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_green_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_red_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_red_edge_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_nir_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_ndvi_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_background_removed_ndre_imagery' => 1, #78009, 77722
-        'observation_unit_polygon_vari_background_removed_threshold_imagery' => 1,
-        'observation_unit_polygon_tgi_background_removed_threshold_imagery' => 1
-    );
+    my %standard_4 = _get_standard_4_polygon_types();
+    my %standard_9 = _get_standard_9_polygon_types();
 
     my @where_clause;
     push @where_clause, "project_md_image.type_id in ($project_image_type_id_list_sql)";
@@ -1623,16 +1638,16 @@ sub get_plot_polygon_types_GET : Args(0) {
             if ($checkbox_select_all) {
                 $input .= "checked";
             }
-            elsif ($checkbox_select_standard_9) {
-                if (exists($standard_9{$project_md_image_type_name})) {
+            elsif ($checkbox_select_standard_4) {
+                if (exists($standard_4{$project_md_image_type_name})) {
                     $input .= "checked disabled";
                 }
                 else {
                     $input .= "disabled";
                 }
             }
-            elsif ($checkbox_select_standard_9_threshold) {
-                if (exists($standard_9_thresholded{$project_md_image_type_name})) {
+            elsif ($checkbox_select_standard_9) {
+                if (exists($standard_9{$project_md_image_type_name})) {
                     $input .= "checked disabled";
                 }
                 else {
