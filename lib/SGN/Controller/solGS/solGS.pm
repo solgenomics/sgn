@@ -595,7 +595,6 @@ sub project_description {
     if ($c->stash->{list_id})
     {
         $c->controller('solGS::List')->list_population_summary($c);
-
     }
     elsif ($c->stash->{dataset_id})
     {
@@ -822,7 +821,7 @@ sub trait :Path('/solgs/trait') Args(3) {
     }
     elsif ($pop_id =~ /list/)
     {
-	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
     }
 
     $c->stash->{pop_id}   = $pop_id;   
@@ -2051,6 +2050,11 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args(3) {
 	$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
 	@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
      } 
+
+     if ($training_pop_id =~ /list/) 
+     {
+	 $c->stash->{list_id} = $training_pop_id =~ s/list_//r;
+     }
 
      $self->project_description($c, $training_pop_id);
      my $training_pop_name = $c->stash->{project_name};
