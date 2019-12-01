@@ -75,7 +75,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+              <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
             </div>
             <br />
 
@@ -273,24 +273,25 @@ jQuery(document).ready(function() {
   	      beforeSend: function() {
             jQuery("#working_modal").modal("show");
   	      },
+          timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
-              $('#dataset_select').val('ERROR');
+              alert(response.error);
             }
             else {
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
   	    //alert("Response ID: "+temp_response);
       	    //alert("Response ID: "+fig3_response);
-              //setTimeout(function() {
+
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
-              //}, 6000);
-  	      }
+  	        }
           },
-          error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable");
+          error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            alert(err.Message);
           }
         });
       }

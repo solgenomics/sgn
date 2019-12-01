@@ -75,7 +75,7 @@ $editable_stock_props => {}
 <tbody>
 <tr>
 <td>
-<a id="create_igd_genotyping_trial_link"><p>Create An IGD Genotyping Plate</p></a>
+<a name="create_genotyping_trial_link"><p>Create An IGD Genotyping Plate</p></a>
 </td>
 <td>
 <a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>

@@ -3,8 +3,10 @@ package CXGN::Dataset::File;
 
 use Moose;
 use File::Slurp qw | write_file |;
+#use File::Sp qw(append_file write_file);
 use JSON::Any;
 use Data::Dumper;
+use CXGN::Genotype::Search;
 
 extends 'CXGN::Dataset';
 
@@ -18,32 +20,79 @@ override('retrieve_genotypes',
 	     my $self = shift;
 	     my $protocol_id = shift;
 	     my $file = shift || $self->file_name()."_genotype.txt";
-	     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id);
 
+		 my $accessions_list_ref = $self->accessions();
+		 my $genotypeprop_hash_select = shift || ['DS'];
+		 my $protocolprop_top_key_select = shift || [];
+		 my $protocolprop_marker_hash_select = shift || [];
+		 my $return_only_first_genotypeprop_for_stock = shift || 1;
 
-	     my $genotype_string = "";
-	     my $genotype_example = $genotypes->[0];
-	     foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-		 $genotype_string .= $key."\t";
-	     }
-	     $genotype_string .= "\n";
-	     foreach my $element (@$genotypes) {
-		 my $genotype_id = $element->{germplasmDbId};
-		 my $genotype_data_string = "";
-		 foreach my $key (sort keys %{$element->{selected_genotype_hash}}) {
-		     my $value = $element->{selected_genotype_hash}->{$key}->{DS};
-		     my $current_genotype = $value;
-		     $genotype_data_string .= $current_genotype."\t";
-		 }
-		 my $s = join "\t", $genotype_id;
-		 $genotype_string .= $s."\t".$genotype_data_string."\n";
-	     }
-     	     write_file($file, $genotype_string);
+#		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
+		 my @accessions_list = @$accessions_list_ref;
+		 my $genotypes_search = CXGN::Genotype::Search->new(
+			bcs_schema => $self->schema(),
+			accession_list => $accessions_list_ref,
+			trial_list => $self->trials(),
+			protocol_id_list => [$protocol_id],
+			genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
+			protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
+			protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
+			return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
+		);
+		$genotypes_search->init_genotype_iterator();
+		my $counter = 0;
+		while(my $geno = $genotypes_search->get_next_genotype_info) {
+ 			my $genotype_string = "";
+ 		    my $genotype_example = $geno;
+ 			if($counter == 0) {
+ 				foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+ 					$genotype_string .= $key."\t";
+ 		    	}
+ 		    	$genotype_string .= "\n";
+ 		 	}
+#		    foreach my $element (@$genotypes) {
+# 			my $element = $genotype_example;
+ 			my $genotype_id = $geno->{germplasmDbId};
+			my $genotype_data_string = "";
+			foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
+				my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
+				my $current_genotype = $value;
+				$genotype_data_string .= $current_genotype."\t";
+			}
+			my $s = join "\t", $genotype_id;
+			$genotype_string .= $s."\t".$genotype_data_string."\n";
+#		    }
+			write_file($file, {append => 1}, $genotype_string);
+			$counter++;
+
+	 	}
+
+#		     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, @accessions_list);
+# 		     my $genotype_string = "";
+# 		     my $genotype_example = $genotypes->[0];
+# 		     foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+# 			 $genotype_string .= $key."\t";
+# 		     }
+# 		     $genotype_string .= "\n";
+# 		     foreach my $element (@$genotypes) {
+# 			 my $genotype_id = $element->{germplasmDbId};
+# 			 my $genotype_data_string = "";
+# 			 foreach my $key (sort keys %{$element->{selected_genotype_hash}}) {
+# 			     my $value = $element->{selected_genotype_hash}->{$key}->{DS};
+# 			     my $current_genotype = $value;
+# 			     $genotype_data_string .= $current_genotype."\t";
+# 			 }
+# 			 my $s = join "\t", $genotype_id;
+# 			 $genotype_string .= $s."\t".$genotype_data_string."\n";
+# 		     }
+# #			 write_file($file, $genotype_string);
+# 			#print STDERR Dumper($genotype_string . "NEXT LINE\n");
+# 			 write_file($file, {append => 1}, $genotype_string);
 
 
 #	     my $genotype_json = JSON::Any->encode($genotypes);
 #	     write_file($file, $genotype_json);
-	     return $genotypes;
+	     return;
 	 });
 
 override('retrieve_phenotypes',

@@ -2938,6 +2938,10 @@ sub get_cluster_phenotype_query_job_args {
     my ($self, $c, $trials) = @_;
 
     my @queries;
+
+    $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials);
+    $c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
+   
     foreach my $trial_id (@$trials)
     {
 	print STDERR "\nget_cluster_phenotype_query_job_args: trial id: $trial_id\n";
@@ -3561,7 +3565,7 @@ sub run_async {
     if ($background_job)  
     {
 	$c->stash->{async} = 1;
-	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c);
+	$c->controller('solGS::AnalysisQueue')->get_analysis_report_job_args_file($c, 2);
 	$report_file = $c->stash->{analysis_report_job_args_file};
     }									  
        

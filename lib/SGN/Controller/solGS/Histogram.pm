@@ -2,14 +2,15 @@ package SGN::Controller::solGS::Histogram;
 
 use Moose;
 use namespace::autoclean;
-use CXGN::Tools::Run;
+
+use Carp qw/ carp confess croak /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 use File::Temp qw / tempfile tempdir /;
 use JSON;
-use Try::Tiny;
+use Storable qw/ nstore retrieve /;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -17,37 +18,18 @@ BEGIN { extends 'Catalyst::Controller' }
 sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
     
-    my $pop_id        = $c->req->param('training_pop_id');
-    my $combo_pops_id = $c->req->param('combo_pops_id'); 
-    my $trait_id      = $c->req->param('trait_id');
-    my $referer       = $c->req->referer;
-  
-    if ($referer =~ /combined/) 
+    $c->stash->{pop_id} = $c->req->param('training_pop_id');
+    $c->stash->{trait_id} = $c->req->param('trait_id');
+
+    if ($c->req->referer =~ /combined/) 
     {    
 	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{combo_pops_id} = $combo_pops_id;
+	$c->stash->{combo_pops_id} = $c->req->param('combo_pops_id'); 
     }
-
-    $c->stash->{pop_id} = $pop_id;
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
     
-    $c->controller('solGS::Files')->trait_phenodata_file($c);    
-    my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
-
-    $c->stash->{histogram_trait_file} = $c->stash->{trait_phenodata_file};
-
-    if (!$trait_pheno_file || -z $trait_pheno_file)
-    {
-        $self->create_population_phenotype_data($c);                 
-    }
-
-    unless (!$c->stash->{phenotype_file} || -s $trait_pheno_file)
-    {
-        $self->create_trait_phenodata($c);
-    }    
+    $c->controller('solGS::solGS')->get_trait_details($c, $c->stash->{trait_id});
     
-    my $data = $self->format_plot_data($c);
+    my $data = $self->get_histogram_data($c);
     
     $c->controller('solGS::solGS')->trait_phenotype_stat($c);
     my $stat = $c->stash->{descriptive_stat};
@@ -69,108 +51,127 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
 }
 
 
-sub format_plot_data {
-   my ($self, $c) = @_;
+sub get_histogram_data {
+    my ($self, $c) = @_;
 
-   my $file = $c->stash->{histogram_trait_file};
-   my $data = $c->controller('solGS::Utils')->read_file_data($$file);
+    my $trait_id = $c->stash->{trait_id};
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id); 
+    $c->controller('solGS::Files')->trait_phenodata_file($c);    
+    my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
+    
+    my $data = $c->controller('solGS::Utils')->read_file_data($trait_pheno_file);
   
    return $data;
    
 }
 
 
-sub create_population_phenotype_data {    
+
+sub run_histogram {
     my ($self, $c) = @_;
     
-    $c->controller("solGS::solGS")->phenotype_file($c);
-
+    $self->histogram_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{histogram_r_jobs_file};
+        
+    $c->controller('solGS::solGS')->run_async($c);
+    
 }
-
-
-sub create_histogram_dir {
-    my ($self, $c) = @_;
-    
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
-}
-
-
-sub create_trait_phenodata {
-    my ($self, $c) = @_;
-    
-    my $combo_id = $c->stash->{combo_pops_id};
-
-    my $pop_id = $c->stash->{pop_id} ? $c->stash->{pop_id} : $c->stash->{combo_pops_id};
-
-    $self->create_histogram_dir($c);
-    my $histogram_dir = $c->stash->{histogram_dir};
-
-    my $pheno_file = $c->stash->{phenotype_file};
-    my $trait_file = $c->controller('solGS::Files')->trait_phenodata_file($c);
-    my $trait_abbr = $c->stash->{trait_abbr};
  
-    if (-s $pheno_file) 
-    {
-        CXGN::Tools::Run->temp_base($histogram_dir);
-       
-        my ( $histogram_commands_temp, $histogram_output_temp ) =
-            map
-        {
-            my (undef, $filename ) =
-                tempfile(
-                    catfile(
-                        CXGN::Tools::Run->temp_base(),
-                        "histogram_analysis_${pop_id}_${trait_abbr}-$_-XXXXXX",
-                         ),
-                );
-            $filename
-        } qw / in out /;
-    
-	{
-	    my $histogram_commands_file = $c->path_to('/R/solGS/histogram.r');
-	    copy( $histogram_commands_file, $histogram_commands_temp )
-            or die "could not copy '$histogram_commands_file' to '$histogram_commands_temp'";
-	}
-	try 
-	{
-	    print STDERR "\nsubmitting histogram job to the cluster..\n";
-	    my $r_process = CXGN::Tools::Run->run_cluster(
-		'R', 'CMD', 'BATCH',
-		'--slave',
-		"--args  input_file=$pheno_file trait_name=$trait_abbr output_file=$trait_file",
-		$histogram_commands_temp,
-		$histogram_output_temp,
-		{
-		    working_dir => $histogram_dir,
-		    max_cluster_jobs => 1_000_000_000,
-		},
-		);
 
-	    $r_process->wait;
-	    print STDERR "\ndone with histogram analysis..\n";
-	}
-	catch 
-	{  
-	    my $err = $_;
-            $err =~ s/\n at .+//s; #< remove any additional backtrace
-            #     # try to append the R output         
-            try
-            { 
-                $err .= "\n=== R output ===\n".file($histogram_output_temp)->slurp."\n=== end R output ===\n" 
-            };
-                     
-            $c->stash->{script_error} =  "There is a problem running the histogram r script on this dataset.";	     
+sub histogram_r_jobs {
+    my ($self, $c) = @_;
     
-	};
-     
-        $c->stash->{histogram_trait_file} = $trait_file;
-    }
-    else 
+    my $pop_id = $c->stash->{pop_id} ? $c->stash->{pop_id} : $c->stash->{combo_pops_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+    
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{histogram_temp_dir};
+
+    my $input_file = $self->histogram_input_files($c);
+    my $trait_file = $c->controller('solGS::Files')->trait_phenodata_file($c);
+ 
+    $c->stash->{r_temp_file}  = "histogram-data-${pop_id}-${trait_abbr}";
+    $c->stash->{r_script}     = 'R/solGS/histogram.r';
+    $c->stash->{input_file} = $input_file;
+    $c->stash->{output_file} = $trait_file;
+
+    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    my $jobs  = $c->stash->{cluster_r_job_args};
+
+    if (reftype $jobs ne 'ARRAY') 
     {
-        $c->stash->{script_error} =  "There is no phenotype for this trait.";     
+	$jobs = [$jobs];
     }
+
+    $c->stash->{histogram_r_jobs} = $jobs;
 
 }
+
+
+sub histogram_r_jobs_file {
+    my ($self, $c) = @_;
+
+    $self->histogram_r_jobs($c);
+    my $jobs = $c->stash->{histogram_r_jobs};
+  
+    my $temp_dir = $c->stash->{histogram_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'histo-r-jobs-file');	   
+   
+    nstore $jobs, $jobs_file
+	or croak "histogram r jobs : $! serializing histogram r jobs to $jobs_file";
+
+    $c->stash->{histogram_r_jobs_file} = $jobs_file;
+    
+}
+
+
+
+sub histogram_input_files {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{combo_pops_id}; 
+    my $trait_id = $c->stash->{trait_id};   
+    
+    $c->controller('solGS::Files')->phenotype_file_name($c);  
+    my $pheno_file = $c->stash->{phenotype_file_name};
+
+    $self->histogram_traits_file($c);   
+    my $traits_file = $c->stash->{histogram_traits_file};
+
+    $c->controller("solGS::Files")->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+
+    my $file_list = join ("\t",
+                          $pheno_file,
+                          $traits_file,
+			  $metadata_file
+	);
+     
+    my $tmp_dir = $c->stash->{histogram_temp_dir};
+    my $name = "histogram_input_files_${pop_id}_${trait_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($tempfile, $file_list);
+    
+    $c->stash->{histogram_input_files} = $tempfile;
+
+}
+
+
+sub histogram_traits_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{combo_pops_id}; 
+
+    my $traits   = $c->stash->{trait_abbr};
+   
+    my $tmp_dir = $c->stash->{histogram_temp_dir};
+    my $name    = "histogram_traits_file_${pop_id}"; 
+    my $traits_file =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($traits_file, $traits);
+
+    $c->stash->{histogram_traits_file} = $traits_file;
+    
+}
+
 
 
 sub begin : Private {

@@ -114,8 +114,8 @@ my $breeding_programs_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Organization: </label>
-          <div class="col-sm-9" >
+          <label class="col-sm-4 control-label">Organization: </label>
+          <div class="col-sm-8" >
             <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
           </div>
         </div>
@@ -333,6 +333,17 @@ jQuery(document).ready(function () {
      jQuery("#year").autocomplete({
         source: '/ajax/stock/project_year_autocomplete',
      });
+     jQuery("#organization").autocomplete({
+        source: '/ajax/stock/stockproperty_autocomplete?property=organization',
+     });
+
+    // Update changed organization
+    jQuery(document).on("change", "#organization", function() {
+      editable_stockprops_search["organization"] = {
+        "matchtype": "contains",
+        "value": jQuery(this).val()
+      }
+    });
 
     var editable_stockprops_search = {};
     var params = {};

@@ -157,6 +157,8 @@ has 'trial_has_subplot_entries' => (isa => 'Int', is => 'rw', predicate => 'has_
 has 'field_size' => (isa => 'Num', is => 'rw', predicate => 'has_field_size', required => 0);
 has 'plot_width' => (isa => 'Num', is => 'rw', predicate => 'has_plot_width', required => 0);
 has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', required => 0);
+has 'planting_date' => (isa => 'Str', is => 'rw', predicate => 'has_planting_date', required => 0);
+has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 has 'stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_stock_type', required => 1);
 
@@ -312,6 +314,12 @@ sub save_trial {
 	$t->set_breeding_program($self->get_breeding_program_id);
 	if ($self->get_trial_type){
 		$t->set_project_type($self->get_trial_type);
+	}
+	if ($self->get_planting_date){
+		$t->set_planting_date($self->get_planting_date);
+	}
+	if ($self->get_harvest_date){
+		$t->set_harvest_date($self->get_harvest_date);
 	}
 
 	#link to the project

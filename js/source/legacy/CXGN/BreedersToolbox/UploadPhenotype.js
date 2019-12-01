@@ -1,5 +1,5 @@
 
-jQuery( document ).ready( function() { 
+jQuery( document ).ready( function() {
 
     //For Spreadsheet Upload
     jQuery('#upload_spreadsheet_phenotype_submit_verify').click( function() {
@@ -32,7 +32,7 @@ jQuery( document ).ready( function() {
 
     jQuery('#upload_spreadsheet_phenotype_file_format').change(function(){
         var val = jQuery(this).val();
-        if (val == 'simple'){
+        if (val == 'simple' || val == 'nirs' || val == 'scio'){
             jQuery('#upload_spreadsheet_phenotype_data_level_div').hide();
         } else {
             jQuery('#upload_spreadsheet_phenotype_data_level_div').show();
@@ -106,6 +106,10 @@ jQuery( document ).ready( function() {
 //	jQuery('#upload_fieldbook_phenotypes_dialog').on('hidden.bs.modal', function () {
 //		location.reload();
 //	})
+
+	jQuery('#delete_pheno_file_link').click( function() {
+		alert('Deleted successfully.');
+        });
 
 });
 
@@ -237,4 +241,3 @@ function displayPhenotypeUploadStoreResponse(response, upload_type) {
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);
 }
-

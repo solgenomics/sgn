@@ -610,19 +610,16 @@ sub create_file_id {
     my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
+    my @traits_ids = $traits_ids->[0] ? @{$traits_ids} : 0;
+    
     my $traits_selection_id;
-   
-    if ($traits_ids->[0])
+    if (scalar(@traits_ids > 1))
     {
 	$traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
     }
         
     my $file_id;
     my $referer = $c->req->referer;
-
-    # if ($training_pop_id =~ /^$selection_pop_id$/) {
-    # 	$selection_pop_id = undef;
-    # }
     
     if ($referer =~ /solgs\/selection\//)
     {
@@ -665,11 +662,8 @@ sub create_file_id {
 	
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
-    else
-    {
-	$file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id;
-    }
 
+    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $traits_ids[0]; 
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
     
@@ -765,7 +759,8 @@ sub get_solgs_dirs {
     my $solqtl_tempfiles = catdir($tmp_dir, 'solqtl', 'tempfiles');  
     my $solgs_lists     = catdir($tmp_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($tmp_dir, 'solgs', 'tempfiles', 'datasets');
-    my $histogram_dir   = catdir($tmp_dir, 'histogram', 'cache');
+    my $histogram_cache = catdir($tmp_dir, 'histogram', 'cache');
+    my $histogram_temp  = catdir($tmp_dir, 'histogram', 'tempfiles');
     my $log_dir         = catdir($tmp_dir, 'log', 'cache');
     my $anova_cache     = catdir($tmp_dir, 'anova', 'cache');
     my $anova_temp      = catdir($tmp_dir, 'anova', 'tempfiles');
@@ -781,8 +776,7 @@ sub get_solgs_dirs {
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
-	 $pca_cache, $pca_temp, $histogram_dir, $log_dir, 
-	 $histogram_dir, $log_dir, $anova_cache, $corre_cache, $corre_temp,
+	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
 	 $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
@@ -800,7 +794,8 @@ sub get_solgs_dirs {
 	      cluster_temp_dir            => $cluster_temp,
               correlation_cache_dir       => $corre_cache,
 	      correlation_temp_dir        => $corre_temp,
-	      histogram_dir               => $histogram_dir,
+	      histogram_cache_dir         => $histogram_cache,
+	      histogram_temp_dir          => $histogram_temp,
 	      analysis_log_dir            => $log_dir,
               anova_cache_dir             => $anova_cache,
 	      anova_temp_dir              => $anova_temp,
