@@ -160,7 +160,7 @@ has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', 
 has 'planting_date' => (isa => 'Str', is => 'rw', predicate => 'has_planting_date', required => 0);
 has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
-has 'stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_stock_type', required => 1);
+has 'stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_stock_type', required => 0);
 
 #Trial linkage when saving a field trial
 has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 0);
@@ -263,6 +263,7 @@ sub save_trial {
 	my $genotyping_plate_sample_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_sample_type', 'project_property');
 	my $genotyping_user_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_user_id', 'nd_experiment_property');
 	my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
+	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_stock_type', 'project_property');
 
 	my $project = $chado_schema->resultset('Project::Project')
 	->create({
@@ -362,6 +363,11 @@ sub save_trial {
     if ($self->has_field_trial_is_planned_to_be_genotyped && $self->get_field_trial_is_planned_to_be_genotyped){
 		$project->create_projectprops({
 			$field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
+		});
+	}
+	if ($self->has_stock_type && $self->get_stock_type){
+		$project->create_projectprops({
+			$trial_stock_type_cvterm->name() => $self->get_stock_type
 		});
 	}
 
