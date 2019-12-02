@@ -415,7 +415,10 @@ sub search {
         $offset_clause = " OFFSET ".$self->offset;
     }
 
-    my $q = "SELECT image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name,
+    my $q = "SELECT image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username,
+        to_char (image.create_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF00') as create_date,
+        to_char (image.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF00') as modified_date,
+        image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name,
         COALESCE(
             json_agg(json_build_object('tag_id', tags.tag_id, 'name', tags.name, 'description', tags.description, 'sp_person_id', tags.sp_person_id, 'modified_date', tags.modified_date, 'create_date', tags.create_date, 'obsolete', tags.obsolete))
             FILTER (WHERE tags.tag_id IS NOT NULL), '[]'

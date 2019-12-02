@@ -8,29 +8,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use SGN::Model::Cvterm;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub observation_levels {
 	my $self = shift;
@@ -224,6 +202,9 @@ sub observation_variable_search {
 			}
 		);
 
+		# Convert our breedbase data types to BrAPI data types.
+		my $trait_format = $self->convert_datatype_to_brapi($trait->format, scalar(@brapi_categories));
+
 		# Note: Breedbase does not have a concept of 'methods'.
 		# Note: Breedbase does not have a concept of 'scale'. The values populated in scale are values from cvprop.
 		# Note: Breedbase does not have a created date stored from ontology variables.
@@ -247,14 +228,14 @@ sub observation_variable_search {
 		        ontologyReference => \%ontologyReference,
                 reference => ''
 		    },
-		    name => $cvterm_name,
-			observationVariableDbId => $trait->term, #$cvterm_name."|".$db_name.":".$accession,
+		    name => $cvterm_name."|".$db_name.":".$accession, #$cvterm_name,
+			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
 			observationVariableName => $cvterm_name,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
 			ontologyReference => \%ontologyReference,
             scale => {
-                dataType=>$trait->format,
+                dataType=>$trait_format,
                 decimalPlaces=>undef,
                 name =>'',
                 ontologyReference => \%ontologyReference,
@@ -345,5 +326,29 @@ sub observation_variable_detail {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable detail result constructed');
 }
 
+sub convert_datatype_to_brapi {
+	#If we find a type we want to convert, convert it.
+	# If there is a type, but we have no conversion for it, let it pass.
+	my $self = shift;
+	my $trait_format = shift;
+	my $num_brapi_categories = shift;
+
+	if ($num_brapi_categories > 0) {
+		# If the trait has categories, convert to Ordinal. Better to assume ordering,
+		# than lack of ordering. 
+		$trait_format = "Ordinal";
+	}
+	elsif ($trait_format eq "qualitative") {
+		# If the trait is qualitative convert to Text
+		$trait_format = "Text";
+	}
+	elsif ($trait_format eq "" || $trait_format eq "numeric" || ! defined $trait_format){
+		# If the trait is numeric or the data type is unspecified, convert to Numerical
+		$trait_format = "Numerical";
+	}
+
+	# Return our processed trait format
+	return $trait_format;
+}
 
 1;
