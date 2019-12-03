@@ -3711,7 +3711,7 @@ sub get_selection_pop_query_args {
     my $err_temp_file  = $c->stash->{err_file_temp};
 
     my $selection_pop_query_args = {
-	'selection_pop_id' => $selection_pop_id,
+	'trial_id' => $selection_pop_id,
 	'genotype_file' => $selection_pop_geno_file,
 	'genotypes_ids'  => $genotypes_ids,
 	'dataset_id'    => $c->stash->{dataset_id},
