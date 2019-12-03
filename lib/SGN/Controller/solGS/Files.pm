@@ -243,13 +243,13 @@ sub analysis_report_file {
 sub genotype_file_name {
     my ($self, $c, $pop_id) = @_;
    
-    $pop_id = $c->stash->{pop_id} if !$pop_id;
+   # $pop_id = $c->stash->{pop_id} if !$pop_id;
  
     my $dir; 
 
-    if (!$pop_id && $c->{stash}->{combo_pops_id}) 
+    if ($c->{stash}->{combo_pops_id} == $pop_id) 
     {
-	$pop_id = $pop_id . '_combined'
+	$pop_id = $c->{stash}->{combo_pops_id} . '_combined';
     }
     
     if ($pop_id =~ /list/) 
@@ -526,7 +526,7 @@ sub selection_population_file {
     my $filtered_geno_file = $c->stash->{filtered_selection_genotype_file};
 
     my $geno_files = $filtered_geno_file;  
-    
+ 
     $self->genotype_file_name($c, $pred_pop_id);
     $geno_files .= "\t" . $c->stash->{genotype_file_name};  
 
@@ -538,10 +538,10 @@ sub selection_population_file {
 
 
 sub traits_acronym_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
-    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+   # my $pop_id = $c->stash->{pop_id};
+   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_acronym_pop' . $pop_id,
                       file      => 'traits_acronym_pop_' . $pop_id . '.txt',
