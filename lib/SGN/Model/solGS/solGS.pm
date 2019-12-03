@@ -750,13 +750,13 @@ sub search_stock_using_plot_name {
  
 
 sub genotype_data {
-    my ($self, $args) = @_;
+    my ($self, $trial_id) = @_;
 
-    my $training_pop_id  = $args->{training_pop_id};
-    my $selection_pop_id = $args->{selection_pop_id};
+    #my $training_pop_id  = $args->{training_pop_id};
+    #my $selection_pop_id = $args->{selection_pop_id};
     
     my $protocol_id = $self->protocol_id();  
-    my $trial_id = $selection_pop_id ? $selection_pop_id : $training_pop_id;
+   # my $trial_id = $selection_pop_id ? $selection_pop_id : $training_pop_id;
  
     my $geno_search = CXGN::Genotype::Search->new({
 		bcs_schema => $self->schema(),
