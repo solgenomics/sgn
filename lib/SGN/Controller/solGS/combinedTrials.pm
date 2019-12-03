@@ -1120,7 +1120,7 @@ sub combined_trials_desc {
         $markers_no   = scalar(split ('\t', $geno_lines[0])) - 1;
     }
   
-    $c->controller('solGS::Files')->traits_acronym_file($c);
+    $c->controller('solGS::Files')->traits_acronym_file($c, $combo_pops_id);
     my $traits_list_file = $c->stash->{traits_acronym_file};
 
     my @traits_list = read_file($traits_list_file);
