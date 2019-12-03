@@ -331,10 +331,10 @@ sub check_single_trial_model_output {
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
-    $c->stash->{trait_abbr} = $trait_abbr;
-    $c->stash->{pop_id}     = $pop_id;  
+    #$c->stash->{trait_abbr} = $trait_abbr;
+    #$c->stash->{pop_id}     = $pop_id;  
  
-    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $pop_id, $trait_id);
     my $cached_gebv = -s $c->stash->{rrblup_training_gebvs_file};
    
     if ($cached_gebv)
@@ -385,8 +385,7 @@ sub check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
     
     my $identifier = $tr_pop_id . '_' . $sel_pop_id;
-    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-    
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);  
     my $cached_gebv = -s $c->stash->{rrblup_selection_gebvs_file};
   
     if ($cached_gebv)
