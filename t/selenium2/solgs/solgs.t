@@ -73,7 +73,7 @@ $d->while_logged_in_as("submitter", sub {
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
-    sleep(5);
+    sleep(8);
     $d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
     sleep(5);
 
