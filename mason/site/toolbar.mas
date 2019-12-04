@@ -11,8 +11,9 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <& toolbar/manage.mas &>
         <& toolbar/search_menu.mas &>
+        <& toolbar/manage.mas &>
+        <& toolbar/tools.mas &>
         <& toolbar/analyze.mas &>
         <& toolbar/about.mas &>
       </ul>

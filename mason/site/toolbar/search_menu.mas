@@ -1,10 +1,10 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Tools</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Search</a>
   <ul class="dropdown-menu">
     <li><a href="/breeders/search">Search Wizard</a></li>
-    <li><a href="/brapihome">BrAPI Home</a></li>
-      <li><a href="/fieldbook">Field Book App</a></li>
-      <li><a href="/tools/label_designer">Label Designer</a></li>
-      <li><a href="/tools/onto/">Ontology Browser</a></li>
-      <li><a href="/tools/compose/">Compose a New Trait</a></li>
+    <li><a href="/search/phenotypes/stock">Accessions and Plots</a></li>
+    <li><a href="/search/cross">Progenies and Crosses</a></li>
+    <li><a href="/search/trials">Field Trials</a></li>
+    <li><a href="/search/traits">Traits</a></li>
+    <li><a href="/search/images">Images</a></li>
   </ul>
 </li>
