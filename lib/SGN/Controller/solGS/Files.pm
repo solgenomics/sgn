@@ -247,9 +247,11 @@ sub genotype_file_name {
  
     my $dir; 
 
-    if ($c->{stash}->{combo_pops_id} == $pop_id) 
+    my $combo_pops_id = $c->{stash}->{combo_pops_id};
+
+    if ($combo_pops_id && $combo_pops_id == $pop_id) 
     {
-	$pop_id = $c->{stash}->{combo_pops_id} . '_combined';
+	$pop_id = $pop_id . '_combined';
     }
     
     if ($pop_id =~ /list/) 
