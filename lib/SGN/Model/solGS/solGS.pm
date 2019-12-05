@@ -805,10 +805,10 @@ sub genotypes_list_genotype_data {
     my ($self, $genotypes_ids) = @_;
 
     my $protocol_id = $self->protocol_id();
-
+    
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
-	accessions => $genotypes_ids,
+	accession_list => $genotypes_ids,
 	protocol_id_list => [$protocol_id],
 	genotypeprop_hash_select=> ['DS'],
 	protocolprop_top_key_select=>[],
