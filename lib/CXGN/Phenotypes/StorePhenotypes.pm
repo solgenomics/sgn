@@ -198,15 +198,10 @@ sub create_hash_lookups {
     my $schema = $self->bcs_schema;
 
     #Find trait cvterm objects and put them in a hash
-
-    #trait list before map: Asparagine content measuring  mg per g DW|CO_331:0000796 Fructose content of raw storage roots percent|CO_331:0000292 Glucose content of raw storage roots percent|CO_331:0000293 Phenol content measuring  mg per g DW|CO_331:0000801 Starch content of raw storage roots percent|CO_331:0000291 Storage root dry matter content computing percent|CO_331:0000297 Sucrose content of raw storage roots percent|CO_331:0000294 Total Monomeric Anthocyanin content measuring  mg per g DW|CO_331:0000798
-#trait list after map:
-
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
-    print STDERR "trait list @trait_list\n";
-    #@trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra hash from trait validation
-    #print STDERR "trait list after map: @trait_list\n";
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
+    print STDERR "trait list after filtering @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -262,7 +257,8 @@ sub verify {
 
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra from trait validation
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
+    print STDERR Dumper \@trait_list;
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -270,7 +266,6 @@ sub verify {
     my $schema = $self->bcs_schema;
     my $transaction_error;
     # print STDERR Dumper \@plot_list;
-    # print STDERR Dumper \@trait_list;
     # print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
@@ -433,7 +428,7 @@ sub store {
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' || 'nirs' ? () : ($_) } @trait_list; # omit notes and nirs spectra so they can be handled separately
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes so they can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
@@ -600,9 +595,13 @@ sub store {
                         $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
                         $self->handle_operator($operator, $phenotype->phenotype_id);
 
-                        $experiment->create({
-                            nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
+                        $experiment->create_related('nd_experiment_phenotypes', {
+                            phenotype_id => $phenotype->phenotype_id
                         });
+
+                        # $experiment->find_or_create_related({
+                        #     nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
+                        # });
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
                         if ($image_id) {
