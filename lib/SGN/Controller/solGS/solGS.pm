@@ -638,8 +638,8 @@ sub project_description {
 
     $c->controller('solGS::Files')->traits_acronym_file($c, $pr_id);
     my $traits_file = $c->stash->{traits_acronym_file};
-    my @lines = read_file($traits_file);
-    my $traits_no = scalar(@lines) - 1;
+    my @traits_lines = read_file($traits_file);
+    my $traits_no = scalar(@traits_lines) - 1;
        
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
@@ -666,7 +666,7 @@ sub training_pop_member_count {
 	my $geno_file  = $c->stash->{genotype_file_name};
 	@geno_lines = read_file($geno_file);
     }
-    
+  
     my $count = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
 
     return $count;
@@ -719,7 +719,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     if ($training_pop_id =~ /list/) 
     {
 	$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
+	$c->controller('solGS::List')->list_population_summary($c);
 	$c->stash->{training_pop_id} = $c->stash->{project_id};
 	$c->stash->{training_pop_name} = $c->stash->{project_name};
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
@@ -749,7 +749,7 @@ sub selection_trait :Path('/solgs/selection/') Args(5) {
     {
 	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
 	
-	$c->controller('solGS::List')->list_population_summary($c, $selection_pop_id);
+	$c->controller('solGS::List')->list_population_summary($c);
 	$c->stash->{selection_pop_id} = $c->stash->{project_id};
 	$c->stash->{selection_pop_name} = $c->stash->{project_name};
 	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
@@ -1147,8 +1147,7 @@ sub predict_selection_pop_multi_traits {
 	my $identifier = $training_pop_id .'_' . $selection_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 
-	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};
-	
+	push @unpredicted_traits, $trait_id if !-s $c->stash->{rrblup_selection_gebvs_file};	
     }
 
     if (@unpredicted_traits)
@@ -1156,7 +1155,7 @@ sub predict_selection_pop_multi_traits {
 	$c->stash->{training_traits_ids} = \@unpredicted_traits;
 
 	$c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id);
-	
+
 	if (!-s $c->stash->{genotype_file_name}) 
 	{		
 	    $self->get_selection_pop_query_args_file($c);        
@@ -3752,7 +3751,7 @@ sub get_cluster_query_job_args {
 
 	my $pop_type = $query_args->{population_type};
 	my $data_type = 'genotype';
-	
+
 	nstore $query_args, $args_file 
 	    or croak "data query script: $! serializing model details to $args_file ";
 	
