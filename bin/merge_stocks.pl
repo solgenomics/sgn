@@ -58,8 +58,8 @@ my $file = shift;
 
 open(my $F, "<", $file) || die "Can't open file $file.\n";
 
-my $header = <$F>;
-print STDERR "Skipping header line $header\n";
+#my $header = <$F>;
+#print STDERR "Skipping header line $header\n";
 eval { 
     while (<$F>) { 
         print STDERR "Read line: $_\n";
