@@ -13,7 +13,6 @@ library(plyr)
 library(stringr)
 #library(lme4)
 library(randomForest)
-library(data.table)
 library(parallel)
 library(genoDataFilter)
 library(phenoAnalysis)
@@ -21,6 +20,8 @@ library(caret)
 library(dplyr)
 library(tibble)
 library(rlang)
+library(data.table)
+
 
 allArgs <- commandArgs()
 
