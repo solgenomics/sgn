@@ -116,7 +116,7 @@ sub observation_variable_ontologies {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Ontologies result constructed');
 }
 
-sub observation_variable_search {
+sub search {
 	my $self = shift;
 	my $inputs = shift;
 	my $c = shift;
