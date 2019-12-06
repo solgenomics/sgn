@@ -1264,6 +1264,16 @@ sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
     $c->stash->{rest} = { trial_tissue_samples => $data };
 }
 
+sub trial_phenotype_metadata : Chained('trial') PathPart('phenotype_metadata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $trial = $c->stash->{trial};
+    my $data = $trial->get_phenotype_metadata();
+
+    $c->stash->{rest} = { data => $data };
+}
+
 sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     my $self = shift;
     my $c = shift;
