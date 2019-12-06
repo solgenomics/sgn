@@ -11,6 +11,7 @@ Options:
 
  -H the database host
  -D the database name
+ -s add accession name from bad name as a synonym to good name
  -x flag; if present, delete the empty remaining accession
 
 mergefile.txt: A file with two columns:  bad name, good name.
@@ -31,9 +32,8 @@ use CXGN::DB::InsertDBH;
 use CXGN::DB::Schemas;
 use CXGN::Stock;
 
-
-our($opt_H, $opt_D, $opt_x);
-getopts('H:D:x');
+our($opt_H, $opt_D, $opt_x, $opt_s);
+getopts('H:D:x:s');
 
 
 print "Password for $opt_H / $opt_D: \n";
@@ -41,6 +41,7 @@ my $pw = (<STDIN>);
 chomp($pw);
 
 my $delete_merged_stock = $opt_x;
+my $add_synonym = $opt_s;
 
 print STDERR "Note: -x: Deleting stocks that have been merged into other stocks.\n";
 
@@ -63,28 +64,34 @@ open(my $F, "<", $file) || die "Can't open file $file.\n";
 eval { 
     while (<$F>) { 
         print STDERR "Read line: $_\n";
-	chomp;
-	my ($merge_stock_name, $good_stock_name) = split /\t/;
-	print STDERR "bad name: $merge_stock_name, good name: $good_stock_name\n";
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
-	if (!$stock_row) { 
-	    print STDERR "Stock $good_stock_name not found. Skipping...\n";
-	    
-	    next();
-	}
-	
-	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name } );
-	if (!$merge_row) { 
-	    print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
-	    next();
-	}
-	
-	my $good_stock = CXGN::Stock->new( { schema => $schema, stock_id => $stock_row->stock_id });
-	my $merge_stock = CXGN::Stock->new( { schema => $schema, stock_id => $merge_row->stock_id });
-	
-	print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
-	$good_stock->merge($merge_stock->stock_id(), $delete_merged_stock);
-	print STDERR "Done.\n";
+		chomp;
+		my ($merge_stock_name, $good_stock_name) = split /\t/;
+		print STDERR "bad name: $merge_stock_name, good name: $good_stock_name\n";
+		my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
+		if (!$stock_row) { 
+			print STDERR "Stock $good_stock_name not found. Skipping...\n";
+			
+			next();
+		}
+		
+		my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name } );
+		if (!$merge_row) { 
+			print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
+			next();
+		}
+		
+		my $good_stock = CXGN::Stock->new( { schema => $schema, stock_id => $stock_row->stock_id });
+		my $merge_stock = CXGN::Stock->new( { schema => $schema, stock_id => $merge_row->stock_id });
+		
+		print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
+		$good_stock->merge($merge_stock->stock_id(), $delete_merged_stock);
+		#add $merge_stock_name as a synonym of $good_stock_name if option -s was used
+		if ($add_synonym) {
+			print STDERR "Adding new synonym\n";
+			my $add_syn = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
+			$add_syn->create_stockprops({ stock_synonym => $merge_stock_name }, { autocreate => 0, allow_duplicate_values=> 1 });
+		}
+		print STDERR "Done.\n";
     }
     
 };
