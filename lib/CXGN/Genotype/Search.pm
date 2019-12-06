@@ -905,6 +905,7 @@ sub get_next_genotype_info {
         $info->{all_protocol_marker_names} = \@all_protocol_marker_names;
         $info->{selected_protocol_hash} = $selected_protocol_info;
         $info->{germplasmDbId} = $germplasmDbId;
+	$info->{germplasmName} = $germplasmName;
         return ($full_count, $info);
 
     }

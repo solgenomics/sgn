@@ -128,9 +128,9 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 
 sub trait_acronyms {
     my ($self, $c) = @_;
-    
+       
     $c->controller('solGS::solGS')->get_all_traits($c);
-    $c->controller('solGS::solGS')->get_acronym_pairs($c);
+    $c->controller('solGS::solGS')->get_acronym_pairs($c, $c->stash->{pop_id});
     
 }
 

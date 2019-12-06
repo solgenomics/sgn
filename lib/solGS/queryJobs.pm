@@ -17,42 +17,39 @@ use SGN::Model::solGS::solGS;
 use SGN::Controller::solGS::solGS;
 use SGN::Controller::solGS::List;
 
+
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
 
 
-has "data_type" => (
+has 'data_type' => (
     is       => 'ro',
     isa      => 'Str',
     required => 1, 
     );
 
 
-has "population_type" => (
+has 'population_type' => (
     is       => 'ro',
     isa      => 'Str',
     required => 1, 
     );
 
-has "args_file" => (
+has 'args_file' => (
      is       => 'ro',
      isa      => 'Str',
      required => 1, 
- );
+    );
 
-
+has 'check_data_exists' => (
+    is => 'ro',
+    isa => 'Num',
+    required => 0,
+    );
 
 
 sub run {
     my $self = shift;
-    
-    my $args_file  = $self->args_file;
-    my $data_type  = $self->data_type;
-    my $pop_type   = $self->population_type;
-  
-    print STDERR "\nrun data type: $data_type\n";
-    print STDERR "\nrun pop type: $pop_type\n";
-    print STDERR "\nrun report file: $args_file\n";
    
     if  ($self->population_type =~ /trial/) {
 	if ($self->data_type =~ /phenotype/) {
@@ -83,19 +80,40 @@ sub trial_genotype_data {
     my $self = shift;
 
     my $args       = retrieve($self->args_file);
-
     my $geno_file  = $args->{genotype_file}; 
-    my $pop_id     = ($args->{selection_pop_id} ? $args->{selection_pop_id} : $args->{training_pop_id});
-
     my $model = $self->get_model();
 					      
-    my $geno_data = $model->genotype_data($args);
+    my $search_obj = $model->genotype_data($args->{trial_id}); 
+    $self->write_geno_data($model, $search_obj, $geno_file);
    
-    if ($geno_data)
+}
+
+
+sub write_geno_data {
+    my ($self, $model, $search_obj, $file) = @_;
+ 
+    my $exists = $self->check_data_exists;
+    my $count = 0;
+    my $marker_headers;
+   
+    while (my $geno = $search_obj->get_next_genotype_info()) 
     {
-	write_file($geno_file, $geno_data);
+	$count++;	
+	if ($count == 1)
+	{
+	    my $geno_hash = $geno->{selected_genotype_hash};
+	    $marker_headers = $model->get_dataset_markers($geno_hash);
+	}
+
+	my $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
+	write_file($file, {append => 1}, $$geno_data);
+
+	if ($self->check_data_exists) 
+	{	    
+	    last if $$geno_data;
+	}
     }
-    
+
 }
 
 
@@ -109,8 +127,7 @@ sub trial_phenotype_data {
     my $traits_file = $args->{traits_list_file};
     my $metadata_file = $args->{metadata_file};
 
-    my $model = $self->get_model();
-   
+    my $model = $self->get_model();   
     my $pheno_data = $model->phenotype_data($pop_id);
     my $metadata   = $model->trial_metadata();
 
@@ -127,18 +144,13 @@ sub trial_phenotype_data {
 sub genotypes_list_genotype_data {
     my $self = shift;
     
-    my $args = retrieve($self->args_file);
-    
-   # my $list_pop_id   = $args->{model_id} || $args->{list_pop_id} || $args->{selection_pop_id};
-   # my $genotypes     = $args->{genotypes_list};
+    my $args = retrieve($self->args_file);    
     my $genotypes_ids = $args->{genotypes_ids};
-    my $data_dir      = $args->{data_dir};
-    my $geno_file     = $args->{genotype_file};
-
+    
     my $model = $self->get_model();
-   
-    my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids);
-    write_file($geno_file, $geno_data);
+    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids);
+    my $geno_file     = $args->{genotype_file};
+    $self->write_geno_data($model, $search_obj, $geno_file);
 
 }
 
@@ -175,12 +187,10 @@ sub dataset_genotype_data {
 
     if ($dataset_id)
     {
-    my $geno_file = $args->{genotype_file};
-
-    my $model = $self->get_model();  
-    my $geno_data = $model->get_dataset_genotype_data($dataset_id);
-    
-    write_file($geno_file, $geno_data);
+	my $model = $self->get_model();
+	my $search_obj = $model->get_dataset_genotype_data($dataset_id);
+	my $geno_file = $args->{genotype_file};
+	$self->write_geno_data($model, $search_obj, $geno_file);
     } 
     elsif ($args->{genotypes_ids})
     {
