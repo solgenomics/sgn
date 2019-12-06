@@ -50,23 +50,27 @@ sub genotyping_data_search_GET : Args(0) {
         limit => $limit,
         offset => $offset
     });
-    my ($total_count, $data) = $genotypes_search->get_genotype_info();
+    $genotypes_search->init_genotype_iterator();
+    # my ($total_count, $data) = $genotypes_search->get_genotype_info();
 
     my @result;
-    foreach (@$data){
-        my $synonym_string = scalar(@{$_->{synonyms}})>0 ? join ',', @{$_->{synonyms}} : '';
+    my $total_count;
+    while (my ($full_count, $g) = $genotypes_search->get_next_genotype_info()) {
+        $total_count = $full_count;
+        my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
         push @result,
           [
-            "<a href=\"/breeders_toolbox/protocol/$_->{analysisMethodDbId}\">$_->{analysisMethod}</a>",
-            "<a href=\"/stock/$_->{stock_id}/view\">$_->{stock_name}</a>",
-            $_->{stock_type_name},
-            "<a href=\"/stock/$_->{germplasmDbId}/view\">$_->{germplasmName}</a>",
+            "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
+            "<a href=\"/stock/$g->{stock_id}/view\">$g->{stock_name}</a>",
+            $g->{stock_type_name},
+            "<a href=\"/stock/$g->{germplasmDbId}/view\">$g->{germplasmName}</a>",
             $synonym_string,
-            $_->{genotypeDescription},
-            $_->{resultCount},
-            $_->{igd_number},
-            "<a href=\"/stock/$_->{stock_id}/genotypes?genotypeprop_id=$_->{markerProfileDbId}\">Download</a>"
+            $g->{genotypeDescription},
+            $g->{resultCount},
+            $g->{igd_number},
+            "<a href=\"/stock/$g->{stock_id}/genotypes?genotypeprop_id=$g->{markerProfileDbId}\">Download</a>"
           ];
+        undef $g;
     }
     #print STDERR Dumper \@result;
 
