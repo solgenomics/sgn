@@ -13,7 +13,7 @@ Options:
  -D the database name
  -x flag; if present, delete the empty remaining accession
 
-mergefile.txt: A file with three columns:  bad name, good name.
+mergefile.txt: A file with two columns:  bad name, good name.
 
 All the metadata of bad name will be transferred to good name.
 If -x is used, stock with name bad name will be deleted.
