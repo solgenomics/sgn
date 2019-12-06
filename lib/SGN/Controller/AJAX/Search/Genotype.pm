@@ -55,8 +55,8 @@ sub genotyping_data_search_GET : Args(0) {
 
     my @result;
     my $total_count;
-    while (my ($total_count, $g) = $genotypes_search->get_next_genotype_info()) {
-        print STDERR Dumper $g;
+    while (my ($full_count, $g) = $genotypes_search->get_next_genotype_info()) {
+        $total_count = $full_count;
         my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
         push @result,
           [
@@ -70,6 +70,7 @@ sub genotyping_data_search_GET : Args(0) {
             $g->{igd_number},
             "<a href=\"/stock/$g->{stock_id}/genotypes?genotypeprop_id=$g->{markerProfileDbId}\">Download</a>"
           ];
+        undef $g;
     }
     #print STDERR Dumper \@result;
 
