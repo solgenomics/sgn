@@ -217,7 +217,7 @@ export function init(main_div){
     var analysis_type;
     $('#save_analysis_dialog').on('show.bs.modal', function(e) {
 	analysis_type = e.relatedTarget.dataset.analysis_type;
-	alert(analysis_type);
+	//alert(analysis_type);
 	$('#analysis_type').val(analysis_type);
     });
 
@@ -229,7 +229,7 @@ export function init(main_div){
 	var analysis_type = $('#analysis_type').val();
 	//alert("analysis type"+analysis_type);
 	var final_filename = basename+"."+analysis_type;
-	alert(final_filename);
+	//alert(final_filename);
 	
 	var selected_datasets = $('#available_datasets').val();
 
@@ -268,7 +268,7 @@ export function init(main_div){
     $('#save_adjusted_means_button').click( function() {
 	var name = $('#analysis_name').val();
 	var file = $('#tempfile').html();
-	alert("Everything worked! Woohoo!" + file + " " +name);
+	alert("Successfully saved analysis results. (" + file + " " +name+")");
     });
 
     $('#mixed_model_analysis_prepare_button').click( function() {
@@ -459,7 +459,7 @@ export function init(main_div){
    });
 
     $('#run_mixed_model_button').click( function() {
-	alert("RUNNING!");
+	//alert("RUNNING!");
         var model = $('#model_string').text();
 	var fixed_factors = parse_simple_factors("fixed_factors");
 	var random_factors = parse_simple_factors("random_factors");;
@@ -658,7 +658,7 @@ function get_dataset_id() {
 		    alert(error);
 		}
 		else {
-		    alert(r.model);
+		    //alert(r.model);
 		    jQuery('#model_string').text(r.model);
 		}
 	    }
