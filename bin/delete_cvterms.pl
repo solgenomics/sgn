@@ -76,7 +76,7 @@ my $coderef = sub {
     	my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $db_cvterm_name, cv_id => $cv->cv_id() });
 	
 	if ($opt_t) { 
-	    my $phenotypes = $schema->resultset('Phenotype::Phenotype')->find( { cvalue_id => $cvterm->cvterm_id(); });
+	    my $phenotypes = $schema->resultset('Phenotype::Phenotype')->find( { cvalue_id => $cvterm->cvterm_id() });
 	    print STDERR $cvterm->name()."\t".$phenotypes->count()."\n";
 	}
 										 
