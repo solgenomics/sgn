@@ -79,19 +79,21 @@ my $coderef = sub {
 	    my $phenotypes = $schema->resultset('Phenotype::Phenotype')->find( { cvalue_id => $cvterm->cvterm_id() });
 	    print STDERR $cvterm->name()."\t".$phenotypes->count()."\n";
 	}
-										 
-	my $dbxref = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
-
-	# check if the dbxref is referenced by other cvterms, only delete
-	# if it's only referenced by this one term
-	#
-	my $dbxref_count_rs = $schema->resultset('Cv::Cvterm')->search( { dbxref_id=> $cvterm->dbxref_id() });
-
-	if ($dbxref_count_rs->count() == 1) {
-	    $dbxref->delete();
+	else { 
+	    my $dbxref = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
+	    
+	    # check if the dbxref is referenced by other cvterms, only delete
+	    # if it's only referenced by this one term
+	    #
+	    my $dbxref_count_rs = $schema->resultset('Cv::Cvterm')->search( { dbxref_id=> $cvterm->dbxref_id() });
+	    
+	    if ($dbxref_count_rs->count() == 1) {
+		$dbxref->delete();
+	    }
+	    my $name = $cvterm->name();
+	    $cvterm->delete();
+	    print STDERR "Deleted term $name\n";
 	}
-
-	$cvterm->delete();
     }
 };
 
