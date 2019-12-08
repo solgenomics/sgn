@@ -32,11 +32,11 @@ solGS.waitPage = function (page, args) {
 	if (page.match(multiTraitsUrls)) {
 	    getTraitsSelectionId(page, args);	    
 	} else {
-	    if (page.match(/list_/)) {
-		askUser(page, args)
-	    } else {
+	    //if (page.match(/list_/)) {
+	//	askUser(page, args)
+	   // } else {
 		checkCachedResult(page, args);
-	    }
+	   // }
 	}
     }
     else {
@@ -270,11 +270,11 @@ solGS.waitPage = function (page, args) {
 		var traitsSelectionId = res.traits_selection_id;
 		page = page  + '/traits/' + traitsSelectionId;
 		
-		if (page.match(/list_/)) {
-		    askUser(page, args)
-		} else {	    
+		//if (page.match(/list_/)) {
+		//    askUser(page, args)
+		//} else {	    
 		    checkCachedResult(page, args);
-		}		
+		//}		
 	    },
 	    error: function (res, st, error) {
 		alert('error: ' + error)
@@ -297,12 +297,12 @@ solGS.waitPage = function (page, args) {
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    solGS.combinedTrials.displayCombinedTrialsTrainingPopPage(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
-	    if (page.match(/solgs\/population\/list_/)) {
-		var listId = args.list_id;
-		loadPlotListTypeTrainingPop(listId);  
-	    } else {
+	    // if (page.match(/solgs\/population\/list_/)) {
+	    // 	var listId = args.list_id;
+	    // 	loadPlotListTypeTrainingPop(listId);  
+	    // } else {
 		window.location = page;
-	    }	   
+	   // }	   
 	} else if (page.match(/solgs\/model\//)) {	    
 	    if (page.match(/solgs\/model\/\d+\/prediction\/\w+_|solgs\/model\/\w+_\d+\/prediction\/\w+_/)) {	
 		loadGenotypesListTypeSelectionPop(args);
@@ -411,6 +411,7 @@ solGS.waitPage = function (page, args) {
 			    
 			    saveAnalysisProfile(analysisProfile);
 			},
+			id   :'submit_job',
 			class: 'btn btn-success',
 			text: 'Submit'
 		    },

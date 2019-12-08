@@ -240,7 +240,6 @@ sub get_genotypes_list_details {
    
     my @genotypes_names = uniq(@$genotypes_names);
     my $genotypes_ids = $self->transform_genotypes_unqiueids($c, \@genotypes_names);
-    
 
     $c->stash->{genotypes_list} = $genotypes_names;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
@@ -910,7 +909,7 @@ sub list_population_summary {
     my $list_id = $c->stash->{list_id};
     my $file_id =  $self->list_file_id($c);	
     my $tmp_dir = $c->stash->{solgs_lists_dir};
-   
+
     if (!$c->user)
     {
 	my $page = "/" . $c->req->path;
@@ -930,17 +929,17 @@ sub list_population_summary {
 	    my @metadata = read_file($metadata_file);
 
 	    
-	    my ($key, $list_name, $desc);
+	    my ($key, $desc);
      
 	    ($desc)        = grep {/description/} @metadata;       
 	    ($key, $desc)  = split(/\t/, $desc);
-      
-	    ($list_name)       = grep {/list_name/} @metadata;      
-	    ($key, $list_name) = split(/\t/, $list_name); 
-
+	   
+	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	    my $list_name = $list->name;
+	  
 	    $c->stash(project_id          => $file_id,
 		      project_name        => $list_name,
-		      prediction_pop_name => $list_name,
+		      selection_pop_name  => $list_name,
 		      project_desc        => $desc,
 		      owner               => $user_name,
 		      protocol            => $protocol,
