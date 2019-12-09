@@ -3,13 +3,21 @@
 package CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 
 use Moose;
+use Try::Tiny;
 
 extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';
 
 sub BUILD {   # adjust the cvterm ids for phenotyping trials
     my $self = shift;
 
-
+    print STDERR "PhenotypingTrial BUILD setting stock type id etc....\n";
+    my @source_stock_types;
+    $self->set_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($self->get_bcs_schema(), 'field_layout', 'experiment_type')->cvterm_id());
+    $self->set_stock_type_id($self->get_plot_cvterm_id);
+    $self->set_stock_relationship_type_id($self->get_plot_of_cvterm_id);
+    @source_stock_types = ($self->get_accession_cvterm_id);
+    $self->set_source_stock_types(\@source_stock_types);
+    
 }
 
 sub validate_design {
@@ -106,11 +114,11 @@ sub validate_design {
     if(scalar(@accession_names)<1){
         $error .= "You cannot create a trial with less than one accession.";
     }
-    my $subplot_type_id = $self->subplot_cvterm_id();      #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
-    my $accession_type_id = $self->accession_cvterm_id();  #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
-    my $plot_type_id = $self->plot_cvterm_id();            #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
-    my $plant_type_id = $self->plant_cvterm_id();          #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
-    my $tissue_type_id = $self->tissue_sample_cvterm_id(); #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $subplot_type_id = $self->get_subplot_cvterm_id();      #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
+    my $accession_type_id = $self->get_accession_cvterm_id();  #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_type_id = $self->get_plot_cvterm_id();            #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = $self->get_plant_cvterm_id();          #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+    my $tissue_type_id = $self->get_tissue_sample_cvterm_id(); #SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $stocks = $chado_schema->resultset('Stock::Stock')->search({
         type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
         uniquename=>{-in=>\@stock_names}
@@ -129,7 +137,7 @@ sub validate_design {
 #    if ($self->get_is_genotyping) {
 #        @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
 #    } else {
-        @source_stock_types = ($accession_type_id);
+    my @source_stock_types = @{$self->get_source_stock_types()};
 #    }
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },

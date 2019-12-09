@@ -1,6 +1,21 @@
 
+=head1 NAME
+
+CXGN::Trial::TrialDesignStore::AbstractTrial - a class to provide function in common to all subclasses of trial store objects.
+
+=cut
 
 package CXGN::Trial::TrialDesignStore::AbstractTrial;
+
+use Moose;
+use MooseX::FollowPBP;
+use Try::Tiny;
+
+=head1 ACCESSORS
+
+=head2 bcs_schema()
+
+=cut
 
 has 'bcs_schema' => (
     is       => 'rw',
@@ -9,42 +24,164 @@ has 'bcs_schema' => (
     required => 1,
 );
 
+=head2 set_trial_id(), get_trial_id()
+
+The trial id, which essentially is a project_id.
+
+=cut
+
 has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', required => 1);
+
+=head2 set_trial_name(), get_trial_name()
+
+The name of the trial. Should be unique in the database.
+
+=cut
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0);
 
+=head2 set_nd_experiment_id(), get_nd_experiment_id(), has_nd_experiment_id()
+
+The nd_experiment_id of the associated design data.
+
+=cut
+
 has 'nd_experiment_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_experiment_id', required => 0);
+
+=head2 set_nd_geolocation_id(), get_nd_geolocation_id(), has_nd_geolocation_id()
+
+The nd_geolocation_id of this trial (globally, not individiual plots etc). Required.
+
+=cut
 
 has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolocation_id', required => 1);
 
+=head2 set_design_type(), get_design_type(), has_design_type()
+
+The type of the design. CBSD, etc. Required.
+
+=cut
+
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
+
+=head2 set_design(), get_design(), has_design()
+
+The Perl design data structure.
+
+=cut
 
 has 'design' => (isa => 'HashRef[HashRef]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 
+=head2 set_is_genotyping(), get_is_genotyping()
+
+Whether this is a genotyping experiment. (deprecated; rather, check the object type).
+
+=cut
+
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
-has 'layout_type' => (isa => 'Str', is => 'rw', default => "phentoyping_trial"); # either field_trial, genotyping_trial, or analysis
+
+=head2 set_stock_exist(), get_stock_exist()
+
+If the stocks in the design were checked and whether the check passed. Internal use only.
+
+=cut
 
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
+=head2 set_new_treatment_has_plant_entries(), get_new_treatment_has_plant_entries()
+
+Whether this treatment has plant entries.
+
+=cut
+
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+
+=head2 set_new_treatment_has_subplot_entries(), get_new_treatment_has_subplot_entries()
+
+Whether this treatment has subplot entries.
+
+=cut
 
 has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
+=head2 set_new_treatment_has_tissue_sample_entries(), get_new_treatment_has_tissue_sample_entries()
+
+Whether this treatment has tissue_sample entries.
+
+=cut
+
 has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+
+=head2 set_new_treatment_date, get_new_treatment_date()
+
+A new treatment date.
+
+=cut
 
 has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
+=head2 set_new_treatment_year, get_new_treatment_year()
+
+A new treatment year.
+
+=cut
+
+
 has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+
+=head2 set_new_treatment_type, get_new_treatment_type()
+
+A new treatment type.
+
+=cut
 
 has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
+=head2 set_operator(), get_operator()
+
+An name for an operator performing the action.
+
+=cut
+
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
 
+=head1 set_source_stock_types(), get_source_stock_types()
+
+
+
+=cut
+
+has 'source_stock_types' => (isa => 'ArrayRef', is => 'rw');    
+
+=head1 CVTERM accessors
+
+=head2 set_nd_experiment_type_id(), get_nd_experiment_type_id()
+
+The experiment type id for the trial category. 
+The values are:
+xxx for field trials
+yyy for genotyping trials
+zzz for analyses
+
+=cut
+    
 has 'nd_experiment_type_id' => (isa => 'Int', is => 'rw');
+
+=head2 set_stock_relationship_type_id(), get_stock_relationship_type_id()
+
+The stock_relationship_type_id of the elements in the design.
+
+=cut
 
 has 'stock_relationship_type_id' => (isa => 'Int', is => 'rw');
 
+=head2 set_stock_type_id(), get_stock_type_id()
+
+The stock type_id of the elements in the design.
+
+=cut
+    
 has 'stock_type_id' => (isa => 'Int', is => 'rw');
 
 has 'seedlot_cvterm_id'  => (isa => 'Int', is => 'rw');
@@ -57,7 +194,7 @@ has 'tissue_sample_of_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'plot_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'lot_of_cvterm_id' => (isa => 'Int', is => 'rw');
+has 'plot_of_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'plant_cvterm_id' => (isa => 'Int', is => 'rw');
 
@@ -76,6 +213,7 @@ has 'plant_index_number_cvterm_id' => (isa => 'Int', is => 'rw');
 has 'replicate_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'block_cvterm_id' => (isa => 'Int', is => 'rw');
+
 has 'plot_number_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'is_control_cvterm_id' => (isa => 'Int', is => 'rw');
@@ -124,44 +262,84 @@ has 'has_tissues_cvterm' => (isa => 'Int', is => 'rw');
 
 sub BUILD {
     my $self = shift;
-    $self->seedlot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id());
-    $self->accession_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id());
-    $self->tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
-    $self->tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
-    $self->plot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id());
-    $self->plot_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id());
-    $self->plant_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id());
-    $self->subplot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id());
-    $self->subplot_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship')->cvterm_id());
-    $self->plant_of_subplot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id());
-    $self->subplot_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_index_number', 'stock_property')->cvterm_id());
-    $self->plant_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id());
-    $self->plant_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id());
-    $self->replicate_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id());
-    $self->block_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id());
-    $self->plot_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id());
-    $self->is_control_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is a control', 'stock_property')->cvterm_id());
-    $self->range_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property')->cvterm_id());
-    $self->row_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id());
-    $self->col_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id());
-    $self->is_blank_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is_blank', 'stock_property')->cvterm_id());
-    $self->concentration_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'concentration', 'stock_property')->cvterm_id());
-    $self->volume_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'volume', 'stock_property')->cvterm_id());
-    $self->dna_person_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'dna_person', 'stock_property')->cvterm_id());
-    $self->extraction_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'extraction', 'stock_property')->cvterm_id());
-    $self->tissue_type_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property')->cvterm_id());
-    $self->acquisition_date_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'acquisition date', 'stock_property')->cvterm_id());
-    $self->ncbi_taxonomy_id_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id());
-    $self->notes_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property')->cvterm_id());
-    $self->treatment_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id());
-    $self->project_design_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property')->cvterm_id());
-    $self->management_factor_year_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property')->cvterm_id());
-    $self->management_factor_date_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_date', 'project_property')->cvterm_id());
-    $self->management_factor_type_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_type', 'project_property')->cvterm_id());
-    $self->trial_treatment_relationship_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id());
-    $self->has_plants_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id());
-    $self->has_subplots_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id());
-    $self->has_tissues_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id());
+    my $chado_schema = $self->get_bcs_schema();
+    
+    $self->set_seedlot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id());
+    
+    $self->set_accession_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id());
+    
+    $self->set_tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
+    
+    $self->set_tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
+    
+    $self->set_plot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id());
+    
+    $self->set_plot_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id());
+    
+    $self->set_plant_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id());
+    
+    $self->set_subplot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id());
+    
+    $self->set_subplot_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship')->cvterm_id());
+    
+    $self->set_plant_of_subplot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship')->cvterm_id());
+    
+    $self->set_subplot_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_index_number', 'stock_property')->cvterm_id());
+    
+    $self->set_plant_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id());
+    
+    $self->set_plant_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id());
+    
+    $self->set_replicate_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id());
+    
+    $self->set_block_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id());
+    
+    $self->set_plot_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id());
+    
+    $self->set_is_control_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is a control', 'stock_property')->cvterm_id());
+    
+    $self->set_range_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property')->cvterm_id());
+    
+    $self->set_row_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id());
+    
+    $self->set_col_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id());
+    
+    $self->set_is_blank_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is_blank', 'stock_property')->cvterm_id());
+    
+    $self->set_concentration_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'concentration', 'stock_property')->cvterm_id());
+    
+    $self->set_volume_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'volume', 'stock_property')->cvterm_id());
+    
+    $self->set_dna_person_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'dna_person', 'stock_property')->cvterm_id());
+    
+    $self->set_extraction_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'extraction', 'stock_property')->cvterm_id());
+    
+    $self->set_tissue_type_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property')->cvterm_id());
+    
+    $self->set_acquisition_date_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'acquisition date', 'stock_property')->cvterm_id());
+    
+    $self->set_ncbi_taxonomy_id_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id());
+    
+    $self->set_notes_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property')->cvterm_id());
+    
+    $self->set_treatment_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id());
+    
+    $self->set_project_design_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property')->cvterm_id());
+    
+    $self->set_management_factor_year_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property')->cvterm_id());
+    
+    $self->set_management_factor_date_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_date', 'project_property')->cvterm_id());
+    
+    $self->set_management_factor_type_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_type', 'project_property')->cvterm_id());
+    
+    $self->set_trial_treatment_relationship_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id());
+    
+    $self->set_has_plants_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id());
+    
+    $self->set_has_subplots_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id());
+    
+    $self->set_has_tissues_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id());
+    
 }
 
 sub validate_design {
@@ -178,22 +356,22 @@ sub store {
     my $nd_geolocation_id = $self->get_nd_geolocation_id;
 
 
-    my $nd_experiment_type_id;
-    my $stock_type_id;
-    my $stock_rel_type_id;
-    my @source_stock_types;
-    if (!$self->get_is_genotyping) {
-        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        $stock_type_id = $plot_cvterm_id;
-        $stock_rel_type_id = $plot_of_cvterm_id;
-        @source_stock_types = ($accession_cvterm_id);
-    } else {
-        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
-        $stock_type_id = $tissue_sample_cvterm_id;
-        $stock_rel_type_id = $tissue_sample_of_cvterm_id;
-        @source_stock_types = ($accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id);
-    }
+    my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
+    my $stock_type_id = $self->get_stock_type_id();
+    my $stock_rel_type_id = $self->get_stock_relationship_type_id();
+ 
+    my @source_stock_types = @{$self->get_source_stock_types()};
+#    my @source_stock_types = ($self->get_accession_cvterm_id);
+#    } 
+#   else {
+#        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+#        $stock_type_id = $self->get_tissue_sample_cvterm_id;
+        $stock_rel_type_id = $self->get_tissue_sample_of_cvterm_id;
+#        @source_stock_types = ($self->get_accession_cvterm_id, $self->get_plot_cvterm_id, $self->get_plant_cvterm_id, $self->get_tissue_sample_cvterm_id);
+#    }
 
+    print STDERR "!!!!!! stock rel type id = $stock_rel_type_id, stock type_id = $stock_type_id\n";
+    
     #$chado_schema->storage->debug(1);
     my $nd_experiment_id;
     if ($self->has_nd_experiment_id){
@@ -203,8 +381,8 @@ sub store {
         my $nd_experiment_project_rs = $chado_schema->resultset('NaturalDiversity::NdExperimentProject')->search(
             {
                 'me.project_id'=>$trial_id,
-                'nd_experiment.type_id'=>$nd_experiment_type_id,
-                'nd_experiment.nd_geolocation_id'=>$nd_geolocation_id
+                'nd_experiment.type_id'=>$self->get_nd_experiment_type_id,
+                'nd_experiment.nd_geolocation_id'=>$self->get_nd_geolocation_id
             },
             { join => 'nd_experiment'}
         );
@@ -215,7 +393,7 @@ sub store {
                 nd_geolocation_id => $self->get_nd_geolocation_id,
                 type_id => $nd_experiment_type_id,
             });
-            $nd_experiment_project = $nd_experiment->find_or_create_related('nd_experiment_projects', {project_id => $trial_id} );
+            $nd_experiment_project = $nd_experiment->find_or_create_related('nd_experiment_projects', {project_id => $self->get_trial_id} );
         } elsif ($nd_experiment_project_rs->count > 1) {
             print STDERR "ERROR: More than one nd_experiment of type=$nd_experiment_type_id for project=$trial_id\n";
             $nd_experiment_project = $nd_experiment_project_rs->first;
@@ -245,7 +423,7 @@ sub store {
 
     my $seedlot_rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },
-        'type_id' => $seedlot_cvterm_id,
+        'type_id' => $self->get_seedlot_cvterm_id,
         'uniquename' => {-in=>\@seen_seedlots}
     });
     my %seedlot_data;
@@ -396,7 +574,7 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                $parent_stock = $stock_lookup->get_stock($accession_cvterm_id);
+                $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id);
 
                 if (!$parent_stock) {
                     die ("Error while saving trial layout: no stocks found matching $stock_name");
@@ -412,48 +590,48 @@ sub store {
             my $new_plot_id;
             if ($plot_name) {
                 my @plot_stock_props = (
-                    { type_id => $replicate_cvterm_id, value => $rep_number },
-                    { type_id => $block_cvterm_id, value => $block_number },
-                    { type_id => $plot_number_cvterm_id, value => $plot_number }
+                    { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
+                    { type_id => $self->get_block_cvterm_id, value => $block_number },
+                    { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                 );
                 if ($is_a_control) {
-                    push @plot_stock_props, { type_id => $is_control_cvterm_id, value => $is_a_control };
+                    push @plot_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                 }
                 if ($range_number) {
-                    push @plot_stock_props, { type_id => $range_cvterm_id, value => $range_number };
+                    push @plot_stock_props, { type_id => $self->get_range_cvterm_id, value => $range_number };
                 }
                 if ($row_number) {
-                    push @plot_stock_props, { type_id => $row_number_cvterm_id, value => $row_number };
+                    push @plot_stock_props, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                 }
                 if ($col_number) {
-                    push @plot_stock_props, { type_id => $col_number_cvterm_id, value => $col_number };
+                    push @plot_stock_props, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                 }
                 if ($well_is_blank) {
-                    push @plot_stock_props, { type_id => $is_blank_cvterm_id, value => $well_is_blank };
+                    push @plot_stock_props, { type_id => $self->get_is_blank_cvterm_id, value => $well_is_blank };
                 }
                 if ($well_concentration) {
-                    push @plot_stock_props, { type_id => $concentration_cvterm_id, value => $well_concentration };
+                    push @plot_stock_props, { type_id => $self->get_concentration_cvterm_id, value => $well_concentration };
                 }
                 if ($well_volume) {
-                    push @plot_stock_props, { type_id => $volume_cvterm_id, value => $well_volume };
+                    push @plot_stock_props, { type_id => $self->get_volume_cvterm_id, value => $well_volume };
                 }
                 if ($well_extraction) {
-                    push @plot_stock_props, { type_id => $extraction_cvterm_id, value => $well_extraction };
+                    push @plot_stock_props, { type_id => $self->get_extraction_cvterm_id, value => $well_extraction };
                 }
                 if ($well_tissue_type) {
-                    push @plot_stock_props, { type_id => $tissue_type_cvterm_id, value => $well_tissue_type };
+                    push @plot_stock_props, { type_id => $self->get_tissue_type_cvterm_id, value => $well_tissue_type };
                 }
                 if ($well_dna_person) {
-                    push @plot_stock_props, { type_id => $dna_person_cvterm_id, value => $well_dna_person };
+                    push @plot_stock_props, { type_id => $self->get_dna_person_cvterm_id, value => $well_dna_person };
                 }
                 if ($acquisition_date) {
-                    push @plot_stock_props, { type_id => $acquisition_date_cvterm_id, value => $acquisition_date };
+                    push @plot_stock_props, { type_id => $self->get_acquisition_date_cvterm_id, value => $acquisition_date };
                 }
                 if ($notes) {
-                    push @plot_stock_props, { type_id => $notes_cvterm_id, value => $notes };
+                    push @plot_stock_props, { type_id => $self->get_notes_cvterm_id, value => $notes };
                 }
                 if ($ncbi_taxonomy_id) {
-                    push @plot_stock_props, { type_id => $ncbi_taxonomy_id_cvterm_id, value => $ncbi_taxonomy_id };
+                    push @plot_stock_props, { type_id => $self->get_ncbi_taxonomy_id_cvterm_id, value => $ncbi_taxonomy_id };
                 }
 
                 my @plot_subjects;
@@ -463,11 +641,11 @@ sub store {
                 push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $stock_id_checked };
 
                 # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
-                if ($stock_type_checked == $plot_cvterm_id){
+                if ($stock_type_checked == $self->get_plot_cvterm_id){
                     my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$plot_of_cvterm_id,
-                        'object.type_id'=>$accession_cvterm_id
+                        'me.type_id'=>$self->get_plot_of_cvterm_id,
+                        'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => 'object'});
                     if ($parent_plot_accession_rs->count > 1){
                         die "Plot $stock_id_checked is linked to more than one accession!\n"
@@ -477,11 +655,11 @@ sub store {
                     }
                 }
                 # For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
-                if ($stock_type_checked == $plant_cvterm_id){
+                if ($stock_type_checked == $self->get_plant_cvterm_id){
                     my $parent_plant_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$plant_of_cvterm_id,
-                        'object.type_id'=>$accession_cvterm_id
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => "object"});
                     if ($parent_plant_accession_rs->count > 1){
                         die "Plant $stock_id_checked is linked to more than one accession!\n"
@@ -491,8 +669,8 @@ sub store {
                     }
                     my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$plant_of_cvterm_id,
-                        'object.type_id'=>$plot_cvterm_id
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'object.type_id'=>$self->get_plot_cvterm_id
                     }, {join => "object"});
                     if ($parent_plot_of_plant_rs->count > 1){
                         die "Plant $stock_id_checked is linked to more than one plot!\n"
@@ -502,11 +680,11 @@ sub store {
                     }
                 }
                 # For genotyping plate, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
-                if ($stock_type_checked == $tissue_sample_cvterm_id){
+                if ($stock_type_checked == $self->get_tissue_sample_cvterm_id){
                     my $parent_tissue_sample_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$tissue_sample_of_cvterm_id,
-                        'object.type_id'=>$accession_cvterm_id
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => "object"});
                     if ($parent_tissue_sample_accession_rs->count > 1){
                         die "Tissue_sample $stock_id_checked is linked to more than one accession!\n"
@@ -516,8 +694,8 @@ sub store {
                     }
                     my $parent_plot_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$tissue_sample_of_cvterm_id,
-                        'object.type_id'=>$plot_cvterm_id
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_plot_cvterm_id
                     }, {join => "object"});
                     if ($parent_plot_of_tissue_sample_rs->count > 1){
                         die "Tissue_sample $stock_id_checked is linked to more than one plot!\n"
@@ -527,8 +705,8 @@ sub store {
                     }
                     my $parent_plant_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
-                        'me.type_id'=>$tissue_sample_of_cvterm_id,
-                        'object.type_id'=>$plant_cvterm_id
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_plant_cvterm_id
                     }, {join => "object"});
                     if ($parent_plant_of_tissue_sample_rs->count > 1){
                         die "Tissue_sample $stock_id_checked is linked to more than one plant!\n"
@@ -539,9 +717,10 @@ sub store {
                 }
 
                 my @plot_nd_experiment_stocks = (
-                    { nd_experiment_id => $nd_experiment_id, type_id => $nd_experiment_type_id }
+                    { nd_experiment_id => $nd_experiment_id, type_id => $self->get_nd_experiment_type_id }
                 );
 
+		print STDERR "STOCK TYPE ID NOW: $stock_type_id\n";
                 my $plot = $stock_rs->create({
                     organism_id => $organism_id_checked,
                     name       => $plot_name,
@@ -582,39 +761,39 @@ sub store {
                 foreach my $plant_name (@$plant_names) {
 
                     my @plant_stock_props = (
-                        { type_id => $plant_index_number_cvterm_id, value => $plant_index_number },
-                        { type_id => $replicate_cvterm_id, value => $rep_number },
-                        { type_id => $block_cvterm_id, value => $block_number },
-                        { type_id => $plot_number_cvterm_id, value => $plot_number }
+                        { type_id => $self->get_plant_index_number_cvterm_id, value => $plant_index_number },
+                        { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
+                        { type_id => $self->get_block_cvterm_id, value => $block_number },
+                        { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
                     if ($is_a_control) {
-                        push @plant_stock_props, { type_id => $is_control_cvterm_id, value => $is_a_control };
+                        push @plant_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
                     if ($range_number) {
-                        push @plant_stock_props, { type_id => $range_cvterm_id, value => $range_number };
+                        push @plant_stock_props, { type_id => $self->get_range_cvterm_id, value => $range_number };
                     }
                     if ($row_number) {
-                        push @plant_stock_props, { type_id => $row_number_cvterm_id, value => $row_number };
+                        push @plant_stock_props, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                     }
                     if ($col_number) {
-                        push @plant_stock_props, { type_id => $col_number_cvterm_id, value => $col_number };
+                        push @plant_stock_props, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
 
                     my @plant_objects = (
-                        { type_id => $plant_of_cvterm_id, subject_id => $new_plot_id }
+                        { type_id => $self->get_plant_of_cvterm_id, subject_id => $new_plot_id }
                     );
                     my @plant_subjects = (
-                        { type_id => $plant_of_cvterm_id, object_id => $stock_id_checked }
+                        { type_id => $self->get_plant_of_cvterm_id, object_id => $stock_id_checked }
                     );
                     my @plant_nd_experiment_stocks = (
-                        { type_id => $nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                        { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
                     );
 
                     my $plant = $stock_rs->create({
                         organism_id => $organism_id_checked,
                         name       => $plant_name,
                         uniquename => $plant_name,
-                        type_id => $plant_cvterm_id,
+                        type_id => $self->get_plant_cvterm_id,
                         stockprops => \@plant_stock_props,
                         stock_relationship_subjects => \@plant_subjects,
                         stock_relationship_objects => \@plant_objects,
@@ -629,39 +808,39 @@ sub store {
                 my $subplot_index_number = 1;
                 foreach my $subplot_name (@$subplot_names) {
                     my @subplot_stockprops = (
-                        { type_id => $subplot_index_number_cvterm_id, value => $subplot_index_number },
-                        { type_id => $replicate_cvterm_id, value => $rep_number },
-                        { type_id => $block_cvterm_id, value => $block_number },
-                        { type_id => $plot_number_cvterm_id, value => $plot_number }
+                        { type_id => $self->get_subplot_index_number_cvterm_id, value => $subplot_index_number },
+                        { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
+                        { type_id => $self->get_block_cvterm_id, value => $block_number },
+                        { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
                     if ($is_a_control) {
-                        push @subplot_stockprops, { type_id => $is_control_cvterm_id, value => $is_a_control };
+                        push @subplot_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
                     if ($range_number) {
-                        push @subplot_stockprops, { type_id => $range_cvterm_id, value => $range_number };
+                        push @subplot_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };
                     }
                     if ($row_number) {
-                        push @subplot_stockprops, { type_id => $row_number_cvterm_id, value => $row_number };
+                        push @subplot_stockprops, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
                     }
                     if ($col_number) {
-                        push @subplot_stockprops, { type_id => $col_number_cvterm_id, value => $col_number };
+                        push @subplot_stockprops, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
 
                     my @subplot_objects = (
-                        { type_id => $subplot_of_cvterm_id, subject_id => $new_plot_id }
+                        { type_id => $self->get_subplot_of_cvterm_id, subject_id => $new_plot_id }
                     );
                     my @subplot_subjects = (
-                        { type_id => $subplot_of_cvterm_id, object_id => $stock_id_checked }
+                        { type_id => $self->get_subplot_of_cvterm_id, object_id => $stock_id_checked }
                     );
                     my @subplot_nd_experiment_stocks = (
-                        { type_id => $nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                        { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
                     );
 
                     if ($subplots_plant_names){
                         my $subplot_plants = $subplots_plant_names->{$subplot_name};
                         foreach (@$subplot_plants) {
                             my $plant_stock_id = $new_stock_ids_hash{$_};
-                            push @subplot_objects, { type_id => $plant_of_subplot_cvterm_id, subject_id => $plant_stock_id };
+                            push @subplot_objects, { type_id => $self->get_plant_of_subplot_cvterm_id, subject_id => $plant_stock_id };
                         }
                     }
 
@@ -669,7 +848,7 @@ sub store {
                         organism_id => $organism_id_checked,
                         name       => $subplot_name,
                         uniquename => $subplot_name,
-                        type_id => $subplot_cvterm_id,
+                        type_id => $self->get_subplot_cvterm_id,
                         stockprops => \@subplot_stockprops,
                         stock_relationship_subjects => \@subplot_subjects,
                         stock_relationship_objects => \@subplot_objects,
@@ -694,39 +873,39 @@ sub store {
                     } else {
                         $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
                     }
-                    push @treatment_nd_experiment_stocks, { type_id => $treatment_nd_experiment_type_id, stock_id => $stock_id };
+                    push @treatment_nd_experiment_stocks, { type_id => $self->get_treatment_nd_experiment_type_id, stock_id => $stock_id };
                 }
 
                 my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
                     nd_geolocation_id => $nd_geolocation_id,
-                    type_id => $treatment_nd_experiment_type_id,
+                    type_id => $self->get_treatment_nd_experiment_type_id,
                     nd_experiment_stocks => \@treatment_nd_experiment_stocks
                 });
 
                 my @treatment_project_props = (
-                    { type_id => $project_design_cvterm_id, value => 'treatment' }
+                    { type_id => $self->get_project_design_cvterm_id, value => 'treatment' }
                 );
 
                 if ($self->get_new_treatment_has_plant_entries){
-                    push @treatment_project_props, { type_id => $has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
+                    push @treatment_project_props, { type_id => $self->get_has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
                 }
                 if ($self->get_new_treatment_has_subplot_entries){
-                    push @treatment_project_props, { type_id => $has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
+                    push @treatment_project_props, { type_id => $self->get_has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
                 }
                 if ($self->get_new_treatment_has_tissue_sample_entries){
-                    push @treatment_project_props, { type_id => $has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
+                    push @treatment_project_props, { type_id => $self->get_has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
                 }
                 if ($self->get_new_treatment_type){
-                    push @treatment_project_props, { type_id => $management_factor_type_cvterm_id, value => $self->get_new_treatment_type };
+                    push @treatment_project_props, { type_id => $self->get_management_factor_type_cvterm_id, value => $self->get_new_treatment_type };
                 }
                 if ($self->get_new_treatment_year){
-                    push @treatment_project_props, { type_id => $management_factor_year_cvterm_id, value => $self->get_new_treatment_year };
+                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $self->get_new_treatment_year };
                 } else {
                     my $t = CXGN::Trial->new({
                         bcs_schema => $chado_schema,
                         trial_id => $self->get_trial_id
                     });
-                    push @treatment_project_props, { type_id => $management_factor_year_cvterm_id, value => $t->get_year() };
+                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $t->get_year() };
                 }
 
                 my @treatment_nd_experiment_project = (
@@ -734,7 +913,7 @@ sub store {
                 );
 
                 my @treatment_relationships = (
-                    { type_id => $trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
+                    { type_id => $self->get_trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
                 );
 
                 #Create a project for each treatment_name
@@ -761,9 +940,11 @@ sub store {
     };
 
     my $transaction_error;
+    
     try {
         $chado_schema->txn_do($coderef);
-    } catch {
+    } 
+    catch {
         print STDERR "Transaction Error: $_\n";
         $transaction_error =  $_;
     };

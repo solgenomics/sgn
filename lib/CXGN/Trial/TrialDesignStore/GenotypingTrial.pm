@@ -2,16 +2,37 @@
 package CXGN::Trial::TrialDesignStore::GenotypingTrial;
 
 use Moose;
+use Try::Tiny;
 
-extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';
+BEGIN { extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';}
+
+sub BUILD {
+    my $self = shift;
+    my $args = shift;
+    
+    $self->set_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($self->get_bcs_schema(), 'genotyping_layout', 'experiment_type')->cvterm_id());
+    $self->set_stock_type_id($self->get_tissue_sample_cvterm_id);
+    $self->set_stock_relationship_type_id($self->get_tissue_sample_of_cvterm_id);
+    
+    $self->set_source_stock_types( 
+	[ 
+	  $self->get_accession_cvterm_id, 
+	  $self->get_plot_cvterm_id, 
+	  $self->get_plant_cvterm_id, 
+	  $self->get_tissue_sample_cvterm_id 
+	]
+	);
+    
+}
+
 
 sub validate_design {
     my $self = shift;
 
     print STDERR "validating design\n";
 
-    my $chado_schema = $self->get_bcs_schema;
-    my $design_type = $self->get_design_type;
+    my $chado_schema = $self->get_bcs_schema();
+    my $design_type = $self->get_design_type();
     my %design = %{$self->get_design}; 
     my $error = '';
 
