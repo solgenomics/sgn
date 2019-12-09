@@ -42,7 +42,7 @@ use Try::Tiny;
 
 our ($opt_H, $opt_D, $opt_i, $opt_c, $opt_t);
 
-getopts('H:D:i:c:');
+getopts('H:D:i:c:t');
 
 if (!$opt_H || !$opt_D || !$opt_i || !$opt_c) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file), -c CVNAME \n");
@@ -74,10 +74,15 @@ my $coderef = sub {
     	my $db_cvterm_name = $worksheet->get_cell($row,0)->value();
 
     	my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $db_cvterm_name, cv_id => $cv->cv_id() });
-	
+
+	if (!$cvterm) { print STDERR "Cvterm $db_cvterm_name does not exit. SKIPPING!\n";
+			next;
+	}
 	if ($opt_t) { 
-	    my $phenotypes = $schema->resultset('Phenotype::Phenotype')->find( { cvalue_id => $cvterm->cvterm_id() });
-	    print STDERR $cvterm->name()."\t".$phenotypes->count()."\n";
+	    my $phenotypes = $schema->resultset('Phenotype::Phenotype')->search( { cvalue_id => $cvterm->cvterm_id() });
+	    if ($phenotypes->count() > 0) { 
+		print STDERR $cvterm->name()."\t".$phenotypes->count()."\n";
+	    }
 	}
 	else { 
 	    my $dbxref = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
