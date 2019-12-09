@@ -78,26 +78,33 @@ my $coderef = sub {
 	if (!$cvterm) { print STDERR "Cvterm $db_cvterm_name does not exit. SKIPPING!\n";
 			next;
 	}
+	my $phenotypes = $schema->resultset('Phenotype::Phenotype')->search( { cvalue_id => $cvterm->cvterm_id() });
 	if ($opt_t) { 
-	    my $phenotypes = $schema->resultset('Phenotype::Phenotype')->search( { cvalue_id => $cvterm->cvterm_id() });
+	    
 	    if ($phenotypes->count() > 0) { 
 		print STDERR $cvterm->name()."\t".$phenotypes->count()."\n";
 	    }
 	}
-	else { 
-	    my $dbxref = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
-	    
-	    # check if the dbxref is referenced by other cvterms, only delete
-	    # if it's only referenced by this one term
-	    #
-	    my $dbxref_count_rs = $schema->resultset('Cv::Cvterm')->search( { dbxref_id=> $cvterm->dbxref_id() });
-	    
-	    if ($dbxref_count_rs->count() == 1) {
-		$dbxref->delete();
+	else {
+	    if ($phenotypes->count() > 0) {
+		print STDERR "Not deleting term ".$cvterm->name()."  with ".$phenotypes->count()." associated phenotypes.\n";
 	    }
-	    my $name = $cvterm->name();
-	    $cvterm->delete();
-	    print STDERR "Deleted term $name\n";
+	    else { 
+		my $dbxref = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
+		
+		# check if the dbxref is referenced by other cvterms, only delete
+		# if it's only referenced by this one term
+		#
+		my $dbxref_count_rs = $schema->resultset('Cv::Cvterm')->search( { dbxref_id=> $cvterm->dbxref_id() });
+		
+		if ($dbxref_count_rs->count() == 1) {
+		    $dbxref->delete();
+		}
+		my $name = $cvterm->name();
+		$cvterm->delete();
+		print STDERR "Deleted term $name.\n";
+	    }
+
 	}
     }
 };
