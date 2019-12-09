@@ -702,7 +702,7 @@ sub structure_selection_prediction_output {
 	my $trait_name = $c->stash->{trait_name};
 	
 	my $training_pop_id   = $c->stash->{training_pop_id};
-	my $prediction_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+	my $prediction_pop_id = $c->stash->{selection_pop_id};
 
 	my $training_pop_page;
 	my $model_page;
@@ -721,8 +721,8 @@ sub structure_selection_prediction_output {
 	{	
 	    $training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 	    if ($training_pop_id =~ /list/)
-	    {		
-		$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
+	    {	  $c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;	
+		$c->controller('solGS::List')->list_population_summary($c);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
 	    elsif ($training_pop_id =~ /dataset/)
@@ -743,9 +743,10 @@ sub structure_selection_prediction_output {
 	if ($prediction_pop_id =~ /list/)
 	{
 	    $c->stash->{list_id} = $prediction_pop_id =~ s/\w+_//r;
-	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);	    
 	    $c->controller('solGS::List')->list_population_summary($c, $prediction_pop_id);
-	    $prediction_pop_name = $c->stash->{prediction_pop_name}; 
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);	    
+	   
+	    $prediction_pop_name = $c->stash->{selection_pop_name}; 
 	}
 	elsif ($prediction_pop_id =~ /dataset/)
 	{
@@ -899,6 +900,7 @@ sub predict_training_traits {
     }   
     
 }
+
 
 sub predict_selection_traits {
     my ($self, $c) = @_;
