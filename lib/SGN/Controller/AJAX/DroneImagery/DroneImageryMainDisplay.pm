@@ -519,14 +519,14 @@ sub _draw_plot_polygon_images_panel {
     my $drone_run_project_id = shift;
     my $plot_polygon_background_to_use_image_id = shift;
     my $html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-        $html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$plot_polygon_term.'">Create/View Plot Polygons ('.$plot_polygon_term.')</button><br/><br/>';
+        $html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$plot_polygon_term.'">Create/View Plot Polygons</button><br/><br/>';
 
         my $plot_polygon_images = '';
         if ($d->{$plot_polygon_term."_images"}) {
             $plot_polygon_images = scalar(@{$d->{$plot_polygon_term."_images"}})." Plot Polygons<br/><span>";
             $plot_polygon_images .= join '', @{$d->{$plot_polygon_term."_images"}};
             $plot_polygon_images .= "</span>";
-            $html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$trial_id.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$drone_run_band_project_type.'" data-plot_polygons_type="'.$plot_polygon_term.'" >Calculate Phenotypes</button><br/><br/>';
+            # $html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_get_phenotypes" data-field_trial_id="'.$trial_id.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$drone_run_band_project_type.'" data-plot_polygons_type="'.$plot_polygon_term.'" >Calculate Phenotypes</button><br/><br/>';
         } else {
             $plot_polygon_images = 'No Plot Polygons Assigned';
         }
