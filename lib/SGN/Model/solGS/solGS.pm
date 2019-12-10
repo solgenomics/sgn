@@ -803,36 +803,11 @@ sub structure_genotype_data {
 
 sub genotypes_list_genotype_data {
     my ($self, $genotypes_ids, $protocol_id) = @_;
-
-<<<<<<< HEAD
-    print STDERR "\nModel: list genos genotype-data - args-protocol_id: $protocol_id\n";
      
     if (!$protocol_id) 
     {	
 	$protocol_id = $self->protocol_id();
     }
-
-    print STDERR "\nModel: list genos genotype-data - prtocol_id: $protocol_id\n";
-	    
-    my $dataset = CXGN::Dataset->new({
- 	people_schema => $self->people_schema,
- 	schema  => $self->schema,
- 	accessions => $genotypes_ids});	
-
-    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-    my $geno_data  = $self->structure_genotype_data($dataref);	   
-||||||| merged common ancestors
-    my $protocol_id = $self->protocol_id();
-	    
-    my $dataset = CXGN::Dataset->new({
- 	people_schema => $self->people_schema,
- 	schema  => $self->schema,
- 	accessions => $genotypes_ids});	
-
-    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-    my $geno_data  = $self->structure_genotype_data($dataref);	   
-=======
-    my $protocol_id = $self->protocol_id();
     
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
@@ -843,7 +818,6 @@ sub genotypes_list_genotype_data {
 	protocolprop_top_key_select=>[],
 	return_only_first_genotypeprop_for_stock=> 1,
 	);
->>>>>>> master
 
     $geno_search->init_genotype_iterator();
     return $geno_search;
