@@ -302,9 +302,9 @@ The procedure is:
    
    -- in the selection proportion textbox, fill in the proportion of the indexed individuals you want to select, e.g. for the top 15 percent, 15. if you wish to select bottom performing, prefix the number with minus sign (e.g. -15)
    
-   -- then run clusterand wait for the result.
+   -- then run cluster and wait for the result.
 
-<img src='{{"assets/images/selection_proportion_lustering.png" | relative_url }}' width="522" />
+<img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
 
 

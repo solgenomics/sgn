@@ -1,0 +1,37 @@
+
+<%args>
+$nirs_files => undef
+$deleted_nirs_files => undef
+$locations => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+
+<& /page/page_title.mas, title=>"Manage NIRS Data" &>
+
+<div class="container-fluid">
+
+<!--button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br /-->
+
+<& /breeders_toolbox/upload_nirs_spreadsheet.mas &>
+
+<div class="well">
+
+<&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link" >Upload NIRS Spreadsheet</a>]' &>
+  <br/>
+  <& /breeders_toolbox/file_list.mas, files=>$nirs_files, allow_delete=>1 &>
+
+</&>
+
+</div>
+<div class="well">
+
+<&| /page/info_section.mas, title=>'Your Obsoleted Files', subtitle=>'These files will not be shown anywhere else on the website', is_subsection=>1 &>
+
+  <& /breeders_toolbox/file_list.mas, files=>$deleted_nirs_files, allow_delete=>0 &>
+
+</&>
+
+</div>
+
+</div>

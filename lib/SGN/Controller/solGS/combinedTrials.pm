@@ -73,8 +73,10 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 	
         $self->catalogue_combined_pops($c, \@pops_ids);
 	
-	$self->prepare_multi_pops_data($c);
-
+	#$self->prepare_multi_pops_data($c);
+	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
+	
+	$self->multi_pops_geno_files($c, \@pops_ids);
         my $geno_files = $c->stash->{multi_pops_geno_files};
         @g_files = split(/\t/, $geno_files);
 
@@ -96,10 +98,11 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     {
         my $pop_id = $pops_ids[0];
         
-        $c->stash->{pop_id} = $pop_id;
-	$c->controller('solGS::solGS')->phenotype_file($c);
-        $c->controller('solGS::solGS')->genotype_file($c);
-        
+        # $c->stash->{pop_id} = $pop_id;
+	# $c->controller('solGS::solGS')->phenotype_file($c);
+        # $c->controller('solGS::solGS')->genotype_file($c);
+	
+        $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
         $ret->{redirect_url} = "/solgs/population/$pop_id";
 	$ret->{pop_id} = $pop_id;
     }
@@ -122,7 +125,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
 
     my $solgs_controller = $c->controller('solGS::solGS');    
     $solgs_controller->get_all_traits($c);
-    $solgs_controller->get_acronym_pairs($c);
+    $solgs_controller->get_acronym_pairs($c, $combo_pops_id);
   
     $self->combined_trials_desc($c);
   
@@ -206,18 +209,18 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(3) {
 	    }
 	}  
 
+	$c->stash->{training_pop_id} = $combo_pops_id;
 	$c->stash->{training_traits_ids} = \@traits_ids;
 	$c->controller('solGS::solGS')->analyzed_traits($c);
-	my $analyzed_traits = $c->stash->{analyzed_traits};
-	
+	my $analyzed_traits = $c->stash->{analyzed_traits_ids};
 	
 	$c->stash->{trait_pages} = \@traits_pages;
 		
 	my @training_pop_data = ([$training_pop_page, $training_pop_desc, \@traits_pages]);
 	
 	$c->stash->{model_data} = \@training_pop_data;
-	$c->stash->{pop_id} = $combo_pops_id;
-	$c->controller('solGS::solGS')->get_acronym_pairs($c);
+	
+	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
 
 	$c->stash->{template} = '/solgs/population/combined/multiple_traits_output.mas';	
     }
@@ -1117,8 +1120,8 @@ sub combined_trials_desc {
         $markers_no   = scalar(split ('\t', $geno_lines[0])) - 1;
     }
   
-    my $trait_exp        = "traits_acronym_pop_${combo_pops_id}";
-    my $traits_list_file = $c->controller('solGS::Files')->grep_file($dir, $trait_exp);  
+    $c->controller('solGS::Files')->traits_acronym_file($c, $combo_pops_id);
+    my $traits_list_file = $c->stash->{traits_acronym_file};
 
     my @traits_list = read_file($traits_list_file);
     my $traits_no   = scalar(@traits_list) - 1;

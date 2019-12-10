@@ -52,9 +52,9 @@ solGS.pca = {
 	var dataType;
 
 	if (selectId) {
-	    dataType = jQuery('#'+selectId + ' #data_type_select').val();
+	    dataType = jQuery('#'+selectId + ' #pca_data_type_select').val();
 	} else {
-	  dataType = jQuery('#data_type_select').val();  
+	  dataType = jQuery('#pca_data_type_select').val();  
 	}
 
 	var popDetails = solGS.getPopulationDetails();
@@ -207,7 +207,7 @@ solGS.pca = {
     },
 
      createDataTypeSelect: function(opts) {
-	var dataTypeGroup = '<select class="form-control" id="data_type_select">';
+	var dataTypeGroup = '<select class="form-control" id="pca_data_type_select">';
 
 	for (var i=0; i < opts.length; i++) {
 	    

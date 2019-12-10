@@ -78,17 +78,17 @@ sub save_profile {
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
 
-    $self->add_headers($c);
+    $self->add_log_headers($c);
 
-    $self->format_profile_entry($c);
-    my $formatted_profile = $c->stash->{formatted_profile};
+    $self->format_log_entry($c);
+    my $log_entry = $c->stash->{formatted_log_entry};
     
-    write_file($log_file, {append => 1}, $formatted_profile);
+    write_file($log_file, {append => 1}, $log_entry);
    
 }
 
 
-sub add_headers {
+sub add_log_headers {
   my ($self, $c) = @_;
 
   $self->analysis_log_file($c);
@@ -136,11 +136,42 @@ sub index_log_file_headers {
 
 }
 
+sub create_selection_pop_page {
+    my ($self, $c) = @_;
 
-sub format_profile_entry {
+    $self->parse_arguments($c);
+     
+    my $tr_pop_id     = $c->stash->{training_pop_id};
+    my $sel_pop_id    = $c->stash->{selection_pop_id};
+    my $trait_id      = $c->stash->{trait_id};
+    my $data_set_type = $c->stash->{data_set_type};
+    my $sel_pop_page;
+   
+    if ($data_set_type =~ /combined populations/)
+    {	   
+	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id";	   
+    }
+    else
+    {	
+	$sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id";
+    }
+  
+    $c->stash->{selection_pop_page} = $sel_pop_page;
+}
+
+
+sub format_log_entry {
     my ($self, $c) = @_; 
     
+   
     my $profile = $c->stash->{analysis_profile};
+    if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+    {
+	 $self->create_selection_pop_page($c);
+	 my $sel_pop_page = $c->stash->{selection_pop_page};
+	 $profile->{analysis_page} = $sel_pop_page;
+    }
+   
     my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
     my $entry   = join("\t", 
 		       (
@@ -156,7 +187,7 @@ sub format_profile_entry {
 
     $entry .= "\n";
 	
-    $c->stash->{formatted_profile} = $entry; 
+    $c->stash->{formatted_log_entry} = $entry; 
 
 }
 
@@ -182,7 +213,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 
 
 sub analysis_report_job_args {
-    my ($self, $c) = @_;
+    my ($self, $c, $status_check_duration) = @_;
 
     my $analysis_details = $c->stash->{bg_job_output_details};
 
@@ -207,8 +238,12 @@ sub analysis_report_job_args {
     
     my $job_config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
 
-    my $cmd = 'mx-run solGS::AnalysisReport '
-	. '--output_details_file ' . $report_file;
+    $status_check_duration =  ' --status_check_duration ' . $status_check_duration if $status_check_duration;
+   
+    my $cmd = 'mx-run solGS::AnalysisReport'
+	. ' --output_details_file ' . $report_file
+	. $status_check_duration;
+
     
     my $job_args = {
 	'cmd' => $cmd,
@@ -224,9 +259,9 @@ sub analysis_report_job_args {
 
 
 sub get_analysis_report_job_args_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $status_check_duration) = @_;
 
-    $self->analysis_report_job_args($c);
+    $self->analysis_report_job_args($c, $status_check_duration);
     my $analysis_job_args = $c->stash->{analysis_report_job_args};
        
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -629,7 +664,7 @@ sub structure_selection_prediction_output {
 	my $trait_name = $c->stash->{trait_name};
 	
 	my $training_pop_id   = $c->stash->{training_pop_id};
-	my $prediction_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+	my $prediction_pop_id = $c->stash->{selection_pop_id};
 
 	my $training_pop_page;
 	my $model_page;
@@ -648,14 +683,12 @@ sub structure_selection_prediction_output {
 	{	
 	    $training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 	    if ($training_pop_id =~ /list/)
-	    {
-		
-		$c->controller('solGS::List')->list_population_summary($c, $training_pop_id);
+	    {	  $c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;	
+		$c->controller('solGS::List')->list_population_summary($c);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
 	    elsif ($training_pop_id =~ /dataset/)
-	    {
-		
+	    {		
 		$c->controller('solGS::Dataset')->dataset_population_summary($c);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
@@ -672,9 +705,10 @@ sub structure_selection_prediction_output {
 	if ($prediction_pop_id =~ /list/)
 	{
 	    $c->stash->{list_id} = $prediction_pop_id =~ s/\w+_//r;
-	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);	    
 	    $c->controller('solGS::List')->list_population_summary($c, $prediction_pop_id);
-	    $prediction_pop_name = $c->stash->{prediction_pop_name}; 
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);	    
+	   
+	    $prediction_pop_name = $c->stash->{selection_pop_name}; 
 	}
 	elsif ($prediction_pop_id =~ /dataset/)
 	{
@@ -692,6 +726,9 @@ sub structure_selection_prediction_output {
 	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 	my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
+
+	$c->controller('solGS::Files')->genotype_file_name($c, $prediction_pop_id);
+	my $selection_geno_file = $c->stash->{genotype_file_name};
 		
 	$output_details{'trait_id_' . $trait_id} = {
 	    'training_pop_page'   => $training_pop_page,
@@ -703,6 +740,7 @@ sub structure_selection_prediction_output {
 	    'trait_id'            => $trait_id,
 	    'model_page'          => $model_page,	
 	    'gebv_file'           => $gebv_file,
+	    'selection_geno_file' => $selection_geno_file,
 	    'data_set_type'       => $data_set_type,
 	};
     }	
@@ -828,6 +866,7 @@ sub predict_training_traits {
     
 }
 
+
 sub predict_selection_traits {
     my ($self, $c) = @_;
 
@@ -860,6 +899,7 @@ sub predict_selection_traits {
     }	    
     
 }
+
 
 sub update_analysis_progress {
     my ($self, $c) = @_;

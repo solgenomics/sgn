@@ -433,7 +433,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data:{
                 'crossingtrial_name': crossingtrial_name,
-                'crossingtrial_program_name': selectedProgram,
+                'crossingtrial_program_id': selectedProgram,
                 'crossingtrial_location': crossingtrial_location,
                 'year': year,
                 'project_description': project_description,

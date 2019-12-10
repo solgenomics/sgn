@@ -809,7 +809,6 @@ sub perform_search {
 
 }
 
-
 ##########################
 # result-getting functions
 
