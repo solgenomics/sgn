@@ -84,6 +84,8 @@ $trial_stock_type
                     <div id="stock_type_in_trial">
 % if ($trial_stock_type) {
 %     print "$trial_stock_type";
+% } else {
+%     print "accession";
 % }
                     </div>
                 </td>
