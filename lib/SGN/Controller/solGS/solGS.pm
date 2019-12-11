@@ -24,9 +24,7 @@ use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 use SGN::Controller::solGS::Utils;
-use solGS::queryJobs;
-use solGS::asyncJob;
-use CXGN::Genotype::Search;
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -3937,13 +3935,12 @@ sub create_cluster_config {
 	sleep            => $args->{sleep}
     };
 
-    if ($args->{cluster_host} =~ /localhost/) {
+    if ($args->{cluster_host} =~ /localhost/) 
+    {
 	$config->{backend} = 'Slurm';
-    } else {
-	my $backend =  $c->config->{backend};
-	my $cluster_host = $c->config->{cluster_host};
-	my $error_file = $config->{err_file};
-	print STDERR "\n\nsubmit job to remote cluster: backend - $backend : submit_host - $cluster_host\n\n";
+    } 
+    else 
+    {
 	$config->{backend} = $c->config->{backend};
 	$config->{submit_host} = $c->config->{cluster_host};
     }
