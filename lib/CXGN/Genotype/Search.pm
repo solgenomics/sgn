@@ -798,7 +798,7 @@ sub get_next_genotype_info {
         }
         my %selected_protocol_marker_info;
         my %selected_protocol_top_key_info;
-        my %filtered_markers;
+        # my %filtered_markers;
         if (defined($protocol_id)){
             my $protocolprop_where_sql = "nd_protocol_id = $protocol_id and type_id = $vcf_map_details_cvterm_id";
             my $protocolprop_where_markers_sql = "nd_protocol_id = $protocol_id and type_id = $vcf_map_details_markers_cvterm_id";
@@ -829,7 +829,7 @@ sub get_next_genotype_info {
                 for my $s (0 .. scalar(@protocolprop_marker_hash_select_arr)-1){
                     $selected_protocol_marker_info{$protocol_id}->{$marker_name}->{$protocolprop_marker_hash_select->[$s]} = $protocolprop_info_return[$s];
                 }
-                $filtered_markers{$marker_name}++;
+                # $filtered_markers{$marker_name}++;
             }
             my $protocolprop_top_key_select_sql = scalar(@protocolprop_top_key_select_arr) > 0 ? ', '.join ',', @protocolprop_top_key_select_arr : '';
             my $protocolprop_top_key_q = "SELECT nd_protocol_id $protocolprop_top_key_select_sql from nd_protocolprop WHERE $protocolprop_where_sql;";
@@ -873,15 +873,15 @@ sub get_next_genotype_info {
         foreach (@$genotypeprop_hash_select){
             push @genotypeprop_hash_select_arr, "s.value->>'$_'";
         }
-        my $filtered_markers_string = "'". join ("','", keys %filtered_markers) ."'";
+        # my $filtered_markers_string = "'". join ("','", keys %filtered_markers) ."'";
         if (defined($genotypeprop_id)) {
     #        my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
             my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
 
             my $filtered_markers_sql = '';
-            if (scalar(keys %filtered_markers) >0) {
-                $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
-            }
+            # if (scalar(keys %filtered_markers) >0) {
+                # $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
+            # }
 
             my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
                 FROM genotypeprop, jsonb_each(genotypeprop.value) as s
