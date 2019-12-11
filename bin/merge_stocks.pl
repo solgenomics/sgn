@@ -33,7 +33,7 @@ use CXGN::DB::Schemas;
 use CXGN::Stock;
 
 our($opt_H, $opt_D, $opt_x, $opt_s);
-getopts('H:D:x:s');
+getopts('H:D:xs');
 
 
 print "Password for $opt_H / $opt_D: \n";
@@ -87,7 +87,7 @@ eval {
 		$good_stock->merge($merge_stock->stock_id(), $delete_merged_stock);
 		#add $merge_stock_name as a synonym of $good_stock_name if option -s was used
 		if ($add_synonym) {
-			print STDERR "Adding new synonym\n";
+			print STDERR "\nAdding $merge_stock_name  as a new synonym for $good_stock_name\n";
 			my $add_syn = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
 			$add_syn->create_stockprops({ stock_synonym => $merge_stock_name }, { autocreate => 0, allow_duplicate_values=> 1 });
 		}
