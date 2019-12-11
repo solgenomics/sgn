@@ -47,6 +47,9 @@ sub genotyping_data_search_GET : Args(0) {
         #marker_name_list=>['S80_265728', 'S80_265723']
         #marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
         #marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
+        genotypeprop_hash_select=>['DS'],
+        protocolprop_marker_hash_select=>[],
+        protocolprop_top_key_select=>[],
         limit => $limit,
         offset => $offset
     });
