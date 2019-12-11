@@ -27,10 +27,13 @@ use File::Slurp qw /write_file read_file/;
 use File::Temp qw / tempfile tempdir /;
 use JSON;
 use List::MoreUtils qw /uniq/;
+use CXGN::People::Person;
 use POSIX qw(strftime);
 use Storable qw/ nstore retrieve /;
 use String::CRC;
 use Try::Tiny;
+
+
 
 use solGS::queryJobs;
 
@@ -911,7 +914,23 @@ sub list_population_summary {
     my $file_id =  $self->list_file_id($c);	
     my $tmp_dir = $c->stash->{solgs_lists_dir};
 
-    if (!$c->user)
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_name = $list->name;
+    my $owner_id = $list->owner;
+
+    my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
+    my $owner = $person->get_first_name() . ' ' . $person->get_last_name();
+
+    my $user_role;
+    my $user_id;
+ 
+    if ($c->user)
+    {
+	$user_role = $c->user->get_object->get_user_type();
+	$user_id = $c->user->get_object->get_sp_person_id();
+    }
+    
+    if (($user_role =~ /submitter|user/  &&  $user_id != $owner_id) || !$c->user)
     {
 	my $page = "/" . $c->req->path;
 	$c->res->redirect("/solgs/login/message?page=$page");
@@ -925,24 +944,19 @@ sub list_population_summary {
 	if ($file_id) 
 	{
 	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
-	    my $metadata_file = $c->stash->{population_metadata_file}; 
-       
+	    my $metadata_file = $c->stash->{population_metadata_file};     
 	    my @metadata = read_file($metadata_file);
-
 	    
 	    my ($key, $desc);
      
 	    ($desc)        = grep {/description/} @metadata;       
 	    ($key, $desc)  = split(/\t/, $desc);
-	   
-	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my $list_name = $list->name;
-	  
+	   	    
 	    $c->stash(project_id          => $file_id,
 		      project_name        => $list_name,
 		      selection_pop_name  => $list_name,
 		      project_desc        => $desc,
-		      owner               => $user_name,
+		      owner               => $owner,
 		      protocol            => $protocol,
 		);  
 	}
