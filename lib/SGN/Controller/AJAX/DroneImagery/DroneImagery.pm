@@ -3546,6 +3546,9 @@ sub _perform_phenotype_calculation {
     elsif ($drone_run_band_project_type eq 'Thermal IR (9000-14000nm)') {
         $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Thermal IR (9000-14000nm)|ISOL:0000011')->cvterm_id;
     }
+    elsif ($drone_run_band_project_type eq 'Raster DSM') {
+        $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Raster DSM|ISOL:0000323')->cvterm_id;
+    }
     elsif ($drone_run_band_project_type eq 'RGB Color Image') {
         $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'RGB Color Image|ISOL:0000002')->cvterm_id;
     }
