@@ -10,7 +10,7 @@ use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use Cache::File;
-
+use CXGN::People::Person;
 
 BEGIN { extends 'Catalyst::Controller' }
 
