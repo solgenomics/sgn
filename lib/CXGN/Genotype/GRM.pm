@@ -7,25 +7,17 @@ CXGN::Genotype::GRM - an object to handle fetching a GRM for stocks
 =head1 USAGE
 
 my $geno = CXGN::Genotype::GRM->new({
-        bcs_schema=>$schema,
-        filename=>$filename,  #file path to write to
-        accession_list=>$accession_list,
-        tissue_sample_list=>$tissue_sample_list,
-        trial_list=>$trial_list,
-        protocol_id_list=>$protocol_id_list,
-        markerprofile_id_list=>$markerprofile_id_list,
-        genotype_data_project_list=>$genotype_data_project_list,
-        chromosome_list=>\@chromosome_numbers,
-        start_position=>$start_position,
-        end_position=>$end_position,
-        marker_name_list=>['S80_265728', 'S80_265723'],
-        genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
-        protocolprop_top_key_select=>['reference_genome_name', 'header_information_lines', 'marker_names', 'markers'], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
-        protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
-        limit=>$limit,
-        offset=>$offset
+    bcs_schema=>$schema,
+    accession_id_list=>\@accession_list,
+    plot_id_list=>\@plot_id_list,
+    protocol_id=>$protocol_id,
+    get_grm_for_parental_accessions=>1
 });
 my $grm = $geno->get_grm();
+
+OR
+
+$geno->download_grm($filename);
 
 =head1 DESCRIPTION
 
@@ -46,6 +38,9 @@ use CXGN::Trial;
 use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::Search;
+use R::YapRI::Base;
+use R::YapRI::Data::Matrix;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -79,7 +74,208 @@ has 'get_grm_for_parental_accessions' => (
 sub get_grm {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    return;
+    my $accession_list = $self->accession_id_list();
+    my $plot_list = $self->plot_id_list();
+    my $protocol_id = $self->protocol_id();
+    my $get_grm_for_parental_accessions = $self->get_grm_for_parental_accessions();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my @individuals_stock_ids;
+    my @all_marker_names;
+    my @dosage_matrix;
+
+    # In this case a list of accessions is given, so get a GRM between these accessions
+    if ($accession_list && scalar(@$accession_list)>0){
+        my $genotypes_search = CXGN::Genotype::Search->new({
+            bcs_schema=>$schema,
+            accession_list=>$accession_list,
+            protocol_id_list=>[$protocol_id],
+            genotypeprop_hash_select=>['DS'],
+            protocolprop_top_key_select=>['markers'],
+            protocolprop_marker_hash_select=>['name'],
+            return_only_first_genotypeprop_for_stock=>1
+        });
+        my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+
+        if (scalar(@$genotypes)>0) {
+            my $p1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
+            my @all_marker_objects = values %$p1_markers;
+            
+            no warnings 'uninitialized';
+            @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+            foreach my $m (@all_marker_objects) {
+                my $name = $m->{name};
+                push @all_marker_names, $name;
+            }
+
+            foreach my $p (0..scalar(@$genotypes)-1) {
+                my @row;
+                foreach my $m (@all_marker_names) {
+                    push @row, $genotypes->[$p]->{selected_genotype_hash}->{$m}->{DS};
+                }
+                push @dosage_matrix, @row;
+                push @individuals_stock_ids, $genotypes->[$p]->{stock_id};
+            }
+        }
+    }
+    # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
+    elsif ($get_grm_for_parental_accessions && scalar(@$plot_list)>0) {
+        my $plot_list_string = join ',', @$plot_list;
+        my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
+            FROM stock AS plot
+            JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
+            JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
+            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent=$accession_cvterm_id)
+            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent=$accession_cvterm_id)
+            WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my @plot_stock_ids_found = [];
+        my @plot_accession_stock_ids_found = [];
+        my @plot_female_stock_ids_found = [];
+        my @plot_male_stock_ids_found = [];
+        while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+            push @plot_stock_ids_found, $plot_stock_id;
+            push @plot_accession_stock_ids_found, $accession_stock_id;
+            push @plot_female_stock_ids_found, $female_parent_stock_id;
+            push @plot_male_stock_ids_found, $male_parent_stock_id;
+        }
+
+        my @progeny_genotypes = [];
+        my @all_marker_objects = {};
+        for my $i (0..scalar(@plot_stock_ids_found)-1) {
+            my $female_stock_id = $plot_female_stock_ids_found[$i];
+            my $male_stock_id = $plot_male_stock_ids_found[$i];
+            my $plot_stock_id = $plot_stock_ids_found[$i];
+
+            my $genotypes_search = CXGN::Genotype::Search->new({
+                bcs_schema=>$schema,
+                accession_list=>[$female_stock_id, $male_stock_id],
+                protocol_id_list=>[$protocol_id],
+                genotypeprop_hash_select=>['DS'],
+                protocolprop_top_key_select=>['markers'],
+                protocolprop_marker_hash_select=>[],
+                return_only_first_genotypeprop_for_stock=>1
+            });
+            my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+
+            my %progeny_genotype;
+            # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
+            if ($genotypes->[0] && $genotypes->[1]) {
+                my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                my $parent1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
+                my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
+                foreach my $marker (keys %$parent1_genotype) {
+                    $progeny_genotype{$marker} = ($parent1_genotype->{$marker}->{DS} + $parent2_genotype->{$marker}->{DS}) / 2;
+                }
+                push @all_marker_objects, values %$parent1_markers;
+            }
+            # elsif ($genotypes->[0]) {
+            #     my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+            #     foreach my $marker (keys %$parent1_genotype) {
+            #         $progeny_genotype{$marker} = $parent1_genotype->{$marker}->{DS};
+            #     }
+            # }
+            if (scalar(keys %progeny_genotype)>0) {
+                push @individuals_stock_ids, $plot_stock_id;
+                push @progeny_genotypes, \%progeny_genotype;
+            }
+        }
+
+        no warnings 'uninitialized';
+        @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+        foreach my $m (@all_marker_objects) {
+            my $name = $m->{name};
+            push @all_marker_names, $name;
+        }
+
+        foreach my $p (0..scalar(@individuals_stock_ids)-1) {
+            my @row;
+            foreach my $m (@all_marker_names) {
+                push @row, $progeny_genotypes[$p]->{$m};
+            }
+            push @dosage_matrix, @row;
+        }
+    }
+
+    # print STDERR Dumper \@all_marker_names;
+    # print STDERR Dumper \@individuals_stock_ids;
+    # print STDERR Dumper \@dosage_matrix;
+    my $grm_n = scalar(@individuals_stock_ids);
+    my $rmatrix = R::YapRI::Data::Matrix->new({
+        name => 'geno_matrix1',
+        coln => scalar(@all_marker_names),
+        rown => $grm_n,
+        colnames => \@all_marker_names,
+        data => \@dosage_matrix
+    });
+
+    my $rbase = R::YapRI::Base->new();
+    my $r_block = $rbase->create_block('r_block');
+    $rmatrix->send_rbase($rbase, 'r_block');
+    # $r_block->add_command('geno_data = data.frame(geno_matrix1)');
+    $r_block->add_command('sum_af <- 0');
+    $r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
+    $r_block->add_command('for (i in range(1,ncol(geno_matrix1))){ sum_af <- sum_af + table(geno_matrix1[,i])[1]/length(geno_matrix1[,i]) }');
+    $r_block->add_command('grm <- geno_matrix1 %*% t(geno_matrix1)');
+    $r_block->add_command('grm <- grm/(2*sum_af)');
+    $r_block->run_block();
+    my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
+    my $grm_data = $result_matrix->{data};
+    undef @dosage_matrix;
+
+    my @grm;
+    my $count = 0;
+    for my $i (1..$grm_n) {
+        my @row;
+        for my $j (1..$grm_n) {
+            push @row, $grm_data->[$count];
+            $count++;
+        }
+        push @grm, \@row;
+    }
+    undef $result_matrix;
+    undef $grm_data;
+    return (\@grm, \@all_marker_names, \@individuals_stock_ids);
+}
+
+sub download_grm {
+    my $self = shift;
+    my $filename = shift;
+
+    my ($result_matrix, $marker_names, $stock_ids) = $self->get_grm();
+
+    my $tsv = Text::CSV->new({ sep_char => "\t", eol => $/ });
+    my @header = ("stock_id");
+    push @header, @$stock_ids;
+
+    my $F;
+    open($F, ">:encoding(utf8)", $filename) || die "Can't open file $filename\n";
+
+        $tsv->print($F, \@header);
+
+        my $row_num = 0;
+        foreach my $s (@$stock_ids) {
+            my @row = ($s);
+            my $col_num = 0;
+            foreach my $c (@$stock_ids) {
+                push @row, $result_matrix->[$row_num]->[$col_num];
+                $col_num++;
+            }
+            $tsv->print($F, \@row);
+            $row_num++;
+        }
+
+    close($F);
 }
 
 1;
