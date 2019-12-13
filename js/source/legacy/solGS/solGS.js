@@ -13,7 +13,7 @@ JSAN.use('jquery.form');
 var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
-
+  
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
@@ -30,25 +30,25 @@ solGS.waitPage = function (page, args) {
 	    + '|solgs/models/combined/trials/';
 
 	if (page.match(multiTraitsUrls)) {
+	  
 	    getTraitsSelectionId(page, args);	    
 	} else {
 	    //if (page.match(/list_/)) {
 	//	askUser(page, args)
-	   // } else {
+	    // } else {
 		checkCachedResult(page, args);
 	   // }
 	}
     }
     else {
-
     	blockPage(page, args);
     }
 
     function checkCachedResult(page, args) {
 
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-	alert('Geno V. ' + args.genotyping_protocol_id);
-	if (trainingTraitsIds) {
+
+	if (trainingTraitsIds ) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	    
 	    if (args === undefined) {
@@ -432,8 +432,9 @@ solGS.waitPage = function (page, args) {
     function getArgsFromUrl (url, args) {
 
 	var referer = document.URL;
+
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-	alert('Geno V. ' + args.genotyping_protocol_id);
+
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(','); 
 	    args['training_traits_ids'] = trainingTraitsIds;	   
