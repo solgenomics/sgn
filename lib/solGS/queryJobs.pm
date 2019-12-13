@@ -84,7 +84,7 @@ sub trial_genotype_data {
 
     my $model = $self->get_model();
 					      
-    my $search_obj = $model->genotype_data($args->{trial_id}); 
+    my $search_obj = $model->genotype_data($args); 
     $self->write_geno_data($model, $search_obj, $geno_file);
    
 }

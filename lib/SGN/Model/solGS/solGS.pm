@@ -750,13 +750,12 @@ sub search_stock_using_plot_name {
  
 
 sub genotype_data {
-    my ($self, $trial_id) = @_;
+    my ($self, $args) = @_;
 
-    #my $training_pop_id  = $args->{training_pop_id};
-    #my $selection_pop_id = $args->{selection_pop_id};
-    
-    my $protocol_id = $self->protocol_id();  
-   # my $trial_id = $selection_pop_id ? $selection_pop_id : $training_pop_id;
+    my $trial_id  = $args->{trial_id};
+    my $protocol_id = $args->{genotyping_protocol_id};  
+
+    $protocol_id = $self->protocol_id() if !$protocol_id;
  
     my $geno_search = CXGN::Genotype::Search->new({
 		bcs_schema => $self->schema(),
@@ -2011,9 +2010,21 @@ sub get_dataset_name {
     my $dataset = CXGN::Dataset->new({
 	people_schema => $self->people_schema,
 	schema  => $self->schema,
-	sp_dataset_id =>$dataset_id}); 
+	sp_dataset_id => $dataset_id}); 
    
     return $dataset->name();
+}
+
+
+sub get_dataset_owner {
+    my ($self, $dataset_id) = @_;
+   
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id => $dataset_id}); 
+   
+    return $dataset->sp_person_id();
 }
 
 
