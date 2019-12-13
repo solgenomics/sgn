@@ -3935,9 +3935,10 @@ sub create_cluster_config {
 	sleep            => $args->{sleep}
     };
 
-    if ($args->{cluster_host} =~ /localhost/) 
+    if ($args->{cluster_host} =~ /localhost/ || !$c->config->{cluster_host}) 
     {
 	$config->{backend} = 'Slurm';
+	$config->{submit_host} = 'localhost';
     } 
     else 
     {
