@@ -223,10 +223,9 @@ sub get_grm {
     my $r_block = $rbase->create_block('r_block');
     $rmatrix->send_rbase($rbase, 'r_block');
     # $r_block->add_command('geno_data = data.frame(geno_matrix1)');
-    $r_block->add_command('sum_af <- 0');
     $r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
-    $r_block->add_command('for (i in range(1,ncol(geno_matrix1))){ sum_af <- sum_af + table(geno_matrix1[,i])[1]/length(geno_matrix1[,i]) }');
-    $r_block->add_command('grm <- tcrossprod(geno_matrix1)/(2*sum_af)');
+    $r_block->add_command('alfreq <- attributes(geno_matrix1)[["scaled:center"]]/2');
+    $r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
     $r_block->run_block();
     my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
     my $grm_data = $result_matrix->{data};
