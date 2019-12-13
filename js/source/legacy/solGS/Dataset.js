@@ -80,7 +80,6 @@ solGS.dataset = {
 
 	var dataset = new CXGN.Dataset();
 	var d = dataset.getDataset(datasetId);
-
 	var plots = d.categories['plots'];
 
 	if (plots == '') {
@@ -112,7 +111,7 @@ solGS.dataset = {
 		var trialsIds = res.trials_ids;
 		var comboPopsId = res.combo_pops_id; 
 		var genoProId = res.genotyping_protocol_id;
-		alert(genoProId);
+	
 		if (trialsIds) {
 		    var args = {
 			'combo_pops_id'   : [ comboPopsId ],
@@ -126,6 +125,7 @@ solGS.dataset = {
 		    };
 		    
 		    if (trialsIds.length > 1) {
+			console.log('geno pro id ' + genoProId)
 			solGS.combinedTrials.downloadCombinedTrialsTrainingPopData(args);
 		    } else {
 			console.log('geno pro id ' + genoProId)
@@ -162,6 +162,10 @@ solGS.dataset = {
 
     createDatasetTrainingReqArgs: function (datasetId, datasetName) {
 
+	var dataset = new CXGN.Dataset();
+	var d = dataset.getDataset(datasetId);
+
+	var protocolId = d.categories['genotyping_protocols'];
 	var popId     = 'dataset_' + datasetId;
 	var popType = 'dataset_training';
 
@@ -172,6 +176,7 @@ solGS.dataset = {
 	    'data_set_type'   : 'single population',
             'training_pop_id' : popId,
 	    'population_type' : popType,
+	    'genotyping_protocol_id' : protocolId
 	};  
 
 	return args;
