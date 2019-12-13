@@ -421,14 +421,26 @@ sub traits_list_file {
 
 sub population_metadata_file {
     my ($self, $c, $dir, $file_id) = @_;
+
+    my $user_id;
+    my $owner_id;
     
-    my $list = CXGN::List->new({ dbh => $c->dbc()->dbh(), 
-				 list_id => $c->stash->{list_id} 
-			       });
-    
-    my $owner_id = $list->owner;
+    if ($c->stash->{list_id}) 
+    {
+	my $list = CXGN::List->new({ dbh => $c->dbc()->dbh(), 
+				     list_id => $c->stash->{list_id} 
+				   });
+	
+	$owner_id = $list->owner;
+	
+    }
+    elsif ($c->stash->{dataset_id})
+    {
+	$owner_id = $c->model('solGS::solGS')->get_dataset_owner($c->stash->{dataset_id});
+    }
+
     my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
-    my $user_id = $person->get_username();
+    $user_id = $person->get_username();
     
     my $cache_data = {key       => "metadata_${user_id}_${file_id}",
                       file      => "metadata_${user_id}_${file_id}",
