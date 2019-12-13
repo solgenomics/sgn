@@ -87,16 +87,18 @@
 
 <script>
 
-  jQuery('#new_account_form').submit(function(event) { 
+  jQuery('#new_account_form').submit(function(event) {
+     jQuery('#working_modal').modal('show');
      var form_data = jQuery('#new_account_form').serialize();
      //alert(JSON.stringify(form_data));
      jQuery.ajax({
        url: '/ajax/user/new',
        data: form_data,
        success: function(r) {
+         jQuery('#working_modal').modal('hide');
            console.log(r);
          if (r.error) { alert(r.error); }
-         else { 
+         else {
            alert('New account added. Check your email.');
            history.back();
          }
