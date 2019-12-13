@@ -683,12 +683,14 @@ sub structure_selection_prediction_output {
 	{	
 	    $training_pop_page    = $base . "solgs/population/$training_pop_id"; 
 	    if ($training_pop_id =~ /list/)
-	    {	  $c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;	
+	    {	  
+		$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;	
 		$c->controller('solGS::List')->list_population_summary($c);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
 	    elsif ($training_pop_id =~ /dataset/)
-	    {		
+	    {	
+		$c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;	
 		$c->controller('solGS::Dataset')->dataset_population_summary($c);
 		$training_pop_name   = $c->stash->{project_name};   
 	    }
