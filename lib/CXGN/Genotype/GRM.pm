@@ -228,7 +228,6 @@ sub get_grm {
     $r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
     $r_block->run_block();
     my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
-    my $grm_data = $result_matrix->{data};
     undef @dosage_matrix;
 
     my @grm;
@@ -236,13 +235,12 @@ sub get_grm {
     for my $i (1..$grm_n) {
         my @row;
         for my $j (1..$grm_n) {
-            push @row, $grm_data->[$count];
+            push @row, $result_matrix->{data}->[$count];
             $count++;
         }
         push @grm, \@row;
     }
     undef $result_matrix;
-    undef $grm_data;
     return (\@grm, \@all_marker_names, \@individuals_stock_ids);
 }
 
