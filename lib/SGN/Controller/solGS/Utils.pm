@@ -2,7 +2,7 @@ package SGN::Controller::solGS::Utils;
 
 use Moose;
 use namespace::autoclean;
-
+use Text::Abbrev;
 use File::Slurp qw /write_file read_file/;
 
 
@@ -67,7 +67,7 @@ sub top_10 {
 
 sub abbreviate_term {
     my ($self, $term) = @_;
-  
+ 
     my @words = split(/\s/, $term);
     
     my $acronym;
@@ -80,10 +80,24 @@ sub abbreviate_term {
     {
 	foreach my $word (@words) 
         {
-	    if ($word =~ /^\D/)
+	    if ($word =~ /^[A-Za-z]/)
             {
-		my $l = substr($word,0,1,q{}); 
+		my $l = substr($word,0,1,q{});
+		
 		$acronym .= $l;
+	    }
+	    elsif ($word =~/^[0-9]/)
+	    {
+		my $str_wrd = $word;
+		my @str = $str_wrd =~ /[\d+-\d+]/g;
+		my $str = join("", @str);
+		my @wrd = $word =~ /[A-Za-z]/g;
+		my $wrd = join("", @wrd);
+	
+		my $l = substr($wrd,0,1,q{});
+		
+		$acronym .= $str . uc($l);
+	
 	    } 
             else 
             {
@@ -91,8 +105,6 @@ sub abbreviate_term {
             }
 
 	    $acronym = uc($acronym);
-	    $acronym =~/(\w+)/;
-	    $acronym = $1; 
 	}	   
     }
   
@@ -112,6 +124,7 @@ sub acronymize_traits {
     foreach my $trait_name (@$traits)
     {
 	$cnt++;
+
         my $abbr = $self->abbreviate_term($trait_name);
 
 	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};  
