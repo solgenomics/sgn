@@ -2,17 +2,44 @@ package CXGN::Trial::TrialDesignStore;
 
 =head1 NAME
 
-CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (both genotyping and phenotyping trials)
+CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (for genotyping, phenotyping and analysis trials)
 
-This is used when storing a new design completely (plots and possibly plants and possibly subplots).
-- Used from CXGN::Trial::TrialCreate for saving newly designed field trials in SGN::Controller::AJAX::Trial->save_experimental_design_POST
-- Used from CXGN::Trial::TrialCreate for saving uploaded field trials in SGN::Controller::AJAX::Trial->upload_trial_file_POST
-- Used from CXGN::Trial::TrialCreate for saving newly designed genotyping plate OR saving uploaded genotyping plate in SGN::Controller::AJAX::GenotypingTrial->store_genotype_trial
+=head1 DESCRIPTION
+
+This class is used for storing a new design completely (plots and possibly plants and possibly subplots).
+
+=over 4
+
+=item -
+
+Used from CXGN::Trial::TrialCreate for saving newly designed field trials in SGN::Controller::AJAX::Trial->save_experimental_design_POST
+
+=item -
+
+Used from CXGN::Trial::TrialCreate for saving uploaded field trials in SGN::Controller::AJAX::Trial->upload_trial_file_POST
+
+=item -
+
+Used from CXGN::Trial::TrialCreate for saving newly designed genotyping plate OR saving uploaded genotyping plate in SGN::Controller::AJAX::GenotypingTrial->store_genotype_trial
+
+=back
 
 This is used for storing new treatment (field management factor) trials.
-- Used from CXGN::Trial::TrialCreate for saving or uploading field trials with treatments in SGN::Controller::AJAX::Trial->save_experimental_design_POST and SGN::Controller::AJAX::Trial->upload_trial_file_POST
-- Used from CXGN::Trial::TrialMetadata->trial_add_treatment for adding a new treatment to a trial
-- To add new treatments, There should be a key in the design called "treatments" specifying which stocks to include in the treatment like:
+
+=over 4
+
+=item -
+
+Used from CXGN::Trial::TrialCreate for saving or uploading field trials with treatments in SGN::Controller::AJAX::Trial->save_experimental_design_POST and SGN::Controller::AJAX::Trial->upload_trial_file_POST
+
+=item -
+
+Used from CXGN::Trial::TrialMetadata->trial_add_treatment for adding a new treatment to a trial
+
+=item -
+
+To add new treatments, There should be a key in the design called "treatments" specifying which stocks to include in the treatment like:
+
     {
         "treatments" =>
             {
@@ -21,14 +48,25 @@ This is used for storing new treatment (field management factor) trials.
             }
     }
 
-This is NOT used for adding plants or tissue_samples to existing trials.
-- Note: For adding plants to a design already saved, use CXGN::Trial->create_plant_entities to auto-generate plant names or CXGN::Trial->save_plant_entries to save user defined plant names.
-- For adding tissue samples to a design already saved, use CXGN::Trial->create_tissue_samples to auto-generate sample names.
+=back
 
---------------------------------------------------------------------------------------------------------
+This is NOT used for adding plants or tissue_samples to existing trials.
+
+=over 5
+
+=item -
+
+Note: For adding plants to a design already saved, use CXGN::Trial->create_plant_entities to auto-generate plant names or CXGN::Trial->save_plant_entries to save user defined plant names.
+
+=item -
+
+For adding tissue samples to a design already saved, use CXGN::Trial->create_tissue_samples to auto-generate sample names.
+
+=back
 
 For field_layout trials, the design should be a HasfRef of HashRefs like:
-{
+
+ {
    '1001' => {
        "plot_name" => "plot1",
        "plot_number" => 1001,
@@ -43,10 +81,10 @@ For field_layout trials, the design should be a HasfRef of HashRefs like:
        "plot_geo_json" => {},
        "plant_names" => ["plant1", "plant2"],
    }
-}
+ }
 
-For genotyping_layout trials, the design should be a HashRef of HashRefs like:
-{
+ For genotyping_layout trials, the design should be a HashRef of HashRefs like:
+ {
    'A01' => {
        "plot_name" => "mytissuesample_A01",
        "stock_name" => "accession1",
@@ -62,79 +100,159 @@ For genotyping_layout trials, the design should be a HashRef of HashRefs like:
        "acquisition_date" => "2018/02/16",
        "notes" => "test notes",
    }
-}
+ }
 
-----------------------------------------------------------------------------------------------------------
 
 Store() will do the following for FIELD LAYOUT trials:
-1) Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = field_layout.
-2) Foreach plot in the design hash, searches for the accession's stock_name.
+
+=over 5
+
+=item 1)
+
+Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = field_layout.
+
+=item 2) 
+
+Foreach plot in the design hash, searches for the accession's stock_name.
 # TO BE IMPLEMENTED: A boolean option to allow stock_names to be added to the database on the fly. Normally this would be set to 0, but for certain loading scripts this could be set to 1.
-3) Finds or creates a stock entry for each plot_name in the design hash.
+
+=item 3) 
+
+Finds or creates a stock entry for each plot_name in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the plot
-4) Creates stockprops (block, rep, plot_number, etc) for plots.
-5) For each plot, creates a stock relationship between the plot and accession if not already present.
-6) If seedlot given: for each plot, creates a seed transaction stock relationship between the plot and seedlot
-7) For each plot, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
-8) Finds or creates a stock entry for each plant_names in the design hash.
+
+=item 4)
+
+Creates stockprops (block, rep, plot_number, etc) for plots.
+
+=item 5) 
+
+For each plot, creates a stock relationship between the plot and accession if not already present.
+
+=item 6) 
+
+If seedlot given: for each plot, creates a seed transaction stock relationship between the plot and seedlot
+
+=item 7) 
+
+For each plot, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
+=item 8) 
+
+Finds or creates a stock entry for each plant_names in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the plant
-9) Creates stockprops (block, rep, plot_number, plant_index_number, etc) for plants.
-10) For each plant, creates a stock_relationship between the plant and accession if not already present.
-11) For each plant, creates a stock_relationship between the plant and plot if not already present.
-12) For each plant creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
+=item 9) 
+
+Creates stockprops (block, rep, plot_number, plant_index_number, etc) for plants.
+=item 10) 
+
+For each plant, creates a stock_relationship between the plant and accession if not already present.
+
+=item 11) 
+
+For each plant, creates a stock_relationship between the plant and plot if not already present.
+
+=item 12) 
+
+For each plant creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
 If there are subplot entries (currently for splitplot design)
-13) Finds or creates a stock entry for each subplot_names in the design hash.
-#TO BE IMPLEMENTED: Associate an owner to the subplot
-9) Creates stockprops (block, rep, plot_number, plant_index_number, etc) for subplots.
-10) For each subplot, creates a stock_relationship between the subplot and accession if not already present.
-11) For each subplot, creates a stock_relationship between the subplot and plot if not already present.
-11) For each subplot, creates a stock_relationship between the subplot and plant if not already present.
-12) For each subplot creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
-----------------------------------------------------------------------------------------------------------
+=item 13) 
+
+Finds or creates a stock entry for each subplot_names in the design hash.
+#TO BE IMPLEMENTED: Associate an owner to the subplot
+
+=item 14) 
+
+Creates stockprops (block, rep, plot_number, plant_index_number, etc) for subplots.
+
+=item 15) 
+
+For each subplot, creates a stock_relationship between the subplot and accession if not already present.
+
+=item 16) 
+
+For each subplot, creates a stock_relationship between the subplot and plot if not already present.
+
+=item 17) 
+
+For each subplot, creates a stock_relationship between the subplot and plant if not already present.
+
+=item 18)
+
+For each subplot creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
+=back
 
 Store() will do the following for GENOTYPING LAYOUT trials:
-1) Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = genotyping_layout.
-2) Foreach tissue_sample in the design hash, searches for the source_observation_unit's stock_name. The source_observation_unit can be in order of descending desireability: tissue_sample, plant, plot, or accession
-3) Finds or creates a stock entry for each tissue in the design hash.
-4) Creates stockprops (col_number, row_number, plot_number, notes, dna_person, etc) for tissue_sample.
-5) For each tissue_sample, creates a stock relationship between the tissue_sample and source_observation_unit if not already present.
-6) If the source_observation_unit is a tissue_sample, it will create stock relationships to the tissue_sample's parent plant, plot, and accession if they exist.
-6) If the source_observation_unit is a plant, it will create stock relationships to the plant's parent plot and accession if they exist.
-6) If the source_observation_unit is a plot, it will create stock relationships to the plot's parent accession if it exists.
-7) For each tissue_sample, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
+=over 5 
+
+=item 1)
+
+Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = genotyping_layout.
+=item 2) 
+
+Foreach tissue_sample in the design hash, searches for the source_observation_unit's stock_name. The source_observation_unit can be in order of descending desireability: tissue_sample, plant, plot, or accession
+
+=item 3) 
+
+Finds or creates a stock entry for each tissue in the design hash.
+
+=item 4) 
+
+Creates stockprops (col_number, row_number, plot_number, notes, dna_person, etc) for tissue_sample.
+
+=item 5) 
+
+For each tissue_sample, creates a stock relationship between the tissue_sample and source_observation_unit if not already present.
+
+=item 6) 
+
+If the source_observation_unit is a tissue_sample, it will create stock relationships to the tissue_sample's parent plant, plot, and accession if they exist.
+
+=item 7) 
+
+If the source_observation_unit is a plant, it will create stock relationships to the plant's parent plot and accession if they exist.
+
+=item 8) 
+
+If the source_observation_unit is a plot, it will create stock relationships to the plot's parent accession if it exists.
+
+=item 9) 
+
+For each tissue_sample, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
+
+=back
 
 =head1 USAGE
 
-my $design_store = CXGN::Trial::TrialDesignStore->new({
+ my $design_store = CXGN::Trial::TrialDesignStore->new({
     bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
     trial_id => $trial_id,
     trial_name => $trial_name,
     design_type => 'CRD',
     design => $design_hash,
     is_genotyping => 0,
-    operator = "janedoe"
-});
-my $validate_error = $design_store->validate_design();
-my $store_error;
-if ($validate_error) {
+    is_analysis => 0,
+    operator = "janedoe" 
+ });
+ my $validate_error = $design_store->validate_design();
+ my $store_error;
+ if ($validate_error) {
     print STDERR "VALIDATE ERROR: $validate_error\n";
-} else {
+ } else {
     try {
         $store error = $design_store->store();
     } catch {
         $store_error = $_;
     };
-}
-if ($store_error) {
+ }
+ if ($store_error) {
     print STDERR "ERROR SAVING TRIAL!: $store_error\n";
-}
-
-
-=head1 DESCRIPTION
-
+ }
 
 =head1 AUTHORS
 
@@ -143,13 +261,10 @@ if ($store_error) {
 
 =cut
 
-
-
 use Data::Dumper;
 use CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 use CXGN::Trial::TrialDesignStore::GenotypingTrial;
 use CXGN::Trial::TrialDesignStore::Analysis;
-
 
 sub new {
     my $class = shift;
