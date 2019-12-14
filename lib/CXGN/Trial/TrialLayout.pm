@@ -393,6 +393,7 @@ sub generate_and_cache_layout {
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "seedlot", "stock_type")->cvterm_id();
     my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
     my $plot_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot_of", "stock_relationship")->cvterm_id();
+    my $analysis_of = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_of", "stock_relationship")->cvterm_id();
     my $tissue_sample_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample_of", "stock_relationship")->cvterm_id();
     my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
     my $subplot_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' );
@@ -459,7 +460,7 @@ sub generate_and_cache_layout {
 	my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
 	my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
 	my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-	    { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
+	    { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv, $analysis_of ] }, 'object.type_id' => $accession_cvterm_id },
 	    { 'join' => 'object' }
 	    );
 	if ($accession_rs->count != 1){
@@ -756,7 +757,7 @@ sub _get_field_layout_experiment_from_project {
     $field_layout_experiment = $project
 	->search_related("nd_experiment_projects")
 	->search_related("nd_experiment")
-   	->find({ 'type.name' => ['field_layout', 'genotyping_layout', 'treatment_experiment']}, {join => 'type' });
+   	->find({ 'type.name' => ['field_layout', 'genotyping_layout', 'treatment_experiment', 'analysis_experiment']}, {join => 'type' });
     return $field_layout_experiment;
 }
 
@@ -890,13 +891,16 @@ sub _get_plots {
     }
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
     my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
-    
+    my $analysis_instance = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_instance", "stock_type")->cvterm_id();
     my $unit_type_id;
     if ($self->get_experiment_type eq 'field_layout'){
 	$unit_type_id = $plot_cvterm_id;
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
 	$unit_type_id = $tissue_cvterm_id;
+    }
+    if ($self->get_experiment_type eq 'analysis') {
+	$unit_type_id = $unit_type_id;
     }
     @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => $unit_type_id });
     

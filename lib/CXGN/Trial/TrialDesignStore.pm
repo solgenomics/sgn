@@ -148,49 +148,41 @@ if ($store_error) {
 use Data::Dumper;
 use CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 use CXGN::Trial::TrialDesignStore::GenotypingTrial;
-#use CXGN::Trial::TrialDesignStore::AnalysisTrial;
-
-=head2 set_design_category(), get_design_cateogory()
-
-The category of design: field_trial, genotyping_trial, or analysis.
-
-=cut
-
-sub set_design_category {
-    
-
-}
-
-sub get_design_category {
-}
-
-sub is_genotyping_trial {
-
-}
+use CXGN::Trial::TrialDesignStore::Analysis;
 
 
 sub new {
     my $class = shift;
     my $args = shift;
 
+    my $type;
+
+    if (($args->{is_genotyping} == 1) && ($args->{is_analysis} == 1)) { 
+	die "Trial design can't have is_genotyping and is_analysis set at the same time.\n";
+    }
+    
     if ($args->{is_genotyping} == 1) { 
-	$args->{design_category} = "genotyping_trial";
+	$type = "genotyping_trial";
     }
 
-    if(! defined($args->{design_category})) { 
-	$args->{design_category} = "phenotyping_trial";
+    if ($args->{is_analysis} == 1) {
+	$type = "analysis";
+    }
+    
+    if( (! $args->{is_genotyping}) && (! $args->{is_analysis}) ) { 
+	$type = "phenotyping_trial";
     }
     
     my $object;
-    if ($args->{design_category} eq "genotyping_trial") {
+    if ($type eq "genotyping_trial") {
 	print STDERR "Generating GENOTYPING TRIAL\n";
 	$object = CXGN::Trial::TrialDesignStore::GenotypingTrial->new($args);
     }
-    if ($args->{design_category} eq "phenotyping_trial") {
+    if ($type eq "phenotyping_trial") {
 	print STDERR "Generating PHENOTYPING TRIAL OBJECT...\n";
 	$object = CXGN::Trial::TrialDesignStore::PhenotypingTrial->new($args);
     }
-    if ($args->{design_category} eq "analysis_trial") {
+    if ($type eq "analysis") {
 	print STDERR "Generating ANALYSIS TRIAL...\n";
 	$object = CXGN::Trial::TrialDesignStore::AnalysisTrial->new($args);
     }

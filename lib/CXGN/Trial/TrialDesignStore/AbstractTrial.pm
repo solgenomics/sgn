@@ -15,6 +15,8 @@ use Try::Tiny;
 
 =head2 bcs_schema()
 
+Bio::Chado::Schema object, required parameter.
+
 =cut
 
 has 'bcs_schema' => (
@@ -26,7 +28,7 @@ has 'bcs_schema' => (
 
 =head2 set_trial_id(), get_trial_id()
 
-The trial id, which essentially is a project_id.
+The trial id, which essentially is a project_id. Required.
 
 =cut
 
@@ -80,6 +82,13 @@ Whether this is a genotyping experiment. (deprecated; rather, check the object t
 
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
+=head2 set_is_analysis(), get_is_analysis()
+
+Whether the object is an analysis object. Assumes is_genotyping to be false.
+
+=cut
+    
+has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
 =head2 set_stock_exist(), get_stock_exist()
 
@@ -146,9 +155,9 @@ An name for an operator performing the action.
 
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
 
-=head1 set_source_stock_types(), get_source_stock_types()
+=head2 set_source_stock_types(), get_source_stock_types()
 
-
+The source stock types. Needs to be defined in the constructor (BUILD) of the subclass.
 
 =cut
 
@@ -181,8 +190,16 @@ has 'stock_relationship_type_id' => (isa => 'Int', is => 'rw');
 The stock type_id of the elements in the design.
 
 =cut
-    
+
 has 'stock_type_id' => (isa => 'Int', is => 'rw');
+
+=head2 set_valid_properties(), get_valid_properties()
+
+The properties that are valid in the object for validation purposes. Needs to be set in the constructor of the subclass.
+
+=cut
+    
+has 'valid_properties' => (isa => 'Maybe[ArrayRef]', is => 'rw');
 
 has 'seedlot_cvterm_id'  => (isa => 'Int', is => 'rw');
 

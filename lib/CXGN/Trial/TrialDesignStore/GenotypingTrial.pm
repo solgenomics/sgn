@@ -22,7 +22,25 @@ sub BUILD {
 	  $self->get_tissue_sample_cvterm_id 
 	]
 	);
-    
+
+    $self->set_valid_properties( 
+	[
+	 'stock_name',
+	 'plot_name',
+	 'row_number',
+	 'col_number',
+	 'is_blank',
+	 'plot_number',
+	 'extraction',
+	 'dna_person',
+	 'concentration',
+	 'volume',
+	 'tissue_type',
+	 'notes',
+	 'acquisition_date',
+	 'ncbi_taxonomy_id'
+	 
+	]);
 }
 
 
@@ -41,22 +59,8 @@ sub validate_design {
         return $error;
     }
 
-    my @valid_properties = (
-	'stock_name',
-	'plot_name',
-	'row_number',
-	'col_number',
-	'is_blank',
-	'plot_number',
-	'extraction',
-	'dna_person',
-	'concentration',
-	'volume',
-	'tissue_type',
-	'notes',
-	'acquisition_date',
-	'ncbi_taxonomy_id'
-        );
+    my @valid_properties = @{$self->get_valid_properties()};
+       
     #plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
 
     
