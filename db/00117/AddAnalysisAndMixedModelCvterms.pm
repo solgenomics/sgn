@@ -78,8 +78,10 @@ sub patch {
 	    experiment_type =>
 	    [
 	     "analysis_experiment",
-	     "mixed_model_analysis",
-	     "averaging_calculation",
+	    ],
+	    stock_relationship =>
+	    [
+	     "analysis_of",
 	    ],
     };
     
