@@ -96,7 +96,7 @@ has 'marker_name_list' => (
 has 'genotypeprop_hash_select' => (
     isa => 'ArrayRef[Str]',
     is => 'ro',
-    default => sub {['GT', 'AD', 'DP', 'GQ', 'DS', 'PL', 'NT']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES
+    default => sub {['DS']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES. For dosage matrix we only need DS
 );
 
 has 'limit' => (
@@ -133,7 +133,9 @@ sub download {
         markerprofile_id_list=>$markerprofile_id_list,
         genotype_data_project_list=>$genotype_data_project_list,
         marker_name_list=>$marker_name_list,
-        genotypeprop_hash_select=>$genotypeprop_hash_select,
+        genotypeprop_hash_select=>['DS'],
+        protocolprop_top_key_select=>['markers'],
+        protocolprop_marker_hash_select=>['name'],
         return_only_first_genotypeprop_for_stock=>1,
         limit=>$limit,
         offset=>$offset
