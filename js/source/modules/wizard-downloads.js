@@ -45,10 +45,21 @@ export function WizardDownloads(main_id,wizard){
         var chromosome_number = d3.select(".wizard-download-genotypes-chromosome-number").node().value;
         var start_position = d3.select(".wizard-download-genotypes-start-position").node().value;
         var end_position = d3.select(".wizard-download-genotypes-end-position").node().value;
-        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}`;
+        var download_format = d3.select(".wizard-download-genotypes-format").node().value;
+        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}`;
         window.open(url,'_blank');
       });
-    
+    main.selectAll(".wizard-download-genetic-relationship-matrix")
+      .attr("disabled",!!accessions.length&&protocols.length<=1?null:true)
+      .on("click",()=>{
+        event.preventDefault();
+        var accession_ids = accessions.map(d=>d.id);
+        var trial_ids = (selections["trials"]||[]).map(d=>d.id);
+        var protocol_id = protocols.length==1?protocols[0].id:'';
+        var url = document.location.origin+`/breeders/download_grm_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}`;
+        window.open(url,'_blank');
+      });
+
     // Download Trial Metadata
     var trials = catagories.indexOf("trials")!=-1 ? selections["trials"] : [];
     main.selectAll(".wizard-download-tmetadata-info")
