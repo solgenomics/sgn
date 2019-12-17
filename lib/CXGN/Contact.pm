@@ -85,6 +85,8 @@ sub send_email {
             my $smtp_port = $vhost_conf->get_conf('smtp_port');
             my $smtp_login = $vhost_conf->get_conf('smtp_login');
             my $smtp_pass = $vhost_conf->get_conf('smtp_pass');
+            my $smtp_auth = $vhost_conf->get_conf('smtp_auth');
+            my $smtp_from = $vhost_conf->get_conf('smtp_from') || $mailfrom;
 
             # If SMTP config values are found use external SMTP server
             if ( $smtp_server and $smtp_login and $smtp_pass ) {
@@ -94,7 +96,8 @@ sub send_email {
                   -layer => $smtp_layer,
                   -port  => $smtp_port,
                   -login => $smtp_login,
-                  -pass  => $smtp_pass
+                  -pass  => $smtp_pass,
+                  -auth  => $smtp_auth
               );
 
               if ($mail == -1) {
@@ -102,6 +105,7 @@ sub send_email {
               };
 
               $mail->send(
+                  -from       => $smtp_from,
                   -to         => $mailto,
                   -subject    => $subject,
                   -body       => $body
