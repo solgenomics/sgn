@@ -57,6 +57,7 @@ solGS.pca = {
 	  dataType = jQuery('#pca_data_type_select').val();  
 	}
 
+	var traitId = jQuery('#trait_id').val();
 	var popDetails = solGS.getPopulationDetails();
 	
 	var listId;
@@ -97,7 +98,8 @@ solGS.pca = {
 		'data_type': dataType,
 		'data_structure': dataStructure,
 		'dataset_id': datasetId,
-		'dataset_name': datasetName
+		'dataset_name': datasetName,
+		'trait_id': traitId
 	    };
 	    
 	    this.runPcaAnalysis(pcaArgs);
@@ -107,15 +109,11 @@ solGS.pca = {
 
     runPcaAnalysis: function (pcaArgs) {
 
-	console.log('runpcaanalysis')
-	
 	jQuery("#pca_canvas .multi-spinner-container").prependTo("#pca_canvas");
 	jQuery("#pca_canvas .multi-spinner-container").show();
 	jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));
 	jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
 	jQuery("#run_pca").hide();
-
-	 console.log('calling pca ajax')
 
 	jQuery.ajax({
             type: 'POST',

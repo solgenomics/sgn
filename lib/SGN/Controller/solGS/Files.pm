@@ -630,8 +630,8 @@ sub create_file_id {
     my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
-    my @traits_ids = $traits_ids->[0] ? @{$traits_ids} : 0;
-    
+    my @traits_ids = $traits_ids->[0] ? @{$traits_ids} : $c->stash->{trait_id};
+   
     my $traits_selection_id;
     if (scalar(@traits_ids > 1))
     {
@@ -682,8 +682,9 @@ sub create_file_id {
 	
 	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
-
-    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $traits_ids[0]; 
+    
+    $file_id = $file_id . '-traits-' . $traits_selection_id if $traits_selection_id;
+    $file_id = $file_id . '-trait-' . $traits_ids[0] if !$traits_selection_id && @traits_ids;
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
     

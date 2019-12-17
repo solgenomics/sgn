@@ -50,6 +50,7 @@ sub pca_run :Path('/pca/run/') Args() {
     my $list_id      = $c->req->param('list_id');   
     my $dataset_id   = $c->req->param('dataset_id');
     my $dataset_name = $c->req->param('dataset_name');
+    my $trait_id      = $c->req->param('trait_id');
     
     my $data_structure =  $c->req->param('data_structure');
     my $data_type      =  $c->req->param('data_type');
@@ -64,6 +65,7 @@ sub pca_run :Path('/pca/run/') Args() {
     $c->stash->{dataset_name}     = $dataset_name;
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
+    $c->stash->{trait_id}         = $trait_id;
 
     $c->controller('solGS::Files')->create_file_id($c);    
     my $file_id = $c->stash->{file_id};
