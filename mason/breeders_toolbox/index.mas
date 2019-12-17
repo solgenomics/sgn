@@ -17,7 +17,7 @@
     }
 
     .SNPTool {
-    	position: relative; 
+    	position: relative;
     	top: 100px;
     	left: 50px;
     }
@@ -31,11 +31,11 @@
     	top: 0px;
     	left: 0px;
     	z-index: 1;
-    }   
-   
+    }
+
 
     .Markers {
-    	position: relative; 
+    	position: relative;
     	top: 110px;
     	left: 400px;
     }
@@ -52,7 +52,7 @@
 
 
     .Phenotypes {
-    	position: relative; 
+    	position: relative;
     	top: 20px;
     	left: -30px;
     }
@@ -69,7 +69,7 @@
 
 
     .QTLTool {
-    	position: relative; 
+    	position: relative;
     	top: 170px;
     	left: 120px;
     }
@@ -84,8 +84,8 @@
     	left: 0px;
     	z-index: 1;
     }
-    
-    .Genes { 
+
+    .Genes {
         position: relative;
         top: 10px;
         left: 130px;
@@ -95,11 +95,11 @@
 
 </style>
 
-<& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
- 
+<& /page/page_title.mas, title=>'Breeders Toolbox' &>
+
 <div class="page_introduction">
 <p>The purpose of this page is to give breeders direct links to
-breeder-relevant tools and data on SGN. It is a work in progress and
+breeder-relevant tools and data. It is a work in progress and
 your feedback or suggestions are welcome to build this into a
 comprehensive, easy to use and breeder-friendly resource.</p>
 
@@ -110,8 +110,8 @@ with suggestions for improvements!</p>
 <div id="icon_nav">
 <ul>
 
-	
-    
+
+
 	<li class="SNPTool"><!-- a href="#" --><img src="/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (coming soon)" ><!-- /a -->
     	<!--
 		<ul>
@@ -123,7 +123,7 @@ with suggestions for improvements!</p>
         </ul>
         -->
 	</li>
-    
+
      <li class="Markers"><a href="/search/direct_search.pl?search=markers"><img src="/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
     	<!--
 		<ul>
@@ -135,7 +135,7 @@ with suggestions for improvements!</p>
         </ul>
         -->
 	</li>
-	
+
 
 	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes"><img src="/img/soliconmenu/Phenotypes.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
     	<!--
@@ -148,7 +148,7 @@ with suggestions for improvements!</p>
         </ul>
         -->
 	</li>
-    
+
 	<li class="QTLTool"><a href="/search/direct_search.pl?search=qtl"><img src="/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
     	<!--
    		<ul>
@@ -226,4 +226,3 @@ with suggestions for improvements!</p>
 
 
 <& /util/import_javascript.mas, classes => [qw[ icon_nav ]] &>
-

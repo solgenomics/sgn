@@ -152,7 +152,7 @@ sub process_image {
     }
     elsif ( $type eq "organism" ) {
         $self->associate_organism($type_id);
-    } 
+    }
     elsif ( $type eq "cvterm" ) {
 	$self->associate_cvterm($type_id);
     }
@@ -160,13 +160,13 @@ sub process_image {
         $self->associate_project($type_id, $linking_table_type_id);
     }
 
-    elsif ( $type eq "test") { 
+    elsif ( $type eq "test") {
 	# need to return something to make this function happy
 	return 1;
-	
+
     }
     else {
-        warn "type $type is not recognized as one of the legal types. Not associating image with any object. Please check if your loading script links the image with an sgn object! \n";
+        warn "type $type is not recognized as one of the legal types. Not associating image with any object. Please check if your loading script links the image with a database object! \n";
     }
 
 }
@@ -973,7 +973,7 @@ sub get_associated_object_links {
 =head2 associate_cvterm
 
  Usage: $image->associate_cvterm($cvterm_id)
- Desc:  link uploaded image with a cvterm        
+ Desc:  link uploaded image with a cvterm
  Ret:   database ID md_image_cvterm_id
  Args:  $cvterm_id
  Side Effects: Insert database row

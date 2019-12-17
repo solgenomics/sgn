@@ -267,6 +267,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	print STDERR "Saving private email '$private_email' to the database\n";
 	$person->set_private_email($private_email);
 	my $confirm_code = $self->tempname();
+    my $project_name = $c->config->{project_name};
 	$person->set_confirm_code($confirm_code);
 	$person->store();
 
@@ -282,7 +283,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 
 sub send_confirmation_email {
     my ($self, $username, $private_email, $confirm_code, $host) = @_;
-    my $subject = "[SGN] E-mail Address Confirmation Request";
+    my $subject = "[$project_name] E-mail Address Confirmation Request";
 
     my $body = <<END_HEREDOC;
 
@@ -299,8 +300,8 @@ confirm your account and e-mail address:
 
   $host/user/confirm?username=$username&confirm=$confirm_code
 
-Thank you.
-Sol Genomics Network
+Thank you,
+$project_name Team
 END_HEREDOC
 
    CXGN::Contact::send_email($subject, $body, $private_email);
@@ -384,9 +385,9 @@ sub send_reset_email_message {
     my $private_email = shift;
     my $reset_link = shift;
 
-    my $subject = "[SGN] E-mail Address Confirmation Request";
     my $main_url = $c->config->{main_production_site_url};
-
+    my $project_name = $c->config->{project_name};
+    my $subject = "[$project_name] E-mail Address Confirmation Request";
     my $body = <<END_HEREDOC;
 
 Hi,
@@ -401,9 +402,8 @@ Your password can be reset using the following link, which you can either click 
 
 $reset_link
 
-Thank you.
-
-Your friends at $main_url
+Thank you,
+$project_name Team
 
 END_HEREDOC
 

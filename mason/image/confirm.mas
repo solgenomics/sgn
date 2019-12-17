@@ -13,21 +13,21 @@ $image_url
 
 <%perl>
 
-  print qq { The image uploaded is shown below. Please click on "Store in SGN database" to permanently store the image in the database. <br /> };
+  print qq { The image uploaded is shown below. Please click on "Store in database" to permanently store the image in the database. <br /> };
 
 print "<br />\n";
 if ($type && $type_id) { print "<b>Association:</b> $type id $type_id<br />\n"; }
 
 print "<b>Submitter:</b> $sp_person_id<br /><br/>\n";
 
-print qq { 
+print qq {
 	  <form name="store_image" action="/image/store" method="post" enctype="multipart/form-data" >
 	  <input type="hidden" name="tempfile" value="$tempfile" />
 	  <input type="hidden" name="filename" value="$filename" />
 	  <input type="hidden" name="type" value="$type" />
 	  <input type="hidden" name="type_id" value="$type_id" />
-	  <input id="store_image_submit" class="btn btn-primary" type="submit" value="Store in SGN database" />
-	  
+	  <input id="store_image_submit" class="btn btn-primary" type="submit" value="Store in database" />
+
 	  </form>
 	  <br/>
 	 };

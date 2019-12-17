@@ -84,8 +84,6 @@ sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
   #   }
   #}
 
-  #just temporarily till R output is working
-  #$output_path = '/home/bje24/cxgn/sgn/static/documents/Rplot.pdf';
   $output_path = '/static/documents/img/Rplot.png';
 
   # when analysis is complete, display output graphic

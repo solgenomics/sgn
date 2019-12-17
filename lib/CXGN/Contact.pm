@@ -17,7 +17,6 @@ use strict;
 use Mail::Sendmail;
 use Email::Send::SMTP::Gmail;
 
-use CXGN::Apache::Request;
 use CXGN::Tools::Text;
 
 use SGN::Context;
@@ -58,15 +57,11 @@ sub send_email {
     #mailto can also be specified normally (such as 'John Binns <zombieite@gmail.com>').
     if ( $mailto and eval{ $vhost_conf->get_conf($mailto)} ) {
         $mailto = $vhost_conf->get_conf($mailto);
-        ##$request_info .= CXGN::Apache::Request::as_verbose_string();
     }
 
     #if we have no one specified to mail to, send it to bugs, and append the request info.
     unless ($mailto) {
-        $mailto = $vhost_conf->get_conf('bugs_email')
-          ; #for all emails that do not specify email address, send them to our bugs_email
-        ##$request_info .= CXGN::Apache::Request::as_verbose_string()
-          ; #append request info to all emails that do not specify email address
+        $mailto = $vhost_conf->get_conf('bugs_email');
     }
 
     $subject ||= 'No subject specified';
