@@ -1002,11 +1002,11 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $referer = $c->req->referer;
-   if ($referer =~ /combined\/populations\//) 
-   {
-       $c->stash->{data_set_type} = 'combined populations';
-       $c->stash->{combo_pops_id} = $pop_id;      
-   };
+    if ($referer =~ /combined\/populations\//) 
+    {
+	$c->stash->{data_set_type} = 'combined populations';
+	$c->stash->{combo_pops_id} = $pop_id;      
+    }
     
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     my $blups_file = $c->stash->{rrblup_training_gebvs_file};
@@ -1014,7 +1014,7 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
     unless (!-e $blups_file || -s $blups_file == 0) 
     {
         my @blups =  map { [ split(/\t/) ] }  read_file($blups_file);
-      
+	
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @blups);
     } 
@@ -1449,19 +1449,22 @@ sub download_prediction_urls {
 sub model_accuracy {
     my ($self, $c) = @_;
     my $file = $c->stash->{validation_file};
-    my @report =();
 
-    if ( !-e $file) { @report = (["Validation file doesn't exist.", "None"]);}
-    if ( -s $file == 0) { @report = (["There is no cross-validation output report.", "None"]);}
-    
-    if (!@report) 
+    my $accuracy;
+    if (!-e $file) 
+    { 
+	$accuracy = [["Validation file doesn't exist.", "None"]];
+    }
+    elsif (!-s $file) 
+    { 
+	$accuracy = [["There is no cross-validation output report.", "None"]];
+    }
+    else
     {
-        @report =  map  { [ split(/\t/, $_) ]}  read_file($file);
+	$accuracy = $c->controller('solGS::Utils')->read_file_data($file);	
     }
 
-    shift(@report); #add condition
-
-    $c->stash->{accuracy_report} = \@report;
+    $c->stash->{accuracy_report} = $accuracy;
  
 }
 
@@ -1471,12 +1474,9 @@ sub model_parameters {
 
     $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
-   
-    my @params =  map  { [ split(/\t/, $_) ]}  read_file($file);
-
-    shift(@params); #add condition
-
-    $c->stash->{model_parameters} = \@params;
+  
+    my $params = $c->controller('solGS::Utils')->read_file_data($file);
+    $c->stash->{model_parameters} = $params;
    
 }
 
