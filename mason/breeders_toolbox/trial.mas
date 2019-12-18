@@ -61,9 +61,17 @@ $trial_stock_type => undef
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type &>
 
+% my $barcode_section_title = '';
+% if ($trial_stock_type eq 'family_name') {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or family names in this trial.';
+% } elsif ($trial_stock_type eq 'cross') {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or crosses in this trial.';
+% } else {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
+% }
 <div class="row">
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => "Generate barcode labels for stocks in this trial.", button_id => "generate_trial_barcode_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
     </div>
     <div class="col-sm-6">
         <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
