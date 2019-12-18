@@ -254,7 +254,7 @@ $trial_stock_type => undef
                 <p>
                     <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
-                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode"></button>
                     <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcode</button>
                 </p>
 
@@ -276,16 +276,21 @@ jQuery(document).ready(function () {
 
     var trial_stock_type = "<% $trial_stock_type %>";
     var dialog_subtitle = '';
+    var barcode_button_label = '';
     if (trial_stock_type == 'family_name') {
         dialog_subtitle = 'Generate barcode for plots, plants and family names used in this trial.';
+        barcode_button_label = 'Family Names Barcode';
     } else if (trial_stock_type == 'cross') {
         dialog_subtitle = 'Generate barcode for plots, plants and crosses used in this trial.';
+        barcode_button_label = 'Crosses Barcode';
     } else {
         dialog_subtitle = 'Generate barcode for plots, plants and accessions used in this trial.';
+        barcode_button_label = 'Accessions Barcode';
     }
 
     jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
 
+    document.getElementById('trial_accession_barcode').innerHTML = barcode_button_label;
 
     jQuery('#trial_accession_barcode').click(function() {
 
