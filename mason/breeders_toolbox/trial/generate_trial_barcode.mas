@@ -295,10 +295,9 @@ jQuery(document).ready(function () {
     jQuery('#trial_accession_barcode').click(function() {
 
     	jQuery.ajax ( {
-                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
 
-    		    success: function(response){
-
+            success: function(response) {
         		var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
         		for (i=0; i<response.accessions[0].length; i++) {
@@ -307,41 +306,39 @@ jQuery(document).ready(function () {
                 trial_accessions_html = trial_accessions_html + "</textarea>";
         		jQuery('#trial_accessions').empty();
         		jQuery('#trial_accessions').html(trial_accessions_html);
-        	    },
-        	    error: function(response){
+            },
+            error: function(response){
         		      alert("Error retrieving accessions.");
-        	    }
-        	});
+            }
         });
+    });
 
-        jQuery('#trial_plot_barcode').click(function() {
+    jQuery('#trial_plot_barcode').click(function() {
 
-            jQuery.ajax ( {
-                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
 
-                success: function(response){
-
-                    var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
-                    for (i=0; i<response.plots[0].length; i++) {
-            		    trial_plots_html = trial_plots_html + response.plots[0][i][1] + "\n";
-            		}
-                    trial_plots_html = trial_plots_html + "</textarea>";
-                    jQuery('#trial_accessions').empty();
-            		jQuery('#trial_accessions').html(trial_plots_html);
-            	    },
-            	    error: function(response){
-            		      alert("Error retrieving plots.");
+            success: function(response){
+                var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                for (i=0; i<response.plots[0].length; i++) {
+                    trial_plots_html = trial_plots_html + response.plots[0][i][1] + "\n";
                 }
-            });
+                trial_plots_html = trial_plots_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(trial_plots_html);
+            },
+            error: function(response){
+                alert("Error retrieving plots.");
+            }
         });
+    });
 
-        jQuery('#trial_plant_barcode').click(function() {
+    jQuery('#trial_plant_barcode').click(function() {
 
-            jQuery.ajax ( {
-                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
 
-                success: function(response){
-
+            success: function(response){
                 if (response.plants == '') {
                     alert("Trial has no plant entries.");
                 }
@@ -352,15 +349,15 @@ jQuery(document).ready(function () {
                 trial_plants_html = trial_plants_html + "</textarea>";
                 jQuery('#trial_accessions').empty();
                 jQuery('#trial_accessions').html(trial_plants_html);
-                },
-                error: function(response){
-                    alert("Error retrieving plants.");
-                }
-
-            });
+            },
+            error: function(response){
+                alert("Error retrieving plants.");
+            }
 
         });
 
     });
+
+});
 
 </script>
