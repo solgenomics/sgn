@@ -164,7 +164,7 @@ $dataset_id => undef
             <tr>
               <td>
                 <span>Chromosome</span>
-                <input placeholder="" type="number" class="wizard-download-genotypes-chromosome-number form-control">
+                <input placeholder="" type="text" class="wizard-download-genotypes-chromosome-number form-control">
               </td>
               <td>
                 <span>Start Position</span>

@@ -90,7 +90,7 @@ has 'genotype_data_project_list' => (
 );
 
 has 'chromosome_list' => (
-    isa => 'ArrayRef[Int]|Undef',
+    isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
     is => 'ro',
 );
 
@@ -438,10 +438,12 @@ sub get_genotype_info {
         my $protocolprop_where_markers_array_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_markers_array_cvterm_id";
         my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
 
+        # my @chromosome_list = ('1A', '2A', '2B');
+
         my $chromosome_where = '';
         if ($chromosome_list && scalar(@$chromosome_list)>0) {
-            my $chromosome_list_sql = join ',', @$chromosome_list;
-            $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+            my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
+            $chromosome_where = " AND (s.value->>'chrom')::str IN ($chromosome_list_sql)";
         }
         my $start_position_where = '';
         if (defined($start_position)) {
@@ -451,6 +453,8 @@ sub get_genotype_info {
         if (defined($end_position)) {
             $end_position_where = " AND (s.value->>'pos')::int <= $end_position";
         }
+
+        print STDERR "\n\n\n==== CHROMO WHERE: $chromosome_where ====\n\n\n";
 
         my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql
             FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s
@@ -807,8 +811,8 @@ sub get_next_genotype_info {
 
             my $chromosome_where = '';
             if ($chromosome_list && scalar(@$chromosome_list)>0) {
-                my $chromosome_list_sql = join ',', @$chromosome_list;
-                $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+                my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
+                $chromosome_where = " AND (s.value->>'chrom')::str IN ($chromosome_list_sql)";
             }
             my $start_position_where = '';
             if (defined($start_position)) {
