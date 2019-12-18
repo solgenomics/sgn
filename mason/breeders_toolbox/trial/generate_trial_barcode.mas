@@ -18,9 +18,8 @@ $trial_stock_type => undef
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p>
+                    <p id = "barcode_dialog_subtitle2">
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Generate barcode for plots and accessions.
                     </p>
                     OR   <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="custom_barcode_trial_link">Design Custom Barcode</button>   ON LABEL DESIGNER PAGE!
                     <center>
@@ -276,19 +275,26 @@ jQuery(document).ready(function () {
 
     var trial_stock_type = "<% $trial_stock_type %>";
     var dialog_subtitle = '';
+    var dialog_subtitle2 = '';
     var barcode_button_label = '';
+
     if (trial_stock_type == 'family_name') {
         dialog_subtitle = 'Generate barcode for plots, plants and family names used in this trial.';
+        dialog_subtitle2 = 'Generate barcode for plots or plants or family names used in this trial.';
         barcode_button_label = 'Family Names Barcode';
     } else if (trial_stock_type == 'cross') {
         dialog_subtitle = 'Generate barcode for plots, plants and crosses used in this trial.';
+        dialog_subtitle2 = 'Generate barcode for plots or plants or crosses used in this trial.';
         barcode_button_label = 'Crosses Barcode';
     } else {
         dialog_subtitle = 'Generate barcode for plots, plants and accessions used in this trial.';
+        dialog_subtitle2 = 'Generate barcode for plots or plants or accessions used in this trial.';
         barcode_button_label = 'Accessions Barcode';
     }
 
     jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
+
+    jQuery('#barcode_dialog_subtitle2').text(dialog_subtitle2);
 
     document.getElementById('trial_accession_barcode').innerHTML = barcode_button_label;
 
