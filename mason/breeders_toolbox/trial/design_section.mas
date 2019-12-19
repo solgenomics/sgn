@@ -4,13 +4,21 @@ $trial_name
 $has_subplot_entries
 $has_plant_entries
 $has_tissue_sample_entries
+$trial_stock_type => undef
 </%args>
 
 <div class="well well-sm">
 
     <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
-
-    <&| /page/info_section.mas, id => "trial_stocks", title=>"Stocks and Stock Type used in Trial", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+% my $stock_label = '';
+% if ($trial_stock_type eq 'family_name') {
+%     $stock_label = 'Family Names';
+% } elsif ($trial_stock_type eq 'cross') {
+%     $stock_label = 'Cross Unique IDs';
+% } else {
+%     $stock_label = 'Accessions'
+% }
+    <&| /page/info_section.mas, id => "trial_stocks", title=> $stock_label, is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
     </&>
 
