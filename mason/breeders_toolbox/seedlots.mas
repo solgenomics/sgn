@@ -169,7 +169,7 @@ jQuery(document).ready(function(){
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
-            //console.log(json);
+            console.log(json);
             if (!isLoggedIn()) {
                 jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
             } else {
@@ -188,11 +188,13 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#submit_seedlot_search').click( function() {
+        console.log("Seedlot search triggered");
         seedlots_table.search("available_seedlots_table").draw();
     });
 
     jQuery('#search_seedlot_form').keypress( function( e ) {
         var code = e.keyCode || e.which;
+        console.log("Keypress code is: "+code);
         if( code == 13 ) {
             jQuery('#submit_seedlot_search').click();
         }
