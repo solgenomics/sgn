@@ -255,11 +255,29 @@ sub dataset_population_summary {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-    
-    my $file_id = $self->dataset_file_id($c);
+    my $file_id =  $self->dataset_file_id($c);	
     my $tmp_dir = $c->stash->{solgs_datasets_dir};
-   
-    if (!$c->user)
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+    my $meta= $c->model('solGS::solGS')->get_dataset_metadata($dataset_id);
+    my $dataset_name = $meta->{name};
+    my $owner_id = $meta->{owner_id};
+    my $desc = $meta->{desc};
+    $desc = 'NA' if $desc == 'undefined';
+     
+    my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
+    my $owner = $person->get_first_name() . ' ' . $person->get_last_name();
+
+    my $user_role;
+    my $user_id;
+ 
+    if ($c->user)
+    {
+	$user_role = $c->user->get_object->get_user_type();
+	$user_id = $c->user->get_object->get_sp_person_id();
+    }
+    
+    if (($user_role =~ /submitter|user/  &&  $user_id != $owner_id) || !$c->user)
     {
 	my $page = "/" . $c->req->path;
 	$c->res->redirect("/solgs/login/message?page=$page");
@@ -267,33 +285,17 @@ sub dataset_population_summary {
     }
     else
     {
-	my $user_name = $c->user->id;  
-        my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c);
+        my $protocol_url = $c->controller('solGS::solGS')->create_protocol_url($c, $protocol_id);
 
-	if ($dataset_id) 
-	{
-	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
-	    my $metadata_file = $c->stash->{population_metadata_file};
-       
-	    my @metadata = read_file($metadata_file);
-       
-	    my ($key, $dataset_name, $desc);
-     
-	    ($desc)        = grep {/description/} @metadata;       
-	    ($key, $desc)  = split(/\t/, $desc);
-      
-	    ($dataset_name)       = grep {/dataset_name/} @metadata;      
-	    ($key, $dataset_name) = split(/\t/, $dataset_name); 
-	   
-	    $c->stash(project_id          => $file_id,
-		      project_name        => $dataset_name,
-		      prediction_pop_name => $dataset_name,
-		      project_desc        => $desc,
-		      owner               => $user_name,
-		      protocol            => $protocol,
-		);  
-	}
+	$c->stash(project_id          => $file_id,
+		  project_name        => $dataset_name,
+		  selection_pop_name  => $dataset_name,
+		  project_desc        => $desc,
+		  owner               => $owner,
+		  protocol            => $protocol_url,
+	    );  
     }
+    
 }
 
 
@@ -302,7 +304,8 @@ sub create_dataset_population_metadata {
 
     my $dataset_id = $c->stash->{dataset_id};
     
-    my $dataset_name = $c->model('solGS::solGS')->get_dataset_name($dataset_id);
+    my $meta= $c->model('solGS::solGS')->get_dataset_metadata($dataset_id);
+    my $dataset_name = $meta->{name};
     
     my $metadata = 'key' . "\t" . 'value';
     $metadata .= "\n" . 'user_id' . "\t" . $c->user->id;
