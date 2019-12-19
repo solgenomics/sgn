@@ -2035,7 +2035,7 @@ sub get_dataset_plots_list {
 }
 
 
-sub get_dataset_name {
+sub get_dataset_metadata {
     my ($self, $dataset_id) = @_;
    
     my $dataset = CXGN::Dataset->new({
@@ -2043,7 +2043,11 @@ sub get_dataset_name {
 	schema  => $self->schema,
 	sp_dataset_id =>$dataset_id}); 
    
-    return $dataset->name();
+    return {
+	'name'     => $dataset->name,
+	'desc'     => $dataset->description,
+	'owner_id' => $dataset->sp_person_id
+    };
 }
 
 
