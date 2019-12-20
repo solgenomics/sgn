@@ -326,6 +326,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
     my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
     my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
+    my $pval_test_outfile = $tempfile . "_" . $newtrait . "_pvals.txt";
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
@@ -401,7 +402,9 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $figure4file,
             $pc_check,
             $kinship_check,
+            $pval_test_outfile,
     );
+    $cmd->is_cluster(1);
     $cmd->wait;
 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";

@@ -19,6 +19,7 @@ figure3_file_name <- args[4]
 figure4_file_name <- args[5]
 pc_check <- args[6]
 kinship_check <- args[7]
+text_output_file <- args[8]
 
 
 
@@ -195,7 +196,8 @@ plot(expected.logvalues , observed.logvalues, main="QQ Plot",
 abline(0,1,lwd=3,col="black")
 dev.off()
 
-
+gwasresults$loc <- as.numeric(as.character(gwasresults$loc))
+write.table(gwasresults, file=text_output_file, row.names=FALSE)
 
 
 ##### Identify the markers that are above the bonferroni cutoff #####
