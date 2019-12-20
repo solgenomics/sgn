@@ -160,7 +160,7 @@ has 'plot_length' => (isa => 'Num', is => 'rw', predicate => 'has_plot_length', 
 has 'planting_date' => (isa => 'Str', is => 'rw', predicate => 'has_planting_date', required => 0);
 has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
-has 'stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_stock_type', required => 0);
+has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0);
 
 #Trial linkage when saving a field trial
 has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 0);
@@ -365,9 +365,9 @@ sub save_trial {
 			$field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
 		});
 	}
-	if ($self->has_stock_type && $self->get_stock_type){
+	if ($self->has_trial_stock_type && $self->get_trial_stock_type){
 		$project->create_projectprops({
-			$trial_stock_type_cvterm->name() => $self->get_stock_type
+			$trial_stock_type_cvterm->name() => $self->get_trial_stock_type
 		});
 	}
 
@@ -389,7 +389,7 @@ sub save_trial {
 		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
 		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
 		operator => $self->get_operator,
-        stock_type => $self->get_stock_type
+        trial_stock_type => $self->get_trial_stock_type
 	});
 	my $error;
 	my $validate_design_error = $trial_design_store->validate_design();

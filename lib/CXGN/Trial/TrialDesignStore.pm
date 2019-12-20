@@ -176,7 +176,7 @@ has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, def
 has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
-has 'stock_type' => (isa => 'Str', is => 'rw', required => 1);
+has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0);
 
 
 sub validate_design {
@@ -185,7 +185,7 @@ sub validate_design {
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
     my %design = %{$self->get_design};
-    my $stock_type = $self->get_stock_type;
+    my $trial_stock_type = $self->get_trial_stock_type;
     my $error = '';
 
     if ($self->get_is_genotyping && $design_type ne 'genotyping_plate') {
@@ -259,12 +259,12 @@ sub validate_design {
             }
             if ($property eq 'stock_name') {
                 my $stock_name = $design{$stock}->{$property};
-                if ($stock_type eq 'accession') {
-                    $seen_accession_names{$stock_name}++;
-                } elsif ($stock_type eq 'cross') {
+                if ($trial_stock_type eq 'cross') {
                     $seen_cross_names{$stock_name}++;
-                } elsif ($stock_type eq 'family_name') {
+                } elsif ($trial_stock_type eq 'family_name') {
                     $seen_family_names{$stock_name}++;
+                } else {
+                    $seen_accession_names{$stock_name}++;
                 }
             }
             if ($property eq 'seedlot_name') {
@@ -305,14 +305,12 @@ sub validate_design {
     #	$error .= "You cannot create a trial with less than one seedlot.";
     #}
 
-    if (($stock_type eq 'accession') && (scalar(@accession_names)<1)) {
-        $error .= "You cannot create a trial with less than one accession.";
-    }
-    if (($stock_type eq 'cross') && (scalar(@cross_names)<1)) {
+    if (($trial_stock_type eq 'cross') && (scalar(@cross_names)<1)) {
         $error .= "You cannot create a trial with less than one cross.";
-    }
-    if (($stock_type eq 'family_name') && (scalar(@family_names)<1)) {
+    } elsif (($trial_stock_type eq 'family_name') && (scalar(@family_names)<1)) {
         $error .= "You cannot create a trial with less than one family_name.";
+    } elsif ((($trial_stock_type eq 'accession') || ($trial_stock_type = undef)) && (scalar(@accession_names)<1)) {
+        $error .= "You cannot create a trial with less than one accession.";
     }
 
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
@@ -378,7 +376,7 @@ sub store {
     my %design = %{$self->get_design};
     my $trial_id = $self->get_trial_id;
     my $nd_geolocation_id = $self->get_nd_geolocation_id;
-    my $stock_type = $self->get_stock_type;
+    my $trial_stock_type = $self->get_trial_stock_type;
 
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
@@ -639,24 +637,24 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                if ($stock_type eq 'accession') {
+
+                if ($trial_stock_type eq 'cross') {
+                    $parent_stock = $stock_lookup->get_stock($cross_cvterm_id);
+                    if (!$parent_stock) {
+                        die ("Error while saving trial layout: no cross found matching $stock_name");
+                    }
+                } elsif ($trial_stock_type eq 'family_name') {
+                    $parent_stock = $stock_lookup->get_stock($family_name_cvterm_id);
+                    if (!$parent_stock) {
+                        die ("Error while saving trial layout: no family name found matching $stock_name");
+                    }
+                } else {
                     $parent_stock = $stock_lookup->get_stock($accession_cvterm_id);
                     if (!$parent_stock) {
                         die ("Error while saving trial layout: no accession found matching $stock_name");
                     }
                 }
-                if ($stock_type eq 'cross') {
-                    $parent_stock = $stock_lookup->get_stock($cross_cvterm_id);
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no cross found matching $stock_name");
-                    }
-                }
-                if ($stock_type eq 'family_name') {
-                    $parent_stock = $stock_lookup->get_stock($family_name_cvterm_id);
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no family name found matching $stock_name");
-                    }
-                }
+
 #                if (!$parent_stock) {
 #                    die ("Error while saving trial layout: no stocks found matching $stock_name");
 #                }
