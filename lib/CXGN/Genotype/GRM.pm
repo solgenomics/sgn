@@ -8,6 +8,7 @@ CXGN::Genotype::GRM - an object to handle fetching a GRM for stocks
 
 my $geno = CXGN::Genotype::GRM->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_id_list=>\@accession_list,
     plot_id_list=>\@plot_id_list,
     protocol_id=>$protocol_id,
@@ -48,6 +49,19 @@ has 'bcs_schema' => (
     required => 1
 );
 
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
+    is => 'rw',
+    required => 1
+);
+
+has 'cache_root_dir' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
+
 has 'protocol_id' => (
     isa => 'Int',
     is => 'rw',
@@ -74,6 +88,8 @@ has 'get_grm_for_parental_accessions' => (
 sub get_grm {
     my $self = shift;
     my $schema = $self->bcs_schema();
+    my $people_schema = $self->people_schema();
+    my $cache_root_dir = $self->cache_root_dir();
     my $accession_list = $self->accession_id_list();
     my $plot_list = $self->plot_id_list();
     my $protocol_id = $self->protocol_id();
@@ -91,16 +107,24 @@ sub get_grm {
 
     # In this case a list of accessions is given, so get a GRM between these accessions
     if ($accession_list && scalar(@$accession_list)>0){
-        my $genotypes_search = CXGN::Genotype::Search->new({
-            bcs_schema=>$schema,
-            accession_list=>$accession_list,
-            protocol_id_list=>[$protocol_id],
-            genotypeprop_hash_select=>['DS'],
-            protocolprop_top_key_select=>['markers'],
-            protocolprop_marker_hash_select=>['name'],
-            return_only_first_genotypeprop_for_stock=>1
+        my $dataset = CXGN::Dataset::Cache->new({
+            people_schema=>$people_schema,
+            schema=>$schema,
+            cache_root=>$cache_root_dir,
+            accessions=>$accession_list
         });
-        my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+        my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+        # my $genotypes_search = CXGN::Genotype::Search->new({
+        #     bcs_schema=>$schema,
+        #     accession_list=>$accession_list,
+        #     protocol_id_list=>[$protocol_id],
+        #     genotypeprop_hash_select=>['DS'],
+        #     protocolprop_top_key_select=>['markers'],
+        #     protocolprop_marker_hash_select=>['name'],
+        #     return_only_first_genotypeprop_for_stock=>1
+        # });
+        # my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
         if (scalar(@$genotypes)>0) {
             my $p1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
@@ -156,16 +180,24 @@ sub get_grm {
             my $male_stock_id = $plot_male_stock_ids_found[$i];
             my $plot_stock_id = $plot_stock_ids_found[$i];
 
-            my $genotypes_search = CXGN::Genotype::Search->new({
-                bcs_schema=>$schema,
-                accession_list=>[$female_stock_id, $male_stock_id],
-                protocol_id_list=>[$protocol_id],
-                genotypeprop_hash_select=>['DS'],
-                protocolprop_top_key_select=>['markers'],
-                protocolprop_marker_hash_select=>[],
-                return_only_first_genotypeprop_for_stock=>1
+            my $dataset = CXGN::Dataset::Cache->new({
+                people_schema=>$people_schema,
+                schema=>$schema,
+                cache_root=>$cache_root_dir,
+                accessions=>[$female_stock_id, $male_stock_id]
             });
-            my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+            # my $genotypes_search = CXGN::Genotype::Search->new({
+            #     bcs_schema=>$schema,
+            #     accession_list=>[$female_stock_id, $male_stock_id],
+            #     protocol_id_list=>[$protocol_id],
+            #     genotypeprop_hash_select=>['DS'],
+            #     protocolprop_top_key_select=>['markers'],
+            #     protocolprop_marker_hash_select=>[],
+            #     return_only_first_genotypeprop_for_stock=>1
+            # });
+            # my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
             my %progeny_genotype;
             # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
