@@ -387,7 +387,7 @@ sub parse_arguments {
 	  	}
 	  }
 
-	  if ($k eq 'training_traits_ids')
+	  if ($k eq 'training_traits_ids')	  
 	  {
 	      $c->stash->{training_traits_ids} = $arguments->{$k};		 
 	      
@@ -396,22 +396,12 @@ sub parse_arguments {
 		    $c->stash->{trait_id} = $arguments->{$k}->[0]; 
 	      }	      
 	  }
-	  
-	  if ($k eq 'list') 
-	  {
-	      $c->stash->{list} = $arguments->{$k}; 
-	  }	
-
-	  if ($k eq 'list_name') 
-	  {
-	      $c->stash->{list_name} = $arguments->{$k}; 
-	  }
 
 	  if ($k eq 'list_id') 
 	  {
-	      $c->stash->{list_id} = $arguments->{$k}; 
+	       $c->stash->{list_id} = $arguments->{$k};
 	  }
-
+	  
 	  if ($k eq 'dataset_name') 
 	  {
 	      $c->stash->{dataset_name} = $arguments->{$k}; 
@@ -911,8 +901,7 @@ sub predict_selection_traits {
   
     if ($selection_pop_id =~ /list/)
     {
-	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::List')->get_genotypes_list_details($c);		      
+	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;	      
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $selection_pop_id);
     } 
     elsif ($selection_pop_id =~ /dataset/) 
