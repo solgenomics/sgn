@@ -25,7 +25,7 @@ $breeding_programs
                     <ul>
                     <li>1) Know what the "source" units for each well will be (either a tissue sample, plant, plot, or accession name). These "source" names must exist in the database (e.g. as tissue samples or plants or plots from a trial, or just as accession names). Ideally you will have the barcodes from the field with you.</li>
                     <li>2) Use the "Coordinate" Android Application to scan your "source" barcodes and record the position of the tissue sample in the 96 or 384 well plate. If you prefer you can create your own XLS file and upload that, if you do not want to use the Coordinate Application. Alternatively you can let the database generate the genotyping plate for you, and then produce the plate in that layout.</li>
-                    <li><b>For more info about the "Coordinate" Android Application go to <a href="http://www.wheatgenetics.org/research/software/89-coordinate">Coordinate</a>.</b></li>
+                    <li><b>For more info about the "Coordinate" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.coordinate">Coordinate</a>.</b></li>
                     <li>3) Click "Add Genotyping Plate" and fill in the form completely.</li>
                     <li>4) To ease shipping materials to the genotyping facility, we can generate the required templates for you after the data is in the database.</li>
                     </ul>
