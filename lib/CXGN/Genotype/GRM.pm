@@ -42,6 +42,7 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
+use CXGN::Dataset::Cache;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',

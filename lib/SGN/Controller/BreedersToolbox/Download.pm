@@ -801,6 +801,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
+        cache_root_dir=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>1
