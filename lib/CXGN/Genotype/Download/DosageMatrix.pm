@@ -99,6 +99,24 @@ has 'genotypeprop_hash_select' => (
     default => sub {['DS']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES. For dosage matrix we only need DS
 );
 
+has 'protocolprop_top_key_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['markers']} #THESE ARE ALL POSSIBLE TOP LEVEL KEYS IN PROTOCOLPROP BASED ON VCF LOADING. For dosage matrix we only need markers
+);
+
+has 'protocolprop_marker_hash_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['name']} #THESE ARE ALL POSSIBLE PROTOCOLPROP MARKER HASH KEYS BASED ON VCF LOADING. For dosage matrix we only need name
+);
+
+has 'return_only_first_genotypeprop_for_stock' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 1
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -121,6 +139,9 @@ sub download {
     my $tissue_sample_list = $self->tissue_sample_list;
     my $marker_name_list = $self->marker_name_list;
     my $genotypeprop_hash_select = $self->genotypeprop_hash_select;
+    my $protocolprop_top_key_select = $self->protocolprop_top_key_select;
+    my $protocolprop_marker_hash_select = $self->protocolprop_marker_hash_select;
+    my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
 
@@ -134,10 +155,10 @@ sub download {
         markerprofile_id_list=>$markerprofile_id_list,
         genotype_data_project_list=>$genotype_data_project_list,
         marker_name_list=>$marker_name_list,
-        genotypeprop_hash_select=>['DS'],
-        protocolprop_top_key_select=>['markers'],
-        protocolprop_marker_hash_select=>['name'],
-        return_only_first_genotypeprop_for_stock=>1,
+        genotypeprop_hash_select=>$genotypeprop_hash_select,
+        protocolprop_top_key_select=>$protocolprop_top_key_select,
+        protocolprop_marker_hash_select=>$protocolprop_marker_hash_select,
+        return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
         limit=>$limit,
         offset=>$offset
     });

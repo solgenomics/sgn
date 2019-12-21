@@ -787,20 +787,17 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $dir = $c->tempfiles_subdir('genotype_download');
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
-    $tempfile = $tempfile.".tsv";
     my $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
 
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
-        cache_root_dir=>$c->config->{cache_file_path},
+        cache_root=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>1
     });
-    $geno->download_grm($tempfile);
+    my $file_handle = $geno->download_grm();
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -809,8 +806,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     };
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-    my $output = read_file($tempfile);
-    $c->res->body($output);
+    $c->res->body($file_handle);
 }
 
 #=pod
