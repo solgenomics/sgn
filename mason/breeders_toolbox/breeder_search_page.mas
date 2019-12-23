@@ -175,11 +175,25 @@ $dataset_id => undef
                 <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control">
               </td>
             </tr>
+            <tr>
+              <td>
+                <select class="wizard-download-genotypes-format form-control" >
+                    <option value="DosageMatrix">Dosage Matrix</option>
+                    <option value="VCF">VCF</option>
+                </select>
+              </td>
+            </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-genotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Genotypes
+                Download Genotypes
+            </button>
+          </div>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                Download Genetic Relationship Matrix (GRM)
             </button>
           </div>
         </div>

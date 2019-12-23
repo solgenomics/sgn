@@ -13,7 +13,7 @@ Options:
  -D the database name
  -x flag; if present, delete the empty remaining accession
 
-mergefile.txt: A file with three columns:  bad name, good name.
+mergefile.txt: A tab-separated file with two columns. Include the following header as the first line: bad name  good name
 
 All the metadata of bad name will be transferred to good name.
 If -x is used, stock with name bad name will be deleted.
@@ -60,39 +60,39 @@ open(my $F, "<", $file) || die "Can't open file $file.\n";
 
 my $header = <$F>;
 print STDERR "Skipping header line $header\n";
-eval { 
-    while (<$F>) { 
+eval {
+    while (<$F>) {
         print STDERR "Read line: $_\n";
 	chomp;
 	my ($merge_stock_name, $good_stock_name) = split /\t/;
 	print STDERR "bad name: $merge_stock_name, good name: $good_stock_name\n";
 	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
-	if (!$stock_row) { 
+	if (!$stock_row) {
 	    print STDERR "Stock $good_stock_name not found. Skipping...\n";
-	    
+
 	    next();
 	}
-	
+
 	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name } );
-	if (!$merge_row) { 
+	if (!$merge_row) {
 	    print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
 	    next();
 	}
-	
+
 	my $good_stock = CXGN::Stock->new( { schema => $schema, stock_id => $stock_row->stock_id });
 	my $merge_stock = CXGN::Stock->new( { schema => $schema, stock_id => $merge_row->stock_id });
-	
+
 	print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
 	$good_stock->merge($merge_stock->stock_id(), $delete_merged_stock);
 	print STDERR "Done.\n";
     }
-    
+
 };
-if ($@) { 
+if ($@) {
     print STDERR "An ERROR occurred ($@). Rolling back changes...\n";
     $dbh->rollback();
 }
-else { 
+else {
     print STDERR "Script is done. Committing... ";
     $dbh->commit();
     print STDERR "Done.\n";

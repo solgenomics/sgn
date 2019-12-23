@@ -50,6 +50,7 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
+use JSON;
 use SGN::Image;
 use CXGN::ZipFile;
 use CXGN::UploadFile;
@@ -199,7 +200,8 @@ sub create_hash_lookups {
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
+    print STDERR "trait list after filtering @trait_list\n";
     my @stock_list = @{$self->stock_list};
     my @cvterm_ids;
 
@@ -208,7 +210,7 @@ sub create_hash_lookups {
     $self->stock_id_list($stock_id_list->{'transform'});
 
     foreach my $trait_name (@trait_list) {
-        #print STDERR "trait: $trait_name\n";
+        print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
         $trait_objs{$trait_name} = $trait_cvterm;
         push @cvterm_ids, $trait_cvterm->cvterm_id();
@@ -221,23 +223,27 @@ sub create_hash_lookups {
     my %check_unique_value_trait_stock;
 
     my $stock_ids_sql = join ("," , @{$self->stock_id_list});
-    my $cvterm_ids_sql = join ("," , @cvterm_ids);
-    my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
-    my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
-    $h->execute();
+    #print STDERR "Cvterm ids are @cvterm_ids";
+    if (scalar @cvterm_ids > 0) {
+        my $cvterm_ids_sql = join ("," , @cvterm_ids);
+        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id FROM phenotype LEFT JOIN nd_experiment_phenotype USING(phenotype_id) LEFT JOIN nd_experiment USING(nd_experiment_id) LEFT JOIN nd_experiment_stock USING(nd_experiment_id) LEFT JOIN stock USING(stock_id) WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
+        my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
+        $h->execute();
 
-    #my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
-    while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
-    #while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
-        #my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
-        #my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
-        if ($stock_id){
-            #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
-            $collect_timestamp = $collect_timestamp || 'NA';
-            $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
-            $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
-            $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
+        #my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}, 'stock.stock_id'=>{-in=>$self->stock_id_list}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
+        while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
+        #while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
+            #my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
+            #my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+            if ($stock_id){
+                #my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+                $collect_timestamp = $collect_timestamp || 'NA';
+                $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
+                $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
+                $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
+            }
         }
+
     }
     $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
     $self->unique_trait_stock(\%check_unique_trait_stock);
@@ -251,7 +257,8 @@ sub verify {
 
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes field from trait validation
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes from trait validation
+    print STDERR Dumper \@trait_list;
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -259,7 +266,6 @@ sub verify {
     my $schema = $self->bcs_schema;
     my $transaction_error;
     # print STDERR Dumper \@plot_list;
-    # print STDERR Dumper \@trait_list;
     # print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
@@ -422,7 +428,7 @@ sub store {
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes trait list so it can be handled separately
+    @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes so they can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
@@ -481,10 +487,28 @@ sub store {
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
 
+            # create plot-wide nd_experiment entry
+
+            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+                nd_geolocation_id => $location_id,
+                type_id => $phenotyping_experiment_cvterm_id,
+                nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
+                nd_experiment_projects => [{project_id => $project_id}],
+                nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}]
+            });
+
+            $experiment_ids{$experiment->nd_experiment_id()}=1;
+
             # Check if there is a note for this plot, If so add it using dedicated function
             my $note_array = $plot_trait_value{$plot_name}->{'notes'};
             if (defined $note_array) {
                 $self->store_stock_note($stock_id, $note_array, $operator);
+            }
+
+            # Check if there is nirs data for this plot, If so add it using dedicated function
+            my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
+            if (defined $nirs_hashref) {
+                $self->store_nirs_data($nirs_hashref, $experiment->nd_experiment_id());
             }
 
             foreach my $trait_name (@trait_list) {
@@ -571,14 +595,13 @@ sub store {
                         $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
                         $self->handle_operator($operator, $phenotype->phenotype_id);
 
-                        my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-                            nd_geolocation_id => $location_id,
-                            type_id => $phenotyping_experiment_cvterm_id,
-                            nd_experimentprops => [{type_id => $local_date_cvterm_id, value => $upload_date}, {type_id => $local_operator_cvterm_id, value => $operator}],
-                            nd_experiment_projects => [{project_id => $project_id}],
-                            nd_experiment_stocks => [{stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id}],
-                            nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
+                        $experiment->create_related('nd_experiment_phenotypes', {
+                            phenotype_id => $phenotype->phenotype_id
                         });
+
+                        # $experiment->find_or_create_related({
+                        #     nd_experiment_phenotypes => [{phenotype_id => $phenotype->phenotype_id}]
+                        # });
 
                         $experiment_ids{$experiment->nd_experiment_id()}=1;
                         if ($image_id) {
@@ -661,6 +684,43 @@ sub store_stock_note {
     $note = $note ." (Operator: $operator, Time: $timestamp)";
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
     $stock->create_stockprops( { 'notes' => $note } );
+}
+
+sub store_nirs_data {
+    my $self = shift;
+    my $nirs_hashref = shift;
+    my $nd_experiment_id = shift;
+    my %nirs_hash = %{$nirs_hashref};
+    print STDERR "NIRS hashref is " . Dumper($nirs_hashref);
+    #convert hashref to json, store in md_json table with type 'nirs_spectra'
+    my $nirs_json = encode_json \%nirs_hash;
+
+    my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
+    my $dbh = $self->bcs_schema->storage->dbh()->prepare($insert_query);
+    $dbh->execute($nirs_json);
+    my ($json_id) = $dbh->fetchrow_array();
+
+    my $linking_query = "INSERT INTO phenome.nd_experiment_md_json ( nd_experiment_id, json_id) VALUES (?,?);";
+
+    $dbh = $self->bcs_schema->storage->dbh()->prepare($linking_query);
+    $dbh->execute($nd_experiment_id,$json_id);
+    #while (my ($unit_id, $unit_name, $level, $accession_id, $accession_name, $location_id, $project_id) = $h->fetchrow_array()) {
+
+    # my $json_row = $self->metadata_schema->resultset("MdJson")
+    #     ->create({
+    #         json_type => 'nirs_spectra',
+    #         json => $nirs_json,
+    #     });
+    #     $json_row->insert();
+    #
+    #     ## Link the json to the experiment
+    #     my $experiment_json = $self->phenome_schema->resultset("NdExperimentMdJson")
+    #         ->create({
+    #             nd_experiment_id => $nd_experiment_id,
+    #             json_id => $json_row->json_id(),
+    #         });
+    #     $experiment_json->insert();
+        print STDERR "[StorePhenotypes] Linked json with id $json_id to nd_experiment $nd_experiment_id\n";
 }
 
 sub delete_previous_phenotypes {

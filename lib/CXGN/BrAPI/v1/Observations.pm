@@ -12,63 +12,24 @@ use CXGN::Phenotypes::StorePhenotypes;
 use utf8;
 use JSON;
 
-has 'bcs_schema' => (
-    isa => 'Bio::Chado::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'metadata_schema' => (
-    isa => 'CXGN::Metadata::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'phenome_schema' => (
-    isa => 'CXGN::Phenome::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'people_schema' => (
-    isa => 'CXGN::People::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page_size' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'status' => (
-    isa => 'ArrayRef[Maybe[HashRef]]',
-    is => 'rw',
-    required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub observations_store {
     my $self = shift;
     my $params = shift;
-    my $observations = $params->{observations} ? $params->{observations} : ();
-
-    #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
+    my $observations = $params->{observations};
+    my $version = $params->{version};
     my $user_id = $params->{user_id};
     my $username = $params->{username};
     my $user_type = $params->{user_type};
     my $archive_path = $params->{archive_path};
     my $tempfiles_subdir = $params->{tempfiles_subdir};
+
+    #print STDERR "Observations are ". Dumper($observations) . "\n";
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -77,7 +38,7 @@ sub observations_store {
     my $status = $self->status;
     my @data = [];
     my @data_files = ();
-    my %result = (data => \@data);
+    my %result;
 
     my @success_status = [];
 
@@ -85,7 +46,7 @@ sub observations_store {
 
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        push @$status, {'4003' => 'Permission Denied. Must have correct privilege.'};
+        push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
     }
 
@@ -183,7 +144,11 @@ sub observations_store {
     }
     if ($stored_observation_success) {
         print STDERR "Success: $stored_observation_success\n";
-        $result{data} = $stored_observation_details;
+        if ($version eq 'v1') {
+            $result{observations} = $stored_observation_details;
+        } elsif ($version eq 'v2') {
+            $result{data} = $stored_observation_details;
+        }
     }
 
     ## Will need to initiate refresh matviews in controller instead
@@ -197,18 +162,18 @@ sub observations_store {
 # sub observations_search {
 #     my $self = shift;
 #     my $search_params = shift;
-# 
+#
 #     my $page_size = $self->page_size;
 #     my $page = $self->page;
 #     my $status = $self->status;
-# 
+#
 #     my @collectors = $search_params->{collectors} ? @{$search_params->{collectors}} : ();
 #     my @observation_db_ids = $search_params->{observationDbIds} ? @{$search_params->{observationDbIds}} : ();
 #     my @observation_unit_db_ids = $search_params->{observationUnitDbIds} ? @{$search_params->{observationUnitDbIds}} : ();
 #     my @observation_variable_db_ids = $search_params->{observationVariableDbIds} ? @{$search_params->{observationVariableDbIds}} : ();
-# 
+#
 #     #implement observation search here using stock search
-# 
+#
 #     my @data;
 #     my %result = (data => \@data);
 #     my @data_files;

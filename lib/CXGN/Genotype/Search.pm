@@ -745,7 +745,6 @@ sub get_next_genotype_info {
 
     my $total_count = 0;
     my @genotypeprop_array;
-    my %genotypeprop_hash;
     my %protocolprop_hash;
     if (my ($stock_id, $genotypeprop_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
@@ -765,7 +764,7 @@ sub get_next_genotype_info {
 
         my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$germplasmDbId});
 
-        my %genotypeprop_info = {
+        my %genotypeprop_info = (
             markerProfileDbId => $genotypeprop_id,
             germplasmDbId => $germplasmDbId,
             germplasmName => $germplasmName,
@@ -783,7 +782,7 @@ sub get_next_genotype_info {
             genotypingDataProjectName => $project_name,
             genotypingDataProjectDescription => $project_description,
             igd_number => $igd_number,
-        };
+        );
 #        my @found_protocolprop_ids = keys %protocolprop_hash;
         my @protocolprop_marker_hash_select_arr;
         foreach (@$protocolprop_marker_hash_select){
@@ -891,21 +890,21 @@ sub get_next_genotype_info {
             $genotypeprop_h->execute($genotypeprop_id);
             while (my ($marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
                 for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
-                    $genotypeprop_hash{$genotypeprop_id}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
+                    $genotypeprop_info{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
                 }
             }
 
         }
-        my $info = $genotypeprop_hash{$genotypeprop_id};
-        my $selected_marker_info = $selected_protocol_marker_info{$info->{analysisMethodDbId}} ? $selected_protocol_marker_info{$info->{analysisMethodDbId}} : {};
-        my $selected_protocol_info = $selected_protocol_top_key_info{$info->{analysisMethodDbId}} ? $selected_protocol_top_key_info{$info->{analysisMethodDbId}} : {};
+        my $selected_marker_info = $selected_protocol_marker_info{$genotypeprop_info{analysisMethodDbId}} ? $selected_protocol_marker_info{$genotypeprop_info{analysisMethodDbId}} : {};
+        my $selected_protocol_info = $selected_protocol_top_key_info{$genotypeprop_info{analysisMethodDbId}} ? $selected_protocol_top_key_info{$genotypeprop_info{analysisMethodDbId}} : {};
         my @all_protocol_marker_names = keys %$selected_marker_info;
         $selected_protocol_info->{markers} = $selected_marker_info;
-        $info->{resultCount} = scalar(keys %{$info->{selected_genotype_hash}});
-        $info->{all_protocol_marker_names} = \@all_protocol_marker_names;
-        $info->{selected_protocol_hash} = $selected_protocol_info;
-        $info->{germplasmDbId} = $germplasmDbId;
-        return ($full_count, $info);
+        $genotypeprop_info{resultCount} = scalar(keys %{$genotypeprop_info{selected_genotype_hash}});
+        $genotypeprop_info{all_protocol_marker_names} = \@all_protocol_marker_names;
+        $genotypeprop_info{selected_protocol_hash} = $selected_protocol_info;
+        $genotypeprop_info{germplasmDbId} = $germplasmDbId;
+        $genotypeprop_info{germplasmName} = $germplasmName;
+        return ($full_count, \%genotypeprop_info);
 
     }
 

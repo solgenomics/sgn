@@ -153,9 +153,15 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	my @dependent_trait_ids;
 	my ($db_id, $accession, @traits_cvterm_ids, $cvterm_id, @found_trait_cvterm_ids, @accessions, @trait_values);
 	my (%hash1, %hash2, %hash3, @trait_values1, @trait_values2, @trait_values3);
-	while ($msg_formula =~ /(\w{2}\:\d+)/g){
+	while ($msg_formula =~ /(\w*\:\d+)/g){
 		push @dependent_trait_ids, [$1];
-		($db_id,$accession) = split (/:/, $1);
+		($db_id,$accession) = split (/:/, $1);	
+			
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		$db_id =~ s/\s+$//;
+		$db_id =~ s/^\s+//;
+			
 		push @accessions, $accession;
 	}
 	print "DB ID: $db_id\n";
@@ -177,7 +183,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 		}
 	}
 
-	while ($msg_formula =~ /([\w\s-]+\|\w{2}\:\d+)/g){
+	while ($msg_formula =~ /([\w\s-]+\|\w*\:\d+)/g){
 		my $full_name = $1;
 		if ($full_name =~ m/\s-\s/g){
 			$full_name =~ s/-\s//g;
@@ -244,7 +250,7 @@ project.project_id=? ) );");
 			#print STDERR Dumper \%map_hash;
 			my $msg_formula_sub = $msg_formula;
 			foreach my $full_trait (keys %map_hash) {
-				$full_trait =~ /([\w\s-]+)\|(\w{2}\:\d+)/g;
+				$full_trait =~ /([\w\s-]+)\|(\w*\:\d+)/g;
 				#print STDERR Dumper $full_trait;
 				$msg_formula_sub =~ s/($1\|$2)/$map_hash{$full_trait}/g;
 			}
