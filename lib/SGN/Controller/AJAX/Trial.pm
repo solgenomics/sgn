@@ -162,21 +162,21 @@ sub generate_experimental_design_POST : Args(0) {
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
     my $no_of_block_sequence = $c->req->param('no_of_block_sequence');
-    my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
-    my $replicated_accession_list = $c->req->param('replicated_accession_list');
+    my $unreplicated_stock_list = $c->req->param('unreplicated_stock_list');
+    my $replicated_stock_list = $c->req->param('replicated_stock_list');
     my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
 
-    my @replicated_accession;
-    if ($c->req->param('replicated_accession_list')) {
-        @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
+    my @replicated_stocks;
+    if ($c->req->param('replicated_stock_list')) {
+        @replicated_stocks = @{_parse_list_from_json($c->req->param('replicated_stock_list'))};
     }
-    my $number_of_replicated_accession = scalar(@replicated_accession);
+    my $number_of_replicated_stocks = scalar(@replicated_stocks);
 
-    my @unreplicated_accession;
-    if ($c->req->param('unreplicated_accession_list')) {
-        @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
+    my @unreplicated_stocks;
+    if ($c->req->param('unreplicated_stock_list')) {
+        @unreplicated_stocks = @{_parse_list_from_json($c->req->param('unreplicated_stock_list'))};
     }
-    my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
+    my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
 
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
@@ -189,21 +189,21 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
-    my $number_of_prep_accession = scalar(@stock_names);
+    my $number_of_prep_stocks = scalar(@stock_names);
     my $p_rep_total_plots;
     my $replicated_plots;
     my $unreplicated_plots;
     my $calculated_total_plot;
 
     if($design_type eq "p-rep"){
-        @stock_names = (@replicated_accession, @unreplicated_accession);
+        @stock_names = (@replicated_stocks, @unreplicated_stocks);
     #}
     #print STDERR Dumper(\@stock_names);
 
-        $number_of_prep_accession = scalar(@stock_names);
+        $number_of_prep_stocks = scalar(@stock_names);
         $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
-        $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
-        $unreplicated_plots = scalar(@unreplicated_accession);
+        $replicated_plots = $no_of_rep_times * $number_of_replicated_stocks;
+        $unreplicated_plots = scalar(@unreplicated_stocks);
         $calculated_total_plot = $replicated_plots + $unreplicated_plots;
     }
 
@@ -390,11 +390,11 @@ sub generate_experimental_design_POST : Args(0) {
         if ($plot_layout_format) {
             $trial_design->set_plot_layout_format($plot_layout_format);
         }
-        if ($number_of_replicated_accession) {
-            $trial_design->set_replicated_accession_no($number_of_replicated_accession);
+        if ($number_of_replicated_stocks) {
+            $trial_design->set_replicated_stock_no($number_of_replicated_stocks);
         }
-        if ($number_of_unreplicated_accession) {
-            $trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession);
+        if ($number_of_unreplicated_stocks) {
+            $trial_design->set_unreplicated_stock_no($number_of_unreplicated_stocks);
         }
         if ($row_in_design_number) {
             $trial_design->set_row_in_design_number($row_in_design_number);
