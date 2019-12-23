@@ -39,6 +39,32 @@ sub key {
     return $key;
 }
 
+sub genotype_key {
+    my $self = shift;
+    my $datatype = shift;
+    my $protocol_id = shift;
+    my $markerprofiles = shift;
+    my $genotypedataprojects = shift;
+    my $markernames = shift;
+    my $genotypeprophash = shift;
+    my $protocolprophash = shift;
+    my $protocolpropmarkerhash = shift;
+    my $return_only_first_genotypeprop_for_stock = shift;
+
+    #print STDERR Dumper($self->_get_dataref());
+    my $json = JSON->new();
+    #preserve order of hash keys to get same text
+    $json = $json->canonical();
+    my $dataref = $json->encode( $self-> _get_dataref() );
+    $markerprofiles = $json->encode( $markerprofiles || [] );
+    $genotypedataprojects = $json->encode( $genotypedataprojects || [] );
+    $markernames = $json->encode( $markernames || [] );
+    $genotypeprophash = $json->encode( $genotypeprophash || [] );
+    $protocolprophash = $json->encode( $protocolprophash || [] );
+    $protocolpropmarkerhash = $json->encode( $protocolpropmarkerhash || [] );
+    my $key = md5_hex($dataref.$protocol_id.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$return_only_first_genotypeprop_for_stock."_$datatype");
+    return $key;
+}
 
 
 after('BUILD', sub {
@@ -55,16 +81,18 @@ override('retrieve_genotypes',
         my $protocolprop_top_key_select = shift;
         my $protocolprop_marker_hash_select = shift;
         my $return_only_first_genotypeprop_for_stock = shift;
+        
+        my $key = $self->genotype_key("retrieve_genotypes", $protocol_id, undef, undef, undef, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock);
 
-        if ($self->cache()->exists($self->key("genotype"))) {
-            my $genotype_json = $self->cache()->get($self->key("genotype"));
+        if ($self->cache()->exists($key)) {
+            my $genotype_json = $self->cache()->get($key);
             my $genotypes = JSON::Any->decode($genotype_json);
             return $genotypes;
         }
         else {
             my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock);
             my $genotype_json = JSON::Any->encode($genotypes);
-            $self->cache()->set($self->key("genotype"), $genotype_json, $self->cache_expiry());
+            $self->cache()->set($key, $genotype_json, $self->cache_expiry());
             return $genotypes;
         }
     });

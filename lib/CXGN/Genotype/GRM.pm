@@ -12,7 +12,8 @@ my $geno = CXGN::Genotype::GRM->new({
     accession_id_list=>\@accession_list,
     plot_id_list=>\@plot_id_list,
     protocol_id=>$protocol_id,
-    get_grm_for_parental_accessions=>1
+    get_grm_for_parental_accessions=>1,
+    cache_root=>$cache_root
 });
 my $grm = $geno->get_grm();
 
@@ -43,6 +44,8 @@ use CXGN::Genotype::Search;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Dataset::Cache;
+use Cache::File;
+use Digest::MD5 qw | md5_hex |;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -56,12 +59,23 @@ has 'people_schema' => (
     required => 1
 );
 
-has 'cache_root_dir' => (
+# Uses a cached file system for getting genotype results and getting GRM
+has 'cache_root' => (
     isa => 'Str',
     is => 'rw',
     required => 1
 );
 
+has 'cache' => (
+    isa => 'Cache::File',
+    is => 'rw',
+);
+
+has 'cache_expiry' => (
+    isa => 'Int',
+    is => 'rw',
+    default => 0, # never expires?
+);
 
 has 'protocol_id' => (
     isa => 'Int',
@@ -86,11 +100,35 @@ has 'get_grm_for_parental_accessions' => (
     default => 0
 );
 
+has 'genotypeprop_hash_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['DS']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES. For dosage matrix we only need DS
+);
+
+has 'protocolprop_top_key_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['markers']} #THESE ARE ALL POSSIBLE TOP LEVEL KEYS IN PROTOCOLPROP BASED ON VCF LOADING. For dosage matrix we only need markers
+);
+
+has 'protocolprop_marker_hash_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['name']} #THESE ARE ALL POSSIBLE PROTOCOLPROP MARKER HASH KEYS BASED ON VCF LOADING. For dosage matrix we only need name
+);
+
+has 'return_only_first_genotypeprop_for_stock' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 1
+);
+
 sub get_grm {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
-    my $cache_root_dir = $self->cache_root_dir();
+    my $cache_root_dir = $self->cache_root();
     my $accession_list = $self->accession_id_list();
     my $plot_list = $self->plot_id_list();
     my $protocol_id = $self->protocol_id();
@@ -277,20 +315,42 @@ sub get_grm {
     return (\@grm, \@all_marker_names, \@individuals_stock_ids);
 }
 
+sub grm_cache_key {
+    my $self = shift;
+    my $datatype = shift;
+
+    #print STDERR Dumper($self->_get_dataref());
+    my $json = JSON->new();
+    #preserve order of hash keys to get same text
+    $json = $json->canonical();
+    my $accessions = $json->encode( $self->accession_id_list() || [] );
+    my $plots = $json->encode( $self->plot_id_list() || [] );
+    my $protocol = $self->protocol_id() || '';
+    my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
+    my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
+    my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
+    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_$datatype");
+    return $key;
+}
+
 sub download_grm {
     my $self = shift;
-    my $filename = shift;
 
-    my ($result_matrix, $marker_names, $stock_ids) = $self->get_grm();
+    my $key = $self->grm_cache_key("download_grm");
+    $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
-    my $tsv = Text::CSV->new({ sep_char => "\t", eol => $/ });
-    my @header = ("stock_id");
-    push @header, @$stock_ids;
+    my $file_handle;
+    if ($self->cache()->exists($key)) {
+        $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        my ($result_matrix, $marker_names, $stock_ids) = $self->get_grm();
 
-    my $F;
-    open($F, ">:encoding(utf8)", $filename) || die "Can't open file $filename\n";
+        my @header = ("stock_id");
+        push @header, @$stock_ids;
 
-        $tsv->print($F, \@header);
+        my $header_line = join "\t", @header;
+        my $data = "$header_line\n";
 
         my $row_num = 0;
         foreach my $s (@$stock_ids) {
@@ -300,11 +360,14 @@ sub download_grm {
                 push @row, $result_matrix->[$row_num]->[$col_num];
                 $col_num++;
             }
-            $tsv->print($F, \@row);
+            my $line = join "\t", @row;
+            $data .= "$line\n";
             $row_num++;
         }
-
-    close($F);
+        $self->cache()->set($key, $data);
+        $file_handle = $self->cache()->handle($key);
+    }
+    return $file_handle;
 }
 
 1;
