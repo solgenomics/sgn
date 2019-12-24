@@ -176,6 +176,7 @@ sub get_grm {
                 my $name = $m->{name};
                 push @all_marker_names, $name;
             }
+            undef @all_marker_objects;
 
             foreach my $p (0..scalar(@$genotypes)-1) {
                 my @row;
@@ -184,7 +185,9 @@ sub get_grm {
                 }
                 push @dosage_matrix, @row;
                 push @individuals_stock_ids, $genotypes->[$p]->{stock_id};
+                undef $genotypes->[$p];
             }
+            undef $genotypes;
         }
     }
     # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
@@ -268,6 +271,7 @@ sub get_grm {
             my $name = $m->{name};
             push @all_marker_names, $name;
         }
+        undef @all_marker_objects;
 
         foreach my $p (0..scalar(@individuals_stock_ids)-1) {
             my @row;
@@ -275,6 +279,7 @@ sub get_grm {
                 push @row, $progeny_genotypes[$p]->{$m};
             }
             push @dosage_matrix, @row;
+            undef $progeny_genotypes[$p];
         }
     }
 
