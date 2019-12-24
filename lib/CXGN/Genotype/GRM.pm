@@ -215,7 +215,7 @@ sub get_grm {
             push @plot_male_stock_ids_found, $male_parent_stock_id;
         }
 
-        my @progeny_genotypes = [];
+        my @progeny_genotypes = ();
         my @all_marker_objects = {};
         for my $i (0..scalar(@plot_stock_ids_found)-1) {
             my $female_stock_id = $plot_female_stock_ids_found[$i];
@@ -281,6 +281,7 @@ sub get_grm {
             push @dosage_matrix, @row;
             undef $progeny_genotypes[$p];
         }
+        undef @progeny_genotypes;
     }
 
     # print STDERR Dumper \@all_marker_names;
