@@ -709,6 +709,9 @@ sub init_genotype_iterator {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     $self->_iterator_query_handle($h);
+    my $rows = $h->rows();
+    print STDERR "init_genotype_iterator: generated $rows rows.\n";
+    return $rows;
 }
 
 
