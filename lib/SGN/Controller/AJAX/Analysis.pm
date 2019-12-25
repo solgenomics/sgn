@@ -20,9 +20,6 @@ __PACKAGE__->config(
 sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") Args(0) {}
 
 sub store_analysis_json_POST {
-
-    # this is not yet functional....
-    
     my $self = shift;
     my $c = shift;
 
@@ -221,7 +218,7 @@ sub store_data {
     
     my $operator = $user->get_first_name()." ".$user->get_last_name();
     print STDERR "Store analysis values...\n";
-    print STDERR "value hash: ".Dumper($values);
+    #print STDERR "value hash: ".Dumper($values);
     print STDERR "traits: ".join(",",@$traits);
 
     

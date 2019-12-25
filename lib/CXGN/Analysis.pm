@@ -83,14 +83,19 @@ sub BUILD {
 
 	# Load the design
 	#
-	my $design = CXGN::Trial::TrialLayout->new( { schema => $args->{bcs_schema}, trial_id => $args->{project_id}, experiment_type=> 'field_layout'} );
+	my $design = CXGN::Trial::TrialLayout->new( { schema => $args->{bcs_schema}, trial_id => $args->{project_id}, experiment_type=> 'analysis_experiment'} );
 
-	print STDERR "READ DESIGN: ".Dumper($design->get_design());
-	$self->design($design->get_design());
+	my $design_hash = $design->generate_and_cache_layout();
 
+	#print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
+	#print STDERR "READ DESIGN: ".Dumper($design->get_design());
+	$self->design($design);
+
+	my @accessions = $design->get_accession_names();
+	print STDERR "ACCESSIONS: ". Dumper(\@accession);
 	# get the accessions from the design (not the dataset!)
 	#
-	$self->accession_names($self->design()->accession_names());	
+	$self->accession_names($self->design()->get_accession_names());	
 	
 	print STDERR "prop_id is $stockprop_id...\n";
 	
@@ -114,7 +119,6 @@ sub BUILD {
     $self->metadata($metadata);
 }
 
-
 =head2 retrieve_analyses_by_user
 
  Usage:        my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $user_id);
@@ -126,7 +130,6 @@ sub BUILD {
 
 =cut
 
-
 sub retrieve_analyses_by_user {
     my $class = shift;
     my $schema = shift;
@@ -135,7 +138,7 @@ sub retrieve_analyses_by_user {
     my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_sp_person_id', 'project_property');
     my $user_info_type_id = $project_sp_person_term->cvterm_id();
 
-    my $project_analysis_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_project', 'project_property');
+    my $project_analysis_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_metadata_json', 'project_property');
     my $analysis_info_type_id = $project_analysis_term ->cvterm_id();
     
     my $q = "SELECT userinfo.project_id FROM projectprop AS userinfo JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id) WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
@@ -145,6 +148,7 @@ sub retrieve_analyses_by_user {
 
     my @analyses = ();
     while (my ($project_id) = $h->fetchrow_array()) {
+	print STDERR "Instantiating analysis project for project ID $project_id...\n";
 	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, project_id=> $project_id });
     }
 
@@ -171,7 +175,7 @@ sub create_and_store_analysis_design {
     my $calculation_location_id = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => "[Computation]" } )->nd_geolocation_id();
 
     $self->nd_geolocation_id($calculation_location_id);
-    
+    print STDERR "Using nd_geolocation with id $calculation_location_id...\n";
     print STDERR "Create analysis entry in project table...\n";
 
     my $check_name = $self->bcs_schema()
@@ -270,13 +274,11 @@ sub create_and_store_analysis_design {
     
     $td->set_trial_name($self->name());
     $td->set_stock_list($self->accession_names());
-
-    #print STDERR "Accessions in design: ".Dumper($self->accession_names())."\n";
     $td->set_design_type("Analysis");
-
+    
     my $design;
     if ($td->calculate_design()) {
-	print STDERR "Calculate design :-) ...\n";
+  	print STDERR "Design calculated :-) ...\n";
 	$design = $td->get_design();
 	$self->design($design);
     }
@@ -293,14 +295,15 @@ sub create_and_store_analysis_design {
 	    nd_geolocation_id => $self->nd_geolocation_id(),
 	    design_type => 'Analysis', 
 	    design => $design,
-	    is_genotyping => 0, 
+	    is_genotyping => 0,
+	    is_analysis => 1,
 	    operator => "janedoe",
 	}); 
     
     my $validate_error = $design_store->validate_design(); 
     my $store_error; 
     if ($validate_error) {
-	print STDERR "VALIDATE ERROR: $validate_error\n"; 
+	print STDERR "VALIDATE ERROR! "; #.Dumper($validate_error)."\n";
     } 
     else {
 	print STDERR "Valiation successful. Storing...\n";
@@ -324,7 +327,9 @@ sub store_analysis_values {
     my $self = shift;
     my $metadata_schema = shift;
     my $phenome_schema = shift;
-    my $values = shift;
+
+
+             my $values = shift;
     my $plots = shift;
     my $traits = shift;
     my $operator = shift;

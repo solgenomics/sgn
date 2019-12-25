@@ -185,6 +185,13 @@ has 'row_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_row_numbe
 
 has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbers', reader => 'get_col_numbers', writer => '_set_col_numbers');
 
+
+sub BUILD {
+#probably better to lazy load the action design...
+    $self->lookup_trial_id();
+
+}
+
 sub _lookup_trial_id {
     my $self = shift;
     print STDERR "CXGN::Trial::TrialLayout ".localtime."\n";
@@ -319,7 +326,7 @@ sub _get_plot_info_fields_from_trial {
 
 
 sub _get_design_from_trial {
-    #print STDERR "Check 2.3.4.1: ".localtime()."\n";
+    print STDERR "Check 2.3.4.1: ".localtime()."\n";
     my $self = shift;
     my $schema = $self->get_schema();
     my $project = $self->get_project();
@@ -393,7 +400,7 @@ sub generate_and_cache_layout {
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "seedlot", "stock_type")->cvterm_id();
     my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
     my $plot_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot_of", "stock_relationship")->cvterm_id();
-    my $analysis_of = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_of", "stock_relationship")->cvterm_id();
+    my $analysis_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_of", "stock_relationship")->cvterm_id();
     my $tissue_sample_of_cv = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample_of", "stock_relationship")->cvterm_id();
     my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
     my $subplot_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' );
@@ -425,6 +432,8 @@ sub generate_and_cache_layout {
     my $json = JSON->new();
     
     @plots = @{$plots_ref};
+
+    #print STDERR "PLOTS: ".Dumper(\@plots);
     foreach my $plot (@plots) {
 	#print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
 	my %design_info;
@@ -459,8 +468,9 @@ sub generate_and_cache_layout {
 	my $well_notes_prop = $stockprop_hash{$notes_cvterm_id} ? join ',', @{$stockprop_hash{$notes_cvterm_id}} : undef;
 	my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
 	my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
+	my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_instance", "stock_type")->cvterm_id();
 	my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-	    { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv, $analysis_of ] }, 'object.type_id' => $accession_cvterm_id },
+	    { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv, $analysis_of_cv ] }, 'object.type_id' => [ $accession_cvterm_id, $analysis_instance_cvterm_id ]},
 	    { 'join' => 'object' }
 	    );
 	if ($accession_rs->count != 1){
@@ -891,16 +901,20 @@ sub _get_plots {
     }
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
     my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
-    my $analysis_instance = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_instance", "stock_type")->cvterm_id();
+    my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_instance", "stock_type")->cvterm_id();
     my $unit_type_id;
+
+    print STDERR "EXP TYPE =".$self->get_experiment_type()."\n";
+    
     if ($self->get_experiment_type eq 'field_layout'){
 	$unit_type_id = $plot_cvterm_id;
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
 	$unit_type_id = $tissue_cvterm_id;
     }
-    if ($self->get_experiment_type eq 'analysis') {
-	$unit_type_id = $unit_type_id;
+    if ($self->get_experiment_type eq 'analysis_experiment') {
+	print STDERR "EXP TYPE = analysis_experiment ($analysis_instance_cvterm_id)... \n";
+	$unit_type_id = $analysis_instance_cvterm_id;
     }
     @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => $unit_type_id });
     

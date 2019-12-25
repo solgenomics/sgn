@@ -4,9 +4,42 @@ package CXGN::Trial::TrialDesignStore;
 
 CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (for genotyping, phenotyping and analysis trials)
 
+=head1 USAGE
+
+ my $design_store = CXGN::Trial::TrialDesignStore->new({
+    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+    trial_id => $trial_id,
+    trial_name => $trial_name,
+    design_type => 'CRD',
+    design => $design_hash,
+    is_genotyping => 0,
+    is_analysis => 0,
+    operator = "janedoe" 
+ });
+
+ my $validate_error = $design_store->validate_design();
+ my $store_error;
+
+ if ($validate_error) {
+    print STDERR "VALIDATE ERROR: $validate_error\n";
+ } 
+ else {
+    try {
+        $store error = $design_store->store();
+    } catch {
+        $store_error = $_;
+    };
+ }
+
+ if ($store_error) {
+    print STDERR "ERROR SAVING TRIAL!: $store_error\n";
+ }
+
+If a genotyping experiment is stored, is_genotyping has to be set to true (1). If an analysis is stored, is_analysis has to be set to true. For a phenotyping experiment, both are set to false (0).
+
 =head1 DESCRIPTION
 
-This class is used for storing a new design completely (plots and possibly plants and possibly subplots).
+This class is used for storing a completely new design (plots and possibly plants and possibly subplots).
 
 =over 4
 
@@ -103,7 +136,7 @@ For field_layout trials, the design should be a HasfRef of HashRefs like:
  }
 
 
-Store() will do the following for FIELD LAYOUT trials:
+store() will do the following for FIELD LAYOUT trials:
 
 =over 5
 
@@ -186,7 +219,7 @@ For each subplot creates an nd_experiment_stock entry if not already present. Th
 
 =back
 
-Store() will do the following for GENOTYPING LAYOUT trials:
+store() will do the following for GENOTYPING LAYOUT trials:
 
 =over 5 
 
@@ -227,32 +260,6 @@ For each tissue_sample, creates an nd_experiment_stock entry if not already pres
 
 =back
 
-=head1 USAGE
-
- my $design_store = CXGN::Trial::TrialDesignStore->new({
-    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-    trial_id => $trial_id,
-    trial_name => $trial_name,
-    design_type => 'CRD',
-    design => $design_hash,
-    is_genotyping => 0,
-    is_analysis => 0,
-    operator = "janedoe" 
- });
- my $validate_error = $design_store->validate_design();
- my $store_error;
- if ($validate_error) {
-    print STDERR "VALIDATE ERROR: $validate_error\n";
- } else {
-    try {
-        $store error = $design_store->store();
-    } catch {
-        $store_error = $_;
-    };
- }
- if ($store_error) {
-    print STDERR "ERROR SAVING TRIAL!: $store_error\n";
- }
 
 =head1 AUTHORS
 
@@ -299,7 +306,7 @@ sub new {
     }
     if ($type eq "analysis") {
 	print STDERR "Generating ANALYSIS TRIAL...\n";
-	$object = CXGN::Trial::TrialDesignStore::AnalysisTrial->new($args);
+	$object = CXGN::Trial::TrialDesignStore::Analysis->new($args);
     }
 
     return $object;
