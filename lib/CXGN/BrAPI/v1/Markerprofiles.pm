@@ -30,26 +30,29 @@ sub markerprofiles_search {
         push @$status, { 'error' => 'Search parameter sampleDbId not supported' };
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        accession_list=>\@germplasm_ids,
-        trial_list=>\@study_ids,
-        protocol_id_list=>[$method],
-        offset=>$page_size*$page,
-        limit=>$page_size
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-
+    my $genotypes_search = CXGN::Genotype::Search->new(
+	{
+	    bcs_schema=>$self->bcs_schema,
+	    accession_list=>\@germplasm_ids,
+	    trial_list=>\@study_ids,
+	    protocol_id_list=>[$method],
+	    offset=>$page_size*$page,
+	    limit=>$page_size
+	});
+    
+    my $total_count = $genotypes_search->init_genotype_iterator();
     my @data;
-    foreach (@$genotypes){
+    
+    for(my $i=0; $i<$page_size; $i++) { #could be problematic for large page_sizes
+	my $gt = $genotypes_search->get_next_genotype_info();
         push @data, {
-            markerprofileDbId => qq|$_->{markerProfileDbId}|,
-            germplasmDbId => qq|$_->{germplasmDbId}|,
-            uniqueDisplayName => $_->{genotypeUniquename},
-            extractDbId => qq|$_->{stock_id}|,
-            sampleDbId => qq|$_->{stock_id}|,
-            analysisMethod => $_->{analysisMethod},
-            resultCount => $_->{resultCount}
+            markerprofileDbId => qq|$gt->{markerProfileDbId}|,
+            germplasmDbId => qq|$gt->{germplasmDbId}|,
+            uniqueDisplayName => $gt->{genotypeUniquename},
+            extractDbId => qq|$gt->{stock_id}|,
+            sampleDbId => qq|$gt->{stock_id}|,
+            analysisMethod => $gt->{analysisMethod},
+            resultCount => $gt->{resultCount}
         };
     }
 
