@@ -10,7 +10,7 @@ my $geno = CXGN::Genotype::DownloadFactory->instantiate(
     'VCF',    #can be either 'VCF' or 'DosageMatrix'
     {
         bcs_schema=>$schema,
-        filename=>$filename,  #file path to write to
+        cache_root_dir=>$cache_root,
         accession_list=>$accession_list,
         tissue_sample_list=>$tissue_sample_list,
         trial_list=>$trial_list,

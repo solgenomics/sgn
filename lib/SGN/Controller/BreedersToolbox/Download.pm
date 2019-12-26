@@ -723,16 +723,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @accession_ids = @{$accession_id_hash->{transform}};
     }
 
-    my $dir = $c->tempfiles_subdir('genotype_download');
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
-
     my $filename = '';
     if ($download_format eq 'VCF') {
-        $tempfile = $tempfile.".vcf";
         $filename = 'BreedBaseGenotypesDownload.vcf';
     }
     else {
-        $tempfile = $tempfile.".tsv";
         $filename = 'BreedBaseGenotypesDownload.tsv';
     }
 
@@ -740,7 +735,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
             bcs_schema=>$schema,
-            filename=>$tempfile,  #file path to write to
+            cache_root_dir=>$c->config->{cache_file_path},
             accession_list=>\@accession_ids,
             #tissue_sample_list=>$tissue_sample_list,
             trial_list=>\@trial_ids,
@@ -755,7 +750,11 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
+<<<<<<< HEAD
     my $status = $geno->download($c);
+=======
+    my $file_handle = $geno->download();
+>>>>>>> master
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -764,8 +763,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     };
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-    my $output = read_file($tempfile);
-    $c->res->body($output);
+    $c->res->body($file_handle);
 }
 
 #Used from wizard page for downloading genetic relationship matrix (GRM)
@@ -773,6 +771,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -792,18 +791,17 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $dir = $c->tempfiles_subdir('genotype_download');
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
-    $tempfile = $tempfile.".tsv";
     my $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
 
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>1
     });
-    $geno->download_grm($tempfile);
+    my $file_handle = $geno->download_grm();
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -812,8 +810,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     };
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-    my $output = read_file($tempfile);
-    $c->res->body($output);
+    $c->res->body($file_handle);
 }
 
 #=pod

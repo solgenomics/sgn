@@ -8,10 +8,12 @@ CXGN::Genotype::GRM - an object to handle fetching a GRM for stocks
 
 my $geno = CXGN::Genotype::GRM->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_id_list=>\@accession_list,
     plot_id_list=>\@plot_id_list,
     protocol_id=>$protocol_id,
-    get_grm_for_parental_accessions=>1
+    get_grm_for_parental_accessions=>1,
+    cache_root=>$cache_root
 });
 my $grm = $geno->get_grm();
 
@@ -41,11 +43,38 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
+use CXGN::Dataset::Cache;
+use Cache::File;
+use Digest::MD5 qw | md5_hex |;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
     required => 1
+);
+
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
+    is => 'rw',
+    required => 1
+);
+
+# Uses a cached file system for getting genotype results and getting GRM
+has 'cache_root' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
+has 'cache' => (
+    isa => 'Cache::File',
+    is => 'rw',
+);
+
+has 'cache_expiry' => (
+    isa => 'Int',
+    is => 'rw',
+    default => 0, # never expires?
 );
 
 has 'protocol_id' => (
@@ -71,9 +100,35 @@ has 'get_grm_for_parental_accessions' => (
     default => 0
 );
 
+has 'genotypeprop_hash_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['DS']} #THESE ARE THE GENERIC AND EXPECTED VCF ATRRIBUTES. For dosage matrix we only need DS
+);
+
+has 'protocolprop_top_key_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['markers']} #THESE ARE ALL POSSIBLE TOP LEVEL KEYS IN PROTOCOLPROP BASED ON VCF LOADING. For dosage matrix we only need markers
+);
+
+has 'protocolprop_marker_hash_select' => (
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {['name']} #THESE ARE ALL POSSIBLE PROTOCOLPROP MARKER HASH KEYS BASED ON VCF LOADING. For dosage matrix we only need name
+);
+
+has 'return_only_first_genotypeprop_for_stock' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 1
+);
+
 sub get_grm {
     my $self = shift;
     my $schema = $self->bcs_schema();
+    my $people_schema = $self->people_schema();
+    my $cache_root_dir = $self->cache_root();
     my $accession_list = $self->accession_id_list();
     my $plot_list = $self->plot_id_list();
     my $protocol_id = $self->protocol_id();
@@ -91,16 +146,24 @@ sub get_grm {
 
     # In this case a list of accessions is given, so get a GRM between these accessions
     if ($accession_list && scalar(@$accession_list)>0){
-        my $genotypes_search = CXGN::Genotype::Search->new({
-            bcs_schema=>$schema,
-            accession_list=>$accession_list,
-            protocol_id_list=>[$protocol_id],
-            genotypeprop_hash_select=>['DS'],
-            protocolprop_top_key_select=>['markers'],
-            protocolprop_marker_hash_select=>['name'],
-            return_only_first_genotypeprop_for_stock=>1
+        my $dataset = CXGN::Dataset::Cache->new({
+            people_schema=>$people_schema,
+            schema=>$schema,
+            cache_root=>$cache_root_dir,
+            accessions=>$accession_list
         });
-        my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+        my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+        # my $genotypes_search = CXGN::Genotype::Search->new({
+        #     bcs_schema=>$schema,
+        #     accession_list=>$accession_list,
+        #     protocol_id_list=>[$protocol_id],
+        #     genotypeprop_hash_select=>['DS'],
+        #     protocolprop_top_key_select=>['markers'],
+        #     protocolprop_marker_hash_select=>['name'],
+        #     return_only_first_genotypeprop_for_stock=>1
+        # });
+        # my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
         if (scalar(@$genotypes)>0) {
             my $p1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
@@ -156,16 +219,24 @@ sub get_grm {
             my $male_stock_id = $plot_male_stock_ids_found[$i];
             my $plot_stock_id = $plot_stock_ids_found[$i];
 
-            my $genotypes_search = CXGN::Genotype::Search->new({
-                bcs_schema=>$schema,
-                accession_list=>[$female_stock_id, $male_stock_id],
-                protocol_id_list=>[$protocol_id],
-                genotypeprop_hash_select=>['DS'],
-                protocolprop_top_key_select=>['markers'],
-                protocolprop_marker_hash_select=>[],
-                return_only_first_genotypeprop_for_stock=>1
+            my $dataset = CXGN::Dataset::Cache->new({
+                people_schema=>$people_schema,
+                schema=>$schema,
+                cache_root=>$cache_root_dir,
+                accessions=>[$female_stock_id, $male_stock_id]
             });
-            my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+            # my $genotypes_search = CXGN::Genotype::Search->new({
+            #     bcs_schema=>$schema,
+            #     accession_list=>[$female_stock_id, $male_stock_id],
+            #     protocol_id_list=>[$protocol_id],
+            #     genotypeprop_hash_select=>['DS'],
+            #     protocolprop_top_key_select=>['markers'],
+            #     protocolprop_marker_hash_select=>[],
+            #     return_only_first_genotypeprop_for_stock=>1
+            # });
+            # my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
             my %progeny_genotype;
             # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
@@ -223,13 +294,11 @@ sub get_grm {
     my $r_block = $rbase->create_block('r_block');
     $rmatrix->send_rbase($rbase, 'r_block');
     # $r_block->add_command('geno_data = data.frame(geno_matrix1)');
-    $r_block->add_command('sum_af <- 0');
     $r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
-    $r_block->add_command('for (i in range(1,ncol(geno_matrix1))){ sum_af <- sum_af + table(geno_matrix1[,i])[1]/length(geno_matrix1[,i]) }');
-    $r_block->add_command('grm <- tcrossprod(geno_matrix1)/(2*sum_af)');
+    $r_block->add_command('alfreq <- attributes(geno_matrix1)[["scaled:center"]]/2');
+    $r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
     $r_block->run_block();
     my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
-    my $grm_data = $result_matrix->{data};
     undef @dosage_matrix;
 
     my @grm;
@@ -237,30 +306,51 @@ sub get_grm {
     for my $i (1..$grm_n) {
         my @row;
         for my $j (1..$grm_n) {
-            push @row, $grm_data->[$count];
+            push @row, $result_matrix->{data}->[$count];
             $count++;
         }
         push @grm, \@row;
     }
     undef $result_matrix;
-    undef $grm_data;
     return (\@grm, \@all_marker_names, \@individuals_stock_ids);
+}
+
+sub grm_cache_key {
+    my $self = shift;
+    my $datatype = shift;
+
+    #print STDERR Dumper($self->_get_dataref());
+    my $json = JSON->new();
+    #preserve order of hash keys to get same text
+    $json = $json->canonical();
+    my $accessions = $json->encode( $self->accession_id_list() || [] );
+    my $plots = $json->encode( $self->plot_id_list() || [] );
+    my $protocol = $self->protocol_id() || '';
+    my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
+    my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
+    my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
+    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_$datatype");
+    return $key;
 }
 
 sub download_grm {
     my $self = shift;
-    my $filename = shift;
 
-    my ($result_matrix, $marker_names, $stock_ids) = $self->get_grm();
+    my $key = $self->grm_cache_key("download_grm");
+    $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
-    my $tsv = Text::CSV->new({ sep_char => "\t", eol => $/ });
-    my @header = ("stock_id");
-    push @header, @$stock_ids;
+    my $file_handle;
+    if ($self->cache()->exists($key)) {
+        $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        my ($result_matrix, $marker_names, $stock_ids) = $self->get_grm();
 
-    my $F;
-    open($F, ">:encoding(utf8)", $filename) || die "Can't open file $filename\n";
+        my @header = ("stock_id");
+        push @header, @$stock_ids;
 
-        $tsv->print($F, \@header);
+        my $header_line = join "\t", @header;
+        my $data = "$header_line\n";
 
         my $row_num = 0;
         foreach my $s (@$stock_ids) {
@@ -270,11 +360,14 @@ sub download_grm {
                 push @row, $result_matrix->[$row_num]->[$col_num];
                 $col_num++;
             }
-            $tsv->print($F, \@row);
+            my $line = join "\t", @row;
+            $data .= "$line\n";
             $row_num++;
         }
-
-    close($F);
+        $self->cache()->set($key, $data);
+        $file_handle = $self->cache()->handle($key);
+    }
+    return $file_handle;
 }
 
 1;
