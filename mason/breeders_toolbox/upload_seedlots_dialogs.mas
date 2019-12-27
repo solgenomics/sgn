@@ -15,8 +15,8 @@
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"What are seedlots?" &>
                             <ul>
-                            <li>Seedlots represent physical seed in packets.</li>
-                            <li>This seed can be from crosses or for named accessions.</li>
+                            <li>Seedlots represent physical seed in storage.</li>
+                            <li>The seedlots can contain botanical seed from crosses, or clonal seed of specific accessions.</li>
                             <li>Seedlots can have a specific location, box, weight(g), and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
@@ -36,8 +36,8 @@
                                 <div class="col-sm-9">
                                     <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
                                         <option value=""></option>
-                                        <option data-desc="If you have seed lots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the seed was not harvested from a cross that is in the database." value="from_accession">I have seed lots for named accessions</option>
-                                        <option data-desc="If you have seed lots that were harvested from crosses that are in the database, use this option." value="from_cross">I have seed lots harvested from crosses</option>
+                                        <option value="clonal">I have clonal seed</option>
+                                        <option value="botanical">I have botanical seed</option>
                                     </select>
                                 </div>
                             </div>
