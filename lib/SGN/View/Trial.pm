@@ -87,7 +87,7 @@ sub design_layout_map_view {
     my @block_numbers = ();
     my @check_names = ();
 
-    foreach my $key (sort { $a <=> $b} keys %design) { 
+    foreach my $key (sort { $a <=> $b} keys %design) {
         my $plot_name = $design{$key}->{plot_name} || '';
         my $stock_name = $design{$key}->{stock_name} || '';
         my $check_name = $design{$key}->{is_a_control} || '';
@@ -95,8 +95,8 @@ sub design_layout_map_view {
         my $col_number = $design{$key}->{col_number} || '';
         my $block_number = $design{$key}->{block_number} || '';
         my $rep_number = $design{$key}->{rep_number} || '';
-        my $plot_number = $key; 
-        
+        my $plot_number = $key;
+
         if ($col_number) {
             push @col_numbers, $col_number;
         }
@@ -123,7 +123,7 @@ sub design_layout_map_view {
         if ($check_name){
             push @check_names, $stock_name;
         }
-        
+
         push @layout_info, {
             plot_number => $plot_number,
             row_number => $row_number,
@@ -134,7 +134,7 @@ sub design_layout_map_view {
             accession_name => $stock_name,
         };
     }
-    
+
     @layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
     my $false_coord;
 	if (scalar(@col_numbers) < 1){
@@ -142,23 +142,23 @@ sub design_layout_map_view {
         $false_coord = 'false_coord';
 		my @row_instances = uniq @row_numbers;
 		my %unique_row_counts;
-		$unique_row_counts{$_}++ for @row_numbers;        
+		$unique_row_counts{$_}++ for @row_numbers;
         my @col_number2;
         for my $key (keys %unique_row_counts){
             push @col_number2, (1..$unique_row_counts{$key});
         }
-        for (my $i=0; $i < scalar(@layout_info); $i++){            
+        for (my $i=0; $i < scalar(@layout_info); $i++){
 			$layout_info[$i]->{'col_number'} = $col_number2[$i];
             push @col_numbers, $col_number2[$i];
-        }		
+        }
 	}
-    
+
     my $plot_popUp;
 	foreach my $hash (@layout_info){
 		$plot_popUp = $hash->{'plot_name'}."\nplot_No:".$hash->{'plot_number'}."\nblock_No:".$hash->{'block_number'}."\nrep_No:".$hash->{'rep_number'}."\nstock:".$hash->{'accession_name'};
         push @$result,  {plotname => $hash->{'plot_name'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
     }
-    
+
     my @sorted_block = sort@block_numbers;
 	my @uniq_block = uniq(@sorted_block);
     @check_names = uniq(@check_names);
@@ -174,7 +174,7 @@ sub design_layout_map_view {
 	for my $y (1..$max_row){
 		push @unique_row, $y;
 	}
-    
+
     my %return = (
 		coord_row =>  \@row_numbers,
 		coord_col =>  \@col_numbers,
@@ -189,7 +189,7 @@ sub design_layout_map_view {
 		result => $result,
 	);
 
-    return  \%return;    
+    return  \%return;
 }
 
 #For printing the table view of the generated design there are two designs that are different from the others:
@@ -199,21 +199,40 @@ sub design_layout_view {
     my $design_ref = shift;
     my $design_info_ref = shift;
     my $design_type = shift;
+    my $trial_stock_type = shift;
     my %design = %{$design_ref};
     my %design_info = %{$design_info_ref};
     my $design_result_html;
 
     $design_result_html .= '<table class="table table-bordered table-hover">';
 
-    if ($design_type eq 'greenhouse') {
-        $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
-    } elsif ($design_type eq 'splitplot') {
-        $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+    if ($trial_stock_type eq 'family_name') {
+        if ($design_type eq 'greenhouse') {
+            $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Family Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        } elsif ($design_type eq 'splitplot') {
+            $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Family Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        } else {
+            $design_result_html .= qq{<tr><th>Plot Name</th><th>Family Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        if ($design_type eq 'greenhouse') {
+            $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Cross Unique ID</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        } elsif ($design_type eq 'splitplot') {
+            $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Cross Unique ID</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        } else {
+            $design_result_html .= qq{<tr><th>Plot Name</th><th>Cross Unique ID</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        }
     } else {
-        $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        if ($design_type eq 'greenhouse') {
+            $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        } elsif ($design_type eq 'splitplot') {
+            $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        } else {
+            $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
+        }
     }
 
-    foreach my $key (sort { $a <=> $b} keys %design) { 
+    foreach my $key (sort { $a <=> $b} keys %design) {
         if ($key eq 'treatments'){
             next;
         }
@@ -229,7 +248,7 @@ sub design_layout_view {
         my $block_col_number = $design{$key}->{block_col_number} || '';
         my $rep_number = $design{$key}->{rep_number} || '';
         my $plot_number = $key;
-        
+
         if ($design{$key}->{subplots_plant_names}) {
             foreach my $subplot_name (sort keys %{$design{$key}->{subplots_plant_names}}) {
                 my $plant_names = $design{$key}->{subplots_plant_names}->{$subplot_name};

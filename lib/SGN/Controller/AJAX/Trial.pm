@@ -74,6 +74,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $project_name = $c->req->param('project_name');
     my $project_description = $c->req->param('project_description');
     my $year = $c->req->param('year');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my @stock_names;
     my $design_layout_view_html;
     my $design_info_view_html;
@@ -438,7 +439,7 @@ sub generate_experimental_design_POST : Args(0) {
         #For printing the table view of the generated design there are two designs that are different from the others:
         # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type);
         $design_map_view = design_layout_map_view(\%design, $design_type);
         $design_info_view_html = design_info_view(\%design, \%design_info);
         my $design_json = encode_json(\%design);

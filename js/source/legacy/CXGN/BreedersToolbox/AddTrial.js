@@ -467,6 +467,7 @@ jQuery(document).ready(function ($) {
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
         //console.log("Trial location is "+trial_location);
+        var trial_stock_type = jQuery('#select_stock_type').val();
         var block_number = $('#block_number').val();
         //alert(block_number);
         var row_number= $('#row_number').val();
@@ -657,6 +658,7 @@ jQuery(document).ready(function ($) {
                 'project_description': desc,
                 'year': year,
                 'trial_location': trial_location,
+                'trial_stock_type': trial_stock_type,
                 'stock_list': stock_list,
                 'control_list': control_list,
                 'control_list_crbd': control_list_crbd,
