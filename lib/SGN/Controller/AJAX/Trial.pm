@@ -441,7 +441,7 @@ sub generate_experimental_design_POST : Args(0) {
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
         $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type);
         $design_map_view = design_layout_map_view(\%design, $design_type);
-        $design_info_view_html = design_info_view(\%design, \%design_info);
+        $design_info_view_html = design_info_view(\%design, \%design_info, $trial_stock_type);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;
         push @design_layout_view_html_array, $design_layout_view_html;

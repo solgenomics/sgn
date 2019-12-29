@@ -272,6 +272,7 @@ sub design_layout_view {
 sub design_info_view {
   my $design_ref = shift;
   my $design_info_ref = shift;
+  my $trial_stock_type = shift;
   my %design = %{$design_ref};
   my %design_info = %{$design_info_ref};
   my %block_hash;
@@ -317,7 +318,13 @@ sub design_info_view {
     $design_info_html .= "<dt>Number of locations</dt><dd>".$design_info{'number_of_locations'}."</dd>";
   }
   if ($design_info{'number_of_stocks'}) {
-    $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+    if ($trial_stock_type eq 'family_name') {
+        $design_info_html .= "<dt>Number of family names</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+    } elsif ($trial_stock_type eq 'cross') {
+        $design_info_html .= "<dt>Number of cross unique ids</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+    } else {
+        $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+    }
   }
   if ($design_info{'number_of_checks'}) {
     $design_info_html .= "<dt>Number of checks</dt><dd>".$design_info{'number_of_checks'}."</dd>";
@@ -356,9 +363,21 @@ sub design_info_view {
 
   if (%block_hash) {
     $design_info_html .= "<dt>Number of blocks</dt><dd>".scalar(keys %block_hash)."</dd>";
-    $design_info_html .= "<dt>Number of accessions per block</dt><dd>";
-    foreach my $key (sort { $a <=> $b} keys %block_hash) {
+    if ($trial_stock_type eq 'family_name') {
+      $design_info_html .= "<dt>Number of family names per block</dt><dd>";
+      foreach my $key (sort { $a <=> $b} keys %block_hash) {
+      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." family names <br>";
+      }
+    }elsif ($trial_stock_type eq 'cross') {
+      $design_info_html .= "<dt>Number of cross unique ids per block</dt><dd>";
+      foreach my $key (sort { $a <=> $b} keys %block_hash) {
+      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." cross unique ids <br>";
+      }
+    } else {
+      $design_info_html .= "<dt>Number of accessions per block</dt><dd>";
+      foreach my $key (sort { $a <=> $b} keys %block_hash) {
       $design_info_html .= "Block ".$key.": ".$block_hash{$key}." accessions <br>";
+      }
     }
     $design_info_html .= "</dt>";
   }
