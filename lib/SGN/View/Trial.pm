@@ -270,39 +270,39 @@ sub design_layout_view {
 }
 
 sub design_info_view {
-  my $design_ref = shift;
-  my $design_info_ref = shift;
-  my $trial_stock_type = shift;
-  my %design = %{$design_ref};
-  my %design_info = %{$design_info_ref};
-  my %block_hash;
-  my %rep_hash;
-  my $design_info_html;
-  my $design_description;
+    my $design_ref = shift;
+    my $design_info_ref = shift;
+    my $trial_stock_type = shift;
+    my %design = %{$design_ref};
+    my %design_info = %{$design_info_ref};
+    my %block_hash;
+    my %rep_hash;
+    my $design_info_html;
+    my $design_description;
 
 
-  $design_info_html .= "<dl>";
+    $design_info_html .= "<dl>";
 
-  if ($design_info{'design_type'}) {
-    $design_description = $design_info{'design_type'};
-    if ($design_info{'design_type'} eq "CRD") {
-      $design_description = "Completely Randomized Design";
-    }
-    if ($design_info{'design_type'} eq "RCBD") {
-      $design_description = "Randomized Complete Block Design";
-    }
-    if ($design_info{'design_type'} eq "Alpha") {
-      $design_description = "Alpha Lattice Incomplete Block Design";
-    }
-    if ($design_info{'design_type'} eq "Augmented") {
-      $design_description = "Augmented Incomplete Block Design";
-    }
-    if ($design_info{'design_type'} eq "MAD") {
-      $design_description = "Modified Augmented Design";
-    }
-    if ($design_info{'design_type'} eq "greenhouse") {
-      $design_description = "Greenhouse Design";
-    }
+    if ($design_info{'design_type'}) {
+        $design_description = $design_info{'design_type'};
+        if ($design_info{'design_type'} eq "CRD") {
+            $design_description = "Completely Randomized Design";
+        }
+        if ($design_info{'design_type'} eq "RCBD") {
+            $design_description = "Randomized Complete Block Design";
+        }
+        if ($design_info{'design_type'} eq "Alpha") {
+            $design_description = "Alpha Lattice Incomplete Block Design";
+        }
+        if ($design_info{'design_type'} eq "Augmented") {
+            $design_description = "Augmented Incomplete Block Design";
+        }
+        if ($design_info{'design_type'} eq "MAD") {
+            $design_description = "Modified Augmented Design";
+        }
+        if ($design_info{'design_type'} eq "greenhouse") {
+            $design_description = "Greenhouse Design";
+        }
 #    if ($design_info{'design_type'} eq "MADII") {
 #      $design_description = "Modified Augmented Design II";
 #    }
@@ -312,86 +312,86 @@ sub design_info_view {
 #    if ($design_info{'design_type'} eq "MADIV") {
 #      $design_description = "Modified Augmented Design IV";
 #    }
-    $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
-  }
-  if ($design_info{'number_of_locations'}) {
-    $design_info_html .= "<dt>Number of locations</dt><dd>".$design_info{'number_of_locations'}."</dd>";
-  }
-  if ($design_info{'number_of_stocks'}) {
-    if ($trial_stock_type eq 'family_name') {
-        $design_info_html .= "<dt>Number of family names</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
-    } elsif ($trial_stock_type eq 'cross') {
-        $design_info_html .= "<dt>Number of cross unique ids</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
-    } else {
-        $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+        $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
     }
-  }
-  if ($design_info{'number_of_checks'}) {
-    $design_info_html .= "<dt>Number of checks</dt><dd>".$design_info{'number_of_checks'}."</dd>";
-  }
-  if ($design_info{'number_of_controls'}) {
-    $design_info_html .= "<dt>Number of controls</dt><dd>".$design_info{'number_of_controls'}."</dd>";
-  }
-
-  my $treatment_info_string = "";
-  foreach my $key (sort { $a <=> $b} keys %design) {
-    my $current_block_number = $design{$key}->{block_number};
-    my $current_rep_number;
-    if ($current_block_number) {
-        if ($block_hash{$current_block_number}) {
-          $block_hash{$current_block_number} += 1;
+    if ($design_info{'number_of_locations'}) {
+        $design_info_html .= "<dt>Number of locations</dt><dd>".$design_info{'number_of_locations'}."</dd>";
+    }
+    if ($design_info{'number_of_stocks'}) {
+        if ($trial_stock_type eq 'family_name') {
+            $design_info_html .= "<dt>Number of family names</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+        } elsif ($trial_stock_type eq 'cross') {
+            $design_info_html .= "<dt>Number of cross unique ids</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
         } else {
-          $block_hash{$current_block_number} = 1;
+            $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
         }
     }
-    if ($design{$key}->{rep_number}) {
-      $current_rep_number = $design{$key}->{rep_number};
-      if ($rep_hash{$current_rep_number}) {
-	$rep_hash{$current_rep_number} += 1;
-      } else {
-	$rep_hash{$current_rep_number} = 1;
-      }
+    if ($design_info{'number_of_checks'}) {
+        $design_info_html .= "<dt>Number of checks</dt><dd>".$design_info{'number_of_checks'}."</dd>";
+    }
+    if ($design_info{'number_of_controls'}) {
+        $design_info_html .= "<dt>Number of controls</dt><dd>".$design_info{'number_of_controls'}."</dd>";
     }
 
-    if($key eq 'treatments'){
-        while(my($k,$v) = each %{$design{$key}}){
-            my $treatment_units = join ',', @{$v};
-            $treatment_info_string .= "<b>$k:</b> $treatment_units<br/>";
+    my $treatment_info_string = "";
+    foreach my $key (sort { $a <=> $b} keys %design) {
+        my $current_block_number = $design{$key}->{block_number};
+        my $current_rep_number;
+        if ($current_block_number) {
+            if ($block_hash{$current_block_number}) {
+                $block_hash{$current_block_number} += 1;
+            } else {
+                $block_hash{$current_block_number} = 1;
+            }
+        }
+        if ($design{$key}->{rep_number}) {
+            $current_rep_number = $design{$key}->{rep_number};
+            if ($rep_hash{$current_rep_number}) {
+                $rep_hash{$current_rep_number} += 1;
+            } else {
+                $rep_hash{$current_rep_number} = 1;
+            }
+        }
+
+        if($key eq 'treatments'){
+            while(my($k,$v) = each %{$design{$key}}){
+                my $treatment_units = join ',', @{$v};
+                $treatment_info_string .= "<b>$k:</b> $treatment_units<br/>";
+            }
         }
     }
-  }
 
-  if (%block_hash) {
-    $design_info_html .= "<dt>Number of blocks</dt><dd>".scalar(keys %block_hash)."</dd>";
-    if ($trial_stock_type eq 'family_name') {
-      $design_info_html .= "<dt>Number of family names per block</dt><dd>";
-      foreach my $key (sort { $a <=> $b} keys %block_hash) {
-      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." family names <br>";
-      }
-    }elsif ($trial_stock_type eq 'cross') {
-      $design_info_html .= "<dt>Number of cross unique ids per block</dt><dd>";
-      foreach my $key (sort { $a <=> $b} keys %block_hash) {
-      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." cross unique ids <br>";
-      }
-    } else {
-      $design_info_html .= "<dt>Number of accessions per block</dt><dd>";
-      foreach my $key (sort { $a <=> $b} keys %block_hash) {
-      $design_info_html .= "Block ".$key.": ".$block_hash{$key}." accessions <br>";
-      }
+    if (%block_hash) {
+        $design_info_html .= "<dt>Number of blocks</dt><dd>".scalar(keys %block_hash)."</dd>";
+        if ($trial_stock_type eq 'family_name') {
+            $design_info_html .= "<dt>Number of family names per block</dt><dd>";
+            foreach my $key (sort { $a <=> $b} keys %block_hash) {
+                $design_info_html .= "Block ".$key.": ".$block_hash{$key}." family names <br>";
+            }
+        } elsif ($trial_stock_type eq 'cross') {
+            $design_info_html .= "<dt>Number of cross unique ids per block</dt><dd>";
+            foreach my $key (sort { $a <=> $b} keys %block_hash) {
+                $design_info_html .= "Block ".$key.": ".$block_hash{$key}." cross unique ids <br>";
+            }
+        } else {
+            $design_info_html .= "<dt>Number of accessions per block</dt><dd>";
+            foreach my $key (sort { $a <=> $b} keys %block_hash) {
+                $design_info_html .= "Block ".$key.": ".$block_hash{$key}." accessions <br>";
+            }
+        }
+        $design_info_html .= "</dt>";
     }
-    $design_info_html .= "</dt>";
-  }
 
 
-  if (%rep_hash) {
-    $design_info_html .= "<dt>Number of reps</dt><dd>".scalar(keys %rep_hash)."</dd>";
-  }
+    if (%rep_hash) {
+        $design_info_html .= "<dt>Number of reps</dt><dd>".scalar(keys %rep_hash)."</dd>";
+    }
 
-  $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
+    $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
 
-  $design_info_html .= "</dl>";
+    $design_info_html .= "</dl>";
 
-  return $design_info_html;
+    return $design_info_html;
 
 }
 
