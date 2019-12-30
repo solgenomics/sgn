@@ -1200,10 +1200,11 @@ sub get_cached_file_VCF {
         $cmd->is_cluster(1);
         $cmd->wait;
 
-
+#        $self->cache()->set($key, $transpose_tempfile);
+#        $file_handle = $self->cache()->handle($key);
 #        copy($transpose_tempfile, $file_handle);
-
-        $file_handle = $transpose_tempfile;
+        open (my $new_fh, $transpose_tempfile);
+        $file_handle = $new_fh;
 
         # my ($total_count, $genotypes) = $self->get_genotype_info();
         #
