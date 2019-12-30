@@ -750,7 +750,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $file_handle = $geno->download();
+    my $file_handle = $geno->download($c);
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
