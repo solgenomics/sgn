@@ -386,7 +386,7 @@ sub trait_phenotype_file {
 
 
 sub all_traits_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
     my $pop_id = $c->stash->{pop_id};
     #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
@@ -403,18 +403,20 @@ sub all_traits_file {
 
 
 sub traits_list_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+   # my $pop_id = $c->stash->{pop_id};
    # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+    if ($pop_id)
+    {
+	my $cache_data = {key       => 'traits_list_pop' . $pop_id,
+			  file      => 'traits_list_pop_' . $pop_id . '.txt',
+			  stash_key => 'traits_list_file',
+			  cache_dir => $c->stash->{solgs_cache_dir}
+	};
 
-    my $cache_data = {key       => 'traits_list_pop' . $pop_id,
-                      file      => 'traits_list_pop_' . $pop_id . '.txt',
-                      stash_key => 'traits_list_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
-    };
-
-    $self->cache_file($c, $cache_data);
+	$self->cache_file($c, $cache_data);
+    }
 
 }
 
@@ -608,7 +610,8 @@ sub create_file_id {
     my $combo_pops_id    = $c->stash->{combo_pops_id};
     my $data_type        = $c->stash->{data_type};
     my $k_number         = $c->stash->{k_number};    
-    my $sindex_name      = $c->stash->{sindex_weigths} || $c->stash->{sindex_name};
+    my $sindex_wts       = $c->stash->{sindex_weigths};
+    my $sindex_name      = $c->stash->{sindex_name};
     my $sel_prop         = $c->stash->{selection_proportion};
 
     my $traits_ids = $c->stash->{training_traits_ids};
@@ -639,7 +642,33 @@ sub create_file_id {
     } 
     elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
     {
-	$file_id =  $selection_pop_id ? $training_pop_id . '-' . $selection_pop_id : $training_pop_id;
+	 if ($sindex_wts)
+	 {
+	     if ($selection_pop_id && $training_pop_id !~ /^$selection_pop_id$/)
+	     {
+	     	 $file_id = $training_pop_id . '-' . $selection_pop_id. '-' . $sindex_wts;
+	     }
+	     else
+	     {
+		 $file_id = $training_pop_id . '-' . $sindex_wts; 
+	     }
+	     
+	    
+	 }
+	 elsif ($sindex_name) 
+	 {
+	    $file_id = $sindex_name; 
+	 }
+	 else 
+	 {
+	     if ($selection_pop_id && $training_pop_id !~ /^$selection_pop_id$/)
+	     {
+		 $file_id = $training_pop_id . '-' . $selection_pop_id; 
+	     } else 
+	     {
+		 $file_id = $training_pop_id; 
+	     }
+	 }   
     }
     else 
     {
@@ -648,26 +677,18 @@ sub create_file_id {
 
     if ($data_structure =~ /list/) 
     {
-	$file_id = "list_${list_id}";
+    	$file_id = "list_${list_id}";
     }
     elsif ($data_structure =~ /dataset/) 
     {
-	$file_id = "dataset_${dataset_id}";
-    } 
-
-    if ($sindex_name)
-    {
-	if ($sindex_name !~ $selection_pop_id)
-	{
-	    $file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
-	}
-	
-	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
+    	$file_id = "dataset_${dataset_id}";
     }
-
-    $file_id = $traits_selection_id ? $file_id . '_traits_' . $traits_selection_id : $file_id . '_trait_' . $traits_ids[0]; 
+       
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
-    $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
+    $file_id = $k_number  ? $file_id . '-' . $k_number : $file_id;
+    $file_id = $file_id . '-' . $traits_selection_id if $traits_selection_id && (!$sindex_name && !$sindex_wts);
+    $file_id = $file_id . '-' . $traits_ids[0] if @$traits_ids & @$traits_ids == 1;
+    $file_id = $file_id . '-' . $sel_prop if $sel_prop;
     
     $c->stash->{file_id} = $file_id;
     
