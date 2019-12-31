@@ -10,6 +10,7 @@ JSAN.use('jquery.blockUI');
 
 var solGS = solGS || function solGS () {};
 
+
 solGS.sIndex = {
    
     listSelectionIndexPopulations: function()  {
@@ -94,13 +95,13 @@ solGS.sIndex = {
 
 	    for (var i = 0; i < indexed.length; i++) {
 		var indexData = {
-		    'id': indexed[i],
-		    'name': indexed[i],
+		    'id': indexed[i][0],
+		    'name': indexed[i][1],
 		    'pop_type': 'selection_index'
 		};
-
+	
 		indexData = JSON.stringify(indexData);
-		sIndexList += '<li><a href="#">' + indexed[i] + '<span class=value>' + indexData + '</span></a></li>';
+		sIndexList += '<li><a href="#">' + indexed[i][1] + '<span class=value>' + indexData + '</span></a></li>';
 	    }
 	}
 	
@@ -281,8 +282,8 @@ solGS.sIndex = {
                     formatGenCorInputData(popId, popType, indexFile);
 
 		    jQuery('#si_canvas #selected_pop').val('');
-
-		    solGS.sIndex.saveIndexedPops(res.sindex_name);
+		   
+		    solGS.sIndex.saveIndexedPops([popId, res.sindex_name]);
 		    solGS.cluster.listClusterPopulations();
 		},
 		error: function(res){
@@ -459,6 +460,7 @@ solGS.sIndex = {
 /////
 }
 ////
+
 
 solGS.sIndex.indexed = [];
 
