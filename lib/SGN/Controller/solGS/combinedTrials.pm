@@ -123,8 +123,9 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
     
     $self->save_common_traits_acronyms($c);
 
-    my $solgs_controller = $c->controller('solGS::solGS');    
-    $solgs_controller->get_all_traits($c);
+    my $solgs_controller = $c->controller('solGS::solGS'); 
+    $solgs_controller->get_all_traits($c, $combo_pops_id);
+   
     $solgs_controller->get_acronym_pairs($c, $combo_pops_id);
   
     $self->combined_trials_desc($c);
@@ -1218,6 +1219,7 @@ sub process_trials_list_details {
 	{
 	    $c->stash->{pops_ids_list} = $pops_ids;
 	    $c->controller('solGS::combinedTrials')->create_combined_pops_id($c);
+	    $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $pops_ids);
 	}
     }
     
@@ -1237,10 +1239,8 @@ sub find_common_traits {
     my @common_traits;  
     foreach my $pop_id (@$combined_pops_list)
     {  
-	$c->stash->{pop_id} = $pop_id;
-
-	$c->controller('solGS::solGS')->get_single_trial_traits($c);
-	$c->controller('solGS::Files')->traits_list_file($c);
+	$c->controller('solGS::solGS')->get_single_trial_traits($c, $pop_id);
+	$c->controller('solGS::Files')->traits_list_file($c, $pop_id);
 	my $traits_list_file = $c->stash->{traits_list_file};
 
 	my $traits = read_file($traits_list_file);
@@ -1267,9 +1267,8 @@ sub save_common_traits_acronyms {
     
     $self->find_common_traits($c);
     my $common_traits = $c->stash->{common_traits};
-       
-    $c->stash->{pop_id} = $combo_pops_id;
-    $c->controller('solGS::Files')->traits_list_file($c);
+  
+    $c->controller('solGS::Files')->traits_list_file($c, $combo_pops_id);
     my $traits_file = $c->stash->{traits_list_file};
     write_file($traits_file, join("\t", @$common_traits)) if $traits_file;
   
