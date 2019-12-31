@@ -58,15 +58,12 @@ jQuery(document).ready( function() {
 		    
 		    if (typeof selectedType === 'undefined'
 			|| !selectedType.match(/dataset/i)) {
+			
 			var listDetail = getListTypeTrainingPopDetail(selectedId);
-
 			if (listDetail.type.match(/plots/)) {
 			    askTrainingJobQueueing(selectedId);
-			} else {
-			    var trialsList = listDetail.list;
-			    var trialsNames = listDetail.list_elements_names;
-			
-			    loadTrialListTypeTrainingPop(trialsNames);		    
+			} else {			
+			    loadTrialListTypeTrainingPop(selectedId);		    
 			}
 		    } else {
 			solGS.dataset.datasetTrainingPop(selectedId, selectedName);
@@ -77,11 +74,15 @@ jQuery(document).ready( function() {
 });
 
 
-function getTrainingListElementsNames (list) {
-   
+function getTrainingListElementsNames (listId) {
+
+    var list = new CXGN.List();
+    var listData     = list.getListData(listId);
+    var listElements = listData.elements;
+    
     var names = [];
-    for (var i = 0; i < list.length; i++) {
-	names.push(list[i][1]);
+    for (var i = 0; i < listElements.length; i++) {
+	names.push(listElements[i][1]);
     }
 
     return names;
@@ -89,11 +90,15 @@ function getTrainingListElementsNames (list) {
 }
 
 
-function getTrainingListElementsIds (list) {
+function getTrainingListElementsIds (listId) {
+
+    var list = new CXGN.List();
+    var listData     = list.getListData(listId);
+    var listElements = listData.elements;
    
     var ids = [];
-    for (var i = 0; i < list.length; i++) {
-	ids.push(list[i][0]);
+    for (var i = 0; i < listElements.length; i++) {
+	ids.push(listElements[i][0]);
     }
 
     return ids;
@@ -104,33 +109,23 @@ function getTrainingListElementsIds (list) {
 function getListTypeTrainingPopDetail(listId) {   
     
     var list = new CXGN.List();
+   
+    var listType      = list.getListType(listId);
+    var listName      = list.listNameById(listId);
     
-    var listData;
-    var listType;
-    var listName;
-
-    if (listId) {
-        listData      = list.getListData(listId);
-	listType      = list.getListType(listId);
-	listName      = list.listNameById(listId);
-	listElements  = listData.elements;
-
-	listElementsNames = getTrainingListElementsNames(listElements);
-	listElementsIds   = getTrainingListElementsIds(listElements);
-    }
-  
-    return {'name'          : listName,	    
-	    'type'          : listType,
-	    'list_id'       : listId,
-	    'list_elements_names' : listElementsNames,
-	    'list_elements_ids' : listElementsIds,
-           };
+    return {
+	'name'    : listName,	    
+	'type'    : listType,
+	'list_id' : listId,	   
+    };
     
 }
 
 
-function loadTrialListTypeTrainingPop (trialsNames) {
-   
+function loadTrialListTypeTrainingPop (listId) {
+	
+    var trialsNames = getTrainingListElementsNames(listId);
+  
     jQuery.ajax({
         type: 'POST',
         url: '/solgs/get/trial/id/',
@@ -163,10 +158,7 @@ function createTrainingReqArgs (listId) {
 
     var genoList  = getListTypeTrainingPopDetail(listId);
     var listName  = genoList.name;
-    var list      = genoList.list;
     var popId     = getModelId(listId);
- 
-    var popType = 'list_reference';
 
     var args = {
 	'list_name'       : listName,
@@ -174,7 +166,6 @@ function createTrainingReqArgs (listId) {
 	'analysis_type'   : 'population download',
 	'data_set_type'   : 'single population',
         'training_pop_id' : popId,
-	'population_type' : popType,
     };  
 
     return args;
