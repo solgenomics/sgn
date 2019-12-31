@@ -314,8 +314,8 @@ sub pca_trials_genotype_data {
 sub pca_dataset_genotype_data {
     my ($self, $c) = @_;
     
-    my $model = $c->controller('solGS::Dataset')->get_model();
-    my $data = $model->get_dataset_data($c->stash->{dataset_id});
+   # my $model = $c->controller('solGS::Dataset')->get_model();
+    my $data = $c->model('solGS::solGS')->get_dataset_data($c->stash->{dataset_id});
     my $accessions = $data->{categories}->{accessions};
     my $trials = $data->{categories}->{trials};
 
