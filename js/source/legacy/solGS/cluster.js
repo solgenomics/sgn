@@ -206,7 +206,7 @@ solGS.cluster = {
 	var popId   = jQuery("#cluster_selected_population_id").val();
 	var popType = jQuery("#cluster_selected_population_type").val();
 	var popName = jQuery("#cluster_selected_population_name").val();
-	  
+
 	if(!selectName) {
 	    selectName = popName;
 	}
@@ -421,28 +421,12 @@ solGS.cluster = {
 
     plotClusterOutput: function(res) {
 
-	var resultName = res.result_name; 
-	var plotId;
-
-	if (resultName != undefined) {
-	     plotId = resultName.replace(/\s/g, '-');
-	} else {
-	    plotId = res.cluster_pop_id;
-	}
+	var fileId = res.file_id;
 	
-	var imageId = 'k-means-plot-'  + plotId + '-'
-	    + res.data_type + '-'+ res.k_number;
+	var fileId = 'k-means-plot-'  + fileId;
+	var resultName = res.result_name;
 
-	if (res.selection_proportion) {
-	    imageId = imageId + '-' + res.selection_proportion;
-	}
-
-	
-	if (res.training_traits_ids) {
-	    imageId = imageId + '-' + res.training_traits_ids;
-	}
-	
-	imageId = 'id="' + imageId + '"';
+	var imageId = 'id="' + fileId + '"';
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
 	var filePlot  = res.kcluster_plot.split('/').pop();
 	var plotType = 'K-means plot';	
@@ -520,12 +504,18 @@ solGS.cluster = {
 	
 	var dataType    = jQuery('#'+selectId + ' #cluster_data_type_select').val();
 	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
-	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
-	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
 
-	selectionProp = selectionProp.replace(/%/, '');
-	selectionProp = selectionProp.replace(/\s+/g, '');
+	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
 	kNumber = kNumber.replace(/\s+/g, '');
+
+	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val();
+
+	if (selectionProp) {
+	    selectionProp = selectionProp.replace(/%/, '');
+	    selectionProp = selectionProp.replace(/\s+/g, '');
+	}
+	
+
 	
 	return {'data_type' : dataType,
 		'cluster_type': clusterType,
