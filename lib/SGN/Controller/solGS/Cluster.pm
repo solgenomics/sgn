@@ -71,8 +71,8 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $data_structure =  $c->req->param('data_structure');
     my $k_number       =  $c->req->param('k_number'); 
     my $cluster_type   = $c->req->param('cluster_type');
-    my $selection_prop   = $c->req->param('selection_proportion');
-    my $sindex_name      = $c->req->param('sindex_name');
+    my $selection_prop = $c->req->param('selection_proportion');
+    my $sindex_name    = $c->req->param('sindex_name');
     $cluster_type      = 'k-means' if !$cluster_type;
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
@@ -91,7 +91,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{selection_proportion} = $selection_prop;
     $c->stash->{sindex_name}      = $sindex_name;
     
-    $c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{training_traits_ids} = \@traits_ids if @traits_ids;
     
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
     $c->controller('solGS::Files')->create_file_id($c);
@@ -163,8 +163,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $cluster_type     = $c->req->param('cluster_type');
     my @traits_ids       = $c->req->param('training_traits_ids[]'); 
     my $list_id          = $c->req->param('list_id');
-    
-
+ 
     my $list_type;   
     my $list_name;
    
@@ -198,8 +197,13 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{sindex_name}      = $sindex_name;
     $c->stash->{selection_proportion} = $selection_prop;
   
-    $c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{training_traits_ids} = \@traits_ids if @traits_ids;
    
+    if (@traits_ids > 1) 
+    {
+      $c->stash->{traits_selection_id} = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+    }
+    
     my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
 
     $c->controller('solGS::Files')->create_file_id($c);
@@ -299,6 +303,10 @@ sub _prepare_response {
     $ret->{k_number}      = $c->stash->{k_number};
     $ret->{selection_proportion} = $c->stash->{selection_proportion};
     $ret->{training_traits_ids} =  $c->stash->{training_traits_ids};
+    $ret->{traits_selection_id} =  $c->stash->{traits_selection_id};
+
+    $c->controller('solGS::Files')->create_file_id($c);
+    $ret->{file_id} =  $c->stash->{file_id};
 
     return $ret;
     
@@ -336,33 +344,33 @@ sub create_cluster_genotype_data {
 }
 
 
-sub create_cluster_phenotype_data {    
-    my ($self, $c) = @_;
+# sub create_cluster_phenotype_data {    
+#     my ($self, $c) = @_;
    
-    my $data_structure = $c->stash->{data_structure};
-    my $referer = $c->req->referer;
-    my $combo_pops_id = $c->stash->{combo_pops_id};
+#     my $data_structure = $c->stash->{data_structure};
+#     my $referer = $c->req->referer;
+#     my $combo_pops_id = $c->stash->{combo_pops_id};
     
-    if ($data_structure =~ /list/) 
-    {
-	$self->cluster_list_phenotype_data($c);	
-    }
-    elsif ($data_structure =~ /dataset/) 
-    {
-	$c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);	
-    }
-    elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
-    {
-	$c->controller('solGS::solGS')->phenotype_file($c);
-    }
-    elsif ($combo_pops_id) 
-    {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
-    }
+#     if ($data_structure =~ /list/) 
+#     {
+# 	$self->cluster_list_phenotype_data($c);	
+#     }
+#     elsif ($data_structure =~ /dataset/) 
+#     {
+# 	$c->controller('solGS::Dataset')->get_dataset_phenotype_data($c);	
+#     }
+#     elsif ($referer =~ /solgs\/trait\/\d+\/population\/|\/breeders\/trial\/|\/solgs\/traits\/all\/population/)
+#     {
+# 	$c->controller('solGS::solGS')->phenotype_file($c);
+#     }
+#     elsif ($combo_pops_id) 
+#     {
+# 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+# 	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+# 	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
+#     }
 
-}
+# }
 
 
 sub cluster_list_genotype_data {
@@ -652,6 +660,7 @@ sub cluster_output_files {
 
 }
 
+
 sub cluster_geno_input_files {
     my ($self, $c) = @_;
     
@@ -659,10 +668,11 @@ sub cluster_geno_input_files {
     my $files;
   
     if ($data_type =~ /genotype/i)
-    {	
-	$files = $c->stash->{genotype_files_list} 
-	|| $c->stash->{genotype_file} 
-	|| $c->stash->{genotype_file_name};
+    {
+	$c->controller('solGS::Files')->genotype_file_name($c, $c->stash->{cluster_pop_id});
+	my $geno_file = $c->stash->{genotype_file_name};
+	
+	$files = $c->stash->{genotype_files_list} || $geno_file;
     }
 
     $c->stash->{cluster_geno_input_files} = $files;
@@ -851,11 +861,14 @@ sub cluster_query_jobs {
     }
     elsif ($data_type =~ /genotype/i)
     {
-	$self->create_cluster_genotype_data_query_jobs($c);
-	$jobs = $c->stash->{cluster_geno_query_jobs};
+	unless ($c->stash->{sindex_name})
+	{
+	    $self->create_cluster_genotype_data_query_jobs($c);
+	    $jobs = $c->stash->{cluster_geno_query_jobs};
+	}
     }
 
-     if (reftype $jobs ne 'ARRAY') 
+    if (reftype $jobs ne 'ARRAY') 
     {
 	$jobs = [$jobs];
     }
@@ -866,9 +879,12 @@ sub cluster_query_jobs {
 
 sub run_cluster {
     my ($self, $c) = @_;
- 
-    $self->cluster_query_jobs_file($c);
-    $c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
+    
+    unless ($c->stash->{sindex_name})
+    {
+	$self->cluster_query_jobs_file($c);
+	$c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
+    }
     
     $self->cluster_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
