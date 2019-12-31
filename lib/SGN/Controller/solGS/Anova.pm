@@ -206,9 +206,9 @@ sub get_traits_abbrs {
     my $trial_id = $c->stash->{trial_id};
     my $traits_ids = $c->stash->{traits_ids};
   
-    $c->stash->{pop_id} = $trial_id;  
-    $c->controller('solGS::solGS')->get_all_traits($c);
-    $c->controller('solGS::Files')->all_traits_file($c);
+    #$c->stash->{pop_id} = $trial_id;  
+    $c->controller('solGS::solGS')->get_all_traits($c, $trial_id);
+    $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
     my $traits_file = $c->stash->{all_traits_file};
    
     my @traits = read_file($traits_file);
