@@ -16,7 +16,7 @@ use Carp qw/ carp confess croak /;
 use SGN::Model::solGS::solGS;
 use SGN::Controller::solGS::solGS;
 use SGN::Controller::solGS::List;
-
+use CXGN::List;
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -58,19 +58,35 @@ sub run {
 	    $self->trial_genotype_data();	
 	}
     } elsif ($self->population_type =~ /list/) {
-	
-	if ($self->data_type =~ /phenotype/) {
-	    $self->plots_list_phenotype_data();
-	} elsif ($self->data_type =~ /genotype/) {
+
+	my $args = retrieve($self->args_file);    
+	my $list_type = $args->{list_type};
+
+	if ($list_type =~ /plots/) {
+	    if ($self->data_type =~ /phenotype/) {
+		$self->plots_list_phenotype_data();
+	    } elsif ($self->data_type =~ /genotype/) {
+		$self->plots_list_genotype_data();
+	    }
+	}  elsif ($list_type =~ /accessions/) {
 	    $self->genotypes_list_genotype_data();	
-	}   
+	}  
     } elsif ($self->population_type =~ /dataset/) {
-	
-	if ($self->data_type =~ /phenotype/) {
-	    $self->plots_list_phenotype_data();
-	} elsif ($self->data_type =~ /genotype/) {
-	    $self->dataset_genotype_data();	
-	}   
+
+	my $args = retrieve($self->args_file);    
+	my $dataset_type = $args->{dataset_type};
+
+	if ($dataset_type =~ /plots/) {
+	    if ($self->data_type =~ /phenotype/) {
+		$self->plots_dataset_phenotype_data();
+	    } elsif ($self->data_type =~ /genotype/) {
+		$self->dataset_genotype_data();
+	    }
+	}  else {
+	    if ($self->data_type =~ /genotype/) {
+		$self->dataset_genotype_data();
+	    }
+	}  
     }
    
 }
@@ -145,11 +161,26 @@ sub genotypes_list_genotype_data {
     my $self = shift;
     
     my $args = retrieve($self->args_file);    
-    my $genotypes_ids = $args->{genotypes_ids};
+    
+    my $model      = $self->get_model();
+    my $search_obj = $model->genotypes_list_genotype_data($args->{list_id});
+    my $geno_file  = $args->{genotype_file};
+ 
+    $self->write_geno_data($model, $search_obj, $geno_file);
+
+}
+
+
+sub plots_list_genotype_data {
+    my $self = shift;
+    
+    my $args = retrieve($self->args_file);      
+    my $list_id = $args->{list_id};
     
     my $model = $self->get_model();
-    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids);
-    my $geno_file     = $args->{genotype_file};
+    my $search_obj = $model->plots_list_genotype_data($list_id);
+    my $geno_file  = $args->{genotype_file};
+   
     $self->write_geno_data($model, $search_obj, $geno_file);
 
 }
@@ -161,18 +192,41 @@ sub plots_list_phenotype_data {
     my $args = retrieve($self->args_file);
 
     my $list_id = $args->{list_id};
-    my $plots_ids   = $args->{plots_ids};
+    
     my $traits_file = $args->{traits_file};
     #my $data_dir    = $args->{data_dir};
     my $pheno_file  = $args->{phenotype_file};
     my $metadata_file = $args->{metadata_file};
    
     my $model = $self->get_model();
-    my $pheno_data = $model->plots_list_phenotype_data($plots_ids);
+    my $pheno_data = $model->plots_list_phenotype_data($list_id);
     my $metadata = $model->trial_metadata();
   
     $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
-        
+  
+    write_file($pheno_file, $pheno_data);
+    write_file($metadata_file, join("\t", @$metadata));
+      
+}
+
+
+sub plots_dataset_phenotype_data {
+    my $self= shift;
+
+    my $args = retrieve($self->args_file);
+
+    my $dataset_id = $args->{dataset_id};   
+    my $traits_file = $args->{traits_file};
+   
+    my $pheno_file  = $args->{phenotype_file};
+    my $metadata_file = $args->{metadata_file};
+   
+    my $model = $self->get_model();
+    my $pheno_data = $model->plots_dataset_phenotype_data($dataset_id);
+    my $metadata = $model->trial_metadata();
+  
+    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
+ 
     write_file($pheno_file, $pheno_data);
     write_file($metadata_file, join("\t", @$metadata));
       
@@ -184,7 +238,7 @@ sub dataset_genotype_data {
     
     my $args = retrieve($self->args_file);   
     my $dataset_id = $args->{dataset_id};
-
+  
     if ($dataset_id)
     {
 	my $model = $self->get_model();
@@ -192,10 +246,6 @@ sub dataset_genotype_data {
 	my $geno_file = $args->{genotype_file};
 	$self->write_geno_data($model, $search_obj, $geno_file);
     } 
-    elsif ($args->{genotypes_ids})
-    {
-	$self->genotypes_list_genotype_data();
-    }
 
 }
 
@@ -204,13 +254,18 @@ sub get_model {
     my $self = shift;
 
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
+					       schema => $self->schema});
 
     return $model;
     
 }
 
+sub schema {
+    my $self = shift;
+    
+    return  SGN::Context->dbic_schema("Bio::Chado::Schema");
 
+}
 
 __PACKAGE__->meta->make_immutable;
 
