@@ -38,6 +38,8 @@ use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::List;
+use CXGN::List::Transform;
 
 extends 'Catalyst::Model';
 
@@ -801,8 +803,11 @@ sub structure_genotype_data {
 }
 
 
-sub genotypes_list_genotype_data {
-    my ($self, $genotypes_ids) = @_;
+sub plots_list_genotype_data {
+    my ($self, $list_id) = @_;
+
+    my $genotypes = $self->plots_list_genotypes_list($list_id);
+    my $genotypes_ids = $genotypes->{accession_ids};
 
     my $protocol_id = $self->protocol_id();
     
@@ -819,6 +824,58 @@ sub genotypes_list_genotype_data {
     $geno_search->init_genotype_iterator();
     return $geno_search;
 
+}
+
+
+sub genotypes_list_genotype_data {
+    my ($self, $list_id) = @_;
+
+    my $genotypes = $self->get_list_elements_names($list_id);
+    
+    my $genotypes_ids = $self->transform_genotypes_genotypes_ids($genotypes);
+    
+    my $protocol_id = $self->protocol_id();
+    
+    my $geno_search = CXGN::Genotype::Search->new(
+	bcs_schema => $self->schema(),
+	accession_list => $genotypes_ids,
+	protocol_id_list => [$protocol_id],
+	genotypeprop_hash_select=> ['DS'],
+	protocolprop_top_key_select=>[],
+	return_only_first_genotypeprop_for_stock=> 1,
+	);
+
+    $geno_search->init_genotype_iterator();
+    return $geno_search;
+
+}
+
+
+sub plots_list_genotypes_list {
+    my ($self, $list_id) = @_;
+
+    my $plots = $self->get_list_elements_names($list_id);
+
+    my $transform = CXGN::List::Transform->new();
+    my $plots_t = $transform->can_transform("plots", "accessions");
+    my $genotypes_id_hash = $transform->transform($self->schema, $plots_t, $plots);
+   
+    return $genotypes_id_hash;
+    
+}
+
+
+sub transform_genotypes_genotypes_ids {
+    my ($self, $genotypes) = @_;
+    
+    my $transform = CXGN::List::Transform->new();
+    my $genotypes_t = $transform->can_transform("accessions", "accession_ids");
+    my $genotypes_id_hash = $transform->transform($self->schema, $genotypes_t, $genotypes);
+    my @genotypes_ids = @{$genotypes_id_hash->{transform}};
+
+    @genotypes_ids = uniq(@genotypes_ids);
+    return \@genotypes_ids;
+    
 }
 
 
@@ -1284,19 +1341,37 @@ sub prediction_pops {
 
 
 sub plots_list_phenotype_data {
-    my ($self, $plots_ids) = @_;
+    my ($self, $list_id) = @_;
 
-    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-	bcs_schema  =>$self->schema,
-	data_level  => 'plot',
-	search_type =>'MaterializedViewTable',
-	plot_list   => $plots_ids,
-	);
+    my $plots_ids = $self->get_list_plots_ids($list_id);
+      
+    return $self->plots_phenotype_data($plots_ids);
 
-    my @data = $phenotypes_search->get_phenotype_matrix();
-    my $clean_data = $self->structure_phenotype_data(\@data);
+}
+
+
+sub get_list_elements_names {
+    my ($self, $list_id) = @_;
+
+    my $list = CXGN::List->new({dbh => $self->context->dbc->dbh, list_id => $list_id });
+    my $names = $list->elements;
    
-    return \$clean_data;
+    return $names;
+
+}
+
+
+sub get_list_plots_ids {
+    my ($self, $list_id) = @_;
+
+    my $plots = $self->get_list_elements_names($list_id);
+
+    my $transform = CXGN::List::Transform->new();
+    my $plots_t = $transform->can_transform("plots", "plot_ids");
+    my $plots_id_hash = $transform->transform($self->schema, $plots_t, $plots);
+    my @plots_ids = @{$plots_id_hash->{transform}};
+
+    return \@plots_ids;
 
 }
 
@@ -2051,14 +2126,47 @@ sub get_dataset_metadata {
 }
 
 
+sub plots_dataset_phenotype_data {
+    my ($self, $dataset_id) = @_;
+   
+    my $plots_ids = $self->get_dataset_plots_list($dataset_id);
+   
+    return $self->plots_phenotype_data($plots_ids);
+
+
+}
+
+
+sub plots_phenotype_data {
+    my ($self, $plots_ids) = @_;
+    
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	bcs_schema  =>$self->schema,
+	data_level  => 'plot',
+	search_type =>'MaterializedViewTable',
+	plot_list   => $plots_ids,
+	);
+
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    my $clean_data = $self->structure_phenotype_data(\@data);
+   
+    return \$clean_data;
+
+}
+
+
 sub get_dataset_genotype_data {
     my ($self, $dataset_id) = @_;
    
     my $protocol_id = $self->protocol_id();
 
+    my $data = $self->get_dataset_data($dataset_id);
+    my $accessions = $data->{categories}->{accessions};
+
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
 	sp_dataset_id => $dataset_id,
+	accession_list => $accessions,
 	protocol_id_list => [$protocol_id],
 	genotypeprop_hash_select=> ['DS'],
 	protocolprop_top_key_select=>[],
