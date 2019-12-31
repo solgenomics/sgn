@@ -27,7 +27,7 @@ solGS.pca = {
 		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 		+ "'" + ');return false;">';
 
-	    var dataType = ['genotype', 'phenotype'];
+	    var dataType = ['Genotype', 'Phenotype'];
 	    var dataTypeOpts = this.createDataTypeSelect(dataType);
 	    
 	    var addRow = '<tr  name="' + dataStructure + '"' + ' id="' + selectId +  '">'
@@ -181,12 +181,12 @@ solGS.pca = {
 	    var listType = list.getListType(dataId);
 	   
 	    if (listType.match(/accessions/)
-		&& dataType.match(/phenotype/i)) {
+		&& dataType.match(/Phenotype/i)) {
 		msg = 'With list of clones, you can only do PCA based on <em>genotype</em>.';		
 	    }
 	    
 	    if (listType.match(/plots/)
-		&& dataType.match(/genotype/i)) {
+		&& dataType.match(/Genotype/i)) {
 		msg = 'With list of plots, you can only do PCA based on <em>phenotype</em>.';		
 	    }
 	}
