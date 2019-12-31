@@ -486,7 +486,7 @@ sub population : Path('/solgs/population') Args(1) {
     }
     else 
     {	
-        $self->get_all_traits($c);  
+        $self->get_all_traits($c, $pop_id);  
         $self->project_description($c, $pop_id);
  
         $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
@@ -854,7 +854,7 @@ sub trait :Path('/solgs/trait') Args(3) {
 		    
 	    if (!-e $acronym_file || !-s $acronym_file) 
 	    {
-		$self->get_all_traits($c);
+		$self->get_all_traits($c, $pop_id);
 	    }
 
 	    $self->trait_phenotype_stat($c);  		   		    
@@ -2526,17 +2526,16 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
 
 
 sub get_single_trial_traits {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
-
-    $c->controller('solGS::Files')->traits_list_file($c);
+    print STDERR "\nget_single_trial_traits pop_id; $pop_id\n";
+    $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file = $c->stash->{traits_list_file};
     
     if (!-s $traits_file)
     {
 	my $traits = $c->model('solGS::solGS')->trial_traits($pop_id);
-	
+	  print STDERR "\nget_single_trial_traits traits; @$traits\n";
 	$traits = join("\t", @$traits);
 	write_file($traits_file, $traits);
     }
@@ -2545,11 +2544,11 @@ sub get_single_trial_traits {
 
 
 sub get_all_traits {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
     
     my $pop_id = $c->stash->{pop_id};
-    
-    $c->controller('solGS::Files')->traits_list_file($c);
+   print STDERR "\nsolgs controller get_all_traits pop_id: $pop_id\n"; 
+    $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file = $c->stash->{traits_list_file};
     
     if (!-s $traits_file)
@@ -2558,7 +2557,7 @@ sub get_all_traits {
 
 	if ($page =~ /solgs\/population\// && $pop_id !~ /\w+/)
 	{
-	    $self->get_single_trial_traits($c);
+	    $self->get_single_trial_traits($c, $pop_id);
 	}
     }  
     
@@ -2576,14 +2575,14 @@ sub get_all_traits {
 	$self->traits_acronym_table($c, $acronym_table);
     }
 	
-    $self->create_trait_data($c);       
+    $self->create_trait_data($c, $pop_id);       
 }
 
 
 sub create_trait_data {
-    my ($self, $c) = @_;   
+    my ($self, $c, $pop_id) = @_;   
           
-    my $acronym_pairs = $self->get_acronym_pairs($c);
+    my $acronym_pairs = $self->get_acronym_pairs($c, $pop_id);
 
     if (@$acronym_pairs)
     {
@@ -2601,7 +2600,7 @@ sub create_trait_data {
 	    } 
 	}
 
-	$c->controller('solGS::Files')->all_traits_file($c);
+	$c->controller('solGS::Files')->all_traits_file($c, $pop_id);
 	my $traits_file =  $c->stash->{all_traits_file};
 	write_file($traits_file, $table);
     }
@@ -3214,7 +3213,7 @@ sub phenotype_file {
 	}	    
     }
 
-    $self->get_all_traits($c);
+    $self->get_all_traits($c, $pop_id);
    
     $c->stash->{phenotype_file} = $pheno_file;   
 
@@ -3292,7 +3291,7 @@ sub phenotype_trial_query_args {
 
     no warnings 'uninitialized';
      	   	    
-    $c->controller('solGS::Files')->traits_list_file($c);
+    $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file =  $c->stash->{traits_list_file};
 	
     my $args = {
@@ -3347,11 +3346,13 @@ sub format_phenotype_dataset_headers {
     $all_headers = $self->clean_traits($all_headers);
     
     my $traits = $all_headers;
-     
+       print STDERR "\nformat_phenotype_dataset_headers: traits -- $traits\n";
     foreach my $mh (@$meta_headers) {
 	$traits =~ s/($mh)//g;
     }
- 
+
+    print STDERR "\nformat_phenotype_dataset_headers: traits -- $traits\n";
+    
     write_file($traits_file, $traits) if $traits_file;   
     my  @filtered_traits = split(/\t/, $traits);
          
@@ -3677,8 +3678,15 @@ sub get_selection_pop_query_args {
     my $genotypes_ids;
     if ($selection_pop_id =~ /list/)
     {
-	$c->controller('solGS::List')->get_genotypes_list_details($c);
-	$genotypes_ids = $c->stash->{genotypes_ids};
+#	$c->controller('solGS::List')->get_genotypes_list_details($c);
+	#	$genotypes_ids = $c->stash->{genotypes_ids};
+	my $list = CXGN::List->new({dbh => $c->dbc()->dbh(), list_id => $c->stash->{list_id}});
+	$c->stash->{list_type} = $list->type;
+	$c->stash->{list_name} = $list->name;
+	my $list_id = $c->stash->{list_id};
+	my $list_type = $c->stash->{list_type};
+
+	print STDERR "\nget_selection_pop_query_arg: list_id -- $list_id  list_type: $list_type\n";
 	$pop_type = 'list';
     }
     elsif ($selection_pop_id =~ /dataset/)
@@ -3703,7 +3711,8 @@ sub get_selection_pop_query_args {
     my $selection_pop_query_args = {
 	'trial_id' => $selection_pop_id,
 	'genotype_file' => $selection_pop_geno_file,
-	'genotypes_ids'  => $genotypes_ids,
+	'list_id'  => $c->stash->{list_id},
+	'list_type' => $c->stash->{list_type},
 	'dataset_id'    => $c->stash->{dataset_id},
 	'out_file' => $out_temp_file,
 	'err_file' => $err_temp_file,
