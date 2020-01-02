@@ -191,7 +191,7 @@ sub _check_combined_trials_data {
 sub _check_combined_trials_model_output {
     my ($self, $c, $pop_id, $trait_id) =@_;
     
-    my $cached_pop_data  = $self->check_combined_trials_training_data($c, $pop_id, $trait_id);
+    my $cached_pop_data  = $self->check_combined_trials_trait_training_data($c, $pop_id, $trait_id);
     
     if ($cached_pop_data)
     {
@@ -289,7 +289,7 @@ sub _check_single_trial_model_selection_output {
 sub _check_combined_trials_model_selection_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
     
-    my $cached_tr_data = $self->check_combined_trials_training_data($c, $tr_pop_id, $trait_id);
+    my $cached_tr_data = $self->check_combined_trials_trait_training_data($c, $tr_pop_id, $trait_id);
 
     if ($cached_tr_data)
     {  
@@ -322,6 +322,25 @@ sub check_single_trial_training_data {
 	return 0;
     } 
    
+}
+
+
+sub check_combined_trials_training_data {
+    my ($self, $c, $combo_pops_id) = @_;
+
+    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+    my $trials = $c->stash->{combined_pops_list};
+
+    my $cached;
+    foreach my $trial (@$trials)
+    {
+	$cached = $self->check_single_trial_training_data($c, $trial);
+
+	last if !$cached;	
+    }  
+
+    return $cached;
+    
 }
 
 
@@ -370,7 +389,7 @@ sub check_combined_trials_model_all_traits_output {
      
     foreach my $tr (@$traits_ids)	    
     {
-	my $cached_tr_data = $self->check_combined_trials_training_data($c, $pop_id, $tr);
+	my $cached_tr_data = $self->check_combined_trials_trait_training_data($c, $pop_id, $tr);
 
 	if ($cached_tr_data)
 	{
@@ -414,7 +433,7 @@ sub check_selection_pop_all_traits_output {
 }
 
 
-sub check_combined_trials_training_data {
+sub check_combined_trials_trait_training_data {
     my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
