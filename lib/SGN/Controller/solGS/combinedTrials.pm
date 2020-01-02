@@ -246,33 +246,39 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
     my $pops_cvs = $c->req->param('combined_populations');
-   
-    if ($pops_cvs)
-    {
-	my @pops = split(',', $pops_cvs);
-        $c->stash->{trait_combo_pops} = \@pops;
+
+    $self->combined_pops_summary($c);
+    my $cached = $c->controller('solGS::CachedResult')->check_single_trait_model_output($c, $combo_pops_id, $trait_id);
+    
+    if (!$cached)
+    {    
+	my $training_pop_name = $c->stash->{project_name};
+	my $training_pop_page = qq | <a href="/solgs/populations/combined/$combo_pops_id">$training_pop_name</a> |;	
+
+	$c->stash->{message} = "Cached output for this model does not exist anymore.\n" . 
+	    " Please go to $training_pop_page and run the analysis.";
+	
+	$c->stash->{template} = "/generic_message.mas"; 
     }
     else
     {
-        $self->get_combined_pops_list($c, $combo_pops_id);
-        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list}; 
-    }
+	if ($pops_cvs)
+	{
+	    my @pops = split(',', $pops_cvs);
+	    $c->stash->{trait_combo_pops} = \@pops;
+	}
+	else
+	{
+	    $self->get_combined_pops_list($c, $combo_pops_id);
+	    $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list}; 
+	}
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-   
-    $self->combined_pops_summary($c);
-      
-    $c->controller('solGS::solGS')->trait_phenotype_stat($c);    
-    $c->controller('solGS::Files')->validation_file($c);
-    $c->controller('solGS::solGS')->model_accuracy($c);
-    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-    $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
-    $c->controller('solGS::solGS')->download_urls($c);
-    $c->controller('solGS::Files')->marker_effects_file($c);
-    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
-    $c->controller('solGS::solGS')->model_parameters($c);
-    
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);		
+	$c->controller('solGS::solGS')->trait_phenotype_stat($c);    	
+	$c->controller('solGS::solGS')->gs_modeling_files($c);
+	
+	$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
+    }
 }
 
 
