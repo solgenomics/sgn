@@ -68,7 +68,7 @@ sub _check_cached_output {
 	my $pop_id   = $args->{training_pop_id}[0];
 	my $trait_id = $args->{trait_id}[0];
 	
-	$self->_check_single_trial_model_output($c, $pop_id, $trait_id);
+	$self->_check_single_trait_model_output($c, $pop_id, $trait_id);
     }
     elsif ($req_page =~ /solgs\/model\/combined\/trials\//)
     {
@@ -132,14 +132,14 @@ sub _check_single_trial_training_data {
 }
 
 
-sub _check_single_trial_model_output {
+sub _check_single_trait_model_output {
     my ($self, $c, $pop_id, $trait_id) =@_;
     
     my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id);
     
     if ($cached_pop_data)
     {
-	$c->stash->{rest}{cached} =  $self->check_single_trial_model_output($c, $pop_id, $trait_id);
+	$c->stash->{rest}{cached} =  $self->check_single_trait_model_output($c, $pop_id, $trait_id);
     }	    
 }
 
@@ -172,9 +172,7 @@ sub _check_combined_trials_data {
     my ($self, $c, $pop_id) =@_;
 
     $c->stash->{combo_pops_id} = $pop_id;
-    #$c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
-    #my $trials = $c->stash->{arrayref_combined_pops_ids};
-
+  
     $c->controller('solGS::combinedTrials')->get_combined_pops_list($c);
     my $trials = $c->stash->{combined_pops_list};
     
@@ -195,7 +193,7 @@ sub _check_combined_trials_model_output {
     
     if ($cached_pop_data)
     {
-	$c->stash->{rest}{cached} =  $self->check_single_trial_model_output($c, $pop_id, $trait_id);
+	$c->stash->{rest}{cached} =  $self->check_single_trait_model_output($c, $pop_id, $trait_id);
     }
 	    
 }
@@ -275,7 +273,7 @@ sub _check_single_trial_model_selection_output {
 
     if ($cached_pop_data)
     {   
-	my $cached_model_out = $self->check_single_trial_model_output($c, $tr_pop_id, $trait_id);
+	my $cached_model_out = $self->check_single_trait_model_output($c, $tr_pop_id, $trait_id);
   
 	if ($cached_model_out) 
 	{
@@ -344,14 +342,11 @@ sub check_combined_trials_training_data {
 }
 
 
-sub check_single_trial_model_output {
+sub check_single_trait_model_output {
     my ($self, $c, $pop_id, $trait_id) = @_;
 
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
-
-    #$c->stash->{trait_abbr} = $trait_abbr;
-    #$c->stash->{pop_id}     = $pop_id;  
  
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $pop_id, $trait_id);
     my $cached_gebv = -s $c->stash->{rrblup_training_gebvs_file};
@@ -377,7 +372,7 @@ sub check_single_trial_model_all_traits_output {
     {
 	foreach my $tr (@$traits_ids)	    
 	{
-	    $c->stash->{$tr}{cached} = $self->check_single_trial_model_output($c, $pop_id, $tr);	   
+	    $c->stash->{$tr}{cached} = $self->check_single_trait_model_output($c, $pop_id, $tr);	   
 	}
     } 
    
@@ -393,7 +388,7 @@ sub check_combined_trials_model_all_traits_output {
 
 	if ($cached_tr_data)
 	{
-	    $c->stash->{$tr}{cached} = $self->check_single_trial_model_output($c, $pop_id, $tr);
+	    $c->stash->{$tr}{cached} = $self->check_single_trait_model_output($c, $pop_id, $tr);
 	}	   
     } 
    
