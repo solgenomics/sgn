@@ -222,7 +222,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(2);
+    sleep(3);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="34 clones"]', 'xpath', 'list sl page')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
