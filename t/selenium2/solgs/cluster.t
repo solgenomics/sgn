@@ -22,15 +22,15 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);   
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
-    sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
-    sleep(1);
+    sleep(2);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
-    sleep(1);
+    sleep(5);
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-34-clones-genotype-4"]', 'xpath', 'check k-means plot')->click();
-    sleep(5);
+    $d->find_element_ok('//img[@id="k-means-plot-list_19-genotype-4"]', 'xpath', 'check k-means plot')->click();
+    sleep(25);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
     sleep(1);
@@ -40,13 +40,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);   
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
-    sleep(1);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(1);
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-60-plot-naccri-phenotype-4"]', 'xpath', 'check k-means plot')->click();
+    $d->find_element_ok('//img[@id="k-means-plot-list_14-phenotype-4"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
@@ -57,13 +57,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);   
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
-    sleep(1);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(1);
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
-    $d->find_element_ok('//img[@id="k-means-plot-Trials-list-genotype-4"]', 'xpath', 'check k-means plot')->click();
+    $d->find_element_ok('//img[@id="k-means-plot-list_10-genotype-4"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
@@ -74,49 +74,55 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);   
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
-    sleep(1);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(1);
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
-    $d->find_element_ok('//img[@id="k-means-plot-Trials-list-phenotype-4"]', 'xpath', 'check k-means plot')->click();
+    $d->find_element_ok('//img[@id="k-means-plot-list_10-phenotype-4"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
+
+    `rm -r /tmp/localhost/`;
+    sleep(3);
+    
     $d->get_ok('/cluster/analysis', 'cluster home page');     
     sleep(1);
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="two trials dataset"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="two trials dataset"]', 'xpath', 'select dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);   
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
-    sleep(1);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(1);
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
-    $d->find_element_ok('//img[@id="k-means-plot-two-trials-dataset-genotype-4"]', 'xpath', 'plot displayed')->click();    
+    $d->find_element_ok('//img[@id="k-means-plot-dataset_11-genotype-4"]', 'xpath', 'plot displayed')->click();    
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
     sleep(1);
-    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="two trials dataset"]', 'xpath', 'select clones list')->click();
+    $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="two trials dataset"]', 'xpath', 'select dataset')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);   
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
-    sleep(1);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(1);
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
-    $d->find_element_ok('//img[@id="k-means-plot-two-trials-dataset-phenotype-4"]', 'xpath', 'check k-means plot')->click();  
+    $d->find_element_ok('//img[@id="k-means-plot-dataset_11-phenotype-4"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
 
+    `rm -r /tmp/localhost/`;
+    sleep(3);
     
     $d->get_ok('/breeders/trial/139', 'trial detail home page');     
     sleep(5);
@@ -127,7 +133,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
@@ -141,8 +147,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
-    sleep(1);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(1);
@@ -151,6 +157,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//img[@id="k-means-plot-139-genotype-5"]', 'xpath', 'check k-means plot')->click();
     sleep(2);
   
+    `rm -r /tmp/localhost/`;
+    sleep(3);
     
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
@@ -176,7 +184,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="list_type_selection_pop_load"]/input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('list_type_selection_pops_list_select', 'id', 'select clones list menu')->click();
-     sleep(5);
+    sleep(5);
+    
     my $list = $d->find_element_ok('//div[@id="list_type_selection_pops_list"]/select[@id="list_type_selection_pops_list_select"]/option[text()="kasese clones 50"]', 'xpath', 'select list sel pop');
     $list->click();
     sleep(5);
@@ -200,27 +209,6 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
     sleep(20);
 
-    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
-    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
-    sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
-    sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="kasese clones 50"]', 'xpath', 'select list sel pop')->click();
-    sleep(3);
-    $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
-    sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
-    sleep(2);
-    $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
-    $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
-    sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(10);
-    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
-    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
-    sleep(5);
-    $d->find_element_ok('//img[@id="k-means-plot-list_24-genotype-5"]', 'xpath', 'check k-means plot')->click();  
-
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -231,14 +219,59 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('GEBV');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-list_24-gebv-5"]', 'xpath', 'check k-means plot')->click();
+    sleep(60);
+    $d->find_element_ok('//img[@id="k-means-plot-139-list_24-gebv-5-1039861645"]', 'xpath', 'check k-means plot')->click();
+
+    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
+    sleep(5);
+    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    sleep(3);
+    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="kasese clones 50"]', 'xpath', 'select list sel pop')->click();
+    sleep(3);
+    $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
+    sleep(2);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
+    $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
+    $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
+    sleep(2);
+    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    sleep(60);
+    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
+    sleep(5);
+    $d->find_element_ok('//img[@id="k-means-plot-139-list_24-genotype-5-1039861645"]', 'xpath', 'check k-means plot')->click();  
+
+
+  
+    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
+    sleep(5);
+    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
+    sleep(3);
+    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Dataset Kasese Clones"]', 'xpath', 'select dataset sel pop')->click();
+    sleep(3);
+    $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
+    sleep(2);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
+    sleep(2);
+    $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
+    $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
+    sleep(2);
+    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    sleep(60);
+    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
+    sleep(5);
+    $d->find_element_ok('//img[@id="k-means-plot-139-dataset_4-genotype-5-1039861645"]', 'xpath', 'check k-means plot')->click();  
+
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -249,36 +282,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
-    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
-    sleep(5);
-    $d->find_element_ok('//img[@id="k-means-plot-dataset_4-genotype-5"]', 'xpath', 'check k-means plot')->click();  
-
-
-    my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
-    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
-    sleep(5);
-    $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
-    sleep(3);
-    $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Dataset Kasese Clones"]', 'xpath', 'select dataset sel pop')->click();
-    sleep(3);
-    $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
-    sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('GEBV');
-    sleep(2);
-    $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
-    $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
-    sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-dataset_4-gebv-5"]', 'xpath', 'check k-means plot')->click();  
+    sleep(60);
+    $d->find_element_ok('//img[@id="k-means-plot-139-dataset_4-gebv-5-1039861645"]', 'xpath', 'check k-means plot')->click();  
     
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -289,14 +300,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-139-phenotype-5"]', 'xpath', 'check k-means plot')->click();  
+    sleep(60);
+    $d->find_element_ok('//img[@id="k-means-plot-139-phenotype-5-1039861645"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -308,14 +319,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
     sleep(2);
-     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
+    $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-139-genotype-5"]', 'xpath', 'check k-means plot')->click();
+    sleep(70);
+    $d->find_element_ok('//img[@id="k-means-plot-139-genotype-5-1039861645"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -327,14 +338,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('GEBV');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-139-gebv-5"]', 'xpath', 'check k-means plot')->click();  
+    sleep(60);
+    $d->find_element_ok('//img[@id="k-means-plot-139-gebv-5-1039861645"]', 'xpath', 'check k-means plot')->click(); 
+    
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -345,14 +357,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-141-genotype-5"]', 'xpath', 'check k-means plot')->click();  
+    sleep(70);
+    $d->find_element_ok('//img[@id="k-means-plot-139-141-genotype-5-1039861645"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
 
 
@@ -365,14 +377,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('GEBV');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-141-gebv-5"]', 'xpath', 'check k-means plot')->click();  
+    sleep(70);
+    $d->find_element_ok('//img[@id="k-means-plot-139-141-gebv-5-1039861645"]', 'xpath', 'check k-means plot')->click();  
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -383,7 +395,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
@@ -391,7 +403,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('selection_proportion', 'id', 'select k number')->send_keys('15');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
+    sleep(70);
     $d->find_element_ok('//img[@id="k-means-plot-139-DMCP-3-FRW-5-genotype-5-15"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
     
@@ -401,12 +413,12 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
-    sleep(2);
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
+    sleep(5);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
+    sleep(40);
     $d->find_element_ok('//img[@id="k-means-plot-139-phenotype-4-70666"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
 	
@@ -415,13 +427,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
+    sleep(70);
     $d->find_element_ok('//img[@id="k-means-plot-139-genotype-4-70666"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
 
@@ -431,7 +443,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Phenotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(2);
@@ -445,13 +457,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
-    $d->find_element_ok('cluster_data_type_select', 'id', 'select data type')->send_keys('Genotype');
+    $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select data type')->click();
     sleep(2);
     $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
     $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('4');
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
-    sleep(20);
+    sleep(70);
     $d->find_element_ok('//img[@id="k-means-plot-2804608595-genotype-4-70741"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
         

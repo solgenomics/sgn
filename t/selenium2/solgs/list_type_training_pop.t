@@ -18,15 +18,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(30);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('plots list tr pop');
+    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('plots list tr pop');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
 
     $d->get('/solgs/population/list_8', 'plots list tr pop page');
-    sleep(3);
+    sleep(10);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
