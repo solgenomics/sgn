@@ -687,7 +687,7 @@ jQuery(document).ready(function ($) {
         $('#generate_trial_barcode_dialog').modal("show");
     });
 
-    jQuery('#trial_accession_barcode').click(function () {
+    jQuery('#trial_stock_barcode').click(function () {
         $('#generate_trial_barcode_button_dialog').modal("hide");
         $('#generate_trial_barcode_dialog').modal("show");
     });

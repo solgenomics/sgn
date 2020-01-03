@@ -251,10 +251,10 @@ $trial_stock_type => undef
                     <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                     </div>
                 <p>
-                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
-                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
-                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode"></button>
-                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plot Barcodes</button>
+                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plant Barcodes</button>
+                    <button type="button" class="btn btn-primary" name="trial_stock_barcode" id="trial_stock_barcode"></button>
+                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcodes</button>
                 </p>
 
                       </center>
@@ -279,26 +279,26 @@ jQuery(document).ready(function () {
     var barcode_button_label = '';
 
     if (trial_stock_type == 'family_name') {
-        dialog_subtitle = 'Generate barcode for plots, plants and family names used in this trial.';
-        dialog_subtitle2 = 'Generate barcode for plots or plants or family names used in this trial.';
-        barcode_button_label = 'Family Names Barcode';
+        dialog_subtitle = 'Generate barcodes for plots, plants and family names used in this trial.';
+        dialog_subtitle2 = 'Generate barcodes for plots or plants or family names used in this trial.';
+        barcode_button_label = 'Family Name Barcodes';
     } else if (trial_stock_type == 'cross') {
-        dialog_subtitle = 'Generate barcode for plots, plants and crosses used in this trial.';
-        dialog_subtitle2 = 'Generate barcode for plots or plants or crosses used in this trial.';
-        barcode_button_label = 'Crosses Barcode';
+        dialog_subtitle = 'Generate barcodes for plots, plants and cross unique ids used in this trial.';
+        dialog_subtitle2 = 'Generate barcodes for plots or plants or cross unique ids used in this trial.';
+        barcode_button_label = 'Cross Unique ID Barcodes';
     } else {
-        dialog_subtitle = 'Generate barcode for plots, plants and accessions used in this trial.';
-        dialog_subtitle2 = 'Generate barcode for plots or plants or accessions used in this trial.';
-        barcode_button_label = 'Accessions Barcode';
+        dialog_subtitle = 'Generate barcodes for plots, plants and accessions used in this trial.';
+        dialog_subtitle2 = 'Generate barcodes for plots or plants or accessions used in this trial.';
+        barcode_button_label = 'Accession Barcodes';
     }
 
     jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
 
     jQuery('#barcode_dialog_subtitle2').text(dialog_subtitle2);
 
-    document.getElementById('trial_accession_barcode').innerHTML = barcode_button_label;
+    document.getElementById('trial_stock_barcode').innerHTML = barcode_button_label;
 
-    jQuery('#trial_accession_barcode').click(function() {
+    jQuery('#trial_stock_barcode').click(function() {
 
     	jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',

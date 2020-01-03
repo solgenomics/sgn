@@ -65,7 +65,7 @@ $trial_stock_type => undef
 % if ($trial_stock_type eq 'family_name') {
 %     $barcode_section_title = 'Generate barcode labels for plots or plants or family names in this trial.';
 % } elsif ($trial_stock_type eq 'cross') {
-%     $barcode_section_title = 'Generate barcode labels for plots or plants or crosses in this trial.';
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or cross unique ids in this trial.';
 % } else {
 %     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
 % }
