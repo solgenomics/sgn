@@ -364,7 +364,7 @@ sub get_genotype_info {
         $limit_clause
         $offset_clause;";
 
-    print STDERR Dumper $q;
+    #print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
@@ -438,12 +438,10 @@ sub get_genotype_info {
         my $protocolprop_where_markers_array_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_markers_array_cvterm_id";
         my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
 
-        # my @chromosome_list = ('1A', '2A', '2B');
-
         my $chromosome_where = '';
         if ($chromosome_list && scalar(@$chromosome_list)>0) {
             my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
-            $chromosome_where = " AND (s.value->>'chrom')::str IN ($chromosome_list_sql)";
+            $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
         }
         my $start_position_where = '';
         if (defined($start_position)) {
@@ -454,12 +452,10 @@ sub get_genotype_info {
             $end_position_where = " AND (s.value->>'pos')::int <= $end_position";
         }
 
-        print STDERR "\n\n\n==== CHROMO WHERE: $chromosome_where ====\n\n\n";
-
         my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql
             FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s
             WHERE $protocolprop_where_markers_sql $chromosome_where $start_position_where $end_position_where;";
-        #print STDERR Dumper $protocolprop_q;
+
         my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
         $protocolprop_h->execute();
         while (my ($protocol_id, $marker_name, @protocolprop_info_return) = $protocolprop_h->fetchrow_array()) {
@@ -812,7 +808,7 @@ sub get_next_genotype_info {
             my $chromosome_where = '';
             if ($chromosome_list && scalar(@$chromosome_list)>0) {
                 my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
-                $chromosome_where = " AND (s.value->>'chrom')::str IN ($chromosome_list_sql)";
+                $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
             }
             my $start_position_where = '';
             if (defined($start_position)) {
