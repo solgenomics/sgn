@@ -661,10 +661,10 @@ jQuery(document).ready(function ($) {
     }
 
     function open_replace_trial_accession_dialog() {
-      jQuery('#replace_trial_accessions_dialog').modal('show');
+      jQuery('#replace_trial_stocks_dialog').modal('show');
     }
 
-    $('#replace_trial_accession_submit').click(function () {
+    $('#replace_trial_stock_submit').click(function () {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_replace_trial_accession_dialog();
     });
@@ -673,7 +673,7 @@ jQuery(document).ready(function ($) {
       jQuery('#subtitute_plot_accessions_dialog').modal('show');
     }
 
-    $('#substitute_accession_submit').click(function () {
+    $('#substitute_stock_submit').click(function () {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_subtitute_plot_accession_dialog();
     });

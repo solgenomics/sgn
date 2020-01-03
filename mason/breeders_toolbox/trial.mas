@@ -117,7 +117,7 @@ $trial_stock_type => undef
 
 <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/download_fieldmap_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/trial_coords_upload_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
 <& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
