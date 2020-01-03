@@ -670,7 +670,7 @@ jQuery(document).ready(function ($) {
     });
 
     function open_subtitute_plot_accession_dialog() {
-      jQuery('#subtitute_plot_accessions_dialog').modal('show');
+      jQuery('#substitute_plot_stocks_dialog').modal('show');
     }
 
     $('#substitute_stock_submit').click(function () {
