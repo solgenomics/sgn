@@ -233,23 +233,21 @@ jQuery(document).ready(function () {
     }
 
 	jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
 
 	    success: function(response){
 	         //console.log(response);
 
-		var trial_stocks_html = "<select class='form-control' id='trial_stocks_table'>";
-		for (i=0; i<response.accessions[0].length; i++) {
-		    trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
-
-		}
-		trial_stocks_html = trial_stocks_html + "</select>";
-		jQuery('#stocks_in_trial').empty();
-		jQuery('#stocks_in_trial').html(trial_stocks_html);
-
-	    },
+            var trial_stocks_html = "<select class='form-control' id='trial_stocks_table'>";
+            for (i=0; i<response.accessions[0].length; i++) {
+                trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
+            }
+            trial_stocks_html = trial_stocks_html + "</select>";
+            jQuery('#stocks_in_trial').empty();
+            jQuery('#stocks_in_trial').html(trial_stocks_html);
+        },
 	    error: function(response){
-		alert("Error retrieving accessions.");
+            alert("Error retrieving accessions.");
 	    }
 	});
 
@@ -289,43 +287,42 @@ jQuery(document).ready(function () {
     jQuery('#edit_field_map_dialog').modal('show');
   }
 
-  jQuery('#replace_stock_submit').click(function() {
-    replace_stock_in_trial(trial_stock_type)
-  });
-
-  function replace_stock_in_trial() {
-    jQuery('#replace_trial_stocks_dialog').modal("hide");
-    var old_stock_id = jQuery('#trial_stocks_table').val();
-    var new_stock = jQuery('#replace_database_stock').val();
-
-    new jQuery.ajax({
-      type: 'POST',
-      url: '/ajax/breeders/trial/<% $trial_id %>/replace_stock',
-      dataType: "json",
-      data: {
-              'old_stock_id': old_stock_id,
-              'new_stock': new_stock,
-              'trial_stock_type': trial_stock_type,
-      },
-      beforeSend: function(){
-        jQuery('#working_modal').modal("show");
-      },
-      success: function (response) {
-        jQuery('#working_modal').modal("hide");
-
-        if (response.error) {
-          alert("Error Replacing Stock: "+response.error);
-        }else {
-            jQuery('#replace_accessions_dialog_success_message').modal("show");
-        }
-      },
-      error: function() {
-        jQuery('#working_modal').modal("hide");
-        alert('An error occurred replacing accession');
-      }
+    jQuery('#replace_stock_submit').click(function() {
+        replace_stock_in_trial(trial_stock_type)
     });
 
-  }
+    function replace_stock_in_trial() {
+        jQuery('#replace_trial_stocks_dialog').modal("hide");
+        var old_stock_id = jQuery('#trial_stocks_table').val();
+        var new_stock = jQuery('#replace_database_stock').val();
+
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/breeders/trial/<% $trial_id %>/replace_stock',
+            dataType: "json",
+            data: {
+                'old_stock_id': old_stock_id,
+                'new_stock': new_stock,
+                'trial_stock_type': trial_stock_type,
+            },
+            beforeSend: function(){
+                jQuery('#working_modal').modal("show");
+            },
+            success: function (response) {
+                jQuery('#working_modal').modal("hide");
+
+                if (response.error) {
+                    alert("Error Replacing Stock: "+response.error);
+                } else {
+                    jQuery('#replace_accessions_dialog_success_message').modal("show");
+                }
+            },
+            error: function() {
+                jQuery('#working_modal').modal("hide");
+                alert('An error occurred replacing stock');
+            }
+        });
+    }
 
   jQuery('#close_replace_field_map_dialog').click( function() {
     location.reload();
