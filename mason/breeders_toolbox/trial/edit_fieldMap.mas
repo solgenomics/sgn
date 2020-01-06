@@ -54,7 +54,7 @@ $trial_stock_type => undef
 	                      <div class="form-group">
 	                        <label id = "replace_stock_label2" class="col-sm-3 control-label"></label>
 	                        <div class="col-sm-9" >
-	                          <input class="form-control" id="replace_database_accession" name="replace_database_accession"></input>
+	                          <input class="form-control" id="replace_database_stock" name="replace_database_stock"></input>
 	                        </div>
 	                      </div>
 
@@ -210,16 +210,27 @@ $trial_stock_type => undef
 
 
 <script>
-jQuery(document).ready( function() {
-
-  jQuery('input[id*="replace_database_accession"]').autocomplete({
-      appendTo: "#replace_trial_stocks_dialog",
-      source: '/ajax/stock/accession_autocomplete'
-  });
-});
-
 
 jQuery(document).ready(function () {
+
+    var trial_stock_type = "<% $trial_stock_type %>";
+
+    if (trial_stock_type == 'family_name') {
+        jQuery('input[id*="replace_database_stock"]').autocomplete({
+            appendTo: "#replace_trial_stocks_dialog",
+            source: '/ajax/stock/family_name_autocomplete'
+        });
+    } else if (trial_stock_type == 'cross') {
+        jQuery('input[id*="replace_database_stock"]').autocomplete({
+            appendTo: "#replace_trial_stocks_dialog",
+            source: '/ajax/stock/cross_autocomplete'
+        });
+    } else {
+        jQuery('input[id*="replace_database_stock"]').autocomplete({
+            appendTo: "#replace_trial_stocks_dialog",
+            source: '/ajax/stock/accession_autocomplete'
+        });
+    }
 
 	jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
@@ -285,7 +296,7 @@ jQuery(document).ready(function () {
   function replace_accession_in_trial() {
     jQuery('#replace_trial_stocks_dialog').modal("hide");
     var old_accession_id = jQuery('#trial_accessions_table').val();
-    var new_accession = jQuery('#replace_database_accession').val();
+    var new_accession = jQuery('#replace_database_stock').val();
 
     new jQuery.ajax({
       type: 'POST',
@@ -359,14 +370,13 @@ jQuery(document).ready(function () {
     });
   }
 
-    var trial_stock_type = "<% $trial_stock_type %>";
     var trial_name = "<% $trial_name %>";
     var edit_dialog_title = '';
     var replace_button_label = '';
     var substitute_button_label = '';
     var replace_dialog_title = '';
     var replace_stock_text1 = '';
-    var replace_stock_test2 = '';
+    var replace_stock_text2 = '';
     var replace_button_submit = '';
     var substitute_dialog_title = '';
     var substitute_button_submit = '';
