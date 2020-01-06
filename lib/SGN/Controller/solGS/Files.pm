@@ -241,12 +241,9 @@ sub analysis_report_file {
 
 
 sub genotype_file_name {
-    my ($self, $c, $pop_id) = @_;
-   
-   # $pop_id = $c->stash->{pop_id} if !$pop_id;
+    my ($self, $c, $pop_id, $protocol_id) = @_;
  
     my $dir; 
-
     my $combo_pops_id = $c->{stash}->{combo_pops_id};
 
     if ($combo_pops_id && $combo_pops_id == $pop_id) 
@@ -267,8 +264,11 @@ sub genotype_file_name {
 	$dir = $c->stash->{solgs_cache_dir};
     }
 
-    my $cache_data = { key       => 'genotype_data_' . $pop_id, 
-		       file      => 'genotype_data_' . $pop_id . '.txt',
+    $protocol_id = $c->model('solGS::solGS')->protocol_id() if !$protocol_id;
+    my $file_id = $pop_id . '-GP-' . $protocol_id;
+    
+    my $cache_data = { key       => 'genotype_data_' . $file_id, 
+		       file      => 'genotype_data_' . $file_id . '.txt',
 		       stash_key => 'genotype_file_name',
 		       cache_dir => $dir
     };
@@ -311,15 +311,6 @@ sub relationship_matrix_file {
     $self->cache_file($c, $cache_data);
 
 }
-
-
-# sub blups_file {
-#     my ($self, $c) = @_;
-    
-#     my $blups_file = $c->stash->{rrblup_training_gebvs_file};
-#     my $top_blups = $c->controller('solGS::Utils')->top_10($blups_file);
-#     $c->stash->{top_blups} = $top_blups;
-# }
 
 
 sub validation_file {
@@ -628,7 +619,8 @@ sub create_file_id {
     my $k_number         = $c->stash->{k_number};    
     my $sindex_name      = $c->stash->{sindex_weigths} || $c->stash->{sindex_name};
     my $sel_prop         = $c->stash->{selection_proportion};
-
+    my $protocol_id      = $c->stash->{genotyping_protocol_id};
+    
     my $traits_ids = $c->stash->{training_traits_ids};
     my @traits_ids = $traits_ids->[0] ? @{$traits_ids} : $c->stash->{trait_id};
    
@@ -687,8 +679,9 @@ sub create_file_id {
     $file_id = $file_id . '-trait-' . $traits_ids[0] if !$traits_selection_id && @traits_ids;
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
+    $file_id = $protocol_id ? $file_id . '-GP-' . $protocol_id : $file_id;
     
-    $c->stash->{file_id} = $file_id;
+    return $file_id;
     
 }
 
