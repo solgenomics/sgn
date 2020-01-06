@@ -1540,6 +1540,7 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
   my $old_accession_id = $c->req->param('old_accession_id');
   my $new_accession = $c->req->param('new_accession');
+  my $trial_stock_type = $c->req->param('trial_stock_type');
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
@@ -1557,6 +1558,7 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
     trial_id => $trial_id,
     old_accession_id => $old_accession_id,
     new_accession => $new_accession,
+    trial_stock_type => $trial_stock_type,
   });
 
   my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();

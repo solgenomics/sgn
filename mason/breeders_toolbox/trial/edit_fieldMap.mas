@@ -290,7 +290,7 @@ jQuery(document).ready(function () {
   }
 
   jQuery('#replace_stock_submit').click(function() {
-    replace_accession_in_trial()
+    replace_accession_in_trial(trial_stock_type)
   });
 
   function replace_accession_in_trial() {
@@ -305,6 +305,7 @@ jQuery(document).ready(function () {
       data: {
               'old_accession_id': old_accession_id,
               'new_accession': new_accession,
+              'trial_stock_type': trial_stock_type,
       },
       beforeSend: function(){
         jQuery('#working_modal').modal("show");
