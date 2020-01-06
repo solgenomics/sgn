@@ -46,8 +46,8 @@ $trial_stock_type => undef
 
 	                    <div class="form-group">
 	                      <label id = "replace_stock_label1" class="col-sm-3 control-label"></label>
-	                      <div class="col-sm-9" id="accessions_in_trial">
-	                        <!--<select class="form-control" id="accessions_in_trial" name="accessions_in_trial"></select>-->
+	                      <div class="col-sm-9" id="stocks_in_trial">
+	                        <!--<select class="form-control" id="stocks_in_trial" name="stocks_in_trial"></select>-->
 	                      </div>
 	                    </div>
 
@@ -238,14 +238,14 @@ jQuery(document).ready(function () {
 	    success: function(response){
 	         //console.log(response);
 
-		var trial_accessions_html = "<select class='form-control' id='trial_accessions_table'>";
+		var trial_stocks_html = "<select class='form-control' id='trial_stocks_table'>";
 		for (i=0; i<response.accessions[0].length; i++) {
-		    trial_accessions_html = trial_accessions_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
+		    trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
 
 		}
-		trial_accessions_html = trial_accessions_html + "</select>";
-		jQuery('#accessions_in_trial').empty();
-		jQuery('#accessions_in_trial').html(trial_accessions_html);
+		trial_stocks_html = trial_stocks_html + "</select>";
+		jQuery('#stocks_in_trial').empty();
+		jQuery('#stocks_in_trial').html(trial_stocks_html);
 
 	    },
 	    error: function(response){
@@ -290,21 +290,21 @@ jQuery(document).ready(function () {
   }
 
   jQuery('#replace_stock_submit').click(function() {
-    replace_accession_in_trial(trial_stock_type)
+    replace_stock_in_trial(trial_stock_type)
   });
 
-  function replace_accession_in_trial() {
+  function replace_stock_in_trial() {
     jQuery('#replace_trial_stocks_dialog').modal("hide");
-    var old_accession_id = jQuery('#trial_accessions_table').val();
-    var new_accession = jQuery('#replace_database_stock').val();
+    var old_stock_id = jQuery('#trial_stocks_table').val();
+    var new_stock = jQuery('#replace_database_stock').val();
 
     new jQuery.ajax({
       type: 'POST',
-      url: '/ajax/breeders/trial/<% $trial_id %>/replace_accession',
+      url: '/ajax/breeders/trial/<% $trial_id %>/replace_stock',
       dataType: "json",
       data: {
-              'old_accession_id': old_accession_id,
-              'new_accession': new_accession,
+              'old_stock_id': old_stock_id,
+              'new_stock': new_stock,
               'trial_stock_type': trial_stock_type,
       },
       beforeSend: function(){
@@ -314,7 +314,7 @@ jQuery(document).ready(function () {
         jQuery('#working_modal').modal("hide");
 
         if (response.error) {
-          alert("Error Replacing Accession: "+response.error);
+          alert("Error Replacing Stock: "+response.error);
         }else {
             jQuery('#replace_accessions_dialog_success_message').modal("show");
         }

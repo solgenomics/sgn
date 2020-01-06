@@ -1538,8 +1538,8 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
   my $self = shift;
   my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-  my $old_accession_id = $c->req->param('old_accession_id');
-  my $new_accession = $c->req->param('new_accession');
+  my $old_stock_id = $c->req->param('old_stock_id');
+  my $new_stock = $c->req->param('new_stock');
   my $trial_stock_type = $c->req->param('trial_stock_type');
   my $trial_id = $c->stash->{trial_id};
 
@@ -1548,26 +1548,26 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
     return;
   }
 
-  if (!$new_accession){
-    $c->stash->{rest} = { error => "Provide new accession name." };
+  if (!$new_stock){
+    $c->stash->{rest} = { error => "Provide new stock name." };
     return;
   }
 
-  my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+  my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
-    old_accession_id => $old_accession_id,
-    new_accession => $new_accession,
+    old_stock_id => $old_stock_id,
+    new_stock => $new_stock,
     trial_stock_type => $trial_stock_type,
   });
 
-  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+  my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
      if ($return_error) {
        $c->stash->{rest} = { error => $return_error };
        return;
      }
 
-  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
