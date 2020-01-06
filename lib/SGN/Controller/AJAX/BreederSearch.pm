@@ -132,6 +132,46 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
 
 }
 
+
+sub get_genotyping_protocol_chromosomes : Path('/ajax/breeder/search/genotyping_protocol_chromosomes') Args(0) {
+  my $self = shift;
+  my $c = shift;
+
+  my $genotyping_protocol_id = $c->req->param('genotyping_protocol');
+  
+  # Prtocol ID not defined, use the default genotyping protocol
+  if ( $genotyping_protocol_id eq "" ) {
+    my $genotyping_protocol_name = $c->config->{default_genotyping_protocol};
+    my $dbhandle = $c->dbc->dbh();
+    my $stmt = $dbhandle->prepare("SELECT nd_protocol_id FROM public.nd_protocol WHERE name = ?");
+    $stmt->execute($genotyping_protocol_name);
+    ($genotyping_protocol_id) = $stmt->fetchrow_array();
+  }
+
+  # Get chromosome names for the specified protocol
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  my $vcf_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "vcf_map_details_markers", "protocol_property")->cvterm_id();
+  my $q = "SELECT DISTINCT(s.value->>'chrom') AS chrom 
+          FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) AS s 
+          WHERE nd_protocol_id = ? AND type_id = ? ORDER BY chrom ASC;";
+  my $dbh = $c->dbc->dbh();
+  my $h = $dbh->prepare($q);
+  $h->execute($genotyping_protocol_id, $vcf_cvterm_id);
+
+  my @names=();
+  while(my ($chrom) = $h->fetchrow_array()){
+    push @names, $chrom;
+  }
+
+  $c->stash->{rest} = {
+    genotyping_protocol => $genotyping_protocol_id,
+    chromosome_names => \@names
+  };
+
+  return;
+}
+
+
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
   my $c = shift;
