@@ -41,7 +41,7 @@ $protocol
 $top_blups
 $blups_download_url
 $combined_populations => ''
-
+$genotyping_protocol_id => ''
 $data_set_type => ''
 
 
@@ -105,7 +105,8 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 &>
 
 
-<input type="hidden"  id="model_id" value="<% $training_pop_id %>" /> 
-<input type="hidden"  id="training_pop_id" value="<% $training_pop_id %>" />
-<input type="hidden"  id="trait_id" value="<% $trait_id %>" />
-<input type="hidden"  id="selection_pop_id" value="<% $selection_pop_id %>" />
+<input type="hidden" id="model_id" value="<% $training_pop_id %>" /> 
+<input type="hidden" id="training_pop_id" value="<% $training_pop_id %>" />
+<input type="hidden" id="trait_id" value="<% $trait_id %>" />
+<input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
+<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

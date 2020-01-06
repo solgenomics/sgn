@@ -25,9 +25,9 @@ $markers_no
 $traits_no
 $stocks_no
 $protocol
-$owner=>''
+$owner => ''
 $acronym
-
+$genotyping_protocol_id => ''
 </%args>
 
 <%perl>
@@ -104,4 +104,4 @@ $acronym
 %}
 
  <input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
- 
+ <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
