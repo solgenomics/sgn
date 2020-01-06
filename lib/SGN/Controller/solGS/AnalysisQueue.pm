@@ -145,15 +145,17 @@ sub create_selection_pop_page {
     my $sel_pop_id    = $c->stash->{selection_pop_id};
     my $trait_id      = $c->stash->{trait_id};
     my $data_set_type = $c->stash->{data_set_type};
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    
     my $sel_pop_page;
    
     if ($data_set_type =~ /combined populations/)
     {	   
-	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id";	   
+	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id/gp/$protocol_id";	   
     }
     else
     {	
-	$sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id";
+	$sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
     }
   
     $c->stash->{selection_pop_page} = $sel_pop_page;
@@ -457,7 +459,8 @@ sub structure_training_modeling_output {
 
     my $pop_id        = $c->stash->{pop_id};
     my $combo_pops_id = $c->stash->{combo_pops_id};
-  
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    
     my @traits_ids = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
     my $referer = $c->req->referer;
 
@@ -478,7 +481,7 @@ sub structure_training_modeling_output {
 
 	if ( $referer =~ m/solgs\/population\// ) 
 	{
-	    $trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
+	    $trait_page = $base . "solgs/trait/$trait_id/population/$pop_id/gp/$protocol_id";
 	    if ($analysis_page =~ m/solgs\/traits\/all\/population\//) 
 	    {
 		my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
@@ -492,19 +495,20 @@ sub structure_training_modeling_output {
 	
 	if ( $referer =~ m/solgs\/search\/trials\/trait\// && $analysis_page =~ m/solgs\/trait\// ) 
 	{
-	    $trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
+	    $trait_page = $base . "solgs/trait/$trait_id/population/$pop_id/gp/$protocol_id";
 	}
 	
 	if ( $referer =~ m/solgs\/populations\/combined\// ) 
 	{
-	    $trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id";
+	    $trait_page = $base . "solgs/model/combined/trials/$pop_id/trait/$trait_id/gp/$protocol_id";
 
 	    if ($analysis_page =~ m/solgs\/models\/combined\/trials\//) 
 	    {
 		my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
 		$analysis_data->{analysis_page} = $base . "solgs/models/combined/trials/" 
-		    . $combo_pops_id . '/traits/' 
-		    . $traits_selection_id;
+		    . $combo_pops_id 
+		    . '/traits/' . $traits_selection_id
+		    . '/gp/' . $protocol_id;
 
 		$c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
 	    } 
@@ -512,7 +516,7 @@ sub structure_training_modeling_output {
 
 	if ( $analysis_page =~ m/solgs\/model\/combined\/trials\// ) 
 	{
-	    $trait_page = $base . "solgs/model/combined/trials/$combo_pops_id/trait/$trait_id";
+	    $trait_page = $base . "solgs/model/combined/trials/$combo_pops_id/trait/$trait_id/gp/$protocol_id";
 
 	    $c->stash->{combo_pops_id} = $combo_pops_id;
 	    $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);		
@@ -538,11 +542,12 @@ sub structure_training_single_pop_data_output {
     my ($self, $c) = @_;
 
     my $pop_id        = $c->stash->{pop_id}; 
-  
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    
     my $base = $c->req->base; 
     $base =~ s/:\d+//;
     
-    my $population_page = $base . "solgs/population/$pop_id";
+    my $population_page = $base . "solgs/population/$pop_id/gp/$protocol_id";
     my $data_set_type   = $c->stash->{data_set_type};
     my $pheno_file;
     my $geno_file;
@@ -573,7 +578,7 @@ sub structure_training_single_pop_data_output {
     else 
     {	    
 	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);	
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);	    
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);	    
 	$pheno_file = $c->stash->{phenotype_file_name};
 	$geno_file  = $c->stash->{genotype_file_name};
 	
@@ -598,14 +603,16 @@ sub structure_training_combined_pops_data_output {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     my $base = $c->req->base; 
     $base =~ s/:\d+//;
     
-    my $combined_pops_page = $base . "solgs/populations/combined/$combo_pops_id";
+    my $combined_pops_page = $base . "solgs/populations/combined/$combo_pops_id/gp/$protocol_id";
     my @combined_pops_ids = @{$c->stash->{combo_pops_list}};
 
     $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, \@combined_pops_ids);	
-    $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, \@combined_pops_ids);
+    $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, \@combined_pops_ids, $protocol_id);
 
     my $multi_ph_files = $c->stash->{multi_pops_pheno_files};
     my @pheno_files = split(/\t/, $multi_ph_files);
@@ -618,13 +625,13 @@ sub structure_training_combined_pops_data_output {
     {	    
 	$c->controller('solGS::solGS')->get_project_details($c, $pop_id);
 	my $population_name = $c->stash->{project_name};
-	my $population_page = $base . "solgs/population/$pop_id";
+	my $population_page = $base . "solgs/population/$pop_id/gp/$protocol_id";
 	
-	my $phe_exp = 'phenotype_data_' . $pop_id . '.txt';
-	my ($pheno_file)  = grep {$_ =~ /$phe_exp/} @pheno_files;
+        $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	my $pheno_file  = $c->stash->{phenotype_file_name};
 	
-	my $gen_exp = 'genotype_data_' . $pop_id . '.txt';
-	my ($geno_file)  = grep{$_ =~ /$gen_exp/} @geno_files;
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id, $protocol_id);
+	my $geno_file  = $c->stash->{genotype_file_name};
 
 	$output_details{'population_id_' . $pop_id} = {
 	    'population_page'   => $population_page,
@@ -648,6 +655,8 @@ sub structure_selection_prediction_output {
     my ($self, $c) = @_;
     
     my @traits_ids = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     my $referer = $c->req->referer;
 
     my $base = $c->req->base; 
@@ -674,14 +683,14 @@ sub structure_selection_prediction_output {
 	
 	if ($data_set_type =~ /combined populations/)
 	{
-	    $training_pop_page    = $base . "solgs/populations/combined/$training_pop_id";
+	    $training_pop_page    = $base . "solgs/populations/combined/$training_pop_id/gp/$protocol_id";
 	    $training_pop_name    = 'Training population ' . $training_pop_id;
-	    $prediction_pop_page  = $base . "solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id";
-	    $model_page           = $base . "solgs/model/combined/populations/$training_pop_id/trait/$trait_id";
+	    $prediction_pop_page  = $base . "solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $model_page           = $base . "solgs/model/combined/populations/$training_pop_id/trait/$trait_id/gp/$protocol_id";
 	}
 	else
 	{	
-	    $training_pop_page    = $base . "solgs/population/$training_pop_id"; 
+	    $training_pop_page    = $base . "solgs/population/$training_pop_id/gp/$protocol_id"; 
 	    if ($training_pop_id =~ /list/)
 	    {	  
 		$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;	
@@ -700,8 +709,8 @@ sub structure_selection_prediction_output {
 		$training_pop_name   = $c->stash->{project_name};    
 	    }
 	    
-	    $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id";
-	    $model_page          = $base . "solgs/trait/$trait_id/population/$training_pop_id";
+	    $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $model_page          = $base . "solgs/trait/$trait_id/population/$training_pop_id/gp/$protocol_id";
 	}
 	
 	if ($prediction_pop_id =~ /list/)
@@ -729,7 +738,7 @@ sub structure_selection_prediction_output {
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 	my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
 
-	$c->controller('solGS::Files')->genotype_file_name($c, $prediction_pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $prediction_pop_id, $protocol_id);
 	my $selection_geno_file = $c->stash->{genotype_file_name};
 		
 	$output_details{'trait_id_' . $trait_id} = {
@@ -814,33 +823,33 @@ sub create_training_data {
     my ($self, $c) = @_;
 
     my $analysis_page = $c->stash->{analysis_page};
-    my $geno_protocol = $c->stash->{genotyping_protocol_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
     if ($analysis_page =~ /solgs\/population\//)
     {
 	my $pop_id = $c->stash->{model_id};	 
 
-	print STDERR "\ncreate_training_data geno protocol: $geno_protocol\n";
+	print STDERR "\ncreate_training_data geno protocol: $protocol_id\n";
 	if ($pop_id =~ /list/)		
 	{
-	    print STDERR "\ncreate_training_data list type geno protocol: $geno_protocol\n";
-	    $c->controller('solGS::List')->submit_list_training_data_query($c);
+	    print STDERR "\ncreate_training_data list type geno protocol: $protocol_id\n";
+	    $c->controller('solGS::List')->submit_list_training_data_query($c, $protocol_id);
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 	}
 	elsif ($pop_id =~ /dataset/)                
-	{  print STDERR "\ncreate_training_data dataset type geno protocol: $geno_protocol\n";
-	     $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c); 
+	{  print STDERR "\ncreate_training_data dataset type geno protocol: $protocol_id\n";
+	     $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c, $protocol_id); 
 	     $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
 	}
 	else
 	{
-	    $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $geno_protocol);
+	    $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
 	}
     }
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
     { 
-	print STDERR "\ncreate_training_data combined trials type geno protocol: $geno_protocol\n";
+	print STDERR "\ncreate_training_data combined trials type geno protocol: $protocol_id\n";
 	my $trials = $c->stash->{combo_pops_list};	
-	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $geno_protocol);	
+	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);	
     }
 
 }
