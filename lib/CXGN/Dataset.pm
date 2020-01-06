@@ -431,18 +431,18 @@ sub get_dataset_data {
 
 sub _get_dataref {
     my $self = shift;
-     my $dataref;
+    my $dataref;
 
     $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
     $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
-		$dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
+    $dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
     $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
     $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
     $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
-		$dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
-		$dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
-		$dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
+    $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
+    $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
+    $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
     return $dataref;
 }

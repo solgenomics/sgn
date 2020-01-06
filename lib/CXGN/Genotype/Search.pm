@@ -53,6 +53,8 @@ use CXGN::Trial;
 use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
+use Cache::File;
+use Digest::MD5 qw | md5_hex |;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -133,6 +135,23 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 0
 );
 
+# When using the get_cached_file_dosage_matrix or get_cached_file_VCF functions, need the following three keys.
+has 'cache_root' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has 'cache' => (
+    isa => 'Cache::File',
+    is => 'rw',
+);
+
+has 'cache_expiry' => (
+    isa => 'Int',
+    is => 'rw',
+    default => 0, # never expires?
+);
+
 has '_iterator_query_handle' => (
     isa => 'Ref',
     is => 'rw'
@@ -208,6 +227,23 @@ has 'offset' => (
 =head2 get_genotype_info
 
 returns: an array with genotype information
+
+=cut
+
+=head2 get_genotype_info()
+
+Function for getting genotype data iteratively.
+Should be used like:
+
+my $genotype_search = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    etc...
+});
+my ($count, $genotype_data) = $genotype_search->get_genotype_info();
+
+If you want to get results iteratively, use the init and iterator function defined below instead. Iterative retrieval minimizes memory load.
+
+If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF functions instead.
 
 =cut
 
@@ -503,13 +539,12 @@ sub get_genotype_info {
     foreach (@$genotypeprop_hash_select){
         push @genotypeprop_hash_select_arr, "s.value->>'$_'";
     }
-    my $filtered_markers_string = "'". join ("','", keys %filtered_markers) ."'";
     if (scalar(@found_genotypeprop_ids)>0) {
         my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
 
         my $filtered_markers_sql = '';
-        if (scalar(keys %filtered_markers) >0) {
+        if (scalar(keys %filtered_markers) >0 && scalar(keys %filtered_markers) < 10000) {
             $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
         }
 
@@ -542,6 +577,24 @@ sub get_genotype_info {
     #print STDERR Dumper \@data;
     return ($total_count, \@data);
 }
+
+=head2 init_genotype_iterator()
+
+Function for initiating genotype search query and then used to get genotype data iteratively. Iterative search retrieval minimizes memory usage.
+Should be used like:
+
+my $genotype_search = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    etc...
+});
+$genotype_search->init_genotype_iterator();
+while (my ($count, $genotype_data) = $genotype_search->get_next_genotype_info) {
+    #Do something with genotype data
+}
+
+If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF functions instead.
+
+=cut
 
 sub init_genotype_iterator {
     my $self = shift;
@@ -711,6 +764,23 @@ sub init_genotype_iterator {
     $self->_iterator_query_handle($h);
 }
 
+=head2 get_next_genotype_info()
+
+Function for getting genotype data iteratively. Iterative search retrieval minimizes memory usage.
+Should be used like:
+
+my $genotype_search = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    ...etc
+});
+$genotype_search->init_genotype_iterator();
+while (my ($count, $genotype_data) = $genotype_search->get_next_genotype_info) {
+    #Do something with genotype data
+}
+
+If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF instead.
+
+=cut
 
 sub get_next_genotype_info {
     my $self = shift;
@@ -873,13 +943,13 @@ sub get_next_genotype_info {
         foreach (@$genotypeprop_hash_select){
             push @genotypeprop_hash_select_arr, "s.value->>'$_'";
         }
-        my $filtered_markers_string = "'". join ("','", keys %filtered_markers) ."'";
         if (defined($genotypeprop_id)) {
     #        my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
             my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
 
             my $filtered_markers_sql = '';
-            if (scalar(keys %filtered_markers) >0) {
+            # If filtered markers by providing a location range or chromosome these markers will be in %filered_markers, but we dont want to use this SQL if there are too many markers (>10000) )
+            if (scalar(keys %filtered_markers) >0 && scalar(keys %filtered_markers) < 10000) {
                 $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
             }
 
@@ -912,5 +982,235 @@ sub get_next_genotype_info {
     return;
 }
 
+sub key {
+    my $self = shift;
+    my $datatype = shift;
+
+    #print STDERR Dumper($self->_get_dataref());
+    my $json = JSON->new();
+    #preserve order of hash keys to get same text
+    $json = $json->canonical();
+    my $accessions = $json->encode( $self->accession_list() || [] );
+    my $tissues = $json->encode( $self->tissue_sample_list() || [] );
+    my $trials = $json->encode( $self->trial_list() || [] );
+    my $protocols = $json->encode( $self->protocol_id_list() || [] );
+    my $markerprofiles = $json->encode( $self->markerprofile_id_list() || [] );
+    my $genotypedataprojects = $json->encode( $self->genotype_data_project_list() || [] );
+    my $markernames = $json->encode( $self->marker_name_list() || [] );
+    my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
+    my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
+    my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
+    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
+    return $key;
+}
+
+
+=head2 get_cached_file_dosage_matrix()
+
+Function for getting the file handle for the genotype search result from cache. Will write the cached file if it does not exist.
+Returns the genotype result as a soage matrix format.
+Uses the file iterator to write the cached file, so that it uses little memory.
+
+=cut
+
+sub get_cached_file_dosage_matrix {
+    my $self = shift;
+    my $key = $self->key("get_cached_file_dosage_matrix");
+    $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
+
+    my $file_handle;
+    if ($self->cache()->exists($key)) {
+        $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        my ($total_count, $genotypes) = $self->get_genotype_info();
+        # print STDERR Dumper $genotypes;
+
+        my %unique_protocols;
+        my %unique_stocks;
+        my %unique_germplasm;
+        foreach (@$genotypes) {
+            $unique_protocols{$_->{analysisMethodDbId}}++;
+            my $sample_name;
+            if ($_->{stock_type_name} eq 'tissue_sample') {
+                $sample_name = $_->{stock_name}."|||".$_->{germplasmName};
+            }
+            elsif ($_->{stock_type_name} eq 'accession') {
+                $sample_name = $_->{stock_name};
+            }
+            $unique_stocks{$sample_name} = $_->{selected_genotype_hash};
+            $unique_germplasm{$_->{germplasmDbId}}++;
+        }
+        my @protocol_ids = keys %unique_protocols;
+        my @sorted_stock_names = sort keys %unique_stocks;
+
+        my @all_marker_objects;
+        foreach (@protocol_ids) {
+            my $protocol = CXGN::Genotype::Protocol->new({bcs_schema => $self->bcs_schema, nd_protocol_id => $_});
+            my $markers = $protocol->markers;
+            push @all_marker_objects, values %$markers;
+        }
+
+        # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+        if (scalar(@all_marker_objects) == 0) {
+            my @representative_markerprofiles = values %unique_stocks;
+            my $represenative_markerprofile = $representative_markerprofiles[0];
+            foreach my $o (keys %$represenative_markerprofile) {
+                push @all_marker_objects, {name => $o};
+            }
+        }
+
+        #VCF should be sorted by chromosome and position
+        no warnings 'uninitialized';
+        @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+        my @header = ("Marker");
+        push @header, @sorted_stock_names;
+
+        my $header_line = join "\t", @header;
+        my $data = "$header_line\n";
+
+        foreach my $m (@all_marker_objects) {
+            my $name = $m->{name};
+            my @row = ($name);
+            foreach my $s (@sorted_stock_names) {
+                my $g = $unique_stocks{$s}->{$name};
+                push @row, $g->{'DS'};
+            }
+            my $line = join "\t", @row;
+            $data .= "$line\n";
+        }
+        $self->cache()->set($key, $data);
+        $file_handle = $self->cache()->handle($key);
+    }
+    return $file_handle;
+}
+
+sub get_cached_file_VCF {
+    my $self = shift;
+    my $key = $self->key("get_cached_file_VCF");
+    $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
+
+    my $file_handle;
+    if ($self->cache()->exists($key)) {
+        $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        my ($total_count, $genotypes) = $self->get_genotype_info();
+
+        my %unique_protocols;
+        my %unique_stocks;
+        my %unique_germplasm;
+        foreach (@$genotypes) {
+            $unique_protocols{$_->{analysisMethodDbId}}++;
+            my $sample_name;
+            if ($_->{stock_type_name} eq 'tissue_sample') {
+                $sample_name = $_->{stock_name}."|||".$_->{germplasmName};
+            }
+            elsif ($_->{stock_type_name} eq 'accession') {
+                $sample_name = $_->{stock_name};
+            }
+            $unique_stocks{$sample_name} = $_->{selected_genotype_hash};
+            $unique_germplasm{$_->{germplasmDbId}}++;
+        }
+        my @protocol_ids = keys %unique_protocols;
+        my @sorted_stock_names = sort keys %unique_stocks;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+
+        my @all_protocol_info_lines = ("##INFO=<ID=VCFDownload, Description='VCFv4.2 FILE GENERATED BY BREEDBASE AT ".$timestamp."'>");
+        my @all_marker_objects;
+        foreach (@protocol_ids) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $self->bcs_schema,
+                nd_protocol_id => $_,
+                chromosome_list=>$self->chromosome_list,
+                start_position=>$self->start_position,
+                end_position=>$self->end_position
+            });
+            my $markers = $protocol->markers;
+            push @all_protocol_info_lines, @{$protocol->header_information_lines};
+            push @all_marker_objects, values %$markers;
+        }
+
+        # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+        if (scalar(@all_marker_objects) == 0) {
+            my @representative_markerprofiles = values %unique_stocks;
+            my $represenative_markerprofile = $representative_markerprofiles[0];
+            foreach my $o (keys %$represenative_markerprofile) {
+                push @all_marker_objects, {name => $o};
+            }
+        }
+
+        my $stocklookup = CXGN::Stock::StockLookup->new({schema => $self->bcs_schema});
+        my @accession_ids = keys %unique_germplasm;
+        my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
+        my $synonym_string = "## Synonyms of accessions: ";
+        while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
+            if(scalar(@{$synonym_list})>0){
+                if(not length($synonym_string)<1){
+                    $synonym_string.=" ";
+                }
+                $synonym_string.=$uniquename."=(";
+                $synonym_string.= (join ", ", @{$synonym_list}).")";
+            }
+        }
+        push @all_protocol_info_lines, $synonym_string;
+
+        #VCF should be sorted by chromosome and position
+        no warnings 'uninitialized';
+        @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+        my $tsv = Text::CSV->new({ sep_char => "\t", eol => $/ });
+        my @header = ("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT");
+        push @header, @sorted_stock_names;
+
+        my $header_info_lines = join "\n", @all_protocol_info_lines;
+        my $data = "$header_info_lines\n";
+        my $header_line = join "\t", @header;
+        $data .= "$header_line\n";
+
+        foreach my $m (@all_marker_objects) {
+            my $name = $m->{name};
+            my $format = $m->{format};
+            my @format;
+            if (!$format) {
+                my $first_g = $unique_stocks{$sorted_stock_names[0]}->{$name};
+                foreach my $k (sort keys %$first_g) {
+                    if (defined($first_g->{$k})) {
+                        push @format, $k;
+                    }
+                }
+            } else {
+                @format = split ':', $format;
+            }
+            if (scalar(@format) > 1) { #ONLY ADD NT FOR NOT OLD GENOTYPING PROTOCOLS
+                my %format_check = map {$_ => 1} @format;
+                if (!exists($format_check{'NT'})) {
+                    push @format, 'NT';
+                }
+                if (!exists($format_check{'DS'})) {
+                    push @format, 'DS';
+                }
+            }
+            $format = join ':', @format;
+            my @row = ($m->{chrom}, $m->{pos}, $name, $m->{ref}, $m->{alt}, $m->{qual}, $m->{filter}, $m->{info}, $format);
+            foreach my $s (@sorted_stock_names) {
+                my $g = $unique_stocks{$s}->{$name};
+                my @geno;
+                foreach my $fr (@format) {
+                    push @geno, $g->{$fr};
+                }
+                my $geno_string = join ':', @geno;
+                push @row, $geno_string;
+            }
+            my $line = join "\t", @row;
+            $data .= "$line\n";
+        }
+        $self->cache()->set($key, $data);
+        $file_handle = $self->cache()->handle($key);
+    }
+    return $file_handle;
+}
 
 1;
