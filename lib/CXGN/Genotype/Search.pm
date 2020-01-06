@@ -1164,7 +1164,7 @@ sub get_cached_file_VCF {
                 }
                 $genotype_string .= "\n";
             }
-            my $genotype_id = $geno->{germplasmDbId};
+            my $genotype_id = $geno->{germplasmName};
             my $genotype_data_string = "";
             foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
                 my $dsvalue = $geno->{selected_genotype_hash}->{$key}->{DS};
