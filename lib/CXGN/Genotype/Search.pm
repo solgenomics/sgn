@@ -14,11 +14,11 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
     protocol_id_list=>$protocol_id_list,
+    end_position=>$end_position,
     markerprofile_id_list=>$markerprofile_id_list,
     genotype_data_project_list=>$genotype_data_project_list,
     chromosome_list=>\@chromosome_numbers,
     start_position=>$start_position,
-    end_position=>$end_position,
     marker_name_list=>['S80_265728', 'S80_265723'],
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     protocolprop_top_key_select=>['reference_genome_name', 'header_information_lines', 'marker_names', 'markers'], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
@@ -1000,7 +1000,10 @@ sub key {
     my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
     my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
-    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
+    my $chromosomes = $json->encode( $self->chromosome_list() || [] );
+    my $start = $json->encode( $self->start_position() || [] );
+    my $end = $json->encode( $self->end_position() || [] );
+    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
     return $key;
 }
 
