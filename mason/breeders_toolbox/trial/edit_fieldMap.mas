@@ -106,17 +106,17 @@ $trial_stock_type => undef
     </div>
 </div>
 
-<div class="modal  fade" id="replace_accessions_dialog_success_message" name="replace_accessions_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="ReplaceFieldMapDialog">
+<div class="modal  fade" id="replace_stock_dialog_success_message" name="replace_stock_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="replace_stock_message_title">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="ReplaceFieldMapDialog">Replace Trial Accessions </h4>
+                <h4 class="modal-title" id="replace_stock_message_title"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Accession was replaced successfully...</p3>
+                    <p3 id="replace_stock_success_message"></p3>
 
                 </div>
             </div>
@@ -128,17 +128,17 @@ $trial_stock_type => undef
     </div>
 </div>
 
-<div class="modal  fade" id="sub_success_message" name="sub_success_message" tabindex="-1" role="dialog" aria-labelledby="SubsFieldMapDialog">
+<div class="modal  fade" id="sub_success_message" name="sub_success_message" tabindex="-1" role="dialog" aria-labelledby="subs_stock_message_title">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SubsFieldMapDialog">Substitute Plot Accessions </h4>
+                <h4 class="modal-title" id="subs_stock_message_title"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Accessions were substituted successfully...</p3>
+                    <p3 id="subs_stock_success_message"></p3>
 
                 </div>
             </div>
@@ -314,7 +314,7 @@ jQuery(document).ready(function () {
                 if (response.error) {
                     alert("Error Replacing Stock: "+response.error);
                 } else {
-                    jQuery('#replace_accessions_dialog_success_message').modal("show");
+                    jQuery('#replace_stock_dialog_success_message').modal("show");
                 }
             },
             error: function() {
@@ -378,7 +378,10 @@ jQuery(document).ready(function () {
     var replace_button_submit = '';
     var substitute_dialog_title = '';
     var substitute_button_submit = '';
-
+    var replace_message_title = '';
+    var replace_success_message = '';
+    var subs_message_title = '';
+    var subs_success_message = '';
 
     if (trial_stock_type == 'family_name') {
         edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within A Trial Plots';
@@ -390,6 +393,10 @@ jQuery(document).ready(function () {
         replace_button_submit = 'Replace Trial Family Name';
         substitute_dialog_title = 'Substitute Plot Family Name in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Family Name';
+        replace_message_title = 'Replace Trial Family Name';
+        replace_success_message = 'Family Name was replaced successfully.';
+        subs_message_title = 'Substitute Plot Family Name';
+        subs_success_message = 'Family Name was substituted successfully.';
     } else if (trial_stock_type == 'cross') {
         edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots';
         replace_button_label = 'Replace Cross Unique ID';
@@ -400,6 +407,10 @@ jQuery(document).ready(function () {
         replace_button_submit = 'Replace Trial Cross Unique ID';
         substitute_dialog_title = 'Substitute Plot Cross Unique ID in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Cross Unique ID';
+        replace_message_title = 'Replace Cross Unique ID';
+        replace_success_message = 'Cross Unique ID was replaced successfully.';
+        subs_message_title = 'Substitute Cross Unique ID';
+        subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
         edit_dialog_title = 'Replace Trial Accessions Or Substitute Accessions Within A Trial Plots';
         replace_button_label = 'Replace Accession';
@@ -410,6 +421,10 @@ jQuery(document).ready(function () {
         replace_button_submit = 'Replace Trial Accession';
         substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
         substitute_button_submit = 'Substitute Plot Accession';
+        replace_message_title = 'Replace Trial Accession';
+        replace_success_message = 'Accession was replaced successfully.';
+        subs_message_title = 'Substitute Plot Accession';
+        subs_success_message = 'Accession was substituted successfully.';
     }
 
     jQuery('#edit_field_map_title').text(edit_dialog_title);
@@ -421,7 +436,10 @@ jQuery(document).ready(function () {
     jQuery('#replace_stock_submit').text(replace_button_submit);
     jQuery('#substitute_plot_dialog').text(substitute_dialog_title);
     jQuery('#substitute_plot_stock_submit').text(substitute_button_submit);
-
+    jQuery('#replace_stock_message_title').text(replace_message_title);
+    jQuery('#replace_stock_success_message').text(replace_success_message);
+    jQuery('#subs_stock_message_title').text(subs_message_title);
+    jQuery('#subs_stock_success_message').text(subs_success_message);
 
 });
 
