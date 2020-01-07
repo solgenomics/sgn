@@ -1534,7 +1534,7 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
-sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
+sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   my $self = shift;
   my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -1556,8 +1556,8 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
   my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
-    old_stock_id => $old_stock_id,
-    new_stock => $new_stock,
+    old_accession_id => $old_stock_id,
+    new_accession => $new_stock,
     trial_stock_type => $trial_stock_type,
   });
 

@@ -238,7 +238,7 @@ jQuery(document).ready(function () {
 	    success: function(response){
 	         //console.log(response);
 
-            var trial_stocks_html = "<select class='form-control' id='trial_stocks_table'>";
+            var trial_stocks_html = "<select class='form-control' id='trial_stock_table'>";
             for (i=0; i<response.accessions[0].length; i++) {
                 trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
             }
@@ -247,7 +247,7 @@ jQuery(document).ready(function () {
             jQuery('#stocks_in_trial').html(trial_stocks_html);
         },
 	    error: function(response){
-            alert("Error retrieving accessions.");
+            alert("Error retrieving stocks.");
 	    }
 	});
 
@@ -293,7 +293,7 @@ jQuery(document).ready(function () {
 
     function replace_stock_in_trial() {
         jQuery('#replace_trial_stocks_dialog').modal("hide");
-        var old_stock_id = jQuery('#trial_stocks_table').val();
+        var old_stock_id = jQuery('#trial_stock_table').val();
         var new_stock = jQuery('#replace_database_stock').val();
 
         new jQuery.ajax({

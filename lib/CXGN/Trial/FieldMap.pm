@@ -419,8 +419,8 @@ sub replace_trial_stock_fieldMap {
 	my $error;
 	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
-	my $new_stock = $self->new_stock;
-	my $old_stock_id = $self->old_stock_id;
+	my $new_stock = $self->new_accession;
+	my $old_stock_id = $self->old_accession_id;
 	my $trial_id = $self->trial_id;
     my $trial_stock_type = $self->trial_stock_type;
 
