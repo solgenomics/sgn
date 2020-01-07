@@ -1623,7 +1623,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   $c->stash->{rest} = { success => 1};
 }
 
-sub substitute_accession : Chained('trial') PathPart('substitute_accession') Args(0) {
+sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   my $self = shift;
 	my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -1640,7 +1640,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   if ($plot_1_id == $plot_2_id){
-    $c->stash->{rest} = { error => "Choose a different plot/accession in 'select Accession 2' to perform this operation." };
+    $c->stash->{rest} = { error => "Choose a different plot/stock in 'select plot 2' to perform this operation." };
     return;
   }
 

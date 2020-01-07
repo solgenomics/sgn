@@ -333,17 +333,17 @@ jQuery(document).ready(function () {
   });
 
   jQuery('#substitute_plot_stock_submit').click( function() {
-    substitute_plot_accession();
+    substitute_plot_stock();
   });
 
-  function substitute_plot_accession() {
+  function substitute_plot_stock() {
 
     var plot_1_info = jQuery('#trial_plot_1_name_table').val();
     var plot_2_info = jQuery('#trial_plot_2_name_table').val();
 
     new jQuery.ajax({
       type: 'POST',
-      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_accession',
+      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_stock',
       dataType: "json",
       data: {
               'plot_1_info': plot_1_info,
@@ -356,14 +356,14 @@ jQuery(document).ready(function () {
         jQuery('#working_modal').modal("hide");
 
         if (response.error){
-          alert("Error Substituting Accessions: "+response.error);
+          alert("Error Substituting Stock: "+response.error);
         } else {
           jQuery('#sub_success_message').modal("show");
         }
       },
       error: function(){
         jQuery('#working_modal').modal("hide");
-        alert('An error occurred substituting plot accession. Please try again or contact us.');
+        alert('An error occurred substituting plot stock. Please try again or contact us.');
       }
     });
   }
