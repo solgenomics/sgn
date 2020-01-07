@@ -361,32 +361,37 @@ $dataset_id => undef
 
 
   // Wizard Callback: get chromosome names for a single selected genotyping protocol
+  var SELECTED_GENOTYPING_PROTOCOL = undefined;
   window.sWizard.wizard.on_change(function(categories, selections, operations) {
     var selected_genotyping_protocols = selections.hasOwnProperty('genotyping_protocols') ? selections.genotyping_protocols : [];
     if ( selected_genotyping_protocols.length <= 1 ) {
-      var genotyping_protocol_id = selected_genotyping_protocols.length === 1 ? selected_genotyping_protocols[0].id : "";
-      jQuery.ajax({
-        url: '/ajax/breeder/search/genotyping_protocol_chromosomes',
-        method: "GET",
-        data: { 'genotyping_protocol': genotyping_protocol_id },
-        error: function(response) {
-          console.log("ERROR: Could not get chromosome names for genotyping protocol #" + genotyping_protocol_id);
-          console.log(response);
-          updateChromosomeNames();
-        },
-        success: function(response) {
-          if (response.error) { 
-            console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + genotyping_protocol_id);
-            console.log(repsonse.error);
+      var selected_genotyping_protocol = selected_genotyping_protocols.length === 1 ? selected_genotyping_protocols[0].id : "";
+      if ( selected_genotyping_protocol !== SELECTED_GENOTYPING_PROTOCOL ) {
+        SELECTED_GENOTYPING_PROTOCOL = selected_genotyping_protocol;
+        jQuery.ajax({
+          url: '/ajax/breeder/search/genotyping_protocol_chromosomes',
+          method: "GET",
+          data: { 'genotyping_protocol': SELECTED_GENOTYPING_PROTOCOL },
+          error: function(response) {
+            console.log("ERROR: Could not get chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+            console.log(response);
             updateChromosomeNames();
+          },
+          success: function(response) {
+            if (response.error) { 
+              console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+              console.log(repsonse.error);
+              updateChromosomeNames();
+            }
+            else {
+              updateChromosomeNames(response.chromosome_names);
+            }
           }
-          else {
-            updateChromosomeNames(response.chromosome_names);
-          }
-        }
-      });
+        });
+      }
     }
     else {
+      SELECTED_GENOTYPING_PROTOCOL = "";
       updateChromosomeNames();
     }
   });
