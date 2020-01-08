@@ -1,7 +1,6 @@
 <%args>
 $preferred_species => ""
 $editable_stock_props => {}
-$user => undef
 </%args>
 
 <%perl>
