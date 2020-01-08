@@ -124,7 +124,7 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
-                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files &>
+                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
                                 <!-- Phenotypic correlation analysis -->
