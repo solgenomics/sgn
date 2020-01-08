@@ -1001,8 +1001,8 @@ sub key {
     my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
     my $chromosomes = $json->encode( $self->chromosome_list() || [] );
-    my $start = $json->encode( $self->start_position() || [] );
-    my $end = $json->encode( $self->end_position() || [] );
+    my $start = $self->start_position() || '' ;
+    my $end = $self->end_position() || '';
     my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
     return $key;
 }
@@ -1049,7 +1049,13 @@ sub get_cached_file_dosage_matrix {
 
         my @all_marker_objects;
         foreach (@protocol_ids) {
-            my $protocol = CXGN::Genotype::Protocol->new({bcs_schema => $self->bcs_schema, nd_protocol_id => $_});
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $self->bcs_schema,
+                nd_protocol_id => $_,
+                chromosome_list=>$self->chromosome_list,
+                start_position=>$self->start_position,
+                end_position=>$self->end_position
+            });
             my $markers = $protocol->markers;
             push @all_marker_objects, values %$markers;
         }

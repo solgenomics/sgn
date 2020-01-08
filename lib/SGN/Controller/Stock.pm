@@ -343,13 +343,9 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_type = $stock->type();
 
     if ($stock_id) {
-        my $dir = $c->tempfiles_subdir('genotype_download');
-        my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
-        $tempfile = $tempfile.".vcf";
-
         my %genotype_download_factory = (
             bcs_schema=>$schema,
-            filename=>$tempfile,  #file path to write to
+            cache_root_dir=>$c->config->{cache_file_path},
             markerprofile_id_list=>$genotypeprop_id,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],
@@ -368,7 +364,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
             \%genotype_download_factory
         );
-        my $status = $geno->download();
+        my $file_handle = $geno->download();
 
         $c->res->content_type("application/text");
         $c->res->cookies->{$dl_cookie} = {
@@ -376,8 +372,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
-        my $output = read_file($tempfile);
-        $c->res->body($output);
+        $c->res->body($file_handle);
     }
 }
 
