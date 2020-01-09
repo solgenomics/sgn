@@ -81,7 +81,12 @@ sub markerprofiles_detail {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         markerprofile_id_list=>[$genotypeprop_id]
-    });
+						       });
+    
+    
+    # note: here get_genotype_info is ok, because we are searching only one
+    # markerprofile
+    #
     my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
     my $detail = $genotypes->[0];
@@ -158,25 +163,31 @@ sub markerprofiles_allelematrix {
         push @$status, { 'error' => 'Unsupported Format Given. Supported values are: json, tsv, csv' };
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        markerprofile_id_list=>\@markerprofile_ids,
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    my $genotypes_search = CXGN::Genotype::Search->new( 
+	{
+	    bcs_schema=>$self->bcs_schema,
+	    markerprofile_id_list=>\@markerprofile_ids,
+	});
+
+    my $total_count = $genotypes_search->init_genotype_iterator();
+
     #print STDERR Dumper $genotypes;
 
     my @data;
     my %marker_names_all;
     my @ordered_refmarkers;
-    foreach (@$genotypes){
-        my $genotype_hash = $_->{selected_genotype_hash};
-        push @ordered_refmarkers, sort keys(%$genotype_hash);
-    }
+#    for(my $i=0; $i<$total_count; $i++){
+#       	my $genotype = $genotypes_search->get_next_genotype_info();
+#        my $genotype_hash = $genotype->{selected_genotype_hash};
+#        push @ordered_refmarkers, sort keys(%$genotype_hash);
+#    }
 
     my @scores;
-    foreach (@$genotypes){
-        my $genotype_hash = $_->{selected_genotype_hash};
-        my $genotypeprop_id = $_->{markerProfileDbId};
+    foreach (my $i=0; $i<$total_count; $i++){
+	my $genotype = $genotypes_search->get_next_genotype_info();
+        my $genotype_hash = $genotype->{selected_genotype_hash};
+	my @ordered_refmarkers = sort keys(%$genotype_hash);
+        my $genotypeprop_id = $genotype->{markerProfileDbId};
         foreach my $m (@ordered_refmarkers) {
             my $score;
             if (exists($genotype_hash->{$m}->{'GT'})){
