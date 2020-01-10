@@ -88,6 +88,21 @@ has 'genotype_data_project_list' => (
     is => 'ro',
 );
 
+has 'chromosome_list' => (
+    isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
+    is => 'ro',
+);
+
+has 'start_position' => (
+    isa => 'Int|Undef',
+    is => 'ro',
+);
+
+has 'end_position' => (
+    isa => 'Int|Undef',
+    is => 'ro',
+);
+
 has 'marker_name_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'ro',
@@ -144,6 +159,9 @@ sub download {
     my $return_only_first_genotypeprop_for_stock = $self->return_only_first_genotypeprop_for_stock;
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my $chromosome_list = $self->chromosome_list;
+    my $start_position = $self->start_position;
+    my $end_position = $self->end_position;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -159,6 +177,9 @@ sub download {
         protocolprop_top_key_select=>$protocolprop_top_key_select,
         protocolprop_marker_hash_select=>$protocolprop_marker_hash_select,
         return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
+        chromosome_list=>$chromosome_list,
+        start_position=>$start_position,
+        end_position=>$end_position,
         limit=>$limit,
         offset=>$offset
     });
