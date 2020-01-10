@@ -4,7 +4,10 @@ $editable_stock_props => {}
 </%args>
 
 <%perl>
-    my $user_role = $c->user->get_object()->get_user_type();
+    my $user_role = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+    }
 </%perl>
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
