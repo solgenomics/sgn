@@ -106,7 +106,7 @@ has 'create_date' => (
 #Filtering KEYS
 
 has 'chromosome_list' => (
-    isa => 'ArrayRef[Int]|Undef',
+    isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
     is => 'ro',
 );
 
@@ -168,8 +168,8 @@ sub _retrieve_nd_protocolprop_markers {
 
     my $chromosome_where = '';
     if ($chromosome_list && scalar(@$chromosome_list)>0) {
-        my $chromosome_list_sql = join ',', @$chromosome_list;
-        $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+        my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
+        $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
     }
     my $start_position_where = '';
     if (defined($start_position)) {

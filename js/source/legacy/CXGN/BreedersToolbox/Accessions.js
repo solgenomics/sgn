@@ -365,14 +365,18 @@ jQuery(document).ready(function ($) {
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
-            if (response.error_string) {
+            if (response.error) {
                 fullParsedData = undefined;
-                alert(response.error_string);
+                alert(response.error);
             }
-            if (response.success) {
+            else if (response.success) {
                 fullParsedData = response.full_data;
                 doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').attr('checked');;
                 review_verification_results(doFuzzySearch, response, response.list_id);
+            }
+            else {
+                fullParsedData = undefined;
+                alert("An unknown error occurred.  Please try again later or contact us for help.");
             }
         }
     });

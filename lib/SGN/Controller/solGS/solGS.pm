@@ -2535,7 +2535,7 @@ sub get_single_trial_traits {
     if (!-s $traits_file)
     {
 	my $traits = $c->model('solGS::solGS')->trial_traits($pop_id);
-	  print STDERR "\nget_single_trial_traits traits; @$traits\n";
+  
 	$traits = join("\t", @$traits);
 	write_file($traits_file, $traits);
     }
