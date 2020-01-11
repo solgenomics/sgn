@@ -77,6 +77,11 @@ has 'cache_expiry' => (
     default => 0, # never expires?
 );
 
+has '_cache_key' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
 has 'protocol_id' => (
     isa => 'Int',
     is => 'rw',
@@ -323,6 +328,7 @@ sub download_grm {
     my $self = shift;
 
     my $key = $self->grm_cache_key("download_grm");
+    $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
