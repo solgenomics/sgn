@@ -1154,6 +1154,21 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <input class="form-control" type="text" id="drone_image_train_keras_model_desc" name="drone_image_train_keras_model_desc" />
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Genotyping Protocol for GRM: </label>
+                            <div class="col-sm-8" >
+                                <div id="drone_image_train_keras_model_genotyping_protocol_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Use Parents of Accessions For In-silico Hybrid: </label>
+                            <div class="col-sm-8" >
+                                <select class="form-control" id="drone_image_train_keras_model_use_parents_grm" name="drone_image_train_keras_model_use_parents_grm" >
+                                    <option value="no">Yes, GRM for parents of accessions if genotyped</option>
+                                    <option value="yes">No, GRM for accessions if genotyped</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <br/><br/>
@@ -2625,6 +2640,9 @@ jQuery(document).ready(function() {
             Workflow.complete("#drone_imagery_train_keras_model_plot_polygon_type_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 6);
         }
+
+        get_select_box('genotyping_protocol', 'drone_image_train_keras_model_genotyping_protocol_div', { 'name' : 'drone_image_train_keras_model_genotyping_protocol_select', 'id' : 'drone_image_train_keras_model_genotyping_protocol_select', 'empty':1 });
+
         return false;
     });
 
@@ -2654,7 +2672,9 @@ jQuery(document).ready(function() {
                     'model_name' : drone_imagery_keras_model_name,
                     'model_description' : drone_imagery_keras_model_desc,
                     'model_type' : drone_imagery_keras_model_type,
-                    'population_id' : jQuery('#drone_imagery_train_keras_cnn_population_id').val()
+                    'population_id' : jQuery('#drone_imagery_train_keras_cnn_population_id').val(),
+                    'nd_protocol_id' : jQuery('#drone_image_train_keras_model_genotyping_protocol_select').val(),
+                    'use_parents_grm' : jQuery('#drone_image_train_keras_model_use_parents_grm').val()
                 },
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");

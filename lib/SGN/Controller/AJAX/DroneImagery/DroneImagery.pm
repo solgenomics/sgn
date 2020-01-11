@@ -42,6 +42,7 @@ use CXGN::GrowingDegreeDays;
 use CXGN::BreederSearch;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::Genotype::GRM;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3992,11 +3993,14 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $trait_id = $c->req->param('trait_id');
     my @aux_trait_id = $c->req->param('aux_trait_id[]') ? $c->req->param('aux_trait_id[]') : ();
     my $model_type = $c->req->param('model_type');
     my $population_id = $c->req->param('population_id');
+    my $protocol_id = $c->req->param('nd_protocol_id');
+    my $use_parents_grm = $c->req->param('use_parents_grm') eq 'yes' ? 1 : 0;
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -4080,6 +4084,16 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
+
+    my $geno = CXGN::Genotype::GRM->new({
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
+        plot_id_list=>\@seen_plots,
+        protocol_id=>$protocol_id,
+        get_grm_for_parental_accessions=>$use_parents_grm
+    });
+    my $file_handle = $geno->download_grm();
 
     my %phenotype_data_hash;
     foreach my $d (@$data) {
