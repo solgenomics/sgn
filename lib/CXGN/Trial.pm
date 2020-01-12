@@ -9,6 +9,35 @@ my $trial = CXGN::Trial->new( { bcs_schema => $schema, ... , trial_id => $trial_
 
 If $trial_id is a phenotyping trial, the type of object returned will be CXGN::PhenotypingTrial.
 
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=head1 METHODS
+
+=cut
+
+package CXGN::Trial;
+
+use Moose;
+use Data::Dumper;
+use Try::Tiny;
+use Data::Dumper;
+use CXGN::Trial::Folder;
+use CXGN::Trial::TrialLayout;
+use CXGN::Trial::TrialLayoutDownload;
+use SGN::Model::Cvterm;
+use Time::Piece;
+use Time::Seconds;
+use CXGN::Calendar;
+use JSON;
+use File::Basename qw | basename dirname|;
+
+=head1 NAME
+
+
+=head1 DESCRIPTION
+
 If $trial_id is a genotyping trial, the type of object returned will be CXGN::GenotypingTrial.
 
 If $trial_id is a crossing trial, the type of object returned will be CXGN::CrossingTrial.
@@ -207,6 +236,7 @@ sub get_all_phenotype_metadata {
 	push @file_array, $file_info{$_};
     }
     return \@file_array;
+
 }
 
 1;

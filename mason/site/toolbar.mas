@@ -12,10 +12,8 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <& toolbar/search_menu.mas &>
-        <& toolbar/maps.mas &>
-        <& toolbar/genomes.mas &>
-        <& toolbar/projects.mas &>
-        <& toolbar/tools.mas &>
+	  <& toolbar/manage.mas &>
+	  <& toolbar/analyze.mas &>
         <& toolbar/about.mas &>
       </ul>
       <ul class="nav navbar-nav navbar-right">
