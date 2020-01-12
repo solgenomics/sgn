@@ -1164,8 +1164,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             <label class="col-sm-4 control-label">Use Parents of Accessions For In-silico Hybrid: </label>
                             <div class="col-sm-8" >
                                 <select class="form-control" id="drone_image_train_keras_model_use_parents_grm" name="drone_image_train_keras_model_use_parents_grm" >
-                                    <option value="no">Yes, GRM for parents of accessions if genotyped</option>
-                                    <option value="yes">No, GRM for accessions if genotyped</option>
+                                    <option value="yes">Yes, GRM for parents of accessions if genotyped</option>
+                                    <option value="no">No, GRM for accessions if genotyped</option>
                                 </select>
                             </div>
                         </div>

@@ -194,16 +194,16 @@ sub get_grm {
             JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
             JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
             JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
-            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent=$accession_cvterm_id)
+            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
             JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
-            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent=$accession_cvterm_id)
+            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
             WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute();
-        my @plot_stock_ids_found = [];
-        my @plot_accession_stock_ids_found = [];
-        my @plot_female_stock_ids_found = [];
-        my @plot_male_stock_ids_found = [];
+        my @plot_stock_ids_found = ();
+        my @plot_accession_stock_ids_found = ();
+        my @plot_female_stock_ids_found = ();
+        my @plot_male_stock_ids_found = ();
         while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
             push @plot_stock_ids_found, $plot_stock_id;
             push @plot_accession_stock_ids_found, $accession_stock_id;
@@ -211,8 +211,12 @@ sub get_grm {
             push @plot_male_stock_ids_found, $male_parent_stock_id;
         }
 
+        # print STDERR Dumper \@plot_stock_ids_found;
+        # print STDERR Dumper \@plot_female_stock_ids_found;
+        # print STDERR Dumper \@plot_male_stock_ids_found;
+
         my @progeny_genotypes = ();
-        my @all_marker_objects = {};
+        my @all_marker_objects = ();
         my %unique_marker_names = ();
         for my $i (0..scalar(@plot_stock_ids_found)-1) {
             my $female_stock_id = $plot_female_stock_ids_found[$i];
@@ -269,9 +273,10 @@ sub get_grm {
         undef @progeny_genotypes;
     }
 
-    # print STDERR Dumper \@all_marker_names;
-    # print STDERR Dumper \@individuals_stock_ids;
-    # print STDERR Dumper \@dosage_matrix;
+    print STDERR Dumper \@all_marker_names;
+    print STDERR Dumper \@individuals_stock_ids;
+    print STDERR Dumper \@dosage_matrix;
+
     my $grm_n = scalar(@individuals_stock_ids);
     my $rmatrix = R::YapRI::Data::Matrix->new({
         name => 'geno_matrix1',
