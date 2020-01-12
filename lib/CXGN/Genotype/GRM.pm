@@ -273,9 +273,9 @@ sub get_grm {
         undef @progeny_genotypes;
     }
 
-    print STDERR Dumper \@all_marker_names;
-    print STDERR Dumper \@individuals_stock_ids;
-    print STDERR Dumper \@dosage_matrix;
+    # print STDERR Dumper \@all_marker_names;
+    # print STDERR Dumper \@individuals_stock_ids;
+    # print STDERR Dumper \@dosage_matrix;
 
     my $grm_n = scalar(@individuals_stock_ids);
     my $rmatrix = R::YapRI::Data::Matrix->new({
@@ -331,14 +331,20 @@ sub grm_cache_key {
 
 sub download_grm {
     my $self = shift;
+    my $return_type = shift || 'filehandle';
 
     my $key = $self->grm_cache_key("download_grm");
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
-    my $file_handle;
+    my $return;
     if ($self->cache()->exists($key)) {
-        $file_handle = $self->cache()->handle($key);
+        if ($return_type eq 'filehandle') {
+            $return = $self->cache()->handle($key);
+        }
+        elsif ($return_type eq 'data') {
+            $return = $self->cache()->get($key);
+        }
     }
     else {
         my ($result_matrix, $marker_names, $stock_ids) = $self->get_grm();
@@ -362,9 +368,14 @@ sub download_grm {
             $row_num++;
         }
         $self->cache()->set($key, $data);
-        $file_handle = $self->cache()->handle($key);
+        if ($return_type eq 'filehandle') {
+            $return = $self->cache()->handle($key);
+        }
+        elsif ($return_type eq 'data') {
+            $return = $data;
+        }
     }
-    return $file_handle;
+    return $return;
 }
 
 1;

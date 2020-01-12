@@ -4093,7 +4093,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>$use_parents_grm
     });
-    my $file_handle = $geno->download_grm();
+    my $grm = $geno->download_grm('data');
+    # print STDERR Dumper $grm;
 
     my %phenotype_data_hash;
     foreach my $d (@$data) {
