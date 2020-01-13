@@ -159,12 +159,17 @@ $dataset_id => undef
         <div id="wiz-down-1-c" class="panel-collapse collapse" role="tabpanel">
           <table class="table">
             <tr>
-              <td><input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input></td>
+              <td colspan="3">
+                <p>To download related genotype data, select <strong>1 or more Accessions</strong> and <strong>no more than 1 Genotyping Protocol</strong>
+                in the wizard.  Optionally, select a Chromosome and enter a position range below.  If no genotyping protocol is selected, the 
+                database default protocol will be used.</p>
+                <input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input>
+              </td>
             </tr>
             <tr>
               <td>
                 <span>Chromosome</span>
-                <input placeholder="" type="number" class="wizard-download-genotypes-chromosome-number form-control">
+                <select class="wizard-download-genotypes-chromosome-number form-control"></select>
               </td>
               <td>
                 <span>Start Position</span>
@@ -175,11 +180,25 @@ $dataset_id => undef
                 <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control">
               </td>
             </tr>
+            <tr>
+              <td colspan="3">
+                <select class="wizard-download-genotypes-format form-control" >
+                    <option value="DosageMatrix">Dosage Matrix</option>
+                    <option value="VCF">VCF</option>
+                </select>
+              </td>
+            </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-genotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Genotypes
+                Download Genotypes
+            </button>
+          </div>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                Download Genetic Relationship Matrix (GRM)
             </button>
           </div>
         </div>
@@ -339,5 +358,55 @@ $dataset_id => undef
   d3.select("#update_wizard_lists").on('click',function(){
     window.sWizard.reload_lists();
   });
+
+
+  // Wizard Callback: get chromosome names for a single selected genotyping protocol
+  var SELECTED_GENOTYPING_PROTOCOL = undefined;
+  window.sWizard.wizard.on_change(function(categories, selections, operations) {
+    var selected_genotyping_protocols = selections.hasOwnProperty('genotyping_protocols') ? selections.genotyping_protocols : [];
+    if ( selected_genotyping_protocols.length <= 1 ) {
+      var selected_genotyping_protocol = selected_genotyping_protocols.length === 1 ? selected_genotyping_protocols[0].id : "";
+      if ( selected_genotyping_protocol !== SELECTED_GENOTYPING_PROTOCOL ) {
+        SELECTED_GENOTYPING_PROTOCOL = selected_genotyping_protocol;
+        jQuery.ajax({
+          url: '/ajax/breeder/search/genotyping_protocol_chromosomes',
+          method: "GET",
+          data: { 'genotyping_protocol': SELECTED_GENOTYPING_PROTOCOL },
+          error: function(response) {
+            console.log("ERROR: Could not get chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+            console.log(response);
+            updateChromosomeNames();
+          },
+          success: function(response) {
+            if (response.error) { 
+              console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+              console.log(repsonse.error);
+              updateChromosomeNames();
+            }
+            else {
+              updateChromosomeNames(response.chromosome_names);
+            }
+          }
+        });
+      }
+    }
+    else {
+      SELECTED_GENOTYPING_PROTOCOL = "";
+      updateChromosomeNames();
+    }
+  });
+  updateChromosomeNames();
+
+  // Set the chromosome names for the select dropdown menu
+  function updateChromosomeNames(names) {
+    var html = "";
+    if ( names )  {
+      html += "<option value=''>All</option>";
+      for ( var i = 0; i < names.length; i++ ) {
+        html += "<option value='" + names[i] + "'>" + names[i] + "</option>";
+      }
+    }
+    $(".wizard-download-genotypes-chromosome-number").html(html);
+  }
 
 </script>

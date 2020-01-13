@@ -1301,27 +1301,14 @@ sub plots_list_phenotype_data {
 }
 
 
-sub project_traits {
-  my ($self, $pr_id) = @_;
-  
-  my $rs = $self->schema->resultset("Project::Project")
-      ->search({"me.project_id"  => $pr_id })
-      ->search_related("nd_experiment_projects")
-      ->search_related("nd_experiment")
-      ->search_related("nd_experiment_phenotypes")
-      ->search_related("phenotype")
-      ->search_related("observable",
-		       {},
-		       {
-			   'select'   => [ qw / observable.cvterm_id observable.name/ ], 
-			   'as'       => [ qw / cvterm_id name  / ],
-			   distinct => [qw / observable.name / ],
-			   order_by => [qw / observable.name / ]
-		       }
-      );
+sub trial_traits {
+    my ($self, $pr_id) = @_;
 
-  return $rs;
-
+    my $trial = CXGN::Trial->new({bcs_schema => $self->schema, 
+				  trial_id => $pr_id});
+    
+    return $trial->get_traits_assayed();
+ 
 }
 
 

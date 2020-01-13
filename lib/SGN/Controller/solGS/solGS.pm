@@ -2535,16 +2535,9 @@ sub get_single_trial_traits {
     
     if (!-s $traits_file)
     {
-	my $traits_rs = $c->model('solGS::solGS')->project_traits($pop_id);
+	my $traits = $c->model('solGS::solGS')->trial_traits($pop_id);
 	
-	my @traits_list;
-	
-	while (my $row = $traits_rs->next)
-	{
-	    push @traits_list, $row->name;	    
-	}
-	
-	my $traits = join("\t", @traits_list);
+	$traits = join("\t", @$traits);
 	write_file($traits_file, $traits);
     }
 
@@ -2563,7 +2556,7 @@ sub get_all_traits {
     {
 	my $page = $c->req->path;    
 
-	if ($page =~ /solgs\/population\//)
+	if ($page =~ /solgs\/population\// && $pop_id !~ /\w+/)
 	{
 	    $self->get_single_trial_traits($c);
 	}
@@ -2576,9 +2569,7 @@ sub get_all_traits {
    
     unless (-s $acronym_file)
     {
-	my @filtered_traits = split(/\t/, $traits);
-	my $count = scalar(@filtered_traits);
-
+	my @filtered_traits = split(/\t/, $traits);	
 	my $acronymized_traits = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits);    
 	my $acronym_table = $acronymized_traits->{acronym_table};
 
