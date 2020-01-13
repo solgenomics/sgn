@@ -302,6 +302,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
     my $display = $c->req->param('display');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -358,6 +359,16 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional = ' ,accession.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $trial_stock_type_id;
+    if ($trial_stock_type eq 'family_name') {
+        $trial_stock_type_id = $family_name_type_id;
+    } elsif ($trial_stock_type eq 'cross') {
+        $trial_stock_type_id = $cross_type_id;
+    } else {
+        $trial_stock_type_id = $accesion_type_id;
+    }
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -386,7 +397,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
 
