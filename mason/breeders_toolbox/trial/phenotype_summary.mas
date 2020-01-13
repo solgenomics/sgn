@@ -131,7 +131,13 @@ jQuery(document).ready(function () {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                if (type == 'family_name') {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                } else if (type == 'cross') {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                } else {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                }
             }
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary(type);
