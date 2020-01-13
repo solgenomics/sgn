@@ -39,9 +39,9 @@ $trial_stock_type => undef
                     <option value="plants">Trait Values for Plants in this Trial</option>
                     <option value="subplots">Trait Values for Subplots in this Trial</option>
                     <option value="tissue_samples">Trait Values for Tissue Samples in this Trial</option>
-                    <option value="plots_accession">Trait Values for Plots in this Trial grouped by Accession</option>
-                    <option value="plants_accession">Trait Values for Plants in this Trial grouped by Accession</option>
-                    <option value="tissue_samples_accession">Trait Values for Tissue Samples in this Trial grouped by Accession</option>
+                    <option id = "plots_stock_option" value="plots_accession"></option>
+                    <option id = "plants_stock_option" value="plants_accession"></option>
+                    <option id = "tissue_samples_stock_option" value="tissue_samples_accession"></option>
                 </select>
             </div>
         </div>
@@ -158,6 +158,27 @@ jQuery(document).ready(function () {
             }, 1500);
         }
     });
+
+    var plots_stock_text = '';
+    var plants_stock_text = '';
+    var tissue_samples_stock_text = '';
+
+    if (type == 'family_name') {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Family Name';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Family Name';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Family Name';
+    } else if (type == 'cross') {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Cross Unique ID';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Cross Unique ID';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Cross Unique ID';
+    } else {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Accession';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Accession';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Accession';
+    }
+    jQuery('#plots_stock_option').text(plots_stock_text);
+    jQuery('#plants_stock_option').text(plants_stock_text);
+    jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
 
 });
 
