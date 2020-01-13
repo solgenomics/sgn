@@ -283,11 +283,11 @@ has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 sub BUILD {
     my $self = shift;
 
-    print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
     my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
     $self->breeder_search($bs);
 
     if ($self->has_sp_dataset_id()) {
+        print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
 	if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
 	my $dataset = JSON::Any->decode($row->dataset());
