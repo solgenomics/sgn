@@ -17,7 +17,16 @@ rename_stocks.pl -H [dbhost] -D [dbname] -i [infile] <-t>
 
 =head1 DESCRIPTION
 
-This script replaces accessions in field layouts in bulk. The infile provided has three columns, in the first column is the stock_id of the plot that needs to be changed. In the second column is the stock uniquename as it is in the database that is currently associated, and in the third column is the new stock uniquename. There is no header on the infile and the infile is .xls.
+This script replaces accessions in field layouts in bulk. 
+
+The infile provided has three columns:
+
+1) the stock_id of the plot that needs to be changed. 
+2) the stock uniquename as it is in the database that is currently associated
+3) the new stock uniquename (needs to be in the database).
+4) optional: a new plot name
+
+There is no header on the infile and the infile is .xls.
 
 The script will dissociate the old accession in column 1 and associate the new accession. The plot name will be unchanged.
 
@@ -42,9 +51,9 @@ use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
 
-our ($opt_H, $opt_D, $opt_i);
+our ($opt_H, $opt_D, $opt_i, $opt_t);
 
-getopts('H:D:i:');
+getopts('H:D:i:t');
 
 if (!$opt_H || !$opt_D || !$opt_i) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file)\n");
@@ -72,20 +81,25 @@ my ( $col_min, $col_max ) = $worksheet->col_range();
 my $coderef = sub {
     for my $row ( 0 .. $row_max ) {
 
-	my $plot_id = $worksheet->get_cell($row, 0)->value();
-    	my $db_uniquename = $worksheet->get_cell($row,1)->value();
-    	my $new_uniquename = $worksheet->get_cell($row,2)->value();
-        
-	print STDERR "$db_uniquename -> $new_uniquename\n";
+	my $plot_name = $worksheet->get_cell($row, 0)->value();
+	my $plot_id = $worksheet->get_cell($row, 1)->value();
+    	my $db_uniquename = $worksheet->get_cell($row,2)->value();
+    	my $new_uniquename = $worksheet->get_cell($row,3)->value();
 
-
-
+	my $new_plotname = "";
+	eval { 
+	    $new_plotname = $worksheet->get_cell($row, 4)->value();
+	};
 	
+	if ($@) {
+	    print STDER "no alternate plot name provided. Keeping old name.\n";
+	}
+	
+	print STDERR "$db_uniquename -> $new_uniquename\n";
 	
     	my $old_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $db_uniquename });
 	my $new_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $new_uniquename });
 
-	
 	if (!$old_stock) { 
 	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
 	    next();
@@ -103,7 +117,7 @@ my $coderef = sub {
 	my ($plot, $acc, $stock_relationship_id) = $h->fetchrow_array();
 
 	#update stock_relationship row with new object_id...
-	$uq = "UPDATE stock_relationship set object_id=? where stock_relationship_id=?";
+	my $uq = "UPDATE stock_relationship set object_id=? where stock_relationship_id=?";
 	my $uh = $dbh->prepare($uq);
 	print STDERR "Changing object_id to ".$new_stock->stock_id()." for relationship $stock_relationship_id\n";
 	if ($opt_t) {
@@ -113,8 +127,15 @@ my $coderef = sub {
 	    $uh->execute($new_stock->stock_id, $stock_relationship_id);
 	}
 
+	if ($new_plotname) {
+	    print STDERR "Renaming plot to $new_plotname...\n";
+	    my $pq = "UPDATE stock SET uniquename=?, name=? WHERE stock_id=?";
+	    my $ph = $dbh->prepare($pq);
+	    $ph->execute($new_plotname, $new_plotname, $plot_id);
+	}
     }
 };
+
 
 my $transaction_error;
 try {
