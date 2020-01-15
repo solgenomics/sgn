@@ -19,7 +19,7 @@
                             <li>The seedlots can contain botanical seed from crosses, or clonal seed of specific accessions.</li>
                             <li>Seedlots can have a specific location, box, weight(g), and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
-                            <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
+                            <li>Seedlots can be used in trials (e.g. provide seed to be planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
                             </ul>
 
                             <br/><br/>
@@ -36,8 +36,8 @@
                                 <div class="col-sm-9">
                                     <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
                                         <option value=""></option>
-                                        <option value="clonal">I have clonal seed</option>
-                                        <option value="botanical">I have botanical seed</option>
+                                        <option data-desc="Clonal seed can consist of stakes, roots, slips, or other clonal plant material used for propagation. The contents of a clonal seedlot must be identified by an accession name, however the source of the seedlot (the specific plot or plant it came from) might not be tracked by the database, and is therefore considered optional." value="clonal">I have clonal seed</option>
+                                        <option data-desc="Botanical seed consists of fertilized ovules harvested from a cross. The source of seedlot that contains botanical seed must be identified by a cross unique id, however the contents of the seedlot (the population name, or in the case of hybrid seed or selfed inbreds, the specific accession) might not be tracked by the database yet, and is therefore considered optional." value="botanical">I have botanical seed</option>
                                     </select>
                                 </div>
                             </div>
@@ -55,10 +55,10 @@
                             <br/><br/>
                             <center>
                                 <div id="upload_seedlots_accessions_template_section" style="display:none">
-                                    <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named accessions</button><br/><br/>
+                                    <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading clonal seedlots</button><br/><br/>
                                 </div>
                                 <div id="upload_seedlots_crosses_template_section" style="display:none">
-                                    <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seed lots harvested</button><br/><br/>
+                                    <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading botanical seedlots</button><br/><br/>
                                 </div>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
                             </center>
@@ -231,7 +231,7 @@
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Named Accessions</h4>
+                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Clonal Seedlots</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -249,7 +249,8 @@
                         <tbody>
                             <tr>
                                 <td>seedlot_name</td>
-                                <td>accession_name</td>
+                                <td>contents</td>
+                                <td>source</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
                                 <td>weight(g)</td>
@@ -262,7 +263,7 @@
                     <b>Required fields:</b>
                     <ul>
                     <li>seedlot_name (must be unique)</li>
-                    <li>accession_name (must exist in the database. the accession_name is the unique identifier for the named genotype)</li>
+                    <li>contents (must be an accession name that exists in the database. The accession_name is the unique identifier for the named genotype)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
                     amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
@@ -274,6 +275,7 @@
 
                     <b>Optional fields:</b>
                     <ul>
+                    <li>source (if provided, must be a plot, plant, or tissue sample that exists in the database)</li>
                     <li>description (information about why this seedlot is being added)</li>
                     </ul>
 
@@ -291,7 +293,7 @@
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog">Upload Template Information For Harvested Seedlots</h4>
+                <h4 class="modal-title" id="uploadSeedlotHarvestedInfoDialog">Upload Template Information For Botanical Seedlots</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -309,7 +311,8 @@
                         <tbody>
                             <tr>
                                 <td>seedlot_name</td>
-                                <td>cross_unique_id</td>
+                                <td>contents</td>
+                                <td>source</td>
                                 <td>operator_name</td>
                                 <td>amount</td>
                                 <td>weight(g)</td>
@@ -322,7 +325,7 @@
                     <b>Required fields:</b>
                     <ul>
                     <li>seedlot_name (must be unique)</li>
-                    <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
+                    <li>source (must be a cross_unique_id that exists in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
                     amount (number of seeds in seedlot. can be provided in conjunction with weight(g). must provide a value for amount or weight(g) or both.)
@@ -334,6 +337,7 @@
 
                     <b>Optional fields:</b>
                     <ul>
+                    <li>contents (if provided, must be population name that exists in the database, or in the case of hybrid seed or selfed inbreds, an accession name that exists in the database)</li>
                     <li>description (information about why this seedlot is being added)</li>
                     </ul>
 
@@ -364,13 +368,13 @@ jQuery(document).ready(function(){
             jQuery('#upload_seedlots_types_description').html('');
         }
 
-        if(jQuery(this).val() == 'from_accession'){
+        if(jQuery(this).val() == 'clonal'){
             jQuery('#upload_seedlots_accessions_template_section').show();
             jQuery('#upload_seedlots_crosses_template_section').hide();
             jQuery('#upload_seedlots_accessions_section').show();
             jQuery('#upload_seedlots_harvested_section').hide();
         }
-        if(jQuery(this).val() == 'from_cross'){
+        if(jQuery(this).val() == 'botanical'){
             jQuery('#upload_seedlots_crosses_template_section').show();
             jQuery('#upload_seedlots_accessions_template_section').hide();
             jQuery('#upload_seedlots_accessions_section').hide();

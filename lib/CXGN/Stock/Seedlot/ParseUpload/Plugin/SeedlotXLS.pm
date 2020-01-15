@@ -44,7 +44,8 @@ sub _validate_with_plugin {
 
     #get column headers
     my $seedlot_name_head;
-    my $accession_name_head;
+    my $contents_head;
+    my $source_head;
     my $operator_name_head;
     my $amount_head;
     my $weight_head;
@@ -55,52 +56,60 @@ sub _validate_with_plugin {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $accession_name_head  = $worksheet->get_cell(0,1)->value();
+        $contents_head  = $worksheet->get_cell(0,1)->value();
     }
     if ($worksheet->get_cell(0,2)) {
-        $operator_name_head  = $worksheet->get_cell(0,2)->value();
+        $source_head  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $amount_head  = $worksheet->get_cell(0,3)->value();
+        $operator_name_head  = $worksheet->get_cell(0,3)->value();
     }
     if ($worksheet->get_cell(0,4)) {
-        $weight_head  = $worksheet->get_cell(0,4)->value();
+        $amount_head  = $worksheet->get_cell(0,4)->value();
     }
     if ($worksheet->get_cell(0,5)) {
-        $description_head  = $worksheet->get_cell(0,5)->value();
+        $weight_head  = $worksheet->get_cell(0,5)->value();
     }
     if ($worksheet->get_cell(0,6)) {
-        $box_name_head  = $worksheet->get_cell(0,6)->value();
+        $description_head  = $worksheet->get_cell(0,6)->value();
+    }
+    if ($worksheet->get_cell(0,7)) {
+        $box_name_head  = $worksheet->get_cell(0,7)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
         push @error_messages, "Cell A1: seedlot_name is missing from the header";
     }
-    if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-        push @error_messages, "Cell B1: accession_name is missing from the header";
+    if (!$contents_head || $contents_head ne 'contents') {
+        push @error_messages, "Cell B1: contents is missing from the header";
+    }
+    if (!$source_head || $source_head ne 'source') {
+        push @error_messages, "Cell C1: source is missing from the header";
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell C1: operator_name is missing from the header";
+        push @error_messages, "Cell D1: operator_name is missing from the header";
     }
     if (!$amount_head || $amount_head ne 'amount') {
-        push @error_messages, "Cell D1: amount is missing from the header";
+        push @error_messages, "Cell E1: amount is missing from the header";
     }
     if (!$weight_head || $weight_head ne 'weight(g)') {
-        push @error_messages, "Cell E1: weight(g) is missing from the header";
+        push @error_messages, "Cell F1: weight(g) is missing from the header";
     }
     if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell F1: description is missing from the header";
+        push @error_messages, "Cell G1: description is missing from the header";
     }
     if (!$box_name_head || $box_name_head ne 'box_name') {
-        push @error_messages, "Cell G1: box_name is missing from the header";
+        push @error_messages, "Cell H1: box_name is missing from the header";
     }
 
     my %seen_seedlot_names;
-    my %seen_accession_names;
+    my %seen_contents;
+    my %seen_sources;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $seedlot_name;
-        my $accession_name;
+        my $contents;
+        my $source;
         my $operator_name;
         my $amount = 'NA';
         my $weight = 'NA';
@@ -111,22 +120,25 @@ sub _validate_with_plugin {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $accession_name = $worksheet->get_cell($row,1)->value();
+            $contents = $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $operator_name = $worksheet->get_cell($row,2)->value();
+            $source = $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $amount =  $worksheet->get_cell($row,3)->value();
+            $operator_name = $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
-            $weight =  $worksheet->get_cell($row,4)->value();
+            $amount =  $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $description =  $worksheet->get_cell($row,5)->value();
+            $weight =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $box_name =  $worksheet->get_cell($row,6)->value();
+            $description =  $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $box_name =  $worksheet->get_cell($row,7)->value();
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
@@ -144,41 +156,54 @@ sub _validate_with_plugin {
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
-        if (!$accession_name || $accession_name eq '') {
+        if (!$contents || $contents eq '') {
             push @error_messages, "Cell B:$row_name: you must provide an accession_name for the contents of the seedlot.";
         } else {
-            if ($accession_name){
-                $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-                $seen_accession_names{$accession_name}++;
+            if ($contents){
+                $contents =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+                $seen_contents{$contents}++;
             }
         }
 
+        if ($source) {
+            $seen_sources{$source}++;
+        }
+
         if (!defined($operator_name) || $operator_name eq '') {
-            push @error_messages, "Cell C$row_name: operator_name missing";
+            push @error_messages, "Cell D$row_name: operator_name missing";
         }
 
         if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell D$row_name: amount missing";
+            push @error_messages, "Cell E$row_name: amount missing";
         }
         if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell E$row_name: weight(g) missing";
+            push @error_messages, "Cell F$row_name: weight(g) missing";
         }
         if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
 
         if (!defined($box_name) || $box_name eq '') {
-            push @error_messages, "Cell G$row_name: box_name missing";
+            push @error_messages, "Cell H$row_name: box_name missing";
         }
     }
 
-    my @accessions = keys %seen_accession_names;
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+    my $validator = CXGN::List::Validate->new();
+
+    my @accessions = keys %seen_contents;
+    my @accessions_missing = @{$validator->validate($schema,'accessions',\@accessions)->{'missing'}};
 
     if (scalar(@accessions_missing) > 0) {
         push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
         $errors{'missing_accessions'} = \@accessions_missing;
+    }
+
+    my @stocks = keys %seen_sources;
+    my @stocks_missing = @{$validator->validate($schema,'stocks',\@stocks)->{'missing'}};
+
+    if (scalar(@stocks_missing) > 0) {
+        push @error_messages, "The following sources are not in the database as stock uniquenames or synonyms: ".join(',',@stocks_missing);
+        $errors{'missing_stocks'} = \@stocks_missing;
     }
 
     # Not checking if seedlot name already exists because the database will just update the seedlot entries
