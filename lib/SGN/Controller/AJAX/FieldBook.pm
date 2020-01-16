@@ -59,6 +59,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+  my $trial_stock_type = $c->req->param('trial_stock_type');
 
   chomp($trial_id);
   if (!$c->user()) {
@@ -94,6 +95,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     }
 
     my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+#    print STDERR "SELECTED COLUMNS =".Dumper($selected_columns)."\n";
     my $include_measured = $c->req->param('include_measured');
     my $use_synonyms = $c->req->param('use_synonyms');
     my $selected_trait_list_id = $c->req->param('trait_list');
@@ -129,6 +131,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         include_measured => $include_measured,
         use_synonyms => $use_synonyms,
         selected_trait_ids => \@selected_traits,
+        trial_stock_type => $trial_stock_type,
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();

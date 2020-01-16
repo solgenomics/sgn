@@ -115,6 +115,12 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
+has 'trial_stock_type'=> (
+    is => 'rw',
+    isa => 'Str',
+);
+
+
 #The attributes below are populated when get_layout_output is run, so should not be instantiatied
 #----------------------
 
@@ -172,7 +178,7 @@ sub get_layout_output {
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my %errors;
     my @error_messages;
-
+    my $trial_stock_type = $self->trial_stock_type();
     print STDERR "TrialLayoutDownload for Trial id: ($trial_id) ".localtime()."\n";
 
     my $trial_layout;
@@ -390,7 +396,8 @@ sub get_layout_output {
         treatment_info_hash => \%treatment_info_hash,
         trait_header => \@traits,
         exact_performance_hash => $exact_performance_hash,
-        overall_performance_hash => \%overall_performance_hash
+        overall_performance_hash => \%overall_performance_hash,
+        trial_stock_type => $trial_stock_type
     };
     my $layout_output;
 

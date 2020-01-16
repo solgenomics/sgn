@@ -460,6 +460,7 @@ function show_fieldbook_treatments_<% $download_type %>(){
 }
 
 function open_create_fieldbook_dialog_<% $download_type %>() {
+    var trial_stock_type = "<% $trial_stock_type %>";
     new jQuery.ajax({
         type: 'POST',
         url: '/ajax/fieldbook/create',
@@ -471,7 +472,8 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
             'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
             'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
-            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val()
+            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val(),
+            'trial_stock_type': trial_stock_type
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
