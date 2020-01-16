@@ -4096,6 +4096,32 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $grm = $geno->download_grm('data');
     # print STDERR Dumper $grm;
 
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my $plot_list_string = join ',', @seen_plots;
+    my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
+        FROM stock AS plot
+        JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
+        JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
+        JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+        JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+        JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+        JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+        WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %plot_pedigrees_found = ();
+    while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+        $plot_pedigrees_found{$plot_stock_id} = {
+            female_stock_id => $female_parent_stock_id,
+            male_stock_id => $male_parent_stock_id
+        };
+    }
+
     my %phenotype_data_hash;
     foreach my $d (@$data) {
         $phenotype_data_hash{$d->{observationunit_stock_id}}->{germplasm_stock_id} = $d->{germplasm_stock_id};
@@ -4146,7 +4172,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 print $F '"'.$day_time.'",';
                                 print $F '"'.$drone_run_project_id.'",';
                                 print $F '"'.$field_trial_id.'",';
-                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
+                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'",';
+                                print $F '"'.$plot_pedigrees_found{$stock_id}->{female_stock_id}.'",';
+                                print $F '"'.$plot_pedigrees_found{$stock_id}->{male_stock_id}.'"';
                                 if (scalar(@aux_trait_id)>0) {
                                     print $F ',"';
                                     my @aux_values;
@@ -4186,7 +4214,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 print $F '"'.$day_time.'",';
                                 print $F '"'.$drone_run_project_id.'",';
                                 print $F '"'.$field_trial_id.'",';
-                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'"';
+                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'",';
+                                print $F '"'.$plot_pedigrees_found{$stock_id}->{female_stock_id}.'",';
+                                print $F '"'.$plot_pedigrees_found{$stock_id}->{male_stock_id}.'"';
                                 if (scalar(@aux_trait_id)>0) {
                                     print $F ',"';
                                     my @aux_values = ();
