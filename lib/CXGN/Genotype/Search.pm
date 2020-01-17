@@ -1047,63 +1047,20 @@ sub get_cached_file_dosage_matrix {
             my $genotype_string = "";
             my $genotype_example = $geno;
             if($counter == 0) {
-#  $m->{filter}, $m->{info}, $format);
-                # $genotype_string .= "#CHROM\t";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{chrom} . " \t";
-                # }
-                # $genotype_string .= "\n";
-                # $genotype_string .= "POS\t";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{pos} . " \t";
-                # }
-                # $genotype_string .= "\n";
                 $genotype_string .= "Marker\t";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
                     $genotype_string .= $key . "\t";
                 }
                 $genotype_string .= "\n";
-                # $genotype_string .= "REF";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{ref} . "\t";
-                # }
-                # $genotype_string .= "\n";
-                # $genotype_string .= "ALT";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{alt} . "\t";
-                # }
-                # $genotype_string .= "\n";
-                # $genotype_string .= "QUAL";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{qual} . "\t";
-                # }
-                # $genotype_string .= "\n";
-                # $genotype_string .= "FILTER";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{filter} . "\t";
-                # }
-                # $genotype_string .= "\n";
-                # $genotype_string .= "INFO";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{info} . "\t";
-                # }
-                # $genotype_string .= "\n";
-                # $genotype_string .= "FORMAT\t";
-                # foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                #     $genotype_string .= "DS:GT\t";
-                # }
-                # $genotype_string .= "\n";
             }
             my $genotype_id = $geno->{germplasmName};
             my $genotype_data_string = "";
             foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
                 my $current_genotype = $geno->{selected_genotype_hash}->{$key}->{DS};
-#                my $current_genotype = $dsvalue;
                 $genotype_data_string .= $current_genotype."\t";
             }
 
-            my $s = join "\t", $genotype_id;
-            $genotype_string .= $s."\t".$genotype_data_string."\n";
+            $genotype_string .= $genotype_id."\t".$genotype_data_string."\n";
     #		    }
             write_file($tempfile, {append => 1}, $genotype_string);
             $counter++;
@@ -1236,15 +1193,14 @@ sub get_cached_file_VCF {
             my $genotype_string = "";
             my $genotype_example = $geno;
             if($counter == 0) {
-#  $m->{filter}, $m->{info}, $format);
                 $genotype_string .= "#CHROM\t";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{chrom} . " \t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{chrom} . " \t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "POS\t";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{pos} . " \t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{pos} . " \t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "ID\t";
@@ -1254,47 +1210,48 @@ sub get_cached_file_VCF {
                 $genotype_string .= "\n";
                 $genotype_string .= "REF";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{ref} . "\t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{ref} . "\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "ALT";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{alt} . "\t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{alt} . "\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "QUAL";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{qual} . "\t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{qual} . "\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "FILTER";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{filter} . "\t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{filter} . "\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "INFO";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= $geno->{selected_genotype_hash}->{$key}->{info} . "\t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{info} . "\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "FORMAT\t";
                 foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
-                    $genotype_string .= "DS:GT\t";
+                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$key}->{format} . "\t";
                 }
                 $genotype_string .= "\n";
             }
             my $genotype_id = $geno->{germplasmName};
             my $genotype_data_string = "";
             foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
-                my $dsvalue = $geno->{selected_genotype_hash}->{$key}->{DS};
-                my $gtvalue = $geno->{selected_genotype_hash}->{$key}->{GT};
-    #            my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
-                my $current_genotype = $dsvalue . ":" . $gtvalue;
-#                my $current_genotype = $dsvalue;
-                $genotype_data_string .= $current_genotype."\t";
+                my @current_geno = ();
+                my $key_format = $genotype_example->{selected_protocol_hash}->{markers}->{$key}->{format};
+                my @format = split ':', $key_format;
+                foreach my $format_key (@format) {
+                    push @current_geno, $geno->{selected_genotype_hash}->{$key}->{$format_key};
+                }
+                my $current_g = join ':', @current_geno;
+                $genotype_data_string .= $current_g."\t";
             }
-            my $s = join "\t", $genotype_id;
-            $genotype_string .= $s."\t".$genotype_data_string."\n";
+            $genotype_string .= $genotype_id."\t".$genotype_data_string."\n";
     #		    }
             write_file($tempfile, {append => 1}, $genotype_string);
             $counter++;
