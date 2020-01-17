@@ -187,6 +187,8 @@ has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbe
 
 
 sub BUILD {
+    my $self = shift;
+    my $args = shift;
 #probably better to lazy load the action design...
     $self->lookup_trial_id();
 
