@@ -15,7 +15,6 @@ sub _validate_with_plugin {
     my $parser = Spreadsheet::ParseExcel->new();
     my @error_messages;
     my %errors;
-    my %missing_accessions;
 
     #try to open the excel file and report any errors
     my $excel_obj = $parser->parse($filename);
@@ -44,7 +43,8 @@ sub _validate_with_plugin {
 
     #get column headers
     my $seedlot_name_head;
-    my $cross_name_head;
+    my $contents_head;
+    my $source_head;
     my $operator_name_head;
     my $amount_head;
     my $weight_head;
@@ -55,52 +55,60 @@ sub _validate_with_plugin {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $cross_name_head  = $worksheet->get_cell(0,1)->value();
+        $contents_head  = $worksheet->get_cell(0,1)->value();
     }
     if ($worksheet->get_cell(0,2)) {
-        $operator_name_head  = $worksheet->get_cell(0,2)->value();
+        $source_head  = $worksheet->get_cell(0,2)->value();
     }
     if ($worksheet->get_cell(0,3)) {
-        $amount_head  = $worksheet->get_cell(0,3)->value();
+        $operator_name_head  = $worksheet->get_cell(0,3)->value();
     }
     if ($worksheet->get_cell(0,4)) {
-        $weight_head  = $worksheet->get_cell(0,4)->value();
+        $amount_head  = $worksheet->get_cell(0,4)->value();
     }
     if ($worksheet->get_cell(0,5)) {
-        $description_head  = $worksheet->get_cell(0,5)->value();
+        $weight_head  = $worksheet->get_cell(0,5)->value();
     }
     if ($worksheet->get_cell(0,6)) {
-        $box_name_head  = $worksheet->get_cell(0,6)->value();
+        $description_head  = $worksheet->get_cell(0,6)->value();
+    }
+    if ($worksheet->get_cell(0,7)) {
+        $box_name_head  = $worksheet->get_cell(0,7)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
         push @error_messages, "Cell A1: seedlot_name is missing from the header";
     }
-    if (!$cross_name_head || $cross_name_head ne 'cross_unique_id') {
-        push @error_messages, "Cell B1: cross_unique_id is missing from the header";
+    if (!$contents_head || $contents_head ne 'contents') {
+        push @error_messages, "Cell B1: contents is missing from the header";
+    }
+    if (!$source_head || $source_head ne 'source') {
+        push @error_messages, "Cell C1: source is missing from the header";
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
-        push @error_messages, "Cell C1: operator_name is missing from the header";
+        push @error_messages, "Cell D1: operator_name is missing from the header";
     }
     if (!$amount_head || $amount_head ne 'amount') {
-        push @error_messages, "Cell D1: amount is missing from the header";
+        push @error_messages, "Cell E1: amount is missing from the header";
     }
     if (!$weight_head || $weight_head ne 'weight(g)') {
-        push @error_messages, "Cell E1: weight(g) is missing from the header";
+        push @error_messages, "Cell F1: weight(g) is missing from the header";
     }
     if (!$description_head || $description_head ne 'description') {
-        push @error_messages, "Cell F1: description is missing from the header";
+        push @error_messages, "Cell G1: description is missing from the header";
     }
     if (!$box_name_head || $box_name_head ne 'box_name') {
-        push @error_messages, "Cell G1: box_name is missing from the header";
+        push @error_messages, "Cell H1: box_name is missing from the header";
     }
 
     my %seen_seedlot_names;
-    my %seen_cross_names;
+    my %seen_contents;
+    my %seen_sources;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $seedlot_name;
-        my $cross_name;
+        my $contents;
+        my $source;
         my $operator_name;
         my $amount = 'NA';
         my $weight = 'NA';
@@ -111,22 +119,25 @@ sub _validate_with_plugin {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $cross_name = $worksheet->get_cell($row,1)->value();
+            $contents = $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $operator_name = $worksheet->get_cell($row,2)->value();
+            $source = $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $amount =  $worksheet->get_cell($row,3)->value();
+            $operator_name = $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
-            $weight =  $worksheet->get_cell($row,4)->value();
+            $amount =  $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $description =  $worksheet->get_cell($row,5)->value();
+            $weight =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $box_name =  $worksheet->get_cell($row,6)->value();
+            $description =  $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $box_name =  $worksheet->get_cell($row,7)->value();
         }
 
         if (!$seedlot_name || $seedlot_name eq '' ) {
@@ -143,33 +154,46 @@ sub _validate_with_plugin {
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
-        if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell B:$row_name: you must provide a cross_unique_id for the contents of the seedlot.";
+        if ($contents) {
+            $seen_contents{$contents}++;
+        }
+
+        if (!$source || $source eq '') {
+            push @error_messages, "Cell C:$source: you must provide a cross_unique_id for the source of the seedlot.";
         } else {
-            if ($cross_name){
-                $seen_cross_names{$cross_name}++;
+            if ($source){
+                $seen_sources{$source}++;
             }
         }
 
         if (!defined($operator_name) || $operator_name eq '') {
-            push @error_messages, "Cell C$row_name: operator_name missing";
+            push @error_messages, "Cell D$row_name: operator_name missing";
         }
 
         if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell D$row_name: amount missing";
+            push @error_messages, "Cell E$row_name: amount missing";
         }
         if (!defined($weight) || $weight eq '') {
-            push @error_messages, "Cell E$row_name: weight(g) missing";
+            push @error_messages, "Cell F$row_name: weight(g) missing";
         }
         if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_name you must provide either a weight in grams or a seed count amount.";
         }
         if (!defined($box_name) || $box_name eq '') {
-            push @error_messages, "Cell G$row_name: box_name missing";
+            push @error_messages, "Cell H$row_name: box_name missing";
         }
     }
 
-    my @crosses = keys %seen_cross_names;
+
+    my @abstract_stocks = keys %seen_contents;
+    my @abstract_stocks_missing = @{$validator->validate($schema,'abstract_stocks',\@abstract_stocks)->{'missing'}};
+
+    if (scalar(@abstract_stocks_missing) > 0) {
+        push @error_messages, "The following contents are not in the database as uniquenames or synonyms: ".join(',',@abstract_stocks_missing);
+        $errors{'missing_contents'} = \@abstract_stocks_missing;
+    }
+
+    my @crosses = keys %seen_sources;
     my $cross_validator = CXGN::List::Validate->new();
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',\@crosses)->{'missing'}};
 
@@ -217,24 +241,33 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my %seen_cross_names;
     my %seen_seedlot_names;
+    my %seen_contents;
+    my %seen_sources;
     for my $row ( 1 .. $row_max ) {
         my $seedlot_name;
-        my $cross_name;
+        my $contents;
+        my $source;
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
             $seen_seedlot_names{$seedlot_name}++;
         }
         if ($worksheet->get_cell($row,1)) {
-            $cross_name = $worksheet->get_cell($row,1)->value();
-            $seen_cross_names{$cross_name}++;
+            $contents = $worksheet->get_cell($row,1)->value();
+            $contents =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_contents{$contents}++;
+        }
+        if ($worksheet->get_cell($row,2)) {
+            $source = $worksheet->get_cell($row,2)->value();
+            $source =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_sources{$source}++;
         }
     }
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 
-    my @crosses = keys %seen_cross_names;
+    my @crosses = keys %seen_sources;
     my $cross_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@crosses },
@@ -255,9 +288,12 @@ sub _parse_with_plugin {
         $seedlot_lookup{$r->uniquename} = $r->stock_id;
     }
 
+    # Do abstract_stock lookup for contents
+
     for my $row ( 1 .. $row_max ) {
         my $seedlot_name;
-        my $cross_name;
+        my $contents;
+        my $source;
         my $operator_name;
         my $amount = 'NA';
         my $weight = 'NA';
@@ -268,36 +304,38 @@ sub _parse_with_plugin {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $cross_name = $worksheet->get_cell($row,1)->value();
+            $contents = $worksheet->get_cell($row,1)->value();
         }
         if ($worksheet->get_cell($row,2)) {
-            $operator_name =  $worksheet->get_cell($row,2)->value();
+            $source =  $worksheet->get_cell($row,2)->value();
         }
         if ($worksheet->get_cell($row,3)) {
-            $amount =  $worksheet->get_cell($row,3)->value();
+            $operator_name =  $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
-            $weight =  $worksheet->get_cell($row,4)->value();
+            $amount =  $worksheet->get_cell($row,4)->value();
         }
         if ($worksheet->get_cell($row,5)) {
-            $description =  $worksheet->get_cell($row,5)->value();
+            $weight =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $box_name =  $worksheet->get_cell($row,6)->value();
+            $description =  $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $box_name =  $worksheet->get_cell($row,7)->value();
         }
 
         #skip blank lines
-        if (!$seedlot_name && !$cross_name && !$description) {
+        if (!$seedlot_name && !$source && !$description) {
             next;
         }
-
 
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
             accession => undef,
             accession_stock_id => undef,
-            cross_name => $cross_name,
-            cross_stock_id => $cross_lookup{$cross_name},
+            cross_name => $source,
+            cross_stock_id => $cross_lookup{$source},
             amount => $amount,
             weight_gram => $weight,
             description => $description,

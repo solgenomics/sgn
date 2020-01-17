@@ -198,12 +198,13 @@ sub _validate_with_plugin {
         $errors{'missing_accessions'} = \@accessions_missing;
     }
 
-    my @stocks = keys %seen_sources;
-    my @stocks_missing = @{$validator->validate($schema,'stocks',\@stocks)->{'missing'}};
+    # Should be more specific than stock . . . tangible_stocks? observation_units?
+    my @tangible_stocks = keys %seen_sources;
+    my @tangible_stocks_missing = @{$validator->validate($schema,'tangible_stocks',\@tangible_stocks)->{'missing'}};
 
-    if (scalar(@stocks_missing) > 0) {
-        push @error_messages, "The following sources are not in the database as stock uniquenames or synonyms: ".join(',',@stocks_missing);
-        $errors{'missing_stocks'} = \@stocks_missing;
+    if (scalar(@tangible_stocks_missing) > 0) {
+        push @error_messages, "The following sources are not in the database as stock uniquenames or synonyms: ".join(',',@tangible_stocks_missing);
+        $errors{'missing_sources'} = \@tangible_stocks_missing;
     }
 
     # Not checking if seedlot name already exists because the database will just update the seedlot entries
@@ -304,7 +305,7 @@ sub _parse_with_plugin {
         $seedlot_lookup{$r->uniquename} = $r->stock_id;
     }
 
-    # Do stock/ observation unit lookup for source
+    # Do tangible_stock/observation_unit lookup for source
 
     for my $row ( 1 .. $row_max ) {
         my $seedlot_name;
