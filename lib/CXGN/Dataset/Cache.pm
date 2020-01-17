@@ -87,12 +87,14 @@ override('retrieve_genotypes',
         if ($self->cache()->exists($key)) {
             my $genotype_json = $self->cache()->get($key);
             my $genotypes = JSON::Any->decode($genotype_json);
+            undef $genotype_json;
             return $genotypes;
         }
         else {
             my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock);
             my $genotype_json = JSON::Any->encode($genotypes);
             $self->cache()->set($key, $genotype_json, $self->cache_expiry());
+            undef $genotype_json;
             return $genotypes;
         }
     });
