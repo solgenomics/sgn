@@ -495,8 +495,8 @@ sub upload_seedlots_POST : Args(0) {
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
-            $sl->accession_stock_id($val->{accession_stock_id});
-            $sl->cross_stock_id($val->{cross_stock_id});
+            $sl->contents_stock_id($val->{contents_stock_id});
+            $sl->source_stock_id($val->{source_stock_id});
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
@@ -504,19 +504,19 @@ sub upload_seedlots_POST : Args(0) {
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
 
-            my $from_stock_id;
-            my $from_stock_name;
-            if ($val->{accession_stock_id}){
-                $from_stock_id = $val->{accession_stock_id};
-                $from_stock_name = $val->{accession};
-            }
-            elsif ($val->{cross_stock_id}){
-                $from_stock_id = $val->{cross_stock_id};
-                $from_stock_name = $val->{cross_name};
-            }
-            if (!$from_stock_id || !$from_stock_name){
-                die "A source accession or source cross must be given to make a seedlot transaction.\n";
-            }
+            # my $from_stock_id;
+            # my $from_stock_name;
+            # if ($val->{contents_stock_id}){
+            #     $from_stock_id = $val->{contents_stock_id};
+            #     $from_stock_name = $val->{accession};
+            # }
+            # elsif ($val->{cross_stock_id}){
+            #     $from_stock_id = $val->{cross_stock_id};
+            #     $from_stock_name = $val->{cross_name};
+            # }
+            # if (!$from_stock_id || !$from_stock_name){
+            #     die "A source accession or source cross must be given to make a seedlot transaction.\n";
+            # }
 
             my $transaction_amount;
             my $transaction_weight;

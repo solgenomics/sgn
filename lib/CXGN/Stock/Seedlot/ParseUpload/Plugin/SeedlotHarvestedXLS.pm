@@ -332,10 +332,13 @@ sub _parse_with_plugin {
 
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
-            accession => undef,
-            accession_stock_id => undef,
-            cross_name => $source,
-            cross_stock_id => $cross_lookup{$source},
+            contents => $contents,
+            source => $source,
+            type => 'botanical',
+            # accession => undef,
+            # accession_stock_id => undef,
+            # cross_name => $source,
+            # cross_stock_id => $cross_lookup{$source},
             amount => $amount,
             weight_gram => $weight,
             description => $description,

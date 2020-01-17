@@ -366,9 +366,10 @@ sub _parse_with_plugin {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
             contents => $contents,
             source => $source,
-            accession_stock_id => $accession_stock_id,
-            cross_name => undef,
-            cross_stock_id => undef,
+            type => 'clonal',
+            # accession_stock_id => $accession_stock_id,
+            # cross_name => undef,
+            # cross_stock_id => undef,
             amount => $amount,
             weight_gram => $weight,
             description => $description,

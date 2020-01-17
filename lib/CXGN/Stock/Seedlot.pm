@@ -43,7 +43,7 @@ $phenome_schema->resultset("StockOwner")->find_or_create({
 
 To Update or Edit a seedlot do:
 
-my $seedlot = CXGN::Stock::Seedlot->new( 
+my $seedlot = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $seedlot_id,
 );
@@ -80,7 +80,7 @@ my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
 
 To Retrieve a single seedlot do:
 
-my $seedlot = CXGN::Stock::Seedlot->new( 
+my $seedlot = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $seedlot_id,
 );
@@ -167,40 +167,51 @@ has 'box_name' => (
     builder  => '_retrieve_box_name',
 );
 
-=head2 Accessor cross()
+=head2 Accessor type()
 
-The crosses this seedlot is a "collection_of". Returns an arrayref of [$cross_stock_id, $cross_uniquename]
-# for setter, use cross_stock_id
+A string specifiying the seedlot type, i.e. 'botanical' or 'clonal'
 
 =cut
 
-has 'cross' => (
+has 'type' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+=head2 Accessor contents()
+
+What accession or population this seedlot contains. Returns an arrayref of [$contents_stock_id, $contents_uniquename]
+# for setter, use contents_stock_id
+
+=cut
+
+has 'contents' => (
     isa => 'ArrayRef|Undef',
     is => 'rw',
     lazy     => 1,
-    builder  => '_retrieve_cross',
+    builder  => '_retrieve_contents',
 );
 
-has 'cross_stock_id' =>   (
+has 'contents_stock_id' =>   (
     isa => 'Int|Undef',
     is => 'rw',
 );
 
-=head2 Accessor accessions()
+=head2 Accessor source()
 
-The accessions this seedlot is a "collection_of". Returns an arrayref of [$accession_stock_id, $accession_uniquename]
-# for setter, use accession_stock_id
+What cross, plot, plant or tissue sample this seedlot originated from. Returns an arrayref of [$source_stock_id, $source_uniquename]
+# for setter, use source_stock_id
 
 =cut
 
-has 'accession' => (
+has 'source' => (
     isa => 'ArrayRef|Undef',
     is => 'rw',
     lazy     => 1,
-    builder  => '_retrieve_accession',
+    builder  => '_retrieve_source',
 );
 
-has 'accession_stock_id' => (
+has 'source_stock_id' =>   (
     isa => 'Int|Undef',
     is => 'rw',
 );
@@ -267,8 +278,8 @@ sub list_seedlots {
     my $breeding_program = shift;
     my $location = shift;
     my $minimum_count = shift;
-    my $contents_accession = shift; #arrayref of uniquenames
-    my $contents_cross = shift; #arrayref of uniquenames
+    my $contents = shift; #arrayref of uniquenames
+    my $source = shift; #arrayref of uniquenames
     my $exact_match_uniquenames = shift;
     my $minimum_weight = shift;
 
