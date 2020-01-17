@@ -94,7 +94,7 @@ has 'genotype_data_project_list' => (
 );
 
 has 'chromosome_list' => (
-    isa => 'ArrayRef[Int]|Undef',
+    isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
     is => 'ro',
 );
 
@@ -402,7 +402,7 @@ sub get_genotype_info {
         $limit_clause
         $offset_clause;";
 
-    print STDERR Dumper $q;
+    #print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
@@ -478,8 +478,8 @@ sub get_genotype_info {
 
         my $chromosome_where = '';
         if ($chromosome_list && scalar(@$chromosome_list)>0) {
-            my $chromosome_list_sql = join ',', @$chromosome_list;
-            $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+            my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
+            $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
         }
         my $start_position_where = '';
         if (defined($start_position)) {
@@ -493,7 +493,7 @@ sub get_genotype_info {
         my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql
             FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s
             WHERE $protocolprop_where_markers_sql $chromosome_where $start_position_where $end_position_where;";
-        #print STDERR Dumper $protocolprop_q;
+
         my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
         $protocolprop_h->execute();
         while (my ($protocol_id, $marker_name, @protocolprop_info_return) = $protocolprop_h->fetchrow_array()) {
@@ -882,8 +882,8 @@ sub get_next_genotype_info {
 
             my $chromosome_where = '';
             if ($chromosome_list && scalar(@$chromosome_list)>0) {
-                my $chromosome_list_sql = join ',', @$chromosome_list;
-                $chromosome_where = " AND (s.value->>'chrom')::int IN ($chromosome_list_sql)";
+                my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
+                $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
             }
             my $start_position_where = '';
             if (defined($start_position)) {
@@ -1005,7 +1005,10 @@ sub key {
     my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
     my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
-    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
+    my $chromosomes = $json->encode( $self->chromosome_list() || [] );
+    my $start = $self->start_position() || '' ;
+    my $end = $self->end_position() || '';
+    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
     return $key;
 }
 
@@ -1098,6 +1101,7 @@ sub get_cached_file_dosage_matrix {
 #                my $current_genotype = $dsvalue;
                 $genotype_data_string .= $current_genotype."\t";
             }
+
             my $s = join "\t", $genotype_id;
             $genotype_string .= $s."\t".$genotype_data_string."\n";
     #		    }
@@ -1119,6 +1123,7 @@ sub get_cached_file_dosage_matrix {
                 # don't block and wait if the cluster looks full
                 max_cluster_jobs => 1_000_000_000,
             }
+
         );
 
     # Do the transposition job on the cluster
@@ -1338,6 +1343,7 @@ sub get_cached_file_VCF {
             {
             print $out $_;
             }
+
 
         open( my $new_fh, $transpose_tempfile_hdr);
         $file_handle = $new_fh;

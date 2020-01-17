@@ -126,7 +126,6 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
-    $c->stash->{user} = $c->user();
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }
 

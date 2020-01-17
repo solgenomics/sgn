@@ -91,7 +91,7 @@ has 'genotype_data_project_list' => (
 );
 
 has 'chromosome_list' => (
-    isa => 'ArrayRef[Int]|Undef',
+    isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
     is => 'ro',
 );
 
