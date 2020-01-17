@@ -94,23 +94,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         }
     }
 
-    my $original_selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
-
-    my %modified_columns = %{$original_selected_columns};
-    if (exists $modified_columns{'family_name'}) {
-        delete $modified_columns{'family_name'};
-        $modified_columns{'accession_name'} = 1;
-    }
-    if (exists $modified_columns{'cross_unique_id'}) {
-        delete $modified_columns{'cross_unique_id'};
-        $modified_columns{'accession_name'} = 1;
-    }
-    my $selected_columns = \%modified_columns;
-
-    print STDERR "ORIGINAL SELECTED COLUMNS =".Dumper($original_selected_columns)."\n";
-
-    print STDERR "MODIFIED COLUMNS =".Dumper(\%modified_columns)."\n";
-
+    my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
     my $include_measured = $c->req->param('include_measured');
     my $use_synonyms = $c->req->param('use_synonyms');
     my $selected_trait_list_id = $c->req->param('trait_list');
