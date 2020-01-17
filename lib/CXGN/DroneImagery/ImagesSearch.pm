@@ -11,6 +11,7 @@ my $images_search = CXGN::DroneImagery::ImagesSearch->new({
     project_image_type_id=>$project_image_type_id,
     project_image_type_id_list=>$project_image_type_id_list,
     drone_run_project_id_list=>\@drone_run_project_ids,
+    drone_run_project_name_list=>\@drone_run_project_names,
     drone_run_band_project_id_list=>\@drone_run_band_project_ids,
     stock_id_list=>\@stock_ids,
     image_id_list=>\@image_ids,
@@ -65,6 +66,11 @@ has 'image_id_list' => (
 
 has 'drone_run_project_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'drone_run_project_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
 
@@ -193,6 +199,7 @@ sub search {
     my $project_image_type_id_list = $self->project_image_type_id_list;
     my $image_id_list = $self->image_id_list;
     my $drone_run_project_id_list = $self->drone_run_project_id_list;
+    my $drone_run_project_name_list = $self->drone_run_project_name_list;
     my $drone_run_band_project_id_list = $self->drone_run_band_project_id_list;
     my $program_list = $self->program_list;
     my $program_id_list = $self->program_id_list;
