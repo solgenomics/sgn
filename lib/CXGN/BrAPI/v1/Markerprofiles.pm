@@ -251,9 +251,7 @@ sub markerprofiles_allelematrix {
 
     } elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
 
-        print STDERR Dumper \@scores;
         my @data = (['marker', 'markerprofileDbId', 'genotype'], @scores);
-        print STDERR Dumper \@scores;
 
         my $file_response = CXGN::BrAPI::FileResponse->new({
             absolute_file_path => $file_path,
@@ -266,28 +264,6 @@ sub markerprofiles_allelematrix {
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles allelematrix result constructed');
-}
-
-sub convert_dosage_to_genotype {
-    my $self = shift;
-    my $dosage = shift;
-
-    my $genotype;
-    if ($dosage eq "NA") {
-	return "NA";
-    }
-    if ($dosage == 1) {
-	return "AA";
-    }
-    elsif ($dosage == 0) {
-	return "BB";
-    }
-    elsif ($dosage == 2) {
-	return "AB";
-    }
-    else {
-	return "NA";
-    }
 }
 
 1;
