@@ -107,12 +107,14 @@ sub markerprofiles_detail {
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
+    my $marker_objects = decode_json $header_line;
     my $gt_line = <$fh>;
     my $gt = decode_json $gt_line;
     my $genotype = $gt->{selected_genotype_hash};
 
     my @data;
-    foreach my $m (sort keys %$genotype) {
+    foreach my $m_obj (@$marker_objects) {
+        my $m = $m_obj->{name};
         if ($counter >= $start_index && $counter <= $end_index) {
             my $geno = '';
             if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
@@ -168,6 +170,7 @@ sub markerprofiles_methods {
 sub markerprofiles_allelematrix {
     my $self = shift;
     my $inputs = shift;
+    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -192,44 +195,51 @@ sub markerprofiles_allelematrix {
         push @$status, { 'error' => 'Unsupported Format Given. Supported values are: json, tsv, csv' };
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new( 
-	{
-	    bcs_schema=>$self->bcs_schema,
-	    markerprofile_id_list=>\@markerprofile_ids,
-	});
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        cache_root=>$c->config->{cache_file_path},
+        markerprofile_id_list=>\@markerprofile_ids,
+        genotypeprop_hash_select=>['DS', 'GT', 'NT'],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[],
+    });
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
 
-    my $total_count = $genotypes_search->init_genotype_iterator();
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
 
-    #print STDERR Dumper $genotypes;
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    my $marker_objects = decode_json $header_line;
 
     my @data;
-    my %marker_names_all;
-    my @ordered_refmarkers;
-#    for(my $i=0; $i<$total_count; $i++){
-#       	my $genotype = $genotypes_search->get_next_genotype_info();
-#        my $genotype_hash = $genotype->{selected_genotype_hash};
-#        push @ordered_refmarkers, sort keys(%$genotype_hash);
-#    }
-
     my @scores;
-    foreach (my $i=0; $i<$total_count; $i++){
-	my $genotype = $genotypes_search->get_next_genotype_info();
-        my $genotype_hash = $genotype->{selected_genotype_hash};
-	my @ordered_refmarkers = sort keys(%$genotype_hash);
-        my $genotypeprop_id = $genotype->{markerProfileDbId};
+    while (my $gt_line = <$fh>) {
+        my $gt = decode_json $gt_line;
+        my $genotype = $gt->{selected_genotype_hash};
+        my @ordered_refmarkers = sort keys(%$genotype);
+        my $genotypeprop_id = $gt->{markerProfileDbId};
+
         foreach my $m (@ordered_refmarkers) {
-            my $score;
-            if (exists($genotype_hash->{$m}->{'GT'})){
-                $score = $genotype_hash->{$m}->{'GT'};
+            if ($counter >= $start_index && $counter <= $end_index) {
+                my $geno = '';
+                if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
+                    $geno = $genotype->{$m}->{'NT'};
+                }
+                elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
+                    $geno = $genotype->{$m}->{'GT'};
+                }
+                elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
+                    $geno = $genotype->{$m}->{'DS'};
+                }
+                push @scores, [
+                    qq|$m|,
+                    qq|$genotypeprop_id|,
+                    $geno
+                ];
             }
-            if (exists($genotype_hash->{$m}->{'DS'})){
-                $score = $self->convert_dosage_to_genotype($genotype_hash->{$m}->{'DS'});
-            }
-            push @scores, [
-                qq|$m|,
-                qq|$genotypeprop_id|,
-                $score
-            ];
+            $counter++;
         }
     }
     #print STDERR Dumper \@scores;
@@ -237,73 +247,26 @@ sub markerprofiles_allelematrix {
     my @scores_seen;
     if (!$data_format || $data_format eq 'json' ){
 
-        for (my $n = $page_size*$page; $n<= ($page_size*($page+1)-1); $n++) {
-            if ($scores[$n]){
-                push @scores_seen, $scores[$n];
-            }
-        }
-        %result = (data=>\@scores_seen);
+        %result = (data=>\@scores);
 
     } elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
 
-        my @header_row;
-        push @header_row, 'markerprofileDbIds';
-        foreach (@markerprofile_ids){
-            push @header_row, $_;
-        }
+        print STDERR Dumper \@scores;
+        my @data = (['marker', 'markerprofileDbId', 'genotype'], @scores);
+        print STDERR Dumper \@scores;
 
-        my %markers;
-        foreach (@scores){
-            $markers{$_->[0]}->{$_->[1]} = $_->[2];
-        }
-        #print STDERR Dumper \%markers;
-
-        my @data_out;
-        push @data_out, \@header_row;
-        foreach (keys %markers){
-            my @data_row;
-            push @data_row, $_;
-            foreach my $profile_id (@markerprofile_ids) {
-                push @data_row, $markers{$_}->{$profile_id};
-            }
-            push @data_out, \@data_row;
-        }
         my $file_response = CXGN::BrAPI::FileResponse->new({
             absolute_file_path => $file_path,
             absolute_file_uri => $inputs->{main_production_site_url}.$uri,
             format => $data_format,
-            data => \@data_out
+            data => \@data
         });
         @data_files = $file_response->get_datafiles();
     }
 
-    $total_count = scalar(@scores);
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles allelematrix result constructed');
 }
-
-
-sub genosort {
-    my ($a_chr, $a_pos, $b_chr, $b_pos);
-    if ($a =~ m/S(\d+)\_(.*)/) {
-	$a_chr = $1;
-	$a_pos = $2;
-    }
-    if ($b =~ m/S(\d+)\_(.*)/) {
-	$b_chr = $1;
-	$b_pos = $2;
-    }
-
-    if ($a_chr && $b_chr) {
-      if ($a_chr == $b_chr) {
-          return $a_pos <=> $b_pos;
-      }
-      return $a_chr <=> $b_chr;
-    } else {
-      return -1;
-    }
-}
-
 
 sub convert_dosage_to_genotype {
     my $self = shift;
