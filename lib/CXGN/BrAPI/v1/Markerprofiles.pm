@@ -14,6 +14,7 @@ extends 'CXGN::BrAPI::v1::Common';
 sub markerprofiles_search {
     my $self = shift;
     my $inputs = shift;
+    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -21,7 +22,7 @@ sub markerprofiles_search {
     my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
     my @extract_ids = $inputs->{extract_ids} ? @{$inputs->{extract_ids}} : ();
     my @sample_ids = $inputs->{sample_ids} ? @{$inputs->{sample_ids}} : ();
-    my $method = $inputs->{protocol_id};
+    my @methods = $inputs->{protocol_ids} ? @{$inputs->{protocol_ids}} : ();
 
     if (scalar(@extract_ids)>0){
         push @$status, { 'error' => 'Search parameter extractDbId not supported' };
@@ -30,35 +31,47 @@ sub markerprofiles_search {
         push @$status, { 'error' => 'Search parameter sampleDbId not supported' };
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new(
-	{
-	    bcs_schema=>$self->bcs_schema,
-	    accession_list=>\@germplasm_ids,
-	    trial_list=>\@study_ids,
-	    protocol_id_list=>[$method],
-	    offset=>$page_size*$page,
-	    limit=>$page_size
-	});
-    
-    my $total_count = $genotypes_search->init_genotype_iterator();
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        cache_root=>$c->config->{cache_file_path},
+        accession_list=>\@germplasm_ids,
+        trial_list=>\@study_ids,
+        protocol_id_list=>\@methods,
+        genotypeprop_hash_select=>['DS'],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[],
+        # offset=>$page_size*$page,
+        # limit=>$page_size
+    });
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
     my @data;
-    
-    for(my $i=0; $i<$page_size; $i++) { #could be problematic for large page_sizes
-	my $gt = $genotypes_search->get_next_genotype_info();
-        push @data, {
-            markerprofileDbId => qq|$gt->{markerProfileDbId}|,
-            germplasmDbId => qq|$gt->{germplasmDbId}|,
-            uniqueDisplayName => $gt->{genotypeUniquename},
-            extractDbId => qq|$gt->{stock_id}|,
-            sampleDbId => qq|$gt->{stock_id}|,
-            analysisMethod => $gt->{analysisMethod},
-            resultCount => $gt->{resultCount}
-        };
+    print STDERR Dumper $file_handle;
+
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    while( <$fh> ) {
+        if ($counter >= $start_index && $counter <= $end_index) {
+            my $gt = decode_json $_;
+            push @data, {
+                markerprofileDbId => qq|$gt->{markerProfileDbId}|,
+                germplasmDbId => qq|$gt->{germplasmDbId}|,
+                uniqueDisplayName => $gt->{genotypeUniquename},
+                extractDbId => qq|$gt->{stock_id}|,
+                sampleDbId => qq|$gt->{stock_id}|,
+                analysisMethod => $gt->{analysisMethod},
+                resultCount => $gt->{resultCount}
+            };
+        }
+        $counter++;
     }
 
     my %result = (data => \@data);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles-search result constructed');
 }
 

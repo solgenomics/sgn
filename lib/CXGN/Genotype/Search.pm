@@ -1026,8 +1026,11 @@ First line in file has all marker objects, while subsequent lines have markerpro
 sub get_cached_file_search_json {
     my $self = shift;
     my $c = shift;
+    my $metadata_only = shift;
     my $protocol_ids = $self->protocol_id_list;
-    my $key = $self->key("get_cached_file_search_json");
+
+    my $metadata_only_string = $metadata_only ? "metadata_only" : "all_data";
+    my $key = $self->key("get_cached_file_search_json_".$metadata_only_string);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
@@ -1072,15 +1075,20 @@ sub get_cached_file_search_json {
                 @all_marker_objects = sort { $a->{name} cmp $b->{name} } @all_marker_objects;
             }
 
+            if ($metadata_only) {
+                @all_marker_objects = [];
+                delete $geno->{selected_genotype_hash};
+                delete $geno->{selected_protocol_hash};
+                delete $geno->{all_protocol_marker_names};
+            }
+
             my $genotype_string = encode_json $geno;
             $genotype_string .= "\n";
             if ($counter == 0) {
                 my $marker_string = encode_json \@all_marker_objects;
                 $marker_string .= "\n";
-                print STDERR $marker_string;
                 write_file($tempfile, {append => 1}, $marker_string);
             }
-            print STDERR $genotype_string;
             write_file($tempfile, {append => 1}, $genotype_string);
             $counter++;
         }
@@ -1093,6 +1101,7 @@ sub get_cached_file_search_json {
         copy($out_copy, $file_handle);
 
         close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
@@ -1207,6 +1216,7 @@ sub get_cached_file_dosage_matrix {
         copy($out_copy, $file_handle);
 
         close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
@@ -1428,6 +1438,7 @@ sub get_cached_file_VCF {
         copy($out_copy, $file_handle);
 
         close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
