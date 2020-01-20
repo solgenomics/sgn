@@ -283,11 +283,11 @@ has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 sub BUILD {
     my $self = shift;
 
-    print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
     my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
     $self->breeder_search($bs);
 
     if ($self->has_sp_dataset_id()) {
+        print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
 	if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
 	my $dataset = JSON::Any->decode($row->dataset());
@@ -431,18 +431,18 @@ sub get_dataset_data {
 
 sub _get_dataref {
     my $self = shift;
-     my $dataref;
+    my $dataref;
 
     $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
     $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
-		$dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
+    $dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
     $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
     $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
     $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
-		$dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
-		$dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
-		$dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
+    $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
+    $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
+    $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
     return $dataref;
 }

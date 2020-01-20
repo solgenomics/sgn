@@ -21,7 +21,7 @@ __PACKAGE__->config(
    );
 
 
-sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) { 
+sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -34,6 +34,8 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $minimum_weight = $params->{minimum_weight} || '';
     my $contents_accession = $params->{contents_accession} || '';
     my $contents_cross = $params->{contents_cross} || '';
+    my $exact_accession = $params->{exact_accession};
+    my $exact_cross = $params->{exact_cross};
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
     my $limit = ($offset+$rows)-1;
@@ -42,6 +44,14 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
 
     my @accessions = split ',', $contents_accession;
     my @crosses = split ',', $contents_cross;
+
+    my $exact_match_uniquenames = 0;
+    if (@accessions > 0 && $exact_accession) {
+        $exact_match_uniquenames = 1;
+    } elsif (@crosses > 0 && $exact_cross) {
+        $exact_match_uniquenames = 1;
+    }
+
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
@@ -54,7 +64,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         $minimum_count,
         \@accessions,
         \@crosses,
-        0,
+        $exact_match_uniquenames,
         $minimum_weight
     );
     my @seedlots;
@@ -88,7 +98,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     $c->stash->{rest} = { data => \@seedlots, draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
 
-sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1) { 
+sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $seedlot_id = shift;
@@ -98,14 +108,14 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{phenome_schema} = $c->dbic_schema("CXGN::Phenome::Schema");
     $c->stash->{seedlot_id} = $seedlot_id;
-    $c->stash->{seedlot} = CXGN::Stock::Seedlot->new( 
+    $c->stash->{seedlot} = CXGN::Stock::Seedlot->new(
         schema => $c->stash->{schema},
         phenome_schema => $c->stash->{phenome_schema},
         seedlot_id => $c->stash->{seedlot_id},
     );
 }
 
-sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) { 
+sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -125,7 +135,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     };
 }
 
-sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) { 
+sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -209,7 +219,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     }
 }
 
-sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) { 
+sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -360,7 +370,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         });
     };
 
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { success => 0, seedlot_id => 0, error => $@ };
 	print STDERR "An error condition occurred, was not able to create seedlot. ($@).\n";
 	return;
@@ -786,7 +796,7 @@ sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit
     }
 }
 
-sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions') Args(0) { 
+sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -840,7 +850,7 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     }
 
     $c->stash->{rest} = { data => \@transactions };
-    
+
 }
 
 sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add') :Args(0) {
@@ -862,7 +872,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $new_sl;
     if ($to_new_seedlot_name){
         $stock_uniquename = $to_new_seedlot_name;
-        eval { 
+        eval {
             my $location_code = $c->req->param('to_new_seedlot_location_name');
             my $box_name = $c->req->param('to_new_seedlot_box_name');
             my $accession_uniquename = $c->req->param('to_new_seedlot_accession_name');
@@ -946,7 +956,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             });
         };
 
-        if ($@) { 
+        if ($@) {
             $c->stash->{rest} = { success => 0, seedlot_id => 0, error => $@ };
             print STDERR "An error condition occurred, was not able to create new seedlot. ($@).\n";
             $c->detach();

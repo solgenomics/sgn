@@ -2556,8 +2556,8 @@ sub get_single_trial_traits {
     
     if (!-s $traits_file)
     {
-	my $traits = $c->model('solGS::solGS')->trial_traits($pop_id);
-	
+	my $traits = $c->model('solGS::solGS')->trial_traits($pop_id);	
+
 	$traits = join("\t", @$traits);
 	write_file($traits_file, $traits);
     }

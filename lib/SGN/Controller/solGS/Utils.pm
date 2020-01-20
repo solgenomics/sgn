@@ -2,7 +2,7 @@ package SGN::Controller::solGS::Utils;
 
 use Moose;
 use namespace::autoclean;
-use Text::Abbrev;
+
 use File::Slurp qw /write_file read_file/;
 
 
