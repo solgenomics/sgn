@@ -435,13 +435,13 @@ sub replace_trial_stock_fieldMap {
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 
-	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
+	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN (?,?,?) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
     if ($trial_stock_type eq 'family_name') {
-		$h_update->execute($new_stock_id,$family_name_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+		$h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     } elsif ($trial_stock_type eq 'cross') {
-		$h_update->execute($new_stock_id,$cross_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+		$h_update->execute($new_stock_id,$cross_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     } else {
-		$h_update->execute($new_stock_id,$accession_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+		$h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
 
     $self->_regenerate_trial_layout_cache();
