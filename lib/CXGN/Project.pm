@@ -2893,7 +2893,7 @@ sub duplicate {
 =head2 get_accessions
 
  Usage:        my $accessions = $t->get_accessions();
- Desc:         retrieves the accessions used in this trial.
+ Desc:         retrieves the accessions or family names or cross unique ids used in this trial.
  Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id, stock_type => stock_type }
  Args:         none
  Side Effects:
@@ -2923,13 +2923,13 @@ sub get_accessions {
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		WHERE accession.type_id IN ($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id)
-		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id)
+		WHERE accession.type_id IN (?, ?, ?)
+		AND stock_relationship.type_id IN (?, ?, ?, ?)
 		AND project.project_id = ?
 		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-	$h->execute($self->get_trial_id());
+	$h->execute($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id,$plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id,$self->get_trial_id());
 	while (my ($stock_id, $uniquename, $stock_type) = $h->fetchrow_array()) {
 		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type};
 	}
