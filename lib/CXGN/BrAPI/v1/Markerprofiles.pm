@@ -45,7 +45,6 @@ sub markerprofiles_search {
     });
     my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
     my @data;
-    print STDERR Dumper $file_handle;
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -78,6 +77,7 @@ sub markerprofiles_search {
 sub markerprofiles_detail {
     my $self = shift;
     my $inputs = shift;
+    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -93,33 +93,49 @@ sub markerprofiles_detail {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        markerprofile_id_list=>[$genotypeprop_id]
-						       });
-    
-    
-    # note: here get_genotype_info is ok, because we are searching only one
-    # markerprofile
-    #
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+        cache_root=>$c->config->{cache_file_path},
+        markerprofile_id_list=>[$genotypeprop_id],
+        genotypeprop_hash_select=>['DS', 'GT', 'NT'],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[],
+    });
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
 
-    my $detail = $genotypes->[0];
-    my $genotype = $detail->{selected_genotype_hash};
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    my $gt_line = <$fh>;
+    my $gt = decode_json $gt_line;
+    my $genotype = $gt->{selected_genotype_hash};
 
     my @data;
-    foreach my $m (sort genosort keys %$genotype) {
-        if (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
-            push @data, { $m => $genotype->{$m}->{'GT'} };
-        } elsif (exists($genotype->{$m}->{'DS'})){
-            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}->{'DS'}) };
+    foreach my $m (sort keys %$genotype) {
+        if ($counter >= $start_index && $counter <= $end_index) {
+            my $geno = '';
+            if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
+                $geno = $genotype->{$m}->{'NT'};
+            }
+            elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
+                $geno = $genotype->{$m}->{'GT'};
+            }
+            elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
+                $geno = $genotype->{$m}->{'DS'};
+            }
+            push @data, {$m => $geno};
         }
+        $counter++;
     }
+
     my %result = (
-        germplasmDbId=>qq|$detail->{germplasmDbId}|,
-        uniqueDisplayName=>$detail->{genotypeUniquename},
-        extractDbId=>qq|$detail->{stock_id}|,
-        sampleDbId=>qq|$detail->{stock_id}|,
-        markerprofileDbId=>qq|$detail->{markerProfileDbId}|,
-        analysisMethod=>$detail->{analysisMethod},
+        germplasmDbId=>qq|$gt->{germplasmDbId}|,
+        uniqueDisplayName=>$gt->{genotypeUniquename},
+        extractDbId=>qq|$gt->{stock_id}|,
+        sampleDbId=>qq|$gt->{stock_id}|,
+        markerprofileDbId=>qq|$gt->{markerProfileDbId}|,
+        analysisMethod=>$gt->{analysisMethod},
         #encoding=>"AA,BB,AB",
         data => \@data
     );
