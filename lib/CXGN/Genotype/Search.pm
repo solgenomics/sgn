@@ -1013,20 +1013,21 @@ sub key {
     return $key;
 }
 
-
-=head2 get_cached_file_dosage_matrix()
+=head2 get_cached_file_search_json()
 
 Function for getting the file handle for the genotype search result from cache. Will write the cached file if it does not exist.
-Returns the genotype result as a soage matrix format.
+Returns the genotype result in a line-by-line json format.
 Uses the file iterator to write the cached file, so that it uses little memory.
+
+First line in file has all marker objects, while subsequent lines have markerprofiles for each sample
 
 =cut
 
-sub get_cached_file_dosage_matrix {
+sub get_cached_file_search_json {
     my $self = shift;
     my $c = shift;
     my $protocol_ids = $self->protocol_id_list;
-    my $key = $self->key("get_cached_file_dosage_matrix");
+    my $key = $self->key("get_cached_file_search_json");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
@@ -1035,13 +1036,12 @@ sub get_cached_file_dosage_matrix {
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_wizard_genotype_download";
+        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_json";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
             DIR=> $tmp_output_dir,
         );
-        my $tmp_genotype_filepath = $tempfile . "_genotype.txt";
 
         my @all_marker_objects;
         foreach (@$protocol_ids) {
@@ -1062,7 +1062,89 @@ sub get_cached_file_dosage_matrix {
 
         $self->init_genotype_iterator();
         my $counter = 0;
-        while(my $geno = $self->get_next_genotype_info) {
+        while (my $geno = $self->get_next_genotype_info) {
+
+            # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
+            if (scalar(@all_marker_objects) == 0) {
+                foreach my $o (keys %{$geno->{selected_genotype_hash}}) {
+                    push @all_marker_objects, {name => $o};
+                }
+                @all_marker_objects = sort { $a->{name} cmp $b->{name} } @all_marker_objects;
+            }
+
+            my $genotype_string = encode_json $geno;
+            $genotype_string .= "\n";
+            if ($counter == 0) {
+                my $marker_string = encode_json \@all_marker_objects;
+                $marker_string .= "\n";
+                print STDERR $marker_string;
+                write_file($tempfile, {append => 1}, $marker_string);
+            }
+            print STDERR $genotype_string;
+            write_file($tempfile, {append => 1}, $genotype_string);
+            $counter++;
+        }
+        close $tempfile;
+
+        open my $out_copy, '<', $tempfile or die "Can't open output file: $!";
+
+        $self->cache()->set($key, '');
+        $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
+
+        close $out_copy;
+    }
+    return $file_handle;
+}
+
+=head2 get_cached_file_dosage_matrix()
+
+Function for getting the file handle for the genotype search result from cache. Will write the cached file if it does not exist.
+Returns the genotype result as a dosage matrix format.
+Uses the file iterator to write the cached file, so that it uses little memory.
+
+=cut
+
+sub get_cached_file_dosage_matrix {
+    my $self = shift;
+    my $c = shift;
+    my $protocol_ids = $self->protocol_id_list;
+    my $key = $self->key("get_cached_file_dosage_matrix");
+    $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
+
+    my $file_handle;
+    if ($self->cache()->exists($key)) {
+        $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        # Set the temp dir and temp output file
+        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_dosage_matrix";
+        mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+        my ($tmp_fh, $tempfile) = tempfile(
+            "wizard_download_XXXXX",
+            DIR=> $tmp_output_dir,
+        );
+
+        my @all_marker_objects;
+        foreach (@$protocol_ids) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $self->bcs_schema,
+                nd_protocol_id => $_,
+                chromosome_list=>$self->chromosome_list,
+                start_position=>$self->start_position,
+                end_position=>$self->end_position
+            });
+            my $markers = $protocol->markers;
+            push @all_marker_objects, values %$markers;
+        }
+
+        #VCF should be sorted by chromosome and position
+        no warnings 'uninitialized';
+        @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+        $self->init_genotype_iterator();
+        my $counter = 0;
+        while (my $geno = $self->get_next_genotype_info) {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
@@ -1099,7 +1181,7 @@ sub get_cached_file_dosage_matrix {
             {
                 backend => $c->config->{backend},
                 submit_host => $c->config->{cluster_host},
-                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_wizard_genotype_download",
+                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_genotype_download_dosage_matrix",
                 queue => $c->config->{'web_cluster_queue'},
                 do_cleanup => 0,
                 out_file => $transpose_tempfile,
@@ -1107,7 +1189,6 @@ sub get_cached_file_dosage_matrix {
                 # don't block and wait if the cluster looks full
                 max_cluster_jobs => 1_000_000_000,
             }
-
         );
 
         # Do the transposition job on the cluster
@@ -1124,6 +1205,8 @@ sub get_cached_file_dosage_matrix {
         $self->cache()->set($key, '');
         $file_handle = $self->cache()->handle($key);
         copy($out_copy, $file_handle);
+
+        close $out_copy;
     }
     return $file_handle;
 }
@@ -1141,13 +1224,12 @@ sub get_cached_file_VCF {
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_wizard_genotype_download";
+        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_VCF";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
             DIR=> $tmp_output_dir,
         );
-        my $tmp_genotype_filepath = $tempfile . "_genotype.txt";
 
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
@@ -1176,7 +1258,7 @@ sub get_cached_file_VCF {
 
         $self->init_genotype_iterator();
         my $counter = 0;
-        while(my $geno = $self->get_next_genotype_info) {
+        while (my $geno = $self->get_next_genotype_info) {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
@@ -1189,7 +1271,7 @@ sub get_cached_file_VCF {
             $unique_germplasm{$geno->{germplasmDbId}}++;
 
             my $genotype_string = "";
-            if($counter == 0) {
+            if ($counter == 0) {
                 $genotype_string .= "#CHROM\t";
                 foreach my $m (@all_marker_objects) {
                     $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . " \t";
@@ -1287,7 +1369,7 @@ sub get_cached_file_VCF {
             {
                 backend => $c->config->{backend},
                 submit_host => $c->config->{cluster_host},
-                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_wizard_genotype_download",
+                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_genotype_download_VCF",
                 queue => $c->config->{'web_cluster_queue'},
                 do_cleanup => 0,
                 out_file => $transpose_tempfile,
@@ -1344,6 +1426,8 @@ sub get_cached_file_VCF {
         $self->cache()->set($key, '');
         $file_handle = $self->cache()->handle($key);
         copy($out_copy, $file_handle);
+
+        close $out_copy;
     }
     return $file_handle;
 }
