@@ -117,7 +117,7 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name, main_production_site_url=>$main_production_site_url &>
 % }
 
-                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 % } #End trial_detail_traits_assayed
 % if ($info_section_id eq 'compute_derived_traits'){
