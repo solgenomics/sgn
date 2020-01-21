@@ -97,7 +97,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     
     my $training_pop_id  = $args->{training_pop_id}[0];
     my $selection_pop_id = $args->{selection_pop_id}[0];
-    my $trait_id         =  $args->{trait_id}[0];
+    my $trait_id         = $args->{trait_id}[0];
     my $protocol_id      = $args->{genotyping_protocol_id};
     
     $c->stash->{list}                = $args->{list};
@@ -108,8 +108,9 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     $c->stash->{model_id}            = $training_pop_id; 
     $c->stash->{pop_id}              = $training_pop_id; 
     $c->stash->{selection_pop_id}    = $selection_pop_id;  
-    $c->stash->{list_prediction} = $args->{population_type};
+    $c->stash->{list_prediction}     = $args->{population_type};
     $c->stash->{trait_id}            = $trait_id;
+    
     $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     if ($args->{data_set_type} =~ /combined populations/) 

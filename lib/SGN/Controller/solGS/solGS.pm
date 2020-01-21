@@ -456,8 +456,13 @@ sub population : Path('/solgs/population') Args() {
 	$c->stash->{message} = "You can not access this page with out population id.";
 	$c->stash->{template} = "/generic_message.mas"; 
     }
- 
-    $protocol_id = $c->model('solGS::solGS')->protocol_id() if !$protocol_id;
+    
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+    
     $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     $c->stash->{pop_id} = $pop_id; 
@@ -576,8 +581,11 @@ sub create_protocol_url {
     my $protocol_url;
     if ($protocol) 
     {
-	my $protocol_id = $c->model('solGS::solGS')->protocol_id($protocol);
-	$protocol_url = '<a href="/breeders_toolbox/protocol/' . $protocol_id . '">' . $protocol . '</a>';
+	my $protocol_detail = $c->model('solGS::solGS')->protocol_detail($protocol);
+	my $protocol_id = $protocol_detail->{protocol_id};
+	my $name        = $protocol_detail->{name};
+	
+	$protocol_url = '<a href="/breeders_toolbox/protocol/' . $protocol_id . '">' . $name . '</a>';
     }
     else
     {
@@ -2557,7 +2565,7 @@ sub get_single_trial_traits {
     if (!-s $traits_file)
     {
 	my $traits = $c->model('solGS::solGS')->trial_traits($pop_id);	
-
+	print STDERR "\n traits: @$traits\n";
 	$traits = join("\t", @$traits);
 	write_file($traits_file, $traits);
     }

@@ -755,7 +755,8 @@ sub genotype_data {
     my $trial_id  = $args->{trial_id};
     my $protocol_id = $args->{genotyping_protocol_id};  
 
-    $protocol_id = $self->protocol_id() if !$protocol_id;
+    my $protocol_detail= $self->protocol_detail() if !$protocol_id;
+    my $protocol_id = $protocol_detail->{protocol_id};
  
     my $geno_search = CXGN::Genotype::Search->new({
 		bcs_schema => $self->schema(),
@@ -804,8 +805,9 @@ sub genotypes_list_genotype_data {
     my ($self, $genotypes_ids, $protocol_id) = @_;
      
     if (!$protocol_id) 
-    {	
-	$protocol_id = $self->protocol_id();
+    {
+	my $protocol_detail= $self->protocol_detail() if !$protocol_id;
+	$protocol_id = $protocol_detail->{protocol_id};
     }
     
     my $geno_search = CXGN::Genotype::Search->new(
@@ -1927,24 +1929,35 @@ sub genotyping_protocol {
 }
 
 
-sub protocol_id {
+sub protocol_detail {
     my ($self, $protocol) = @_;
 
     unless ($protocol) 
     {
 	$protocol = $self->context->config->{default_genotyping_protocol};
     }
-   
-    my $q = 'SELECT nd_protocol_id FROM nd_protocol WHERE name = ?';
-    my $sth = $self->context->dbc->dbh->prepare($q);
-
-    $sth->execute($protocol);
-
-    my $protocol_id = $sth->fetchrow_array(); 
-   
-    return $protocol_id;
-
     
+    my $where;
+    if ($protocol =~ /\D+/)
+    {
+	$where = 'WHERE name = ?';
+    }
+    else
+    { 
+	$where = 'WHERE nd_protocol_id = ?';	
+    }
+    
+    my $q = 'SELECT nd_protocol_id, name, description FROM nd_protocol ' .  $where;    
+    my $sth = $self->context->dbc->dbh->prepare($q);
+    $sth->execute($protocol);
+    my ($protocol_id, $name, $desc) = $sth->fetchrow_array(); 
+
+    return {
+	'protocol_id' => $protocol_id, 
+	'name'        => $name,
+	'description' => $desc
+    };
+   
 }
 
 
@@ -2018,7 +2031,8 @@ sub get_dataset_owner {
 sub get_dataset_genotype_data {
     my ($self, $dataset_id, $protocol_id) = @_;
    
-    my $protocol_id = $self->protocol_id();
+    my $protocol_detail = $self->protocol_detail();
+    my $protocol_id = $protocol_detail->{protocol_id};
 
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
