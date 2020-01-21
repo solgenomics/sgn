@@ -287,8 +287,9 @@ sub list_seedlots {
     my %unique_seedlots;
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
-    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    # my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $population_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "population", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
     my $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
@@ -306,26 +307,26 @@ sub list_seedlots {
     if ($location) {
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
-    if ($contents_accession && scalar(@$contents_accession)>0) {
-        $search_criteria{'subject.type_id'} = $accession_type_id;
+    if ($contents && scalar(@$contents)>0) {
+        # $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
-            $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
+            $search_criteria{'subject.uniquename'} = { -in => $contents };
         } else {
-            foreach (@$contents_accession){
+            foreach (@$contents){
                 push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
             }
         }
     }
-    if ($contents_cross && scalar(@$contents_cross)>0) {
-        $search_criteria{'subject.type_id'} = $cross_type_id;
-        if ($exact_match_uniquenames){
-            $search_criteria{'subject.uniquename'} = { -in => $contents_cross };
-        } else {
-            foreach (@$contents_cross){
-                push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
-            }
-        }
-    }
+    # if ($contents_cross && scalar(@$contents_cross)>0) {
+    #     $search_criteria{'subject.type_id'} = $cross_type_id;
+    #     if ($exact_match_uniquenames){
+    #         $search_criteria{'subject.uniquename'} = { -in => $contents_cross };
+    #     } else {
+    #         foreach (@$contents_cross){
+    #             push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
+    #         }
+    #     }
+    # }
 
     my @seedlot_search_joins = (
         {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
@@ -355,7 +356,7 @@ sub list_seedlots {
         }
     );
 
-    my %source_types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $cross_type_id => 'cross' );
+    my %contents_types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $population_type_id => 'population' );
     my $records_total = $rs->count();
     if (defined($limit) && defined($offset)){
         $rs = $rs->slice($offset, $limit);
@@ -370,7 +371,7 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{breeding_program_id} = $row->get_column('breeding_program_id');
         $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
         $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
-        push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
+        push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $contents_types_hash{$row->get_column('source_type_id')}];
     }
     #print STDERR Dumper \%unique_seedlots;
 
