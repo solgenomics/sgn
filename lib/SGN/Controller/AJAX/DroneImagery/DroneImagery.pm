@@ -4151,9 +4151,15 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
 
-    # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
-    if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
-        open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        print $F '"stock_id","image_path","phenotype_value","trait_name","image_type","day","drone_run_project_id","field_trial_id","accession_id","female_id","male_id"';
+        if (scalar(@aux_trait_id)>0) {
+            print $F ',"'.join('","', @aux_trait_id).'"';
+        }
+        print $F "\n";
+
+        # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
+        if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
             foreach my $field_trial_id (sort keys %seen_field_trial_ids){
                 foreach my $stock_id (sort keys %seen_stock_ids){
                     foreach my $image_type (sort keys %seen_image_types) {
@@ -4191,11 +4197,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                     }
                 }
             }
-        close($F);
-    }
-    #Non-LSTM models group 9 image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
-    else {
-        open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        }
+        #Non-LSTM models group 9 image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
+        else {
             foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
                 foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
                     foreach my $stock_id (sort keys %seen_stock_ids){
@@ -4233,8 +4237,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                     }
                 }
             }
-        close($F);
-    }
+        }
+    close($F);
+
     undef %data_hash;
     undef %phenotype_data_hash;
 
