@@ -3352,21 +3352,11 @@ sub format_phenotype_dataset_rows {
     
 }
 
-sub clean_traits {
-    my ($self, $terms) = @_;
-
-    $terms =~ s/(\|\w+:\d+)//g;
-    $terms =~ s/\|/ /g;
-    $terms =~ s/^\s+|\s+$//g;
-
-    return $terms;
-}
-
 
 sub format_phenotype_dataset_headers {
     my ($self, $all_headers, $meta_headers,  $traits_file) = @_;
     
-    $all_headers = $self->clean_traits($all_headers);
+    $all_headers = SGN::Controller::solGS::Utils->clean_traits($all_headers);
     
     my $traits = $all_headers;
      
