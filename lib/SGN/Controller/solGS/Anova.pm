@@ -103,7 +103,7 @@ sub remove_ontology {
 
     foreach my $tr (@$traits) {
 	my $name = $tr->[1];
-	$name= $c->controller('solGS::solGS')->clean_traits($name);
+	$name= $c->controller('solGS::Utils')->clean_traits($name);
 
 	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
  	push @clean_traits, $id_nm;	    	    
