@@ -139,12 +139,13 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Do you require stitching an ortho image of the drone run:</label>
+                            <label class="col-sm-3 control-label">Are you not uploading an orthophotomosaic?:</label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
                                     <option value="">Select One</option>
-                                    <option value="yes">Yes, I am uploading a zipfile of images to stitch</option>
-                                    <option value="no">No</option>
+                                    <option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option>
+                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images to use as raw images</option>
+                                    <option value="no">No, I am uploading a stitched orthomosaic</option>
                                 </select>
                             </div>
                         </div>
@@ -259,7 +260,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_image_upload_drone_run_band_stitching').change(function(){
-        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes') {
+        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_raw') {
             jQuery('#drone_run_upload_drone_run_band_number_div').hide();
         } else {
             jQuery('#drone_run_upload_drone_run_band_number_div').show();
@@ -272,12 +273,12 @@ jQuery(document).ready(function() {
         var drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
         var drone_run_camera_info = jQuery('#drone_image_upload_camera_info').val();
         var drone_run_id = jQuery('#drone_run_id').val();
-        if (drone_run_id != '' && drone_run_band_unstitched == 'yes') {
-            alert('Please create a new drone run band if you are uploading a zipfile of images to stitch.');
+        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw')) {
+            alert('Please create a new drone run band if you are uploading a zipfile of raw images.');
             return false;
         }
         if (drone_run_band_unstitched == '') {
-            alert('Please select whether you are uploading unstitched images.');
+            alert('Please select whether you are uploading orthomosaic images.');
             return false;
         }
         if (drone_run_id == '' && drone_run_camera_info == '') {
@@ -303,7 +304,7 @@ jQuery(document).ready(function() {
                 }
             }
         }
-        else if (drone_run_band_unstitched == 'yes') {
+        else if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw') {
             html = html + '<div class="well well-sm">';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
 
@@ -424,7 +425,7 @@ jQuery(document).ready(function() {
                     }
                 }
             }
-        } else if (drone_run_band_unstitched == 'yes') {
+        } else if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw') {
             if (jQuery('#upload_drone_images_zipfile').val() == ''){
                 alert('Please select a zipfile of images');
                 return;

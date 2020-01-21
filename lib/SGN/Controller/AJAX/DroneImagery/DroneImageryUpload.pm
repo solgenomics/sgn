@@ -114,8 +114,8 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
-    if ($selected_drone_run_id && $new_drone_run_band_stitching eq 'yes') {
-        $c->stash->{rest} = { error => "Please create a new drone run if you are uploading a zipfile of images to stitch!" };
+    if ($selected_drone_run_id && ($new_drone_run_band_stitching eq 'yes' || $new_drone_run_band_stitching eq 'yes_raw')) {
+        $c->stash->{rest} = { error => "Please create a new drone run if you are uploading a zipfile of raw images!" };
         $c->detach();
     }
 
@@ -285,7 +285,7 @@ sub upload_drone_imagery_POST : Args(0) {
         my $stitching_work_pix = $c->req->param('upload_drone_images_stitching_work_pix');
 
         if (!$upload_file) {
-            $c->stash->{rest} = { error => "Please provide a drone image zipfile of images to stitch!" };
+            $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images to stitch!" };
             $c->detach();
         }
         if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
@@ -450,6 +450,101 @@ sub upload_drone_imagery_POST : Args(0) {
             my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
             push @return_drone_run_band_image_urls, $image->get_image_url('original');
             push @return_drone_run_band_image_ids, $image->get_image_id();
+            push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
+        }
+    }
+    elsif ($new_drone_run_band_stitching eq 'yes_raw') {
+        my $upload_file = $c->req->upload('upload_drone_images_zipfile');
+        my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
+        my $stitching_work_pix = $c->req->param('upload_drone_images_stitching_work_pix');
+
+        if (!$upload_file) {
+            $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images!" };
+            $c->detach();
+        }
+        if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
+            $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
+            $c->detach();
+        }
+
+        my $upload_original_name = $upload_file->filename();
+        my $upload_tempfile = $upload_file->tempname;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => "drone_imagery_upload",
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+        print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+
+        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+        my $zipfile_return = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
+        print STDERR Dumper $zipfile_return;
+        if ($zipfile_return->{error}) {
+            $c->stash->{rest} = { error => "Problem saving images!".$zipfile_return->{error} };
+            $c->detach();
+        }
+        my $image_paths = $zipfile_return->{image_files};
+
+        my @stitched_bands;
+        my %raw_image_bands;
+        if ($new_drone_run_camera_info eq 'micasense_5') {
+            @stitched_bands = (
+                ["Band 1", "Blue", "Blue (450-520nm)", 0],
+                ["Band 2", "Green", "Green (515-600nm)", 1],
+                ["Band 3", "Red", "Red (600-690nm)", 2],
+                ["Band 4", "NIR", "NIR (780-3000nm)", 3],
+                ["Band 5", "RedEdge", "Red Edge (690-750nm)", 4]
+            );
+            my $counter = 0;
+            foreach (@$image_paths) {
+                push @{$raw_image_bands{$counter}}, $_;
+                $counter++;
+                if ($counter >= 5) {
+                    $counter = 0;
+                }
+            }
+        }
+        elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
+            @stitched_bands = (
+                ["Color Image", "RGB Color Image", "RGB Color Image", 0],
+            );
+            $raw_image_bands{0} = $image_paths;
+        }
+        else {
+            die "Camera info not supported for stitching: $new_drone_run_camera_info\n";
+        }
+
+        foreach my $m (@stitched_bands) {
+            my $project_rs = $schema->resultset("Project::Project")->create({
+                name => $new_drone_run_name."_".$m->[1],
+                description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Raw image upload.",
+                projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
+                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
+            });
+            my $selected_drone_run_band_id = $project_rs->project_id();
+
+            my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
+            foreach my $im (@{$raw_image_bands{$m->[3]}}) {
+                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+                push @return_drone_run_band_image_urls, $image->get_image_url('original');
+                push @return_drone_run_band_image_ids, $image->get_image_id();
+            }
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
     }

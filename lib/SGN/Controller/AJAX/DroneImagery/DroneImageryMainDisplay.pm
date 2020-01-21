@@ -68,6 +68,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{project_image_type_name} = $_->{project_image_type_name};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
@@ -93,6 +94,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
+            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{project_image_type_name} = $_->{project_image_type_name};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
             $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
@@ -109,8 +111,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
         }
     }
-
-    #print STDERR Dumper \%unique_drone_runs;
+    # print STDERR Dumper \%unique_drone_runs;
 
     my $calendar_funcs = CXGN::Calendar->new({});
     foreach my $trial_name (sort keys %unique_drone_runs) {
@@ -153,12 +154,17 @@ sub raw_drone_imagery_summary_GET : Args(0) {
 
             $drone_run_html .= '</div><div class="col-sm-3">';
             if (!$v->{drone_run_indicator}) {
-                if (!$v->{drone_run_processed}) {
-                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                } elsif (!$v->{drone_run_processed_minimal_vi}) {
-                    $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_minimal_vi" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Minimal Vegetitative Index Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                } elsif (!$v->{drone_run_processed_extended}) {
-                    $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                if ($v->{project_image_type_name} eq 'raw_drone_imagery') {
+                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                }
+                else {
+                    if (!$v->{drone_run_processed}) {
+                        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                    } elsif (!$v->{drone_run_processed_minimal_vi}) {
+                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_minimal_vi" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Minimal Vegetitative Index Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                    } elsif (!$v->{drone_run_processed_extended}) {
+                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                    }
                 }
             }
             $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Imaging Event</button>';
@@ -331,7 +337,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
         push @{$unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_images"}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
     }
 
-    #print STDERR Dumper \%unique_drone_runs;
+    # print STDERR Dumper \%unique_drone_runs;
 
     foreach my $k (sort keys %unique_drone_runs) {
         my $v = $unique_drone_runs{$k};
@@ -342,6 +348,14 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
         foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
             my $d = $drone_run_bands->{$drone_run_band_project_id};
+            
+            if ($d->{images}) {
+                $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Raw Images</h5></div><div class="col-sm-6">';
+                foreach (@{$d->{images}}) {
+                    $drone_run_band_table_html .= $_;
+                }
+                $drone_run_band_table_html .= '</div></div></div>';
+            }
 
             if ($d->{stitched_image}) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Stitched Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{stitched_image_username}.'<br/><b>Date</b>: '.$d->{stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{stitched_image}.'</div></div></div>';

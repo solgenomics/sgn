@@ -1168,6 +1168,68 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_drone_imagery_plot_polygon_types : Path('/ajax/html/select/drone_imagery_plot_polygon_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $plot_polygon_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+
+    my @result;
+    while (my ($type_id, $t) = each %$plot_polygon_image_types) {
+        push @result, [$type_id, $t->{name}];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_plot_images : Path('/ajax/html/select/plot_images') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>[$drone_run_project_id],
+    });
+    my ($result, $total_count) = $images_search->search();
+
+    my @result;
+    foreach (@$result) {
+        push @result, [$_->{image_id}, $_->{image_original_filename}];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_drone_run_band') Args(0) {
     my $self = shift;
     my $c = shift;
