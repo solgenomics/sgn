@@ -319,6 +319,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
                  variable DATABASE_FIXTURE_PATH, which will overrule this
                  option.
 
+  --list_config  lists the configuration information
+
   -- -v          options specified after two dashes will be passed to prove
                  directly, such -v will run prove in verbose mode.
 
