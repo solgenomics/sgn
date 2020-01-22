@@ -1173,15 +1173,31 @@ sub get_drone_imagery_plot_polygon_types : Path('/ajax/html/select/drone_imagery
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    my $names_as_select = $c->req->param("names_as_select") || 0;
+    my $standard_process = $c->req->param("standard_process_type") || 'minimal';
+
     my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
     my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
     my $empty = $c->req->param("empty") || "";
 
     my $plot_polygon_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
 
+    my %terms;
+    while (my($type_id, $o) = each %$plot_polygon_image_types) {
+        my %standard_processes = map {$_ => 1} @{$o->{standard_process}};
+        if (exists($standard_processes{$standard_process})) {
+            $terms{$type_id} = $o;
+        }
+    }
+
     my @result;
-    while (my ($type_id, $t) = each %$plot_polygon_image_types) {
-        push @result, [$type_id, $t->{name}];
+    foreach my $type_id (sort keys %terms) {
+        my $t = $terms{$type_id};
+        if ($names_as_select) {
+            push @result, [$t->{name}, $t->{name}];
+        } else {
+            push @result, [$type_id, $t->{name}];
+        }
     }
 
     if ($empty) {

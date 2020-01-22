@@ -355,6 +355,16 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                     $drone_run_band_table_html .= $_;
                 }
                 $drone_run_band_table_html .= '</div></div></div>';
+
+                foreach my $t (@{$original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{observation_unit_plot_polygon_types}->{base}}) {
+                    if ($d->{$t."_images"}) {
+                        $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Assigned Plot-Polygon Images</h5></div><div class="col-sm-6">';
+                        foreach (@{$d->{$t."_images"}}) {
+                            $drone_run_band_table_html .= $_;
+                        }
+                        $drone_run_band_table_html .= '</div></div></div>';
+                    }
+                }
             }
 
             if ($d->{stitched_image}) {

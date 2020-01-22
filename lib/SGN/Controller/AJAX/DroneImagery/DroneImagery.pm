@@ -800,6 +800,8 @@ sub _perform_plot_polygon_assign {
     my $polygon_objs = decode_json $stock_polygons;
     my %stock_ids;
 
+    # print STDERR Dumper $polygon_objs;
+
     foreach my $stock_name (keys %$polygon_objs) {
         my $polygon = $polygon_objs->{$stock_name};
         if ($from_web_interface) {
@@ -938,6 +940,34 @@ sub _perform_plot_polygon_assign {
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id
     };
+}
+
+sub drone_imagery_manual_assign_plot_polygon : Path('/api/drone_imagery/manual_assign_plot_polygon') : ActionClass('REST') { }
+sub drone_imagery_manual_assign_plot_polygon_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $polygon = $c->req->param('polygon');
+    my $plot_name = $c->req->param('plot_name');
+    my $assign_plot_polygons_type = $c->req->param('image_type_name');
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my %stock_polygon = ($plot_name => decode_json $polygon);
+    my $stock_polygons = encode_json \%stock_polygon;
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        image_id_list=>[$image_id],
+    });
+    my ($result, $total_count) = $images_search->search();
+    my $drone_run_band_project_id = $result->[0]->{drone_run_band_project_id};
+
+    my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $stock_polygons, $assign_plot_polygons_type, $user_id, $user_name, $user_role, 0);
+
+    $c->stash->{rest} = $return;
 }
 
 sub drone_imagery_save_plot_polygons_template : Path('/api/drone_imagery/save_plot_polygons_template') : ActionClass('REST') { }
@@ -4303,7 +4333,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     close($fh);
     #print STDERR Dumper \@result_agg;
 
-    open(my $F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
+    open($F, ">", $archive_temp_result_agg_file) || die "Can't open file ".$archive_temp_result_agg_file;
         foreach my $data (@result_agg){
             print $F $data;
             print $F "\n";

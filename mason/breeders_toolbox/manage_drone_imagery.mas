@@ -322,7 +322,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <&| /util/workflow.mas, id=> "manage_drone_imagery_standard_process_raw_images_workflow" &>
         <&| /util/workflow.mas:step, title=> "Intro" &>
             <& /page/page_title.mas, title=>"This workflow will guide you through applying a standard process to your aerial imaging bands" &>
-            <p>This process will allow you to manually assign plot-polygons to the raw images.</p>
+
+            <div class="well well-sm">
+                <p>This process will allow you to manually assign plot-polygons to the raw images.</p>
+            </div>
+
             <br/><br/>
             <center>
             <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -330,6 +334,14 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
         </&>
         <&| /util/workflow.mas:step, title=> "Plot Polygons" &>
             <& /page/page_title.mas, title=>"Manually assign plot-polygons to raw images" &>
+
+            <div class="well well-sm">
+                <ul>
+                    <li>You should only assign one image of a given plot-polygon type to a plot.</li>
+                    <li>Select an image and then click the four corners of the plot.</li>
+                    <li>Assign the plot-polygon type (e.g. green, red, NIR) and assign the plot name to the cropped polygon.</li>
+                </ul>
+            </div>
 
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
@@ -358,6 +370,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </div>
                 </div>
             </div>
+
+            <br/><br/>
+            <center>
+            <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_assign_plot" onclick="return false;">Assign Plot Image</button>
+            </center>
 
         </&>
     </&>
@@ -2121,9 +2138,15 @@ jQuery(document).ready(function() {
         location.reload();
     })
 
+    //
+    // Standard process on raw images
+    //
+
     var manage_drone_imagery_standard_process_raw_images_field_trial_id;
     var manage_drone_imagery_standard_process_raw_images_drone_run_id;
     var manage_drone_imagery_standard_process_raw_images_image_id;
+    var manage_drone_imagery_standard_process_raw_images_selected_plot_name;
+    var manage_drone_imagery_standard_process_raw_images_selected_image_type_name;
     var ctx;
     var dronecroppingImg;
 
@@ -2133,9 +2156,9 @@ jQuery(document).ready(function() {
         manage_drone_imagery_standard_process_raw_images_field_trial_id = jQuery(this).data('field_trial_id');
         manage_drone_imagery_standard_process_raw_images_drone_run_id = jQuery(this).data('drone_run_project_id');
 
-        get_select_box('stocks','drone_imagery_standard_process_raw_images_plot_select_div', {'name': 'drone_imagery_standard_process_raw_images_plot_select', 'id': 'drone_imagery_standard_process_raw_images_plot_select', 'empty':1, 'stock_type_name':'plot', 'trial_id_list':manage_drone_imagery_standard_process_raw_images_field_trial_id });
+        get_select_box('stocks','drone_imagery_standard_process_raw_images_plot_select_div', {'name': 'drone_imagery_standard_process_raw_images_plot_select', 'id': 'drone_imagery_standard_process_raw_images_plot_select', 'empty':1, 'stock_type_name':'plot', 'trial_id_list':manage_drone_imagery_standard_process_raw_images_field_trial_id, 'multiple':0, 'names_as_select':1 });
 
-        get_select_box('drone_imagery_plot_polygon_types','drone_imagery_standard_process_raw_images_image_type_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_type_select', 'id': 'drone_imagery_standard_process_raw_images_image_type_select', 'empty':1 });
+        get_select_box('drone_imagery_plot_polygon_types','drone_imagery_standard_process_raw_images_image_type_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_type_select', 'id': 'drone_imagery_standard_process_raw_images_image_type_select', 'empty':1, 'names_as_select':1 });
     
         get_select_box('plot_images','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
     });
@@ -2171,6 +2194,47 @@ jQuery(document).ready(function() {
             }
         });
     });
+
+    jQuery('#drone_imagery_standard_process_raw_images_assign_plot').click(function(){
+        manage_drone_imagery_standard_process_raw_images_selected_plot_name = jQuery('#drone_imagery_standard_process_raw_images_plot_select').val();
+        manage_drone_imagery_standard_process_raw_images_selected_image_type_name = jQuery('#drone_imagery_standard_process_raw_images_image_type_select').val();
+
+        if (manage_drone_imagery_standard_process_raw_images_selected_plot_name == '') {
+            alert('Please select a plot!');
+            return false;
+        }
+        if (manage_drone_imagery_standard_process_raw_images_selected_image_type_name == '') {
+            alert('Please select a plot polygon type!');
+            return false;
+        }
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/manual_assign_plot_polygon?image_id='+manage_drone_imagery_standard_process_raw_images_image_id+'&polygon='+JSON.stringify(crop_points)+'&plot_name='+manage_drone_imagery_standard_process_raw_images_selected_plot_name+'&image_type_name='+manage_drone_imagery_standard_process_raw_images_selected_image_type_name,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else if (response.warning) {
+                    alert(response.warning);
+                } else {
+                    alert('Plot-image saved!');
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error cropping and saving plot image!')
+            }
+        });
+        return false;
+    });
+
+    //
+    // Phenotype calc buttons
+    //
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_phenotype_run"]', function(){
         manage_drone_imagery_standard_process_drone_run_project_id = jQuery(this).data('drone_run_project_id');
