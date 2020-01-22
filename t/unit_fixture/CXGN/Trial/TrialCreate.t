@@ -33,7 +33,7 @@ ok(my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
    ->create_with({
        name   => 'accession',
        cv     => 'stock_type',
-      
+
 		 }));
 my @stock_names;
 for (my $i = 1; $i <= 10; $i++) {
@@ -92,7 +92,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2015",
     trial_description => "test description",
@@ -145,7 +145,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2015",
     trial_description => "test description",
@@ -181,20 +181,20 @@ foreach my $acc (@$accession_names) {
 
 # layout for genotyping experiment
 # use data structure returned by brapi call for GDF:
-# plates:[ { 'project_id' : 'project x', 
+# plates:[ { 'project_id' : 'project x',
 #            'plate_name' : 'required',
 #            'plate_format': 'Plate_96' | 'tubes',
 #            'sample_type' : 'DNA' | 'RNA' | 'Tissue'
 #            'samples':[
 # {
-#    		'name': 'sample_name1', 
+#    		'name': 'sample_name1',
 #     		'well': 'optional'
 #               'concentration:
-#'              'volume': 
-#               'taxomony_id' : 
-#               'tissue_type' : 
+#'              'volume':
+#               'taxomony_id' :
+#               'tissue_type' :
 #               }
-# ] 
+# ]
 
 my $plate_info = {
     elements => \@genotyping_stock_names,
@@ -331,7 +331,7 @@ ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     genotyping_plate_format => $plate_info->{plate_format},
     genotyping_plate_sample_type => $plate_info->{sample_type},
 }), "create genotyping plate");
-                                   
+
 my $save = $genotyping_trial_create->save_trial();
 ok($save->{'trial_id'}, "save genotyping plate");
 
@@ -349,7 +349,7 @@ ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
 ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names3");
 my %genotyping_stocks = map { $_ => 1 } @genotyping_stock_names;
 $genotyping_stocks{'BLANK'} = 1;
-foreach my $acc (@$genotyping_accession_names) { 
+foreach my $acc (@$genotyping_accession_names) {
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");
 }
 
@@ -376,7 +376,7 @@ ok($trial_design->set_plot_number_increment(1), "set plot increment");
 ok($trial_design->set_westcott_check_1("test_stock_for_trial1"), "set check 1");
 ok($trial_design->set_westcott_check_2("test_stock_for_trial2"), "set check 2");
 ok($trial_design->set_westcott_col(20), "set column number");
-ok($trial_design->set_design_type("westcott"), "set design type");
+ok($trial_design->set_design_type("Westcott"), "set design type");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
@@ -386,14 +386,14 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2015",
     trial_description => "test description",
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_name_westcott",
     trial_type=>$ayt_cvterm_id,
-    design_type => "westcott",
+    design_type => "Westcott",
     operator => "janedoe"
 						    }), "create trial object");
 
@@ -459,7 +459,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2015",
     trial_description => "test description",

@@ -23,7 +23,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
        id="data_type_opts"
        value="">
 
-    <select class="form-control" id="data_type_select">
+    <select class="form-control" id="pca_data_type_select">
       <option selected="genotype">Genotype</option>
       <option value="phenotype">Phenotype</option>
     </select>

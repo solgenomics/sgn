@@ -34,7 +34,7 @@ use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use Math::Round::Var;
-#use CXGN::Genotype::Search;
+use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -390,6 +390,7 @@ sub has_genotype {
     my ($protocol_name, $protocol_id)  = $sth->fetchrow_array();
   
     return $protocol_id;
+   
 }
 
 
@@ -717,149 +718,82 @@ sub search_stock_using_plot_name {
 }
 
 
-sub first_stock_genotype_data {
-    my ($self, $pr_id) = @_;
+# sub first_stock_genotype_data {
+#     my ($self, $pr_id) = @_;
   
-    my $protocol_id = $self->protocol_id();
-  
-    my $trial = CXGN::Trial->new({'bcs_schema' => $self->schema, 
-				  'trial_id' => $pr_id});    
-    my $accessions = $trial->get_accessions();
-    
-    my $geno_data;
-  
-    foreach my $st (@$accessions) 
-    { 	
-	my $stock_id = $st->{stock_id};
-	my $dataset = CXGN::Dataset->new({
-	    people_schema => $self->people_schema,
-	    schema  => $self->schema,
-	    accessions =>[$stock_id]});
-    
-	my $dataref = $dataset->retrieve_genotypes($protocol_id);
-	$geno_data  = $self->structure_genotype_data($dataref);
-     
-	last if ${$geno_data};
-    }
+#     my $protocol_id = $self->protocol_id();
+   
+#     my $geno_data = {};
  
-    return $geno_data;
+#     my $geno_search = CXGN::Genotype::Search->new({
+# 		bcs_schema => $self->schema,
+# 		trial_list => [$pr_id],
+# 		protocol_id_list => [$protocol_id],
+# 		genotypeprop_hash_select=> ['DS'],
+# 		protocolprop_top_key_select=>[],
+# 		protocolprop_top_key_select=>[],
+# 		return_only_first_genotypeprop_for_stock=> 1,
+# 		});
 
-}
+#     $geno_search->init_genotype_iterator();
+#     my $count = 0; 
+#     while (my $geno = $geno_search->get_next_genotype_info()) 
+#     {
+#     	$count++;	
+#     	$geno_data  = $self->structure_genotype_data($geno, $count);   
+#     	last if $$geno_data;	   
+#     } 
+    
+#     return $geno_data;
 
+# }
+ 
 
 sub genotype_data {
-    my ($self, $args) = @_;
+    my ($self, $trial_id) = @_;
 
-    my $training_pop_id  = $args->{training_pop_id};
-    my $selection_pop_id = $args->{selection_pop_id};
-    my $tr_geno_file     = $args->{training_geno_file};
+    #my $training_pop_id  = $args->{training_pop_id};
+    #my $selection_pop_id = $args->{selection_pop_id};
+    
+    my $protocol_id = $self->protocol_id();  
+   # my $trial_id = $selection_pop_id ? $selection_pop_id : $training_pop_id;
+ 
+    my $geno_search = CXGN::Genotype::Search->new({
+		bcs_schema => $self->schema(),
+		trial_list => [$trial_id],
+		protocol_id_list => [$protocol_id],
+		genotypeprop_hash_select=> ['DS'],
+		protocolprop_top_key_select=>[],
+		protocolprop_top_key_select=>[],
+		return_only_first_genotypeprop_for_stock=> 1,
+		});
+
+    $geno_search->init_genotype_iterator();
+    return $geno_search;
    
-    my @genotypes;
-    my $geno_data = {};
-    
-    my $protocol_id = $self->protocol_id();
-    
-    if ($training_pop_id) 
-    { 
-        if ($selection_pop_id) 
-        {   
-	    my $dataset = CXGN::Dataset->new({
- 		people_schema => $self->people_schema,
- 	    	schema  => $self->schema,
- 	    	trials  => [$selection_pop_id]}
-		);	    
-
-	    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-	    $geno_data  = $self->structure_genotype_data($dataref);
-	    
-	    open my $fh, $tr_geno_file or die "couldnot open $tr_geno_file: $!";    
-	    my $training_pop_markers = <$fh>;
-	    $training_pop_markers    =~ s/^\s+|\s+$//g;                                
-	    my @training_pop_markers = split(/\t/, $training_pop_markers);
-
-	    my $selection_pop_markers = (split("\n", ${$geno_data}))[0];
-	    $selection_pop_markers    =~ s/^\s+|\s+$//g;
-	    my @selection_pop_markers = split(/\t/, $selection_pop_markers);
-
-	    my $common_markers = scalar(intersect(@training_pop_markers, @selection_pop_markers));
-            my $similarity     = $common_markers / scalar(@training_pop_markers);
-                  
-	    if ($similarity == 1)     
-            {
-		return $geno_data;
-	    }	    
-        }        
-        else 
-        {              	  
-      	    my $dataset = CXGN::Dataset->new({
- 		people_schema => $self->people_schema,
- 	    	schema  => $self->schema,
- 	    	trials  => [$training_pop_id]}
-		);	    
-
-	    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-	    $geno_data  = $self->structure_genotype_data($dataref);
-
-	    return  $geno_data;   
-	}
-    } 
-    elsif ($selection_pop_id && !$training_pop_id) 
-    {
-	my $dataset = CXGN::Dataset->new({
- 		people_schema => $self->people_schema,
- 	    	schema  => $self->schema,
- 	    	trials  => [$selection_pop_id]}
-		);	    
-
-	    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-	    $geno_data  = $self->structure_genotype_data($dataref);
-
-	    return  $geno_data;   
-
-    } 
 }
 
 
 sub structure_genotype_data {
-    my ($self, $dataref) =@_;
+    my ($self, $dataref, $markers, $iter_no) =@_;
 
     my $geno_data;
-   
-    if (@$dataref)
+  
+    if ($dataref)
     {
-	my $geno_row  = @$dataref[0]->{selected_genotype_hash};
-	my $markers   = $self->_get_dataset_markers($geno_row);
-	my $headers   = $self->_create_genotype_dataset_headers($markers);
-	
-	$geno_data = "\t" . $headers . "\n";    
-	
-	my @stocks;
-	my $duplicate_stock;   
-	my $cnt = 0;
-	
-	foreach my $dg (@$dataref)
-	{
-	    $cnt++;
-	    
-	    my $stock = $dg->{germplasmName};
+	my $geno_hash = $dataref->{selected_genotype_hash};
 
-	    if ($cnt > 1)
-	    {
-		$duplicate_stock =  grep(/^$stock$/, @stocks); #$stock ~~ @stocks;
-	    }
-	    
-	    if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
-	    {
-		push @stocks, $stock;
-		
-		my $geno_hash = $dg->{selected_genotype_hash}; 
-		
-		$geno_data .= $stock . "\t";
-		$geno_data .= $self->_create_genotype_row($headers, $geno_hash);
-		$geno_data .= "\n";
-	    }
-	}
-   ### print STDERR scalar(@stocks)."\n";
+	if ($iter_no == 1) 
+	{
+	    my $headers   = $self->create_genotype_dataset_headers($markers);
+	    $geno_data = "\t" . $headers . "\n";
+	 
+	} 
+	
+	$geno_data .= $dataref->{germplasmName} . "\t";
+  
+	$geno_data .= ${$self->create_genotype_row($markers, $geno_hash)};
+	$geno_data .= "\n";
     }
 
     return \$geno_data;
@@ -871,16 +805,19 @@ sub genotypes_list_genotype_data {
     my ($self, $genotypes_ids) = @_;
 
     my $protocol_id = $self->protocol_id();
-	    
-    my $dataset = CXGN::Dataset->new({
- 	people_schema => $self->people_schema,
- 	schema  => $self->schema,
- 	accessions => $genotypes_ids});	
+    
+    my $geno_search = CXGN::Genotype::Search->new(
+	bcs_schema => $self->schema(),
+	accession_list => $genotypes_ids,
+	protocol_id_list => [$protocol_id],
+	genotypeprop_hash_select=> ['DS'],
+	protocolprop_top_key_select=>[],
+	protocolprop_top_key_select=>[],
+	return_only_first_genotypeprop_for_stock=> 1,
+	);
 
-    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-    my $geno_data  = $self->structure_genotype_data($dataref);	   
-
-    return $geno_data;
+    $geno_search->init_genotype_iterator();
+    return $geno_search;
 
 }
 
@@ -1120,7 +1057,7 @@ sub extract_project_markers {
 }
 
 
-sub _get_dataset_markers {
+sub get_dataset_markers {
     my ($self, $geno_hash) = @_;
  
     my @markers  = keys %$geno_hash;
@@ -1130,7 +1067,7 @@ sub _get_dataset_markers {
 } 
 
 
-sub _create_genotype_dataset_headers {
+sub create_genotype_dataset_headers {
     my ($self, $markers) = @_; 
 
     my $headers = join("\t", @$markers);
@@ -1139,21 +1076,20 @@ sub _create_genotype_dataset_headers {
 }
 
 
-sub _create_genotype_row {
-    my ($self, $headers, $genotype_hash) = @_; 
-
-    my @markers = split("\t", $headers);
+sub create_genotype_row {
+    my ($self, $markers, $genotype_hash) = @_; 
 
     my $geno_values;
-    foreach my $marker (@markers) 
-    {   
+    
+    foreach my $marker (@$markers) 
+    {
 	no warnings 'uninitialized';
 	
 	$geno_values .= $genotype_hash->{$marker}->{'DS'};
-        $geno_values .= "\t" unless $marker eq $markers[-1];
+        $geno_values .= "\t" unless $marker eq $markers->[-1];
     }
 
-    return $geno_values;
+    return \$geno_values;
 
 }
 
@@ -1365,27 +1301,14 @@ sub plots_list_phenotype_data {
 }
 
 
-sub project_traits {
-  my ($self, $pr_id) = @_;
-  
-  my $rs = $self->schema->resultset("Project::Project")
-      ->search({"me.project_id"  => $pr_id })
-      ->search_related("nd_experiment_projects")
-      ->search_related("nd_experiment")
-      ->search_related("nd_experiment_phenotypes")
-      ->search_related("phenotype")
-      ->search_related("observable",
-		       {},
-		       {
-			   'select'   => [ qw / observable.cvterm_id observable.name/ ], 
-			   'as'       => [ qw / cvterm_id name  / ],
-			   distinct => [qw / observable.name / ],
-			   order_by => [qw / observable.name / ]
-		       }
-      );
+sub trial_traits {
+    my ($self, $pr_id) = @_;
 
-  return $rs;
-
+    my $trial = CXGN::Trial->new({bcs_schema => $self->schema, 
+				  trial_id => $pr_id});
+    
+    return $trial->get_traits_assayed();
+ 
 }
 
 
@@ -1626,19 +1549,6 @@ sub stock_phenotype_data_rs {
 }
 
 
-# sub phenotype_data {
-#      my ($self, $pop_id ) = @_; 
-    
-#      my $data;
-#      if ($pop_id) 
-#      {
-# 	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
-# 	 $data           = $self->structure_phenotype_data($phenotypes);                   
-#      }
-    
-#      return  \$data; 
-# }
-
 sub phenotype_data {
     my ($self, $project_id) = @_;
  
@@ -1701,7 +1611,6 @@ sub trial_metadata  {
     return \@headers;
 
 }
-
 
 
 sub structure_plots_list_phenotype_data {
@@ -2141,17 +2050,22 @@ sub get_dataset_name {
 sub get_dataset_genotype_data {
     my ($self, $dataset_id) = @_;
    
-    my $dataset = CXGN::Dataset->new({
-	people_schema => $self->people_schema,
-	schema  => $self->schema,
-	sp_dataset_id =>$dataset_id});
-
     my $protocol_id = $self->protocol_id();
-    my $dataref = $dataset->retrieve_genotypes($protocol_id);
-    my $geno_data  = $self->structure_genotype_data($dataref);
-   
-    return $geno_data;
-}
+
+    my $geno_search = CXGN::Genotype::Search->new(
+	bcs_schema => $self->schema(),
+	sp_dataset_id => $dataset_id,
+	protocol_id_list => [$protocol_id],
+	genotypeprop_hash_select=> ['DS'],
+	protocolprop_top_key_select=>[],
+	protocolprop_top_key_select=>[],
+	return_only_first_genotypeprop_for_stock=> 1,
+	);
+
+    $geno_search->init_genotype_iterator();
+    return $geno_search;
+
+ }
 
 
 

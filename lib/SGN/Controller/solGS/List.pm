@@ -32,7 +32,7 @@ use Storable qw/ nstore retrieve /;
 use String::CRC;
 use Try::Tiny;
 
-
+use solGS::queryJobs;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -240,7 +240,6 @@ sub get_genotypes_list_details {
    
     my @genotypes_names = uniq(@$genotypes_names);
     my $genotypes_ids = $self->transform_genotypes_unqiueids($c, \@genotypes_names);
-    
 
     $c->stash->{genotypes_list} = $genotypes_names;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
@@ -662,7 +661,8 @@ sub genotypes_list_genotype_query_job {
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
@@ -674,11 +674,10 @@ sub genotypes_list_genotype_query_job {
 		or croak "data query script: $! serializing model details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type genotype '
-	. ' --population_type ' . $pop_type
-	. ' --args_file ' . $args_file;
+    	. ' --data_type genotype '
+    	. ' --population_type ' . $pop_type
+    	. ' --args_file ' . $args_file;
     
-
     my $job_args = {
 	'cmd' => $cmd,
 	'config' => $config,
@@ -746,14 +745,15 @@ sub plots_list_phenotype_query_job {
 		or croak "data query script: $! serializing data query details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
-	. ' --data_type phenotype '
-	. ' --population_type plots_list '
-	. ' --args_file ' . $args_file;
+    	. ' --data_type phenotype '
+    	. ' --population_type plots_list '
+    	. ' --args_file ' . $args_file;
 
      my $config_args = {
 	'temp_dir' => $temp_dir,
 	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
      };
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
@@ -909,7 +909,7 @@ sub list_population_summary {
     my $list_id = $c->stash->{list_id};
     my $file_id =  $self->list_file_id($c);	
     my $tmp_dir = $c->stash->{solgs_lists_dir};
-   
+
     if (!$c->user)
     {
 	my $page = "/" . $c->req->path;
@@ -929,17 +929,17 @@ sub list_population_summary {
 	    my @metadata = read_file($metadata_file);
 
 	    
-	    my ($key, $list_name, $desc);
+	    my ($key, $desc);
      
 	    ($desc)        = grep {/description/} @metadata;       
 	    ($key, $desc)  = split(/\t/, $desc);
-      
-	    ($list_name)       = grep {/list_name/} @metadata;      
-	    ($key, $list_name) = split(/\t/, $list_name); 
-
+	   
+	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	    my $list_name = $list->name;
+	  
 	    $c->stash(project_id          => $file_id,
 		      project_name        => $list_name,
-		      prediction_pop_name => $list_name,
+		      selection_pop_name  => $list_name,
 		      project_desc        => $desc,
 		      owner               => $user_name,
 		      protocol            => $protocol,

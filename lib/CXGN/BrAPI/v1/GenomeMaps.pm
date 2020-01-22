@@ -8,29 +8,7 @@ use CXGN::Cview::MapFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 =head2 list
 
@@ -68,7 +46,7 @@ sub list {
 	my @maps = $map_factory->get_all_maps();
 	my @data;
 
-    my $query = "SELECT map_id, date_loaded, count(distinct(location_id)) FROM sgn.map_version JOIN marker_location using (map_version_id) WHERE map_version_id=? GROUP BY 1,2";
+  my $query = "SELECT map_id, date_loaded, count(distinct(location_id)) FROM sgn.map_version JOIN marker_location using (map_version_id) WHERE map_version_id=? GROUP BY 1,2";
 	my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
 
 	foreach my $m (@maps) {
@@ -136,6 +114,7 @@ sub detail {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
+  
 	my $map = $map_factory->create( { map_id => $map_id });
     my $map_type = $map->get_type();
     my $map_units = $map->get_units();
@@ -146,7 +125,7 @@ sub detail {
         $map_type = 'Genetic';
         $map_units = 'cM';
     }
-
+    
        	my @data = ();
 
 	foreach my $chr ($map->get_chromosomes()) {
@@ -196,6 +175,7 @@ sub positions {
 	my $status = $self->status;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
+
 	my $map = $map_factory->create( { map_id => $map_id });
 
 	my @data = ();

@@ -77,7 +77,6 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
 
-    print STDERR "\ndataset name: $dataset_name\n";
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -153,6 +152,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $cluster_pop_id   = $c->req->param('cluster_pop_id');
+    my $cluster_pop_name = $c->req->param('cluster_pop_name');
     my $dataset_id       = $c->req->param('dataset_id');
     my $dataset_name     = $c->req->param('dataset_name');
     my $data_structure   = $c->req->param('data_structure');
@@ -163,6 +163,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $cluster_type     = $c->req->param('cluster_type');
     my @traits_ids       = $c->req->param('training_traits_ids[]'); 
     my $list_id          = $c->req->param('list_id');
+    
 
     my $list_type;   
     my $list_name;
@@ -183,6 +184,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{cluster_pop_id}   = $cluster_pop_id;
+    $c->stash->{cluster_pop_name} = $cluster_pop_name;
     $c->stash->{data_structure}   = $data_structure;
     $c->stash->{list_id}          = $list_id;
     $c->stash->{list_name}        = $list_name;
@@ -199,7 +201,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{training_traits_ids} = \@traits_ids;
    
     my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+
     $c->controller('solGS::Files')->create_file_id($c);
+    my $file_id = $c->stash->{file_id};
   
     $c->stash->{pop_id} = $cluster_pop_id || $pop_id;
    
@@ -278,7 +282,7 @@ sub _prepare_response {
 
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 
-    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name};
+    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name} || $c->stash->{cluster_pop_name} ;
     my $ret->{kcluster_plot} = $cluster_plot_file;
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;
@@ -294,6 +298,7 @@ sub _prepare_response {
     $ret->{data_type}     = $c->stash->{data_type};
     $ret->{k_number}      = $c->stash->{k_number};
     $ret->{selection_proportion} = $c->stash->{selection_proportion};
+    $ret->{training_traits_ids} =  $c->stash->{training_traits_ids};
 
     return $ret;
     
@@ -391,7 +396,6 @@ sub cluster_list_genotype_data {
     }	   
     else
     {
-	print STDERR "\n cluster_list_genotype_data list_id: $list_id\n";
 	if ($list_type eq 'accessions')
 	{
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c, $list_id);
@@ -672,7 +676,7 @@ sub cluster_pheno_input_files {
     my $files;
     
     if ($data_type =~ /phenotype/i)
-    {
+    {	    
 	$files = $c->stash->{phenotype_files_list} 
 	|| $c->stash->{phenotype_file} 
 	|| $c->stash->{phenotype_file_name};
@@ -863,18 +867,14 @@ sub cluster_query_jobs {
 sub run_cluster {
     my ($self, $c) = @_;
  
-    my $cores = $c->controller('solGS::Utils')->count_cores();
-     
-    if ($cores > 1) 
-    {
-    	$self->run_cluster_multi_cores($c);
-    }
-    else
-    {
-	$self->run_cluster_single_core($c);
-	
-    }
+    $self->cluster_query_jobs_file($c);
+    $c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
     
+    $self->cluster_r_jobs_file($c);
+    $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
+    
+    $c->controller('solGS::solGS')->run_async($c);
+       
 }
 
 

@@ -305,29 +305,35 @@ sub get_location_geojson {
     my $self = shift;
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
+    my $noaa_station_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'noaa_station_id', 'geolocation_property')->cvterm_id();
 
-	my $q = "SELECT A,B,C,D,E,string_agg(F, ' & '),G,H,I,J,K FROM
-(SELECT geo.nd_geolocation_id as A,
- geo.description AS B,
- abbreviation.value AS C,
-    country_name.value AS D,
- country_code.value AS E,
- breeding_program.name AS F,
- location_type.value AS G,
- latitude AS H,
-    longitude AS I,
- altitude AS J,
-    count(distinct(projectprop.project_id)) AS K
-FROM nd_geolocation AS geo
-LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
-LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
-LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
-LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
-LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
-LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
-LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
-GROUP BY 1,2,3,4,5,6,7
-ORDER BY 2) AS T1 group by 1,2,3,4,5,7,8,9,10,11";
+    my $q = "SELECT A,B,C,D,E,string_agg(F, ' & '),G,H,I,J,K,L
+        FROM
+            (SELECT geo.nd_geolocation_id as A,
+                geo.description AS B,
+                abbreviation.value AS C,
+                country_name.value AS D,
+                country_code.value AS E,
+                breeding_program.name AS F,
+                location_type.value AS G,
+                noaa_station_id.value AS L,
+                latitude AS H,
+                longitude AS I,
+                altitude AS J,
+                count(distinct(projectprop.project_id)) AS K
+            FROM nd_geolocation AS geo
+            LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+            LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
+            LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+            LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+            LEFT JOIN nd_geolocationprop AS noaa_station_id ON (geo.nd_geolocation_id = noaa_station_id.nd_geolocation_id AND noaa_station_id.type_id = $noaa_station_id_cvterm_id )
+            LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+            LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
+            LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
+            GROUP BY 1,2,3,4,5,6,7,8
+            ORDER BY 2)
+        AS T1
+        GROUP BY 1,2,3,4,5,7,8,9,10,11,12";
 
 
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
@@ -337,7 +343,7 @@ ORDER BY 2) AS T1 group by 1,2,3,4,5,7,8,9,10,11";
 	foreach my $d (@location_data) {
 	    $d = Encode::encode_utf8($d);
 	}
-	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = @location_data;
+	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $noaa_station_id) = @location_data;
 
         my $lat = $latitude ? $latitude + 0 : undef;
         my $long = $longitude ? $longitude + 0 : undef;
@@ -355,7 +361,8 @@ ORDER BY 2) AS T1 group by 1,2,3,4,5,7,8,9,10,11";
                 Latitude => $lat,
                 Longitude => $long,
                 Altitude => $alt,
-                Trials => '<a href="/search/trials?location_id='.$id.'">'.$trial_count.' trials</a>'
+                Trials => '<a href="/search/trials?location_id='.$id.'">'.$trial_count.' trials</a>',
+                NOAAStationID => $noaa_station_id
             },
             geometry => {
                 type => "Point",
@@ -601,7 +608,8 @@ sub get_project_year_cvterm_id {
 
 sub get_gt_protocols {
     my $self = shift;
-    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my $genotyping_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { type_id => $genotyping_protocol_cvterm_id} );
     #print STDERR "NdProtocol resultset rows:\n";
     my @protocols;
     while (my $row = $rs->next()) {

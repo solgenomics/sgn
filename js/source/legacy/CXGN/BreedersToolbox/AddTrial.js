@@ -1099,7 +1099,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         }
-        else if (design_method == 'westcott') {
+        else if (design_method == 'Westcott') {
             $("#FieldMap").hide();
             $("#trial_multi-design_more_info").show();
             $("#prephelp").hide();

@@ -30,6 +30,7 @@ sub mason_forward :Path('/pages') Args(1) {
     my $page = shift;
 
     print STDERR "Forwarding to $page...\n";
+    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{template} = '/pages/'.$page.".mas";
 }
 

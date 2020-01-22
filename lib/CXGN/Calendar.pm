@@ -57,7 +57,12 @@ sub check_value_format {
             $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
         }
-        #Historical dates in teh database often have this format
+				#Harvest and Planting Dates uploaded via Upload Trial Design files will have this format
+        elsif ($value =~ /^\d{4}-\d\d-\d\d$/) {
+            $value = $self->format_time($value)->datetime;
+            return '{"'.$value.'","'.$value.'","","#"}';
+        }
+        #Historical dates in the database often have this format
         elsif ($value =~ /^(\d{4})-(Jan|January|Feb|February|March|Mar|April|Apr|May|June|Jun|July|Jul|August|Aug|September|Sep|October|Oct|November|Nov|December|Dec)-(\d)/) {
             $value = $self->format_time($value)->datetime;
             return '{"'.$value.'","'.$value.'","","#"}';
@@ -123,7 +128,7 @@ sub determine_allday {
     return $allday;
 }
 
-#This function is used to return a Time::Piece object, which is useful for format consistency. It can take a variety of formats, which is important to match historic date data in teh database.
+#This function is used to return a Time::Piece object, which is useful for format consistency. It can take a variety of formats, which is important to match historic date data in the database.
 sub format_time {
 	my $self = shift;
     my $input_time = shift;

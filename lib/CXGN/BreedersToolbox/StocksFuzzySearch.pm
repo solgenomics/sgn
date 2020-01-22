@@ -94,7 +94,7 @@ sub get_matches {
             } elsif (scalar(@{$synonym_uniquename_lookup{$stock_name}}) == 1){
                 $match_info{matched_string} = $stock_name." (SYNONYM OF ".$synonym_uniquename_lookup{$stock_name}->[0].")";
                 $match_info{is_synonym} = 1;
-                $match_info{uniquename} = $synonym_uniquename_lookup{$stock_name}->[0];
+                $match_info{unique_name} = $synonym_uniquename_lookup{$stock_name}->[0];
             }
             push @found_stocks, \%match_info;
             next;

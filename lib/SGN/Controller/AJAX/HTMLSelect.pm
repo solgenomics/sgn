@@ -102,7 +102,7 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
     my @years;
     if ($auto_generate) {
       my $next_year = 1901 + (localtime)[5];
-      my $oldest_year = $next_year - 30;
+      my $oldest_year = $next_year - 50;
       @years = sort { $b <=> $a } ($oldest_year..$next_year);
     }
     else {
@@ -654,6 +654,9 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
 
     my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+	phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
+	people_schema => $c->dbic_schema("CXGN::People::Schema"),
         page_size => 1000000,
         page => 0,
         status => []

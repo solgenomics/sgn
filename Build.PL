@@ -79,11 +79,13 @@ my $build = SGN::Build->new(
         'DateTime'                                 => 0,
         # Remove the following dep when XML::Atom is fixed to depend on it and released
         'DateTime::TimeZone'                       => '1.31',
+	'DateTime::Format::Duration'               => 0,
         'DateTime::Format::Flexible'               => 0,
 	'DateTime::Format::Pg'                     => 0,
 	'Digest::Crc32'                            => 0,
         'DBIx::Class'                              => 0,
         'DBIx::Connector'                          => 0,
+        'Email::Send::SMTP::Gmail'                 => 0,
 	'enum'                                     => 0,
         'File::Basename'                           => 0,
         'File::Copy'                               => 0,
