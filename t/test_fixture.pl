@@ -26,6 +26,7 @@ my $nocleanup;
 my $noserver;
 my $dumpupdatedfixture;
 my $noparallel = 0;
+my $list_config = "";
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
@@ -37,6 +38,7 @@ GetOptions(
     "noserver" => \$noserver,
     "noparallel" => \$noparallel,
     "fixture_path" => \$fixture_path,
+    "list_config" => \$list_config
     );
 
 require Carp::Always if $carpalways;
@@ -66,7 +68,10 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-print STDERR Dumper($cfg);
+if ($list_config) { 
+    print STDERR Dumper($cfg);
+}
+
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost} || 'localhost';
 my $dbport = $config->{dbport} || '5432';
