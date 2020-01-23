@@ -356,6 +356,10 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <canvas id="drone_imagery_standard_process_raw_images_show"></canvas>
 
             <hr>
+            <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_save_polygon" onclick="return false;">Save Plot-Polygon</button>
+            <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_paste_polygon" onclick="return false;">Paste Plot-Polygon</button>
+            <hr>
+
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
                     <label class="col-sm-3 control-label">Plot-polygon type: </label>
@@ -2147,6 +2151,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_image_id;
     var manage_drone_imagery_standard_process_raw_images_selected_plot_name;
     var manage_drone_imagery_standard_process_raw_images_selected_image_type_name;
+    var manage_drone_imagery_standard_process_raw_images_polygon = [];
     var ctx;
     var dronecroppingImg;
 
@@ -2230,6 +2235,27 @@ jQuery(document).ready(function() {
             }
         });
         return false;
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_save_polygon').click(function() {
+        if (crop_points.length != 4) {
+            alert('Click the four corners of the plot in the image first!');
+            return false;
+        }
+        else {
+            manage_drone_imagery_standard_process_raw_images_polygon = crop_points;
+        }
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_paste_polygon').click(function(){
+        if (manage_drone_imagery_standard_process_raw_images_polygon.length != 4) {
+            alert('First save a plot-polygon!');
+            return false;
+        }
+        else {
+            drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_polygon';
+            alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
+        }
     });
 
     //
@@ -3324,18 +3350,25 @@ jQuery(document).ready(function() {
         }
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
-        if (crop_points.length < 4){
-            crop_points.push({x:PosX, y:PosY});
-            crop_display_points.push({x:PosX, y:PosY});
-        } else {
-            crop_display_points.push({x:PosX, y:PosY});
+
+        if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_polygon') {
+            plotPolygonsTemplatePasteRawImage(PosX, PosY, manage_drone_imagery_standard_process_raw_images_polygon);
+            drone_imagery_standard_process_plot_polygon_click_type = '';
         }
-        if (crop_display_points.length > 5){
-            crop_points = [];
-            crop_display_points = [];
+        else {
+            if (crop_points.length < 4){
+                crop_points.push({x:PosX, y:PosY});
+                crop_display_points.push({x:PosX, y:PosY});
+            } else {
+                crop_display_points.push({x:PosX, y:PosY});
+            }
+            if (crop_display_points.length > 5){
+                crop_points = [];
+                crop_display_points = [];
+            }
+            drawPolyline(crop_display_points);
+            drawWaypoints(crop_display_points, undefined, 0);
         }
-        drawPolyline(crop_display_points);
-        drawWaypoints(crop_display_points, undefined, 0);
     }
 
     function drawPolyline(points){
@@ -3856,6 +3889,27 @@ jQuery(document).ready(function() {
         droneImageryDrawPlotPolygonActiveTemplatesTable(drone_imagery_plot_polygons_active_templates, plot_polygons_template_dimensions);
 
         droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
+    }
+
+    function plotPolygonsTemplatePasteRawImage(posx, posy, polygon) {
+        var plot_polygon_top_left_position = polygon[0];
+        var plot_polygon_template_paste_x_diff = plot_polygon_top_left_position['x'] - posx;
+        var plot_polygon_template_paste_y_diff = plot_polygon_top_left_position['y'] - posy;
+
+        crop_points = [
+            {x:polygon[0]['x'] - plot_polygon_template_paste_x_diff, y:polygon[0]['y'] - plot_polygon_template_paste_y_diff},
+            {x:polygon[1]['x'] - plot_polygon_template_paste_x_diff, y:polygon[1]['y'] - plot_polygon_template_paste_y_diff},
+            {x:polygon[2]['x'] - plot_polygon_template_paste_x_diff, y:polygon[2]['y'] - plot_polygon_template_paste_y_diff},
+            {x:polygon[3]['x'] - plot_polygon_template_paste_x_diff, y:polygon[3]['y'] - plot_polygon_template_paste_y_diff}
+        ];
+
+        plot_polygons_ind_4_points = JSON.parse(JSON.stringify(crop_points));
+        plot_polygons_display_points = plot_polygons_ind_4_points;
+        if (plot_polygons_display_points.length == 4) {
+            plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+        }
+        drawPolyline(plot_polygons_display_points);
+        drawWaypoints(plot_polygons_display_points, 1, 0);
     }
 
     function droneImageryDrawPlotPolygonActiveTemplatesTable(div_id, plot_polygons_template_dimensions){

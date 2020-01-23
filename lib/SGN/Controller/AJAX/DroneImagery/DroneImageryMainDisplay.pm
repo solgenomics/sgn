@@ -348,7 +348,8 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
 
         foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
             my $d = $drone_run_bands->{$drone_run_band_project_id};
-            
+
+            # If raw images were uploaded and orthomosaic will not be used.
             if ($d->{images}) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Raw Images</h5></div><div class="col-sm-6">';
                 foreach (@{$d->{images}}) {
@@ -367,6 +368,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                 }
             }
 
+            # If orthomosaic was uploaded or stitched by ImageBreed on upload of raw images.
             if ($d->{stitched_image}) {
                 $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Stitched Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{stitched_image_id}.'"></span></h5><b>By</b>: '.$d->{stitched_image_username}.'<br/><b>Date</b>: '.$d->{stitched_image_modified_date}.'</div><div class="col-sm-6">'.$d->{stitched_image}.'</div></div></div>';
 

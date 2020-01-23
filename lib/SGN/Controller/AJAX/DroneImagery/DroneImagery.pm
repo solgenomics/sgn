@@ -808,6 +808,7 @@ sub _perform_plot_polygon_assign {
             my $last_point = pop @$polygon;
         }
         if (scalar(@$polygon) != 4){
+            # print STDERR Dumper $polygon;
             $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.' should be 4 long!'};
             $c->detach();
         }
