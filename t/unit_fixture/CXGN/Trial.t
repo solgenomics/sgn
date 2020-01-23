@@ -380,7 +380,7 @@ is_deeply(\@all_project_types, [
           'Screen House',
           'Seed Multiplication',
           'Seedling Nursery',
-          'Specialty Trial'
+          'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
           'crossing_block_trial',
@@ -523,8 +523,8 @@ my $total_phenotypes = $trial->total_phenotypes();
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
-print STDERR "Total phentoypes: $total_phenotypes\n";
-print STDERR "Trial phentoypes: $trial_phenotype_count\n";
+#print STDERR "Total phentoypes: $total_phenotypes\n";
+#print STDERR "Trial phentoypes: $trial_phenotype_count\n";
 is($total_phenotypes, 3508, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
@@ -547,7 +547,7 @@ my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
 my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_traits([70727], 'all', ['plot_of','plant_of'], 'accession', 'subject');
-#print STDERR Dumper $plot_pheno_for_trait;
+print STDERR Dumper $plot_pheno_for_trait;
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;
 foreach (@$plot_pheno_for_trait) {
@@ -557,14 +557,14 @@ foreach (@$plot_pheno_for_trait) {
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
 my @expected_sorted_stocks = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name});
-print STDERR Dumper \@phenotyped_stocks;
-print STDERR Dumper \@expected_sorted_stocks;
+#print STDERR Dumper \@phenotyped_stocks;
+#print STDERR Dumper \@expected_sorted_stocks;
 is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
 is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks");
 
 my $trial_experiment_count = $trial->get_experiment_count();
-#print STDERR $trial_experiment_count."\n";
-is($trial_experiment_count, 7, "check get_experiment_count");
+print STDERR $trial_experiment_count."\n";
+is($trial_experiment_count, 4, "check get_experiment_count");
 
 my $location_type_id = $trial->get_location_type_id();
 #print STDERR $location_type_id."\n";
