@@ -1069,10 +1069,9 @@ sub get_cached_file_search_json {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
-                foreach my $o (keys %{$geno->{selected_genotype_hash}}) {
+                foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
-                @all_marker_objects = sort { $a->{name} cmp $b->{name} } @all_marker_objects;
             }
 
             if ($metadata_only) {
@@ -1157,10 +1156,9 @@ sub get_cached_file_dosage_matrix {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
-                foreach my $o (keys %{$geno->{selected_genotype_hash}}) {
+                foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
-                @all_marker_objects = sort { $a->{name} cmp $b->{name} } @all_marker_objects;
             }
 
             my $genotype_string = "";
@@ -1272,10 +1270,9 @@ sub get_cached_file_VCF {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
-                foreach my $o (keys %{$geno->{selected_genotype_hash}}) {
+                foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
-                @all_marker_objects = sort { $a->{name} cmp $b->{name} } @all_marker_objects;
             }
 
             $unique_germplasm{$geno->{germplasmDbId}}++;
@@ -1324,8 +1321,20 @@ sub get_cached_file_VCF {
                 $genotype_string .= "\n";
                 $genotype_string .= "FORMAT\t";
                 foreach my $m (@all_marker_objects) {
-                    my $format = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format};
-                    my @format_array = split ':', $format;
+                    my $format = $m->{format};
+                    my @format_array;
+                    #In case of old genotyping protocols where there was no protocolprop marker info
+                    if (!$format) {
+                        my $first_g = $geno->{selected_genotype_hash}->{$m->{name}};
+                        foreach my $k (sort keys %$first_g) {
+                            if (defined($first_g->{$k})) {
+                                push @format_array, $k;
+                            }
+                        }
+                    } else {
+                        @format_array = split ':', $format;
+                    }
+
                     if (scalar(@format_array) > 1) { #ONLY ADD NT FOR NOT OLD GENOTYPING PROTOCOLS
                         my %format_check = map {$_ => 1} @format_array;
                         if (!exists($format_check{'NT'})) {
@@ -1338,6 +1347,7 @@ sub get_cached_file_VCF {
                     $format = join ':', @format_array;
                     $genotype_string .= $format . "\t";
                     $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
+                    $m->{format} = $format;
                 }
                 $genotype_string .= "\n";
             }
@@ -1441,6 +1451,27 @@ sub get_cached_file_VCF {
         $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
+}
+
+sub genosort {
+    my ($a_chr, $a_pos, $b_chr, $b_pos);
+    if ($a =~ m/S(\d+)\_(.*)/) {
+        $a_chr = $1;
+        $a_pos = $2;
+    }
+    if ($b =~ m/S(\d+)\_(.*)/) {
+        $b_chr = $1;
+        $b_pos = $2;
+    }
+
+    if ($a_chr && $b_chr) {
+        if ($a_chr == $b_chr) {
+            return $a_pos <=> $b_pos;
+        }
+        return $a_chr <=> $b_chr;
+    } else {
+        return -1;
+    }
 }
 
 1;
