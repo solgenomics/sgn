@@ -144,6 +144,7 @@ has 'offset' => (
 
 sub download {
     my $self = shift;
+    my $c = shift;
     my $schema = $self->bcs_schema;
     my $cache_root_dir = $self->cache_root_dir,
     my $trial_list = $self->trial_list;
@@ -183,7 +184,7 @@ sub download {
         limit=>$limit,
         offset=>$offset
     });
-    return $genotypes_search->get_cached_file_dosage_matrix();
+    return $genotypes_search->get_cached_file_dosage_matrix($c);
 }
 
 1;
