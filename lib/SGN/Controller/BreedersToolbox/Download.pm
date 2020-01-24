@@ -42,9 +42,9 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-	# redirect to login page
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
+	    # redirect to login page
+	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	    return;
     }
 
     $c->stash->{template} = '/breeders_toolbox/download.mas';
@@ -64,10 +64,10 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    $self->trial_download_log($c, $trial_id, "trial layout");
 
 #    if ($format eq "csv") {
-#	$self->download_layout_csv($c, $trial_id, $design);
+#       $self->download_layout_csv($c, $trial_id, $design);
 #    }
 #    else {
-#	$self->download_layout_excel($c, $trial_id, $design);
+#       $self->download_layout_excel($c, $trial_id, $design);
 #    }
 #}
 
@@ -87,12 +87,12 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    move($tempfile, $file_path);
 
 #    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "TrialLayoutCSV",
-#	},
+#   	{
+#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#   	    trial_id => $trial_id,
+#   	    filename => $file_path,
+#   	    format => "TrialLayoutCSV",
+#       },
 #	);
 
 #    $td->download();
@@ -121,12 +121,12 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    move($tempfile, $file_path);
 
 #    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "TrialLayoutExcel",
-#	},
+#   	{
+#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#   	    trial_id => $trial_id,
+#   	    filename => $file_path,
+#   	    format => "TrialLayoutExcel",
+#   	},
 #	);
 
 #    $td->download();
@@ -750,7 +750,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $file_handle = $geno->download();
+    my $file_handle = $geno->download($c);
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
