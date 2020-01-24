@@ -156,6 +156,8 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             if (!$v->{drone_run_indicator}) {
                 if ($v->{project_image_type_name} eq 'raw_drone_imagery') {
                     $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+
+                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
                 }
                 else {
                     if (!$v->{drone_run_processed}) {
