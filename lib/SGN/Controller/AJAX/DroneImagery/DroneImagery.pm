@@ -953,18 +953,12 @@ sub drone_imagery_manual_assign_plot_polygon_GET : Args(0) {
     my $polygon = $c->req->param('polygon');
     my $plot_name = $c->req->param('plot_name');
     my $assign_plot_polygons_type = $c->req->param('image_type_name');
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my %stock_polygon = ($plot_name => decode_json $polygon);
     my $stock_polygons = encode_json \%stock_polygon;
-
-    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        image_id_list=>[$image_id],
-    });
-    my ($result, $total_count) = $images_search->search();
-    my $drone_run_band_project_id = $result->[0]->{drone_run_band_project_id};
 
     my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $stock_polygons, $assign_plot_polygons_type, $user_id, $user_name, $user_role, 0);
 
@@ -2826,7 +2820,14 @@ sub drone_imagery_get_image_GET : Args(0) {
     my $image_fullpath = $image->get_filename('original_converted', 'full');
     my @size = imgsize($image_fullpath);
 
-    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, image_width => $size[0], image_height => $size[1] };
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        image_id_list=>[$image_id],
+    });
+    my ($result, $total_count) = $images_search->search();
+    my $drone_run_band_project_id = $result->[0]->{drone_run_band_project_id};
+
+    $c->stash->{rest} = { image_url => $image_url, image_fullpath => $image_fullpath, image_width => $size[0], image_height => $size[1], drone_run_band_project_id => $drone_run_band_project_id };
 }
 
 sub drone_imagery_remove_image : Path('/api/drone_imagery/remove_image') : ActionClass('REST') { }
