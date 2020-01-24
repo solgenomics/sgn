@@ -1850,6 +1850,9 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $time_diff_weeks = $time_diff->weeks;
     my $time_diff_days = $time_diff->days;
     my $rounded_time_diff_weeks = round($time_diff_weeks);
+    if ($rounded_time_diff_weeks == 0) {
+        $rounded_time_diff_weeks = 1;
+    }
     print STDERR Dumper $rounded_time_diff_weeks;
 
     my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
