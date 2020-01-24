@@ -3407,7 +3407,7 @@ sub _perform_phenotype_automated {
             type_id=>$process_indicator_cvterm_id,
             project_id=>$drone_run_project_id,
         });
-        $in_progress_indicator = $drone_run_band_remove_background_threshold_rs->first->value();
+        $in_progress_indicator = $drone_run_band_remove_background_threshold_rs->first ? $drone_run_band_remove_background_threshold_rs->first->value() : 0;
     }
 
     my $project_image_type_id_map = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
