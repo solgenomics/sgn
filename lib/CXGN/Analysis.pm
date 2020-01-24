@@ -92,7 +92,7 @@ sub BUILD {
 	$self->design($design);
 
 	my @accessions = $design->get_accession_names();
-	print STDERR "ACCESSIONS: ". Dumper(\@accession);
+	print STDERR "ACCESSIONS: ". Dumper(\@accessions);
 	# get the accessions from the design (not the dataset!)
 	#
 	$self->accession_names($self->design()->get_accession_names());	
@@ -307,8 +307,8 @@ sub create_and_store_analysis_design {
     } 
     else {
 	print STDERR "Valiation successful. Storing...\n";
-	try { $store_error = $design_store->store(); }
-	catch { $store_error = $_; };
+	try { $store_error = $design_store->store() }
+	catch { $store_error = $_ };
     } 
     if ($store_error) { 
 	die "ERROR SAVING TRIAL!: $store_error\n"; 
