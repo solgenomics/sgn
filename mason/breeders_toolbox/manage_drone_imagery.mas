@@ -373,6 +373,18 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <button class="btn btn-danger btn-sm" id="drone_imagery_standard_process_raw_images_clear_polygon" onclick="return false;">Start Over</button>
             <hr>
 
+            <hr>
+            <form class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Previously used plot-polygons: </label>
+                    <div class="col-sm-6">
+                        <div id="drone_imagery_standard_process_raw_images_previous_polygons_div"></div>
+                    </div>
+                </div>
+            </form>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon" onclick="return false;">Paste Previously Used Plot-Polygon</button>
+            <hr>
+
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
                     <label class="col-sm-3 control-label">Plot-polygon type: </label>
@@ -2167,6 +2179,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_selected_plot_name;
     var manage_drone_imagery_standard_process_raw_images_selected_image_type_name;
     var manage_drone_imagery_standard_process_raw_images_polygon = [];
+    var manage_drone_imagery_standard_process_raw_images_previous_polygon;
     var ctx;
     var dronecroppingImg;
 
@@ -2181,6 +2194,8 @@ jQuery(document).ready(function() {
         get_select_box('drone_imagery_plot_polygon_types','drone_imagery_standard_process_raw_images_image_type_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_type_select', 'id': 'drone_imagery_standard_process_raw_images_image_type_select', 'empty':1, 'names_as_select':1 });
     
         get_select_box('plot_images','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
+
+        get_select_box('plot_image_sizes','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
     });
 
     jQuery(document).on('change', '#drone_imagery_standard_process_raw_images_image_id_select', function() {
@@ -2303,6 +2318,17 @@ jQuery(document).ready(function() {
             drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_polygon';
             alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
         }
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon').click(function(){
+        manage_drone_imagery_standard_process_raw_images_previous_polygon = jQuery('#drone_imagery_standard_process_raw_images_plot_sizes_select').val();
+        console.log(manage_drone_imagery_standard_process_raw_images_previous_polygon);
+        if (manage_drone_imagery_standard_process_raw_images_previous_polygon == '') {
+            alert('To do this first select a previously used polygon, if there exists one!');
+            return false;
+        }
+        drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_previous_polygon';
+        alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
     });
 
     //
@@ -3401,6 +3427,18 @@ jQuery(document).ready(function() {
         PosY = PosY - ImgPos[1];
 
         if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_polygon') {
+            plotPolygonsTemplatePasteRawImage(PosX, PosY, manage_drone_imagery_standard_process_raw_images_polygon);
+            drone_imagery_standard_process_plot_polygon_click_type = '';
+        }
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_previous_polygon') {
+            var manage_drone_imagery_standard_process_raw_images_previous_polygon_array = manage_drone_imagery_standard_process_raw_images_previous_polygon.split(',');
+            manage_drone_imagery_standard_process_raw_images_polygon = [
+                {'x':PosX, 'y':PosY},
+                {'x':PosX+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[0]), 'y':PosY},
+                {'x':PosX+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[0]), 'y':PosY+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[1])},
+                {'x':PosX, 'y':PosY+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[1])}
+            ];
+            crop_points = manage_drone_imagery_standard_process_raw_images_polygon;
             plotPolygonsTemplatePasteRawImage(PosX, PosY, manage_drone_imagery_standard_process_raw_images_polygon);
             drone_imagery_standard_process_plot_polygon_click_type = '';
         }

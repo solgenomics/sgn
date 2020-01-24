@@ -35,6 +35,7 @@ use CXGN::Stock::Search;
 use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
 use JSON;
+use Image::Size;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1232,6 +1233,50 @@ sub get_plot_images : Path('/ajax/html/select/plot_images') Args(0) {
     my @result;
     foreach (@$result) {
         push @result, [$_->{image_id}, $_->{image_original_filename}];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_plot_image_sizes : Path('/ajax/html/select/plot_image_sizes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>[$drone_run_project_id],
+    });
+    my ($result, $total_count) = $images_search->search();
+
+    my @result;
+    my %unique_sizes;
+    foreach (@$result) {
+        my $image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        my $image_url = $image->get_image_url('original_converted');
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my @size = imgsize($image_fullpath);
+        my $str = join ',', @size;
+        $unique_sizes{$str} = \@size;
+    }
+
+    while (my($str, $size) = each %unique_sizes) {
+        push @result, [$str, $size->[0]." width and ".$size->[1]." height"];
     }
 
     if ($empty) {
