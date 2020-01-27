@@ -156,6 +156,38 @@ sub clean_traits {
 }
 
 
+sub remove_ontology {
+    my ($self, $traits) = @_;
+
+    my @clean_traits;
+
+    foreach my $tr (@$traits) {
+	my $name = $tr->[1];
+	$name= $self->clean_traits($name);
+
+	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
+ 	push @clean_traits, $id_nm;	    	    
+    }
+
+    return \@clean_traits;
+
+}
+
+
+sub get_clean_trial_trait_names {
+    my ($self, $c, $trial_id) = @_;
+
+    my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+    my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
+    my @trait_names;
+
+    foreach my $tr (@$clean_traits)
+    {
+	push @trait_names, $tr->{trait_name};
+    }
+
+    return \@trait_names;
+}
 ####
 1;
 ####
