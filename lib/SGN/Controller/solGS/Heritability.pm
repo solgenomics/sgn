@@ -22,6 +22,7 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $pop_id;
 
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     
@@ -89,7 +90,8 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
     my $pop_id        = $c->req->param('training_pop_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
     $c->stash->{pop_id} = $pop_id;
-
+    $c->stash->{training_pop_id} = $pop_id;
+    
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
     
