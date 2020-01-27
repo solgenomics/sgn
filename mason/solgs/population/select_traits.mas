@@ -16,7 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 $traits_form => ''
-$pop_id
+$training_pop_id
 $all_traits_file
 
 
@@ -32,7 +32,7 @@ $all_traits_file
 {
  my ($id, $trait, $acronym) = split (/\t/);
 
- my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
+ my $trait_link   = qq | <a href="/solgs/trait/$id/population/$training_pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
  my $row          = <<ROW;
  <tr>
    <td>
@@ -79,4 +79,4 @@ ROW
 
 %}
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
+<input type="hidden" id="population_id" value="<% $training_pop_id %>" />
