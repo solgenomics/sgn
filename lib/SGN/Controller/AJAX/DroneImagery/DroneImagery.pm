@@ -4120,15 +4120,18 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
 
-    my $geno = CXGN::Genotype::GRM->new({
-        bcs_schema=>$schema,
-        people_schema=>$people_schema,
-        cache_root=>$c->config->{cache_file_path},
-        plot_id_list=>\@seen_plots,
-        protocol_id=>$protocol_id,
-        get_grm_for_parental_accessions=>$use_parents_grm
-    });
-    my $grm = $geno->download_grm('data');
+    my $grm;
+    if ($protocol_id) {
+        my $geno = CXGN::Genotype::GRM->new({
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            cache_root=>$c->config->{cache_file_path},
+            plot_id_list=>\@seen_plots,
+            protocol_id=>$protocol_id,
+            get_grm_for_parental_accessions=>$use_parents_grm
+        });
+        $grm = $geno->download_grm('data');
+    }
     # print STDERR Dumper $grm;
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
