@@ -4199,30 +4199,67 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         }
         print $F_aux "\n";
 
-        foreach my $field_trial_id (sort keys %seen_field_trial_ids){
-            foreach my $stock_id (sort keys %seen_stock_ids){
-                my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
-                my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
-                my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
-                if (defined($value)) {
-                    print $F_aux "$stock_id,";
-                    print $F_aux "$value,";
-                    print $F_aux "$trait_name,";
-                    print $F_aux "$field_trial_id,";
-                    print $F_aux "$d->{germplasm_stock_id},";
-                    print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
-                    print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
-                    if (scalar(@aux_trait_id)>0) {
-                        print $F_aux ',';
-                        my @aux_values;
-                        foreach my $aux_trait (@aux_trait_id) {
-                            my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
-                            push @aux_values, $aux_value;
+        # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
+        if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
+            foreach my $field_trial_id (sort keys %seen_field_trial_ids){
+                foreach my $stock_id (sort keys %seen_stock_ids){
+                    foreach my $image_type (sort keys %seen_image_types) {
+                        my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
+                        my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                        my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        if (defined($value)) {
+                            print $F_aux "$stock_id,";
+                            print $F_aux "$value,";
+                            print $F_aux "$trait_name,";
+                            print $F_aux "$field_trial_id,";
+                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            if (scalar(@aux_trait_id)>0) {
+                                print $F_aux ',';
+                                my @aux_values;
+                                foreach my $aux_trait (@aux_trait_id) {
+                                    my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    push @aux_values, $aux_value;
+                                }
+                                my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
+                                print $F_aux $aux_values_string;
+                            }
+                            print $F_aux "\n";
                         }
-                        my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
-                        print $F_aux $aux_values_string;
                     }
-                    print $F_aux "\n";
+                }
+            }
+        }
+        #Non-LSTM models group image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
+        else {
+            foreach my $field_trial_id (sort keys %seen_field_trial_ids){
+                foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                    foreach my $stock_id (sort keys %seen_stock_ids){
+                        my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
+                        my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                        my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        if (defined($value)) {
+                            print $F_aux "$stock_id,";
+                            print $F_aux "$value,";
+                            print $F_aux "$trait_name,";
+                            print $F_aux "$field_trial_id,";
+                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            if (scalar(@aux_trait_id)>0) {
+                                print $F_aux ',';
+                                my @aux_values;
+                                foreach my $aux_trait (@aux_trait_id) {
+                                    my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    push @aux_values, $aux_value;
+                                }
+                                my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
+                                print $F_aux $aux_values_string;
+                            }
+                            print $F_aux "\n";
+                        }
+                    }
                 }
             }
         }
