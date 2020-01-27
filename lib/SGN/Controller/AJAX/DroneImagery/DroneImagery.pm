@@ -4158,8 +4158,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     }
 
     my %phenotype_data_hash;
+    my %aux_data_hash;
     foreach my $d (@$data) {
-        $phenotype_data_hash{$d->{observationunit_stock_id}}->{germplasm_stock_id} = $d->{germplasm_stock_id};
         foreach my $o (@{$d->{observations}}) {
             if ($o->{trait_id} == $trait_id) {
                 $phenotype_data_hash{$d->{observationunit_stock_id}}->{trait_value} = {
@@ -4170,11 +4170,13 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                 $phenotype_data_hash{$d->{observationunit_stock_id}}->{aux_trait_value}->{$o->{trait_id}} = $o->{value};
             }
         }
+        $aux_data_hash{$d->{trial_id}}->{$d->{observationunit_stock_id}} = $d;
     }
     #print STDERR Dumper \%data_hash;
     undef $data;
 
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
+    my $archive_temp_input_aux_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileauxXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
     #my $archive_temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/modelfileXXXX');
     my $archive_temp_loss_history_file_string = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/losshistoryXXXX');
@@ -4186,12 +4188,48 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
 
-    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        print $F '"stock_id","image_path","phenotype_value","trait_name","image_type","day","drone_run_project_id","field_trial_id","accession_id","female_id","male_id"';
+    open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
+        print $F_aux 'stock_id,phenotype_value,trait_name,field_trial_id,accession_id,female_id,male_id';
         if (scalar(@aux_trait_id)>0) {
-            print $F ',"'.join('","', @aux_trait_id).'"';
+            my $aux_trait_counter = 0;
+            foreach (@aux_trait_id) {
+                print $F_aux ",aux_trait_$aux_trait_counter";
+                $aux_trait_counter++;
+            }
         }
-        print $F "\n";
+        print $F_aux "\n";
+
+        foreach my $field_trial_id (sort keys %seen_field_trial_ids){
+            foreach my $stock_id (sort keys %seen_stock_ids){
+                my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
+                my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                if (defined($value)) {
+                    print $F_aux "$stock_id,";
+                    print $F_aux "$value,";
+                    print $F_aux "$trait_name,";
+                    print $F_aux "$field_trial_id,";
+                    print $F_aux "$d->{germplasm_stock_id},";
+                    print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
+                    print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                    if (scalar(@aux_trait_id)>0) {
+                        print $F_aux ',';
+                        my @aux_values;
+                        foreach my $aux_trait (@aux_trait_id) {
+                            my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                            push @aux_values, $aux_value;
+                        }
+                        my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
+                        print $F_aux $aux_values_string;
+                    }
+                    print $F_aux "\n";
+                }
+            }
+        }
+    close($F_aux);
+
+    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        print $F "stock_id,image_path,image_type,day,drone_run_project_id\n";
 
         # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
         if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
@@ -4203,37 +4241,19 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                             my $image_fullpath = $data->{image};
                             my $drone_run_project_id = $data->{drone_run_project_id};
                             my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
-                            my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
-                            if ($value) {
-                                print $F '"'.$stock_id.'",';
-                                print $F '"'.$image_fullpath.'",';
-                                print $F '"'.$value.'",';
-                                print $F '"'.$trait_name.'",';
-                                print $F '"'.$image_type.'",';
-                                print $F '"'.$day_time.'",';
-                                print $F '"'.$drone_run_project_id.'",';
-                                print $F '"'.$field_trial_id.'",';
-                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'",';
-                                print $F '"'.$plot_pedigrees_found{$stock_id}->{female_stock_id}.'",';
-                                print $F '"'.$plot_pedigrees_found{$stock_id}->{male_stock_id}.'"';
-                                if (scalar(@aux_trait_id)>0) {
-                                    print $F ',"';
-                                    my @aux_values;
-                                    foreach my $aux_trait (@aux_trait_id) {
-                                        my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
-                                        push @aux_values, $aux_value;
-                                    }
-                                    my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
-                                    print $F $aux_values_string.'"';
-                                }
-                                print $F "\n";
+                            if (defined($value)) {
+                                print $F "$stock_id,";
+                                print $F "$image_fullpath,";
+                                print $F "$image_type,";
+                                print $F "$day_time,";
+                                print $F "$drone_run_project_id\n";
                             }
                         }
                     }
                 }
             }
         }
-        #Non-LSTM models group 9 image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
+        #Non-LSTM models group image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
         else {
             foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
                 foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
@@ -4243,30 +4263,12 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                             my $image_fullpath = $data->{image};
                             my $drone_run_project_id = $data->{drone_run_project_id};
                             my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
-                            my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
-                            if ($value) {
-                                print $F '"'.$stock_id.'",';
-                                print $F '"'.$image_fullpath.'",';
-                                print $F '"'.$value.'",';
-                                print $F '"'.$trait_name.'",';
-                                print $F '"'.$image_type.'",';
-                                print $F '"'.$day_time.'",';
-                                print $F '"'.$drone_run_project_id.'",';
-                                print $F '"'.$field_trial_id.'",';
-                                print $F '"'.$phenotype_data_hash{$stock_id}->{germplasm_stock_id}.'",';
-                                print $F '"'.$plot_pedigrees_found{$stock_id}->{female_stock_id}.'",';
-                                print $F '"'.$plot_pedigrees_found{$stock_id}->{male_stock_id}.'"';
-                                if (scalar(@aux_trait_id)>0) {
-                                    print $F ',"';
-                                    my @aux_values = ();
-                                    foreach my $aux_trait (@aux_trait_id) {
-                                        my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
-                                        push @aux_values, $aux_value;
-                                    }
-                                    my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
-                                    print $F $aux_values_string.'"';
-                                }
-                                print $F "\n";
+                            if (defined($value)) {
+                                print $F "$stock_id,";
+                                print $F "$image_fullpath,";
+                                print $F "$image_type,";
+                                print $F "$day_time,";
+                                print $F "$drone_run_project_id\n";
                             }
                         }
                     }
@@ -4277,6 +4279,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
 
     undef %data_hash;
     undef %phenotype_data_hash;
+    undef %aux_data_hash;
 
     my $log_file_path = '';
     if ($c->config->{error_log}) {
@@ -4285,28 +4288,31 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
 
     my $cmd = '';
     if ($model_type eq 'KerasTunerCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_1_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'SimpleKerasTunerCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type simple_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     # elsif ($model_type eq 'KerasTunerCNNInceptionResNetV2') {
-    #     $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2application_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+    #     $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --output_random_search_result_project \''.$keras_tuner_output_project_dir.'\' --keras_model_type inceptionresnetv2application_tuner --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     # }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNInceptionResNetV2') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type inceptionresnetv2 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm_imagenet --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type densenet121_lstm_imagenet --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNDenseNet121ImageNetWeights') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type densenet121application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type densenet121application --keras_model_weights imagenet --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     elsif ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
-        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type simple_1 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type simple_1 --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
+    }
+    elsif ($model_type eq 'KerasCNNMLPExample') {
+        $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/KerasCNNSequentialSoftmaxCategorical.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_aux_data_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --output_model_file_path \''.$archive_temp_output_model_file.'\' '.$log_file_path.' --keras_model_type mlp_cnn_example --output_loss_history \''.$archive_temp_loss_history_file.'\' ';
     }
     else {
         $c->stash->{rest} = {error => "$model_type not supported!"};
