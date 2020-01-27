@@ -754,10 +754,13 @@ sub genotype_data {
 
     my $trial_id  = $args->{trial_id};
     my $protocol_id = $args->{genotyping_protocol_id};  
-
-    my $protocol_detail= $self->protocol_detail() if !$protocol_id;
-    my $protocol_id = $protocol_detail->{protocol_id};
- 
+  
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $self->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+  
     my $geno_search = CXGN::Genotype::Search->new({
 		bcs_schema => $self->schema(),
 		trial_list => [$trial_id],
@@ -2031,7 +2034,7 @@ sub get_dataset_owner {
 sub get_dataset_genotype_data {
     my ($self, $dataset_id, $protocol_id) = @_;
    
-    my $protocol_detail = $self->protocol_detail();
+    my $protocol_detail = $self->protocol_detail($protocol_id);
     my $protocol_id = $protocol_detail->{protocol_id};
 
     my $geno_search = CXGN::Genotype::Search->new(
