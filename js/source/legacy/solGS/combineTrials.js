@@ -160,6 +160,7 @@ solGS.combinedTrials = {
 	var referer = window.location.href;
 	
 	var page;
+
 	
 	if (comboPopsList.length > 1) {
 	    jQuery.ajax({  
@@ -221,6 +222,7 @@ solGS.combinedTrials = {
 
     	var comboPopsId = args.combo_pops_id;
     	comboPopsId = comboPopsId[0];
+	var genoProtocol = args.genotyping_protocol_id;
 	
     	var referer = window.location.href;
     	var page;
@@ -234,7 +236,7 @@ solGS.combinedTrials = {
     		+ traitId;
 	    
     	} else {
-    	    page = '/solgs/populations/combined/' + comboPopsId;
+    	    page = '/solgs/populations/combined/' + comboPopsId + '/gp/' + genoProtocol;
     	}
 	
     	console.log('calling solgs wait page...')
@@ -353,14 +355,16 @@ solGS.combinedTrials = {
 	var page;
 	var popId = args.trial_id;
 	var traitId = args.trait_id;
-	
+	var genoProtocol = args.genotyping_protocol_id;
+
 	if (referer.match(/search\/trials\/trait\//)) {
 	    page = '/solgs/trait/' + traitId + '/population/' + popId;
 	    
 	} else {
 	    var hostName = window.location.protocol + '//' + window.location.host;  
-	    page = hostName +  '/solgs/population/' + popId;
+	    page = hostName +  '/solgs/population/' + popId + '/gp/' + genoProtocol;
 	}
+
 	console.log('downloadSingleTrialTrainingPopData geno pro id' + args.genotyping_protocol_id)
 	var pageArgs = {'population_id'   : [ popId],
 		    'analysis_type'   : 'population download',
