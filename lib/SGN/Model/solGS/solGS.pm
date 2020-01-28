@@ -1964,6 +1964,27 @@ sub protocol_detail {
 }
 
 
+sub get_all_genotyping_protocols {
+    my ($self, $trial_id) = @_;
+
+    my $q = 'SELECT distinct(genotyping_protocol_id) 
+                    FROM genotyping_protocolsXtrials
+                    WHERE trial_id = ?';
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+    $sth->execute($trial_id);
+
+    my @protocol_ids;
+    
+    while ( my $protocol_id = $sth->fetchrow_array()) 
+    {
+	push @protocol_ids, $protocol_id;
+    }
+
+    return \@protocol_ids;
+}
+
+
 sub get_genotypes_from_dataset {
     my ($self, $dataset_id) = @_;
    
