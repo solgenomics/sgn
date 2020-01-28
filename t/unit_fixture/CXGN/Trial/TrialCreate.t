@@ -354,7 +354,7 @@ foreach my $acc (@$genotyping_accession_names) {
 }
 
 #create westcott trial design_type
-
+=begin
 my @stock_names_westcott;
 for (my $i = 1; $i <= 100; $i++) {
     push(@stock_names_westcott, "test_stock_for_westcott_trial".$i);
@@ -424,6 +424,8 @@ for (my $i=0; $i<scalar(@stock_names_westcott); $i++){
     }
 }
 ok(scalar(@accessions) == 100, "check accession names");
+=end
+=cut
 
 #create splitplot trial design_type
 
