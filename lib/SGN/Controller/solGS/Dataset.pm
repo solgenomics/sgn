@@ -7,7 +7,7 @@ use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use POSIX qw(strftime);
-
+use Scalar::Util qw /weaken reftype/;
 #BEGIN { extends 'Catalyst::Controller' }
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -32,7 +32,7 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     
     $c->stash->{dataset_id} = $dataset_id;
     $self->get_dataset_trials_details($c);
-      
+     
     $c->stash->{rest}{'trials_ids'} = $c->stash->{trials_ids};
     $c->stash->{rest}{'combo_pops_id'} = $c->stash->{combo_pops_id};
     $c->stash->{rest}{'trials_names'} = $c->stash->{trials_names};;
@@ -71,10 +71,12 @@ sub get_dataset_trials_ids {
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
     my $trials_ids = $data->{categories}->{trials};
-
-    my $geno_protocol = $data->{categories}->{genotyping_protocols};
-    print STDERR "\get_dataset_trials_ids: protocol -- $geno_protocol->[0]\n";
-    $c->stash->{genotyping_protocol_id} = $geno_protocol->[0];
+   
+    $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
+   
+    my $protocol_id = $self->get_dataset_genotyping_protocol($c);
+   
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
     $c->stash->{dataset_trials_ids} = $trials_ids;
     $c->stash->{trials_ids} = $trials_ids;
 
@@ -120,9 +122,9 @@ sub submit_dataset_training_data_query {
    
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
-     my $geno_protocol = $data->{categories}->{protocol};
 
-    print STDERR "\n submit_dataset_training_data_query: protocol -- $geno_protocol\n";   
+    my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
+
     my $query_jobs_file;
 
     if (@{$data->{categories}->{plots}})	
@@ -137,7 +139,8 @@ sub submit_dataset_training_data_query {
     elsif (@{$data->{categories}->{trials}})	
     {	
 	my $trials = $data->{categories}->{trials};
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials);
+		
+	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
     
@@ -210,9 +213,7 @@ sub create_dataset_geno_data_query_jobs {
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
     
-    my $geno_protocol = $data->{categories}->{protocol};
-
-    print STDERR "\ncreate_dataset_geno_data_query_jobs: protocol -- $geno_protocol\n";
+    my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
     if ($data->{categories}->{accessions}->[0])	
     {
@@ -229,6 +230,29 @@ sub create_dataset_geno_data_query_jobs {
 	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids);
 	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }    
+}
+
+sub get_dataset_genotyping_protocol {
+    my ($self, $c, $dataset_id) = @_;
+
+    $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
+  
+    my $model = $self->get_model();
+    my $data = $model->get_dataset_data($dataset_id);
+  
+    my $protocol_id = $data->{categories}->{genotyping_protocols};
+
+    if (reftype($protocol_id) ne 'ARRAY')
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+    else
+    {
+	$protocol_id = $protocol_id->[0];
+    }
+
+    return $protocol_id;
 }
 
 
@@ -348,8 +372,8 @@ sub create_dataset_pop_data_files {
     #my $dataset_id = $c->stash->{dataset_id}
     $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
-
-    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+    my $protocol_id = $self->get_dataset_genotyping_protocol($c);
+    $c->controller('solGS::Files')->genotype_file_name($c, $file_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
     
     my $files = { pheno_file => $pheno_file, geno_file => $geno_file};
