@@ -203,8 +203,11 @@ unless( $prove_pid ) {
     # now run the tests against it
     #
     my $app = App::Prove->new;
+
+    my $v = $verbose ? 'v' : '';
+    
     $app->process_args(
-        '-lr',
+        '-lr'.$v,
         ( map { -I => $_ } @INC ),
         @prove_args
         );

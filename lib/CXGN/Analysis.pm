@@ -28,7 +28,7 @@ has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
 has 'accession_ids' => (is => 'rw', isa => 'Maybe[ArrayRef]');
 
-has 'accession_names' => (is => 'rw', isa => 'ArrayRef');
+has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]'); #maybe for debugging only
 
 has 'data_hash' => (is => 'rw', isa => 'HashRef');
 

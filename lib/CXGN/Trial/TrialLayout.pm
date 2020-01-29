@@ -190,7 +190,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 #probably better to lazy load the action design...
-    $self->lookup_trial_id();
+    $self->_get_design_from_trial();
 
 }
 
