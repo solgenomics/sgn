@@ -85,66 +85,22 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h4>NIRS spreadsheet must be uploaded in .xls excel file format</h4>
+            <h4>NIRS data must be added uploaded via a simple .xls spreadsheet, or a SCIO formatted .csv</h4>
             <p>(tab-delimited text formats are NOT supported)</p>
 
-            <hr>
-            <button class="btn btn-primary" name="create_spreadsheet_link">Create Phenotyping Spreadsheet for Trial</button>
-            <hr>
-
-            <h4>Required Data:</h4>
+            <h4>Simple .xls spreadsheet:</h4>
             <ul>
-                <li>Please click the above button to generate the required phenotype spreadsheet</li>
+                <li>The simple nirs spreadsheet format is built on top of the simple phenotype format.</li>
+                <li>A column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves.</li>
+                <li>Trait column names must come from the trait ontology, but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.</li>
             </ul>
 
-            <h4>Notes:</h4>
+            <h4>SCIO .csv:</h4>
             <ul>
-                <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
-                <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
-                <li>Two or more traits can be uploaded at the same time.</li>
+                <li>The SCIO format is generated when doing a direct download from the SCIO server.</li>
+                <li>It consists of a series of metadata fields at the beginning of the file, followed by a header for all of the individual measurements, followed by a row for each of the individual measurements themselves.</li>
+                <li>The User_input_id field must be a valid observation_unit in the database.</li>
             </ul>
-
-            <h4>Simple and Detailed Spreadsheet Format:</h4>
-            <ul>
-                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.</li>
-                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
-                <li>The "NIRS" format is built on top of the simple format - a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves. Trait column names must come form the trait ontology but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.
-
-            <h4>Timestamps:</h4>
-            <ul>
-                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
-                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
-                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
-                <li>Example with timestamps: <br/><br/>
-                <table class="table table-hover table-bordered">
-                    <thead>
-                        <tr>
-                            <th>sprouting proportion|CO_334:0000008</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>20,2016-04-28 16:30:40-0500</td>
-                        </tr>
-                    </tbody>
-                </table>
-                </li>
-                <li>Example without timestamps: <br/><br/>
-                <table class="table table-hover table-bordered">
-                    <thead>
-                        <tr>
-                            <th>sprouting proportion|CO_334:0000008</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>20</td>
-                        </tr>
-                    </tbody>
-                </table>
-                </li>
-            </ul>
-
         </div>
       </div>
       <div class="modal-footer">
