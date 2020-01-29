@@ -112,6 +112,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
 		brapi_module_inst => {
+            context => $c,
 			bcs_schema => $bcs_schema,
 			metadata_schema => $metadata_schema,
 			phenome_schema => $phenome_schema,
@@ -1434,7 +1435,7 @@ sub markerprofile_search_process {
 		stock_ids => $clean_inputs->{germplasmDbId},
 		extract_ids => $clean_inputs->{extractDbId},
 		sample_ids => $clean_inputs->{sampleDbId},
-		protocol_id => $clean_inputs->{methodDbId}->[0] ? $clean_inputs->{methodDbId}->[0] : $default_protocol_id
+		protocol_ids => $clean_inputs->{methodDbId}
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }

@@ -154,7 +154,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
         protocolprop_marker_hash_select=>[],
         return_only_first_genotypeprop_for_stock=>0
     });
-    my $stored_genotypes_result = $stored_genotypes->get_genotype_info();
+    my $count = $stored_genotypes->init_genotype_iterator();
 
     my %distance_matrix;
     my %seen_stored_genotype_names;
@@ -165,8 +165,8 @@ sub upload_genotype_qc_verify_POST : Args(0) {
             markers=>$protocol_info->{marker_names}
         });
         
-        foreach (@$stored_genotypes_result) {
-            my $stock_name = $_->{stock_name};
+        foreach (my $stored_gt = $stored_genotypes->get_next_genotype_info()) {
+            my $stock_name = $stored_gt->{stock_name};
             $seen_stored_genotype_names{$stock_name}++;
             my $gt = CXGN::Genotype->new({
                 marker_encoding=>'GT',

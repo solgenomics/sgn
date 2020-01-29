@@ -71,19 +71,7 @@ is_deeply($response, {
                                           },
                           'status' => [
                                         {
-                                          'code' => 'info',
-                                          'message' => 'BrAPI base call found with page=0, pageSize=10'
-                                        },
-                                        {
-                                          'code' => 'info',
-                                          'message' => 'Loading CXGN::BrAPI::v1::Observations'
-                                        },
-                                        {
-                                          'message' => 'Permission Denied. Must have correct privilege.',
-                                          'code' => '4003'
-                                        },
-                                        {
-                                          'message' => 'Must have submitter privileges to upload phenotypes! Please contact us!',
+                                          'message' => 'You must login and have permission to access this BrAPI call.',
                                           'code' => '400'
                                         }
                                       ]
@@ -143,7 +131,7 @@ is_deeply($response, {
                                       'observationUnitDbId' => 38866,
                                       'collector' => 'collector1',
                                       'value' => '11',
-                                      'observationVariableDbId' => 'dry matter content percentage|CO_334:0000092',
+                                      'observationVariableDbId' => 'CO_334:0000092',
                                       'germplasmName' => 'test_accession3',
                                       'germplasmDbId' => 38842
                                     },
@@ -155,7 +143,7 @@ is_deeply($response, {
                                       'observationUnitDbId' => 38870,
                                       'collector' => 'collector1',
                                       'value' => '110',
-                                      'observationVariableDbId' => 'fresh shoot weight measurement in kg|CO_334:0000016',
+                                      'observationVariableDbId' => 'CO_334:0000016',
                                       'uploadedBy' => 41,
                                       'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                       'studyDbId' => 137,
