@@ -69,7 +69,8 @@ sub raw_drone_imagery_plot_image_count_GET : Args(0) {
         JOIN project AS drone_run ON(drone_run.project_id=drone_run_band_rel.object_project_id)
         JOIN phenome.project_md_image AS project_image ON(drone_run_band.project_id=project_image.project_id)
         JOIN cvterm AS project_image_type ON(project_image_type.cvterm_id=project_image.type_id)
-        WHERE project_image.type_id in ($sql);";
+        JOIN metadata.md_image AS image ON(image.image_id=project_image.image_id)
+        WHERE project_image.type_id in ($sql) AND image.obsolete='f';";
 
     #print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
