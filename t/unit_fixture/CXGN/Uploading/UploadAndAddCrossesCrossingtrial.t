@@ -205,9 +205,24 @@ my $UG120002_id = $schema->resultset('Stock::Stock')->find({name =>'UG120002'})-
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/crosses_and_details_in_trial");
 $response = decode_json $mech->content;
 
-is_deeply($response, {'data'=> [
-    [qq{<a href = "/cross/$test_add_cross_id">test_add_cross</a>}, 'UG120001xUG120002', 'biparental', qq{<a href = "/stock/$UG120001_id/view">UG120001</a>}, qq{<a href = "/stock/$UG120002_id/view">UG120002</a>}, qq{<a href = "/stock/$female_plot_id/view">KASESE_TP2013_842</a>}, qq{<a href = "/stock/$male_plot_id/view">KASESE_TP2013_1591</a>}, qq{<a href = "/stock//view"></a>}, qq{<a href = "/stock//view"></a>}]
-]}, 'crosses in a trial');
+is_deeply($response, {'data'=> [{
+        cross_id => $test_add_cross_id,
+        cross_name => 'test_add_cross',
+        cross_combination => 'UG120001xUG120002',
+        cross_type => 'biparental',
+        female_parent_id => $UG120001_id,
+        female_parent_name => 'UG120001',
+        male_parent_id => $UG120002_id,
+        male_parent_name => 'UG120002',
+        female_plot_id => $female_plot_id,
+        female_plot_name => 'KASESE_TP2013_842',
+        male_plot_id => $male_plot_id,
+        male_plot_name => 'KASESE_TP2013_1591',
+        female_plant_id => undef,
+        female_plant_name => undef,
+        male_plant_id => undef,
+        male_plant_name => undef
+}]}, 'crosses in a trial');
 
 # test uploading progenies
 my $offspring_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();

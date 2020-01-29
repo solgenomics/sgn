@@ -40,6 +40,13 @@ is_deeply($message_hash, {'success' => 1});
 my $field_trial_id = $schema->resultset("Project::Project")->search({name => 'test_trial'})->first->project_id();
 
 #Testing upload of unstitched Micasense RedEdge 5 band raw captures.
+
+my $python_dependencies_installed = `locate keras.py`;
+#print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
+
+SKIP: {
+    skip 'missing pyhton dependencies', 1 unless $python_dependencies_installed;
+
 my $micasense5bandimageszipfile = $f->config->{basepath}."/t/data/imagebreed/Micasense5BandRaw3Captures.zip";
 my $micasense5bandpanelzipfile = $f->config->{basepath}."/t/data/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip";
 $ua = LWP::UserAgent->new;
@@ -307,5 +314,5 @@ my $message_remove_image = $response_remove_image->decoded_content;
 my $message_hash_remove_image = decode_json $message_remove_image;
 print STDERR Dumper $message_hash_remove_image;
 ok($message_hash_remove_image->{status});
-
+}
 done_testing();
