@@ -42,6 +42,16 @@ sub get_training_pop_gebvs :Path('/solgs/get/gebvs/training/population/') Args(0
     $c->stash->{trait_id}        = $c->req->param('trait_id');
     $c->stash->{population_type} = 'training_population';
 
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+   
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+
     my $ret->{gebv_exists} = undef;
 
     $self->get_training_pop_gebv_file($c);
@@ -72,7 +82,17 @@ sub get_selection_pop_gebvs :Path('/solgs/get/gebvs/selection/population/') Args
     $c->stash->{training_pop_id}  = $c->req->param('training_pop_id');
     $c->stash->{trait_id}         = $c->req->param('trait_id');
     $c->stash->{population_type}  = 'selection_population';
- 
+
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+   
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     my $ret->{gebv_exists} = undef;
 
     $self->get_selection_pop_gebv_file($c);
@@ -103,10 +123,19 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $trait_id         = $c->req->param('trait_id');
     my @selection_pop_traits = $c->req->param('training_traits_ids[]');
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
     
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{trait_id}         = $trait_id; 
+    $c->stash->{trait_id}         = $trait_id;
+
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+   
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
 
     if (@selection_pop_traits)
     {
@@ -205,17 +234,18 @@ sub get_selection_pop_gebv_file {
 sub boxplot_id {
     my ($self, $c) = @_;
     
-    my $selection_pop_id   = $c->stash->{selection_pop_id};
-    my $training_pop_id    = $c->stash->{training_pop_id};
-    my $trait_id           = $c->stash->{trait_id};
-
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $trait_id         = $c->stash->{trait_id};
+    my $protocol_id      = $c->stash->{genotyping_protocol_id};
+    
     my $multi_traits = $c->stash->{training_traits_ids};
     if (scalar(@$multi_traits) > 1) {
 
 	$trait_id = crc(join('', @$multi_traits));
     }
 
-    $c->stash->{boxplot_id} = "${training_pop_id}_${selection_pop_id}_${trait_id}";
+    $c->stash->{boxplot_id} = "${training_pop_id}_${selection_pop_id}_${trait_id}-${protocol_id}";
   
 }
 
