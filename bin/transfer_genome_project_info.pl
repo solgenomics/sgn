@@ -11,10 +11,11 @@ use Pod::Usage;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use JSON::Any;
+use CXGN::Stock::SequencingInfo;
 
-our ($opt_H, $opt_D, $opt_i);
+our ($opt_H, $opt_D);
 
-getopts('H:D:i:');
+getopts('H:D:');
 
 if (!$opt_H || !$opt_D ) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file) \n");
