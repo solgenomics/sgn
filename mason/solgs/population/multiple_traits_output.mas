@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
+/solgs/population/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
 
 =AUTHOR
 
@@ -27,7 +27,7 @@ $prediction_pop_name => undef
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
 $acronym
-$genotyping_protocol_id => undef
+$genotyping_protocol_id
 
 </%args>
 

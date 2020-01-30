@@ -24,10 +24,10 @@ $project_desc
 $markers_no
 $traits_no
 $stocks_no
-$protocol
+$protocol_url => ''
 $owner => ''
 $acronym
-$genotyping_protocol_id => ''
+$genotyping_protocol_id
 </%args>
 
 <%perl>
@@ -57,7 +57,7 @@ $genotyping_protocol_id => ''
     markers_no   => $markers_no,
     traits_no    => $traits_no,
     stocks_no    => $stocks_no,
-    protocol     => $protocol,
+    protocol_url => $protocol_url,
     owner        => $owner,
  &>
 

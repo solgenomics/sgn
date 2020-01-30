@@ -26,7 +26,7 @@ $list_of_prediction_pops => undef
 $prediction_pop_name => ''
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
-$genotyping_protocol_id => undef
+$genotyping_protocol_id
 $acronym
 
 </%args>
