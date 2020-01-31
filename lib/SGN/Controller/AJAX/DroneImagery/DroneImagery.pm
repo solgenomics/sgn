@@ -955,6 +955,7 @@ sub drone_imagery_manual_assign_plot_polygon_GET : Args(0) {
     my $plot_name = $c->req->param('plot_name');
     my $assign_plot_polygons_type = $c->req->param('image_type_name');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $angle_rotated = $c->req->param('angle_rotated');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -962,6 +963,17 @@ sub drone_imagery_manual_assign_plot_polygon_GET : Args(0) {
     my $stock_polygons = encode_json \%stock_polygon;
 
     my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $stock_polygons, $assign_plot_polygons_type, $user_id, $user_name, $user_role, 0);
+
+    my $manual_plot_polygon_template = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+
+    my $plot_polygon_info = {
+        rotate_angle => $angle_rotated,
+        plot_name => $plot_name,
+        image_id => $image_id,
+        drone_run_band_project_id => $drone_run_band_project_id,
+        plot_polygon_type => $assign_plot_polygons_type,
+        polygon => $stock_polygons
+    };
 
     $c->stash->{rest} = $return;
 }

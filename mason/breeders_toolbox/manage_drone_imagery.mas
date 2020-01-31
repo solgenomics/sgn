@@ -2181,6 +2181,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_selected_image_type_name;
     var manage_drone_imagery_standard_process_raw_images_polygon = [];
     var manage_drone_imagery_standard_process_raw_images_previous_polygon;
+    var manage_drone_imagery_standard_process_raw_images_rotate_angle = 0.00;
     var ctx;
     var dronecroppingImg;
 
@@ -2244,7 +2245,7 @@ jQuery(document).ready(function() {
         }
 
         jQuery.ajax({
-            url : '/api/drone_imagery/manual_assign_plot_polygon?image_id='+manage_drone_imagery_standard_process_raw_images_rotated_image_id+'&polygon='+JSON.stringify(crop_points)+'&plot_name='+manage_drone_imagery_standard_process_raw_images_selected_plot_name+'&image_type_name='+manage_drone_imagery_standard_process_raw_images_selected_image_type_name+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_raw_images_drone_run_band_id,
+            url : '/api/drone_imagery/manual_assign_plot_polygon?image_id='+manage_drone_imagery_standard_process_raw_images_rotated_image_id+'&polygon='+JSON.stringify(crop_points)+'&plot_name='+manage_drone_imagery_standard_process_raw_images_selected_plot_name+'&image_type_name='+manage_drone_imagery_standard_process_raw_images_selected_image_type_name+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_raw_images_drone_run_band_id+'&angle_rotated='+manage_drone_imagery_standard_process_raw_images_rotate_angle,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -2270,6 +2271,7 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_standard_process_raw_images_rotate_image').click(function(){
         var rotate_stitched_image_degrees = parseFloat(jQuery('#drone_imagery_standard_process_raw_images_rotate_degrees_input').val());
         applyShowRotateImage(manage_drone_imagery_standard_process_raw_images_image_id, manage_drone_imagery_standard_process_raw_images_drone_run_band_id, rotate_stitched_image_degrees, 'drone_imagery_standard_process_raw_images_show');
+        manage_drone_imagery_standard_process_raw_images_rotate_angle = rotate_stitched_image_degrees;
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_clear_polygon').click(function(){
