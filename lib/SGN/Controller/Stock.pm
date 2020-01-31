@@ -286,6 +286,90 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         );
 }
 
+
+=head2 view_by_name 
+
+Public Path: /stock/view
+Query Params:
+    name = stock name
+    organism (optional) = organism name (abbreviation, genus, species, or common name)
+
+Redirect to a stock detail page for the stock specified by name 
+and organism (if provided).  If no organism is provided, then redirect 
+to the matching stock if only one match is found, otherwise display an
+error message.
+
+=cut
+
+sub view_by_name : Path('/stock/view') Args(0) {
+    my ($self, $c) = @_;
+    my $rs = $self->schema->resultset('Stock::Stock');
+
+    my $name = $c->req->param("name");
+    my $organism = $c->req->param("organism");
+    
+    my $matches;
+    my $count = 0;
+
+    # Search by name and organism
+    if ( defined($organism) && defined($name) ) {
+        $matches = $rs->search({
+                uniquename => $name,
+                -or => [
+                    'organism.abbreviation' => $organism,
+                    'organism.genus' => $organism,
+                    'organism.species' => $organism,
+                    'organism.common_name' => {'like', '%' . $organism .'%'}
+                ],
+                is_obsolete => 'false'
+            },
+            {join => 'organism'}
+        );
+        $count = $matches->count;
+    }
+
+    # Search by name
+    elsif ( defined($name) ) {
+        $matches = $rs->search({
+                uniquename => $name, 
+                is_obsolete => 'false'
+            }, 
+            {join => 'organism'}
+        );
+        $count = $matches->count;
+    }
+
+
+    # NO MATCH FOUND
+    if ( $count == 0 ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Stock Found</strong> ($name $organism)<br />You can view and search for stocks from the <a href='/search/stocks'>Stock Search Page</a>";
+    }
+    
+    # 1 MATCH FOUND - REDIRECT
+    elsif ( $count == 1 ) {
+        my $stock_id = $matches->first->stock_id;
+        my $url = "/stock/$stock_id/view";
+        $c->res->redirect($url, 301);
+    }
+
+    # MULTIPLE MATCHES FOUND
+    else {
+        my $list = "<ul>";
+        while (my $stock = $matches->next) {
+            my $stock_id = $stock->stock_id;
+            my $stock_name = $stock->uniquename;
+            my $species_name = $stock->organism->species;
+            my $url = "/stock/$stock_id/view";
+            $list.="<li><a href='$url'>$stock_name ($species_name)</li>";
+        }
+        $list.="</ul>";
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>Multiple Stocks Found</strong><br />" . $list;
+    }
+}
+
+
 =head1 PRIVATE ACTIONS
 
 =head2 download_phenotypes
