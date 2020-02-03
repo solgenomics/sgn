@@ -59,7 +59,6 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
-  my $trial_stock_type = $c->req->param('trial_stock_type');
 
   chomp($trial_id);
   if (!$c->user()) {
@@ -93,6 +92,14 @@ sub create_fieldbook_from_trial_POST : Args(0) {
             return;
         }
     }
+
+    my $trial_stock_type;
+    if (!defined($c->req->param('trial_stock_type'))) {
+        $trial_stock_type = 'accession';
+    } else {
+        $trial_stock_type = $c->req->param('trial_stock_type');
+    }
+
     my $original_selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
 
     my %modified_columns = %{$original_selected_columns};

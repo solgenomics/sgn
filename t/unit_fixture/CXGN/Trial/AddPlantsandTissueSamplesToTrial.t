@@ -295,7 +295,8 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plots',
-    selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1}
+    selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1},
+    trial_stock_type => 'accession'
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -438,7 +439,8 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plants',
-    selected_columns=> {'plant_name'=>1,'plot_name'=>1,'block_number'=>1,'plant_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1}
+    selected_columns=> {'plant_name'=>1,'plot_name'=>1,'block_number'=>1,'plant_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1},
+    trial_stock_type => 'accession'
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -713,8 +715,8 @@ is_deeply( $columns, [
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
-my $create_spreadsheet = CXGN::Trial::Download->new( 
-  { 
+my $create_spreadsheet = CXGN::Trial::Download->new(
+  {
   bcs_schema => $f->bcs_schema,
   trial_list => [$trial_id],
   trait_list => \@trait_list,
@@ -986,8 +988,8 @@ is_deeply($contents->[1]->{'cell'}->[11], [
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
-my $create_spreadsheet = CXGN::Trial::Download->new( 
-{ 
+my $create_spreadsheet = CXGN::Trial::Download->new(
+{
 bcs_schema => $f->bcs_schema,
 trial_list => [$trial_id],
 trait_list => \@trait_list,

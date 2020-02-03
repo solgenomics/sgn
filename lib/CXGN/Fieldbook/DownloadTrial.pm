@@ -141,6 +141,7 @@ has 'selected_trait_ids'=> (
 has 'trial_stock_type'=> (
     is => 'rw',
     isa => 'Str',
+    required => 0
 );
 
 sub download {
