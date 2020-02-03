@@ -2011,6 +2011,8 @@ sub get_stock_phenotypes_for_traits {
 		$relationship_join
 		$where_clause
 		ORDER BY stock.stock_id;";
+
+    print STDERR "QUERY = $q\n";
     my $h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';

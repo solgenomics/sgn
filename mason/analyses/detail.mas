@@ -41,7 +41,7 @@ $analysis_description => 'no description'
   <div id="accession_list">...</div>
 </&>
 
-<& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $analysis_id &>
+<& /analyses/analysis_summary.mas, trial_id => $analysis_id &>
 
 
 

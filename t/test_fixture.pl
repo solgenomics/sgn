@@ -165,6 +165,20 @@ else {
 	}
 	Catalyst::ScriptRunner->run('SGN', 'Server');
 
+	if (!$nocleanup) {
+	    print STDERR "# Removing test database ($dbname)... ";
+	    
+	    if ($noserver) {
+		print STDERR "# [ --noserver option: No logfile to remove]\n";
+	    }
+	    else {
+		print STDERR "# Delete server logfile... ";
+		close($logfile);
+		unlink $logfile;
+		print STDERR "Done.\n";
+
+	    }
+	}
 	exit;
     }
     print STDERR  "# Starting web server (PID=$server_pid)... ";
@@ -236,10 +250,10 @@ if (!$nocleanup) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
     }
     else {
-	print STDERR "# Delete server logfile... ";
-	close($logfile);
-	unlink $logfile;
-	print STDERR "Done.\n";
+	# print STDERR "# Delete server logfile... ";
+	# close($logfile);
+	# unlink $logfile;
+	# print STDERR "Done.\n";
 
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";

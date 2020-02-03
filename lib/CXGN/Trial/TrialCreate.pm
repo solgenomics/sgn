@@ -172,6 +172,7 @@ has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predi
 
 #Properties for genotyping plates
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
+has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
 has 'genotyping_facility_submitted' => (isa => 'Str', is => 'rw');
@@ -269,45 +270,62 @@ sub save_trial {
 		description => $self->get_trial_description(),
 	});
 
-    my $t = CXGN::Project->new({
+	my $t = CXGN::Trial->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id()
 	});
 
 	print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
 	my $nd_experiment_type_id;
-	if (!$self->get_is_genotyping) {
-		$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-	} else {
-		$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+	if ($self->get_is_genotyping()) {
+	    print STDERR "Generating a genotyping trial...\n";
+	    $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+	} 
+	elsif ($self->get_is_analysis()) { 
+	    print STDERR "Generating an analysis trial...\n";
+	    $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'analysis_experiment')->cvterm_id();
+	} 
+	else {
+	    print STDERR "Generating a phenotyping trial...\n";
+	    $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'field_layout', 'experiment_type')->cvterm_id();
 	}
-
 	my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-	->create({
+	    ->create(
+	    {
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		type_id => $nd_experiment_type_id,
-	});
+	    });
 
-	if ($self->get_is_genotyping()){
-		#print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
-		$nd_experiment->create_nd_experimentprops({
-			$genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
-			$genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
+
+	if ($self->get_is_genotyping()) { 
+	    #print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
+	    $nd_experiment->create_nd_experimentprops(
+		{
+		    $genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
+		    $genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
 		});
-
-        $project->create_projectprops({
-            $genotyping_facility_cvterm->name() => $self->get_genotyping_facility(),
-            $genotyping_facility_submitted_cvterm->name() => $self->get_genotyping_facility_submitted(),
-            $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
-            $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
-        });
-
-        my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
-	} else {
-        my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
-        my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
-        my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
-    }
+	    
+	    
+	    
+	    $project->create_projectprops(
+		{
+		    $genotyping_facility_cvterm->name() => $self->get_genotyping_facility(),
+		    $genotyping_facility_submitted_cvterm->name() => $self->get_genotyping_facility_submitted(),
+		    $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
+		    $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
+		});
+	    
+	    my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
+	}
+	elsif ($self->get_is_analysis()) {
+	    # do analysis stuff here
+	    #
+	}
+	else {
+	    my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
+	    my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
+	    my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
+	}
 
 	$t->set_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 	$t->set_breeding_program($self->get_breeding_program_id);
@@ -370,15 +388,17 @@ sub save_trial {
 		$project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
 	}
 
+	print STDERR "NOW CALLING TRIAl DESIGN STORE...\n";
 	my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id(),
-        trial_name => $trial_name,
+		trial_name => $trial_name,
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
-        nd_experiment_id => $nd_experiment->nd_experiment_id(),
+		nd_experiment_id => $nd_experiment->nd_experiment_id(),
 		design_type => $design_type,
 		design => \%design,
-		is_genotyping => $self->get_is_genotyping,
+		is_genotyping => $self->get_is_genotyping(),
+		is_analysis => $self->get_is_analysis(),
 		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
 		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
 		operator => $self->get_operator

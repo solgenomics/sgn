@@ -378,14 +378,6 @@ sub store {
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
  
     my @source_stock_types = @{$self->get_source_stock_types()};
-#    my @source_stock_types = ($self->get_accession_cvterm_id);
-#    } 
-#   else {
-#        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
-#        $stock_type_id = $self->get_tissue_sample_cvterm_id;
-        $stock_rel_type_id = $self->get_tissue_sample_of_cvterm_id;
-#        @source_stock_types = ($self->get_accession_cvterm_id, $self->get_plot_cvterm_id, $self->get_plant_cvterm_id, $self->get_tissue_sample_cvterm_id);
-#    }
 
     print STDERR "!!!!!! stock rel type id = $stock_rel_type_id, stock type_id = $stock_type_id\n";
     
