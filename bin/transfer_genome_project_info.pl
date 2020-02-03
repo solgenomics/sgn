@@ -11,6 +11,7 @@ use Pod::Usage;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use JSON::Any;
+use CXGN::Stock::SequencingInfo;
 
 our ($opt_H, $opt_D, $opt_i);
 
