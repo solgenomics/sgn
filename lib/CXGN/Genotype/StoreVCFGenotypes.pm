@@ -847,6 +847,8 @@ sub store_metadata {
     }
     $self->protocol_id($protocol_id);
 
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    $self->accession_type_id($accession_type_id);
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     $self->tissue_sample_type_id($tissue_sample_type_id);
 
