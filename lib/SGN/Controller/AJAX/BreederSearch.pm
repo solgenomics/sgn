@@ -145,8 +145,8 @@ sub get_genotyping_protocol_chromosomes : Path('/ajax/breeder/search/genotyping_
     my $genotyping_protocol_name = $c->config->{default_genotyping_protocol};
     if ( defined($genotyping_protocol_name) ) {
       my $genotyping_protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$genotyping_protocol_name});
-      if ( defined($genotyping_protocol_rs) && $genotyping_protocol_rs->count() > 0) {
-        $genotyping_protocol_id = $genotyping_protocol_rs->first->nd_protocol_id();
+      if ( defined($genotyping_protocol_rs) ) {
+        $genotyping_protocol_id = $genotyping_protocol_rs->nd_protocol_id();
       } 
     }
   }
