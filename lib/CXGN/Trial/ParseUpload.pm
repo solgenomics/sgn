@@ -43,6 +43,14 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data'
 );
 
+has 'trial_stock_type' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_trial_stock_type',
+    required => 0,
+    default => 'accession'
+);
+
 sub parse {
   my $self = shift;
   my $args = shift;

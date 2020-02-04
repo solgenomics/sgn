@@ -869,6 +869,7 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_crossing_trial;
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
+    my $trial_stock_type = $c->req->param('trial_upload_trial_stock_type');
 
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
@@ -936,7 +937,7 @@ sub upload_trial_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
     $parser->load_plugin('TrialExcelFormat');
     $parsed_data = $parser->parse();
 

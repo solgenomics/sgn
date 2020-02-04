@@ -13,6 +13,7 @@ sub _validate_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
+  my $trial_stock_type = $self->get_trial_stock_type();
   my %errors;
   my @error_messages;
   my %warnings;
@@ -326,7 +327,7 @@ sub _validate_with_plugin {
             $errors{'missing_seedlots'} = \@seedlots_missing;
             push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
         }
-    
+
         my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
         if (exists($return->{error})){
             push @error_messages, $return->{error};
@@ -518,7 +519,7 @@ sub _parse_with_plugin {
         $design{$key}->{num_seed_per_plot} = $num_seed_per_plot;
         $design{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
     }
-  
+
   }
   #print STDERR Dumper \%design;
   $self->_set_parsed_data(\%design);
