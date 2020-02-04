@@ -227,7 +227,7 @@ sub create_dataset_geno_data_query_jobs {
 	my $trials_ids = $data->{categories}->{trials};
 	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
 	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids);
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
 	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }    
 }
@@ -298,7 +298,7 @@ sub dataset_population_summary {
     else
     {
 	my $user_name = $c->user->id;  
-        my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c);
+        my $protocol  = $c->controller('solGS::Utils')->create_protocol_url($c);
 
 	if ($dataset_id) 
 	{
