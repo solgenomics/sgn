@@ -70,6 +70,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 	$c->stash->{pops_ids_list} = \@pops_ids;
 	$self->create_combined_pops_id($c);
 	my $combo_pops_id = $c->stash->{combo_pops_id};
+	$c->stash->{training_pop_id} = $combo_pops_id;
 	
         $self->catalogue_combined_pops($c, \@pops_ids);
 	
@@ -101,7 +102,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         # $c->stash->{pop_id} = $pop_id;
 	# $c->controller('solGS::solGS')->phenotype_file($c);
         # $c->controller('solGS::solGS')->genotype_file($c);
-	
+	$c->stash->{training_pop_id} = $pop_id;
         $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
         $ret->{redirect_url} = "/solgs/population/$pop_id";
 	$ret->{pop_id} = $pop_id;
@@ -115,22 +116,41 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 }
 
 
-sub combined_trials_page :Path('/solgs/populations/combined') Args(1) {
-    my ($self, $c, $combo_pops_id) = @_;
+sub combined_trials_page :Path('/solgs/populations/combined') Args() {
+    my ($self, $c, $combo_pops_id, $gp, $protocol_id) = @_;
 
     $c->stash->{pop_id} = $combo_pops_id;
+    $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
-    
-    $self->save_common_traits_acronyms($c);
 
-    my $solgs_controller = $c->controller('solGS::solGS');    
-    $solgs_controller->get_all_traits($c);
-    $solgs_controller->get_acronym_pairs($c, $combo_pops_id);
+    # my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
   
-    $self->combined_trials_desc($c);
-  
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
-    
+    # if (!$cached)
+    # {	 
+    # 	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+    # 	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
+    # 	    . " and create the training population data.";
+	
+    # 	$c->stash->{template} = "/generic_message.mas"; 
+    # }
+    # else
+    # {
+	if (!$protocol_id || !$protocol_id !~ /\d+/)
+	{
+	    my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	    $protocol_id = $protocol_detail->{protocol_id};
+	}
+
+	$c->stash->{genotyping_protocol_id} = $protocol_id;       
+	$self->save_common_traits_acronyms($c);
+
+	$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
+	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
+	
+	$self->combined_trials_desc($c);
+	
+	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
+   # }
 }
 
 
@@ -310,8 +330,8 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     my $sel_pop_mr_cnt = $c->controller('solGS::solGS')->get_markers_count($c, $mr_cnt_args);
     $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
-    my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c);
-    $c->stash->{protocol} = $protocol;
+    my $protocol = $c->controller('solGS::Utils')->create_protocol_url($c);
+    $c->stash->{protocol_url} = $protocol;
     
     my $identifier    = $model_id . '_' . $selection_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
@@ -674,7 +694,7 @@ sub combined_pops_summary {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
- 
+
     $self->get_combined_pops_list($c, $combo_pops_id);
     my @pops_ids = @{$c->stash->{trait_combo_pops}};
   
@@ -726,7 +746,7 @@ sub combined_pops_summary {
     my $stocks_no   =  $self->count_combined_trials_members($c, $combo_pops_id);
     my $training_pop = "Training population $combo_pops_id";
     
-    my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c); 
+    my $protocol = $c->controller('solGS::Utils')->create_protocol_url($c); 
 
     $c->stash(
 	markers_no   => $markers_no,
@@ -734,7 +754,7 @@ sub combined_pops_summary {
 	project_desc => $desc,
 	project_name => $training_pop,
 	owner        => $projects_owners,
-	protocol     => $protocol,
+	protocol_url => $protocol,
         );
 
 }
@@ -1130,7 +1150,7 @@ sub combined_trials_desc {
 
     my $training_pop = "Training population $combo_pops_id";
     
-    my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c); 
+    my $protocol  = $c->controller('solGS::Utils')->create_protocol_url($c); 
     my $stocks_no = $self->count_combined_trials_members($c, $combo_pops_id);
    
     $c->stash(stocks_no    => $stocks_no,
@@ -1139,7 +1159,7 @@ sub combined_trials_desc {
               project_desc => $desc,
               project_name => $training_pop,
               owner        => $projects_owners,
-	      protocol     => $protocol,
+	      protocol_url     => $protocol,
         );
 }
 
@@ -1235,24 +1255,24 @@ sub find_common_traits {
     my $combined_pops_list = $c->stash->{combined_pops_list};
     
     my @common_traits;  
-    foreach my $pop_id (@$combined_pops_list)
+    foreach my $trial_id (@$combined_pops_list)
     {  
-	$c->stash->{pop_id} = $pop_id;
+#	my $trial_traits = $c->model('solGS::solGS')->trial_traits($pop_id);
+#	my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($c, $trial_traits);
+	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $trial_id);
 
-	$c->controller('solGS::solGS')->get_single_trial_traits($c);
-	$c->controller('solGS::Files')->traits_list_file($c);
-	my $traits_list_file = $c->stash->{traits_list_file};
+	# foreach my $tr (@$clean_traits)
+	# {
+	#     push @trait_names, $tr->{trait_name};
+	# }
 
-	my $traits = read_file($traits_list_file);
-        my @trial_traits = split(/\t/, $traits);
-       
         if (@common_traits)        
         {
-            @common_traits = intersect(@common_traits, @trial_traits);
+            @common_traits = intersect(@common_traits, @$trait_names);
         }
         else 
         {    
-            @common_traits = @trial_traits;
+            @common_traits = @$trait_names;
         }
     }
    
@@ -1264,13 +1284,14 @@ sub save_common_traits_acronyms {
     my ($self, $c) = @_;
     
     my $combo_pops_id = $c->stash->{combo_pops_id};
-    
+ 
     $self->find_common_traits($c);
     my $common_traits = $c->stash->{common_traits};
-       
-    $c->stash->{pop_id} = $combo_pops_id;
-    $c->controller('solGS::Files')->traits_list_file($c);
+  
+    $c->stash->{training_pop_id} = $combo_pops_id;
+    $c->controller('solGS::Files')->traits_list_file($c, $combo_pops_id);
     my $traits_file = $c->stash->{traits_list_file};
+
     write_file($traits_file, join("\t", @$common_traits)) if $traits_file;
   
 }
