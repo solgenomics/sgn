@@ -81,8 +81,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial_derive_trait",
     trial_name => "test_trial_derive_trait",
     design_type => "RCBD",
-    operator => "janedoe",
-    trial_stock_type => 'accession'
+    operator => "janedoe"
 }), "create trial object");
 
 ok(my $save = $trial_create->save_trial(), "save trial");

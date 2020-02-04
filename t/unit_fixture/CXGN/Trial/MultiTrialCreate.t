@@ -89,8 +89,7 @@ foreach my $trial_location (@multi_location) {
         trial_location => $trial_location,
         trial_name => "test_multi_trial_name".$trial_location,
         design_type => "RCBD",
-        operator => "janedoe",
-        trial_stock_type => 'accession'
+        operator => "janedoe"
     						    }), "create trial object");
 
     my $save = $trial_create->save_trial();
