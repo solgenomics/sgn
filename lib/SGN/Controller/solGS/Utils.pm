@@ -188,6 +188,20 @@ sub get_clean_trial_trait_names {
 
     return \@trait_names;
 }
+
+
+sub create_protocol_url {
+    my ($self, $c, $protocol) = @_;
+   
+    my $protocol_detail = $c->model('solGS::solGS')->protocol_detail($protocol);
+    my $protocol_id = $protocol_detail->{protocol_id};
+    my $name        = $protocol_detail->{name};
+    my $protocol_url = '<a href="/breeders_toolbox/protocol/' . $protocol_id . '">' . $name . '</a>';
+  
+    return $protocol_url;
+}
+
+
 ####
 1;
 ####
