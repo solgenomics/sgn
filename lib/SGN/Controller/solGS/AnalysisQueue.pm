@@ -393,9 +393,17 @@ sub parse_arguments {
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
 	  }
+	  
 	  if ($k eq 'genotyping_protocol_id') 
 	  {
-	      $c->stash->{genotyping_protocol_id} =  $arguments->{$k};
+	      my $protocol_id =  $arguments->{$k};
+	      if (!$protocol_id)
+	      {
+		  my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+		  $protocol_id = $protocol_detail->{protocol_id};
+	      }
+    
+	      $c->stash->{genotyping_protocol_id} = $protocol_id;	      
 	  }	 	  	 
       }
   }
