@@ -501,7 +501,8 @@ solGS.waitPage = function (page, args) {
 	} else if (url.match(/solgs\/population\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-	 
+	    var gpr = urlStr[6];
+	  
 	    if (args === undefined) {
 		args = { 
 		    'training_pop_id' : [ urlStr[4] ], 
@@ -546,7 +547,15 @@ solGS.waitPage = function (page, args) {
 	    }
 	}
 
-	args['genotyping_protocol_id'] = args.genotyping_protocol_id;
+	var protocolId = args.genotyping_protocol_id;
+
+	if(!protocolId) {
+	    protocolId = jQuery('#genotyping_protocol_id').val();
+	    alert('hmtl protocol id ' + protocolId)
+	}
+	
+	args['genotyping_protocol_id'] = protocolId;
+	
 	return args;
 
     }
@@ -774,8 +783,8 @@ solGS.alertMessage = function (msg, msgTitle, divId) {
     jQuery('<div />', {id: divId})
 	.html(msg)
 	.dialog({
-	    height : 200,
-	    width  : 250,
+	    maxHeight : 400,
+	    maxWidth  : 500,
 	    modal  : true,
 	    title  : msgTitle,
 	    buttons: {
