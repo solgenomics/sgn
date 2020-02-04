@@ -74,14 +74,15 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2016",
     trial_description => "test_trial_derive_trait description",
     trial_location => "test_location_for_trial_derive_trait",
     trial_name => "test_trial_derive_trait",
     design_type => "RCBD",
-    operator => "janedoe"
+    operator => "janedoe",
+    trial_stock_type => 'accession'
 }), "create trial object");
 
 ok(my $save = $trial_create->save_trial(), "save trial");
