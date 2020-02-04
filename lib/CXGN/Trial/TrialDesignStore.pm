@@ -176,7 +176,7 @@ has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, def
 has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
-has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0);
+has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0, default => 'accession');
 
 
 sub validate_design {
