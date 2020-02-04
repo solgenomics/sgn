@@ -950,7 +950,7 @@ sub list_population_summary {
     else
     {
 	my $user_name = $c->user->id; 
-        my $protocol_url = $c->controller('solGS::solGS')->create_protocol_url($c, $protocol_id);
+        my $protocol_url = $c->controller('solGS::Utils')->create_protocol_url($c, $protocol_id);
 
 	if ($file_id) 
 	{
