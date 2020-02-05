@@ -38,7 +38,7 @@ use Time::Piece;
 use POSIX;
 use Math::Round;
 use Parallel::ForkManager;
-use CXGN::GrowingDegreeDays;
+use CXGN::NOAANCDC;
 use CXGN::BreederSearch;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Accessions;
@@ -5149,7 +5149,7 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     my $project_start_date_time_object = Time::Piece->strptime($project_start_date, "%Y-%B-%d");
     my $project_start_date_datetime = $project_start_date_time_object->strftime("%Y-%m-%d");
 
-    my $gdd = CXGN::GrowingDegreeDays->new({
+    my $gdd = CXGN::NOAANCDC->new({
         bcs_schema => $schema,
         start_date => $planting_date_datetime, #YYYY-MM-DD
         end_date => $project_start_date_datetime, #YYYY-MM-DD
