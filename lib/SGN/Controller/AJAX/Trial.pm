@@ -957,7 +957,7 @@ sub upload_trial_file_POST : Args(0) {
             }
         }
 
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_stocks'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
         return;
     }
 
@@ -995,6 +995,7 @@ sub upload_trial_file_POST : Args(0) {
             field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            trial_stock_type => $trial_stock_type
         );
 
         print STDERR "Trial type is ".$trial_info_hash{'trial_type'}."\n";

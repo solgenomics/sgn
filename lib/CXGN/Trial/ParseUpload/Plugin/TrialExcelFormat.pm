@@ -343,7 +343,7 @@ sub _validate_with_plugin {
         my @family_names_missing = @{$family_name_validator->validate($schema,'family_name',\@family_names)->{'missing'}};
 
         if (scalar(@family_names_missing) > 0) {
-            $errors{'missing_accessions'} = \@family_names_missing;
+            $errors{'missing_stocks'} = \@family_names_missing;
             push @error_messages, "The following family names are not in the database as uniquenames or synonyms: ".join(',',@family_names_missing);
         }
     } elsif ($trial_stock_type eq 'cross') {
@@ -352,7 +352,7 @@ sub _validate_with_plugin {
         my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'cross',\@cross_unique_ids)->{'missing'}};
 
         if (scalar(@crosses_missing) > 0) {
-            $errors{'missing_accessions'} = \@crosses_missing;
+            $errors{'missing_stocks'} = \@crosses_missing;
             push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
         }
     } else {
@@ -361,7 +361,7 @@ sub _validate_with_plugin {
         my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
 
         if (scalar(@accessions_missing) > 0) {
-            $errors{'missing_accessions'} = \@accessions_missing;
+            $errors{'missing_stocks'} = \@accessions_missing;
             push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
         }
     }
