@@ -417,6 +417,7 @@ sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
+  my $trial_stock_type = $self->get_trial_stock_type();
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
@@ -438,33 +439,35 @@ sub _parse_with_plugin {
       }
   }
 
-  my %seen_accession_names;
+  my %seen_stock_names;
   for my $row ( 1 .. $row_max ) {
-      my $accession_name;
+      my $stock_name;
       if ($worksheet->get_cell($row,1)) {
-          $accession_name = $worksheet->get_cell($row,1)->value();
-          $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-          $seen_accession_names{$accession_name}++;
+          $stock_name = $worksheet->get_cell($row,1)->value();
+          $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_stock_names{$stock_name}++;
       }
   }
   my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+  my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+  my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
   my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
-  my @accessions = keys %seen_accession_names;
-  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+  my @stocks = keys %seen_stock_names;
+  my $stock_synonym_rs = $schema->resultset("Stock::Stock")->search({
       'me.is_obsolete' => { '!=' => 't' },
-      'stockprops.value' => { -in => \@accessions},
-      'me.type_id' => $accession_cvterm_id,
+      'stockprops.value' => { -in => \@stocks},
+      'me.type_id' => { -in => ($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id)},
       'stockprops.type_id' => $synonym_cvterm_id
   },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-  my %acc_synonyms_lookup;
-  while (my $r=$acc_synonym_rs->next){
-      $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+  my %stock_synonyms_lookup;
+  while (my $r=$stock_synonym_rs->next){
+      $stock_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
   }
 
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
-    my $accession_name;
+    my $stock_name;
     my $plot_number;
     my $block_number;
     my $is_a_control;
@@ -481,9 +484,9 @@ sub _parse_with_plugin {
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,1)) {
-      $accession_name = $worksheet->get_cell($row,1)->value();
+      $stock_name = $worksheet->get_cell($row,1)->value();
     }
-    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
     }
@@ -519,7 +522,7 @@ sub _parse_with_plugin {
     }
 
     #skip blank lines
-    if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
+    if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
       next;
     }
 
@@ -533,17 +536,17 @@ sub _parse_with_plugin {
         $treatment_col++;
     }
 
-    if ($acc_synonyms_lookup{$accession_name}){
-        my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
-        if (scalar(@accession_names)>1){
-            print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+    if ($stock_synonyms_lookup{$stock_name}){
+        my @stock_names = keys %{$stock_synonyms_lookup{$stock_name}};
+        if (scalar(@stock_names)>1){
+            print STDERR "There is more than one uniquename for this synonym $stock_name. this should not happen!\n";
         }
-        $accession_name = $accession_names[0];
+        $stock_name = $stock_names[0];
     }
 
     my $key = $row;
     $design{$key}->{plot_name} = $plot_name;
-    $design{$key}->{stock_name} = $accession_name;
+    $design{$key}->{stock_name} = $stock_name;
     $design{$key}->{plot_number} = $plot_number;
     $design{$key}->{block_number} = $block_number;
     if ($is_a_control) {
