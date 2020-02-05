@@ -145,6 +145,10 @@ sub get_grm {
     my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
+    my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+    chomp($number_system_cores);
+    print STDERR "NUMCORES $number_system_cores\n";
+
     my @individuals_stock_ids;
     my @all_marker_names;
     my @dosage_matrix;
@@ -290,9 +294,16 @@ sub get_grm {
     my $r_block = $rbase->create_block('r_block');
     $rmatrix->send_rbase($rbase, 'r_block');
     # $r_block->add_command('geno_data = data.frame(geno_matrix1)');
-    $r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
-    $r_block->add_command('alfreq <- attributes(geno_matrix1)[["scaled:center"]]/2');
-    $r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
+
+    # $r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
+    # $r_block->add_command('alfreq <- attributes(geno_matrix1)[["scaled:center"]]/2');
+    # $r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
+
+    $r_block->add_command('library(rrBLUP)');
+    $r_block->add_command('geno_matrix1 <- geno_matrix1-1'); #Code as -1,0,1
+    $r_block->add_command('A_matrix <- A.mat(geno_matrix1, min.MAF=NULL, max.missing=NULL, impute.method="mean", tol=0.02, n.core='.$number_system_cores/2.', shrink=FALSE, return.imputed=FALSE)');
+    $r_block->add_command('grm <- A_matrix$A');
+
     $r_block->run_block();
     my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
     undef @dosage_matrix;
