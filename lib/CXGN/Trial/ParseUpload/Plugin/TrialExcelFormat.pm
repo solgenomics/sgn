@@ -25,6 +25,8 @@ sub _validate_with_plugin {
   my %seen_plot_names;
   my %seen_accession_names;
   my %seen_seedlot_names;
+  my %seen_cross_unique_ids;
+  my %seen_family_names;
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -55,7 +57,7 @@ sub _validate_with_plugin {
 
   #get column headers
   my $plot_name_head;
-  my $accession_name_head;
+  my $stock_name_head;
   my $seedlot_name_head;
   my $num_seed_per_plot_head;
   my $weight_gram_seed_per_plot_head;
@@ -71,7 +73,7 @@ sub _validate_with_plugin {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
   }
   if ($worksheet->get_cell(0,1)) {
-    $accession_name_head  = $worksheet->get_cell(0,1)->value();
+    $stock_name_head  = $worksheet->get_cell(0,1)->value();
   }
   if ($worksheet->get_cell(0,2)) {
     $plot_number_head  = $worksheet->get_cell(0,2)->value();
@@ -114,9 +116,20 @@ sub _validate_with_plugin {
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
     push @error_messages, "Cell A1: plot_name is missing from the header";
   }
-  if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-    push @error_messages, "Cell B1: accession_name is missing from the header";
-  }
+
+    if ($trial_stock_type eq 'family_name') {
+        if (!$stock_name_head || $stock_name_head ne 'family_name') {
+            push @error_messages, "Cell B1: family_name is missing from the header";
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        if (!$stock_name_head || $stock_name_head ne 'cross_unique_id') {
+            push @error_messages, "Cell B1: cross_unique_id is missing from the header";
+    } else {
+        if (!$stock_name_head || $stock_name_head ne 'accession_name') {
+            push @error_messages, "Cell B1: accession_name is missing from the header";
+        }
+    }
+
   if (!$plot_number_head || $plot_number_head ne 'plot_number') {
     push @error_messages, "Cell C1: plot_number is missing from the header";
   }
@@ -154,7 +167,7 @@ sub _validate_with_plugin {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
     my $plot_name;
-    my $accession_name;
+    my $stock_name;
     my $seedlot_name;
     my $num_seed_per_plot = 0;
     my $weight_gram_seed_per_plot = 0;
@@ -170,7 +183,7 @@ sub _validate_with_plugin {
       $plot_name = $worksheet->get_cell($row,0)->value();
     }
     if ($worksheet->get_cell($row,1)) {
-      $accession_name = $worksheet->get_cell($row,1)->value();
+      $stock_name = $worksheet->get_cell($row,1)->value();
     }
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
@@ -204,7 +217,7 @@ sub _validate_with_plugin {
     }
 
     #skip blank lines
-    if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
+    if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
       next;
     }
 
@@ -231,13 +244,28 @@ sub _validate_with_plugin {
 
       #print STDERR "Check 03 ".localtime();
 
-    #accession name must not be blank
-    if (!$accession_name || $accession_name eq '') {
-      push @error_messages, "Cell B$row_name: accession name missing";
+    #stock_name must not be blank and must exist in the database
+    if ($trial_stock_type eq 'family_name') {
+        if (!$stock_name || $stock_name eq '') {
+            push @error_messages, "Cell B$row_name: family name missing";
+        } else {
+            $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_family_names{$stock_name}++;
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        if (!$stock_name || $stock_name eq '') {
+            push @error_messages, "Cell B$row_name: cross unique id missing";
+        } else {
+            $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_cross_unique_ids{$stock_name}++;
+        }
     } else {
-      #accession name must exist in the database
-      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-      $seen_accession_names{$accession_name}++;
+        if (!$stock_name || $stock_name eq '') {
+          push @error_messages, "Cell B$row_name: accession name missing";
+        } else {
+          $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_accession_names{$stock_name}++;
+        }
     }
 
       #print STDERR "Check 04 ".localtime();
@@ -309,14 +337,35 @@ sub _validate_with_plugin {
 
   }
 
-    my @accessions = keys %seen_accession_names;
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+    if ($trial_stock_type eq 'family_name') {
+        my @family_names = keys %seen_family_names;
+        my $family_name_validator = CXGN::List::Validate->new();
+        my @family_names_missing = @{$family_name_validator->validate($schema,'family_name',\@family_names)->{'missing'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        $errors{'missing_accessions'} = \@accessions_missing;
-        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        if (scalar(@family_names_missing) > 0) {
+            $errors{'missing_accessions'} = \@family_names_missing;
+            push @error_messages, "The following family names are not in the database as uniquenames or synonyms: ".join(',',@family_names_missing);
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        my @cross_unique_ids = keys %seen_cross_unique_ids;
+        my $cross_unique_id_validator = CXGN::List::Validate->new();
+        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'cross',\@cross_unique_ids)->{'missing'}};
+
+        if (scalar(@crosses_missing) > 0) {
+            $errors{'missing_accessions'} = \@crosses_missing;
+            push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+        }
+    } else {
+        my @accessions = keys %seen_accession_names;
+        my $accession_validator = CXGN::List::Validate->new();
+        my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+
+        if (scalar(@accessions_missing) > 0) {
+            $errors{'missing_accessions'} = \@accessions_missing;
+            push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        }
     }
+
 
     my @seedlot_names = keys %seen_seedlot_names;
     if (scalar(@seedlot_names)>0){
