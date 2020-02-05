@@ -301,8 +301,8 @@ sub get_grm {
 
     $r_block->add_command('library(rrBLUP)');
     $r_block->add_command('geno_matrix1 <- geno_matrix1-1'); #Code as -1,0,1
-    $r_block->add_command('A_matrix <- A.mat(geno_matrix1, min.MAF=NULL, max.missing=NULL, impute.method="mean", tol=0.02, n.core='.$number_system_cores/2.', shrink=FALSE, return.imputed=FALSE)');
-    $r_block->add_command('grm <- A_matrix$A');
+    $r_block->add_command('A_matrix <- A.mat(geno_matrix1, min.MAF=NULL, max.missing=NULL, impute.method="mean", tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE)');
+    $r_block->add_command('grm <- A_matrix');
 
     $r_block->run_block();
     my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
