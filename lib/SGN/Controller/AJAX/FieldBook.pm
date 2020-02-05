@@ -94,8 +94,8 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     }
 
     my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
-    my $include_measured = $c->req->param('include_measured');
-    my $use_synonyms = $c->req->param('use_synonyms');
+    my $include_measured = $c->req->param('include_measured') || '';
+    my $use_synonyms = $c->req->param('use_synonyms') || '';
     my $selected_trait_list_id = $c->req->param('trait_list');
     my @selected_traits;
     if ($selected_trait_list_id){
