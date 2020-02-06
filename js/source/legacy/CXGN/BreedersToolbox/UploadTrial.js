@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
         var description = $("#trial_upload_description").val();
         var design_type = $("#trial_upload_design_method").val();
         var uploadFile = $("#trial_uploaded_file").val();
-        var trial_stock_type = $('#trial_upload_trial_stock_type').val();
+        var trial_stock_type = $("#trial_upload_trial_stock_type").val();
 
         if (trial_name === '') {
             alert("Please give a trial name");

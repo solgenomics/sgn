@@ -341,7 +341,7 @@ sub _validate_with_plugin {
     if ($trial_stock_type eq 'family_name') {
         my @family_names = keys %seen_family_names;
         my $family_name_validator = CXGN::List::Validate->new();
-        my @family_names_missing = @{$family_name_validator->validate($schema,'family_name',\@family_names)->{'missing'}};
+        my @family_names_missing = @{$family_name_validator->validate($schema,'family_names',\@family_names)->{'missing'}};
 
         if (scalar(@family_names_missing) > 0) {
             $errors{'missing_stocks'} = \@family_names_missing;
@@ -350,7 +350,7 @@ sub _validate_with_plugin {
     } elsif ($trial_stock_type eq 'cross') {
         my @cross_unique_ids = keys %seen_cross_unique_ids;
         my $cross_unique_id_validator = CXGN::List::Validate->new();
-        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'cross',\@cross_unique_ids)->{'missing'}};
+        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'crosses',\@cross_unique_ids)->{'missing'}};
 
         if (scalar(@crosses_missing) > 0) {
             $errors{'missing_stocks'} = \@crosses_missing;
