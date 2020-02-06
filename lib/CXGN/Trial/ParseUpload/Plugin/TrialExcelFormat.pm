@@ -124,6 +124,7 @@ sub _validate_with_plugin {
     } elsif ($trial_stock_type eq 'cross') {
         if (!$stock_name_head || $stock_name_head ne 'cross_unique_id') {
             push @error_messages, "Cell B1: cross_unique_id is missing from the header";
+        }
     } else {
         if (!$stock_name_head || $stock_name_head ne 'accession_name') {
             push @error_messages, "Cell B1: accession_name is missing from the header";
@@ -315,7 +316,7 @@ sub _validate_with_plugin {
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seedlot_name}++;
-        push @pairs, [$seedlot_name, $accession_name];
+        push @pairs, [$seedlot_name, $stock_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
@@ -449,15 +450,13 @@ sub _parse_with_plugin {
       }
   }
   my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-  my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-  my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
   my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
   my @stocks = keys %seen_stock_names;
   my $stock_synonym_rs = $schema->resultset("Stock::Stock")->search({
       'me.is_obsolete' => { '!=' => 't' },
       'stockprops.value' => { -in => \@stocks},
-      'me.type_id' => { -in => ($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id)},
+      'me.type_id' => $accession_cvterm_id,
       'stockprops.type_id' => $synonym_cvterm_id
   },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
   my %stock_synonyms_lookup;
