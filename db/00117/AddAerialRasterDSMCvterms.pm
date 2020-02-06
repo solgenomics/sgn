@@ -64,7 +64,11 @@ sub patch {
         'project_md_image' => [
             'observation_unit_polygon_raster_dsm_imagery',
             'threshold_background_removed_stitched_drone_imagery_raster_dsm',
-            'observation_unit_polygon_raster_dsm_background_removed_threshold_imagery'
+            'observation_unit_polygon_raster_dsm_background_removed_threshold_imagery',
+            'raw_boundaries_top_left_drone_imagery',
+            'raw_boundaries_top_right_drone_imagery',
+            'raw_boundaries_bottom_left_drone_imagery',
+            'raw_boundaries_bottom_right_drone_imagery'
         ]
     };
 

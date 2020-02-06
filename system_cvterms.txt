@@ -285,6 +285,10 @@ composable_cvtypes	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
 phenotype_property  phenotype_outlier   suppressed phenotype measurement    01/04/2018  aco46   00089
 project_md_image	raw_drone_imagery	Raw images uploaded as drone imagery	9/6/2018	nm529	00103
+project_md_image	raw_boundaries_top_left_drone_imagery	Raw drone imagery for getting top left boundary	2/6/2020	nm529	00103
+project_md_image	raw_boundaries_top_right_drone_imagery	Raw drone imagery for getting top right boundary	2/6/2020	nm529	00103
+project_md_image	raw_boundaries_bottom_left_drone_imagery	Raw drone imagery for getting bottom left boundary	2/6/2020	nm529	00103
+project_md_image	raw_boundaries_bottom_right_drone_imagery	Raw drone imagery for getting bottom right boundary	2/6/2020	nm529	00103
 project_md_image	stitched_drone_imagery	Stitched image from uploaded drone imagery	9/6/2018	nm529	00103
 project_md_image	denoised_stitched_drone_imagery	Denoised stitched image	10/5/2018	nm529	00103
 project_md_image	rotated_stitched_drone_imagery	Rotated stitched image	10/5/2018	nm529	00103
