@@ -1,4 +1,60 @@
 
+=encoding utf-8
+
+=head1 NAME
+
+CXGN::Analysis - manage analyses on Breedbase
+
+=head1 DESCRIPTION
+
+Analyses are stored much like trials, starting out in the project table, and linking through to nd_experiment and stock through linking tables, as well phentoype to store the analysis results. Additional metadata is stored in in a projectprop with the type_id 'analysis_metadata_json'. The type of the project is 'analysis_project' (stored in a projectprop as well). Each analysis is assigned to a user, using and sp_person_id assigned in a projectprop.
+
+=head2 TYPES
+
+The data structure is built using type ids that are different from a regular field trial.
+
+=over 4
+
+=item nd_experiment.type_id
+
+The nd_experiment.type_id links to 'analysis_experiment' (nd_experiment_property) (equivalent to 'field_experiment' in a trial), 
+
+=item stock.type_id 
+
+The stock.type_id links to 'analysis_instance' (stock_property) (equivalent to 'plot' in a trial)
+
+=item stock_relationship.type_id
+
+The stock_relationship.type_id links to 'analysis_of' (equivalent to 'plot_of' in field trials)
+
+=back
+
+This is summarized in the following table:
+
+ ┌──────────────────┬───────────────────────┬───────────────────┬────────────────┐
+ │ project type     │ nd_experiment.type_id │ stock.type_id     │ stock_relation │
+ │                  │                       │                   │ ship.type_id   │
+ ├──────────────────┼───────────────────────┼───────────────────┼────────────────┤
+ │ trial            │ field_experiment      │ plot              │ plot_of        │
+ ├──────────────────┼───────────────────────┼───────────────────┼────────────────┤
+ │ genotyping_plate │ genotyping_experiment │ tissue_sample     │ sample_of      │
+ ├──────────────────┼───────────────────────┼───────────────────┼────────────────┤
+ │ analysis         │ analysis_experiment   │ analysis_instance │ analysis_of    │
+ └──────────────────┴───────────────────────┴───────────────────┴────────────────┘
+
+
+=back
+
+The data in  analysis_metdata_json is managed by the CXGN::Analysis::AnalysisMetadata class and contains the dataset_id used to generate the analysis, the actual analysis protocol that was run, and the traits relevant to the analysis.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=head1 METHODS
+
+=cut
+    
 package CXGN::Analysis;
 
 use Moose;
@@ -16,29 +72,83 @@ use CXGN::Dataset;
 
 #BEGIN { extends 'CXGN::Project' }; # only conceptually for now
 
+=head2 bcs_schema()
+
+=cut
+    
 has 'bcs_schema' => (is => 'rw', isa => 'Ref' );
 
+=head2 people_schema()
+
+=cut
+    
 has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema');
+
+=head2 project_id()
+
+=cut
 
 has 'project_id' => (is => 'rw', isa => 'Int');
 
+=head2 name()
+
+=cut
+
 has 'name' => (is => 'rw', isa => 'Str');
+
+=head2 description()
+
+=cut
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
+=head2 accession_ids()
+
+=cut
+
 has 'accession_ids' => (is => 'rw', isa => 'Maybe[ArrayRef]');
+
+=head2 accession_names()
+
+=cut
 
 has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]'); #maybe for debugging only
 
+=head2 data_hash()
+
+=cut
+
 has 'data_hash' => (is => 'rw', isa => 'HashRef');
+
+=head2 design()
+
+=cut
 
 has 'design' => (is => 'rw', isa => 'Ref');
 
+=head2 traits()
+
+=cut
+
 has 'traits' => (is => 'rw', isa => 'ArrayRef');
+
+=head2 nd_geolocation_id()
+
+=cut
 
 has 'nd_geolocation_id' => (is => 'rw', isa=> 'Maybe[Int]');
 
+=head2 user_id()
+
+=cut
+
 has 'user_id' => (is => 'rw', isa => 'Int');
+
+=head2 metadata()
+
+CXGN::Analysis::AnalysisMetadata object.
+
+=cut
 
 has 'metadata' => (isa => 'Maybe[CXGN::Analysis::AnalysisMetadata]', is => 'rw');
 
