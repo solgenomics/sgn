@@ -205,19 +205,19 @@ jQuery(document).ready(function() {
   jQuery('#runH2').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
-      $('#heritability_output').empty();
+      $('#heritability_files').empty();
     } else {
-      $('#heritability_output').empty();
+      $('#heritability_files').empty();
       if ($('#pheno_select').val() != ""){
         var dataset_id = $('#available_datasets').val();
         var trait_id = $('#pheno_select').val();
-        var pc_check = 1;
-        var kinship_check = 1;
+        var pc_check = 0;
+        var kinship_check = 0;
         if ($('#princomp').is(':checked')) {
-          var pc_check = 1;
+          var pc_check = 0;
         }
         if ($('kinshipmat').is(':checked')) {
-          var kinship_check = 1;
+          var kinship_check = 0;
         }
         //alert(pc_check);
         //alert(kinship_check);
@@ -235,11 +235,13 @@ jQuery(document).ready(function() {
               $('#dataset_select').val('ERROR');
             }
             else {
+              var h2File_response = response.h2Table;
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
         //alert("Response ID: "+temp_response);
             //alert("Response ID: "+fig3_response);
               //setTimeout(function() {
+              $('#heritability_output').append("<img id='heritability_Table' src='"+ h2File_response + "'/>");
               $('#heritability_output').append("<img id='heritability_Figure3' src='"+ fig3_response + "'/>");
               $('#heritability_output').append("<img id='heritability_Figure4' src='"+ fig4_response + "'/>");
               //},6000);
