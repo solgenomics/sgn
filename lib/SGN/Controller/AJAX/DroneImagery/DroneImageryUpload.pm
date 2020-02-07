@@ -75,10 +75,10 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->stash->{rest} = { error => "Please select a drone run or create a new drone run!" };
         $c->detach();
     }
-    if ($selected_drone_run_id && $new_drone_run_name){
-        $c->stash->{rest} = { error => "Please select a drone run OR create a new drone run, not both!" };
-        $c->detach();
-    }
+    # if ($selected_drone_run_id && $new_drone_run_name){
+    #     $c->stash->{rest} = { error => "Please select a drone run OR create a new drone run, not both!" };
+    #     $c->detach();
+    # }
     if ($new_drone_run_name && !$new_drone_run_type){
         $c->stash->{rest} = { error => "Please give a new drone run type!" };
         $c->detach();
@@ -114,10 +114,10 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
-    if ($selected_drone_run_id && ($new_drone_run_band_stitching eq 'yes' || $new_drone_run_band_stitching eq 'yes_raw' || $new_drone_run_band_stitching eq 'yes_automated')) {
-        $c->stash->{rest} = { error => "Please create a new drone run if you are uploading a zipfile of raw images!" };
-        $c->detach();
-    }
+    # if ($selected_drone_run_id && ($new_drone_run_band_stitching eq 'yes' || $new_drone_run_band_stitching eq 'yes_raw' || $new_drone_run_band_stitching eq 'yes_automated')) {
+    #     $c->stash->{rest} = { error => "Please create a new drone run if you are uploading a zipfile of raw images!" };
+    #     $c->detach();
+    # }
 
     my $log_file_path = '';
     if ($c->config->{error_log}){
@@ -455,6 +455,11 @@ sub upload_drone_imagery_POST : Args(0) {
     } elsif ($new_drone_run_band_stitching eq 'yes_automated') {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
+        my $drone_run_raw_image_boundaries_first_plot_corner = $c->req->param('drone_run_raw_image_boundaries_first_plot_corner');
+        my $drone_run_raw_image_boundaries_second_plot_direction = $c->req->param('drone_run_raw_image_boundaries_second_plot_direction');
+        my $drone_run_raw_image_boundaries_plot_orientation = $c->req->param('drone_run_raw_image_boundaries_plot_orientation');
+        my $drone_run_raw_image_boundaries_corners_json = $c->req->param('drone_run_raw_image_boundaries_corners_json');
+        my $drone_run_raw_image_boundaries_corners_gps_json = $c->req->param('drone_run_raw_image_boundaries_corners_gps_json');
 
         if (!$upload_file) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images to stitch!" };
@@ -497,25 +502,15 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         my $image_paths = $zipfile_return->{image_files};
 
-        my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_to_stitch');
-        my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
+        my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_boundaries');
+        my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
         open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
             foreach (@$image_paths) {
-                my $dir = $c->tempfiles_subdir('/upload_drone_imagery_temp_raw');
-                my $temp_file_raw_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_temp_raw/fileXXXX').".png";
+                my $temp_file_raw_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
                 print $fh "$_,$temp_file_raw_image\n";
             }
         close($fh);
-        print STDERR "Drone image stitch temp file $temp_file_image_file_names\n";
-
-        $dir = $c->tempfiles_subdir('/upload_drone_imagery_stitched_result');
-        my $temp_file_stitched_result_band1 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
-        my $temp_file_stitched_result_band2 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
-        my $temp_file_stitched_result_band3 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
-        my $temp_file_stitched_result_band4 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
-        my $temp_file_stitched_result_band5 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
-        my $temp_file_stitched_result_rgb = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
-        my $temp_file_stitched_result_rnre = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
+        print STDERR "Drone image raw boundaries temp file $temp_file_image_file_names\n";
 
         my $cmd;
         my @stitched_bands;
@@ -552,7 +547,7 @@ sub upload_drone_imagery_POST : Args(0) {
             }
             my $image_paths_panel = $zipfile_return_panel->{image_files};
 
-            my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_to_stitch/fileXXXX');
+            my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
             open ($fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
                 foreach (@$image_paths_panel) {
                     print $fh "$_\n";
@@ -560,22 +555,44 @@ sub upload_drone_imagery_POST : Args(0) {
             close($fh);
             print STDERR "Drone image stitch temp file panel $temp_file_image_file_names_panel\n";
 
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesMicasense.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$dir' --output_path_band1 '$temp_file_stitched_result_band1' --output_path_band2 '$temp_file_stitched_result_band2' --output_path_band3 '$temp_file_stitched_result_band3' --output_path_band4 '$temp_file_stitched_result_band4' --output_path_band5 '$temp_file_stitched_result_band5' --final_rgb_output_path '$temp_file_stitched_result_rgb' --final_rnre_output_path '$temp_file_stitched_result_rnre'";
+            my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $schema, trial_id => $selected_trial_id, experiment_type=>'field_layout' });
+            my $trial_design = $trial_layout->get_design();
 
-            @stitched_bands = (
-                ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
-                ["Band 2", "Green", "Green (515-600nm)", $temp_file_stitched_result_band2],
-                ["Band 3", "Red", "Red (600-690nm)", $temp_file_stitched_result_band3],
-                ["Band 4", "NIR", "NIR (780-3000nm)", $temp_file_stitched_result_band4],
-                ["Band 5", "RedEdge", "Red Edge (690-750nm)", $temp_file_stitched_result_band5]
-            );
+            my $field_layout_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
+            open ($fh, ">", $field_layout_path ) || die ("\nERROR: the file $field_layout_path could not be found\n" );
+                foreach (sort { $a <=> $b } keys %$trial_design) {
+                    my $v = $trial_design->{$_};
+                    print $fh $v->{plot_id}.",".$v->{plot_name}.",".$v->{plot_number}."\n";
+                }
+            close($fh);
+
+            my $field_layout_params_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
+            open ($fh, ">", $field_layout_params_path ) || die ("\nERROR: the file $field_layout_params_path could not be found\n" );
+                print $fh "$drone_run_raw_image_boundaries_first_plot_corner\n";
+                print $fh "$drone_run_raw_image_boundaries_second_plot_direction\n";
+                print $fh "$drone_run_raw_image_boundaries_plot_orientation\n";
+                print $fh "$drone_run_raw_image_boundaries_corners_json\n";
+                print $fh "$drone_run_raw_image_boundaries_corners_gps_json\n";
+            close($fh);
+
+            my $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
+
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path'";
+
+            # @stitched_bands = (
+            #     ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
+            #     ["Band 2", "Green", "Green (515-600nm)", $temp_file_stitched_result_band2],
+            #     ["Band 3", "Red", "Red (600-690nm)", $temp_file_stitched_result_band3],
+            #     ["Band 4", "NIR", "NIR (780-3000nm)", $temp_file_stitched_result_band4],
+            #     ["Band 5", "RedEdge", "Red Edge (690-750nm)", $temp_file_stitched_result_band5]
+            # );
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb'";
-
-            @stitched_bands = (
-                ["Color Image", "RGB Color Image", "RGB Color Image", $temp_file_stitched_result_rgb],
-            );
+            # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb'";
+            # 
+            # @stitched_bands = (
+            #     ["Color Image", "RGB Color Image", "RGB Color Image", $temp_file_stitched_result_rgb],
+            # );
         }
         else {
             die "Camera info not supported for stitching: $new_drone_run_camera_info\n";
@@ -865,7 +882,6 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
         $c->stash->{rest} = { error => "Could not save file $upload_original_name_tl in archive." };
         $c->detach();
     }
-    unlink $upload_tempfile_tl;
     
     my $upload_original_name_tr = $upload_file_top_right_image->filename();
     my $upload_tempfile_tr = $upload_file_top_right_image->tempname;
@@ -885,7 +901,6 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
         $c->stash->{rest} = { error => "Could not save file $upload_original_name_tr in archive." };
         $c->detach();
     }
-    unlink $upload_tempfile_tr;
 
     my $upload_original_name_bl = $upload_file_bottom_left_image->filename();
     my $upload_tempfile_bl = $upload_file_bottom_left_image->tempname;
@@ -905,7 +920,6 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
         $c->stash->{rest} = { error => "Could not save file $upload_original_name_bl in archive." };
         $c->detach();
     }
-    unlink $upload_tempfile_bl;
 
     my $upload_original_name_br = $upload_file_bottom_right_image->filename();
     my $upload_tempfile_br = $upload_file_bottom_right_image->tempname;
@@ -925,7 +939,56 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
         $c->stash->{rest} = { error => "Could not save file $upload_original_name_br in archive." };
         $c->detach();
     }
+
+    my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_image_boundaries');
+    my $temp_file_gps_tl = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
+    my $temp_file_gps_tr = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
+    my $temp_file_gps_bl = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
+    my $temp_file_gps_br = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
+
+    my $status_tl = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_tl' --outfile_path '$temp_file_gps_tl'");
+    my $status_tr = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_tr' --outfile_path '$temp_file_gps_tr'");
+    my $status_bl = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_bl' --outfile_path '$temp_file_gps_bl'");
+    my $status_br = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_br' --outfile_path '$temp_file_gps_br'");
+
+    unlink $upload_tempfile_tl;
+    unlink $upload_tempfile_tr;
+    unlink $upload_tempfile_bl;
     unlink $upload_tempfile_br;
+
+    my @tl_gps;
+    my @tr_gps;
+    my @bl_gps;
+    my @br_gps;
+    my $csv = Text::CSV->new({ sep_char => ',' });
+
+    open(my $fh_tl, '<', $temp_file_gps_tl) or die "Could not open file '$temp_file_gps_tl' $!";
+        if ($csv->parse(<$fh_tl>)) {
+            @tl_gps = $csv->fields();
+        }
+    close $fh_tl;
+    open(my $fh_tr, '<', $temp_file_gps_tr) or die "Could not open file '$temp_file_gps_tr' $!";
+        if ($csv->parse(<$fh_tr>)) {
+            @tr_gps = $csv->fields();
+        }
+    close $fh_tr;
+    open(my $fh_bl, '<', $temp_file_gps_bl) or die "Could not open file '$temp_file_gps_bl' $!";
+        if ($csv->parse(<$fh_bl>)) {
+            @bl_gps = $csv->fields();
+        }
+    close $fh_bl;
+    open(my $fh_br, '<', $temp_file_gps_br) or die "Could not open file '$temp_file_gps_br' $!";
+        if ($csv->parse(<$fh_br>)) {
+            @br_gps = $csv->fields();
+        }
+    close $fh_br;
+
+    print STDERR Dumper \@tl_gps;
+    print STDERR Dumper \@tr_gps;
+    print STDERR Dumper \@bl_gps;
+    print STDERR Dumper \@br_gps;
+
+    my %corners = (tl => \@tl_gps, tr => \@tr_gps, bl => \@bl_gps, br => \@br_gps);
 
     my $linking_table_tl_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_boundaries_top_left_drone_imagery', 'project_md_image')->cvterm_id();
     my $image_tl = SGN::Image->new( $schema->storage->dbh, undef, $c );
@@ -955,7 +1018,7 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
     my $br_url = $image_br->get_image_url('original_converted');
     my $br_image_id = $image_br->get_image_id();
 
-    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, tl_url => $tl_url, tl_image_id => $tl_image_id, tr_url => $tr_url, tr_image_id => $tr_image_id, bl_url => $bl_url, bl_image_id => $bl_image_id, br_url => $br_url, br_image_id => $br_image_id };
+    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, tl_url => $tl_url, tl_image_id => $tl_image_id, tr_url => $tr_url, tr_image_id => $tr_image_id, bl_url => $bl_url, bl_image_id => $bl_image_id, br_url => $br_url, br_image_id => $br_image_id, corners_gps => \%corners };
 }
 
 sub _check_user_login {
