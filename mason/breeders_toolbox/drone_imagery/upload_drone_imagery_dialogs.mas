@@ -78,6 +78,8 @@
                         <input id="drone_run_raw_image_boundaries_row_num" name="drone_run_raw_image_boundaries_row_num" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_col_num" name="drone_run_raw_image_boundaries_col_num" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_flight_direction" name="drone_run_raw_image_boundaries_flight_direction" type="hidden" value=""/>
+                        <input id="drone_run_raw_image_boundaries_plot_width" name="drone_run_raw_image_boundaries_plot_width" type="hidden" value=""/>
+                        <input id="drone_run_raw_image_boundaries_plot_length" name="drone_run_raw_image_boundaries_plot_length" type="hidden" value=""/>
 
                         <center>
                         <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
@@ -354,6 +356,24 @@
                                     <option value="rows">Rows</option>
                                     <option value="columns">Columns</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-6 control-label">Plot width (m): </label>
+                            <div class="col-sm-6">
+                                <input type="number" class="form-control" id="drone_imagery_upload_raw_image_boundaries_plot_polygons_plot_width" name="drone_imagery_upload_raw_image_boundaries_plot_polygons_plot_width">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-6 control-label">Plot length (m): </label>
+                            <div class="col-sm-6">
+                                <input type="number" class="form-control" id="drone_imagery_upload_raw_image_boundaries_plot_polygons_plot_length" name="drone_imagery_upload_raw_image_boundaries_plot_polygons_plot_length">
                             </div>
                         </div>
                     </div>
@@ -676,6 +696,8 @@ jQuery(document).ready(function() {
     var uploadDroneRawImagesBoundariesNumRows;
     var uploadDroneRawImagesBoundariesNumCols;
     var uploadDroneRawImagesBoundariesFlightDir;
+    var uploadDroneRawImagesBoundariesPlotWidth;
+    var uploadDroneRawImagesBoundariesPlotLength;
 
     jQuery('#upload_drone_imagery_form').iframePostForm({
         json: true,
@@ -914,6 +936,8 @@ jQuery(document).ready(function() {
         uploadDroneRawImagesBoundariesNumRows = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_row_num').val();
         uploadDroneRawImagesBoundariesNumCols = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_col_num').val();
         uploadDroneRawImagesBoundariesFlightDir = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_flight_direction').val();
+        uploadDroneRawImagesBoundariesPlotWidth = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_plot_width').val();
+        uploadDroneRawImagesBoundariesPlotLength = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_plot_length').val();
 
         if (uploadDroneRawImagesBoundariesFirstPlotCorner == '' || uploadDroneRawImagesBoundariesSecondPlotDirection == '' || uploadDroneRawImagesBoundariesPlotOrientation == '') {
             alert('Please select the first plot corner, the direction of the second plot, and the plot layout orientation.');
@@ -943,6 +967,14 @@ jQuery(document).ready(function() {
             alert('Please give the number of columns!');
             return false;
         }
+        else if (uploadDroneRawImagesBoundariesPlotWidth == '') {
+            alert('Please give a plot width in meters');
+            return false;
+        }
+        else if (uploadDroneRawImagesBoundariesPlotLength == '') {
+            alert('Please give a plot length in meters');
+            return false;
+        }
         else {
             drone_run_band_unstitched_raw_image_boundaries = 0;
             jQuery('#drone_run_raw_image_boundaries_first_plot_corner').val(uploadDroneRawImagesBoundariesFirstPlotCorner);
@@ -954,6 +986,8 @@ jQuery(document).ready(function() {
             jQuery('#drone_run_raw_image_boundaries_row_num').val(uploadDroneRawImagesBoundariesNumRows);
             jQuery('#drone_run_raw_image_boundaries_col_num').val(uploadDroneRawImagesBoundariesNumCols);
             jQuery('#drone_run_raw_image_boundaries_flight_direction').val(uploadDroneRawImagesBoundariesFlightDir);
+            jQuery('#drone_run_raw_image_boundaries_plot_width').val(uploadDroneRawImagesBoundariesPlotWidth);
+            jQuery('#drone_run_raw_image_boundaries_plot_length').val(uploadDroneRawImagesBoundariesPlotLength);
 
             jQuery('#upload_drone_imagery_dialog').modal('show');
         }
