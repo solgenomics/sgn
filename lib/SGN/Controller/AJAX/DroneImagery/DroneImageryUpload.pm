@@ -460,6 +460,10 @@ sub upload_drone_imagery_POST : Args(0) {
         my $drone_run_raw_image_boundaries_plot_orientation = $c->req->param('drone_run_raw_image_boundaries_plot_orientation');
         my $drone_run_raw_image_boundaries_corners_json = $c->req->param('drone_run_raw_image_boundaries_corners_json');
         my $drone_run_raw_image_boundaries_corners_gps_json = $c->req->param('drone_run_raw_image_boundaries_corners_gps_json');
+        my $drone_run_raw_image_boundaries_rotate_angle = $c->req->param('drone_run_raw_image_boundaries_rotate_angle');
+        my $drone_run_raw_image_boundaries_row_num = $c->req->param('drone_run_raw_image_boundaries_row_num');
+        my $drone_run_raw_image_boundaries_col_num = $c->req->param('drone_run_raw_image_boundaries_col_num');
+        my $drone_run_raw_image_boundaries_flight_direction = $c->req->param('drone_run_raw_image_boundaries_flight_direction');
 
         if (!$upload_file) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images to stitch!" };
@@ -573,6 +577,10 @@ sub upload_drone_imagery_POST : Args(0) {
                 print $fh "$drone_run_raw_image_boundaries_plot_orientation\n";
                 print $fh "$drone_run_raw_image_boundaries_corners_json\n";
                 print $fh "$drone_run_raw_image_boundaries_corners_gps_json\n";
+                print $fh "$drone_run_raw_image_boundaries_rotate_angle\n";
+                print $fh "$drone_run_raw_image_boundaries_row_num\n";
+                print $fh "$drone_run_raw_image_boundaries_col_num\n";
+                print $fh "$drone_run_raw_image_boundaries_flight_direction\n";
             close($fh);
 
             my $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
