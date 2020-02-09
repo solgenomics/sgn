@@ -1,8 +1,17 @@
 
 
 
-X<-read.table(file="trait_ccJgT_phenotype.txt", sep="\t",header=TRUE)
+library("methods")
+library("dplyr")
 
+##### Get data #####
+args = commandArgs(trailingOnly = TRUE)
+
+pheno <- read.table(args[1], sep = "\t", header = TRUE)
+
+figure3_file_name <- args[2]
+figure4_file_name <- args[3]
+h2File <- args[4]
 
 
 cat("Removing missing data...", "\n")
@@ -42,14 +51,14 @@ write.table(drymater, file="drymater.txt", sep="\t")
 
 # print(pheno[,52])
 
-# library(agricolae)
+library(agricolae)
 
-# cat("Starting AMMI...","\n")
+cat("Starting AMMI...","\n")
 
 # sink("resultAMMI.txt")
 # pdf(file='AMMI_test.pdf')
 
-# model<- with(X,AMMI(env, gen, rep, trait, console=FALSE))
+model<- with(X,AMMI(env, gen, rep, trait, console=FALSE))
 # cat("------------------------------------------------------------  ", "\n")
 # cat("Análise de Variância  ", "\n")
 # cat("------------------------------------------------------------  ", "\n")
@@ -62,11 +71,11 @@ write.table(drymater, file="drymater.txt", sep="\t")
 # model$analysis
 # cat("  ", "\n")
 
-# cat("------------------------------------------------------------  ", "\n")
-# cat("Médias dos Genótipos e Ambientes  ", "\n")
-# cat("------------------------------------------------------------  ", "\n")
-# cat("", "\n")
-# model$means
+cat("------------------------------------------------------------  ", "\n")
+cat("Médias dos Genótipos e Ambientes  ", "\n")
+cat("------------------------------------------------------------  ", "\n")
+cat("", "\n")
+model$means
 # cat("", "\n")
 # cat("------------------------------------------------------------  ", "\n")
 # cat("Dados para análise gráfica  ", "\n")
@@ -83,13 +92,13 @@ write.table(drymater, file="drymater.txt", sep="\t")
 # # see help(plot.AMMI)
 # # biplot
 
-# plot(model)
+plot(model)
 
 
 # # triplot PC 1,2,3 
-# plot(model, type=2, number=TRUE)
-# # biplot PC1 vs Yield 
-# plot(model, first=0,second=1, number=TRUE)
+plot(model, type=2, number=TRUE)
+# biplot PC1 vs Yield 
+plot(model, first=0,second=1, number=TRUE)
 
 
 # sink()

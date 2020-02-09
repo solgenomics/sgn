@@ -67,7 +67,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runH2" type="submit" name="runH2" value="runH2">Run stability</button>
+              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run stability</button>
             </div>
             <br />
 
@@ -202,7 +202,7 @@ jQuery(document).ready(function() {
   });
 
 
-  jQuery('#runH2').click( function () {
+  jQuery('#runAMMI').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
       $('#stability_output').empty();
@@ -211,13 +211,13 @@ jQuery(document).ready(function() {
       if ($('#pheno_select').val() != ""){
         var dataset_id = $('#available_datasets').val();
         var trait_id = $('#pheno_select').val();
-        var pc_check = 1;
-        var kinship_check = 1;
+        var pc_check = 0;
+        var kinship_check = 0;
         if ($('#princomp').is(':checked')) {
-          var pc_check = 1;
+          var pc_check = 0;
         }
         if ($('kinshipmat').is(':checked')) {
-          var kinship_check = 1;
+          var kinship_check = 0;
         }
         //alert(pc_check);
         //alert(kinship_check);

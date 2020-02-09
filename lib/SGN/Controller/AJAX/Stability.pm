@@ -27,7 +27,7 @@ __PACKAGE__->config(
     );
 
 
-sub shared_phenotypes: Path('/ajax/Stability/shared_phenotypes') : {
+sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
@@ -37,13 +37,13 @@ sub shared_phenotypes: Path('/ajax/Stability/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-	      my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
     
-    $c->tempfiles_subdir("Stability_files");
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"Stability_files/trait_XXXXX");
+    $c->tempfiles_subdir("stability_files");
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
     $people_schema = $c->dbic_schema("CXGN::People::Schema");
     $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
@@ -59,7 +59,7 @@ sub shared_phenotypes: Path('/ajax/Stability/shared_phenotypes') : {
 }
 
 
-sub extract_trait_data :Path('/ajax/Stability/getdata') Args(0) {
+sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -68,13 +68,13 @@ sub extract_trait_data :Path('/ajax/Stability/getdata') Args(0) {
 
     $file = basename($file);
 
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "/tmp/vagrant/SGN-site/Stability_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "/tmp/vagrant/SGN-site/stability_files/".$file);
     print STDERR Dumper($temppath);
 
     my $F;
     if (! open($F, "<", $temppath)) {
-	$c->stash->{rest} = { error => "Can't find data." };
-	return;
+    $c->stash->{rest} = { error => "Can't find data." };
+    return;
     }
 
     my $header = <$F>;
@@ -90,35 +90,35 @@ sub extract_trait_data :Path('/ajax/Stability/getdata') Args(0) {
     my @data = ();
 
     while (<$F>) {
-	chomp;
+    chomp;
 
-	my @fields = split "\t";
-	my %line = {};
-	for(my $n=0; $n <@keys; $n++) {
-	    if (exists($fields[$n]) && defined($fields[$n])) {
-		$line{$keys[$n]}=$fields[$n];
-	    }
-	}
+    my @fields = split "\t";
+    my %line = {};
+    for(my $n=0; $n <@keys; $n++) {
+        if (exists($fields[$n]) && defined($fields[$n])) {
+        $line{$keys[$n]}=$fields[$n];
+        }
+    }
     print STDERR Dumper(\%line);
-	push @data, \%line;
+    push @data, \%line;
     }
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
-sub generate_results: Path('/ajax/Stability/generate_results') : {
+sub generate_results: Path('/ajax/stability/generate_results') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
     print STDERR $dataset_id;
     print STDERR $trait_id;
-    $c->tempfiles_subdir("Stability_files");
-    my $Stability_tmp_output = $c->config->{cluster_shared_tempdir}."/Stability_files";
-    mkdir $Stability_tmp_output if ! -d $Stability_tmp_output;
+    $c->tempfiles_subdir("stability_files");
+    my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
+    mkdir $stability_tmp_output if ! -d $stability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
-      "Stability_download_XXXXX",
-      DIR=> $Stability_tmp_output,
+      "stability_download_XXXXX",
+      DIR=> $stability_tmp_output,
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
@@ -126,7 +126,7 @@ sub generate_results: Path('/ajax/Stability/generate_results') : {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $temppath = $Stability_tmp_output . "/" . $tempfile;
+    my $temppath = $stability_tmp_output . "/" . $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
 
@@ -138,12 +138,12 @@ sub generate_results: Path('/ajax/Stability/generate_results') : {
 
 
 
-   # my $cmd = "Rscript " . $c->config->{basepath} . "/R/Stability/2_blup_rscript.R " . $pheno_filepath . " " . $trait_id;
+   # my $cmd = "Rscript " . $c->config->{basepath} . "/R/stability/2_blup_rscript.R " . $pheno_filepath . " " . $trait_id;
    # system($cmd);
     eval {
     my $cmd = {
             backend => $c->config->{backend},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/Stability_files",
+            temp_base => $c->config->{cluster_shared_tempdir} . "/stability_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
@@ -154,7 +154,7 @@ sub generate_results: Path('/ajax/Stability/generate_results') : {
     $job = CXGN::Tools::Run->new($cmd);
     $cmd->run_cluster(
             "Rscript ",
-            $c->config->{basepath} . "/R/Stability/ammi_rscript.R",
+            $c->config->{basepath} . "/R/stability/h2_blup_rscript.R",
             $pheno_filepath
     );
     $cmd->alive;
