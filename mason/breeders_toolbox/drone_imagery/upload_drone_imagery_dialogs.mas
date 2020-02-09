@@ -698,6 +698,9 @@ jQuery(document).ready(function() {
     var uploadDroneRawImagesBoundariesFlightDir;
     var uploadDroneRawImagesBoundariesPlotWidth;
     var uploadDroneRawImagesBoundariesPlotLength;
+    var uploadDroneRawImagesBoundariesPlotClickCorner;
+    var uploadDroneRawImagesBoundariesPlotClickDisplayCorner;
+    var uploadDroneRawImagesBoundariesPlotClickCorners;
 
     jQuery('#upload_drone_imagery_form').iframePostForm({
         json: true,
@@ -811,9 +814,44 @@ jQuery(document).ready(function() {
         PosY = PosY - ImgPos[1];
 
         var clicked_point = {x:PosX, y:PosY};
-        // drawWaypointsRawImageBoundaries(clicked_point);
+        drawWaypointsRawImageBoundaries([clicked_point]);
         uploadDroneRawImagesBoundariesPoints[uploadDroneRawImagesBoundariesCorner] = clicked_point;
         console.log(uploadDroneRawImagesBoundariesPoints);
+
+        alert('Now click on the four corners of the corner plot');
+        uploadDroneRawImagesBoundariesCanvas.onmousedown = GetCoordinatesRawImageBoundariesCornerPlot
+    }
+
+    function GetCoordinatesRawImageBoundariesCornerPlot(e) {
+        var PosX = 0;
+        var PosY = 0;
+        var ImgPos;
+        ImgPos = FindPosition(uploadDroneRawImagesBoundariesCanvas);
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+            PosX = e.pageX;
+            PosY = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+            PosX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            PosY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        PosX = PosX - ImgPos[0];
+        PosY = PosY - ImgPos[1];
+
+        if (uploadDroneRawImagesBoundariesPlotClickCorner.length < 4){
+            uploadDroneRawImagesBoundariesPlotClickCorner.push({x:PosX, y:PosY});
+            uploadDroneRawImagesBoundariesPlotClickDisplayCorner.push({x:PosX, y:PosY});
+        } else {
+            alert('Click one more time');
+            uploadDroneRawImagesBoundariesPlotClickDisplayCorner.push({x:PosX, y:PosY});
+        }
+        if (uploadDroneRawImagesBoundariesPlotClickDisplayCorner.length > 5){
+            uploadDroneRawImagesBoundariesPlotClickCorner = [];
+            uploadDroneRawImagesBoundariesPlotClickDisplayCorner = [];
+        }
+        drawPolylineRawImageBoundaries(uploadDroneRawImagesBoundariesPlotClickDisplayCorner);
+        drawWaypointsRawImageBoundaries(uploadDroneRawImagesBoundariesPlotClickDisplayCorner, undefined, 0);
     }
 
     function FindPositionRawImageBoundaries(oElement) {
@@ -828,19 +866,35 @@ jQuery(document).ready(function() {
         }
     }
 
-    // function drawWaypointsRawImageBoundaries(points){
-    //    console.log(points);
-    //    for(var i=0;i<points.length;i++){
-    //        uploadDroneRawImagesBoundariesCtx.beginPath();
-    //        uploadDroneRawImagesBoundariesCtx.arc(points[i].x,points[i].y,4,0,Math.PI*2);
-    //        uploadDroneRawImagesBoundariesCtx.closePath();
-    //        uploadDroneRawImagesBoundariesCtx.strokeStyle='black';
-    //        uploadDroneRawImagesBoundariesCtx.lineWidth=1;
-    //        uploadDroneRawImagesBoundariesCtx.stroke();
-    //        uploadDroneRawImagesBoundariesCtx.fillStyle='white';
-    //        uploadDroneRawImagesBoundariesCtx.fill();
-    //    }
-    // }
+    function drawPolylineRawImageBoundaries(points){
+        if (points.length == 4) {
+            points.push(points[0]);
+        }
+        for(var i=0;i<points.length;i++){
+            uploadDroneRawImagesBoundariesCtx.beginPath();
+            uploadDroneRawImagesBoundariesCtx.moveTo(points[0].x,points[0].y);
+            for(var i=1;i<points.length;i++){
+                uploadDroneRawImagesBoundariesCtx.lineTo(points[i].x,points[i].y);
+            }
+            uploadDroneRawImagesBoundariesCtx.strokeStyle='blue';
+            uploadDroneRawImagesBoundariesCtx.lineWidth=5;
+            uploadDroneRawImagesBoundariesCtx.stroke();
+        }
+    }
+
+    function drawWaypointsRawImageBoundaries(points){
+        console.log(points);
+        for(var i=0;i<points.length;i++){
+            uploadDroneRawImagesBoundariesCtx.beginPath();
+            uploadDroneRawImagesBoundariesCtx.arc(points[i].x,points[i].y,4,0,Math.PI*2);
+            uploadDroneRawImagesBoundariesCtx.closePath();
+            uploadDroneRawImagesBoundariesCtx.strokeStyle='black';
+            uploadDroneRawImagesBoundariesCtx.lineWidth=1;
+            uploadDroneRawImagesBoundariesCtx.stroke();
+            uploadDroneRawImagesBoundariesCtx.fillStyle='white';
+            uploadDroneRawImagesBoundariesCtx.fill();
+        }
+    }
 
     function upload_drone_imagery_raw_images_automated_boundaries_form() {
         jQuery('#upload_drone_imagery_form').attr("action", "/api/drone_imagery/upload_drone_imagery_raw_images_automated_boundaries");
