@@ -6,6 +6,8 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use JSON::Any;
 use Data::Dumper;
+use Spreadsheet::WriteExcel;
+use Spreadsheet::Read;
 
 my $fix = SGN::Test::Fixture->new();
 
@@ -14,13 +16,19 @@ is(ref($fix->config()), "HASH", 'hashref check');
 BEGIN {use_ok('CXGN::Trial::TrialCreate');}
 BEGIN {use_ok('CXGN::Trial::TrialLayout');}
 BEGIN {use_ok('CXGN::Trial::TrialDesign');}
-BEGIN {use_ok('CXGN::Trial::TrialLayoutDownload');}
 BEGIN {use_ok('CXGN::Trial::TrialLookup');}
+BEGIN {use_ok('CXGN::Trial::Download');}
+BEGIN {use_ok('CXGN::Fieldbook::DownloadTrial');}
+BEGIN {use_ok('CXGN::Trial::TrialLayoutDownload');}
+BEGIN {use_ok('CXGN::Trial');}
+
 ok(my $schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
+ok(my $metadata_schema = $fix->metadata_schema);
 ok(my $dbh = $fix->dbh);
 
-# create crosses and family_names for the trial
+
+# create crosses and family_names for trials
 my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
 
@@ -60,6 +68,7 @@ foreach my $family_name (@family_names) {
 	});
 };
 
+
 # create trial with cross stock type
 ok(my $cross_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
 ok($cross_trial_design->set_trial_name("cross_to_trial1"), "set trial name");
@@ -92,6 +101,8 @@ ok(my $crosses_trial_create = CXGN::Trial::TrialCreate->new({
 my $crosses_trial_save = $crosses_trial_create->save_trial();
 ok($crosses_trial_save->{'trial_id'}, "save trial");
 
+
+# retrieving cross trial and design info
 ok(my $crosses_trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $schema,
     trial_name => "cross_to_trial1",
@@ -167,6 +178,7 @@ my $cross_trial_type = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $cr
 my $cross_trial_stock_type = $cross_trial_type->get_trial_stock_type();
 is($cross_trial_stock_type, 'cross');
 
+
 # create trial with family_name stock type
 ok(my $fam_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
 ok($fam_trial_design->set_trial_name("family_name_to_trial1"), "set trial name");
@@ -196,6 +208,9 @@ ok(my $fam_trial_create = CXGN::Trial::TrialCreate->new({
 
 my $fam_save = $fam_trial_create->save_trial();
 ok($fam_save->{'trial_id'}, "save trial");
+
+
+# retrieving family_name trial with design info
 ok(my $fam_trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $schema,
     trial_name => "family_name_to_trial1",
@@ -269,5 +284,78 @@ is(scalar@fam_plot_names, 10);
 my $fam_trial_type = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $fam_trial_id });
 my $fam_trial_stock_type = $fam_trial_type->get_trial_stock_type();
 is($fam_trial_stock_type, 'family_name');
+
+
+# create cross trial Fieldbook
+my $cross_fieldbook_tempfile = "/tmp/test_create_cross_trial_fieldbook.xls";
+
+my $cross_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
+    bcs_schema => $schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $cross_trial_id,
+    tempfile => $cross_fieldbook_tempfile,
+    archive_path => $fix->config->{archive_path},
+    user_id => 41,
+    user_name => "janedoe",
+    data_level => 'plots',
+    selected_columns=> {'plot_name'=>1, 'plot_id'=>1, 'plot_number'=>1 ,'block_number'=>1,,'accession_name'=>1},
+    trial_stock_type => 'cross'
+});
+
+my $create_fieldbook_return = $cross_fieldbook->download();
+ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
+
+my $contents = ReadData $create_fieldbook_return->{'file'};
+#print STDERR Dumper @contents->[0]->[0];
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+
+my $columns = $contents->[1]->{'cell'};
+ok(scalar(@$columns) == 6, "check number of col in created file.");
+my @field_book_columns = @$columns;
+is($field_book_columns[1][1], 'plot_name');
+is($field_book_columns[2][1], 'plot_id');
+is($field_book_columns[3][1], 'cross_unique_id');
+is($field_book_columns[4][1], 'plot_number');
+is($field_book_columns[5][1], 'block_number');
+#print STDERR "FIELDBOOK COLUMNS =".Dumper($columns)."\n";
+
+
+# create family_name trial Fieldbook
+my $family_fieldbook_tempfile = "/tmp/test_create_family_trial_fieldbook.xls";
+
+my $family_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
+    bcs_schema => $schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $fam_trial_id,
+    tempfile => $family_fieldbook_tempfile,
+    archive_path => $fix->config->{archive_path},
+    user_id => 41,
+    user_name => "janedoe",
+    data_level => 'plots',
+    selected_columns=> {'plot_name'=>1, 'plot_id'=>1, 'plot_number'=>1 ,'rep_number'=>1,,'accession_name'=>1},
+    trial_stock_type => 'family_name'
+});
+
+my $create_family_fieldbook_return = $family_fieldbook->download();
+ok($create_family_fieldbook_return, "check that download trial fieldbook returns something.");
+
+my $family_contents = ReadData $create_family_fieldbook_return->{'file'};
+#print STDERR Dumper @contents->[0]->[0];
+is($family_contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+
+my $family_columns = $family_contents->[1]->{'cell'};
+ok(scalar(@$family_columns) == 6, "check number of col in created file.");
+my @family_field_book_columns = @$family_columns;
+is($family_field_book_columns[1][1], 'plot_name');
+is($family_field_book_columns[2][1], 'plot_id');
+is($family_field_book_columns[3][1], 'family_name');
+is($family_field_book_columns[4][1], 'plot_number');
+is($family_field_book_columns[5][1], 'rep_number');
+#print STDERR "FAMILY FIELDBOOK COLUMNS =".Dumper($family_columns)."\n";
+
+
+
 
 done_testing();
