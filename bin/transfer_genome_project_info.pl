@@ -11,10 +11,11 @@ use Pod::Usage;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use JSON::Any;
+use CXGN::Stock::SequencingInfo;
 
-our ($opt_H, $opt_D, $opt_i);
+our ($opt_H, $opt_D);
 
-getopts('H:D:i:');
+getopts('H:D:');
 
 if (!$opt_H || !$opt_D ) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file) \n");
@@ -23,7 +24,7 @@ if (!$opt_H || !$opt_D ) {
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 
-my $dbh = CXGN::DB::InsertDBH->new({ 
+my $dbh = CXGN::DB::InsertDBH->new({
         dbhost=>$dbhost,
         dbname=>$dbname,
         dbargs => {AutoCommit => 1, RaiseError => 1}
@@ -35,16 +36,16 @@ my $q = "SELECT organismprop_id, organism_id, type_id, value from organismprop w
 
 my $h = $dbh->prepare($q);
 $h->execute();
-					  
+
 while (my ($organismprop_id, $organism_id, $type_id, $value)= $h->fetchrow_array()) {
     my $data = JSON::Any->decode($value);
-					      
+
     my $row = $schema->resultset("Stock::Stock")->find( { organism_id => $organism_id, uniquename => $data->{genome_project_sequenced_accessions} });
 
     if ($row) {
 	print STDERR "accession $data->{genome_project_sequenced_accessions} FOUND in database!!!!\n";
 	my $si = CXGN::Stock::SequencingInfo->new( { schema => $schema });
-	
+
 	$si->funded_by($data->{genome_project_funding_agencies});
 	$si->contact_email($data->{genome_project_contact_person});
 	$si->organization($data->{genome_project_sequencing_center});
@@ -56,7 +57,7 @@ while (my ($organismprop_id, $organism_id, $type_id, $value)= $h->fetchrow_array
 
     }
     else {
-	print sTDERR "accession $data->{genome_project_sequenced_accessions} ***NOT*** FOUND in database!!!!\n";
+	print STDERR "accession $data->{genome_project_sequenced_accessions} ***NOT*** FOUND in database!!!!\n";
 
     }
 }

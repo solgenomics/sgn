@@ -40,6 +40,7 @@ sub genotyping_data_search_GET : Args(0) {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
+        cache_root=>$c->config->{cache_file_path},
         accession_list=>$clean_inputs->{accession_id_list},
         tissue_sample_list=>$clean_inputs->{tissue_sample_id_list},
         trial_list=>$clean_inputs->{genotyping_data_project_id_list},
@@ -49,31 +50,38 @@ sub genotyping_data_search_GET : Args(0) {
         #marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
         genotypeprop_hash_select=>['DS'],
         protocolprop_marker_hash_select=>[],
-        protocolprop_top_key_select=>[],
-        limit => $limit,
-        offset => $offset
+        protocolprop_top_key_select=>[]
     });
-    $genotypes_search->init_genotype_iterator();
-    # my ($total_count, $data) = $genotypes_search->get_genotype_info();
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #only gets metadata and not all genotype data!
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    my $marker_objects = decode_json $header_line;
+
+    my $start_index = $offset;
+    my $end_index = $offset + $limit;
+    # print STDERR Dumper [$start_index, $end_index];
 
     my @result;
-    my $total_count;
-    while (my ($full_count, $g) = $genotypes_search->get_next_genotype_info()) {
-        $total_count = $full_count;
-        my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
-        push @result,
-          [
-            "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
-            "<a href=\"/stock/$g->{stock_id}/view\">$g->{stock_name}</a>",
-            $g->{stock_type_name},
-            "<a href=\"/stock/$g->{germplasmDbId}/view\">$g->{germplasmName}</a>",
-            $synonym_string,
-            $g->{genotypeDescription},
-            $g->{resultCount},
-            $g->{igd_number},
-            "<a href=\"/stock/$g->{stock_id}/genotypes?genotypeprop_id=$g->{markerProfileDbId}\">Download</a>"
-          ];
-        undef $g;
+    my $counter = 0;
+    while (my $gt_line = <$fh>) {
+        if ($counter >= $start_index && $counter < $end_index) {
+            my $g = decode_json $gt_line;
+            # print STDERR Dumper $g;
+            my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
+            push @result, [
+                "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
+                "<a href=\"/stock/$g->{stock_id}/view\">$g->{stock_name}</a>",
+                $g->{stock_type_name},
+                "<a href=\"/stock/$g->{germplasmDbId}/view\">$g->{germplasmName}</a>",
+                $synonym_string,
+                $g->{genotypeDescription},
+                $g->{resultCount},
+                $g->{igd_number},
+                "<a href=\"/stock/$g->{stock_id}/genotypes?genotypeprop_id=$g->{markerProfileDbId}\">Download</a>"
+            ];
+        }
+        $counter++;
     }
     #print STDERR Dumper \@result;
 
@@ -82,7 +90,7 @@ sub genotyping_data_search_GET : Args(0) {
         $draw =~ s/\D//g; # cast to int
     }
 
-    $c->stash->{rest} = { data => \@result, draw => $draw, recordsTotal => $total_count,  recordsFiltered => $total_count };
+    $c->stash->{rest} = { data => \@result, draw => $draw, recordsTotal => $counter,  recordsFiltered => $counter };
 }
 
 sub _clean_inputs {

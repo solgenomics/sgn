@@ -80,21 +80,24 @@ sub send_email {
             print STDERR "CXGN::Contact: Configured as production server, but not configured to send emails; no email sent from $mailfrom to $mailto.\n";
         }
         else {
-
             my $smtp_server = $vhost_conf->get_conf('smtp_server');
+            my $smtp_layer = $vhost_conf->get_conf('smtp_layer');
             my $smtp_port = $vhost_conf->get_conf('smtp_port');
-            my $smtp_user = $vhost_conf->get_conf('smtp_user');
+            my $smtp_login = $vhost_conf->get_conf('smtp_login');
             my $smtp_pass = $vhost_conf->get_conf('smtp_pass');
+            my $smtp_auth = $vhost_conf->get_conf('smtp_auth');
+            my $smtp_from = $vhost_conf->get_conf('smtp_from') || $mailfrom;
 
             # If SMTP config values are found use external SMTP server
-            if ( $smtp_server and $smtp_port and $smtp_user and $smtp_pass ) {
+            if ( $smtp_server and $smtp_login and $smtp_pass ) {
 
               my ($mail,$error) = Email::Send::SMTP::Gmail->new(
-                  -layer =>'ssl',
-                  -port  => $smtp_port,
                   -smtp  => $smtp_server,
-                  -login => $smtp_user,
-                  -pass  => $smtp_pass
+                  -layer => $smtp_layer,
+                  -port  => $smtp_port,
+                  -login => $smtp_login,
+                  -pass  => $smtp_pass,
+                  -auth  => $smtp_auth
               );
 
               if ($mail == -1) {
@@ -102,6 +105,7 @@ sub send_email {
               };
 
               $mail->send(
+                  -from       => $smtp_from,
                   -to         => $mailto,
                   -subject    => $subject,
                   -body       => $body
