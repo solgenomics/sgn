@@ -378,7 +378,7 @@ sub _validate_with_plugin {
             push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
         }
 
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@pairs);
         if (exists($return->{error})){
             push @error_messages, $return->{error};
         }
