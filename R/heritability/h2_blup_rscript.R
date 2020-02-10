@@ -61,6 +61,7 @@ numb = 1
 
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
+
 for (i in 40:(ncol(pheno)))
 {
   outcome = colnames(pheno)[i]
@@ -100,7 +101,7 @@ Heritability = Heritability %>%
 print(Heritability)
 
 library(gridExtra)
-png(h2File, height=100, width=1000)
+png(h2File, height=(25*numb), width=1000)
 p<-tableGrob(Heritability)
 grid.arrange(p)
 dev.off()
