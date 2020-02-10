@@ -80,6 +80,7 @@
                         <input id="drone_run_raw_image_boundaries_flight_direction" name="drone_run_raw_image_boundaries_flight_direction" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_plot_width" name="drone_run_raw_image_boundaries_plot_width" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_plot_length" name="drone_run_raw_image_boundaries_plot_length" type="hidden" value=""/>
+                        <input id="drone_run_raw_image_boundaries_corners_plots_json" name="drone_run_raw_image_boundaries_corners_plots_json" type="hidden" value=""/>
 
                         <center>
                         <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
@@ -819,7 +820,7 @@ jQuery(document).ready(function() {
         console.log(uploadDroneRawImagesBoundariesPoints);
 
         alert('Now click on the four corners of the corner plot');
-        uploadDroneRawImagesBoundariesCanvas.onmousedown = GetCoordinatesRawImageBoundariesCornerPlot
+        uploadDroneRawImagesBoundariesCanvas.onmousedown = GetCoordinatesRawImageBoundariesCornerPlot;
     }
 
     function GetCoordinatesRawImageBoundariesCornerPlot(e) {
@@ -843,8 +844,9 @@ jQuery(document).ready(function() {
             uploadDroneRawImagesBoundariesPlotClickCorner.push({x:PosX, y:PosY});
             uploadDroneRawImagesBoundariesPlotClickDisplayCorner.push({x:PosX, y:PosY});
         } else {
-            alert('Click one more time');
+            alert('Click one more time on image');
             uploadDroneRawImagesBoundariesPlotClickDisplayCorner.push({x:PosX, y:PosY});
+            uploadDroneRawImagesBoundariesPlotClickCorners[uploadDroneRawImagesBoundariesCorner] = uploadDroneRawImagesBoundariesPlotClickCorner;
         }
         if (uploadDroneRawImagesBoundariesPlotClickDisplayCorner.length > 5){
             uploadDroneRawImagesBoundariesPlotClickCorner = [];
@@ -1036,6 +1038,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_run_raw_image_boundaries_plot_orientation').val(uploadDroneRawImagesBoundariesPlotOrientation);
             jQuery('#drone_run_raw_image_boundaries_corners_json').val(JSON.stringify(uploadDroneRawImagesBoundariesPoints));
             jQuery('#drone_run_raw_image_boundaries_corners_gps_json').val(JSON.stringify(uploadDroneRawImagesBoundariesCornersGPS));
+            jQuery('#drone_run_raw_image_boundaries_corners_plots_json').val(JSON.stringify(uploadDroneRawImagesBoundariesPlotClickCorners));
             jQuery('#drone_run_raw_image_boundaries_rotate_angle').val(uploadDroneRawImagesBoundariesRotateAngle);
             jQuery('#drone_run_raw_image_boundaries_row_num').val(uploadDroneRawImagesBoundariesNumRows);
             jQuery('#drone_run_raw_image_boundaries_col_num').val(uploadDroneRawImagesBoundariesNumCols);
