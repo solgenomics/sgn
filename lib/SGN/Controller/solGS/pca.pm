@@ -46,7 +46,7 @@ sub pca_run :Path('/pca/run/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
-
+    my $protocol_id      = $c->req->param('genotyping_protocol_id');
     my $list_id      = $c->req->param('list_id');   
     my $dataset_id   = $c->req->param('dataset_id');
     my $dataset_name = $c->req->param('dataset_name');
@@ -56,7 +56,14 @@ sub pca_run :Path('/pca/run/') Args() {
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'genotype' if !$data_type;
     $data_type         = lc($data_type);
+
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
     
+    $c->stash->{genotyping_protocol_id} = $protocol_id;       
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -66,10 +73,10 @@ sub pca_run :Path('/pca/run/') Args() {
     $c->stash->{combo_pops_id}    = $combo_pops_id;
     $c->stash->{data_type}        = $data_type;
     $c->stash->{trait_id}         = $trait_id;
-
-    $c->controller('solGS::Files')->create_file_id($c);    
-    my $file_id = $c->stash->{file_id};
-    
+      
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    $c->stash->{file_id} = $file_id;
+   
     if ($list_id)
     {
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
@@ -619,9 +626,9 @@ sub pca_geno_input_files {
   
     if ($data_type =~ /genotype/i)
     {	
-	$files = $c->stash->{genotype_files_list} 
-	|| $c->stash->{genotype_file} 
-	|| $c->stash->{genotype_file_name};
+	 $files = $c->stash->{genotype_files_list}
+	 || $c->stash->{genotype_file} 
+	 || $c->stash->{genotype_file_name};	
     }
 
     $c->stash->{pca_geno_input_files} = $files;
