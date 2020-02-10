@@ -68,7 +68,7 @@ sub extract_trait_data :Path('/ajax/heritability/getdata') Args(0) {
 
     $file = basename($file);
 
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "/tmp/vagrant/SGN-site/heritability_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/heritability_files/".$file);
     print STDERR Dumper($temppath);
 
     my $F;
@@ -122,6 +122,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
+    
 
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -132,34 +133,65 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
+    
+    my $h2File = $tempfile . "_" . "h2File.png";
+    my $figure3file = $tempfile . "_" . "figure3.png";
+    my $figure4file = $tempfile . "_" . "figure4.png";
+
+    # $trait_id =~ tr/ /./;
+    # $trait_id =~ tr/\//./;
 
 
-
-
-   # my $cmd = "Rscript " . $c->config->{basepath} . "/R/heritability/2_blup_rscript.R " . $pheno_filepath . " " . $trait_id;
-   # system($cmd);
-    eval {
-    my $cmd = {
+    my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
             temp_base => $c->config->{cluster_shared_tempdir} . "/heritability_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
-        };
+        });
 
-    my $job;
-    $job = CXGN::Tools::Run->new($cmd);
+        print STDERR Dumper $pheno_filepath;
+
+    # my $job;
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
-            $pheno_filepath
+            $pheno_filepath,
+            $figure3file,
+            $figure4file,
+            $h2File
     );
     $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
+
+   
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
+    copy($h2File, $figure_path);
+    copy($figure3file, $figure_path);
+    copy($figure4file, $figure_path);
+
+    my $h2Filebasename = basename($h2File);
+    my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
+    
+    my $figure3basename = basename($figure3file);
+    my $figure3_response = "/documents/tempfiles/heritability_files/" . $figure3basename;
+    
+    my $figure4basename = basename($figure4file);
+    my $figure4_response = "/documents/tempfiles/heritability_files/" . $figure4basename;
+
+
+    print $h2File_response;
+        
+    $c->stash->{rest} = {
+        h2Table => $h2File_response,
+        figure3 => $figure3_response,
+        figure4 => $figure4_response,
+        dummy_response => $dataset_id
+        # dummy_response2 => $trait_id,
     };
-};
-    # my $figure_path = $c->{basepath} . "./documents/tempfiles/h2_files/";
+}
+
+1
+
