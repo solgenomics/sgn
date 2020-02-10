@@ -51,6 +51,7 @@ sub check_predicted_dataset_selection :Path('/solgs/check/predicted/dataset/sele
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
+    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
     
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
    

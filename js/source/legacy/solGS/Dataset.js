@@ -165,7 +165,12 @@ solGS.dataset = {
 	var dataset = new CXGN.Dataset();
 	var d = dataset.getDataset(datasetId);
 
-	var protocolId = d.categories['genotyping_protocols'];
+	var protocolId = d.categories['genotyping_protocols'][0];
+
+	if (!protocolId) {
+	    protocolId  = jQuery('#genotyping_protocol_id').val();
+	}
+	
 	var popId     = 'dataset_' + datasetId;
 	var popType = 'dataset_training';
 
@@ -189,6 +194,7 @@ solGS.dataset = {
 	var trainingPopDetails = solGS.getPopulationDetails();	
 	var selectionPopId = 'dataset_' + datasetId;
 
+
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 	var traitId   = jQuery("#trait_id").val();
 
@@ -201,7 +207,11 @@ solGS.dataset = {
 	var dataset = new CXGN.Dataset();
 	var d = dataset.getDataset(datasetId);
 
-	var protocolId = d.categories['genotyping_protocols'];
+	var protocolId = d.categories['genotyping_protocols'][0];
+
+	if (!protocolId) {
+	    protocolId  = jQuery('#genotyping_protocol_id').val();
+	}
 	
 	var args = {
 	    'dataset_id'       : datasetId,
