@@ -214,10 +214,10 @@ jQuery(document).ready(function() {
         var pc_check = 0;
         var kinship_check = 0;
         if ($('#princomp').is(':checked')) {
-          var pc_check = 0;
+          var pc_check = 1;
         }
-        if ($('kinshipmat').is(':checked')) {
-          var kinship_check = 0;
+        if ($('#kinshipmat').is(':checked')) {
+          var kinship_check = 1;
         }
         //alert(pc_check);
         //alert(kinship_check);
@@ -225,28 +225,29 @@ jQuery(document).ready(function() {
         //alert("Pheno ID: "+trait_id);
         $.ajax({
           url: '/ajax/stability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
+          timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
-              $('#dataset_select').val('ERROR');
+              alert(response.error);
             }
             else {
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
         //alert("Response ID: "+temp_response);
             //alert("Response ID: "+fig3_response);
-              //setTimeout(function() {
-              $('#stability_output').append("<img id='stability_Figure3' src='"+ fig3_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure4' src='"+ fig4_response + "'/>");
-              //},6000);
+
+              $('#stability_output').append("<img id='stb_Figure3' src='"+ fig3_response + "'/>");
+              $('#stability_output').append("<img id='stb_Figure4' src='"+ fig4_response + "'/>");
             }
           },
-          error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable, ponto 2");
+          error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            alert(err.Message);
           }
         });
       }

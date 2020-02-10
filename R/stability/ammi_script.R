@@ -8,46 +8,47 @@ library("dplyr")
 args = commandArgs(trailingOnly = TRUE)
 
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
+study_trait <- args[2]
+study_trait
 
-figure3_file_name <- args[2]
-figure4_file_name <- args[3]
-h2File <- args[4]
+figure3_file_name <- args[3]
+figure4_file_name <- args[4]
 
 
-cat("Removing missing data...", "\n")
-pheno= X[which(X[,52] != "NA"),]
+pheno_vector <- pheno[,pmatch(study_trait, names(pheno))]
+pheno_vector[1:5]
+# Make a new phenotype table, including only the phenotype selected:
+pheno_mod <- cbind(pheno, pheno_vector)
 
-z = 100
-a = 1
-b = 1
-i = 0
-for (i in 1:nrow(pheno)){
-	pheno[i,16]=a
-	pheno[i,18]=b
-	i=i+1
-	b=b+1
-	if (b>5){
-		b=1
-	}
-	if(i>z){
-		a=a+1
-		z=z+100
-		cat("Preparing the data...","\n")
-	}
-}
+colnames(pheno_mod)
 
-pheno <- pheno[-c(701:736),]
+dim(pheno_mod)
+pheno_mod=pheno_mod[which(pheno_mod$pheno_vector != "NA"),]
+print("Filtering out NAs...")
+dim(pheno_mod)
+#pheno_mod <- pheno_mod[!duplicated(pheno_mod$germplasmDbId),]
+# pheno_mod <- distinct(pheno_mod, germplasmDbId, .keep_all = TRUE)
+# print("Filtering out duplicated stock IDs, keeping only single row for each stock ID...")
+# dim(pheno_mod)
 
-# print(pheno[,16])
+# pheno_mod$germplasmDbId<-factor(as.character(pheno_mod$germplasmDbId), levels=rownames(geno.gwas)) #to ensure same levels on both files
+# pheno_mod <- pheno_mod[order(pheno_mod$germplasmDbId),]
+##Creating file for GWAS function from rrBLUP package
+# pheno_mod$locationDbId<- as.factor(pheno_mod$locationDbId)
+# Check the number of levels in the pheno_mod$locationDbId
+location_levels <- nlevels(pheno_mod$locationDbId)
+print("Number of Levels:")
+location_levels
 
-env <-as.factor(pheno$locationDbId)
-gen <-as.factor(pheno$germplasmDbId)
-rep <-as.factor(pheno$blockNumber)
-trait <-as.numeric(pheno[,52])
 
-drymater = pheno[,52]
+env <-as.factor(pheno_mod$locationDbId)
+gen <-as.factor(pheno_mod$germplasmDbId)
+rep <-as.factor(pheno_mod$blockNumber)
+# trait <-as.numeric(pheno[,52])
 
-write.table(drymater, file="drymater.txt", sep="\t")
+# drymater = pheno[,52]
+
+# write.table(drymater, file="drymater.txt", sep="\t")
 
 # print(pheno[,52])
 
@@ -58,7 +59,7 @@ cat("Starting AMMI...","\n")
 # sink("resultAMMI.txt")
 # pdf(file='AMMI_test.pdf')
 
-model<- with(X,AMMI(env, gen, rep, trait, console=FALSE))
+model<- with(pheno_mod,AMMI(env, gen, rep, study_trait, console=FALSE))
 # cat("------------------------------------------------------------  ", "\n")
 # cat("Análise de Variância  ", "\n")
 # cat("------------------------------------------------------------  ", "\n")
@@ -96,10 +97,13 @@ plot(model)
 
 
 # # triplot PC 1,2,3 
+png(figure3_file_name)
 plot(model, type=2, number=TRUE)
+dev.off()
 # biplot PC1 vs Yield 
+png(figure4_file_name)
 plot(model, first=0,second=1, number=TRUE)
-
+dev.off()
 
 # sink()
 # dev.off()

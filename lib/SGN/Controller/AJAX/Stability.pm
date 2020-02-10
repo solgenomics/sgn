@@ -132,34 +132,57 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
+    my $newtrait = $trait_id;
+    $newtrait =~ s/\s/\_/g;
+    $newtrait =~ s/\//\_/g;
+    print STDERR $newtrait . "\n";
+
+    my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
+    my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
+
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
 
-
-
    # my $cmd = "Rscript " . $c->config->{basepath} . "/R/stability/2_blup_rscript.R " . $pheno_filepath . " " . $trait_id;
    # system($cmd);
-    eval {
-    my $cmd = {
+    my $cmd = CXGN::Tools::Run->new(
+        {
             backend => $c->config->{backend},
+            submit_host => $c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/stability_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
-        };
-
-    my $job;
-    $job = CXGN::Tools::Run->new($cmd);
+        }
+    );
     $cmd->run_cluster(
             "Rscript ",
-            $c->config->{basepath} . "/R/stability/h2_blup_rscript.R",
+            $c->config->{basepath} . "/R/stability/ammi_script.R",
             $pheno_filepath
     );
     $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
+
+     my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
+    copy($figure3file,$figure_path);
+    copy($figure4file,$figure_path);
+#    my $figure3basename = $figure3file;
+
+#    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
+    my $figure3basename = basename($figure3file);
+    my $figure3file_response = "/documents/tempfiles/stability_files/" . $figure3basename;
+    my $figure4basename = basename($figure4file);
+    my $figure4file_response = "/documents/tempfiles/stability_files/" . $figure4basename;
+#    $figure4file_response =~ s/\.\/static//;
+    $c->stash->{rest} = {
+        figure3 => $figure3file_response,
+        figure4 => $figure4file_response,
+        dummy_response => $dataset_id,
+        dummy_response2 => $trait_id,
     };
-};
+}
+
     # my $figure_path = $c->{basepath} . "./documents/tempfiles/h2_files/";
