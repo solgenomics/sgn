@@ -22,6 +22,8 @@ pheno_mod <- cbind(pheno, pheno_vector)
 
 colnames(pheno_mod)
 
+cat("It is working")
+
 dim(pheno_mod)
 pheno_mod=pheno_mod[which(pheno_mod$pheno_vector != "NA"),]
 print("Filtering out NAs...")

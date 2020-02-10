@@ -137,52 +137,65 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     $newtrait =~ s/\//\_/g;
     print STDERR $newtrait . "\n";
 
-    my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
-    my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
+    my $figure3file = $tempfile . "_figure3.png";
+    my $figure4file = $tempfile . "_figure4.png";
 
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
+    # $trait_id =~ tr/ /./;
+    # $trait_id =~ tr/\//./;
 
-
-   # my $cmd = "Rscript " . $c->config->{basepath} . "/R/stability/2_blup_rscript.R " . $pheno_filepath . " " . $trait_id;
-   # system($cmd);
-    my $cmd = CXGN::Tools::Run->new(
-        {
+    my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
-            submit_host => $c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/stability_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
-        }
-    );
+        });
+
+        print STDERR Dumper $pheno_filepath;
+
+    # my $job;
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/stability/ammi_script.R",
-            $pheno_filepath
+            $pheno_filepath,
+            $trait_id,
+            $figure3file,
+            $figure4file,
     );
     $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
 
-     my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
-    copy($figure3file,$figure_path);
-    copy($figure4file,$figure_path);
-#    my $figure3basename = $figure3file;
+   
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
+    # copy($h2File, $figure_path);
+    copy($figure3file, $figure_path);
+    copy($figure4file, $figure_path);
 
-#    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
+    # my $h2Filebasename = basename($h2File);
+    # my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
+    
     my $figure3basename = basename($figure3file);
-    my $figure3file_response = "/documents/tempfiles/stability_files/" . $figure3basename;
+    my $figure3_response = "/documents/tempfiles/stability_files/" . $figure3basename;
+    
     my $figure4basename = basename($figure4file);
-    my $figure4file_response = "/documents/tempfiles/stability_files/" . $figure4basename;
-#    $figure4file_response =~ s/\.\/static//;
+    my $figure4_response = "/documents/tempfiles/stability_files/" . $figure4basename;
+
+
+    print $figure3_response;
+        
     $c->stash->{rest} = {
-        figure3 => $figure3file_response,
-        figure4 => $figure4file_response,
+        # h2Table => $h2File_response,
+        figure3 => $figure3_response,
+        figure4 => $figure4_response,
         dummy_response => $dataset_id,
         dummy_response2 => $trait_id,
     };
 }
+
+1
+
+
 
     # my $figure_path = $c->{basepath} . "./documents/tempfiles/h2_files/";
