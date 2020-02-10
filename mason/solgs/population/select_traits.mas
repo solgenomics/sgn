@@ -18,7 +18,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $traits_form => ''
 $training_pop_id
 $all_traits_file
-
+$genotyping_protocol_id
 
 </%args>
 
@@ -32,7 +32,7 @@ $all_traits_file
 {
  my ($id, $trait, $acronym) = split (/\t/);
 
- my $trait_link   = qq | <a href="/solgs/trait/$id/population/$training_pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
+ my $trait_link   = qq | <a href="/solgs/trait/$id/population/$training_pop_id/gp/$genotyping_protocol_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
  my $row          = <<ROW;
  <tr>
    <td>
