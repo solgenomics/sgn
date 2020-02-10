@@ -453,6 +453,7 @@ sub upload_drone_imagery_POST : Args(0) {
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
     } elsif ($new_drone_run_band_stitching eq 'yes_automated') {
+        print STDERR Dumper $c->req->params();
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
         my $drone_run_raw_image_boundaries_first_plot_corner = $c->req->param('drone_run_raw_image_boundaries_first_plot_corner');
@@ -467,6 +468,11 @@ sub upload_drone_imagery_POST : Args(0) {
         my $drone_run_raw_image_boundaries_plot_width = $c->req->param('drone_run_raw_image_boundaries_plot_width');
         my $drone_run_raw_image_boundaries_plot_length = $c->req->param('drone_run_raw_image_boundaries_plot_length');
         my $drone_run_raw_image_boundaries_corners_plots_json = $c->req->param('drone_run_raw_image_boundaries_corners_plots_json');
+        my $drone_run_raw_image_boundaries_latitude_precision = $c->req->param('drone_run_raw_image_boundaries_latitude_precision');
+        my $drone_run_raw_image_boundaries_start_direction = $c->req->param('drone_run_raw_image_boundaries_start_direction');
+        my $drone_run_raw_image_boundaries_turn_direction = $c->req->param('drone_run_raw_image_boundaries_turn_direction');
+        my $drone_run_raw_image_boundaries_geographic_position = $c->req->param('drone_run_raw_image_boundaries_geographic_position');
+        my $drone_run_raw_image_boundaries_image_top_direction = $c->req->param('drone_run_raw_image_boundaries_image_top_direction');
 
         if (!$upload_file) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images to stitch!" };
@@ -587,6 +593,11 @@ sub upload_drone_imagery_POST : Args(0) {
                 print $fh "$drone_run_raw_image_boundaries_plot_width\n";
                 print $fh "$drone_run_raw_image_boundaries_plot_length\n";
                 print $fh "$drone_run_raw_image_boundaries_corners_plots_json\n";
+                print $fh "$drone_run_raw_image_boundaries_latitude_precision\n";
+                print $fh "$drone_run_raw_image_boundaries_start_direction\n";
+                print $fh "$drone_run_raw_image_boundaries_turn_direction\n";
+                print $fh "$drone_run_raw_image_boundaries_geographic_position\n";
+                print $fh "$drone_run_raw_image_boundaries_image_top_direction\n";
             close($fh);
 
             my $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
@@ -765,19 +776,19 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
     my $upload_file_bottom_right_image = $c->req->upload('upload_drone_images_bottom_right_image');
 
     if (!$upload_file_top_left_image) {
-        $c->stash->{rest} = { error => "Please provide a top left image!" };
+        $c->stash->{rest} = { error => "Please provide a north west image!" };
         $c->detach();
     }
     if (!$upload_file_top_right_image) {
-        $c->stash->{rest} = { error => "Please provide a top right image!" };
+        $c->stash->{rest} = { error => "Please provide a north east image!" };
         $c->detach();
     }
     if (!$upload_file_bottom_left_image) {
-        $c->stash->{rest} = { error => "Please provide a bottom left image!" };
+        $c->stash->{rest} = { error => "Please provide a south west image!" };
         $c->detach();
     }
     if (!$upload_file_bottom_right_image) {
-        $c->stash->{rest} = { error => "Please provide a bottom right image!" };
+        $c->stash->{rest} = { error => "Please provide a south east image!" };
         $c->detach();
     }
 
@@ -1002,7 +1013,7 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
     print STDERR Dumper \@bl_gps;
     print STDERR Dumper \@br_gps;
 
-    my %corners = (tl => \@tl_gps, tr => \@tr_gps, bl => \@bl_gps, br => \@br_gps);
+    my %corners = (north_west => \@tl_gps, north_east => \@tr_gps, south_west => \@bl_gps, south_east => \@br_gps);
 
     my $linking_table_tl_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_boundaries_top_left_drone_imagery', 'project_md_image')->cvterm_id();
     my $image_tl = SGN::Image->new( $schema->storage->dbh, undef, $c );
