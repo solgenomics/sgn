@@ -91,9 +91,9 @@ has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plan
 
 has 'num_seed_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_seed_per_plot',clearer => 'clear_num_seed_per_plot');
 
-has 'replicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_replicated_accession_no',clearer => 'clear_replicated_accession_no');
+has 'replicated_stock_no' => (isa => 'Int',is => 'rw',predicate => 'has_replicated_stock_no',clearer => 'clear_replicated_stock_no');
 
-has 'unreplicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_unreplicated_accession_no',clearer => 'clear_unreplicated_accession_no');
+has 'unreplicated_stock_no' => (isa => 'Int',is => 'rw',predicate => 'has_unreplicated_stock_no',clearer => 'clear_unreplicated_stock_no');
 
 has 'num_of_replicated_times' => (isa => 'Int',is => 'rw',predicate => 'has_num_of_replicated_times',clearer => 'clear_num_of_replicated_times');
 
@@ -169,7 +169,7 @@ sub validate_field_colNumber {
   if (isint($colNum)){
     return $colNum;
   } else {
-      die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
+      die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
       return;
   }
 

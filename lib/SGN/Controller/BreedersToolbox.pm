@@ -22,6 +22,8 @@ use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
 use JSON;
+use CXGN::Trial;
+
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -355,6 +357,9 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     }
     my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
 
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+    $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
     $c->stash->{trial_name} = $project_name;
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';

@@ -37,7 +37,7 @@ sub validate {
     my $excel_obj;
     my $worksheet;
     my %parse_result;
-   
+
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
@@ -73,17 +73,17 @@ sub validate {
         return \%parse_result;
     }
 
-    my $accession_name_head;
+    my $trial_stock_name_head;
     if ($worksheet->get_cell(0,1)) {
-      $accession_name_head  = $worksheet->get_cell(0,1)->value();
+      $trial_stock_name_head  = $worksheet->get_cell(0,1)->value();
     }
 
-    if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-        $parse_result{'error'} = "No accession_name in header.";
-        print STDERR "No accession_name in header\n";
+    if (!$trial_stock_name_head || (($trial_stock_name_head ne 'accession_name') && ($trial_stock_name_head ne 'family_name') && ($trial_stock_name_head ne 'cross_unique_id'))) {
+        $parse_result{'error'} = "No accession_name or family_name or cross_unique_id in header.";
+        print STDERR "No accession_name or family_name or cross_unique_id in header\n";
         return \%parse_result;
     }
-    
+
     my $plot_num_head;
     if ($worksheet->get_cell(0,2)) {
       $plot_num_head  = $worksheet->get_cell(0,2)->value();
@@ -94,7 +94,7 @@ sub validate {
         print STDERR "No plot_number in header\n";
         return \%parse_result;
     }
-    
+
     my $block_head;
     if ($worksheet->get_cell(0,3)) {
       $block_head  = $worksheet->get_cell(0,3)->value();
@@ -105,7 +105,7 @@ sub validate {
         print STDERR "No block_number in header\n";
         return \%parse_result;
     }
-    
+
     my $is_control_head;
     if ($worksheet->get_cell(0,4)) {
       $is_control_head  = $worksheet->get_cell(0,4)->value();
@@ -116,7 +116,7 @@ sub validate {
         print STDERR "No is_a_control in header\n";
         return \%parse_result;
     }
-    
+
     my $rep_head;
     if ($worksheet->get_cell(0,5)) {
       $rep_head  = $worksheet->get_cell(0,5)->value();
@@ -207,7 +207,7 @@ sub parse {
                 $trait_value = '';
             }
             #print STDERR $trait_value." : ".$timestamp."\n";
-            
+
             if ($timestamp_included) {
                 if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
                     $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";

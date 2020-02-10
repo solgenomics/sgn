@@ -1018,6 +1018,40 @@ sub cross_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+=head2 family_name_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub family_name_autocomplete : Local : ActionClass('REST') { }
+
+sub family_name_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='family_name' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
 =head2 population_autocomplete
 
  Usage:

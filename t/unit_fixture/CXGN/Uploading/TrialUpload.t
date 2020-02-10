@@ -234,7 +234,7 @@ ok($post1_nd_experimentprop_diff == 0, "check ndexperimentprop table after uploa
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 3, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 4, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -446,7 +446,7 @@ ok($post2_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post2_project_prop_diff."\n";
-ok($post2_project_prop_diff == 10, "check projectprop table after upload igd trial");
+ok($post2_project_prop_diff == 11, "check projectprop table after upload igd trial");
 
 $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -680,7 +680,7 @@ ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 13, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 15, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;

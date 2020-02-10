@@ -56,7 +56,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
   my $trait_list_ref = $c->req->param('trait_list');
   my $format = $c->req->param('format') || "DataCollectorExcel";
   my $data_level = $c->req->param('data_level') || "plots";
-  
+
   if ($data_level eq 'plants') {
       my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
       if (!$trial->has_plant_entries()) {
@@ -64,14 +64,14 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
           return;
       }
   }
-  
+
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('download');
   my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/'.$format.'_'.$trial_id.'_'.'XXXXX');
   my $file_path = $c->config->{basepath}."/".$tempfile.".xls";
   close($fh);
   move($tempfile, $file_path);
-
+  my $trial_stock_type = $c->req->param('trial_stock_type');
   my $create_spreadsheet = CXGN::Trial::Download->new(
       {
 	  bcs_schema => $schema,
@@ -80,6 +80,7 @@ sub create_DataCollector_spreadsheet_POST : Args(0) {
 	  filename => $file_path,
 	  format => $format,
       data_level => $data_level,
+      trial_stock_type => $trial_stock_type,
       });
 
   my $spreadsheet_response = $create_spreadsheet->download();

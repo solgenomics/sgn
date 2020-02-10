@@ -157,6 +157,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     else {
+        $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 

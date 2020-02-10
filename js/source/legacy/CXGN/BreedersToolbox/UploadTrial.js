@@ -43,6 +43,8 @@ jQuery(document).ready(function ($) {
         var description = $("#trial_upload_description").val();
         var design_type = $("#trial_upload_design_method").val();
         var uploadFile = $("#trial_uploaded_file").val();
+        var trial_stock_type = $("#trial_upload_trial_stock_type").val();
+
         if (trial_name === '') {
             alert("Please give a trial name");
         }
@@ -57,6 +59,9 @@ jQuery(document).ready(function ($) {
         }
         else if (description === '') {
             alert("Please give a description");
+        }
+        else if (trial_stock_type === '') {
+            alert("Please select stock type used in trial");
         }
         else if (design_type === '') {
             alert("Please give a design type");
