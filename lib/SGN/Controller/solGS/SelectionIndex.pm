@@ -20,11 +20,20 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id  = $c->req->param('training_pop_id');
     my @traits_ids       = $c->req->param('training_traits_ids[]');
-   
+    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
+
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+     
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     my $traits;
     if ($selection_pop_id) 
