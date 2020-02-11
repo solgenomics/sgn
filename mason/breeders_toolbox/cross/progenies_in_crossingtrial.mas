@@ -5,17 +5,36 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
-    <thead>
-        <tr>
-            <th>Cross Unique ID</th>
-            <th>Cross Combination</th>
-            <th>Number of Progenies</th>
-            <th>Family Name</th>
-        </tr>
-    </thead>
-</table>
-
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Upload Progenies or Family Names", is_subsection => 1, collapsible=>1, collapsed=>1, &>
+                <&| /page/info_section.mas, title=>"Upload progeny names that are NOT in database ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_new_progenies_link">Upload</button>'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_existing_progenies_link">Upload</button>'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_family_names_link">Upload</button>'&>
+                </&>
+            </&><!-- closes upload new phenotype file section -->
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Progeny and Family Name Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
+                    <thead>
+                        <tr>
+                            <th>Cross Unique ID</th>
+                            <th>Cross Combination</th>
+                            <th>Number of Progenies</th>
+                            <th>Family Name</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&><!-- closes uploaded file section -->
+        </div>
+    </div>
+</div><!-- closes well -->
 
 <script>
 
