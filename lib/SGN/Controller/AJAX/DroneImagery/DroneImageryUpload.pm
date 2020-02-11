@@ -519,8 +519,12 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
         open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
             foreach (@$image_paths) {
-                my $temp_file_raw_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
-                print $fh "$_,$temp_file_raw_image\n";
+                my $temp_file_raw_image_blue = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_green = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_red = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_nir = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_red_edge = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                print $fh "$_,$temp_file_raw_image_blue,$temp_file_raw_image_green,$temp_file_raw_image_red,$temp_file_raw_image_nir,$temp_file_raw_image_red_edge\n";
             }
         close($fh);
         print STDERR "Drone image raw boundaries temp file $temp_file_image_file_names\n";
