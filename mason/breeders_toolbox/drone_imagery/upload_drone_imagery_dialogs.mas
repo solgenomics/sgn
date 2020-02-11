@@ -226,11 +226,11 @@
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_start_continue" name="drone_image_upload_raw_image_boundaries_start_continue">Go to Next Step</button>
             </center>
         </&>
-        <&| /util/workflow.mas:step, title=> "Top Left Boundary Point" &>
+        <&| /util/workflow.mas:step, title=> "North West Boundary Point" &>
             <div class="well">
                 <ul>
                     <li>Rotate image if necessary.</li>
-                    <li>Click on the point in the image representing the top-left corner.</li>
+                    <li>Click on the point in the image representing the north west corner.</li>
                 </ul>
             </div>
 
@@ -252,10 +252,10 @@
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_tl_continue">Go to Next Step</button>
             </center>
         </&>
-        <&| /util/workflow.mas:step, title=> "Top Right Boundary Point" &>
+        <&| /util/workflow.mas:step, title=> "North East Boundary Point" &>
             <div class="well">
                 <ul>
-                    <li>Click on the point in the image representing the top-right corner.</li>
+                    <li>Click on the point in the image representing the north east corner.</li>
                 </ul>
             </div>
 
@@ -266,10 +266,10 @@
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_tr_continue">Go to Next Step</button>
             </center>
         </&>
-        <&| /util/workflow.mas:step, title=> "Bottom Left Boundary Point" &>
+        <&| /util/workflow.mas:step, title=> "South West Boundary Point" &>
             <div class="well">
                 <ul>
-                    <li>Click on the point in the image representing the bottom-left corner.</li>
+                    <li>Click on the point in the image representing the south west corner.</li>
                 </ul>
             </div>
 
@@ -280,10 +280,10 @@
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_bl_continue">Go to Next Step</button>
             </center>
         </&>
-        <&| /util/workflow.mas:step, title=> "Bottom Right Boundary Point" &>
+        <&| /util/workflow.mas:step, title=> "South East Boundary Point" &>
             <div class="well">
                 <ul>
-                    <li>Click on the point in the image representing the bottom-right corner.</li>
+                    <li>Click on the point in the image representing the south east corner.</li>
                 </ul>
             </div>
 
@@ -294,7 +294,7 @@
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_br_continue">Go to Next Step</button>
             </center>
         </&>
-        <&| /util/workflow.mas:step, title=> "Field Layout" &>
+        <&| /util/workflow.mas:step, title=> "Field Layout Params" &>
             <div class="form form-horizontal">
                 <div class="row">
                     <div class="col-sm-6">
@@ -804,7 +804,9 @@ jQuery(document).ready(function() {
             }
             else if (drone_run_band_unstitched == 'yes_automated') {
                 uploadDroneRawImagesBoundariesDroneRunProjectId = response.drone_run_project_id;
-                uploadDroneRawImagesBoundariesCornersGPS = response.corners_gps;
+                if (response.corners_gps) {
+                    uploadDroneRawImagesBoundariesCornersGPS = response.corners_gps;
+                }
 
                 jQuery('#drone_run_id').val(uploadDroneRawImagesBoundariesDroneRunProjectId);
 
@@ -1083,19 +1085,19 @@ jQuery(document).ready(function() {
             alert('Please select the first plot corner, the direction of the second plot, and the plot layout orientation.');
             return false;
         }
-        else if (!('top_left' in uploadDroneRawImagesBoundariesPoints) ) {
+        else if (!('north_west' in uploadDroneRawImagesBoundariesPoints) ) {
             alert('Please click the top left corner first!');
             return false;
         }
-        else if (!('top_right' in uploadDroneRawImagesBoundariesPoints) ) {
+        else if (!('north_east' in uploadDroneRawImagesBoundariesPoints) ) {
             alert('Please click the top right corner first!');
             return false;
         }
-        else if (!('bottom_left' in uploadDroneRawImagesBoundariesPoints) ) {
+        else if (!('south_west' in uploadDroneRawImagesBoundariesPoints) ) {
             alert('Please click the bottom left corner first!');
             return false;
         }
-        else if (!('bottom_right' in uploadDroneRawImagesBoundariesPoints) ) {
+        else if (!('south_east' in uploadDroneRawImagesBoundariesPoints) ) {
             alert('Please click the bottom right corner first!');
             return false;
         }
