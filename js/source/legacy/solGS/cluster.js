@@ -422,25 +422,9 @@ solGS.cluster = {
     plotClusterOutput: function(res) {
 
 	var resultName = res.result_name; 
-	var plotId;
+	var imageId = res.plot_name;
 
-	if (resultName != undefined) {
-	     plotId = resultName.replace(/\s/g, '-');
-	} else {
-	    plotId = res.cluster_pop_id;
-	}
-	
-	var imageId = 'k-means-plot-'  + plotId + '-'
-	    + res.data_type + '-'+ res.k_number;
-
-	if (res.selection_proportion) {
-	    imageId = imageId + '-' + res.selection_proportion;
-	}
-
-	
-	if (res.training_traits_ids) {
-	    imageId = imageId + '-' + res.training_traits_ids;
-	}
+	console.log('file id ' + imageId)
 	
 	imageId = 'id="' + imageId + '"';
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
@@ -523,8 +507,12 @@ solGS.cluster = {
 	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
 	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
 
-	selectionProp = selectionProp.replace(/%/, '');
-	selectionProp = selectionProp.replace(/\s+/g, '');
+	console.log(selectionProp)
+	if (selectionProp) {
+	    selectionProp = selectionProp.replace(/%/, '');
+	    selectionProp = selectionProp.replace(/\s+/g, '');
+	}
+	
 	kNumber = kNumber.replace(/\s+/g, '');
 	
 	return {'data_type' : dataType,
