@@ -720,16 +720,16 @@ sub create_file_id {
     # $file_id = $file_id . '-trait-' . $traits_ids[0] if !$traits_selection_id && @traits_ids;
     if ($trait_id) 
     {
-	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-	my $trait_abbr = $c->stash->{trait_abbr};
+	#$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	#my $trait_abbr = $c->stash->{trait_abbr};
 	
-	$file_id = $file_id . '-' . $trait_abbr;
+	$file_id = $file_id . '-' . $trait_id;
     }
 
    
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
-    $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
-    $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-GP-' . $protocol_id : $file_id;
+    $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
+    $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-gp-' . $protocol_id : $file_id;
      
     return $file_id;
     
