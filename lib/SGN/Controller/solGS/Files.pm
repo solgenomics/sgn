@@ -133,7 +133,7 @@ sub filtered_training_genotype_file {
    
     $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
     
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     my $file_id = "${pop_id}-GP-${protocol_id}";
   
     my $cache_data = { key       => 'filtered_genotype_data_' . $file_id, 
@@ -252,16 +252,13 @@ sub analysis_report_file {
 
 sub genotype_file_name {
     my ($self, $c, $pop_id, $protocol_id) = @_;
- 
-   
-    my $combo_pops_id = $c->{stash}->{combo_pops_id};
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
-    my $file_id = "${pop_id}-GP-${protocol_id}";
- 
-    if ($combo_pops_id && $combo_pops_id == $pop_id) 
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
+
+    if (!$protocol_id)
     {
-	$pop_id = $pop_id . '_combined';
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
     }
 
     my $dir; 
@@ -278,11 +275,7 @@ sub genotype_file_name {
 	$dir = $c->stash->{solgs_cache_dir};
     }
     
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+   
   
     my $file_id = $pop_id . '-GP-' . $protocol_id;
     
@@ -342,7 +335,7 @@ sub validation_file {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $file_id = $pop_id . '-' . $trait . '-GP-' . $protocol_id;
-  
+ 
   
     my $data_set_type = $c->stash->{data_set_type};
     no warnings 'uninitialized';
@@ -733,11 +726,11 @@ sub create_file_id {
 	$file_id = $file_id . '-' . $trait_abbr;
     }
 
-    $file_id = $protocol_id ? $file_id . '-GP-' . $protocol_id : $file_id;
+   
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-K-' . $k_number : $file_id;
-   
-    
+    $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-GP-' . $protocol_id : $file_id;
+     
     return $file_id;
     
 }
