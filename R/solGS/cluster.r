@@ -34,16 +34,16 @@ errorFile   <- grep("error", outputFiles, value = TRUE)
 
 combinedDataFile <- grep("combined_cluster_data_file", outputFiles, value = TRUE)
 
-plotPamFile      <- grep("plot_pam", outputFiles, value = TRUE)
-plotKmeansFile   <- grep("plot_kmeans", outputFiles, value = TRUE)
-
+plotPamFile    <- grep("plot_pam", outputFiles, value = TRUE)
+plotKmeansFile <- grep("k-means-plot", outputFiles, value = TRUE)
 optionsFile    <- grep("options", inputFiles,  value = TRUE)
+
 clusterOptions <- read.table(optionsFile,
                              header = TRUE,
                              sep = "\t",
                              stringsAsFactors = FALSE,
                              na.strings = "")
-
+print(clusterOptions)
 clusterOptions <- column_to_rownames(clusterOptions, var = "Params")
 userKNumbers   <- as.numeric(clusterOptions["k numbers", 1])
 dataType       <- clusterOptions["data type", 1]
@@ -63,6 +63,7 @@ genoDataMissing <- c()
 extractGenotype <- function(inputFiles) {
 
     genoFiles <- grep("genotype_data", inputFiles,  value = TRUE)
+   
     genoMetaData <- c()
     filteredGenoFile <- c()
 
@@ -107,7 +108,6 @@ extractGenotype <- function(inputFiles) {
     }
 
     genoData <- data.frame(genoData)
-    
 }
 
 set.seed(235)
@@ -116,7 +116,7 @@ clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
-
+    
     pca    <- prcomp(clusterData, retx = TRUE)
     pca    <- summary(pca)
 
