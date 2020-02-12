@@ -40,7 +40,7 @@ for (i in 40:ncol(pheno)){
 }
 
 
-n = round(n/2)
+# n = round(n/2)
 
 z=1
 png(figure3_file_name,height=900)
@@ -50,21 +50,6 @@ for(i in 40:ncol(pheno)){
 	test = is.numeric(pheno[,i])
 	if (test == "TRUE") {
 		hist(pheno[,i], main = "Data Distribution", xlab = traits[z])
-		z=z+1
-	}
-	else {
-		z=z+1
-	}
-}
-dev.off()
-
-z=1
-png(figure4_file_name,height=900)
-par(mar=c(4,4,2,2))
-par(mfrow=c(n,2))
-for(i in 40:ncol(pheno)){
-	test = is.numeric(pheno[,i])
-	if (test == "TRUE") {
 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
 		z=z+1
 	}
@@ -73,6 +58,22 @@ for(i in 40:ncol(pheno)){
 	}
 }
 dev.off()
+
+# z=1
+# png(figure4_file_name,height=900)
+# par(mar=c(4,4,2,2))
+# par(mfrow=c(n,2))
+# for(i in 40:ncol(pheno)){
+# 	test = is.numeric(pheno[,i])
+# 	if (test == "TRUE") {
+# 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
+# 		z=z+1
+# 	}
+# 	else {
+# 		z=z+1
+# 	}
+# }
+# dev.off()
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
