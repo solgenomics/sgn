@@ -653,10 +653,11 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
     my $use_full_trait_name = $c->req->param("use_full_trait_name") || 0;
 
     my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+        context => $c,
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-	phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
-	people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+        phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
         page_size => 1000000,
         page => 0,
         status => []
