@@ -203,7 +203,7 @@ jQuery(document).ready(function() {
 
 
   jQuery('#runH2').click( function () {
-    if (!jQuery('#pheno_select').val(1)) {
+    if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
       $('#heritability_output').empty();
     } else {
@@ -224,13 +224,13 @@ jQuery(document).ready(function() {
               alert(response.error);
             }
             else {
-              var fig3_response = response.h2Table;
-              var fig4_response = response.figure3;
+              var fig1_response = response.h2Table;
+              var fig2_response = response.figure3;
         //alert("Response ID: "+temp_response);
-            //alert("Response ID: "+fig3_response);
+            //alert("Response ID: "+fig1_response);
 
-              $('#heritability_output').append("<img id='h2_Table' src='"+ fig3_response + "'/>");
-              $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig4_response + "'/>");
+              $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
+              $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
             }
           },
           error: function(xhr, status, error) {
