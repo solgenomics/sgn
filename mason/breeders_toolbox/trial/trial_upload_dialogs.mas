@@ -261,6 +261,17 @@ $locations
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Stock Type Used in Trial: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="trial_upload_trial_stock_type" name="trial_upload_trial_stock_type">
+                                            <option value="">Select a stock type</option>
+                                            <option value="accession">accession</option>
+                                            <option value="cross">cross</option>
+                                            <option value="family_name">family_name</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Design Type: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
@@ -482,15 +493,14 @@ $locations
                     <b>Trials may be uploaded in an Excel file (.xls)</b>
                     <br />
                     (.xlsx format not supported)
-                    <br /><br />
-
+                    <br />
+                    <hr>
+                    <h4>Stock type being evaluated in this trial: accession</h4>
                     <b>Single Trial Design:</b>
-
                     <b>Header:</b>
-                    <br>
+                    <br/>
                     The first row (header) must contain the following:
                     <br />
-
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
@@ -512,18 +522,75 @@ $locations
                     </table>
                     <b>Header as a string:</b><br/>
                     <p>plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
-
+                    <br />
+                    <h4>Stock type being evaluated in this trial: cross unique id</h4>
+                    <b>Single Trial Design:</b>
+                    <b>Header:</b>
+                    <br/>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>plot_name</td>
+                                <td>cross_unique_id</td>
+                                <td>plot_number</td>
+                                <td>block_number</td>
+                                <td>is_a_control</td>
+                                <td>rep_number</td>
+                                <td>range_number</td>
+                                <td>row_number</td>
+                                <td>col_number</td>
+                                <td>seedlot_name</td>
+                                <td>num_seed_per_plot</td>
+                                <td>weight_gram_seed_per_plot</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Header as a string:</b><br/>
+                    <p>plot_name,cross_unique_id,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                    <br />
+                    <h4>Stock type being evaluated in this trial: family name</h4>
+                    <b>Single Trial Design:</b>
+                    <b>Header:</b>
+                    <br/>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>plot_name</td>
+                                <td>family_name</td>
+                                <td>plot_number</td>
+                                <td>block_number</td>
+                                <td>is_a_control</td>
+                                <td>rep_number</td>
+                                <td>range_number</td>
+                                <td>row_number</td>
+                                <td>col_number</td>
+                                <td>seedlot_name</td>
+                                <td>num_seed_per_plot</td>
+                                <td>weight_gram_seed_per_plot</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Header as a string:</b><br/>
+                    <p>plot_name,family_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                    <br />
+                    <hr>
                     <b>Required fields:</b>
                     <ul>
                     <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name and the plot number.)</li>
-                    <li>accession_name (must exist in the database. this is the accession being tested in the plot.)</li>
+                    <li>accession_name or cross_unique_id or family_name (must exist in the database. this is the accession or cross unique id or family name being tested in the plot.)</li>
                     <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). these numbers should be unique for the trial.)</li>
                     <li>block_number (a design parameter indicating which block the plot is in)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
-                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
+                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
                     <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>

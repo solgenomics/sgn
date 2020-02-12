@@ -1,6 +1,9 @@
 <li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Genomes</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Genomes<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
+    <li><a href="/genomes/sequenced_accessions">Sequenced Accessions</a></li>
+    <li role="separator" class="divider"></li>
+
     <li class="dropdown-header">Completed Genomes</li>
     <li><a href="/organism/Solanum_lycopersicum/genome">Tomato</a></li>
     <li><a target="_blank" href="http://apollo.sgn.cornell.edu/apollo/8738/jbrowse/index.html?loc=SL3.0ch01&tracks=ITAG3.2%20gene%20models%2CXY%20plot-All%20merged%20reads">Tomato - Apollo genome annotation editor</a></li>
@@ -17,12 +20,12 @@
     <li><a href="/organism/Petunia_axillaris/genome"><i>Petunia axillaris</i></a></li>
     <li><a href="/organism/Petunia_inflata/genome"><i>Petunia inflata</i></a></li>
     <li><a href="/organism/Solanum_pimpinellifolium/genome"><i>Solanum pimpinellifolium</i></a></li>
-    
+
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Resequencing projects</li>
     <li><a href="/organism/Solanum_lycopersicum/inbred_genomes"><i>Solanum lycopersicum</i> inbreds</a></li>
     <li><a href="/organism/Solanum_lycopersicum/tomato_150">150 Tomato Genome Resequencing Project</a></li>
     <li><a href="/organism/Solanum_lycopersicum/tomato_360">BGI Tomato 360 genomes</a></li>
-    
+
   </ul>
 </li>

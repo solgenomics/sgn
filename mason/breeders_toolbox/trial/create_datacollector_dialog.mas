@@ -2,6 +2,7 @@
 <%args>
 $trial_id
 $trial_name => undef
+$trial_stock_type => undef
 </%args>
 
 
@@ -33,7 +34,7 @@ $trial_name => undef
                 </div>
 	        </div>
 	       </form><br/>
-         
+
         </div>
       </div>
       <div class="modal-footer">
@@ -53,7 +54,7 @@ jQuery(document).ready(function() {
     var list = new CXGN.List();
     jQuery("#trait_list_dc").html(list.listSelect("trait_list_dc", [ 'traits' ], undefined, undefined, undefined));
   });
-  
+
   jQuery('#create_DataCollector_submit_button').click( function () {
     create_DataCollector();
   });
@@ -68,7 +69,8 @@ function create_DataCollector() {
     if (! trait_list_id == "") {
         trait_list = JSON.stringify(list.getList(trait_list_id));
     }
-    
+    var trial_stock_type = "<% $trial_stock_type %>";
+
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/phenotype/create_DataCollector',
@@ -77,6 +79,7 @@ function create_DataCollector() {
             'trial_id': <% $trial_id %>,
             'trait_list': trait_list,
             'data_level': jQuery("#download_datacollector_data_level").val(),
+            'trial_stock_type': trial_stock_type, 
         },
         beforeSend: function() {
             jQuery('#working_modal').modal("show");

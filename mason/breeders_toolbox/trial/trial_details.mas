@@ -17,6 +17,7 @@ $plot_length
 $field_size
 $field_trial_is_planned_to_be_genotyped
 $field_trial_is_planned_to_cross
+$trial_stock_type
 </%args>
 
 <div class="row">
@@ -72,6 +73,19 @@ $field_trial_is_planned_to_cross
 %  print "$year";
 % } else {
 %  print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Stock Type Used in This Trial</b></td>
+                <td>
+                    <div id="stock_type_in_trial">
+% if ($trial_stock_type) {
+%     print "$trial_stock_type";
+% } else {
+%     print "accession";
 % }
                     </div>
                 </td>

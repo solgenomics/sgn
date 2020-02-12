@@ -1677,7 +1677,7 @@ sub merge {
     my $sars = $phenome_schema->resultset("StockAllele")->search( { stock_id => $other_stock_id });
     while (my $row = $sars->next()) {
 	$row->stock_id($self->stock_id());
-	$row->udate();
+	$row->update();
 	print STDERR "Moving stock alleles from stock $other_stock_id to stock ".$self->stock_id()."\n";
 	$stock_allele_count++;
     }

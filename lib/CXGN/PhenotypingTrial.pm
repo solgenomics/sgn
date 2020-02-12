@@ -141,4 +141,30 @@ sub get_drone_run_bands_from_field_trial {
     return \@result;
 }
 
+=head2 function get_trial_stock_type()
+
+ Usage:
+ Desc:         Get stock type used in trial
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trial_stock_type {
+    my $self = shift;
+    my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trial_stock_type', 'project_property');
+    my $type_id = $trial_stock_type_cvterm->cvterm_id();
+
+    my $stock_type_rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { type_id => $type_id } );
+
+    if ($stock_type_rs->count() == 0) {
+        return undef;
+    } else {
+        return $stock_type_rs->first()->value();
+    }
+}
+
+
 1;
