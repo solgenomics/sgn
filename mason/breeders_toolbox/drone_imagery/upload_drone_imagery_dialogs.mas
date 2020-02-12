@@ -86,6 +86,8 @@
                         <input id="drone_run_raw_image_boundaries_turn_direction" name="drone_run_raw_image_boundaries_turn_direction" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_geographic_position" name="drone_run_raw_image_boundaries_geographic_position" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_image_top_direction" name="drone_run_raw_image_boundaries_image_top_direction" type="hidden" value=""/>
+                        <input id="drone_run_raw_image_boundaries_row_alley_width" name="drone_run_raw_image_boundaries_row_alley_width" type="hidden" value=""/>
+                        <input id="drone_run_raw_image_boundaries_column_alley_width" name="drone_run_raw_image_boundaries_column_alley_width" type="hidden" value=""/>
 
                         <center>
                         <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
@@ -230,7 +232,7 @@
             <div class="well">
                 <ul>
                     <li>Rotate image if necessary.</li>
-                    <li>Click on the point in the image representing the north west corner.</li>
+                    <li>Click on the point in the image representing the north west corner. Do not include border rows.</li>
                 </ul>
             </div>
 
@@ -255,7 +257,7 @@
         <&| /util/workflow.mas:step, title=> "North East Boundary Point" &>
             <div class="well">
                 <ul>
-                    <li>Click on the point in the image representing the north east corner.</li>
+                    <li>Click on the point in the image representing the north east corner. Do not include border rows.</li>
                 </ul>
             </div>
 
@@ -269,7 +271,7 @@
         <&| /util/workflow.mas:step, title=> "South West Boundary Point" &>
             <div class="well">
                 <ul>
-                    <li>Click on the point in the image representing the south west corner.</li>
+                    <li>Click on the point in the image representing the south west corner. Do not include border rows.</li>
                 </ul>
             </div>
 
@@ -283,7 +285,7 @@
         <&| /util/workflow.mas:step, title=> "South East Boundary Point" &>
             <div class="well">
                 <ul>
-                    <li>Click on the point in the image representing the south east corner.</li>
+                    <li>Click on the point in the image representing the south east corner. Do not include border rows.</li>
                 </ul>
             </div>
 
@@ -449,6 +451,24 @@
                                     <option value="Q3" disabled>South of 0 and West of 0 (e.g. South America)</option>
                                     <option value="Q4" disabled>South of 0 and East of 0 (e.g. Australia)</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-6 control-label">Distance in between rows (m) (alleys between horizontal rows as seen in context of your image): </label>
+                            <div class="col-sm-6">
+                                <input type="number" class="form-control" id="drone_imagery_upload_raw_image_boundaries_plot_polygons_alley_row_width" name="drone_imagery_upload_raw_image_boundaries_plot_polygons_alley_row_width">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-6 control-label">Distance in between columns (m) (alleys between vertical columns as seen in context of your image): </label>
+                            <div class="col-sm-6">
+                                <input type="number" class="form-control" id="drone_imagery_upload_raw_image_boundaries_plot_polygons_alley_column_width" name="drone_imagery_upload_raw_image_boundaries_plot_polygons_alley_column_width">
                             </div>
                         </div>
                     </div>
@@ -781,6 +801,8 @@ jQuery(document).ready(function() {
     var uploadDroneRawImagesBoundariesTurnDirection;
     var uploadDroneRawImagesBoundariesGeographicPosition;
     var uploadDroneRawImagesBoundariesImageTopDirection;
+    var uploadDroneRawImagesBoundariesRowAlleyWidth;
+    var uploadDroneRawImagesBoundariesColumnAlleyWidth;
 
     jQuery('#upload_drone_imagery_form').iframePostForm({
         json: true,
@@ -900,7 +922,7 @@ jQuery(document).ready(function() {
         uploadDroneRawImagesBoundariesPoints[uploadDroneRawImagesBoundariesCorner] = clicked_point;
         console.log(uploadDroneRawImagesBoundariesPoints);
 
-        alert('Now click on the four corners of the corner plot');
+        alert('Now click on the four corners of the corner plot. Close the rectangle to total 5 clicks.');
         uploadDroneRawImagesBoundariesCanvas.onmousedown = GetCoordinatesRawImageBoundariesCornerPlot;
     }
 
@@ -1080,6 +1102,8 @@ jQuery(document).ready(function() {
         uploadDroneRawImagesBoundariesTurnDirection = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_turn_direction').val();
         uploadDroneRawImagesBoundariesGeographicPosition = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygon_geographic_position').val();
         uploadDroneRawImagesBoundariesImageTopDirection = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_image_top_direction').val();
+        uploadDroneRawImagesBoundariesRowAlleyWidth = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_alley_row_width').val();
+        uploadDroneRawImagesBoundariesColumnAlleyWidth = jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygons_alley_column_width').val();
 
         if (uploadDroneRawImagesBoundariesFirstPlotCorner == '' || uploadDroneRawImagesBoundariesSecondPlotDirection == '' || uploadDroneRawImagesBoundariesPlotOrientation == '') {
             alert('Please select the first plot corner, the direction of the second plot, and the plot layout orientation.');
@@ -1136,6 +1160,8 @@ jQuery(document).ready(function() {
             jQuery('#drone_run_raw_image_boundaries_turn_direction').val(uploadDroneRawImagesBoundariesTurnDirection);
             jQuery('#drone_run_raw_image_boundaries_geographic_position').val(uploadDroneRawImagesBoundariesGeographicPosition);
             jQuery('#drone_run_raw_image_boundaries_image_top_direction').val(uploadDroneRawImagesBoundariesImageTopDirection);
+            jQuery('#drone_run_raw_image_boundaries_row_alley_width').val(uploadDroneRawImagesBoundariesRowAlleyWidth);
+            jQuery('#drone_run_raw_image_boundaries_column_alley_width').val(uploadDroneRawImagesBoundariesColumnAlleyWidth);
 
             jQuery('#upload_drone_imagery_dialog').modal('show');
         }

@@ -473,6 +473,8 @@ sub upload_drone_imagery_POST : Args(0) {
         my $drone_run_raw_image_boundaries_turn_direction = $c->req->param('drone_run_raw_image_boundaries_turn_direction');
         my $drone_run_raw_image_boundaries_geographic_position = $c->req->param('drone_run_raw_image_boundaries_geographic_position');
         my $drone_run_raw_image_boundaries_image_top_direction = $c->req->param('drone_run_raw_image_boundaries_image_top_direction');
+        my $drone_run_raw_image_boundaries_row_alley_width = $c->req->param('drone_run_raw_image_boundaries_row_alley_width');
+        my $drone_run_raw_image_boundaries_column_alley_width = $c->req->param('drone_run_raw_image_boundaries_column_alley_width');
 
         if (!$upload_file) {
             $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images to stitch!" };
@@ -602,11 +604,13 @@ sub upload_drone_imagery_POST : Args(0) {
                 print $fh "$drone_run_raw_image_boundaries_turn_direction\n";
                 print $fh "$drone_run_raw_image_boundaries_geographic_position\n";
                 print $fh "$drone_run_raw_image_boundaries_image_top_direction\n";
+                print $fh "$drone_run_raw_image_boundaries_row_alley_width\n";
+                print $fh "$drone_run_raw_image_boundaries_column_alley_width\n";
             close($fh);
 
             my $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
 
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path'";
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path' --temporary_development_path '/home/nmorales/Downloads'";
 
             # @stitched_bands = (
             #     ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
