@@ -480,6 +480,10 @@
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_layout_continue">Go to Next Step</button>
             </center>
         </&>
+        <&| /util/workflow.mas:step, title=> "Check Plot Images" &>
+            <div id="drone_imagery_upload_raw_image_boundaries_plot_polygon_verify">
+            </div>
+        </&>
     </&>
 </div>
 
@@ -828,59 +832,71 @@ jQuery(document).ready(function() {
                 uploadDroneRawImagesBoundariesDroneRunProjectId = response.drone_run_project_id;
                 if (response.corners_gps) {
                     uploadDroneRawImagesBoundariesCornersGPS = response.corners_gps;
+
+                    jQuery('#drone_run_id').val(uploadDroneRawImagesBoundariesDroneRunProjectId);
+
+                    var canvas = document.getElementById('upload_drone_imagery_raw_images_boundary_tl_show');
+                    uploadDroneRawImagesBoundariesCtx = canvas.getContext('2d');
+                    var image_tl = new Image();
+                    image_tl.onload = function () {
+                        canvas.width = this.naturalWidth;
+                        canvas.height = this.naturalHeight;
+                        uploadDroneRawImagesBoundariesCtx.drawImage(this, 0, 0);
+                    };
+                    image_tl.src = response.tl_url;
+                    uploadDroneRawImagesBoundariesCanvas = canvas;
+                    uploadDroneRawImagesBoundariesCanvas.onmousedown = GetCoordinatesRawImageBoundaries;
+                    uploadDroneRawImagesBoundariesCorner = 'north_west';
+                    uploadDroneRawImagesBoundariesTLImageId = response.tl_image_id;
+
+                    var canvas_tr = document.getElementById('upload_drone_imagery_raw_images_boundary_tr_show');
+                    var ctx_tr = canvas_tr.getContext('2d');
+                    var image_tr = new Image();
+                    image_tr.onload = function () {
+                        canvas_tr.width = this.naturalWidth;
+                        canvas_tr.height = this.naturalHeight;
+                        ctx_tr.drawImage(this, 0, 0);
+                    };
+                    image_tr.src = response.tr_url;
+                    canvas_tr.onmousedown = GetCoordinatesRawImageBoundaries;
+                    uploadDroneRawImagesBoundariesTRImageId = response.tr_image_id;
+
+                    var canvas_bl = document.getElementById('upload_drone_imagery_raw_images_boundary_bl_show');
+                    var ctx_bl = canvas_bl.getContext('2d');
+                    var image_bl = new Image();
+                    image_bl.onload = function () {
+                        canvas_bl.width = this.naturalWidth;
+                        canvas_bl.height = this.naturalHeight;
+                        ctx_bl.drawImage(this, 0, 0);
+                    };
+                    image_bl.src = response.bl_url;
+                    canvas_bl.onmousedown = GetCoordinatesRawImageBoundaries;
+                    uploadDroneRawImagesBoundariesBLImageId = response.bl_image_id;
+
+                    var canvas_br = document.getElementById('upload_drone_imagery_raw_images_boundary_br_show');
+                    var ctx_br = canvas_br.getContext('2d');
+                    var image_br = new Image();
+                    image_br.onload = function () {
+                        canvas_br.width = this.naturalWidth;
+                        canvas_br.height = this.naturalHeight;
+                        ctx_br.drawImage(this, 0, 0);
+                    };
+                    image_br.src = response.br_url;
+                    canvas_br.onmousedown = GetCoordinatesRawImageBoundaries;
+                    uploadDroneRawImagesBoundariesBRImageId = response.br_image_id;
+
                 }
+                else {
+                    var drone_imagery_upload_raw_image_boundaries_plots = response.drone_run_band_raw_image_boundaries_temp_images;
+                    var html = '';
+                    for (i=0; i<drone_imagery_upload_raw_image_boundaries_plots.length; i++) {
+                        html += drone_imagery_upload_raw_image_boundaries_plots[i][0]+', '+drone_imagery_upload_raw_image_boundaries_plots[i][1]+', '+drone_imagery_upload_raw_image_boundaries_plots[i][2]+', <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][3]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][3]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][4]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][4]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][5]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][5]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][6]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][6]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][7]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][7]+'</a><br/>';
+                    }
+                    jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygon_verify').html(html);
 
-                jQuery('#drone_run_id').val(uploadDroneRawImagesBoundariesDroneRunProjectId);
-
-                var canvas = document.getElementById('upload_drone_imagery_raw_images_boundary_tl_show');
-                uploadDroneRawImagesBoundariesCtx = canvas.getContext('2d');
-                var image_tl = new Image();
-                image_tl.onload = function () {
-                    canvas.width = this.naturalWidth;
-                    canvas.height = this.naturalHeight;
-                    uploadDroneRawImagesBoundariesCtx.drawImage(this, 0, 0);
-                };
-                image_tl.src = response.tl_url;
-                uploadDroneRawImagesBoundariesCanvas = canvas;
-                uploadDroneRawImagesBoundariesCanvas.onmousedown = GetCoordinatesRawImageBoundaries;
-                uploadDroneRawImagesBoundariesCorner = 'north_west';
-                uploadDroneRawImagesBoundariesTLImageId = response.tl_image_id;
-
-                var canvas_tr = document.getElementById('upload_drone_imagery_raw_images_boundary_tr_show');
-                var ctx_tr = canvas_tr.getContext('2d');
-                var image_tr = new Image();
-                image_tr.onload = function () {
-                    canvas_tr.width = this.naturalWidth;
-                    canvas_tr.height = this.naturalHeight;
-                    ctx_tr.drawImage(this, 0, 0);
-                };
-                image_tr.src = response.tr_url;
-                canvas_tr.onmousedown = GetCoordinatesRawImageBoundaries;
-                uploadDroneRawImagesBoundariesTRImageId = response.tr_image_id;
-
-                var canvas_bl = document.getElementById('upload_drone_imagery_raw_images_boundary_bl_show');
-                var ctx_bl = canvas_bl.getContext('2d');
-                var image_bl = new Image();
-                image_bl.onload = function () {
-                    canvas_bl.width = this.naturalWidth;
-                    canvas_bl.height = this.naturalHeight;
-                    ctx_bl.drawImage(this, 0, 0);
-                };
-                image_bl.src = response.bl_url;
-                canvas_bl.onmousedown = GetCoordinatesRawImageBoundaries;
-                uploadDroneRawImagesBoundariesBLImageId = response.bl_image_id;
-
-                var canvas_br = document.getElementById('upload_drone_imagery_raw_images_boundary_br_show');
-                var ctx_br = canvas_br.getContext('2d');
-                var image_br = new Image();
-                image_br.onload = function () {
-                    canvas_br.width = this.naturalWidth;
-                    canvas_br.height = this.naturalHeight;
-                    ctx_br.drawImage(this, 0, 0);
-                };
-                image_br.src = response.br_url;
-                canvas_br.onmousedown = GetCoordinatesRawImageBoundaries;
-                uploadDroneRawImagesBoundariesBRImageId = response.br_image_id;
+                    Workflow.complete("#drone_image_upload_raw_image_boundaries_layout_continue");
+                    Workflow.focus('#drone_imagery_upload_raw_immage_boundaries_workflow', 6);
+                }
 
                 jQuery('#upload_drone_imagery_dialog').modal('hide');
 

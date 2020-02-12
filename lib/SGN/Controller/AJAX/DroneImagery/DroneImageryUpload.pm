@@ -174,6 +174,8 @@ sub upload_drone_imagery_POST : Args(0) {
     my @return_drone_run_band_project_ids;
     my @return_drone_run_band_image_ids;
     my @return_drone_run_band_image_urls;
+    my @raw_image_boundaries_temp_images;
+    my $output_path;
     if ($new_drone_run_band_stitching eq 'no') {
         my @new_drone_run_bands;
         if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
@@ -518,15 +520,16 @@ sub upload_drone_imagery_POST : Args(0) {
         my $image_paths = $zipfile_return->{image_files};
 
         my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_boundaries');
-        my $temp_file_image_file_names = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
+        my $base_path = $c->config->{basepath}."/";
+        my $temp_file_image_file_names = $base_path.$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
         open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
             foreach (@$image_paths) {
-                my $temp_file_raw_image_blue = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
-                my $temp_file_raw_image_green = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
-                my $temp_file_raw_image_red = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
-                my $temp_file_raw_image_nir = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
-                my $temp_file_raw_image_red_edge = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
-                print $fh "$_,$temp_file_raw_image_blue,$temp_file_raw_image_green,$temp_file_raw_image_red,$temp_file_raw_image_nir,$temp_file_raw_image_red_edge\n";
+                my $temp_file_raw_image_blue = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_green = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_red = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_nir = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                my $temp_file_raw_image_red_edge = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX').".png";
+                print $fh "$_,$base_path,$temp_file_raw_image_blue,$temp_file_raw_image_green,$temp_file_raw_image_red,$temp_file_raw_image_nir,$temp_file_raw_image_red_edge\n";
             }
         close($fh);
         print STDERR "Drone image raw boundaries temp file $temp_file_image_file_names\n";
@@ -608,7 +611,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 print $fh "$drone_run_raw_image_boundaries_column_alley_width\n";
             close($fh);
 
-            my $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
+            $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
 
             $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path' --temporary_development_path '/home/nmorales/Downloads'";
 
@@ -632,6 +635,18 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         print STDERR Dumper $cmd;
         my $status = system($cmd);
+
+        my $csv = Text::CSV->new({ sep_char => ',' });
+        open(my $fh, '<', $output_path) or die "Could not open file '$output_path' $!";
+            while ( my $row = <$fh> ){
+                my @columns;
+                if ($csv->parse($row)) {
+                    @columns = $csv->fields();
+                }
+                push @raw_image_boundaries_temp_images, \@columns;
+            }
+        close($fh);
+        print STDERR Dumper \@raw_image_boundaries_temp_images;
 
         foreach my $m (@stitched_bands) {
             my $project_rs = $schema->resultset("Project::Project")->create({
@@ -768,7 +783,7 @@ sub upload_drone_imagery_POST : Args(0) {
         }
     }
 
-    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls };
+    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls, drone_run_band_raw_image_boundaries_temp_images => \@raw_image_boundaries_temp_images };
 }
 
 sub upload_drone_imagery_raw_images_automated_boundaries : Path('/api/drone_imagery/upload_drone_imagery_raw_images_automated_boundaries') : ActionClass('REST') { }
