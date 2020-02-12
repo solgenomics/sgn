@@ -1,6 +1,6 @@
 use strict;
 
-package SGN::Controller::AJAX::Heritability;
+package SGN::Controller::AJAX::H2;
 
 use Moose;
 use Data::Dumper;
@@ -117,7 +117,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $heritability_tmp_output = $c->config->{cluster_shared_tempdir}."/heritability_files";
     mkdir $heritability_tmp_output if ! -d $heritability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
-      "h2_download_XXXXX",
+      "heritability_download_XXXXX",
       DIR=> $heritability_tmp_output,
     );
 
