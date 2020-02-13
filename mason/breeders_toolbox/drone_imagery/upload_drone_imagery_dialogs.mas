@@ -888,10 +888,11 @@ jQuery(document).ready(function() {
                 }
                 else {
                     var drone_imagery_upload_raw_image_boundaries_plots = response.drone_run_band_raw_image_boundaries_temp_images;
-                    var html = '';
+                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Plot</th><th>Blue Image</th><th>Green Image</th><th>Red Image</th><th>NIR Image</th><th>Red Edge Image</th></tr></thead><tbody>';
                     for (i=0; i<drone_imagery_upload_raw_image_boundaries_plots.length; i++) {
-                        html += drone_imagery_upload_raw_image_boundaries_plots[i][0]+', '+drone_imagery_upload_raw_image_boundaries_plots[i][1]+', '+drone_imagery_upload_raw_image_boundaries_plots[i][2]+', <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][3]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][3]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][4]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][4]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][5]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][5]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][6]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][6]+'</a>, <a href="'+drone_imagery_upload_raw_image_boundaries_plots[i][7]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][7]+'</a><br/>';
+                        html += '<tr><td><a href="/stock/'+drone_imagery_upload_raw_image_boundaries_plots[i][0]+'">'+drone_imagery_upload_raw_image_boundaries_plots[i][1]+'</a> Plot Number:  '+drone_imagery_upload_raw_image_boundaries_plots[i][2]+'</td><td><img src="'+drone_imagery_upload_raw_image_boundaries_plots[i][3]+'"></td><td><img src="'+drone_imagery_upload_raw_image_boundaries_plots[i][4]+'"></td><td><img src="'+drone_imagery_upload_raw_image_boundaries_plots[i][5]+'"></td><td><img src="'+drone_imagery_upload_raw_image_boundaries_plots[i][6]+'"></td><td><img src="'+drone_imagery_upload_raw_image_boundaries_plots[i][7]+'"></td></tr>';
                     }
+                    html = html + '</tbody></table>';
                     jQuery('#drone_imagery_upload_raw_image_boundaries_plot_polygon_verify').html(html);
 
                     Workflow.complete("#drone_image_upload_raw_image_boundaries_layout_continue");
