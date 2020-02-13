@@ -321,7 +321,7 @@
                             <br/>
 
                             <center>
-                                <button class="btn btn-primary" id="add_new_trait_observation_variable_ontology_step">Go to Next Step</button>
+                                <button class="btn btn-primary" id="add_new_trait_observation_variable_ontology_step">Store Ontology</button>
                             </center>
 
                         </&>
@@ -637,6 +637,41 @@ jQuery(document).ready(function() {
             error: function(response){
                 jQuery("#working_modal").modal("hide");
                 alert("Error saving observation variable.");
+            }
+        });
+    });
+
+    jQuery('#add_new_trait_observation_variable_ontology_step').click(function(){
+        jQuery.ajax ({
+            url: '/ajax/onto/store_ontology_identifier',
+            type: 'POST',
+            data: {
+                'ontology_name':jQuery('#add_new_observation_variable_ontology_name').val(),
+                'ontology_description':jQuery('#add_new_observation_variable_ontology_definition').val(),
+                'ontology_identifier':jQuery('#add_new_observation_variable_ontology_db_name').val(),
+                'ontology_type':jQuery('#add_new_observation_variable_ontology_type').val()
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                //if (response.message){
+                //    Workflow.complete('#add_new_trait_observation_variable_ontology_step');
+                //    Workflow.focus("#add_new_ontology_workflow", -1); //go to success page
+                //}
+                if (response.success) {
+                    alert(response.success);
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error saving ontology.");
             }
         });
     });
