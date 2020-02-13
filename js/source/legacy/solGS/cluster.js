@@ -188,6 +188,7 @@ solGS.cluster = {
 	var selectName    = clusterArgs.select_name;
 	var dataStr      = clusterArgs.data_structure;
 
+	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
 	if (trainingTraitsIds) {
@@ -206,7 +207,7 @@ solGS.cluster = {
 	var popId   = jQuery("#cluster_selected_population_id").val();
 	var popType = jQuery("#cluster_selected_population_type").val();
 	var popName = jQuery("#cluster_selected_population_name").val();
-	  
+
 	if(!selectName) {
 	    selectName = popName;
 	}
@@ -232,7 +233,7 @@ solGS.cluster = {
 		.show().fadeOut(9400);
 	    
 	} else {
-	
+	 
 	    if (url.match(/solgs\/traits\/all\/population\//)) {
 		if (popType.match(/training/)) {
 		    popDetails['training_pop_id'] = popId;	
@@ -307,7 +308,8 @@ solGS.cluster = {
 				'k_number' : kNumber,
 				'selection_proportion': selectionProp,
 				'sindex_name': sIndexName,
-				'cluster_pop_name': selectName
+				'cluster_pop_name': selectName,
+				'genotyping_protocol_id': protocolId
 			       };
 	    
 	    this.runClusterAnalysis(clusterArgs);
@@ -374,10 +376,9 @@ solGS.cluster = {
 	var dataType = valArgs.data_type;
 	var selectionProp = valArgs.selection_proportion;
 	var dataStr = valArgs.data_structure;
-	var dataId = valArgs.data_id;
-	
+	var dataId = valArgs.data_id;	
 	var msg;
-	
+
 	if (popType == 'selection_index') {
 	  
 	    if (dataType.match(/genotype/i) == null) {
@@ -423,8 +424,6 @@ solGS.cluster = {
 
 	var resultName = res.result_name; 
 	var imageId = res.plot_name;
-
-	console.log('file id ' + imageId)
 	
 	imageId = 'id="' + imageId + '"';
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
@@ -498,6 +497,7 @@ solGS.cluster = {
     clusteringOptions: function(selectId) {
 
 	var url = document.URL;
+
 	if(url.match(/cluster\/analysis/)) {
 	    selectId = this.selectRowId(selectId);
 	}
@@ -505,9 +505,9 @@ solGS.cluster = {
 	var dataType    = jQuery('#'+selectId + ' #cluster_data_type_select').val();
 	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
 	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
-	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
-
-	console.log(selectionProp)
+	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val();
+	var popType = jQuery('#cluster_selected_population_type').val();
+	
 	if (selectionProp) {
 	    selectionProp = selectionProp.replace(/%/, '');
 	    selectionProp = selectionProp.replace(/\s+/g, '');
