@@ -23,6 +23,11 @@
 
                             <br/><br/>
                             <center>
+                                <button class="btn btn-primary" id="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+
+                            <br/><br/>
+                            <center>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
@@ -256,8 +261,92 @@
     </div>
 </div>
 
+<div class="modal fade" id="add_new_observation_variable_ontology_dialog" name="add_new_observation_variable_ontology_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewObservationVariableOntologyDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewObservationVariableOntologyDialog">Add New Ontology</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_new_ontology_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Start a new ontology" &>
+                            <ul>
+                                <li>In this workflow you can add a new ontology to the database. Once an ontology is added, you can add terms into it from the add observation variables workflow.</li>
+                                <li>Ontologies are tagged as being either for traits, methods, or scales</li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Ontology" &>
+                            <& /page/page_title.mas, title=>"Define your ontology" &>
+
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Ontology Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_ontology_name" name="add_new_observation_variable_ontology_name" type="text" placeholder="e.g. MyBreedingProgram Grape Ontology"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Ontology Definition: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_ontology_definition" name="add_new_observation_variable_ontology_definition" type="text" placeholder="e.g. description of the ontology"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Ontology Database Identifier: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_ontology_db_name" name="add_new_observation_variable_ontology_db_name" type="text" placeholder="a unique identifier for the terms in the ontology e.g. CO322"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Ontology Type: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_new_observation_variable_ontology_type" name="add_new_observation_variable_ontology_type"/>
+                                            <option value="trait">Trait or Observation Variable</option>
+                                            <option value="method">Method</option>
+                                            <option value="unit">Scale</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                            <br/>
+
+                            <center>
+                                <button class="btn btn-primary" id="add_new_trait_observation_variable_ontology_step">Go to Next Step</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your ontology is now in the database. Add new terms into it from the add observation variable workflow." &>
+                        </&>
+
+                    </&><!-- End of workflow -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready(function() {
+
+    jQuery('#add_new_observation_variable_ontology_add_button').click(function(){
+        jQuery('#add_new_observation_variable_ontology_dialog').modal('show');
+    });
+
     jQuery('button[name="add_new_observation_variable_button"]').click(function(){
         jQuery('#add_new_observation_variable_dialog').modal('show');
 
