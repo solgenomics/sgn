@@ -100,14 +100,15 @@ solGS.sIndex = {
 	if (indexed) {
 
 	    for (var i = 0; i < indexed.length; i++) {
+		
 		var indexData = {
-		    'id': indexed[i],
-		    'name': indexed[i],
+		    'id': indexed[i].sindex_id,
+		    'name': indexed[i].sindex_name,
 		    'pop_type': 'selection_index'
 		};
 
 		indexData = JSON.stringify(indexData);
-		sIndexList += '<li><a href="#">' + indexed[i] + '<span class=value>' + indexData + '</span></a></li>';
+		sIndexList += '<li><a href="#">' + indexed[i].sindex_name + '<span class=value>' + indexData + '</span></a></li>';
 	    }
 	}
 	
@@ -293,8 +294,13 @@ solGS.sIndex = {
                     formatGenCorInputData(popId, popType, indexFile);
 
 		    jQuery('#si_canvas #selected_pop').val('');
-
-		    solGS.sIndex.saveIndexedPops(res.sindex_name);
+	
+		    var sIndexed = {
+			'sindex_id': popId,
+			'sindex_name': res.sindex_name
+		    };
+		    
+		    solGS.sIndex.saveIndexedPops(sIndexed);
 		    solGS.cluster.listClusterPopulations();
 		},
 		error: function(res){
