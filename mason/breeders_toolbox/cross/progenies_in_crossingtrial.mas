@@ -53,7 +53,7 @@ $trial_id
                             <br>
                         </p>
                     </&>
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_form" name="upload_progenies_form">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_new_form" name="upload_progenies_new_form">
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Upload File: </label>
                                 <div class="col-sm-10">
@@ -88,7 +88,7 @@ $trial_id
                             <br>
                         </p>
                     </&>
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_form" name="upload_progenies_form">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_exist_form" name="upload_progenies_exist_form">
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Upload File: </label>
                                 <div class="col-sm-10">
@@ -389,6 +389,7 @@ jQuery(document).ready(function(){
         jQuery("#upload_progenies_new_accessions_dialog").modal("show");
     });
 
+
     jQuery("#upload_progenies_existing_accessions_link").click(function(){
 
         jQuery("#upload_progenies_exist_spreadsheet_format_info").click(function(){
@@ -401,16 +402,28 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_progenies_new_submit").click(function(){
         var uploadFile = jQuery("#progenies_new_upload_file").val();
-        jQuery('#upload_progenies_form').attr("action", "/ajax/cross/upload_progenies");
+        jQuery('#upload_progenies_new_form').attr("action", "/ajax/cross/upload_progenies");
         if (uploadFile === ''){
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_progenies_form").submit();
-        jQuery("#update_progenies_crosses_dialog").modal("hide");
+        jQuery("#upload_progenies_new_form").submit();
+        jQuery("#upload_progenies_new_accessions_dialog").modal("hide");
     });
 
-    jQuery('#upload_progenies_form').iframePostForm({
+
+    jQuery("#upload_progenies_exist_submit").click(function(){
+        var uploadFile = jQuery("#progenies_exist_upload_file").val();
+        jQuery('#upload_progenies_exist_form').attr("action", "/ajax/cross/upload_progenies");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_progenies_exist_form").submit();
+        jQuery("#upload_progenies_exist_accessions_dialog").modal("hide");
+    });
+
+    jQuery('#upload_progenies_new_form').iframePostForm({
         json: true,
         post: function(){
             jQuery("#working_modal").modal("show");
