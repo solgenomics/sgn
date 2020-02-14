@@ -152,6 +152,7 @@ function askSelectionJobQueueing (listId) {
     var args = createSelectionReqArgs(listId);
     var modelId = args.training_pop_id;
     var selectionPopId = args.selection_pop_id;
+    var protocolId = args.genotyping_protocol_id;
       
     var hostName = window.location.protocol + '//' + window.location.host;    
     var page     = hostName + '/solgs/model/' + modelId + '/prediction/' + selectionPopId;
@@ -175,7 +176,7 @@ function createSelectionReqArgs (listId) {
 	var popType = 'list_prediction';
 	
 	var selectionPopId = 'list_' + listId;
-
+	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
 	if (trainingTraitsIds) {
@@ -193,7 +194,8 @@ function createSelectionReqArgs (listId) {
 	    'training_pop_id'  : modelId, 
 	    'selection_pop_id' : selectionPopId, 
 	    'population_type'  : popType,
-	    'training_traits_ids' : trainingTraitsIds
+	    'training_traits_ids' : trainingTraitsIds,
+	    'genotyping_protocol_id': protocolId
 	};  
 
 	return args;
