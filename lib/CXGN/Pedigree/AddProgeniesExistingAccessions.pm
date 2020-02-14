@@ -79,8 +79,7 @@ sub add_progenies_existing_accessions {
 
 
         foreach my $progeny_name (@progeny_names) {
-
-            my $progeny_rs = $self->_get_accession($progeny_name);
+            my $progeny_rs = $self->_get_progeny_name($progeny_name);
             if (!$progeny_rs) {
                 print STDERR "Progeny name could not be found\n";
                 return;

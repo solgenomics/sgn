@@ -933,42 +933,43 @@ sub upload_progenies_POST : Args(0) {
     }
 
     #add the progeny
-    if ($parsed_data){
+    if ($parsed_data && $upload_new_accessions){
         my %progeny_hash = %{$parsed_data};
         foreach my $cross_name_key (keys %progeny_hash){
             my $progenies_ref = $progeny_hash{$cross_name_key};
             my @progenies = @{$progenies_ref};
-
-            if($upload_type = 'ProgeniesExcel') {
-                my $progeny_add = CXGN::Pedigree::AddProgeny->new({
-                    chado_schema => $chado_schema,
-                    phenome_schema => $phenome_schema,
-                    dbh => $dbh,
-                    cross_name => $cross_name_key,
-                    progeny_names => \@progenies,
-                    owner_name => $user_name,
-                });
-                if (!$progeny_add->add_progeny()){
-                    $c->stash->{rest} = {error_string => "Error adding progeny",};
-                    return;
-                }
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+                chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progenies,
+                owner_name => $user_name,
+            });
+            if (!$progeny_add->add_progeny()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                return;
             }
-            if($upload_type = 'ProgeniesExistingAccessionsExcel') {
-                my $progeny_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
-                    chado_schema => $chado_schema,
-                    dbh => $dbh,
-                    cross_name => $cross_name_key,
-                    progeny_names => \@progenies,
-                });
-                if (!$progeny_add->add_progenies_existing_accessions()){
-                    $c->stash->{rest} = {error_string => "Error adding progeny",};
-                    return;
-                }
-            }
-
         }
     }
 
+    if ($parsed_data && $upload_exist_accessions){
+        my %progeny_hash = %{$parsed_data};
+        foreach my $cross_name_key (keys %progeny_hash){
+            my $progenies_ref = $progeny_hash{$cross_name_key};
+            my @progenies = @{$progenies_ref};
+            my $progeny_exist_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+                chado_schema => $chado_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progenies,
+            });
+            if (!$progeny_exist_add->add_progenies_existing_accessions()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                return;
+            }
+        }
+    }
     $c->stash->{rest} = {success => "1",};
 }
 
