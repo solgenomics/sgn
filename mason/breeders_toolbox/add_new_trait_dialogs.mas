@@ -23,7 +23,7 @@
 
                             <br/><br/>
                             <center>
-                                <button class="btn btn-primary" id="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
                             </center>
 
                             <br/><br/>
@@ -37,6 +37,11 @@
 
                             <p>An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.</p>
                             <hr>
+
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -74,6 +79,11 @@
                                 <li>Here you can select a trait that already exists in an ontology in the database or you can add a new trait into an ontology.</li>
                             </ul>
                             <hr>
+
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -119,6 +129,11 @@
                             <p>A method defines the how it was measured measured. It is one component of an observation variable; the others are a trait and a scale.</p>
                             <hr>
 
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
+
                             <form class="form-horizontal">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Method Ontology Name: </label>
@@ -161,6 +176,11 @@
                         </&>
                         <&| /util/workflow.mas:step, title=> "Scale" &>
                             <& /page/page_title.mas, title=>"Define your scale" &>
+
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -343,7 +363,7 @@
 <script>
 jQuery(document).ready(function() {
 
-    jQuery('#add_new_observation_variable_ontology_add_button').click(function(){
+    jQuery('button[name="add_new_observation_variable_ontology_add_button"]').click(function(){
         jQuery('#add_new_observation_variable_ontology_dialog').modal('show');
     });
 
@@ -397,7 +417,7 @@ jQuery(document).ready(function() {
             alert('Only select one trait ontology!');
         } else {
             add_new_trait_new_trait_db_id = selected[0];
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'db_id':selected[0] });
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
         }
     });
 
@@ -411,7 +431,7 @@ jQuery(document).ready(function() {
             alert('Only select one method ontology!');
         } else {
             add_new_trait_new_method_db_id = selected[0];
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_method_select_div', { 'selectbox_name':'add_new_trait_existing_method_select',    'selectbox_id':'add_new_trait_existing_method_select', 'empty':1, 'db_id':selected[0] });
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_method_select_div', { 'selectbox_name':'add_new_trait_existing_method_select',    'selectbox_id':'add_new_trait_existing_method_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
         }
     });
 
@@ -425,7 +445,7 @@ jQuery(document).ready(function() {
             alert('Only select one scale ontology!');
         } else {
             add_new_trait_new_scale_db_id = selected[0];
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_scale_select_div', { 'selectbox_name':'add_new_trait_existing_scale_select',    'selectbox_id':'add_new_trait_existing_scale_select', 'empty':1, 'db_id':selected[0] });
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_scale_select_div', { 'selectbox_name':'add_new_trait_existing_scale_select',    'selectbox_id':'add_new_trait_existing_scale_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
         }
     });
 
