@@ -311,9 +311,9 @@
                                     <label class="col-sm-3 control-label">Ontology Type: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="add_new_observation_variable_ontology_type" name="add_new_observation_variable_ontology_type"/>
-                                            <option value="trait">Trait or Observation Variable</option>
-                                            <option value="method">Method</option>
-                                            <option value="unit">Scale</option>
+                                            <option value="trait_ontology">Trait or Observation Variable</option>
+                                            <option value="method_ontology">Method</option>
+                                            <option value="unit_ontology">Scale</option>
                                         </select>
                                     </div>
                                 </div>

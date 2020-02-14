@@ -175,16 +175,18 @@ sub store_ontology_identifier {
     my $cv_check = $schema->resultset("Cv::Cv")->find({name=>$ontology_name});
     if ($cv_check) {
         return {
-            error => "The ontology name $ontology_name has already been used!";
-        }
+            error => "The ontology name $ontology_name has already been used!"
+        };
     }
 
     my $db_check = $schema->resultset("General::Db")->find({name=>$ontology_name});
     if ($db_check) {
         return {
-            error => "The ontology identifier $ontology_identifier has already been used!";
-        }
+            error => "The ontology identifier $ontology_identifier has already been used!"
+        };
     }
+
+    my $cv_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $ontology_type, 'composable_cvtypes')->cvterm_id();
 
     my $coderef = sub {
         my $cv_rs = $schema->resultset("Cv::Cv")->create({
@@ -192,6 +194,11 @@ sub store_ontology_identifier {
             definition => $ontology_description
         });
         my $new_cv_id = $cv_rs->cv_id();
+
+        my $new_ontology_cvprop = $schema->resultset("Cv::Cvprop")->create({
+            cv_id   => $new_cv_id,
+            type_id => $cv_type_id
+        });
 
         my $db_rs = $schema->resultset("General::Db")->create({
             name => $ontology_identifier
