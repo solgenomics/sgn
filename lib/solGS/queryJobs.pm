@@ -99,15 +99,21 @@ sub write_geno_data {
    
     while (my $geno = $search_obj->get_next_genotype_info()) 
     {
+	my $geno_data;
 	$count++;	
 	if ($count == 1)
 	{
 	    my $geno_hash = $geno->{selected_genotype_hash};
 	    $marker_headers = $model->get_dataset_markers($geno_hash);
+	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
+	    write_file($file, $$geno_data);
 	}
+	else
+	{
 
-	my $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
-	write_file($file, {append => 1}, $$geno_data);
+	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
+	    write_file($file, {append => 1}, $$geno_data);
+	}
 
 	if ($self->check_data_exists) 
 	{	    
