@@ -637,8 +637,8 @@ sub upload_drone_imagery_POST : Args(0) {
         my $status = system($cmd);
 
         my $csv = Text::CSV->new({ sep_char => ',' });
-        open(my $fh, '<', $output_path) or die "Could not open file '$output_path' $!";
-            while ( my $row = <$fh> ){
+        open(my $fh_out, '<', $output_path) or die "Could not open file '$output_path' $!";
+            while ( my $row = <$fh_out> ){
                 my @columns;
                 if ($csv->parse($row)) {
                     @columns = $csv->fields();
@@ -793,18 +793,6 @@ sub upload_drone_imagery_POST : Args(0) {
 
             $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
 
-            my @aligned_images;
-            my $csv = Text::CSV->new({ sep_char => ',' });
-            open(my $fh, '<', $output_path) or die "Could not open file '$output_path' $!";
-                while ( my $row = <$fh> ) {
-                    my @columns;
-                    if ($csv->parse($row)) {
-                        @columns = $csv->fields();
-                    }
-                    push @aligned_images, $columns[0];
-                }
-            close($fh);
-
             @stitched_bands = (
                 ["Band 1", "Blue", "Blue (450-520nm)", 0],
                 ["Band 2", "Green", "Green (515-600nm)", 1],
@@ -812,14 +800,6 @@ sub upload_drone_imagery_POST : Args(0) {
                 ["Band 4", "NIR", "NIR (780-3000nm)", 3],
                 ["Band 5", "RedEdge", "Red Edge (690-750nm)", 4]
             );
-            my $counter = 0;
-            foreach (@aligned_images) {
-                push @{$raw_image_bands{$counter}}, $_;
-                $counter++;
-                if ($counter >= 5) {
-                    $counter = 0;
-                }
-            }
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
             @stitched_bands = (
@@ -833,6 +813,27 @@ sub upload_drone_imagery_POST : Args(0) {
 
         print STDERR Dumper $cmd;
         my $status = system($cmd);
+
+        my @aligned_images;
+        my $csv = Text::CSV->new({ sep_char => ',' });
+        open(my $fh_out, '<', $output_path) or die "Could not open file '$output_path' $!";
+            while ( my $row = <$fh_out> ) {
+                my @columns;
+                if ($csv->parse($row)) {
+                    @columns = $csv->fields();
+                }
+                push @aligned_images, $columns[0];
+            }
+        close($fh_out);
+
+        my $counter = 0;
+        foreach (@aligned_images) {
+            push @{$raw_image_bands{$counter}}, $_;
+            $counter++;
+            if ($counter >= 5) {
+                $counter = 0;
+            }
+        }
 
         foreach my $m (@stitched_bands) {
             my $project_rs = $schema->resultset("Project::Project")->create({

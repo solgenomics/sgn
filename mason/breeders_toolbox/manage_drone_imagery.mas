@@ -2213,8 +2213,8 @@ jQuery(document).ready(function() {
                 ctx = canvas.getContext('2d');
                 var image = new Image();
                 image.onload = function () {
-                    ctx.width = response.image_width;
-                    ctx.height = response.image_height;
+                    ctx.width = response.naturalWidth;
+                    ctx.height = response.naturalHeight;
                     ctx.drawImage(this, 0, 0);
                 };
                 image.src = response.image_url;
