@@ -155,73 +155,73 @@ $locations
                                 <div class="form-group" id="get_maternal_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Female Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="maternal_parent" type="text" name="maternal" />
+                                        <input class="form-control" id="maternal_parent" type="text" name="maternal" placeholder="Enter female parent name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_paternal_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Male Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
+                                        <input class="form-control" id="paternal_parent" type="text" name="paternal" placeholder="Enter male parent name"  />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_selfed_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Selfed Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="selfed_parent" type="text" name="selfed" />
+                                        <input class="form-control" id="selfed_parent" type="text" name="selfed" placeholder="Enter parent name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_sib_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Sib Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="sib_parent" type="text" name="sib" />
+                                        <input class="form-control" id="sib_parent" type="text" name="sib" placeholder="Enter parent name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_open_maternal_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Female Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" />
+                                        <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" placeholder="Enter female parent name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_open_paternal_population" style="display: none">
                                     <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="open_paternal_population" type="text" name="open paternal" />
+                                        <input class="form-control" id="open_paternal_population" type="text" name="open paternal" placeholder="Enter male population name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_maternal_population" style="display: none">
                                     <label class="col-sm-2 control-label">Female Population: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" />
+                                        <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" placeholder="Enter female population name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Male Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" />
+                                        <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" placeholder="Enter male parent name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_selfed_population" style="display: none">
                                     <label class="col-sm-2 control-label">Selfed Population: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" />
+                                        <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" placeholder="Enter parent population name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
                                     <label class="col-sm-2 control-label">Female Population: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" />
+                                        <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" placeholder="Enter female population name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
                                     <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" />
+                                        <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" placeholder="Enter male population name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="get_doubled_haploid_parent" style="display: none">
                                     <label class="col-sm-2 control-label">Doubled Haploid Parent: </label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" />
+                                        <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" placeholder="Enter parent name" />
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="polycross_accessions" style="display: none">
@@ -260,7 +260,7 @@ $locations
                                     <label class="col-sm-2 control-label">Field Trial: </label>
                                     <div class="col-sm-10">
                                         <div class="input-group">
-                                            <input type ="text" class ="form-control" id ="field_trial">
+                                            <input type ="text" class ="form-control" id ="field_trial" placeholder="Enter trial name">
                                             <div class ="input-group-btn">
                                                 <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
                                             </div>
@@ -271,7 +271,7 @@ $locations
                                     <label class="col-sm-2 control-label">Female Plot: </label>
                                     <div class="col-sm-10">
                                         <select class="form-control" id="female_plot" name="female_plot">
-                                            <option value="">Choose trial first</option>
+                                            <option value="">Enter trial name first</option>
                                         </select>
                                     </div>
                                 </div><br/><br/>
@@ -279,7 +279,7 @@ $locations
                                     <label class="col-sm-2 control-label">Male Plot: </label>
                                     <div class="col-sm-10">
                                         <select class="form-control" id="male_plot" name="male_plot">
-                                            <option value="">Choose trial first</option>
+                                            <option value="">Enter trial name first</option>
                                         </select>
                                     </div>
                                 </div><br/><br/>
