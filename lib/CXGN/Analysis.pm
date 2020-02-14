@@ -70,13 +70,13 @@ use CXGN::List::Transform;
 use CXGN::Dataset;
 
 
-#BEGIN { extends 'CXGN::Project' }; # only conceptually for now
+#BEGIN { extends 'CXGN::Project' };
 
 =head2 bcs_schema()
 
 =cut
     
-has 'bcs_schema' => (is => 'rw', isa => 'Ref' );
+ has 'bcs_schema' => (is => 'rw', isa => 'Ref', required => 1 );
 
 =head2 people_schema()
 
@@ -102,17 +102,16 @@ has 'name' => (is => 'rw', isa => 'Str');
 
 has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
-=head2 accession_ids()
-
-=cut
-
-has 'accession_ids' => (is => 'rw', isa => 'Maybe[ArrayRef]');
+#=head2 accession_ids()
+#
+#=cut
+#has 'accession_ids' => (is => 'rw', isa => 'Maybe[ArrayRef]', lazy => 1, builder => '_load_accession_ids');
 
 =head2 accession_names()
 
 =cut
 
-has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]'); #maybe for debugging only
+has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]', lazy => 1, builder => '_load_accession_names'); #maybe for debugging only
 
 =head2 data_hash()
 
@@ -124,7 +123,7 @@ has 'data_hash' => (is => 'rw', isa => 'HashRef');
 
 =cut
 
-has 'design' => (is => 'rw', isa => 'Ref');
+has 'design' => (is => 'rw', isa => 'Ref', lazy => 1, builder => '_load_design');
 
 =head2 traits()
 
@@ -152,6 +151,13 @@ CXGN::Analysis::AnalysisMetadata object.
 
 has 'metadata' => (isa => 'Maybe[CXGN::Analysis::AnalysisMetadata]', is => 'rw');
 
+#sub BUILDARGS {
+#    my $self = shift;
+#    my $args = shift;
+#    $args->{trial_id} = $args->{project_id};
+#}
+
+has 'project' => (isa => 'CXGN::Project', is => 'rw');
 
 sub BUILD {
     my $self = shift;
@@ -164,13 +170,19 @@ sub BUILD {
 	# with a project ID, we load all associated metadata
 	# first, get project row and retrieve name
 	#
-	my $row = $args->{bcs_schema}->resultset("Project::Project")->find( { project_id => $args->{project_id} });
 
-	if (! $row) { return undef; }
+	my $project = CXGN::Project->new( { bcs_schema => $args->{bcs_schema}, trial_id => $args->{project_id}});
 	
-	$self->name($row->name());
-	$self->description($row->description());
+	if (! $project) { return undef; }
 
+	$self->project($project);
+	
+	$self->name($project->get_name());
+	$self->description($project->get_description());
+
+	print STDERR "LOcation id retrieved : = ".$project->get_location()->[0]."\n";
+	$self->nd_geolocation_id($project->get_location()->[0]);
+	
 	# retrieve associated metadata from projectprop
 	#
 	my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
@@ -191,21 +203,7 @@ sub BUILD {
 
 	$stockprop_id = $metadata->prop_id();
 
-	# Load the design
-	#
-	my $design = CXGN::Trial::TrialLayout->new( { schema => $args->{bcs_schema}, trial_id => $args->{project_id}, experiment_type=> 'analysis_experiment'} );
-
-	my $design_hash = $design->generate_and_cache_layout();
-
-	#print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
-	#print STDERR "READ DESIGN: ".Dumper($design->get_design());
-	$self->design($design);
-
-	my @accessions = $design->get_accession_names();
-	print STDERR "ACCESSIONS: ". Dumper(\@accessions);
-	# get the accessions from the design (not the dataset!)
-	#
-	$self->accession_names($self->design()->get_accession_names());	
+	# Note: lazy load the design (too slow)...
 	
 	print STDERR "prop_id is $stockprop_id...\n";
 	
@@ -296,19 +294,26 @@ sub create_and_store_analysis_design {
 	die "An analysis with name ".$self->name()." already exists in the database. Please choose another name.";
 	return;
     }
-	
-    
+
+    # create project row
+    #
     my $analysis = $self->bcs_schema()
 	->resultset("Project::Project")
-	->create( 
-	{ 
+	->create(
+	{
 	    name => $self->name(),
 	    description => $self->description(),
 	});
-    
+
     my $analysis_id = $analysis->project_id();
 
     print STDERR "Created analysis id $analysis_id.\n";
+
+    # store nd_location_id
+    #
+    my $project = CXGN::Project->new( { bcs_schema => $self->bcs_schema(), trial_id => $analysis_id });
+
+    $project->set_location($calculation_location_id);
     
     # store user info
     #
@@ -370,7 +375,7 @@ sub create_and_store_analysis_design {
     # print STDERR "Retrieving accession names...\n";
     # print STDERR "Using ids ".join(", ",@{$self->accession_ids()})."\n";
     # my $tf = CXGN::List::Transform->new();
-    # my $transform_name = $tf->can_transform("accession_ids", "accessions");
+    # my $transform_name = $tf->can_transform("accession_ids, "accessions");
     # print STDERR "Transform name = $transform_name\n";
     # if ($transform_name) {
     # 	$accession_names = $tf->transform($self->bcs_schema(), $transform_name, $self->accession_ids());
@@ -496,5 +501,58 @@ sub store_analysis_values {
     }
     
 }
+
+sub _load_design {
+    my $self = shift;
+
+    # Load the design
+    #
+    my $design = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $self->project_id(), experiment_type=> 'analysis_experiment'} );
+
+    print STDERR "_load_design: design = ".Dumper($design->get_design);
+
+    #print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
+    #print STDERR "READ DESIGN: ".Dumper($design->get_design());
+    return $design;
+    
+ 
+}
+
+sub get_phenotype_matrix {
+    my $self = shift;
+    
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	bcs_schema=>$self->bcs_schema(),
+	search_type => "Native",
+	data_level => "analysis_instance",
+	experiment_type => "analysis_experiment",
+	trial_list=> [ $self->project_id() ],
+	); 
+    
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    return \@data;
+}
+
+sub _load_accession_names {
+    my $self = shift;
+
+    my $design = $self->design();
+    #print STDERR "Design = ".Dumper($design);
+    
+    my @accessions = $design->get_accession_names();
+    print STDERR "ACCESSIONS: ". Dumper(\@accessions);
+    # get the accessions from the design (not the dataset!)
+    #
+    return $self->design()->get_accession_names();
+}
+
+
+#sub _load_accession_ids {
+#    my $self = shift;
+#    my $design = $self->design();
+
+#    return $self->design()->get_accession_ids();
+
+#}
 
 1;

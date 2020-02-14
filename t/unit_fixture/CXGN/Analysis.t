@@ -22,7 +22,7 @@ my $a = CXGN::Analysis->new({ bcs_schema => $schema, people_schema => $people_sc
 print STDERR "Accession test...\n";
 
 $a->accession_names( [ 'test_accession1', 'test_accession2', 'test_accession4' ] );
-$a->nd_geolocation_id(23); # test location
+#$a->nd_geolocation_id(23); # test location
 $a->metadata()->dataset_id($ds->sp_dataset_id());
 $a->user_id(41);
 
@@ -30,7 +30,7 @@ $a->name("test_analysis");
 
 print STDERR Dumper($a->accession_names());
 
-ok($a->nd_geolocation_id() == 23, "nd_geolocation_id test");
+#ok($a->nd_geolocation_id() == 23, "nd_geolocation_id test");
 
 print STDERR "Design test...\n";
 my $project_id = $a->create_and_store_analysis_design();
@@ -52,6 +52,17 @@ is($a2->name(), "test_analysis", "analysis name test");
 is($a2->metadata()->dataset_id(), 1);
 
 print STDERR Dumper($a2->metadata()->to_json());
+
+my $row = $t->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => '[Computation]' });
+
+is($a2->nd_geolocation_id(), $row->nd_geolocation_id(), "nd_geolocation_id test after save");
+
+print STDERR "DESIGN: ".Dumper($a2->design()->get_design());
+
+print STDERR "ACCESSIONS: ".Dumper($a2->accession_names())."\n";
+
+my $dataref = $a2->get_phenotype_matrix();
+print STDERR "Phenotype Matrix: ".Dumper($dataref);
 
 $ds->delete();
 

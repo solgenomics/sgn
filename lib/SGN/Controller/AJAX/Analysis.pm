@@ -17,7 +17,16 @@ __PACKAGE__->config(
     );
 
 
-sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") Args(0) {}
+
+sub ajax_analysis : Chained('/') PathPart('ajax/analysis') CaptureArgs(1) {
+    my $self = shift;
+    my $c = shift;
+    my $analysis_id = shift;
+
+    $c->stash->{analysis_id} = $analysis_id;
+}
+
+sub store_analysis_json : Path('/ajax/store/analysis/json') ActionClass("REST") Args(0) {}
 
 sub store_analysis_json_POST {
     my $self = shift;
@@ -54,7 +63,7 @@ sub store_analysis_json_POST {
     $self->store_data($c, $params, \%values, \@stocks, \@plots, \@traits, $user_id);
 }
 
-sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
+sub store_analysis_file : Path('/ajax/store/analysis/file') ActionClass("REST") Args(0) {}
 
 sub store_analysis_file_POST {
     my $self = shift;
@@ -161,7 +170,7 @@ sub store_data {
 
 
     my $user = $c->user()->get_object();
-    
+
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
@@ -279,6 +288,45 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
 
 }
 
+sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(0)  {
+    my $self = shift;
+    my $c = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    
+    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, project_id => $c->stash->{analysis_id} } );
+
+    my $ds = CXGN::Dataset->new( { schema => $bcs_schema, people_schema => $people_schema, sp_dataset_id => $a->metadata()->dataset_id() });
+
+    my $dataset_id = "";
+    my $dataset_name = "";
+    my $dataset_description = "";
+    
+    if ($ds) {
+	$dataset_id = $ds->sp_dataset_id();
+	$dataset_name = $ds->name();
+	$dataset_description = $ds->description();
+    }
+
+    my $dataref = $a->get_phenotype_matrix();
+    
+    my $resultref = {
+	dataset_id => $dataset_id,
+	dataset_name => $dataset_name,
+	dataset_description => $dataset_description,
+	#accession_ids => $a ->accession_ids(),
+	accession_names => $a->accession_names(),
+	traits => $a->traits(),
+	data => $dataref,
+    };
+
+    $c->stash->{rest} = $resultref;
+
+	
+}
+
+
 sub check_user {
     my $self = shift;
     my $c = shift;
@@ -295,3 +343,5 @@ sub check_user {
     
     return $error;
 }
+
+1;

@@ -4,9 +4,13 @@
 
 <%doc>
 
-=head1 /mason/analyses/index.mas - show user-specific analyses in the system
+=head1 NAME
+
+/mason/analyses/index.mas - show user-specific analyses in the system
 
 =head1 DESCRIPTION
+
+Displays a page with a table of all the analyses run by the currently logged in user.
 
 =head1 AUTHOR
 
@@ -15,6 +19,8 @@ Lukas Mueller <lam87@cornell.edu>
 =cut
   
 </%doc>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
 
 <& /page/page_title.mas, title => "Your analyses" &>
 
@@ -40,13 +46,6 @@ Lukas Mueller <lam87@cornell.edu>
      
 
 <script>
-
-  $(document).ready( function() {
-    $('#analyses_by_user_table').DataTable(
-    {
-       ajax: '/ajax/analyses/by_user'
-    });
-  
-  });
-
+  alert("hello");
+  window.jsMod['analyses'].retrieve_analysis_overview_table();
 </script>

@@ -2,6 +2,8 @@
 package SGN::Controller::Analysis;
 
 use Moose;
+use URI::FromHash 'uri';
+
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -9,6 +11,16 @@ sub view_analyses :Path('/analyses') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $user_id;
+    if ($c->user()) {
+	$user_id = $c->user->get_object()->get_sp_person_id();
+    }
+    if (!$user_id) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
+
+    
     $c->stash->{template} = '/analyses/index.mas';
 }
 
