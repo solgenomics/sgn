@@ -87,6 +87,7 @@ sub observation_variable_ontologies {
         $composable_cv_prop_sql = " cvprop.type_id IN ($composable_cv_prop_sql)";
     }
 
+    # Add db name spaces for databases tagged as trait_ontology, method_ontology, etc for the cvprop_type_names being queried. This added name spaces onto those taken from onto_root_namespaces conf key. When using the "add ontology web interface", ontologies are tagged with a cvprop type; however, when loading obo file ontologies, the cvprop must be added afterward.
     my $q1 = "SELECT distinct(db.name) FROM db JOIN dbxref ON(db.db_id = dbxref.db_id) JOIN cvterm ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN cv ON(cvterm.cv_id = cv.cv_id) JOIN cvprop ON(cvprop.cv_id=cv.cv_id) WHERE $composable_cv_prop_sql;";
     my $sth1 = $self->bcs_schema->storage->dbh->prepare($q1);
     $sth1->execute();
