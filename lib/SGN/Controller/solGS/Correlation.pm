@@ -94,7 +94,16 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $model_id    = $c->req->param('model_id');
     my @traits_ids  = $c->req->param('traits_ids[]');
     my $index_file  = $c->req->param('index_file');
+    my $protocol_id  = $c->req->param('genotyping_protocol_id');
 
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     $c->stash->{selection_index_only_file} = $index_file;   
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
@@ -116,6 +125,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
 	$ret->{index_file} = $index_file;
+	$ret->{genotyping_protocol_id} = $protocol_id;
 
     }
 
@@ -294,6 +304,16 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
 
     my $gebvs_file = $c->req->param('gebvs_file');
     my $index_file = $c->req->param('index_file');
+
+    my $protocol_id  = $c->req->param('genotyping_protocol_id');
+  
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     $c->stash->{data_input_file} = $gebvs_file;
 
