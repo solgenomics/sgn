@@ -176,6 +176,8 @@ sub upload_drone_imagery_POST : Args(0) {
     my @return_drone_run_band_image_urls;
     my @raw_image_boundaries_temp_images;
     my $output_path;
+    my $cmd;
+
     if ($new_drone_run_band_stitching eq 'no') {
         my @new_drone_run_bands;
         if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
@@ -347,7 +349,6 @@ sub upload_drone_imagery_POST : Args(0) {
         my $temp_file_stitched_result_rgb = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
         my $temp_file_stitched_result_rnre = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_stitched_result/fileXXXX').".png";
 
-        my $cmd;
         my @stitched_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
             my $upload_original_name_panel = $upload_panel_file->filename();
@@ -534,7 +535,6 @@ sub upload_drone_imagery_POST : Args(0) {
         close($fh);
         print STDERR "Drone image raw boundaries temp file $temp_file_image_file_names\n";
 
-        my $cmd;
         my @stitched_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
             my $upload_original_name_panel = $upload_panel_file->filename();
@@ -733,9 +733,78 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         my $image_paths = $zipfile_return->{image_files};
 
+        my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_images');
+        my $base_path = $c->config->{basepath}."/";
+        my $temp_file_image_file_names = $base_path.$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
+        open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
+            foreach (@$image_paths) {
+                my $temp_file_raw_image_blue = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
+                my $temp_file_raw_image_green = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
+                my $temp_file_raw_image_red = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
+                my $temp_file_raw_image_nir = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
+                my $temp_file_raw_image_red_edge = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
+                print $fh "$_,$base_path,$temp_file_raw_image_blue,$temp_file_raw_image_green,$temp_file_raw_image_red,$temp_file_raw_image_nir,$temp_file_raw_image_red_edge\n";
+            }
+        close($fh);
+
         my @stitched_bands;
         my %raw_image_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
+            my $upload_original_name_panel = $upload_panel_file->filename();
+            my $upload_tempfile_panel = $upload_panel_file->tempname;
+            $time = DateTime->now();
+            $timestamp = $time->ymd()."_".$time->hms();
+
+            my $uploader_panel = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile_panel,
+                subdirectory => "drone_imagery_upload_panel",
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name_panel,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role
+            });
+            my $archived_filename_with_path_panel = $uploader_panel->archive();
+            my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
+            if (!$archived_filename_with_path_panel) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
+                $c->detach();
+            }
+            unlink $upload_tempfile_panel;
+            print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
+
+            $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+            my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
+            print STDERR Dumper $zipfile_return_panel;
+            if ($zipfile_return_panel->{error}) {
+                $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
+                $c->detach();
+            }
+            my $image_paths_panel = $zipfile_return_panel->{image_files};
+
+            my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
+            open ($fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
+                foreach (@$image_paths_panel) {
+                    print $fh "$_\n";
+                }
+            close($fh);
+
+            $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
+
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
+
+            my @aligned_images;
+            my $csv = Text::CSV->new({ sep_char => ',' });
+            open(my $fh, '<', $output_path) or die "Could not open file '$output_path' $!";
+                while ( my $row = <$fh> ) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    push @aligned_images, $columns[0];
+                }
+            close($fh);
+
             @stitched_bands = (
                 ["Band 1", "Blue", "Blue (450-520nm)", 0],
                 ["Band 2", "Green", "Green (515-600nm)", 1],
@@ -744,7 +813,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 ["Band 5", "RedEdge", "Red Edge (690-750nm)", 4]
             );
             my $counter = 0;
-            foreach (@$image_paths) {
+            foreach (@aligned_images) {
                 push @{$raw_image_bands{$counter}}, $_;
                 $counter++;
                 if ($counter >= 5) {
@@ -761,6 +830,9 @@ sub upload_drone_imagery_POST : Args(0) {
         else {
             die "Camera info not supported for stitching: $new_drone_run_camera_info\n";
         }
+
+        print STDERR Dumper $cmd;
+        my $status = system($cmd);
 
         foreach my $m (@stitched_bands) {
             my $project_rs = $schema->resultset("Project::Project")->create({
