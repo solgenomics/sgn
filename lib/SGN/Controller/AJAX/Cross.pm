@@ -35,6 +35,7 @@ use CXGN::UploadFile;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
+use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
 use CXGN::Pedigree::AddFamilyNames;
 use CXGN::Pedigree::AddPopulations;
