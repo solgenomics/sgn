@@ -208,7 +208,7 @@ sub gebv_rel_weights {
     my @si_wts;
     my $rel_wts_txt = "trait" . "\t" . 'relative_weight' . "\n";
     
-    foreach my $tr (keys %$rel_wts)
+    foreach my $tr (sort keys %$rel_wts)
     {      
         my $wt = $rel_wts->{$tr};
         unless ($tr eq 'rank')
