@@ -125,7 +125,12 @@ solGS.combinedTrials = {
 			window.location.href = newUrl;
 			jQuery.unblockUI();
                     } else if (res.pop_id) {
-			this.goToSingleTrialTrainingPopPage(res.pop_id, trId);
+			var args = {'pop_id': res.pop_id,
+				    'trait_id': trId,
+				    'genotyping_protocol_id': res.genotyping_protocol_id
+				   };
+			
+			this.goToSingleTrialTrainingPopPage(args);
 			jQuery.unblockUI();
                     } 
                     
@@ -155,6 +160,7 @@ solGS.combinedTrials = {
 	}
 
 	console.log('getCombinedPopsId: combopopsid ' + comboPopsList)
+	var protocolId = jQuery('#genotyping_protocol_id').val();
 	
 	var traitId = this.getTraitId();
 	var referer = window.location.href;
@@ -167,7 +173,7 @@ solGS.combinedTrials = {
 		type: 'POST',
 		dataType: "json",
 		url: "/solgs/get/combined/populations/id",
-		data: {'trials': comboPopsList},
+		data: {'trials': comboPopsList, 'genotyping_protocol_id': protocolId},
 		success: function(res) {                         
 		    if (res.status) {               
     			var comboPopsId = res.combo_pops_id;
@@ -181,6 +187,7 @@ solGS.combinedTrials = {
 			    'combo_pops_id'   : [ comboPopsId ],
 			    'combo_pops_list' : comboPopsList,
 			    'trait_id'        : traitId,
+			    'genotyping_protocol_id': res.genotyping_protocol_id
 			};
 			
 			console.log('goToCombinedTrialsTrainingPop')			
@@ -200,7 +207,8 @@ solGS.combinedTrials = {
 	    var popId = comboPopsList;
 	    var args = {
 		'trial_id': popId,
-		'trait_id': traitId
+		'trait_id': traitId,
+		'genotyping_protocol_id': protocolId
 	    };
 	    
 	    this.downloadSingleTrialTrainingPopData(args);
@@ -222,7 +230,7 @@ solGS.combinedTrials = {
 
     	var comboPopsId = args.combo_pops_id;
     	comboPopsId = comboPopsId[0];
-	var genoProtocol = args.genotyping_protocol_id;
+	var protocolId = args.genotyping_protocol_id;
 	
     	var referer = window.location.href;
     	var page;
@@ -231,12 +239,12 @@ solGS.combinedTrials = {
     	    var traitId = args.trait_id;
     	    traitId = traitId[0];
 	    
-    	    page = '/solgs/model/combined/trials/'
-    		+ comboPopsId + '/trait/'
-    		+ traitId;
+    	    page = '/solgs/model/combined/trials/' + comboPopsId
+		+ '/trait/' + traitId
+		+ '/gp/' + protocolId;
 	    
     	} else {
-    	    page = '/solgs/populations/combined/' + comboPopsId + '/gp/' + genoProtocol;
+    	    page = '/solgs/populations/combined/' + comboPopsId + '/gp/' + protocolId;
     	}
 	
     	console.log('calling solgs wait page...')
@@ -246,10 +254,12 @@ solGS.combinedTrials = {
     },
 
 
-    displayCombinedTrialsTrainingPopPage: function(trialsIds) {
+    displayCombinedTrialsTrainingPopPage: function(args) {
 	
-	console.log('retrievepopsdata: trialsids ' + trialsIds)
-
+	console.log('retrievepopsdata: trialsids ' + args.combo_pops_list)
+	var trialsIds = args.combo_pops_list;
+	var protocolId = args.genotyping_protocol_id;
+	
 	if (!trialsIds) {
 	    trialsIds = this.getSelectedTrials();
 	}
@@ -263,17 +273,23 @@ solGS.combinedTrials = {
             type: 'POST',
             dataType: "json",
             url: action,
-            data: {'trials': trialsIds},
+            data: {'trials': trialsIds, 'genotyping_protocol_id': protocolId},
             success: function(res) {                         
 		if (res.not_matching_pops == null) {
 		    
                     var combinedPopsId = res.combined_pops_id;
+		    var protocolId     = res.genotyping_protocol_id;
 		    
                     if (combinedPopsId) {
-			solGS.combinedTrials.goToCombinedTrialsTrainingPopPage(combinedPopsId);
+			solGS.combinedTrials.goToCombinedTrialsTrainingPopPage(combinedPopsId, protocolId);
 			jQuery.unblockUI();
                     } else if (res.pop_id) {
-			solGS.combinedTrials.goToSingleTrialTrainingPopPage(res.pop_id);
+			var args = {'pop_id': res.pop_id,
+				    'trait_id': trId,
+				    'genotyping_protocol_id': res.genotyping_protocol_id
+				   };
+			
+			solGS.combinedTrials.goToSingleTrialTrainingPopPage(args);
 			jQuery.unblockUI();
                     } 
                     
@@ -319,9 +335,9 @@ solGS.combinedTrials = {
     },
 
 
-    goToCombinedTrialsTrainingPopPage: function (comboPopsId) {
+    goToCombinedTrialsTrainingPopPage: function (comboPopsId, protocolId) {
      
-    	var page = '/solgs/populations/combined/' + comboPopsId;
+    	var page = '/solgs/populations/combined/' + comboPopsId + '/gp/' + protocolId;
 	
     	if (comboPopsId) {
             window.location = page;
@@ -331,17 +347,17 @@ solGS.combinedTrials = {
     },
 
 
-    goToSingleTrialTrainingPopPage: function (popId, traitId) {
+    goToSingleTrialTrainingPopPage: function (args) {
     
 	var referer = window.location.href;
 	var page;
 	
 	if (referer.match(/search\/trials\/trait\//)) {
-	    page = '/solgs/trait/' + traitId + '/population/' + popId;
+	    page = '/solgs/trait/' + args.trait_id + '/population/' + args.pop_id;
 	    
 	} else {
 	    var hostName = window.location.protocol + '//' + window.location.host;  
-	    page = hostName +  '/solgs/population/' + popId;
+	    page = hostName +  '/solgs/population/' + args.pop_id + '/gp/' + args.genotyping_protocol_id;
 	}
 
 	window.location = page;
@@ -355,14 +371,14 @@ solGS.combinedTrials = {
 	var page;
 	var popId = args.trial_id;
 	var traitId = args.trait_id;
-	var genoProtocol = args.genotyping_protocol_id;
+	var protocolId = args.genotyping_protocol_id;
 
 	if (referer.match(/search\/trials\/trait\//)) {
 	    page = '/solgs/trait/' + traitId + '/population/' + popId;
 	    
 	} else {
 	    var hostName = window.location.protocol + '//' + window.location.host;  
-	    page = hostName +  '/solgs/population/' + popId + '/gp/' + genoProtocol;
+	    page = hostName +  '/solgs/population/' + popId + '/gp/' + protocolId;
 	}
 
 	console.log('downloadSingleTrialTrainingPopData geno pro id' + args.genotyping_protocol_id)
