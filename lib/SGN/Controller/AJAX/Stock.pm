@@ -1833,8 +1833,8 @@ sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('
 sub get_stock_datatables_genotype_data_GET  {
     my $self = shift;
     my $c = shift;
-    my $limit = $c->req->param('length');
-    my $offset = $c->req->param('start');
+    my $limit = $c->req->param('length') || 1000;
+    my $offset = $c->req->param('start') || 0;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
