@@ -152,29 +152,35 @@ function formatGenCorInputData (popId, type, indexFile) {
     if(traitsIds) {
 	traitsIds = traitsIds.split(',');
     }
-
     var modelId  = modelDetail.population_id;
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+    var genArgs = {
+	'model_id': modelId,
+	'corr_population_id': popId,
+	'traits_ids': traitsIds,
+	'type' : type,
+	'index_file': indexFile,
+	'genotyping_protocol_id': protocolId
+    };
+      
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        data: {'model_id': modelId,
-	       'corr_population_id': popId,
-	       'traits_ids': traitsIds,
-	       'type' : type,
-	       'index_file': indexFile},
+        data: genArgs ,
         url: '/correlation/genetic/data/',
-        success: function(response) {
+        success: function(res) {
 
-            if (response.status) {
+            if (res.status) {
 		
-                gebvsFile = response.gebvs_file;
-		indexFile = response.index_file;
-		
+                var gebvsFile = res.gebvs_file;
+		var indexFile = res.index_file;
+		var protocolId = res.genotyping_protocol_id;
                 var divPlace;
+		
                 if (indexFile) {
                     divPlace = '#si_correlation_canvas';
                 }
-
+		
                 var args = {
                     'model_id': modelDetail.population_id, 
                     'corr_population_id': popId, 
@@ -183,6 +189,7 @@ function formatGenCorInputData (popId, type, indexFile) {
                     'gebvs_file': gebvsFile,
 		    'index_file': indexFile,
                     'div_place' : divPlace,
+		    'genotyping_protocol_id': protocolId
                 };
 		
                 runGenCorrelationAnalysis(args);
@@ -194,7 +201,7 @@ function formatGenCorInputData (popId, type, indexFile) {
 		
             }
         },
-        error: function(response) {
+        error: function(res) {
             jQuery(divPlace +"#correlation_message")
                 .css({"padding-left": '0px'})
                 .html("Error occured preparing the additive genetic data for correlation analysis.");
