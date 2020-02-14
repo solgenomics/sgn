@@ -74,6 +74,7 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
+    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
     
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
  
@@ -360,6 +361,7 @@ sub predict_list_selection_pop_multi_traits {
     my $data_set_type    = $c->stash->{data_set_type};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $protocol_id      = $c->stash->{genotyping_protocol_id};
   
     $c->stash->{pop_id} = $training_pop_id;    
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
@@ -699,7 +701,7 @@ sub genotypes_list_genotype_query_job {
     };
     
     $c->stash->{genotypes_list_genotype_query_job} = $job_args;
-    $c->stash->{genotype_file} = $geno_file;
+    $c->stash->{genotype_file_name} = $geno_file;
 }
 
 
@@ -891,12 +893,14 @@ sub get_list_training_data_query_jobs_file {
 
 
 sub submit_list_training_data_query {
-    my ($self, $c, $protocol_id) = @_;
+    my ($self, $c) = @_;
 
     my $list_id = $c->stash->{list_id};
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
     my $list_type = $list->type;
 
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     my $query_jobs_file;
 
     if ($list_type =~ /plots/) 
