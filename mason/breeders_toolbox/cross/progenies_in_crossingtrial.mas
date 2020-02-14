@@ -379,7 +379,6 @@ jQuery(document).ready(function(){
         });
     });
 
-
     jQuery("#upload_progenies_new_accessions_link").click(function(){
 
         jQuery("#upload_progenies_new_spreadsheet_format_info").click(function(){
@@ -389,7 +388,6 @@ jQuery(document).ready(function(){
         jQuery("#upload_progenies_new_accessions_dialog").modal("show");
     });
 
-
     jQuery("#upload_progenies_existing_accessions_link").click(function(){
 
         jQuery("#upload_progenies_exist_spreadsheet_format_info").click(function(){
@@ -398,7 +396,6 @@ jQuery(document).ready(function(){
 
         jQuery("#upload_progenies_existing_accessions_dialog").modal("show");
     });
-
 
     jQuery("#upload_progenies_new_submit").click(function(){
         var uploadFile = jQuery("#progenies_new_upload_file").val();
@@ -410,7 +407,6 @@ jQuery(document).ready(function(){
         jQuery("#upload_progenies_new_form").submit();
         jQuery("#upload_progenies_new_accessions_dialog").modal("hide");
     });
-
 
     jQuery("#upload_progenies_exist_submit").click(function(){
         var uploadFile = jQuery("#progenies_exist_upload_file").val();
@@ -445,6 +441,30 @@ jQuery(document).ready(function(){
             }
         }
     });
+
+    jQuery('#upload_progenies_exist_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_progenies_error_display tbody").html('');
+                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
+                jQuery("#upload_progenies_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#progenies_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
     jQuery("#dismiss_progenies_saved_dialog").click(function(){
         location.reload();
     });
