@@ -11,9 +11,8 @@ has 'dbic_schema' => (isa => 'Bio::Chado::Schema',
         required => 1,
 );
 
-has 'stock_id' => (isa => 'Int',
+has 'stock_id' => (isa => 'Maybe[Int]',
         is => 'rw',
-        required => 1,
 );
 
 
@@ -150,6 +149,30 @@ sub get_stock_for_tissue {
 
 }
 
+
+sub get_cross_of_progeny {
+    my $self = shift;
+    my $progeny_name = shift;
+    my $schema = shift;
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+    my $q = "SELECT cross_stock.stock_id, cross_stock.uniquename FROM stock
+            JOIN stock_relationship ON (stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
+            JOIN stock AS cross_stock on (stock_relationship.object_id = cross_stock.stock_id) AND cross_stock.type_id = ?
+            WHERE stock.uniquename = ?
+            ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+             $h->execute($offspring_of_type_id, $cross_type_id, $progeny_name);
+
+             my @cross =();
+            while(my($stock_id, $stock_name) = $h->fetchrow_array()){
+                 push @cross, [$stock_id, $stock_name]
+            }
+
+            return\@cross;
+}
 
 
 1;

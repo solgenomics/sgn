@@ -6,6 +6,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::Stock::RelatedStocks;
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -105,6 +106,16 @@ sub _validate_with_plugin {
     if (scalar(@progenies_missing) > 0) {
         push @error_messages, "The following progeny names are not in the database, or are not in the database as uniquenames: ".join(',',@progenies_missing);
         $errors{'missing_accessions'} = \@progenies_missing;
+    }
+
+    #check if progeny is already associated with cross_unique_id
+    foreach my $progeny_name(@progenies) {
+        my $cross_progeny_linkage = CXGN::Stock::RelatedStocks->get_cross_of_progeny($progeny_name, $schema);
+        my @previous_cross = @$cross_progeny_linkage;
+        if (scalar(@previous_cross) > 0) {
+            push @error_messages, "The following progeny is already associated with the cross unique id: " $previous_cross[0][1];
+            $errors{'existing_cross_linkage'} = \@previous_cross;
+        }
     }
 
     #store any errors found in the parsed file to parse_errors accessor
