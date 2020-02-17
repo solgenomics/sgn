@@ -1214,7 +1214,7 @@ sub get_drone_imagery_plot_polygon_types : Path('/ajax/html/select/drone_imagery
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_plot_images : Path('/ajax/html/select/plot_images') Args(0) {
+sub get_micasense_aligned_raw_images : Path('/ajax/html/select/micasense_aligned_raw_images') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -1225,15 +1225,21 @@ sub get_plot_images : Path('/ajax/html/select/plot_images') Args(0) {
     my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
     my $empty = $c->req->param("empty") || "";
 
-    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        drone_run_project_id_list=>[$drone_run_project_id],
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
     });
-    my ($result, $total_count) = $images_search->search();
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
 
     my @result;
-    foreach (@$result) {
-        push @result, [$_->{image_id}, $_->{image_original_filename}];
+    foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+        my $image_ids_array = $saved_micasense_stacks->{$_};
+        my $image_ids = join ',', @$image_ids_array;
+        push @result, [$image_ids, $image_ids];
     }
 
     if ($empty) {

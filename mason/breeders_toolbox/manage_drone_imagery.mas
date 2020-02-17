@@ -2195,13 +2195,15 @@ jQuery(document).ready(function() {
 
         get_select_box('drone_imagery_plot_polygon_types','drone_imagery_standard_process_raw_images_image_type_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_type_select', 'id': 'drone_imagery_standard_process_raw_images_image_type_select', 'empty':1, 'names_as_select':1 });
     
-        get_select_box('plot_images','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
+        get_select_box('micasense_aligned_raw_images','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
 
         get_select_box('plot_image_sizes','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
     });
 
     jQuery(document).on('change', '#drone_imagery_standard_process_raw_images_image_id_select', function() {
-        manage_drone_imagery_standard_process_raw_images_image_id = jQuery(this).val();
+        var manage_drone_imagery_standard_process_raw_images_image_id_string = jQuery(this).val();
+        var manage_drone_imagery_standard_process_raw_images_image_id_array = manage_drone_imagery_standard_process_raw_images_image_id_string.split(',');
+        manage_drone_imagery_standard_process_raw_images_image_id = manage_drone_imagery_standard_process_raw_images_image_id_array[4];
         manage_drone_imagery_standard_process_raw_images_rotated_image_id = jQuery(this).val();
 
         jQuery.ajax({
