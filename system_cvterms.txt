@@ -141,6 +141,7 @@ project_property	drone_run_standard_process_phenotype_calculation_in_progress	Ru
 project_property	drone_run_standard_process_completed	If the drone run had the standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_extended_completed	If the drone run had the extended standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_vi_completed	If the drone run had the vegetative index standard process run	10/5/2018	nm529	00103
+project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw Micasense images, the captures are aligned and this records which image is in which capture	02/17/2020	nm529	00117
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093

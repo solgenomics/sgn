@@ -69,6 +69,9 @@ sub patch {
             'raw_boundaries_top_right_drone_imagery',
             'raw_boundaries_bottom_left_drone_imagery',
             'raw_boundaries_bottom_right_drone_imagery'
+        ],
+        'project_property' => [
+            'drone_run_raw_images_saved_micasense_stacks'
         ]
     };
 

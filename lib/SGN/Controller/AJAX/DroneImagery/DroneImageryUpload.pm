@@ -175,6 +175,7 @@ sub upload_drone_imagery_POST : Args(0) {
     my @return_drone_run_band_image_ids;
     my @return_drone_run_band_image_urls;
     my @raw_image_boundaries_temp_images;
+    my %saved_image_stacks;
     my $output_path;
     my $cmd;
 
@@ -801,14 +802,14 @@ sub upload_drone_imagery_POST : Args(0) {
                 ["Band 5", "RedEdge", "Red Edge (690-750nm)", 4]
             );
         }
-        elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-            @stitched_bands = (
-                ["Color Image", "RGB Color Image", "RGB Color Image", 0],
-            );
-            $raw_image_bands{0} = $image_paths;
-        }
+        # elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
+        #     @stitched_bands = (
+        #         ["Color Image", "RGB Color Image", "RGB Color Image", 0],
+        #     );
+        #     $raw_image_bands{0} = $image_paths;
+        # }
         else {
-            die "Camera info not supported for stitching: $new_drone_run_camera_info\n";
+            die "Camera info not supported for raw image upload: $new_drone_run_camera_info\n";
         }
 
         print STDERR Dumper $cmd;
@@ -827,6 +828,8 @@ sub upload_drone_imagery_POST : Args(0) {
         close($fh_out);
 
         my $counter = 0;
+        my $total_images = scalar(@aligned_images);
+        my $total_captures = $total_images/5;
         foreach (@aligned_images) {
             push @{$raw_image_bands{$counter}}, $_;
             $counter++;
@@ -854,9 +857,25 @@ sub upload_drone_imagery_POST : Args(0) {
             }
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
+
+        my $image_stack_counter = 0;
+        foreach (@return_drone_run_band_image_ids) {
+            push @{$saved_image_stacks{$image_stack_counter}}, $_;
+            $image_stack_counter++;
+            if ($image_stack_counter >= $total_captures) {
+                $image_stack_counter = 0;
+            }
+        }
+
+        my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+        my $image_stack_projectprop_rs = $schema->resultset("Project::Projectprop")->create({
+            project_id => $selected_drone_run_id,
+            type_id => $saved_image_stacks_type_id,
+            value => encode_json \%saved_image_stacks
+        });
     }
 
-    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls, drone_run_band_raw_image_boundaries_temp_images => \@raw_image_boundaries_temp_images };
+    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls, drone_run_band_raw_image_boundaries_temp_images => \@raw_image_boundaries_temp_images, saved_image_stacks => \%saved_image_stacks };
 }
 
 sub upload_drone_imagery_raw_images_automated_boundaries : Path('/api/drone_imagery/upload_drone_imagery_raw_images_automated_boundaries') : ActionClass('REST') { }
