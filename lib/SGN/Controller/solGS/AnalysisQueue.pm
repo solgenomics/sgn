@@ -152,7 +152,8 @@ sub create_selection_pop_page {
    
     if ($data_set_type =~ /combined populations/)
     {	   
-	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id/gp/$protocol_id";	   
+#	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+	$sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
     }
     else
     {	
@@ -683,81 +684,82 @@ sub structure_selection_prediction_output {
 	my $trait_abbr = $c->stash->{trait_abbr};
 	my $trait_name = $c->stash->{trait_name};
 	
-	my $training_pop_id   = $c->stash->{training_pop_id};
-	my $prediction_pop_id = $c->stash->{selection_pop_id};
+	my $tr_pop_id   = $c->stash->{training_pop_id};
+	my $sel_pop_id = $c->stash->{selection_pop_id};
 
-	my $training_pop_page;
+	my $tr_pop_page;
 	my $model_page;
-	my $prediction_pop_page; 
-	my $training_pop_name;
-	my $prediction_pop_name;
+	my $sel_pop_page; 
+	my $tr_pop_name;
+	my $sel_pop_name;
 	
 	if ($data_set_type =~ /combined populations/)
 	{
-	    $training_pop_page    = $base . "solgs/populations/combined/$training_pop_id/gp/$protocol_id";
-	    $training_pop_name    = 'Training population ' . $training_pop_id;
-	    $prediction_pop_page  = $base . "solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id/gp/$protocol_id";
-	    $model_page           = $base . "solgs/model/combined/populations/$training_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $tr_pop_page    = $base . "solgs/populations/combined/$tr_pop_id/gp/$protocol_id";
+	    $tr_pop_name    = 'Training population ' . $tr_pop_id;
+	    #$prediction_pop_page  = $base . "solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $sel_pop_page = $base. "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $model_page           = $base . "solgs/model/combined/populations/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
 	}
 	else
 	{	
-	    $training_pop_page    = $base . "solgs/population/$training_pop_id/gp/$protocol_id"; 
-	    if ($training_pop_id =~ /list/)
+	    $tr_pop_page    = $base . "solgs/population/$tr_pop_id/gp/$protocol_id"; 
+	    if ($tr_pop_id =~ /list/)
 	    {	  
-		$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;	
+		$c->stash->{list_id} = $tr_pop_id =~ s/\w+_//r;	
 		$c->controller('solGS::List')->list_population_summary($c);
-		$training_pop_name   = $c->stash->{project_name};   
+		$tr_pop_name   = $c->stash->{project_name};   
 	    }
-	    elsif ($training_pop_id =~ /dataset/)
+	    elsif ($tr_pop_id =~ /dataset/)
 	    {	
-		$c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;	
+		$c->stash->{dataset_id} = $tr_pop_id =~ s/\w+_//r;	
 		$c->controller('solGS::Dataset')->dataset_population_summary($c);
-		$training_pop_name   = $c->stash->{project_name};   
+		$tr_pop_name   = $c->stash->{project_name};   
 	    }
 	    else
 	    {
-		$c->controller('solGS::solGS')->get_project_details($c, $training_pop_id);
-		$training_pop_name   = $c->stash->{project_name};    
+		$c->controller('solGS::solGS')->get_project_details($c, $tr_pop_id);
+		$tr_pop_name   = $c->stash->{project_name};    
 	    }
 	    
-	    $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id/gp/$protocol_id";
-	    $model_page          = $base . "solgs/trait/$trait_id/population/$training_pop_id/gp/$protocol_id";
+	    $sel_pop_page = $base . "solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+	    $model_page          = $base . "solgs/trait/$trait_id/population/$tr_pop_id/gp/$protocol_id";
 	}
 	
-	if ($prediction_pop_id =~ /list/)
+	if ($sel_pop_id =~ /list/)
 	{
-	    $c->stash->{list_id} = $prediction_pop_id =~ s/\w+_//r;
-	    $c->controller('solGS::List')->list_population_summary($c, $prediction_pop_id);
-	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $prediction_pop_id);	    
+	    $c->stash->{list_id} = $sel_pop_id =~ s/\w+_//r;
+	    $c->controller('solGS::List')->list_population_summary($c, $sel_pop_id);
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $sel_pop_id);	    
 	   
-	    $prediction_pop_name = $c->stash->{selection_pop_name}; 
+	    $sel_pop_name = $c->stash->{selection_pop_name}; 
 	}
-	elsif ($prediction_pop_id =~ /dataset/)
+	elsif ($sel_pop_id =~ /dataset/)
 	{
-	    $c->stash->{dataset_id} = $prediction_pop_id =~ s/\w+_//r;
+	    $c->stash->{dataset_id} = $sel_pop_id =~ s/\w+_//r;
 	    $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);	    
 	    $c->controller('solGS::Dataset')->dataset_population_summary($c);
-	    $prediction_pop_name = $c->stash->{prediction_pop_name};
+	    $sel_pop_name = $c->stash->{prediction_pop_name};
 	}
 	else 
 	{
-	    $c->controller('solGS::solGS')->get_project_details($c, $prediction_pop_id);
-	    $prediction_pop_name = $c->stash->{project_name};
+	    $c->controller('solGS::solGS')->get_project_details($c, $sel_pop_id);
+	    $sel_pop_name = $c->stash->{project_name};
 	}
 	
-	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
+	my $identifier = $tr_pop_id . '_' . $sel_pop_id;
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 	my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
 
-	$c->controller('solGS::Files')->genotype_file_name($c, $prediction_pop_id, $protocol_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $sel_pop_id, $protocol_id);
 	my $selection_geno_file = $c->stash->{genotype_file_name};
 		
 	$output_details{'trait_id_' . $trait_id} = {
-	    'training_pop_page'   => $training_pop_page,
-	    'training_pop_id'     => $training_pop_id,
-	    'training_pop_name'   => $training_pop_name,
-	    'prediction_pop_name' => $prediction_pop_name,
-	    'prediction_pop_page' => $prediction_pop_page,
+	    'training_pop_page'   => $tr_pop_page,
+	    'training_pop_id'     => $tr_pop_id,
+	    'training_pop_name'   => $tr_pop_name,
+	    'prediction_pop_name' => $sel_pop_name,
+	    'prediction_pop_page' => $sel_pop_page,
 	    'trait_name'          => $trait_name,
 	    'trait_id'            => $trait_id,
 	    'model_page'          => $model_page,	
@@ -786,7 +788,7 @@ sub run_analysis {
     my $referer          = $c->req->referer; 
    
     my @selected_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-     
+
     eval
     {
 	my $training_pages = 'solgs\/traits\/all\/population\/'
