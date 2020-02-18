@@ -15,6 +15,7 @@ use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
 use CXGN::Location::LocationLookup;
 use JSON;
+use JSON qw( decode_json );
 use Data::Dumper;
 use Digest::MD5;
 use Try::Tiny;
@@ -144,31 +145,47 @@ sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
 
+	# foreach (keys %$params){
+	# 	my $values = $params->{$_};
+	# 	my $ret_val;
+	# 	if (ref \$values eq 'SCALAR' || ref $values eq 'ARRAY'){
+
+	# 		if (ref \$values eq 'SCALAR') {
+	# 			push @$ret_val, $values;
+	# 		} elsif (ref $values eq 'ARRAY'){
+	# 			$ret_val = $values;
+	# 		}
+
+	# 		@$ret_val = grep {$_ ne undef} @$ret_val;
+	# 		@$ret_val = grep {$_ ne ''} @$ret_val;
+	# 		$_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
+	# 		$params->{$_} = $ret_val;
+	# 	}
+	# 	elsif (ref $values eq 'HASH') {
+	# 		$params->{$_} = [$values];
+	# 	}
+	# 	else {
+	# 		die "Input $_ is not a scalar, arrayref, or a single level hash\n";
+	# 	}
+
+	# }
 	foreach (keys %$params){
 		my $values = $params->{$_};
 		my $ret_val;
-		if (ref \$values eq 'SCALAR' || ref $values eq 'ARRAY'){
-
-			if (ref \$values eq 'SCALAR') {
-				push @$ret_val, $values;
-			} elsif (ref $values eq 'ARRAY'){
-				$ret_val = $values;
-			}
-
-			@$ret_val = grep {$_ ne undef} @$ret_val;
-			@$ret_val = grep {$_ ne ''} @$ret_val;
-			$_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
-			$params->{$_} = $ret_val;
+		if (ref \$values eq 'SCALAR'){
+			push @$ret_val, $values;
+		} elsif (ref $values eq 'ARRAY'){
+			$ret_val = $values;
+        } elsif (ref $values eq 'HASH'){
+            $ret_val = [$values];
+		} else {
+			die "Input is not a scalar or an arrayref\n";
 		}
-		elsif (ref $values eq 'HASH') {
-			$params->{$_} = _clean_inputs($values);
-		}
-		else {
-			die "Input $_ is not a scalar, arrayref, or a single level hash\n";
-		}
-
+		@$ret_val = grep {$_ ne undef} @$ret_val;
+		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
+		$params->{$_} = $ret_val;
 	}
-
 	return $params;
 }
 
@@ -384,6 +401,18 @@ sub crops_GET {
 	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Crops');
+	my $brapi_package_result = $brapi_module->crops($supported_crop);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub commoncropnames : Chained('brapi') PathPart('commoncropnames') Args(0) : ActionClass('REST') { }
+
+sub commoncropnames_GET {
+	my $self = shift;
+	my $c = shift;
+	my $supported_crop = $c->config->{'supportedCrop'};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CommonCropNames');
 	my $brapi_package_result = $brapi_module->crops($supported_crop);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -2113,6 +2142,34 @@ sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/obser
     retrieve_results($self, $c, $search_id, 'ObservationUnits');
 }
 
+sub studies_observations_v2 :  Chained('brapi') PathPart('observationunits') Args(1) ActionClass('REST') { }
+
+sub studies_observations_v2_PUT {
+    my $self = shift;
+    my $c = shift;
+    my $observation_unit_db_id = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    #my $auth = _authenticate_user($c);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->observationunits_store($observation_unit_db_id,$clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub studies_observation_v2 :  Chained('brapi') PathPart('observationunits') Args(0) ActionClass('REST') { }
+
+sub studies_observation_v2_GET {
+	my $self = shift;
+	my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
+    _standard_response_construction($c, $brapi_package_result);
+}
+
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
 
 sub phenotypes_search_table_POST {
@@ -2521,6 +2578,21 @@ sub locations_list_GET {
 	my $brapi_package_result = $brapi_module->locations_list();
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub locations_detail : Chained('brapi') PathPart('locations') Args(1) : ActionClass('REST') { }
+
+sub locations_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my $location_id = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Locations');
+	my $brapi_package_result = $brapi_module->locations_list($location_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 
 sub observationvariable_data_type_list : Chained('brapi') PathPart('variables/datatypes') Args(0) : ActionClass('REST') { }
 

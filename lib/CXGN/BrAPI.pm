@@ -28,8 +28,12 @@ use CXGN::BrAPI::v1::Variables;
 use CXGN::BrAPI::v2::Results;
 use CXGN::BrAPI::v2::ObservationUnits;
 use CXGN::BrAPI::v2::Studies;
-use CXGN::BrAPI::v2::Crops;
-
+use CXGN::BrAPI::v2::CommonCropNames;
+use CXGN::BrAPI::v2::Locations;
+use CXGN::BrAPI::v2::Samples;
+use CXGN::BrAPI::v2::Trials;
+use CXGN::BrAPI::v2::Programs;
+use CXGN::BrAPI::v2::Traits;
 
 has 'version' => (
 	isa => 'Str',

@@ -128,7 +128,9 @@ sub search {
             positionCoordinateXType => '',
             positionCoordinateY => $obs_unit->{obsunit_row_number},
             positionCoordinateYType => '',
-            replicate => $obs_unit->{obsunit_rep}
+            replicate => $obs_unit->{obsunit_rep},
+            plotNumber => $obs_unit->{obsunit_plot_number},
+            plantNumber => $obs_unit->{obsunit_plant_number}
         );
         my $brapi_observationUnitPosition = parse_json(encode_json \%observationUnitPosition);
 
@@ -144,8 +146,6 @@ sub search {
             observationUnitXref => '',
             programName => $obs_unit->{breeding_program_name},
             programDbId => $obs_unit->{breeding_program_id},
-            plotNumber => $obs_unit->{obsunit_plot_number},
-            plantNumber => $obs_unit->{obsunit_plant_number},
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,

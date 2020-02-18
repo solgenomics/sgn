@@ -1,4 +1,4 @@
-package CXGN::BrAPI::v2::Crops;
+package CXGN::BrAPI::v2::CommonCropNames;
 
 use Moose;
 use Data::Dumper;
