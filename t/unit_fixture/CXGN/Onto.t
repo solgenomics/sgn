@@ -430,4 +430,17 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 ok($response->{success});
 
+$mech->post_ok('http://localhost:3010/ajax/onto/store_ontology_identifier',
+    [
+        "sgn_session_id"=>$sgn_session_id,
+        "ontology_name"=> "NewOntology1",
+        "ontology_description"=> "new ontology",
+        "ontology_identifier"=> "NOO1",
+        "ontology_type"=> "method_ontology",
+    ]
+);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+ok($response->{success});
+
 done_testing();
