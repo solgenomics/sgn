@@ -113,8 +113,8 @@ sub _validate_with_plugin {
         my $cross_progeny_linkage = CXGN::Stock::RelatedStocks->get_cross_of_progeny($progeny_name, $schema);
         my @previous_cross = @$cross_progeny_linkage;
         if (scalar(@previous_cross) > 0) {
-            push @error_messages, "The following progeny is already associated with the cross unique id: " $previous_cross[0][1];
-            $errors{'existing_cross_linkage'} = \@previous_cross;
+            push @error_messages, "The following progeny name is already associated with a cross unique id: ".$progeny_name;
+            $errors{'existing_another_cross_linkage'} = $progeny_name;
         }
     }
 
