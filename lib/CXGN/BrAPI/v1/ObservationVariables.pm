@@ -69,8 +69,8 @@ sub observation_variable_data_types {
 sub observation_variable_ontologies {
     my $self = shift;
 	my $inputs = shift;
-	my $name_spaces = $inputs->{name_spaces};
-	my $cvprop_types = $inputs->{cvprop_type_names} || [];
+	my $name_spaces = $inputs->{name_spaces} || [];
+	my $cvprop_types = $inputs->{cvprop_type_names} || ['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology'];
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -84,11 +84,19 @@ sub observation_variable_ontologies {
     my $composable_cv_prop_sql;
     if (scalar(@composable_cv_prop_types)>0) {
         $composable_cv_prop_sql = join ("," , @composable_cv_prop_types);
-        $composable_cv_prop_sql = " AND cvprop.type_id IN ($composable_cv_prop_sql)";
+        $composable_cv_prop_sql = " cvprop.type_id IN ($composable_cv_prop_sql)";
+    }
+
+    # Add db name spaces for databases tagged as trait_ontology, method_ontology, etc for the cvprop_type_names being queried. This added name spaces onto those taken from onto_root_namespaces conf key. When using the "add ontology web interface", ontologies are tagged with a cvprop type; however, when loading obo file ontologies, the cvprop must be added afterward.
+    my $q1 = "SELECT distinct(db.name) FROM db JOIN dbxref ON(db.db_id = dbxref.db_id) JOIN cvterm ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN cv ON(cvterm.cv_id = cv.cv_id) JOIN cvprop ON(cvprop.cv_id=cv.cv_id) WHERE $composable_cv_prop_sql;";
+    my $sth1 = $self->bcs_schema->storage->dbh->prepare($q1);
+    $sth1->execute();
+    while (my ($db_name) = $sth1->fetchrow_array()) {
+        push @$name_spaces, $db_name;
     }
 
 	#Using code pattern from SGN::Controller::AJAX::Onto->roots_GET
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) JOIN cvprop USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? $composable_cv_prop_sql;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, dbxref.version, dbxref.description, cv.cv_id, cv.name, cv.definition FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) JOIN cv USING(cv_id) JOIN cvprop USING(cv_id) LEFT JOIN cvterm_relationship ON (cvterm.cvterm_id=cvterm_relationship.subject_id) WHERE cvterm_relationship.subject_id IS NULL AND is_obsolete= 0 AND is_relationshiptype = 0 and db.name=? AND $composable_cv_prop_sql;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	foreach (@$name_spaces){
 		$sth->execute($_);
