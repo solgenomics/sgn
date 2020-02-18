@@ -4205,7 +4205,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
 
 
     open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
-        print $F_aux 'stock_id,phenotype_value,trait_name,field_trial_id,accession_id,female_id,male_id';
+        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id';
         if (scalar(@aux_trait_id)>0) {
             my $aux_trait_counter = 0;
             foreach (@aux_trait_id) {
@@ -4282,7 +4282,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     close($F_aux);
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        print $F "stock_id,image_path,image_type,day,drone_run_project_id\n";
+        print $F "stock_id,image_path,image_type,day,drone_run_project_id,value\n";
 
         # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
         if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
@@ -4299,7 +4299,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 print $F "$image_fullpath,";
                                 print $F "$image_type,";
                                 print $F "$day_time,";
-                                print $F "$drone_run_project_id\n";
+                                print $F "$drone_run_project_id,";
+                                print $F "$value\n";
                             }
                         }
                     }
@@ -4321,7 +4322,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 print $F "$image_fullpath,";
                                 print $F "$image_type,";
                                 print $F "$day_time,";
-                                print $F "$drone_run_project_id\n";
+                                print $F "$drone_run_project_id,";
+                                print $F "$value\n";
                             }
                         }
                     }
@@ -4439,10 +4441,10 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     if ($c->req->param('save_model') == 1) {
         my $model_name = $c->req->param('model_name');
         my $model_description = $c->req->param('model_description');
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
     }
 
-    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_temp_file => $archive_temp_output_model_file, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string };
+    $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_input_aux_file => $archive_temp_input_aux_file, model_temp_file => $archive_temp_output_model_file, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string };
 }
 
 sub drone_imagery_save_keras_model : Path('/api/drone_imagery/save_keras_model') : ActionClass('REST') { }
@@ -4455,6 +4457,7 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $model_file = $c->req->param('model_file');
     my $model_input_file = $c->req->param('model_input_file');
+    my $model_input_aux_file = $c->req->param('model_input_aux_file');
     my $model_name = $c->req->param('model_name');
     my $model_description = $c->req->param('model_description');
     my $trait_id = $c->req->param('trait_id');
@@ -4463,7 +4466,7 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
+    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $model_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
 }
 
 sub _perform_save_trained_keras_cnn_model {
@@ -4474,6 +4477,7 @@ sub _perform_save_trained_keras_cnn_model {
     my $field_trial_ids = shift;
     my $model_file = shift;
     my $model_input_file = shift;
+    my $model_input_aux_file = shift;
     my $model_name = shift;
     my $model_description = shift;
     my $drone_run_ids = shift;
@@ -4595,6 +4599,41 @@ sub _perform_save_trained_keras_cnn_model {
     my $experiment_files_model_input = $phenome_schema->resultset("NdExperimentMdFiles")->create({
         nd_experiment_id => $nd_experiment_id,
         file_id => $file_model_input_row->file_id()
+    });
+
+    my $model_input_aux_original_name = basename($model_input_aux_file);
+    my $archived_model_input_aux_file_type = 'trained_keras_cnn_model_input_aux_data_file';
+    print STDERR Dumper $model_input_original_name;
+
+    my $uploader_model_input_aux = CXGN::UploadFile->new({
+        tempfile => $model_input_aux_file,
+        subdirectory => $archived_model_input_aux_file_type,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $model_input_aux_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_model_input_aux_filename_with_path = $uploader_model_input_aux->archive();
+    my $md5_model_input_aux = $uploader_model_input_aux->get_md5($archived_model_input_aux_filename_with_path);
+    if (!$archived_model_input_aux_filename_with_path) {
+        $c->stash->{rest} = { error => "Could not save file $archived_model_input_aux_filename_with_path in archive." };
+        $c->detach();
+    }
+    unlink $model_input_aux_file;
+    print STDERR "Archived Keras CNN Model Input Aux Data File: $archived_model_input_aux_filename_with_path\n";
+
+    my $file_model_input_aux_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_model_input_aux_filename_with_path),
+        dirname => dirname($archived_model_input_aux_filename_with_path),
+        filetype => $archived_model_input_aux_file_type,
+        md5checksum => $md5_model_input_aux->hexdigest(),
+        metadata_id => $md_row->metadata_id()
+    });
+
+    my $experiment_files_model_input_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+        nd_experiment_id => $nd_experiment_id,
+        file_id => $file_model_input_aux_row->file_id()
     });
 
     $c->stash->{rest} = { success => 1 };
@@ -4733,6 +4772,30 @@ sub _perform_keras_cnn_predict {
         };
     }
 
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my $plot_list_string = join ',', @seen_plots;
+    my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
+        FROM stock AS plot
+        JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
+        JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
+        JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+        JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+        JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+        JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+        WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %plot_pedigrees_found = ();
+    while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+        $plot_pedigrees_found{$plot_stock_id} = {
+            female_stock_id => $female_parent_stock_id,
+            male_stock_id => $male_parent_stock_id
+        };
+    }
+
     my $model_q = "SELECT basename, dirname, trained_trait.value, model_type.value
         FROM metadata.md_files
         JOIN phenome.nd_experiment_md_files using(file_id)
@@ -4764,6 +4827,18 @@ sub _perform_keras_cnn_predict {
     my ($basename_training_input, $filename_training_input) = $h_training_input->fetchrow_array();
     my $training_input_data_file = $filename_training_input."/".$basename_training_input;
 
+    my $model_q_training_input_aux = "SELECT basename, dirname
+        FROM metadata.md_files
+        JOIN phenome.nd_experiment_md_files using(file_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_protocol using(nd_experiment_id)
+        JOIN nd_protocol using(nd_protocol_id)
+        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model_input_aux_data_file';";
+    my $h_training_input_aux = $schema->storage->dbh()->prepare($model_q_training_input_aux);
+    $h_training_input_aux->execute($model_id);
+    my ($basename_training_input_aux, $filename_training_input_aux) = $h_training_input_aux->fetchrow_array();
+    my $training_input_aux_data_file = $filename_training_input_aux."/".$basename_training_input_aux;
+
     my @trait_ids = ($trait_id);
     print STDERR Dumper \@trait_ids;
     my @aux_trait_id = ();
@@ -4787,8 +4862,8 @@ sub _perform_keras_cnn_predict {
     my ($data, $unique_traits) = $phenotypes_search->search();
 
     my %phenotype_data_hash;
+    my %aux_data_hash;
     foreach my $d (@$data) {
-        $phenotype_data_hash{$d->{observationunit_stock_id}}->{germplasm_stock_id} = $d->{germplasm_stock_id};
         foreach my $o (@{$d->{observations}}) {
             if ($o->{trait_id} == $trait_id) {
                 $phenotype_data_hash{$d->{observationunit_stock_id}}->{trait_value} = {
@@ -4799,12 +4874,13 @@ sub _perform_keras_cnn_predict {
                 $phenotype_data_hash{$d->{observationunit_stock_id}}->{aux_trait_value}->{$o->{trait_id}} = $o->{value};
             }
         }
+        $aux_data_hash{$d->{trial_id}}->{$d->{observationunit_stock_id}} = $d;
     }
-    #print STDERR Dumper \%data_hash;
     undef $data;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
+    my $archive_temp_input_aux_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
     my $archive_temp_output_evaluation_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputevaluationfileXXXX');
     my $archive_temp_output_activation_file = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputactivationfileXXXX');
@@ -4813,9 +4889,88 @@ sub _perform_keras_cnn_predict {
     $archive_temp_output_activation_file .= ".pdf";
     my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
 
-    # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
-    if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
-        open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+    open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
+        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id';
+        if (scalar(@aux_trait_id)>0) {
+            my $aux_trait_counter = 0;
+            foreach (@aux_trait_id) {
+                print $F_aux ",aux_trait_$aux_trait_counter";
+                $aux_trait_counter++;
+            }
+        }
+        print $F_aux "\n";
+
+        # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
+        if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
+            foreach my $field_trial_id (sort keys %seen_field_trial_ids){
+                foreach my $stock_id (sort keys %seen_stock_ids){
+                    foreach my $image_type (sort keys %seen_image_types) {
+                        my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
+                        my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                        my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        if (defined($value)) {
+                            print $F_aux "$stock_id,";
+                            print $F_aux "$value,";
+                            print $F_aux "$trait_name,";
+                            print $F_aux "$field_trial_id,";
+                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            if (scalar(@aux_trait_id)>0) {
+                                print $F_aux ',';
+                                my @aux_values;
+                                foreach my $aux_trait (@aux_trait_id) {
+                                    my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    push @aux_values, $aux_value;
+                                }
+                                my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
+                                print $F_aux $aux_values_string;
+                            }
+                            print $F_aux "\n";
+                        }
+                    }
+                }
+            }
+        }
+        #Non-LSTM models group image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
+        else {
+            foreach my $field_trial_id (sort keys %seen_field_trial_ids){
+                foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                    foreach my $stock_id (sort keys %seen_stock_ids){
+                        my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
+                        my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                        my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        if (defined($value)) {
+                            print $F_aux "$stock_id,";
+                            print $F_aux "$value,";
+                            print $F_aux "$trait_name,";
+                            print $F_aux "$field_trial_id,";
+                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
+                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            if (scalar(@aux_trait_id)>0) {
+                                print $F_aux ',';
+                                my @aux_values;
+                                foreach my $aux_trait (@aux_trait_id) {
+                                    my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    push @aux_values, $aux_value;
+                                }
+                                my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
+                                print $F_aux $aux_values_string;
+                            }
+                            print $F_aux "\n";
+                        }
+                    }
+                }
+            }
+        }
+    close($F_aux);
+
+    open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        print $F "stock_id,image_path,image_type,day,drone_run_project_id,value\n";
+
+        # LSTM model uses longitudinal time information, so input ordered by field_trial, then stock_id, then by image_type, then by chronological ascending time for each drone run
+        if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
             foreach my $field_trial_id (sort keys %seen_field_trial_ids){
                 foreach my $stock_id (sort keys %seen_stock_ids){
                     foreach my $image_type (sort keys %seen_image_types) {
@@ -4823,37 +4978,22 @@ sub _perform_keras_cnn_predict {
                             my $data = $data_hash{$field_trial_id}->{$stock_id}->{$image_type}->{$day_time};
                             my $image_fullpath = $data->{image};
                             my $drone_run_project_id = $data->{drone_run_project_id};
-                            my $value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{trait_value}->{value} : '';
-                            my $trait_name = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name} : '';
-                            print $F '"'.$stock_id.'",';
-                            print $F '"'.$image_fullpath.'",';
-                            print $F '"'.$value.'",';
-                            print $F '"'.$trait_name.'",';
-                            print $F '"'.$image_type.'",';
-                            print $F '"'.$day_time.'",';
-                            print $F '"'.$drone_run_project_id.'",';
-                            print $F '"'.$field_trial_id.'",';
-                            print $F '"'.$stock_info{$stock_id}->{germplasm_stock_id}.'"';
-                            if (scalar(@aux_trait_id)>0) {
-                                print $F ',"';
-                                my @aux_values;
-                                foreach my $aux_trait (@aux_trait_id) {
-                                    my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
-                                    push @aux_values, $aux_value;
-                                }
-                                my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
-                                print $F $aux_values_string.'"';
+                            my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                            if (defined($value)) {
+                                print $F "$stock_id,";
+                                print $F "$image_fullpath,";
+                                print $F "$image_type,";
+                                print $F "$day_time,";
+                                print $F "$drone_run_project_id,";
+                                print $F "$value\n";
                             }
-                            print $F "\n";
                         }
                     }
                 }
             }
-        close($F);
-    }
-    #Non-LSTM models group 9 image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
-    else {
-        open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
+        }
+        #Non-LSTM models group image types for each stock into a single montage, so the input is ordered by field trial, then ascending chronological time, then by stock_id, and then by image_type.
+        else {
             foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
                 foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
                     foreach my $stock_id (sort keys %seen_stock_ids){
@@ -4861,35 +5001,24 @@ sub _perform_keras_cnn_predict {
                             my $data = $data_hash{$field_trial_id}->{$stock_id}->{$image_type}->{$day_time};
                             my $image_fullpath = $data->{image};
                             my $drone_run_project_id = $data->{drone_run_project_id};
-                            my $value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{trait_value}->{value} : '';
-                            my $trait_name = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name} : '';
-                            print $F '"'.$stock_id.'",';
-                            print $F '"'.$image_fullpath.'",';
-                            print $F '"'.$value.'",';
-                            print $F '"'.$trait_name.'",';
-                            print $F '"'.$image_type.'",';
-                            print $F '"'.$day_time.'",';
-                            print $F '"'.$drone_run_project_id.'",';
-                            print $F '"'.$field_trial_id.'",';
-                            print $F '"'.$stock_info{$stock_id}->{germplasm_stock_id}.'"';
-                            if (scalar(@aux_trait_id)>0) {
-                                print $F ',"';
-                                my @aux_values;
-                                foreach my $aux_trait (@aux_trait_id) {
-                                    my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
-                                    push @aux_values, $aux_value;
-                                }
-                                my $aux_values_string = scalar(@aux_values)>0 ? join '","', @aux_values : '';
-                                print $F $aux_values_string.'"';
+                            my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
+                            if (defined($value)) {
+                                print $F "$stock_id,";
+                                print $F "$image_fullpath,";
+                                print $F "$image_type,";
+                                print $F "$day_time,";
+                                print $F "$drone_run_project_id,";
+                                print $F "$value\n";
                             }
-                            print $F "\n";
                         }
                     }
                 }
             }
-        close($F);
-    }
+        }
+    close($F);
+
     undef %data_hash;
+    undef %aux_data_hash;
 
     print STDERR "Predicting $trained_trait_name from Keras CNN $model_type\n";
 
@@ -4898,7 +5027,7 @@ sub _perform_keras_cnn_predict {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --training_aux_data_input_file \''.$training_input_aux_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 

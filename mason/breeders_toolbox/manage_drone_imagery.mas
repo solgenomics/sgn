@@ -2807,6 +2807,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
     var manage_drone_imagery_train_keras_temporary_model_file = '';
     var manage_drone_imagery_train_keras_temporary_model_input_file = '';
+    var manage_drone_imagery_train_keras_temporary_model_input_aux_file = '';
     var manage_drone_imagery_train_keras_class_map = '';
 
     var manage_drone_imagery_predict_keras_drone_run_ids = [];
@@ -2924,6 +2925,7 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_train_keras_model_confirm_step').click(function(){
         manage_drone_imagery_train_keras_temporary_model_file = '';
         manage_drone_imagery_train_keras_temporary_model_input_file = '';
+        manage_drone_imagery_train_keras_temporary_model_input_aux_file = '';
         manage_drone_imagery_train_keras_class_map = '';
 
         var drone_imagery_keras_model_name = jQuery('#drone_image_train_keras_model_name').val();
@@ -2975,6 +2977,7 @@ jQuery(document).ready(function() {
                     //html = html + '<hr><h3>Save Model for Predictions</h3><div class="form-horizontal"><div class="form-group"><label class="col-sm-6 control-label">Model Name: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_name" name="drone_imagery_save_keras_model_name" type="text" /></div></div><div class="form-group"><label class="col-sm-6 control-label">Model Description: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_desc" name="drone_imagery_save_keras_model_desc" type="text" /></div></div></div><button class="btn btn-primary" id="drone_imagery_keras_model_save">Save Model (Required For Using For Prediction)</button>';
 
                     manage_drone_imagery_train_keras_temporary_model_input_file = response.model_input_file;
+                    manage_drone_imagery_train_keras_temporary_model_input_aux_file = response.model_input_aux_file;
                     manage_drone_imagery_train_keras_temporary_model_file = response.model_temp_file;
                     manage_drone_imagery_train_keras_class_map = response.class_map;
 
@@ -2997,7 +3000,7 @@ jQuery(document).ready(function() {
         }
         else {
             jQuery.ajax({
-                url : '/api/drone_imagery/save_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&model_file='+manage_drone_imagery_train_keras_temporary_model_file+'&model_input_file='+manage_drone_imagery_train_keras_temporary_model_input_file+'&model_name='+manage_drone_imagery_train_keras_model_save_name+'&model_description='+manage_drone_imagery_train_keras_model_save_desc+'&class_map='+JSON.stringify(manage_drone_imagery_train_keras_class_map)+'&trait_id='+manage_drone_imagery_train_keras_trait_id,
+                url : '/api/drone_imagery/save_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&model_file='+manage_drone_imagery_train_keras_temporary_model_file+'&model_input_file='+manage_drone_imagery_train_keras_temporary_model_input_file+'&model_input_aux_file='+manage_dromanage_drone_imagery_train_keras_temporary_model_input_aux_file+'&model_name='+manage_drone_imagery_train_keras_model_save_name+'&model_description='+manage_drone_imagery_train_keras_model_save_desc+'&class_map='+JSON.stringify(manage_drone_imagery_train_keras_class_map)+'&trait_id='+manage_drone_imagery_train_keras_trait_id,
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -3038,6 +3041,7 @@ jQuery(document).ready(function() {
 
             jQuery('#drone_image_predict_keras_drone_runs_table').DataTable({
                 destroy : true,
+                paging : false,
                 ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=predict_keras_drone_imagery_drone_run_select&checkbox_select_all=1&field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string
             });
 
