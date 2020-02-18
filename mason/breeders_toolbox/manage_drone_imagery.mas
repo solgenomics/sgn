@@ -1177,7 +1177,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <table class="table table-bordered table-hover" id="drone_image_train_keras_drone_runs_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
+                                <th>Select <br/><input type="checkbox" id="drone_image_train_keras_drone_runs_table_select_all" checked>Select All</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Type</th>
                                 <th>Drone Run Description</th>
@@ -2838,6 +2838,7 @@ jQuery(document).ready(function() {
             get_select_box('traits', 'drone_imagery_train_keras_cnn_aux_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_aux_trait_ids', 'id' : 'drone_imagery_train_keras_cnn_aux_trait_ids', 'empty':1, 'multiple':1, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id_string, 'stock_type':'plot' });
 
             jQuery('#drone_image_train_keras_drone_runs_table').DataTable({
+                paging : false,
                 destroy : true,
                 ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=train_keras_drone_imagery_drone_run_select&checkbox_select_all=1&field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string
             });
@@ -2889,6 +2890,12 @@ jQuery(document).ready(function() {
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
         }
         return false;
+    });
+
+    jQuery('#drone_image_train_keras_drone_runs_table_select_all').change(function(){
+        jQuery('input[name="train_keras_drone_imagery_drone_run_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_train_keras_drone_runs_table_select_all').prop("checked"));
+        });
     });
 
     jQuery('#drone_image_train_keras_plot_polygon_image_type_table_select_all').change(function() {
