@@ -22,7 +22,8 @@ my $genotypes_search = CXGN::Genotype::Download::DosageMatrix->new({
     marker_name_list=>['S80_265728', 'S80_265723'],
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     limit=>$limit,
-    offset=>$offset
+    offset=>$offset,
+    compute_from_parents=>0 #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -132,6 +133,12 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 1
 );
 
+has 'compute_from_parents' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -163,9 +170,11 @@ sub download {
     my $chromosome_list = $self->chromosome_list;
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
+    my $compute_from_parents = $self->compute_from_parents;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$c->dbic_schema("CXGN::People::Schema"),
         cache_root=>$cache_root_dir,
         accession_list=>$accession_list,
         tissue_sample_list=>$tissue_sample_list,
@@ -184,13 +193,19 @@ sub download {
         limit=>$limit,
         offset=>$offset
     });
-    return $genotypes_search->get_cached_file_dosage_matrix(
+    my @required_config = (
         $c->config->{cluster_shared_tempdir},
         $c->config->{backend},
         $c->config->{cluster_host},
         $c->config->{'web_cluster_queue'},
         $c->config->{basepath}
     );
+    if ($compute_from_parents) {
+        return $genotypes_search->get_cached_file_dosage_matrix_compute_from_parents(@required_config);
+    }
+    else {
+        return $genotypes_search->get_cached_file_dosage_matrix(@required_config);
+    }
 }
 
 1;

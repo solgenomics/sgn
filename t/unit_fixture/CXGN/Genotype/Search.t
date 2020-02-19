@@ -12,6 +12,7 @@ local $Data::Dumper::Indent = 0;
 
 my $t = SGN::Test::Fixture->new();
 my $schema = $t->bcs_schema;
+my $people_schema = $t->people_schema;
 
 
 my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
@@ -40,6 +41,7 @@ print STDERR Dumper $protocol_id;
 # Extract and test genotype search for subset of markers
 my $genotypes_search_marker_subset = CXGN::Genotype::Search->new(
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_list => $ds->accessions(),
 #    marker_name_list => ['S7520_730357'],
 #    marker_name_list => ['S7520_730357', 'S7107_65000', 'S3049_609125'],
@@ -57,6 +59,7 @@ is($total_count_ms, 6);
 # Extract and test genotype search for all markers
 my $genotypes_search = CXGN::Genotype::Search->new(
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_list => $ds->accessions(),
     protocol_id_list=>[$protocol_id],
     genotypeprop_hash_select=>['DS'],

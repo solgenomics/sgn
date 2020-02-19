@@ -731,6 +731,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         $filename = 'BreedBaseGenotypesDownload.tsv';
     }
 
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
@@ -743,6 +745,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             chromosome_list=>$chromosome_numbers,
             start_position=>$start_position,
             end_position=>$end_position,
+            compute_from_parents=>$compute_from_parents
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],
@@ -789,13 +792,15 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
 
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
-        get_grm_for_parental_accessions=>1
+        get_grm_for_parental_accessions=>$compute_from_parents
     });
     my $file_handle = $geno->download_grm();
 
@@ -834,6 +839,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my @trial_list = map { $_->[1] } @$trial_data;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $t = CXGN::List::Transform->new();
 
 
@@ -861,6 +867,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         accession_list=>$accession_id_data->{transform},
         trial_list=>$trial_id_data->{transform},
         protocol_id_list=>[$protocol_id]
