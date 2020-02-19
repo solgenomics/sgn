@@ -28,27 +28,11 @@ sub marker_effects_file {
 
     my $data_set_type = $c->stash->{data_set_type};
        
-    my $cache_data;
-
-    # if ($data_set_type =~ /combined populations/)
-    # {
-    #     my $combo_identifier = $c->stash->{combo_pops_id}; 
-       
-    #     $cache_data = {key       => 'marker_effects_combined_pops_'.  $trait . '_' . $combo_identifier,
-    #                    file      => 'marker_effects_'. $trait . '_' . $combo_identifier . '_combined_pops' . '.txt',
-    #                    stash_key => 'marker_effects_file',
-    # 		       cache_dir => $c->stash->{solgs_cache_dir}
-    #     };
-    # }
-    # else
-    # {
-    
-     my   $cache_data = {key    => 'marker_effects_' . $file_id,
+    my   $cache_data = {key    => 'marker_effects_' . $file_id,
                       file      => 'marker_effects_' . $file_id . '.txt',
                       stash_key => 'marker_effects_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
        };
-    #}
 
     $self->cache_file($c, $cache_data);
 
@@ -69,24 +53,12 @@ sub variance_components_file {
 
     no warnings 'uninitialized';
 
-    # if ($data_set_type =~ /combined populations/)
-    # {
-    #     my $combo_identifier = $c->stash->{combo_pops_id}; 
 
-    #     $cache_data = {key       => 'variance_components_combined_pops_'.  $trait . "_". $combo_identifier,
-    #                    file      => 'variance_components_'. $trait . '_' . $combo_identifier. '_combined_pops.txt',
-    #                    stash_key => 'variance_components_file',
-    # 		       cache_dir => $c->stash->{solgs_cache_dir}
-    #     };
-    # }
-    # else 
-    # {
-        my $cache_data = {key    => 'variance_components_' . $file_id,
-                       file      => 'variance_components_' . $file_id. '.txt',
-                       stash_key => 'variance_components_file',
-		       cache_dir => $c->stash->{solgs_cache_dir}
-        };
-    #}
+    my $cache_data = {key    => 'variance_components_' . $file_id,
+		      file      => 'variance_components_' . $file_id. '.txt',
+		      stash_key => 'variance_components_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
+    };    
 
     $self->cache_file($c, $cache_data);
 }
@@ -98,30 +70,16 @@ sub trait_phenodata_file {
     my $pop_id        = $c->stash->{pop_id};
     my $trait_abbr    = $c->stash->{trait_abbr};    
     my $data_set_type = $c->stash->{data_set_type};
-   
-    my $cache_data;
     
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
 
-	if ($data_set_type =~ /combined populations/)
-	{
-	    my $combo_identifier = $c->stash->{combo_pops_id}; 
-	    $cache_data = {key       => 'phenotype_trait_combined_pops_'.  $trait_abbr . "_". $combo_identifier,
-			   file      => 'phenotype_data_' . $trait_abbr . '_'. $combo_identifier. '_combined.txt',
-			   stash_key => 'trait_phenodata_file',
-			   cache_dir => $c->stash->{solgs_cache_dir}
-	    };
-	}
-	else 
-	{
-	    $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait_abbr,
-			   file      => 'phenotype_data_' . $trait_abbr .'_' . $pop_id . '.txt',
-			   stash_key => 'trait_phenodata_file',
-			   cache_dir => $c->stash->{solgs_cache_dir}
-	    };
-	}
+	my $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait_abbr,
+			  file      => 'phenotype_data_' . $trait_abbr .'_' . $pop_id . '.txt',
+			  stash_key => 'trait_phenodata_file',
+			  cache_dir => $c->stash->{solgs_cache_dir}
+	};
 
 	$self->cache_file($c, $cache_data);
     }
@@ -340,26 +298,14 @@ sub validation_file {
     my $data_set_type = $c->stash->{data_set_type};
     no warnings 'uninitialized';
 
-    # if ($data_set_type =~ /combined populations/) 
-    # {
-    #     my $combo_identifier = $c->stash->{combo_pops_id};
-    #     $cache_data = {key       => 'cross_validation_combined_pops_'.  $trait . "_${combo_identifier}",
-    #                    file      => 'cross_validation_'. $trait . '_' . $combo_identifier . '_combined_pops.txt' ,
-    #                    stash_key => 'validation_file',
-    # 		       cache_dir => $c->stash->{solgs_cache_dir}
-    #     };
-    # }
-    # else
-    # {
 
-        my $cache_data = {
-	    key       => 'cross_validation_' . $file_id, 
-	    file      => 'cross_validation_' . $file_id . '.txt',
-	    stash_key => 'validation_file',
-	    cache_dir => $c->stash->{solgs_cache_dir}
-        };
-    #}
-
+    my $cache_data = {
+	key       => 'cross_validation_' . $file_id, 
+	file      => 'cross_validation_' . $file_id . '.txt',
+	stash_key => 'validation_file',
+	cache_dir => $c->stash->{solgs_cache_dir}
+    };
+  
     $self->cache_file($c, $cache_data);
 }
 
@@ -369,10 +315,11 @@ sub combined_gebvs_file {
 
     my $pop_id = $c->stash->{pop_id};
     
-    my $cache_data = {key       => 'selected_traits_gebv_' . $pop_id . '_' . $identifier, 
-                      file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier . '.txt',
-                      stash_key => 'selected_traits_gebv_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+    my $cache_data = {
+	key       => 'selected_traits_gebv_' . $pop_id . '_' . $identifier, 
+	file      => 'selected_traits_gebv_' . $pop_id . '_' . $identifier . '.txt',
+	stash_key => 'selected_traits_gebv_file',
+	cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $self->cache_file($c, $cache_data);
