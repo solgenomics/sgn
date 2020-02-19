@@ -4680,6 +4680,16 @@ sub _perform_keras_cnn_predict {
     my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
+    my $plot_polygon_rgb_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery', 'project_md_image')->cvterm_id();
+    my $plot_polygon_green_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_2', 'project_md_image')->cvterm_id();
+    my $plot_polygon_red_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_3', 'project_md_image')->cvterm_id();
+    my $plot_polygon_red_threshold_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_3', 'project_md_image')->cvterm_id();
+
+    if (scalar(@$plot_polygon_type_ids) == 1) {
+        #To match standard_4 image types of micasense
+        $plot_polygon_type_ids = [$plot_polygon_rgb_cvterm_id, $plot_polygon_green_cvterm_id, $plot_polygon_red_cvterm_id, $plot_polygon_red_threshold_cvterm_id];
+    }
+
     my @accession_ids;
     if ($population_id && $population_id ne 'null') {
         my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
