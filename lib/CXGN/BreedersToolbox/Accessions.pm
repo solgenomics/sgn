@@ -39,26 +39,26 @@ has 'phenome_schema' => (
     is => 'rw'
 );
 
-sub get_all_accessions { 
+sub get_all_accessions {
     my $self = shift;
     my $schema = $self->schema();
 
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-    
-    my $rs = $self->schema->resultset('Stock::Stock')->search({type_id => $accession_cvterm->cvterm_id});
+
+    my $rs = $self->schema->resultset('Stock::Stock')->search({'me.is_obsolete' => { '!=' => 't' }, type_id => $accession_cvterm->cvterm_id});
     #my $rs = $self->schema->resultset('Stock::Stock')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
     my @accessions = ();
 
 
 
-    while (my $row = $rs->next()) { 
+    while (my $row = $rs->next()) {
 	push @accessions, [ $row->stock_id, $row->name, $row->description ];
     }
 
     return \@accessions;
 }
 
-sub get_all_populations { 
+sub get_all_populations {
     my $self = shift;
     my $schema = $self->schema();
 
@@ -67,7 +67,7 @@ sub get_all_populations {
     my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
 
     my $population_member_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
-    
+
     my $populations_rs = $schema->resultset("Stock::Stock")->search({
         'type_id' => $population_cvterm->cvterm_id(),
         'is_obsolete' => 'f'

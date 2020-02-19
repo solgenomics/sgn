@@ -52,7 +52,7 @@ sub genotyping_data_search_GET : Args(0) {
         protocolprop_marker_hash_select=>[],
         protocolprop_top_key_select=>[]
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #only gets metadata and not all genotype data!
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
