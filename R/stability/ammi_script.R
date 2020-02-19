@@ -8,10 +8,11 @@ library("dplyr")
 args = commandArgs(trailingOnly = TRUE)
 
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
-
-figure3_file_name <- args[2]
-figure4_file_name <- args[3]
-h2File <- args[4]
+study_trait <- args[2]
+study_trait
+figure3_file_name <- args[3]
+figure4_file_name <- args[4]
+h2File <- args[5]
 
 
 cat("Removing missing data...", "\n")

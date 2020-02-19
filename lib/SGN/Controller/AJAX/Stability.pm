@@ -11,11 +11,13 @@ use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
+#use SGN::Model::Cvterm;
+#use CXGN::List;
+#use CXGN::List::Validate;
+#use CXGN::Trial::Download;
+#use CXGN::Phenotypes::PhenotypeMatrix;
+#use CXGN::BreederSearch;
 use CXGN::Tools::Run;
-use CXGN::Page::UserPrefs;
-use CXGN::Tools::List qw/distinct evens/;
-use CXGN::Blast::Parse;
-use CXGN::Blast::SeqQuery;
 use Cwd qw(cwd);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -41,16 +43,43 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
-    
+    # my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
+    # mkdir $stability_tmp_output if ! -d $stability_tmp_output;
+    # my ($fh, $tempfile) = tempfile(
+    # "trait_XXXXXX",
+    #   DIR=> $stability_tmp_output,
+    # );
+
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
+#    my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
+#    mkdir $stability_tmp_output if ! -d $stability_tmp_output;
+#    my ($tmp_fh, $tempfile) = tempfile(
+#      "stability_download_XXXXX",
+#      DIR=> $stability_tmp_output,
+#    );
+#    my $pheno_filepath = $tempfile . "_phenotype.txt";
+
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
+#    my $temppath = $stability_tmp_output . "/" . $tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
+#    my $phenotypes = $ds->retrieve_phenotypes();
+#    my $trials_ref = $ds->retrieve_trials();
     print STDERR Dumper(@trait_info);
+#    my @trials = @$trials_ref;
+
+#    my $values_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
+#    copy($pheno_filepath,$values_path);
+
+#    my $file_basename = basename($pheno_filepath);
+#    my $file_response = "./documents/tempfiles/stability_files/" . $file_basename;
+#    print STDERR $file_response . "\n";
+#    my @co_pheno;
     $c->stash->{rest} = {
         options => \@trait_info,
         tempfile => $tempfile."_phenotype.txt",
@@ -68,7 +97,9 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
 
     $file = basename($file);
 
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "/tmp/vagrant/SGN-site/stability_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/stability_files/".$file);
+#    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, "static/documents/tempfiles/stability_files/".$file);
+#    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/stability_files/stability_download_0bDQ5_phenotype.txt");
     print STDERR Dumper($temppath);
 
     my $F;
@@ -82,6 +113,7 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     print STDERR Dumper($header);
     my @keys = split("\t", $header);
     print STDERR Dumper($keys[1]);
+# add this for loop to remove the crop ontology codes from the keys (and the preceding pipes)
     for(my $n=0; $n <@keys; $n++) {
         if ($keys[$n] =~ /\|CO\_/) {
         $keys[$n] =~ s/\|CO\_.*//;
@@ -106,60 +138,93 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
+
+
 sub generate_results: Path('/ajax/stability/generate_results') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
+    my $pc_check = $c->req->param('pc_check');
+    my $kinship_check = $c->req->param('kinship_check');
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("stability_files");
+#    my ($fh, $tempfiletest) = $c->tempfile(TEMPLATE=>"stability_files/stability_download_XXXXX");
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
     mkdir $stability_tmp_output if ! -d $stability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
       "stability_download_XXXXX",
       DIR=> $stability_tmp_output,
     );
-
+    #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
     my $pheno_filepath = $tempfile . "_phenotype.txt";
-
+    my $geno_filepath = $tempfile . "_genotype.txt";
+#    my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
+#    my $geno_filepath = "." . $tempfile . "_genotype.txt";
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-
+#    my $temppath = $c->config->{basepath}."/".$tempfile;
+##    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
     my $temppath = $stability_tmp_output . "/" . $tempfile;
 
+#    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
 
+##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+
+
+#    $ds-> @$trials_ref = retrieve_genotypes();
+    my $newtrait = $trait_id;
+    $newtrait =~ s/\s/\_/g;
+    $newtrait =~ s/\//\_/g;
+    print STDERR $newtrait . "\n";
+    my $tempfile2 = $tempfile;
+    my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
+    my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
-
-
-
-   # my $cmd = "Rscript " . $c->config->{basepath} . "/R/stability/2_blup_rscript.R " . $pheno_filepath . " " . $trait_id;
-   # system($cmd);
-    eval {
-    my $cmd = {
+    my $cmd = CXGN::Tools::Run->new(
+        {
             backend => $c->config->{backend},
+            submit_host => $c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/stability_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
-        };
-
-    my $job;
-    $job = CXGN::Tools::Run->new($cmd);
+        }
+    );
     $cmd->run_cluster(
             "Rscript ",
-            $c->config->{basepath} . "/R/stability/h2_blup_rscript.R",
-            $pheno_filepath
+            $c->config->{basepath} . "/R/stability/ammi_script.R",
+            $pheno_filepath,
+            $trait_id,
+            $figure3file,
+            $figure4file,
     );
-    $cmd->alive;
-    $cmd->is_cluster(1);
     $cmd->wait;
+
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
+    copy($figure3file,$figure_path);
+    copy($figure4file,$figure_path);
+#    my $figure3basename = $figure3file;
+
+#    $figure3basename =~ s/\/export\/prod\/tmp\/stability\_files\///;
+    my $figure3basename = basename($figure3file);
+    my $figure3file_response = "/documents/tempfiles/stability_files/" . $figure3basename;
+    my $figure4basename = basename($figure4file);
+    my $figure4file_response = "/documents/tempfiles/stability_files/" . $figure4basename;
+#    $figure4file_response =~ s/\.\/static//;
+    $c->stash->{rest} = {
+        figure3 => $figure3file_response,
+        figure4 => $figure4file_response,
+        dummy_response => $dataset_id,
+        dummy_response2 => $trait_id,
     };
-};
-    # my $figure_path = $c->{basepath} . "./documents/tempfiles/h2_files/";
+}
+
+1;
