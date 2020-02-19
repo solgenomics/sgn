@@ -1854,7 +1854,7 @@ sub get_stock_datatables_genotype_data_GET  {
         $genotype_search_params{tissue_sample_list} = [$stock_id];
     }
     my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #only gets metadata and not all genotype data!
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
