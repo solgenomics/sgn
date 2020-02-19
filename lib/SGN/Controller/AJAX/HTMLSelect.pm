@@ -650,7 +650,7 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
 sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $cvprop_type_names = $c->req->param("cvprop_type_name") ? decode_json $c->req->param("cvprop_type_name") : ['trait_ontology'];
+    my $cvprop_type_names = $c->req->param("cvprop_type_name") ? decode_json $c->req->param("cvprop_type_name") : ['trait_ontology', 'method_ontology', 'unit_ontology'];
     my $use_full_trait_name = $c->req->param("use_full_trait_name") || 0;
 
     my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
@@ -664,14 +664,7 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
         status => []
     });
 
-    #Using code pattern found in SGN::Controller::Ontology->onto_browser
-    my $onto_root_namespaces = $c->config->{trait_variable_onto_root_namespaces};
-    my @namespaces = split ", ", $onto_root_namespaces;
-    foreach my $n (@namespaces) {
-        $n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
-    }
-
-    my $result = $observation_variables->observation_variable_ontologies({name_spaces => \@namespaces, cvprop_type_names => $cvprop_type_names});
+    my $result = $observation_variables->observation_variable_ontologies({cvprop_type_names => $cvprop_type_names});
     #print STDERR Dumper $result;
 
     my @ontos;
@@ -1073,11 +1066,17 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
 
     my $empty = $c->request->param("empty") || '';
     my $multiple =  $c->req->param("multiple") || 0;
+    my $exclude_top_term =  $c->req->param("exclude_top_term") || 1;
 
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    my $exclude_top_sql = '';
+    if ($exclude_top_term) {
+        $exclude_top_sql = " AND dbxref.accession != '0000000' ";
+    }
+
     my @ontology_terms;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE db_id=$db_id ORDER BY cvterm.name;";
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE db_id=$db_id $exclude_top_sql ORDER BY cvterm.name;";
     my $sth = $bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
