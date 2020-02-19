@@ -20,12 +20,12 @@ use Storable qw/ nstore retrieve /;
 BEGIN { extends 'Catalyst::Controller' }
 
 
-sub check_pheno_corr_result :Path('/phenotype/heritability/check/result/') Args(1) {
+sub check_pheno_h2_result :Path('/phenotype/heritability/check/result/') Args(1) {
     my ($self, $c, $pop_id) = @_;
 
     $c->stash->{pop_id} = $pop_id;
 
-    $self->pheno_heritability_output_files($c);
+    $self->pheno_h2_output_files($c);
     my $h2_output_file = $c->stash->{h2_coefficients_json_file};
    
     my $ret->{result} = undef;
@@ -84,6 +84,46 @@ sub heritability_phenotype_data :Path('/heritability/phenotype/data/') Args(0) {
 
 }
 
+
+sub heritability_genetic_data :Path('/heritability/genetic/data/') Args(0) {
+    my ($self, $c) = @_;
+   
+    my $h2_pop_id = $c->req->param('h2_population_id');
+    my $pop_type    = $c->req->param('type');
+    my $model_id    = $c->req->param('model_id');
+    my @traits_ids  = $c->req->param('traits_ids[]');
+    my $index_file  = $c->req->param('index_file');
+
+    $c->stash->{selection_index_only_file} = $index_file;   
+    $c->stash->{model_id} = $model_id;
+    $c->stash->{pop_id}   = $model_id;
+    $c->stash->{training_pop_id} = $model_id;
+    $c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{prediction_pop_id} = $h2_pop_id if $pop_type =~ /selection/;
+ 
+    #$c->controller('solGS::Files')->selection_index_file($c);
+   
+    $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);   
+    my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
+    my $tmp_dir = $c->stash->{heritability_temp_dir};
+    $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
+    
+    my $ret->{status} = undef;
+
+    if ( -s $combined_gebvs_file )
+    {
+        $ret->{status} = 'success'; 
+        $ret->{gebvs_file} = $combined_gebvs_file;
+	$ret->{index_file} = $index_file;
+
+    }
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
 
 
 sub trait_acronyms {
@@ -149,7 +189,7 @@ sub create_heritability_dir {
 }
 
 
-sub pheno_heritability_output_files {
+sub pheno_h2_output_files {
     my ($self, $c) = @_;
      
     my $pop_id = $c->stash->{pop_id};
@@ -182,20 +222,42 @@ sub pheno_heritability_output_files {
     $c->stash->{h2_coefficients_json_file}  = $h2_coefficients_json_file;
 }
 
-sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/output') Args(0) {
+
+sub genetic_heritability_output_files {
+    my ($self, $c) = @_;
+     
+    my $h2_pop_id = $c->stash->{h2_pop_id};
+    my $model_id     = $c->stash->{model_id};
+    my $type         = $c->stash->{type};
+ 
+    my $pred_pop_id = $c->stash->{prediction_pop_id};
+    $model_id    = $c->stash->{model_id};
+    my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $h2_pop_id :  $h2_pop_id; 
+
+    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $h2_json_file  = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_h2_json_${identifier}");
+    my $h2_table_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_h2_table_${identifier}");
+
+    $c->stash->{genetic_h2_table_file} = $h2_table_file;
+    $c->stash->{genetic_h2_json_file}  = $h2_json_file;
+
+}
+
+
+sub pheno_h2_analysis_output :Path('/phenotypic/heritability/analysis/output') Args(0) {
     my ($self, $c) = @_;
    
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
    
-    $self->pheno_heritability_output_files($c);
+    $self->pheno_h2_output_files($c);
     my $h2_json_file = $c->stash->{h2_coefficients_json_file};
    
     my $ret->{status} = 'failed';
   
     if (!-s $h2_json_file)
     {
-        $self->run_pheno_heritability_analysis($c);  
+        $self->run_pheno_h2_analysis($c);  
         $h2_json_file = $c->stash->{h2_coefficients_json_file}; 
     }
     
@@ -217,32 +279,91 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
 }
 
 
+sub genetic_heritability_analysis_output :Path('/genetic/heritability/analysis/output') Args(0) {
+    my ($self, $c) = @_;
+
+    $c->stash->{h2_pop_id} = $c->req->param('h2_population_id');
+    $c->stash->{model_id}     = $c->req->param('model_id');
+    $c->stash->{type}         = $c->req->param('type');
+    
+    my $h2_pop_id = $c->req->param('h2_population_id');
+    my $model_id    = $c->req->param('model_id');
+    my $type        = $c->req->param('type');
+
+    my $gebvs_file = $c->req->param('gebvs_file');
+    my $index_file = $c->req->param('index_file');
+    
+    $c->stash->{data_input_file} = $gebvs_file;
+
+    $c->stash->{selection_index_file} = $index_file;
+    $c->stash->{gebvs_file} = $gebvs_file;
+    
+    $c->stash->{pop_id} = $h2_pop_id;
+  
+    if (-s $gebvs_file) 
+    { 
+        $self->run_genetic_heritability_analysis($c);       
+    }
+    
+    my $ret->{status} = 'failed';
+    my $h2_json_file = $c->stash->{genetic_h2_json_file};
+    
+    if (-s $h2_json_file)
+    { 
+        $ret->{status}   = 'success';
+        $ret->{data}     = read_file($h2_json_file);
+    } 
+    
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
+
+}
+
+
+sub run_genetic_heritability_analysis {
+    my ($self, $c) = @_;
+          
+    $self->temp_geno_h2_input_file($c);
+    $self->temp_geno_h2_output_file($c);
+
+    $c->stash->{h2_input_files}  = $c->stash->{temp_geno_h2_input_file};
+    $c->stash->{h2_output_files} = $c->stash->{temp_geno_h2_output_file};
+   
+    $c->stash->{heritability_type} = "genetic-heritability";
+    $c->stash->{heritability_script} = "R/solGS/genetic_heritability.r";
+    
+    $self->run_heritability_analysis($c);
+
+}
+
 
 sub download_phenotypic_heritability : Path('/download/phenotypic/heritability/population') Args(1) {
     my ($self, $c, $id) = @_;
     
     $self->create_heritability_dir($c);
-    my $corr_dir = $c->stash->{heritability_cache_dir};
-    my $corr_file = catfile($corr_dir,  "h2_coefficients_table_${id}");
+    my $h2_dir = $c->stash->{heritability_cache_dir};
+    my $h2_file = catfile($h2_dir,  "h2_coefficients_table_${id}");
   
-    unless (!-e $corr_file || -s $corr_file <= 1) 
+    unless (!-e $h2_file || -s $h2_file <= 1) 
     {
-	my @corr_data;
+	my @h2_data;
 	my $count=1;
 
-	foreach my $row ( read_file($corr_file) )
+	foreach my $row ( read_file($h2_file) )
 	{
 	    if ($count==1) {  $row = 'Traits,' . $row;}             
 	    $row =~ s/NA//g; 
 	    $row = join(",", split(/\s/, $row));
 	    $row .= "\n";
  
-	    push @corr_data, [ $row ];
+	    push @h2_data, [ $row ];
 	    $count++;
 	}
    
 	$c->res->content_type("text/plain");
-	$c->res->body(join "",  map{ $_->[0] } @corr_data);              
+	$c->res->body(join "",  map{ $_->[0] } @h2_data);              
     }  
 }
 
@@ -251,7 +372,7 @@ sub temp_pheno_h2_output_file {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
-    $self->pheno_heritability_output_files($c);
+    $self->pheno_h2_output_files($c);
    
     my $files = join ("\t",
 			  $c->stash->{h2_coefficients_table_file},
@@ -299,7 +420,52 @@ sub temp_pheno_h2_input_file {
 
 }
 
-sub run_pheno_heritability_analysis {
+
+sub temp_geno_h2_output_file {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};
+    $self->genetic_heritability_output_files($c);
+   
+    my $files = join ("\t",
+			  $c->stash->{genetic_h2_table_file},
+			  $c->stash->{genetic_h2_json_file},			  
+	);
+     
+    my $tmp_dir = $c->stash->{heritability_temp_dir};
+    my $name = "geno_h2_output_files_${pop_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($tempfile, $files);
+    
+    $c->stash->{temp_geno_h2_output_file} = $tempfile;
+
+}
+
+
+sub temp_geno_h2_input_file {
+    my ($self, $c) = @_;
+    
+    my $pop_id = $c->stash->{pop_id};
+    
+    my $gebvs_file = $c->stash->{gebvs_file}; #$c->stash->{data_input_file};
+    my $index_file = $c->stash->{selection_index_file};
+  
+    my $files = join ("\t",
+		      $gebvs_file,  
+		      $index_file
+	);
+     
+    my $tmp_dir = $c->stash->{heritability_temp_dir};
+    my $name = "geno_h2_input_files_${pop_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($tempfile, $files);
+    
+    $c->stash->{temp_geno_h2_input_file} = $tempfile;
+
+}
+
+
+sub run_pheno_h2_analysis {
     my ($self, $c) = @_;
     
     my $pop_id = $c->stash->{pop_id};
@@ -312,7 +478,7 @@ sub run_pheno_heritability_analysis {
         
     $c->stash->{heritability_type} = "pheno-heritability";
 
-    $c->stash->{heritability_script} = "R/heritability/h2_blup_rscript.R";
+    $c->stash->{heritability_script} = "R/heritability/h2_rscript.R";
     
     $self->run_heritability_analysis($c);
 
