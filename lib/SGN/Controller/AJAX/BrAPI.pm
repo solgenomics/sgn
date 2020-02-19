@@ -1565,15 +1565,15 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
 sub allelematrices : Chained('brapi') PathPart('allelematrices-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrices_POST {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrices_GET {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrices_new : Chained('brapi') PathPart('allelematrices') Args(0) : ActionClass('REST') { }
@@ -1602,47 +1602,47 @@ sub allelematrices_cached_GET {
 sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrix_POST {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrix_GET {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrix_search_process {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
 
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $format = $clean_inputs->{format}->[0];
-	my $file_path;
-	my $uri;
-	if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
-		my $dir = $c->tempfiles_subdir('download');
-		($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
-	}
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
-	my $brapi_package_result = $brapi_module->markerprofiles_allelematrix({
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $format = $clean_inputs->{format}->[0];
+    my $file_path;
+    my $uri;
+    if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+        my $dir = $c->tempfiles_subdir('download');
+        ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
+    }
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_allelematrix({
         cache_file_path => $c->config->{cache_file_path},
         shared_cluster_dir => $c->config->{cluster_shared_tempdir},
-		markerprofile_ids => $clean_inputs->{markerprofileDbId},
-		marker_ids => $clean_inputs->{markerDbId},
-		unknown_string => $clean_inputs->{unknownString}->[0],
-		sep_phased => $clean_inputs->{sepPhased}->[0],
-		sep_unphased => $clean_inputs->{sepUnphased}->[0],
-		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
-		format => $format,
-		main_production_site_url => $c->config->{main_production_site_url},
-		file_path => $file_path,
-		file_uri => $uri
-	});
-	_standard_response_construction($c, $brapi_package_result);
+        markerprofile_ids => $clean_inputs->{markerprofileDbId},
+        marker_ids => $clean_inputs->{markerDbId},
+        unknown_string => $clean_inputs->{unknownString}->[0],
+        sep_phased => $clean_inputs->{sepPhased}->[0],
+        sep_unphased => $clean_inputs->{sepUnphased}->[0],
+        expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+        format => $format,
+        main_production_site_url => $c->config->{main_production_site_url},
+        file_path => $file_path,
+        file_uri => $uri
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
