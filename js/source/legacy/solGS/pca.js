@@ -27,7 +27,7 @@ solGS.pca = {
 		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 		+ "'" + ');return false;">';
 
-	    var dataType = ['genotype', 'phenotype'];
+	    var dataType = ['Genotype', 'Phenotype'];
 	    var dataTypeOpts = this.createDataTypeSelect(dataType);
 	    
 	    var addRow = '<tr  name="' + dataStructure + '"' + ' id="' + selectId +  '">'
