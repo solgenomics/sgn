@@ -4223,14 +4223,16 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
                         my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
+                        my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
                             print $F_aux "$d->{germplasm_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            print $F_aux "$female_parent_stock_id,";
+                            print $F_aux "$male_parent_stock_id,";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -4255,14 +4257,16 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
                         my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
+                        my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
                             print $F_aux "$d->{germplasm_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            print $F_aux "$female_parent_stock_id,";
+                            print $F_aux "$male_parent_stock_id,";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -4815,9 +4819,9 @@ sub _perform_keras_cnn_predict {
         JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
         JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
         WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model';";
-    my $h = $schema->storage->dbh()->prepare($model_q);
-    $h->execute($model_id);
-    my ($basename, $filename, $trained_trait, $model_type) = $h->fetchrow_array();
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute($model_id);
+    my ($basename, $filename, $trained_trait, $model_type) = $model_h->fetchrow_array();
     my $trained_trait_hash = decode_json $trained_trait;
     my $model_type_hash = decode_json $model_type;
     my $trait_id = $trained_trait_hash->{variable_id};
@@ -4918,14 +4922,16 @@ sub _perform_keras_cnn_predict {
                         my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
                         my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
+                        my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
                             print $F_aux "$d->{germplasm_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            print $F_aux "$female_parent_stock_id,";
+                            print $F_aux "$male_parent_stock_id,";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -4950,14 +4956,16 @@ sub _perform_keras_cnn_predict {
                         my $d = $aux_data_hash{$field_trial_id}->{$stock_id};
                         my $value = $phenotype_data_hash{$stock_id}->{trait_value}->{value};
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
+                        my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
+                        my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
                             print $F_aux "$d->{germplasm_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{female_stock_id},";
-                            print $F_aux "$plot_pedigrees_found{$stock_id}->{male_stock_id},";
+                            print $F_aux "$female_parent_stock_id,";
+                            print $F_aux "$male_parent_stock_id,";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
