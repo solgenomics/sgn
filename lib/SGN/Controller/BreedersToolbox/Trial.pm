@@ -176,7 +176,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
-        $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
+        $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
