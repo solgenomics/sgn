@@ -168,6 +168,7 @@ sub download {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$c->dbic_schema("CXGN::People::Schema"),
         cache_root=>$cache_root_dir,
         accession_list=>$accession_list,
         tissue_sample_list=>$tissue_sample_list,

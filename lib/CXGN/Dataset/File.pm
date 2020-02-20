@@ -31,6 +31,7 @@ override('retrieve_genotypes',
 		 my @accessions_list = @$accessions_list_ref;
 		 my $genotypes_search = CXGN::Genotype::Search->new(
 			bcs_schema => $self->schema(),
+            people_schema => $self->people_schema(),
 			accession_list => $accessions_list_ref,
 			trial_list => $self->trials(),
 			protocol_id_list => [$protocol_id],

@@ -760,20 +760,6 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$schema,
-        accession_list=>[45642, 45636],
-        # tissue_sample_list=>$tissue_sample_list,
-        # trial_list=>$trial_list,
-        # protocol_id_list=>$protocol_id_list,
-        # marker_name_list=>['S80_265728', 'S80_265723']
-        # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
-        # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    #print STDERR Dumper $genotypes;
-
-    $c->stash->{data} = 'my data';
     $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
 }
 

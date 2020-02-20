@@ -17,6 +17,7 @@ local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
+my $people_schema = $f->people_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
@@ -212,6 +213,7 @@ is($protocol_id, $message_hash->{nd_protocol_id});
 
 my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     protocol_id_list=>[$protocol_id],
     
 });
@@ -269,6 +271,7 @@ ok($message_hash->{nd_protocol_id});
 
 my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     protocol_id_list=>[$message_hash->{nd_protocol_id}],
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
@@ -312,6 +315,7 @@ ok($message_hash->{nd_protocol_id});
 
 my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     protocol_id_list=>[$message_hash->{nd_protocol_id}],
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
