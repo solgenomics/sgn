@@ -224,7 +224,7 @@ is_deeply($response, {'data'=> [{
         male_plant_name => undef
 }]}, 'crosses in a trial');
 
-# test uploading progenies
+# test uploading progenies with new accessions
 my $offspring_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
 my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
 
@@ -239,7 +239,7 @@ $response = $ua->post(
     'http://localhost:3010/ajax/cross/upload_progenies',
     Content_Type => 'form-data',
     Content => [
-        progenies_upload_file => [ $file, 'update_progenies.xls', Content_Type => 'application/vnd.ms-excel', ],
+        progenies_new_upload_file => [ $file, 'update_progenies.xls', Content_Type => 'application/vnd.ms-excel', ],
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -257,6 +257,33 @@ is($after_add_progenies_stock, $before_add_progenies_stock + 6);
 is($after_add_progenies_accession, $before_add_progenies_accession + 6);
 is($after_add_progenies_relationship_all, $before_add_progenies_relationship_all + 18);
 is($after_add_progenies_offspring, $before_add_progenies_offspring + 6);
+
+# test uploading progenies with existing accessions
+$file = $f->config->{basepath}."/t/data/cross/update_progenies_existing_accessions.xls";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_progenies',
+    Content_Type => 'form-data',
+    Content => [
+        progenies_exist_upload_file => [ $file, 'update_progenies_existing_accessions.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+is_deeply($message_hash, {'success' => 1});
+
+#added 4 progenies using existing accessions
+my $after_add_progenies_exist_stock = $schema->resultset("Stock::Stock")->search({})->count();
+my $after_add_progenies_exist_accession = $schema->resultset("Stock::Stock")->search({type_id => $accession_type_id})->count();
+my $after_add_progenies_exist_relationship_all = $schema->resultset("Stock::StockRelationship")->search({})->count();
+my $after_add_progenies_exist_offspring = $schema->resultset("Stock::StockRelationship")->search({type_id => $offspring_type_id})->count();
+
+is($after_add_progenies_exist_stock, $after_add_progenies_stock);
+is($after_add_progenies_exist_accession, $after_add_progenies_accession);
+is($after_add_progenies_exist_relationship_all, $after_add_progenies_relationship_all + 12);
+is($after_add_progenies_exist_offspring, $after_add_progenies_offspring + 4);
 
 # test updating cross info by uploading
 my $before_updating_info_stocks = $schema->resultset("Stock::Stock")->search({})->count();
@@ -383,14 +410,14 @@ my $after_delete_all_crosses_in_experiment = $schema->resultset("NaturalDiversit
 my $after_delete_all_crosses_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 my $stocks_after_delete_all_crosses = $schema->resultset("Stock::Stock")->search({})->count();
 
-is($after_delete_all_crosses_crosses, $before_adding_cross);
-is($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment);
+is($after_delete_all_crosses_crosses, $before_adding_cross + 1); #one cross cannot be deleted because progenies have associated data
+is($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment + 1); #one cross cannot be deleted because progenies have associated data
 
 # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info
-is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 38);
+is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 39);
 
-# stock table has 42 more rows after adding 4 family names and 38 plants
-is($stocks_after_delete_all_crosses, $before_adding_stocks + 42);
+# stock table has 42 more rows after adding 4 family names and 38 plants, one cross with two new accessions cannot be deleted
+is($stocks_after_delete_all_crosses, $before_adding_stocks + 45);
 
 # remove added crossing trials after test so that they don't affect downstream tests
 $crossing_trial_rs->delete();

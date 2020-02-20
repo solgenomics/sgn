@@ -14,10 +14,11 @@ extends 'CXGN::BrAPI::v1::Common';
 sub markerprofiles_search {
     my $self = shift;
     my $inputs = shift;
-    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $cache_file_path = $inputs->{cache_file_path};
+    my $shared_cluster_dir = $inputs->{shared_cluster_dir};
     my @germplasm_ids = $inputs->{stock_ids} ? @{$inputs->{stock_ids}} : ();
     my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
     my @extract_ids = $inputs->{extract_ids} ? @{$inputs->{extract_ids}} : ();
@@ -33,7 +34,7 @@ sub markerprofiles_search {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
+        cache_root=>$cache_file_path,
         accession_list=>\@germplasm_ids,
         trial_list=>\@study_ids,
         protocol_id_list=>\@methods,
@@ -43,7 +44,7 @@ sub markerprofiles_search {
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
+    my $file_handle = $genotypes_search->get_cached_file_search_json($shared_cluster_dir, 1); #Metadata only returned
     my @data;
 
     my $start_index = $page*$page_size;
@@ -77,10 +78,11 @@ sub markerprofiles_search {
 sub markerprofiles_detail {
     my $self = shift;
     my $inputs = shift;
-    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $cache_file_path = $inputs->{cache_file_path};
+    my $shared_cluster_dir = $inputs->{shared_cluster_dir};
     my $genotypeprop_id = $inputs->{markerprofile_id};
     my $sep_phased = $inputs->{sep_phased};
     my $sep_unphased = $inputs->{sep_unphased};
@@ -93,13 +95,13 @@ sub markerprofiles_detail {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
+        cache_root=>$cache_file_path,
         markerprofile_id_list=>[$genotypeprop_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($shared_cluster_dir, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -170,10 +172,11 @@ sub markerprofiles_methods {
 sub markerprofiles_allelematrix {
     my $self = shift;
     my $inputs = shift;
-    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $cache_file_path = $inputs->{cache_file_path};
+    my $shared_cluster_dir = $inputs->{shared_cluster_dir};
     my @markerprofile_ids = $inputs->{markerprofile_ids} ? @{$inputs->{markerprofile_ids}} : ();
     my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
     my $sep_phased = $inputs->{sep_phased};
@@ -197,13 +200,13 @@ sub markerprofiles_allelematrix {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
+        cache_root=>$cache_file_path,
         markerprofile_id_list=>\@markerprofile_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($shared_cluster_dir, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;

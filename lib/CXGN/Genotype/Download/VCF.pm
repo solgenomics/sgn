@@ -186,7 +186,13 @@ sub download {
         limit=>$limit,
         offset=>$offset
     });
-    return $genotypes_search->get_cached_file_VCF($c);
+    return $genotypes_search->get_cached_file_VCF(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 }
 
 1;

@@ -248,9 +248,9 @@ sub get_stock_synonyms {
 	return $synonym_hash;
 }
 
-=head2 function get_stock_exact()
+=head2 function get_cross_exact()
 
-retrieves the stock row with an exact match to the stock name or synonym
+retrieves the stock row with cross stock type and with an exact match to the stock name
 
 =cut
 
@@ -261,6 +261,29 @@ sub get_cross_exact {
 	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,'cross','stock_type')->cvterm_id;
 
 	my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.is_obsolete' => { '!=' => 't' }, 'uniquename' => $stock_name, 'type_id' => $cross_type_id });
+    my $stock;
+    if ($stock_rs->count == 1) {
+        $stock = $stock_rs->first;
+    } else {
+        return;
+    }
+    return $stock;
+}
+
+
+=head2 function get_accession_exact()
+
+retrieves the stock row with accession stock type and with an exact match to the stock name
+
+=cut
+
+sub get_accession_exact {
+    my $self = shift;
+	my $schema = $self->get_schema();
+	my $stock_name = $self->get_stock_name();
+	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,'accession','stock_type')->cvterm_id;
+
+	my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'me.is_obsolete' => { '!=' => 't' }, 'uniquename' => $stock_name, 'type_id' => $accession_type_id });
     my $stock;
     if ($stock_rs->count == 1) {
         $stock = $stock_rs->first;

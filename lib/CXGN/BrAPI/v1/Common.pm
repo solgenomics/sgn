@@ -51,11 +51,6 @@ package CXGN::BrAPI::v1::Common;
     required => 1,
     );
 
-has 'context' => (
-   is => 'rw',
-   required => 1,
-);
-
  has 'page_size' => (
     isa => 'Int',
     is => 'rw',

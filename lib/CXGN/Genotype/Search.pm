@@ -1025,7 +1025,7 @@ First line in file has all marker objects, while subsequent lines have markerpro
 
 sub get_cached_file_search_json {
     my $self = shift;
-    my $c = shift;
+    my $shared_cluster_dir_config = shift;
     my $metadata_only = shift;
     my $protocol_ids = $self->protocol_id_list;
 
@@ -1039,7 +1039,7 @@ sub get_cached_file_search_json {
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_json";
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_json";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1115,8 +1115,13 @@ Uses the file iterator to write the cached file, so that it uses little memory.
 
 sub get_cached_file_dosage_matrix {
     my $self = shift;
-    my $c = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $protocol_ids = $self->protocol_id_list;
+
     my $key = $self->key("get_cached_file_dosage_matrix");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -1126,7 +1131,7 @@ sub get_cached_file_dosage_matrix {
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_dosage_matrix";
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_dosage_matrix";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1186,10 +1191,10 @@ sub get_cached_file_dosage_matrix {
 
         my $cmd = CXGN::Tools::Run->new(
             {
-                backend => $c->config->{backend},
-                submit_host => $c->config->{cluster_host},
-                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_genotype_download_dosage_matrix",
-                queue => $c->config->{'web_cluster_queue'},
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
                 do_cleanup => 0,
                 out_file => $transpose_tempfile,
     #            out_file => $transpose_tempfile,
@@ -1201,7 +1206,7 @@ sub get_cached_file_dosage_matrix {
         # Do the transposition job on the cluster
         $cmd->run_cluster(
                 "perl ",
-                $c->config->{basepath} . "/bin/transpose_matrix.pl",
+                $basepath_config."/bin/transpose_matrix.pl",
                 $tempfile,
         );
         $cmd->is_cluster(1);
@@ -1221,7 +1226,12 @@ sub get_cached_file_dosage_matrix {
 
 sub get_cached_file_VCF {
     my $self = shift;
-    my $c = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
+
     my $key = $self->key("get_cached_file_VCF");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
     my $protocol_ids = $self->protocol_id_list;
@@ -1232,7 +1242,7 @@ sub get_cached_file_VCF {
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_VCF";
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_VCF";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1387,10 +1397,10 @@ sub get_cached_file_VCF {
 
         my $cmd = CXGN::Tools::Run->new(
             {
-                backend => $c->config->{backend},
-                submit_host => $c->config->{cluster_host},
-                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_genotype_download_VCF",
-                queue => $c->config->{'web_cluster_queue'},
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
                 do_cleanup => 0,
                 out_file => $transpose_tempfile,
     #            out_file => $transpose_tempfile,
@@ -1402,7 +1412,7 @@ sub get_cached_file_VCF {
         # Do the transposition job on the cluster
         $cmd->run_cluster(
                 "perl ",
-                $c->config->{basepath} . "/bin/transpose_matrix.pl",
+                $basepath_config."/bin/transpose_matrix.pl",
                 $tempfile,
         );
         $cmd->is_cluster(1);
