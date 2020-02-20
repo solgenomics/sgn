@@ -5126,7 +5126,7 @@ sub _perform_keras_cnn_predict {
             push @data_matrix_clean, 'NA';
         }
     }
-    # print STDERR Dumper \@data_matrix_clean;
+    print STDERR Dumper \@data_matrix_clean;
 
     if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
         print STDERR "CNN Prediction Mixed Model\n";
