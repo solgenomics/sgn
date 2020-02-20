@@ -748,6 +748,22 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
 
+sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
+}
+
+
 sub manage_markers : Path("/breeders/markers") Args(0) {
     my $self = shift;
     my $c = shift;

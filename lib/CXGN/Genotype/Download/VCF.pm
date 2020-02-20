@@ -24,8 +24,7 @@ my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     marker_name_list=>['S80_265728', 'S80_265723'],
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     limit=>$limit,
-    offset=>$offset,
-    compute_from_parents=>0 #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
+    offset=>$offset
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -133,12 +132,6 @@ has 'return_only_first_genotypeprop_for_stock' => (
     isa => 'Bool',
     is => 'ro',
     default => 1
-);
-
-has 'compute_from_parents' => (
-    isa => 'Bool',
-    is => 'ro',
-    default => 0
 );
 
 has 'limit' => (
