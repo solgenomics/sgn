@@ -67,7 +67,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run stability</button>
+              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run Stability</button>
             </div>
             <br />
 
@@ -118,7 +118,7 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select");
   }
   else {
-    alert('You must be logged in to use stability');
+    alert('You must be logged in to use Stability');
   }
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
@@ -205,19 +205,19 @@ jQuery(document).ready(function() {
   jQuery('#runAMMI').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
-      $('#stability_output').empty();
+      $('#stability_files').empty();
     } else {
-      $('#stability_output').empty();
+      $('#stability_files').empty();
       if ($('#pheno_select').val() != ""){
         var dataset_id = $('#available_datasets').val();
         var trait_id = $('#pheno_select').val();
         var pc_check = 0;
         var kinship_check = 0;
         if ($('#princomp').is(':checked')) {
-          var pc_check = 1;
+          var pc_check = 0;
         }
-        if ($('#kinshipmat').is(':checked')) {
-          var kinship_check = 1;
+        if ($('kinshipmat').is(':checked')) {
+          var kinship_check = 0;
         }
         //alert(pc_check);
         //alert(kinship_check);
@@ -225,29 +225,30 @@ jQuery(document).ready(function() {
         //alert("Pheno ID: "+trait_id);
         $.ajax({
           url: '/ajax/stability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'pc_check': pc_check, 'kinship_check': kinship_check},
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
-          timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
-              alert(response.error);
+              $('#dataset_select').val('ERROR');
             }
             else {
+              var h2File_response = response.h2Table;
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
         //alert("Response ID: "+temp_response);
             //alert("Response ID: "+fig3_response);
-
-              $('#stability_output').append("<img id='stb_Figure3' src='"+ fig3_response + "'/>");
-              $('#stability_output').append("<img id='stb_Figure4' src='"+ fig4_response + "'/>");
+              //setTimeout(function() {
+              $('#stability_output').append("<img id='stability_Table' src='"+ h2File_response + "'/>");
+              $('#stability_output').append("<img id='stability_Figure3' src='"+ fig3_response + "'/>");
+              $('#stability_output').append("<img id='stability_Figure4' src='"+ fig4_response + "'/>");
+              //},6000);
             }
           },
-          error: function(xhr, status, error) {
-            var err = eval("(" + xhr.responseText + ")");
-            alert(err.Message);
+          error: function(response) {
+            alert("An error occurred, the service may temporarily be unavailable, ponto 2");
           }
         });
       }

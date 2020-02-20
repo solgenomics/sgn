@@ -37,7 +37,7 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+        my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
@@ -68,13 +68,13 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
 
     $file = basename($file);
 
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "/tmp/vagrant/SGN-site/stability_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/stability_files/".$file);
     print STDERR Dumper($temppath);
 
     my $F;
     if (! open($F, "<", $temppath)) {
-    $c->stash->{rest} = { error => "Can't find data." };
-    return;
+  $c->stash->{rest} = { error => "Can't find data." };
+  return;
     }
 
     my $header = <$F>;
@@ -90,17 +90,17 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     my @data = ();
 
     while (<$F>) {
-    chomp;
+  chomp;
 
-    my @fields = split "\t";
-    my %line = {};
-    for(my $n=0; $n <@keys; $n++) {
-        if (exists($fields[$n]) && defined($fields[$n])) {
-        $line{$keys[$n]}=$fields[$n];
-        }
-    }
+  my @fields = split "\t";
+  my %line = {};
+  for(my $n=0; $n <@keys; $n++) {
+      if (exists($fields[$n]) && defined($fields[$n])) {
+    $line{$keys[$n]}=$fields[$n];
+      }
+  }
     print STDERR Dumper(\%line);
-    push @data, \%line;
+  push @data, \%line;
     }
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
@@ -122,6 +122,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
+    
 
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -135,13 +136,16 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
     $newtrait =~ s/\//\_/g;
-    print STDERR $newtrait . "\n";
+    $trait_id =~ tr/ /./;
+    $trait_id =~ tr/\//./;
 
-    my $figure3file = $tempfile . "_figure3.png";
-    my $figure4file = $tempfile . "_figure4.png";
+    my $h2File = $tempfile . "_" . "h2File.png";
+    my $figure3file = $tempfile . "_" . "figure3.png";
+    my $figure4file = $tempfile . "_" . "figure4.png";
 
     # $trait_id =~ tr/ /./;
     # $trait_id =~ tr/\//./;
+
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -162,6 +166,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $trait_id,
             $figure3file,
             $figure4file,
+            $h2File
     );
     $cmd->alive;
     $cmd->is_cluster(1);
@@ -169,12 +174,12 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
-    # copy($h2File, $figure_path);
+    copy($h2File, $figure_path);
     copy($figure3file, $figure_path);
     copy($figure4file, $figure_path);
 
-    # my $h2Filebasename = basename($h2File);
-    # my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
+    my $h2Filebasename = basename($h2File);
+    my $h2File_response = "/documents/tempfiles/stability_files/" . $h2Filebasename;
     
     my $figure3basename = basename($figure3file);
     my $figure3_response = "/documents/tempfiles/stability_files/" . $figure3basename;
@@ -183,19 +188,16 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $figure4_response = "/documents/tempfiles/stability_files/" . $figure4basename;
 
 
-    print $figure3_response;
+    print $h2File_response;
         
     $c->stash->{rest} = {
-        # h2Table => $h2File_response,
+        h2Table => $h2File_response,
         figure3 => $figure3_response,
         figure4 => $figure4_response,
-        dummy_response => $dataset_id,
-        dummy_response2 => $trait_id,
+        dummy_response => $dataset_id
+        # dummy_response2 => $trait_id,
     };
 }
 
 1
 
-
-
-    # my $figure_path = $c->{basepath} . "./documents/tempfiles/h2_files/";
