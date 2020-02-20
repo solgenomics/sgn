@@ -457,13 +457,8 @@ sub population : Path('/solgs/population') Args() {
 	$c->stash->{template} = "/generic_message.mas"; 
     }
     
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
-    $c->stash->{genotyping_protocol_id} = $protocol_id;   
     $c->stash->{training_pop_id} = $pop_id; 
     #$c->stash->{pop_id} = $pop_id;
     
@@ -667,15 +662,8 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my $type   = $c->req->param('data_set_type');
     my $protocol_id  = $c->req->param('genotyping_protocol_id');
 
-    
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+  
     my $count;
     if ($type =~ /single/)
     {
@@ -713,15 +701,8 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
-
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-
     if ($training_pop_id =~ /list/) 
     {
 	$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
@@ -831,13 +812,7 @@ sub trait :Path('/solgs/trait') Args() {
 	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
     }
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     $c->stash->{pop_id}   = $pop_id;  
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
@@ -974,12 +949,6 @@ sub output_files {
     my $trait    = $c->stash->{trait_abbr}; 
     my $trait_id = $c->stash->{trait_id};
 
-    if (!$c->stash->{genotyping_protocol_id})
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$c->stash->{genotyping_protocol_id} = $protocol_detail->{protocol_id};
-    }
-    
     $c->controller('solGS::Files')->marker_effects_file($c);  
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c); 
     $c->controller('solGS::Files')->validation_file($c);
@@ -1256,14 +1225,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
     $c->stash->{pop_id}            = $training_pop_id;
     $c->stash->{prediction_pop_id} = $selection_pop_id; 
     $c->stash->{selection_pop_id}  = $selection_pop_id;
-
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-   
-    $c->stash->{genotyping_protocol_id} = $protocol_id; 
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
 
     if ($referer =~ /solgs\/model\/combined\/populations\//)
     {   
@@ -1589,13 +1551,7 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
     $c->stash->{training_pop_id} = $tr_pop_id;
     my $protocol_id = $c->req->param('genotyping_protocol_id');
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-    
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
@@ -1704,15 +1660,10 @@ sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
 sub check_training_population :Path('/solgs/check/training/population/') Args() {
     my ($self, $c, $pop_id, $gp, $protocol_id) = @_;
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{training_pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     $self->check_population_is_training_population($c, $pop_id, $protocol_id);
     my $is_training_pop = $c->stash->{is_training_population};
@@ -1799,13 +1750,6 @@ sub check_population_has_genotype {
     my $pop_id = $c->stash->{pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
   
@@ -1841,14 +1785,8 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $trait_id           = $c->req->param('trait_id');
     my $protocol_id        = $c->req->param('genotyping_protocol_id');
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
 
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
     my $referer = $c->req->referer;
   
     if ($referer =~ /combined\//) 
@@ -2117,14 +2055,7 @@ sub build_multiple_traits_models {
 sub all_traits_output :Path('/solgs/traits/all/population') Args() {
      my ($self, $c, $training_pop_id, $tr_txt, $traits_selection_id, $gp, $protocol_id) = @_;
       
-
-     if (!$protocol_id)
-     {
-	 my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	 $protocol_id = $protocol_detail->{protocol_id};
-     }
-     
-     $c->stash->{genotyping_protocol_id} = $protocol_id;
+     $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
      
      my @traits_ids;
    
@@ -2578,15 +2509,7 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{prediction_pop_id} = $selection_pop_id;
     $c->stash->{selectiion_pop_id} = $selection_pop_id;
-
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-    
-    $c->stash->{genotyping_protocol_id} = $protocol_id;   
-    
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     $self->get_trait_details($c, $trait_id);
     
     my $page = $c->req->referer();

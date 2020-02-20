@@ -402,13 +402,7 @@ sub parse_arguments {
 	      $protocol_id =  $arguments->{$k};      
 	  }
 	  
-	  if (!$protocol_id || $protocol_id =~ /undefined|null/)
-	  {
-	      my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	      $protocol_id = $protocol_detail->{protocol_id};
-	  }
-    
-	  $c->stash->{genotyping_protocol_id} = $protocol_id;	
+	  $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);	
       }
   }
 	    

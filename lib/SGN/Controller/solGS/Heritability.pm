@@ -20,13 +20,7 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my $combo_pops_id = $c->req->param('combo_pops_id');
     my $protocol_id = $c->req->param('genotyping_protocol_id');
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-    
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
@@ -99,15 +93,9 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
     my $pop_id        = $c->req->param('training_pop_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
 
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+    my $protocol_id = $c->req->param('genotyping_protocol_id');    
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{training_pop_id} = $pop_id;
     

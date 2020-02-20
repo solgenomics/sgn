@@ -202,6 +202,19 @@ sub create_protocol_url {
 }
 
 
+sub stash_protocol_id {
+    my ($self, $c, $protocol_id) = @_;
+
+    if (!$protocol_id || $protocol_id =~ /undefined/)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+}
+
+
 ####
 1;
 ####

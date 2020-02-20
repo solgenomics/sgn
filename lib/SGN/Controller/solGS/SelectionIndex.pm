@@ -27,13 +27,7 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-     
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     my $traits;
     if ($selection_pop_id) 

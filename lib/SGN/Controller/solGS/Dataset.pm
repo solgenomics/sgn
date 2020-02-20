@@ -233,6 +233,7 @@ sub create_dataset_geno_data_query_jobs {
     }    
 }
 
+
 sub get_dataset_genotyping_protocol {
     my ($self, $c, $dataset_id) = @_;
 
@@ -243,16 +244,14 @@ sub get_dataset_genotyping_protocol {
   
     my $protocol_id = $data->{categories}->{genotyping_protocols};
 
-    if (reftype($protocol_id) ne 'ARRAY')
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-    else
+    if (reftype($protocol_id) eq 'ARRAY')
     {
 	$protocol_id = $protocol_id->[0];
     }
 
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+    $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     return $protocol_id;
 }
 

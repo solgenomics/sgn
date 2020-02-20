@@ -43,14 +43,7 @@ sub get_training_pop_gebvs :Path('/solgs/get/gebvs/training/population/') Args(0
     $c->stash->{population_type} = 'training_population';
 
     my $protocol_id = $c->req->param('genotyping_protocol_id');
-
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-   
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
 
     my $ret->{gebv_exists} = undef;
 
@@ -84,14 +77,7 @@ sub get_selection_pop_gebvs :Path('/solgs/get/gebvs/selection/population/') Args
     $c->stash->{population_type}  = 'selection_population';
 
     my $protocol_id = $c->req->param('genotyping_protocol_id');
-
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-   
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     my $ret->{gebv_exists} = undef;
 
@@ -129,13 +115,7 @@ sub genetic_gain_boxplot :Path('/solgs/genetic/gain/boxplot/') Args(0) {
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{trait_id}         = $trait_id;
 
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-   
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
 
     if (@selection_pop_traits)
     {

@@ -32,12 +32,8 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
 
     my @pops_ids = $c->req->param('trials[]');
     my $protocol_id = $c->req->param('genotyping_protocol_id');
-   
-    if (!$protocol_id)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
+
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     my $combo_pops_id;
     my $ret->{status} = 0;
@@ -51,7 +47,7 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
         $self->catalogue_combined_pops($c, \@pops_ids);
 	$ret->{combo_pops_id} = $combo_pops_id;
 	$ret->{status} = 1;
-	$ret->{genotyping_protocol_id} = $protocol_id;
+	$ret->{genotyping_protocol_id} = $c->stash->{genotyping_protocol_id};
     }
 
     $ret = to_json($ret);
@@ -68,13 +64,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     my @pops_ids = $c->req->param('trials[]');
     my $protocol_id  = $c->req->param('genotyping_protocol_id');
     
-    if (!$protocol_id || !$protocol_id !~ /\d+/)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     my $combo_pops_id;
     my $ret->{status} = 0;
@@ -141,15 +131,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
-   
-    if (!$protocol_id || !$protocol_id !~ /\d+/)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     # my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
     
     # if (!$cached)
@@ -180,13 +162,7 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{trait_id}      = $trait_id;
 
-    if (!$protocol_id || !$protocol_id !~ /\d+/)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;       
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id); 
     
     $self->combine_trait_data($c); 
     $self->build_model_combined_trials_trait($c);
@@ -209,15 +185,9 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{model_id} = $combo_pops_id;
     $c->stash->{pop_id} = $combo_pops_id;
-    $c->stash->{data_set_type} = 'combined populations';
+    $c->stash->{data_set_type} = 'combined populations';     
 
-    if (!$protocol_id || !$protocol_id !~ /\d+/)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;       
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
     
     my @traits_ids;
 
@@ -289,13 +259,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
-    if (!$protocol_id || !$protocol_id !~ /\d+/)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;       
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);    
     
     my $pops_cvs = $c->req->param('combined_populations');
    
@@ -343,14 +307,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{data_set_type}        = 'combined populations';
     $c->stash->{combined_populations} = 1;
 
-    if (!$protocol_id || !$protocol_id !~ /\d+/)
-    {
-	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
-	$protocol_id = $protocol_detail->{protocol_id};
-    }
-
-    $c->stash->{genotyping_protocol_id} = $protocol_id;       
-    
+    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);       
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   
   
     if ($selection_pop_id =~ /list/) 
