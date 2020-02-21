@@ -11,7 +11,7 @@ $datasets
 <& '/page/page_title.mas', title => "Fieldmap app" &>
 
 <& '/util/import_javascript.mas', 
-  classes => ['jquery','d3.d3v4Min']
+  classes => ['jquery','d3.d3v4Min','fieldmap.BrAPI','fieldmap.leaflet','fieldmap.leaflet-search', 'brapi.BrAPIFieldmap','fieldmap.turf','fieldmap.L-Path-Transform.js']
 
 &>
 
@@ -43,13 +43,13 @@ $datasets
 
 <link rel="stylesheet" href="/documents/inc/fieldmap/leaflet.css" />
 <link rel="stylesheet" href="/documents/inc/fieldmap/leaflet-search.min.css">
-<script src="/documents/inc/fieldmap/leaflet.js"></script>
-<script src="/documents/inc/fieldmap/L.Path.Transform.js"></script>
-<script src="/documents/inc/fieldmap/leaflet-search.src.js"></script>
+<!-- <script src="/documents/inc/fieldmap/leaflet.js"></script> -->
+<!-- <script src="/documents/inc/fieldmap/L.Path.Transform.js"></script> -->
+<!-- <script src="/documents/inc/fieldmap/leaflet-search.src.js"></script> -->
 <script src="/documents/inc/fieldmap/d3.js"></script>
-<script src="/documents/inc/fieldmap/turf.js"></script>
-<script src="/documents/inc/fieldmap/BrAPI.js"></script>
-<script src="/documents/inc/fieldmap/BrAPIFieldmap.js" charset="utf-8"></script>
+<!-- <script src="/documents/inc/fieldmap/turf.js"></script> -->
+<!-- <script src="/documents/inc/fieldmap/BrAPI.js"></script> -->
+<!-- <script src="/documents/inc/fieldmap/BrAPIFieldmap.js" charset="utf-8"></script> -->
 
 <form class="form-inline" style="padding:10px;">
   <div class="form-group">
