@@ -5,6 +5,7 @@ use Moose;
 
 use Data::Dumper;
 use DateTime;
+use List::MoreUtils qw(uniq);
 use CXGN::Stock::SequencingInfo;
 
 __PACKAGE__->config(
@@ -53,7 +54,7 @@ sub retrieve_sequencing_infos {
 
     my @data = ();
 
-    foreach my $stock_id (@stock_ids) {
+    foreach my $stock_id (uniq @stock_ids) {
 	print STDERR "retrieving data for stock stock_id...\n";
 	my $infos = CXGN::Stock::SequencingInfo->get_sequencing_project_infos($schema, $stock_id);
 
