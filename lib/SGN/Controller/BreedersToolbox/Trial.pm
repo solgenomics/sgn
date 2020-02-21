@@ -156,12 +156,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     elsif ($design_type eq "genotype_data_project"){
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
-    else {
-        $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
-        $c->stash->{template} = '/breeders_toolbox/trial.mas';
-    }
-
-    if ($trial_type_name eq "crossing_trial"){
+    elsif ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
         my $program_name = $breeding_program_data->[0]->[1];
         my $locations = decode_json $program_object->get_all_locations_by_breeding_program();
@@ -176,7 +171,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
         my $locations_by_program_json = encode_json(\@locations_by_program);
         $c->stash->{locations_by_program_json} = $locations_by_program_json;
-        $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
+        $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
+    }
+    else {
+        $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
+        $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
