@@ -67,7 +67,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run Stability</button>
+              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run AMMI</button>
             </div>
             <br />
 
@@ -235,20 +235,22 @@ jQuery(document).ready(function() {
               $('#dataset_select').val('ERROR');
             }
             else {
-              var h2File_response = response.h2Table;
+              var AMMIFile_response = response.AMMITable;
+              var fig1_response = response.figure1;
+              var fig2_response = response.figure2;
               var fig3_response = response.figure3;
-              var fig4_response = response.figure4;
         //alert("Response ID: "+temp_response);
-            //alert("Response ID: "+fig3_response);
+            //alert("Response ID: "+fig1_response);
               //setTimeout(function() {
-              $('#stability_output').append("<img id='stability_Table' src='"+ h2File_response + "'/>");
+              $('#stability_output').append("<img id='stability_Table' src='"+ AMMIFile_response + "'/>");
+              $('#stability_output').append("<img id='stability_Figure1' src='"+ fig1_response + "'/>");
+              $('#stability_output').append("<img id='stability_Figure2' src='"+ fig2_response + "'/>");
               $('#stability_output').append("<img id='stability_Figure3' src='"+ fig3_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure4' src='"+ fig4_response + "'/>");
               //},6000);
             }
           },
           error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable, ponto 2");
+            alert("An error occurred, the service may temporarily be unavailable");
           }
         });
       }

@@ -139,9 +139,11 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
-    my $h2File = $tempfile . "_" . "h2File.png";
+    my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
+    my $figure1file = $tempfile . "_" . "figure1.png";
+    my $figure2file = $tempfile . "_" . "figure2.png";
     my $figure3file = $tempfile . "_" . "figure3.png";
-    my $figure4file = $tempfile . "_" . "figure4.png";
+
 
     # $trait_id =~ tr/ /./;
     # $trait_id =~ tr/\//./;
@@ -164,36 +166,50 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $c->config->{basepath} . "/R/stability/ammi_script.R",
             $pheno_filepath,
             $trait_id,
+            $figure1file,
+            $figure2file,
             $figure3file,
-            $figure4file,
-            $h2File
+            $AMMIFile
     );
     $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
 
-   
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
-    copy($h2File, $figure_path);
-    copy($figure3file, $figure_path);
-    copy($figure4file, $figure_path);
+    my $resultfile = $AMMIFile.".results";
+    my $error;
+    my $lines;
 
-    my $h2Filebasename = basename($h2File);
-    my $h2File_response = "/documents/tempfiles/stability_files/" . $h2Filebasename;
+    if (! -e $resultfile) { 
+    $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
+    }
+    else { 
+    $lines = read_file($temppath.".results");
+    }
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/stability_files/";
+    copy($AMMIFile, $figure_path);
+    copy($figure1file, $figure_path);
+    copy($figure2file, $figure_path);
+    copy($figure3file, $figure_path);
+
+    my $AMMIFilebasename = basename($AMMIFile);
+    my $AMMIFile_response = "/documents/tempfiles/stability_files/" . $AMMIFilebasename;
     
+    my $figure1basename = basename($figure1file);
+    my $figure1_response = "/documents/tempfiles/stability_files/" . $figure1basename;
+    
+    my $figure2basename = basename($figure2file);
+    my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
+
     my $figure3basename = basename($figure3file);
     my $figure3_response = "/documents/tempfiles/stability_files/" . $figure3basename;
-    
-    my $figure4basename = basename($figure4file);
-    my $figure4_response = "/documents/tempfiles/stability_files/" . $figure4basename;
 
-
-    print $h2File_response;
+    print $AMMIFile_response;
         
     $c->stash->{rest} = {
-        h2Table => $h2File_response,
+        AMMITable => $AMMIFile_response,
+        figure1 => $figure1_response,
+        figure2 => $figure2_response,
         figure3 => $figure3_response,
-        figure4 => $figure4_response,
         dummy_response => $dataset_id
         # dummy_response2 => $trait_id,
     };
