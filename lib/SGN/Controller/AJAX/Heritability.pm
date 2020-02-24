@@ -138,9 +138,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $figure3file = $tempfile . "_" . "figure3.png";
     my $figure4file = $tempfile . "_" . "figure4.png";
 
-    # $trait_id =~ tr/ /./;
-    # $trait_id =~ tr/\//./;
-
+    $trait_id =~ tr/ /./;
+    $trait_id =~ tr/\//./;
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -158,6 +157,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
             "Rscript ",
             $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
             $pheno_filepath,
+            $trait_id,
             $figure3file,
             $figure4file,
             $h2File

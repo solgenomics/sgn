@@ -8,11 +8,16 @@ args = commandArgs(trailingOnly = TRUE)
 
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 
-# figure3_file_name = paste(pheno, ".figure3.png", sep="")
-figure3_file_name <- args[2]
-figure4_file_name <- args[3]
-h2File <- args[4]
+study_trait <- args[2]
+figure3_file_name <- args[3]
+figure4_file_name <- args[4]
+h2File <- args[5]
 
+cat("study trait is ", study_trait,"\n")
+
+names <- colnames(pheno)
+new_names <- gsub(".CO.*","",names)
+colnames(pheno) <- new_names
 
 
 #Calculating missing data
@@ -43,7 +48,7 @@ for (i in 40:ncol(pheno)){
 # n = round(n/2)
 
 z=1
-png(figure3_file_name,height=900)
+png(figure3_file_name,height=250*n)
 par(mar=c(4,4,2,2))
 par(mfrow=c(n,2))
 for(i in 40:ncol(pheno)){
