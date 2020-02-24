@@ -506,7 +506,7 @@ sub get_cross_progenies_trial {
     my $cross_combination_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_combination", "stock_property")->cvterm_id();
     my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
-    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
 
     my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_combination, cross_table.family_id, cross_table.family_name, progeny_count_table.progeny_number
         FROM
@@ -527,7 +527,7 @@ sub get_cross_progenies_trial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($cross_combination_type_id, $member_of_type_id, $family_name_type_id, $trial_id, $offspring_of_type_id, $trial_id);
+    $h->execute($cross_combination_type_id, $cross_member_of_type_id, $family_name_type_id, $trial_id, $offspring_of_type_id, $trial_id);
 
     my @data =();
     while(my($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) = $h->fetchrow_array()){

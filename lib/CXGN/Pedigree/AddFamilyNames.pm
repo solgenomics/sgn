@@ -66,7 +66,7 @@ sub add_family_name {
 
         my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
 
-        my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'member_of', 'stock_relationship')->cvterm_id();
+        my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
 
        #Get stock of type cross matching cross name
         $cross_stock = $self->_get_cross($self->get_cross_name());
@@ -87,7 +87,7 @@ sub add_family_name {
         if ($family_name_rs){
             #create relationship between family_name and cross
             $family_name_rs->find_or_create_related('stock_relationship_objects', {
-                type_id => $member_of_cvterm_id,
+                type_id => $cross_member_of_cvterm_id,
                 object_id => $family_name_rs->stock_id(),
                 subject_id => $cross_stock->stock_id(),
             });
@@ -102,7 +102,7 @@ sub add_family_name {
 
             #create relationship between new family_name and cross
             $new_family_name_rs->find_or_create_related('stock_relationship_objects', {
-                type_id => $member_of_cvterm_id,
+                type_id => $cross_member_of_cvterm_id,
                 object_id => $new_family_name_rs->stock_id(),
                 subject_id => $cross_stock->stock_id(),
             });
