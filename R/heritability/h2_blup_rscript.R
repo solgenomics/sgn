@@ -95,7 +95,7 @@ for (i in 40:(ncol(pheno))) {
 	if (test == "TRUE") {
 	  outcome = colnames(pheno)[i]
 	  
-	  model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + replicate + blockNumber,
+	  model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
 	                na.action = na.exclude,
 	                data=pheno)
 	  
