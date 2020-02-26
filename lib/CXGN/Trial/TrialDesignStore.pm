@@ -333,15 +333,15 @@ sub validate_design {
     }
 
     my $cross_validator = CXGN::List::Validate->new();
-    my @cross_missing = @{$cross_validator->validate($chado_schema,'crosses',\@cross_names)->{'missing'}};
+    my @cross_missing = @{$cross_validator->validate($chado_schema,'accessions_or_crosses',\@cross_names)->{'missing'}};
     if (scalar(@cross_missing) > 0) {
-        $error .=  "The following crosses are not in the database as uniquenames or synonyms: ".join(',',@cross_missing);
+        $error .=  "The following cross unique ids or accessions are not in the database as uniquenames or synonyms: ".join(',',@cross_missing);
     }
 
     my $family_name_validator = CXGN::List::Validate->new();
-    my @family_name_missing = @{$family_name_validator->validate($chado_schema,'family_names',\@family_names)->{'missing'}};
+    my @family_name_missing = @{$family_name_validator->validate($chado_schema,'accessions_or_family_names',\@family_names)->{'missing'}};
     if (scalar(@family_name_missing) > 0) {
-        $error .=  "The following family names are not in the database as uniquenames or synonyms: ".join(',',@family_name_missing);
+        $error .=  "The following family names or accessions are not in the database as uniquenames or synonyms: ".join(',',@family_name_missing);
     }
 
     my @source_stock_types;
