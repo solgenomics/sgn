@@ -1718,7 +1718,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         }
-        else if (design_method == 'westcott') {
+        else if (design_method == 'Westcott') {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();

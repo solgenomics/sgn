@@ -284,7 +284,7 @@ rect.bordered {
                                             <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
                                             <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
                                             <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
-                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="westcott">Westcott Design</option>
+                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="Westcott">Westcott Design</option>
                                             <!--<option value=MADIII>MADIII</option>-->
                                             <!--<option value=MADIV>MADIV</option>-->
                                             <!--<option value=MADV>MADV</option>-->
