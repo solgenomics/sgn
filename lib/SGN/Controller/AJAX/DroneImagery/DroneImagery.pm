@@ -5073,10 +5073,10 @@ sub _perform_keras_cnn_predict {
             push @predictions, $prediction;
         }
     close($fh);
-    print STDERR Dumper \@predictions;
+    #print STDERR Dumper \@predictions;
 
     my $iter = 0;
-    print STDERR Dumper \%phenotype_data_hash;
+    #print STDERR Dumper \%phenotype_data_hash;
     foreach my $sorted_stock_id (@predicted_stock_ids) {
         my $prediction = $predictions[$iter];
         my $previous_value = $phenotype_data_hash{$sorted_stock_id} ? $phenotype_data_hash{$sorted_stock_id}->{trait_value}->{value} : '';
@@ -5130,7 +5130,7 @@ sub _perform_keras_cnn_predict {
             push @data_matrix_clean, 'NA';
         }
     }
-    print STDERR Dumper \@data_matrix_clean;
+    #print STDERR Dumper \@data_matrix_clean;
 
     if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
         print STDERR "CNN Prediction Mixed Model\n";
