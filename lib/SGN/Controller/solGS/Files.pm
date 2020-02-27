@@ -213,7 +213,7 @@ sub genotype_file_name {
 
     $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
     
     my $dir; 
@@ -595,7 +595,7 @@ sub create_file_id {
     my $sel_prop         = $c->stash->{selection_proportion};
     my $protocol_id      = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
       
     my $traits_ids = $c->stash->{training_traits_ids};

@@ -402,7 +402,7 @@ sub parse_arguments {
 	      $protocol_id =  $arguments->{$k};      
 	  }
 	  
-	  $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);	
+	  $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);	
       }
   }
 	    

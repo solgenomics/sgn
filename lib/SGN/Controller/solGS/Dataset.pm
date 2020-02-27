@@ -249,7 +249,7 @@ sub get_dataset_genotyping_protocol {
 	$protocol_id = $protocol_id->[0];
     }
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
     
     return $protocol_id;

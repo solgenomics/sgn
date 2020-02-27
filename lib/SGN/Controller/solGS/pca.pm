@@ -57,7 +57,7 @@ sub pca_run :Path('/pca/run/') Args() {
     $data_type         = 'genotype' if !$data_type;
     $data_type         = lc($data_type);
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;

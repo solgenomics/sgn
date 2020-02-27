@@ -309,7 +309,7 @@ sub _check_combined_trials_model_selection_output {
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
     
     $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);

@@ -78,7 +78,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id);  
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);  
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -185,7 +185,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $data_type    = 'genotype' if !$data_type;
     $data_type    = lc($data_type);
 
-    $c->controller('solGS::Utils')->stash_protocol_id($c, $protocol_id); 
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id); 
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{cluster_pop_id}   = $cluster_pop_id;

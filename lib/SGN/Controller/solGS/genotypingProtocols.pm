@@ -1,4 +1,4 @@
-package SGN::Controller::solGS::genotypingProtocols;
+package SGN::Controller::solGS::genotypingProtocol;
 
 
 use Moose;
@@ -43,11 +43,38 @@ sub genotype_protocols {
 	push @protocols_details, $details if %$details;	
     }
 
-   # my $dummy = {'protocol_id'=>2, 'name'=>'dummy protocol'};
-   # push @protocols_details, $dummy; 
+    my $dummy = {'protocol_id'=>2, 'name'=>'dummy protocol'};
+    push @protocols_details, $dummy; 
    
     return \@protocols_details;
     
+}
+
+
+sub create_protocol_url {
+    my ($self, $c, $protocol) = @_;
+   
+    my $protocol_detail = $c->model('solGS::solGS')->protocol_detail($protocol);
+    my $protocol_id = $protocol_detail->{protocol_id};
+    my $name        = $protocol_detail->{name};
+    my $protocol_url = '<a href="/breeders_toolbox/protocol/' . $protocol_id . '">' . $name . '</a>';
+  
+    return $protocol_url;
+}
+
+
+sub stash_protocol_id {
+    my ($self, $c, $protocol_id) = @_;
+
+    if (!$protocol_id || $protocol_id =~ /undefined/)
+    {
+	my $protocol_detail= $c->model('solGS::solGS')->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
+   # return $protocol_id;
 }
 
 
