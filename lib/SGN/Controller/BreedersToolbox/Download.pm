@@ -750,7 +750,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $file_handle = $geno->download($c);
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {

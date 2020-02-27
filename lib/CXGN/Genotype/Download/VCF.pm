@@ -146,7 +146,11 @@ has 'offset' => (
 
 sub download {
     my $self = shift;
-    my $c = shift;
+    my $cluster_shared_tempdir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $schema = $self->bcs_schema;
     my $cache_root_dir = $self->cache_root_dir,
     my $trial_list = $self->trial_list;
@@ -187,11 +191,11 @@ sub download {
         offset=>$offset
     });
     return $genotypes_search->get_cached_file_VCF(
-        $c->config->{cluster_shared_tempdir},
-        $c->config->{backend},
-        $c->config->{cluster_host},
-        $c->config->{'web_cluster_queue'},
-        $c->config->{basepath}
+        $cluster_shared_tempdir_config,
+        $backend_config,
+        $cluster_host_config,
+        $web_cluster_queue_config,
+        $basepath_config
     );
 }
 

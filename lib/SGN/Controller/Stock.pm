@@ -364,7 +364,13 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
             \%genotype_download_factory
         );
-        my $file_handle = $geno->download($c);
+        my $file_handle = $geno->download(
+            $c->config->{cluster_shared_tempdir},
+            $c->config->{backend},
+            $c->config->{cluster_host},
+            $c->config->{'web_cluster_queue'},
+            $c->config->{basepath}
+        );
 
         $c->res->content_type("application/text");
         $c->res->cookies->{$dl_cookie} = {
