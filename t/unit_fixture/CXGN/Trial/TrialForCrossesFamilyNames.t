@@ -356,6 +356,92 @@ is($family_field_book_columns[5][1], 'rep_number');
 #print STDERR "FAMILY FIELDBOOK COLUMNS =".Dumper($family_columns)."\n";
 
 
+#create westcott trial design_type using cross_unique_ids
+
+my @cross_unique_ids_westcott;
+for (my $i = 1; $i <= 100; $i++) {
+    push(@cross_unique_ids_westcott, "cross_for_westcott_trial".$i);
+}
+foreach my $cross_unique_id (@cross_unique_ids_westcott) {
+    my $cross_stock = $schema->resultset('Stock::Stock')->create({
+	    organism_id => $organism->organism_id,
+	    name       => $cross_unique_id,
+	    uniquename => $cross_unique_id,
+	    type_id     => $cross_type_id,
+    });
+};
+
+my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+
+my @accessions_westcott;
+for (my $i = 1; $i <= 2; $i++) {
+    push(@accessions_westcott, "check_accession_for_westcott_trial".$i);
+}
+foreach my $accession (@accessions_westcott) {
+    my $accession_stock = $schema->resultset('Stock::Stock')->create({
+	    organism_id => $organism->organism_id,
+	    name       => $accession,
+	    uniquename => $accession,
+	    type_id     => $accession_type_id,
+    });
+};
+
+ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
+ok($trial_design->set_trial_name("cross_westcott_trial"), "set trial name");
+ok($trial_design->set_stock_list(\@cross_unique_ids_westcott), "set stock list");
+ok($trial_design->set_plot_start_number(1), "set plot start number");
+ok($trial_design->set_plot_number_increment(1), "set plot increment");
+ok($trial_design->set_westcott_check_1("check_accession_for_westcott_trial1"), "set check 1");
+ok($trial_design->set_westcott_check_2("check_accession_for_westcott_trial2"), "set check 2");
+ok($trial_design->set_westcott_col(20), "set column number");
+ok($trial_design->set_design_type("Westcott"), "set design type");
+ok($trial_design->calculate_design(), "calculate design");
+ok(my $design = $trial_design->get_design(), "retrieve design");
+
+ok(my $trial_create = CXGN::Trial::TrialCreate->new({
+    chado_schema => $schema,
+    dbh => $dbh,
+    user_name => "johndoe", #not implemented
+    design => $design,
+    program => "test",
+    trial_year => "2015",
+    trial_description => "test description",
+    trial_location => "test_location",
+    trial_name => "cross_westcott_trial",
+    trial_type=>$preliminary_trial_cvterm_id,
+    design_type => "Westcott",
+    operator => "janedoe",
+    trial_stock_type => 'cross'
+}), "create trial object");
+
+my $save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
+
+ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
+    schema => $schema,
+    trial_name => "cross_westcott_trial",
+}), "create trial lookup object");
+
+ok(my $trial = $trial_lookup->get_trial());ok(my $trial_id = $trial->project_id());
+ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $schema,
+    trial_id => $trial_id,
+    experiment_type => 'field_layout'
+}), "create trial layout object");
+
+ok(my $stock_names = $trial_layout->get_accession_names(), "retrieve cross_unique_ids");
+
+my %stocks = map { $_ => 1 } @cross_unique_ids_westcott;
+my @crosses;
+for (my $i=0; $i<scalar(@cross_unique_ids_westcott); $i++){
+    foreach my $cross (@$stock_names) {
+        if ($cross->{accession_name} eq $cross_unique_ids_westcott[$i]){
+            push @crosses, $cross->{accession_name};
+        }
+    }
+}
+ok(scalar(@crosses) == 100, "check cross unique id");
+
 
 
 done_testing();
