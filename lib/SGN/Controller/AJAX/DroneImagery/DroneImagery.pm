@@ -4903,6 +4903,8 @@ sub _perform_keras_cnn_predict {
     $archive_temp_output_activation_file .= ".pdf";
     my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
 
+    my @predicted_stock_ids;
+
     open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
         print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id';
         if (scalar(@aux_trait_id)>0) {
@@ -4925,6 +4927,7 @@ sub _perform_keras_cnn_predict {
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
+                            push @predicted_stock_ids, $stock_id;
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
@@ -4959,6 +4962,7 @@ sub _perform_keras_cnn_predict {
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
+                            push @predicted_stock_ids, $stock_id;
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
@@ -5073,7 +5077,7 @@ sub _perform_keras_cnn_predict {
 
     my $iter = 0;
     print STDERR Dumper \%phenotype_data_hash;
-    foreach my $sorted_stock_id (sort keys %seen_stock_ids) {
+    foreach my $sorted_stock_id (@predicted_stock_ids) {
         my $prediction = $predictions[$iter];
         my $previous_value = $phenotype_data_hash{$sorted_stock_id} ? $phenotype_data_hash{$sorted_stock_id}->{trait_value}->{value} : '';
         if ($previous_value){
