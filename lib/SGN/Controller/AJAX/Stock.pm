@@ -1858,6 +1858,9 @@ sub get_stock_datatables_genotype_data_GET  {
     my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
     my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
 
+    my @result;
+    my $counter = 0;
+
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
     if ($header_line) {
@@ -1867,8 +1870,6 @@ sub get_stock_datatables_genotype_data_GET  {
         my $end_index = $offset + $limit;
         # print STDERR Dumper [$start_index, $end_index];
 
-        my @result;
-        my $counter = 0;
         while (my $gt_line = <$fh>) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my $g = decode_json $gt_line;
