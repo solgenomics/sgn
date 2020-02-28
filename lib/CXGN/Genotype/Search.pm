@@ -1324,6 +1324,10 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             push @male_stock_ids_found, $male_parent_stock_id;
         }
 
+        print STDERR Dumper \@accession_stock_ids_found;
+        print STDERR Dumper \@female_stock_ids_found;
+        print STDERR Dumper \@male_stock_ids_found;
+
         my %unique_germplasm;
         my $protocol = CXGN::Genotype::Protocol->new({
             bcs_schema => $schema,
@@ -1357,6 +1361,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             my %progeny_genotype;
             # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
             if ($genotypes->[0] && $genotypes->[1]) {
+                print STDERR Dumper "Computing genotype biparental";
 
                 # For old protocols with no protocolprop info...
                 if (scalar(@all_marker_objects) == 0) {
@@ -1389,13 +1394,39 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
 
                 $counter++;
             }
-            # elsif ($genotypes->[0]) {
-            #     my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-            #     foreach my $marker (keys %$parent1_genotype) {
-            #         $progeny_genotype{$marker} = $parent1_genotype->{$marker}->{DS};
-            #         $unique_marker_names{$marker}++;
-            #     }
-            # }
+            elsif ($genotypes->[0]) {
+                print STDERR Dumper "Computing genotype single parent";
+
+                # For old protocols with no protocolprop info...
+                if (scalar(@all_marker_objects) == 0) {
+                    foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
+                        push @all_marker_objects, {name => $o};
+                    }
+                }
+
+                my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+
+                my $genotype_string = "";
+                if ($counter == 0) {
+                    $genotype_string .= "Marker\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $m->{name} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                }
+
+                my $genotype_data_string = "";
+                foreach my $m (@all_marker_objects) {
+                    my $current_genotype = $parent1_genotype->{$m->{name}}->{DS};
+                    $genotype_data_string .= $current_genotype."\t";
+                }
+
+                $genotype_string .= $accession_stock_id."\t".$genotype_data_string."\n";
+
+                write_file($tempfile, {append => 1}, $genotype_string);
+
+                $counter++;
+            }
         }
 
         open my $out_copy, '<', $tempfile or die "Can't open output file: $!";
