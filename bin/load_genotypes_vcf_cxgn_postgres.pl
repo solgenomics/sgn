@@ -263,6 +263,7 @@ my $store_args = {
     phenome_schema=>$phenome_schema,
     observation_unit_type_name=>$obs_type,
     observation_unit_uniquenames=> $observation_unit_names_all,
+    accession_population_name=>$opt_g,
     project_id=>$opt_h,
     genotyping_facility=>$opt_n, #projectprop
     breeding_program_id=>$breeding_program_id, #project_rel
