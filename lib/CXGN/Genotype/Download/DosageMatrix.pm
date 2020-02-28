@@ -24,7 +24,8 @@ my $genotypes_search = CXGN::Genotype::Download::DosageMatrix->new({
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     limit=>$limit,
     offset=>$offset,
-    compute_from_parents=>0 #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
+    compute_from_parents=>0, #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
+    forbid_cache=>0 #If you want to get a guaranteed fresh result not from the file cache
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -146,6 +147,12 @@ has 'compute_from_parents' => (
     default => 0
 );
 
+has 'forbid_cache' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -183,6 +190,7 @@ sub download {
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
     my $compute_from_parents = $self->compute_from_parents;
+    my $forbid_cache = $self->forbid_cache;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -203,7 +211,8 @@ sub download {
         start_position=>$start_position,
         end_position=>$end_position,
         limit=>$limit,
-        offset=>$offset
+        offset=>$offset,
+        forbid_cache=>$forbid_cache
     });
     my @required_config = (
         $cluster_shared_tempdir_config,

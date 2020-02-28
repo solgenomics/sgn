@@ -27,6 +27,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     return_only_first_genotypeprop_for_stock=>0, #THIS IS TO CONSERVE MEMORY USAGE
     limit=>$limit,
     offset=>$offset,
+    forbid_cache=>$forbid_cache
     # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}], NOT IMPLEMENTED
     # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}], NOT IMPLEMENTED
 });
@@ -60,7 +61,6 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use Cache::File;
-use CXGN::Dataset::Cache;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
 use File::Temp qw | tempfile |;
@@ -167,6 +167,12 @@ has 'cache_expiry' => (
     isa => 'Int',
     is => 'rw',
     default => 0, # never expires?
+);
+
+has 'forbid_cache' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
 );
 
 has '_iterator_query_handle' => (
@@ -1055,7 +1061,7 @@ sub get_cached_file_search_json {
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {
@@ -1147,7 +1153,7 @@ sub get_cached_file_dosage_matrix {
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {
@@ -1273,7 +1279,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {
@@ -1407,7 +1413,7 @@ sub get_cached_file_VCF {
     my $protocol_ids = $self->protocol_id_list;
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {

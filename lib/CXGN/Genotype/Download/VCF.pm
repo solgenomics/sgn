@@ -25,7 +25,8 @@ my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     marker_name_list=>['S80_265728', 'S80_265723'],
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     limit=>$limit,
-    offset=>$offset
+    offset=>$offset,
+    forbid_cache=>0 #If you want to get a guaranteed fresh result not from the file cache
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -141,6 +142,12 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 1
 );
 
+has 'forbid_cache' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -177,6 +184,7 @@ sub download {
     my $chromosome_list = $self->chromosome_list;
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
+    my $forbid_cache = $self->forbid_cache;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -197,7 +205,8 @@ sub download {
         start_position=>$start_position,
         end_position=>$end_position,
         limit=>$limit,
-        offset=>$offset
+        offset=>$offset,
+        forbid_cache=>$forbid_cache
     });
     return $genotypes_search->get_cached_file_VCF(
         $cluster_shared_tempdir_config,
