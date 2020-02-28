@@ -33,6 +33,7 @@ sub genotyping_data_search_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
 
     my $limit = $c->req->param('length');
@@ -40,6 +41,7 @@ sub genotyping_data_search_GET : Args(0) {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
+        people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         accession_list=>$clean_inputs->{accession_id_list},
         tissue_sample_list=>$clean_inputs->{tissue_sample_id_list},

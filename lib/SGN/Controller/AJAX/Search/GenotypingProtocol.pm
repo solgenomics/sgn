@@ -52,9 +52,17 @@ sub genotyping_protocol_search_GET : Args(0) {
     foreach (@$protocol_search_result){
         my $num_markers = $_->{marker_count};
         my @trimmed;
+        my $header_line_count = 0;
         foreach (@{$_->{header_information_lines}}){
-            $_ =~ tr/<>//d;
-            push @trimmed, $_;
+            if ($header_line_count < 10) {
+                $_ =~ tr/<>//d;
+                push @trimmed, $_;
+            }
+            else {
+                push @trimmed, "### ----- SHOWING FIRST 10 LINES ONLY ----- ###";
+                last;
+            }
+            $header_line_count++;
         }
         my $description = join '<br/>', @trimmed;
         $description = $description ? $description : 'NA';

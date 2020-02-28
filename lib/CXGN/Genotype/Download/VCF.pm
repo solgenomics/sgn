@@ -12,6 +12,7 @@ PLEASE BE AWARE THAT THE DEFAULT OPTIONS FOR genotypeprop_hash_select, protocolp
 
 my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_list=>$accession_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
@@ -50,6 +51,12 @@ use DateTime;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
     is => 'rw',
     required => 1,
 );
@@ -152,6 +159,7 @@ sub download {
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
     my $schema = $self->bcs_schema;
+    my $people_schema = $self->people_schema;
     my $cache_root_dir = $self->cache_root_dir,
     my $trial_list = $self->trial_list;
     my $genotype_data_project_list = $self->genotype_data_project_list;
@@ -172,6 +180,7 @@ sub download {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         cache_root=>$cache_root_dir,
         accession_list=>$accession_list,
         tissue_sample_list=>$tissue_sample_list,

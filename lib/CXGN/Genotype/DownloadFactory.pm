@@ -10,6 +10,7 @@ my $geno = CXGN::Genotype::DownloadFactory->instantiate(
     'VCF',    #can be either 'VCF' or 'DosageMatrix'
     {
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         cache_root_dir=>$cache_root,
         accession_list=>$accession_list,
         tissue_sample_list=>$tissue_sample_list,
@@ -26,6 +27,7 @@ my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
         limit=>$limit,
         offset=>$offset
+        compute_from_parents=>0 #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
     }
 );
 my $status = $geno->download();
