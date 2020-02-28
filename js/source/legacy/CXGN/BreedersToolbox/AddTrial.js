@@ -1718,7 +1718,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         }
-        else if (design_method == 'westcott') {
+        else if (design_method == 'Westcott') {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -2025,21 +2025,21 @@ jQuery(document).ready(function ($) {
         document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
 
         document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
-        document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'crosses' ], '', 'refresh', undefined);
+        document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], '', 'refresh', undefined);
 
         document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
-        document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'family_names' ], '', 'refresh', undefined);
+        document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], '', 'refresh', undefined);
 
         //add lists to the list select and list of checks select dropdowns for CRBD.
         document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
         document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
 
-        document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'crosses' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
         document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
 
-        document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'family_names' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
         document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
 
