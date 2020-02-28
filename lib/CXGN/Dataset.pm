@@ -474,6 +474,7 @@ sub retrieve_genotypes {
 
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
+        people_schema=>$self->people_schema,
         accession_list => $self->accessions(),
         trial_list => $self->trials(),
         protocol_id_list => [$protocol_id],

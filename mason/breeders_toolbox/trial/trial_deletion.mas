@@ -108,7 +108,7 @@ jQuery(document).ready(function() {
 });
 
 function retrieve_trial_traits() {
-    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>', 'size':'20px' });
+    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>', 'size':'20px', 'multiple':'1' });
 }
 
 function delete_selected_assayed_traits() {

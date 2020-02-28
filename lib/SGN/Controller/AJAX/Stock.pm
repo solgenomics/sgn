@@ -1838,11 +1838,13 @@ sub get_stock_datatables_genotype_data_GET  {
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
     my $stock_type = $stock->type();
 
     my %genotype_search_params = (
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>[],
         protocolprop_top_key_select=>[],
