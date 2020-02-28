@@ -60,6 +60,7 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use Cache::File;
+use CXGN::Dataset::Cache;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
 use File::Temp qw | tempfile |;
