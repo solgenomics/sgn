@@ -1,5 +1,5 @@
 
-package CXGN::Trial::TrialDesign::Plugin::westcott;
+package CXGN::Trial::TrialDesign::Plugin::Westcott;
 
 use Moose::Role;
 use List::Util qw | max |;
@@ -22,7 +22,7 @@ sub create_design {
     my $westcott_check_2;
     my $westcott_check_1;
     my $westcott_col_between_check;
-    
+
     if ($self->has_stock_list()) {
       @stock_list = @{$self->get_stock_list()};
     } else {
@@ -45,22 +45,22 @@ sub create_design {
     if ($self->has_westcott_col_between_check()) {
       $westcott_col_between_check = $self->get_westcott_col_between_check();
     }
-    
+
     $stock_data_matrix =  R::YapRI::Data::Matrix->new({
         name => 'stock_data_matrix',
         rown => 1,
         coln => scalar(@stock_list),
         data => \@stock_list,
     });
-    
+
     $r_block = $rbase->create_block('r_block');
-    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $stock_data_matrix->send_rbase($rbase, 'r_block');
     $r_block->add_command('library(devtools)');
     $r_block->add_command('library(st4gi)');
     $r_block->add_command('geno <-  stock_data_matrix[1,]');
-    $r_block->add_command('ch1 <- "'.$westcott_check_1.'"'); 
+    $r_block->add_command('ch1 <- "'.$westcott_check_1.'"');
     $r_block->add_command('ch2 <- "'.$westcott_check_2.'"');
-    $r_block->add_command('nc <- '.$westcott_col); 
+    $r_block->add_command('nc <- '.$westcott_col);
     if ($westcott_col_between_check){
         $r_block->add_command('ncb <- '.$westcott_col_between_check);
         $r_block->add_command('westcott<-cr.w(geno, ch1, ch2, nc, ncb=ncb)');
@@ -74,7 +74,7 @@ sub create_design {
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
     @plot_numbers = $result_matrix->get_column("plot.num");
     @stock_names = $result_matrix->get_column("geno");
-    
+
     my @vector_trt = (1..scalar(@stock_list));
     my %accName;
     for (my $i=0; $i< scalar(@stock_list); $i++){
@@ -92,8 +92,8 @@ sub create_design {
     my @col_numbers = $result_matrix->get_column("col");
     @block_numbers = $result_matrix->get_column("row");
     my $max_block = max( @block_numbers );
-    @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max_block)}; 
-    
+    @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max_block)};
+
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
       my %plot_info;
       $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
@@ -108,7 +108,7 @@ sub create_design {
       $westcott_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
     %westcott_design = %{$self->_build_plot_names(\%westcott_design)};
-    return \%westcott_design;   
+    return \%westcott_design;
 }
 
 1;

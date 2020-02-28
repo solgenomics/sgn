@@ -365,9 +365,9 @@ jQuery(document).ready(function ($) {
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
-            if (response.error) {
+            if (response.error || response.error_string) {
                 fullParsedData = undefined;
-                alert(response.error);
+                alert(response.error || response.error_string);
             }
             else if (response.success) {
                 fullParsedData = response.full_data;
