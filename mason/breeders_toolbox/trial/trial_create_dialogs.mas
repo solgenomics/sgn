@@ -77,9 +77,9 @@ rect.bordered {
                         <&| /util/workflow.mas, id=> "trial_design_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
                                 <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
-                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
+                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession, cross unique id or family name representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
                                 <p>To design a trial you need to provide a globally unique trial name. The plot names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
-                                <p>You also need to provide a list of accessions to use. Based on the design you have picked, the accessions will be randomized over the blocks or replicates in the trial.</p>
+                                <p>You also need to provide a list of accessions, cross unique ids or family names to use. Based on the design you have picked, the accessions, cross unique ids or family names will be randomized over the blocks or replicates in the trial.</p>
                                 <p>You can provide a list of accessions to use as controls or checks in your experiment.</p>
                                 <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
                                 <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
@@ -260,7 +260,7 @@ rect.bordered {
                                 </div>
                                 <hr>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Stock Type Used in Trial: </label>
+                                    <label class="col-sm-3 control-label">Stock Type Being Evaluated in Trial: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_stock_type">
                                             <option value="">Select a stock type</option>
@@ -284,7 +284,7 @@ rect.bordered {
                                             <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
                                             <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
                                             <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
-                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="westcott">Westcott Design</option>
+                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="Westcott">Westcott Design</option>
                                             <!--<option value=MADIII>MADIII</option>-->
                                             <!--<option value=MADIV>MADIV</option>-->
                                             <!--<option value=MADV>MADV</option>-->
@@ -366,12 +366,12 @@ rect.bordered {
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_cross_checks_section" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from cross list. (optional): </label>
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be accessions list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_cross_checks_section" >
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_family_name_checks_section" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from family_name list. (optional): </label>
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be accessions list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_family_name_checks_section" >
                                         </div>
                                     </div>

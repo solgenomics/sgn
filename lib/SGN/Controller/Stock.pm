@@ -336,6 +336,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_name = $stock_row->uniquename;
     my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
@@ -345,6 +346,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     if ($stock_id) {
         my %genotype_download_factory = (
             bcs_schema=>$schema,
+            people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
             markerprofile_id_list=>$genotypeprop_id,
             #genotype_data_project_list=>$genotype_data_project_list,
@@ -364,7 +366,13 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
             \%genotype_download_factory
         );
-        my $file_handle = $geno->download($c);
+        my $file_handle = $geno->download(
+            $c->config->{cluster_shared_tempdir},
+            $c->config->{backend},
+            $c->config->{cluster_host},
+            $c->config->{'web_cluster_queue'},
+            $c->config->{basepath}
+        );
 
         $c->res->content_type("application/text");
         $c->res->cookies->{$dl_cookie} = {

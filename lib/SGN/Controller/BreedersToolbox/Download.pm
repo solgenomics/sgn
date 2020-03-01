@@ -682,12 +682,14 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $format = $c->req->param("format") || "list_id";
     my $download_format = $c->req->param("download_format") || 'VCF';
     my $chromosome_numbers = $c->req->param("chromosome_number") ? [$c->req->param("chromosome_number")] : [];
     my $start_position = $c->req->param("start_position") || undef;
     my $end_position = $c->req->param("end_position") || undef;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
@@ -737,6 +739,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
             bcs_schema=>$schema,
+            people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
             accession_list=>\@accession_ids,
             #tissue_sample_list=>$tissue_sample_list,
@@ -745,7 +748,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             chromosome_list=>$chromosome_numbers,
             start_position=>$start_position,
             end_position=>$end_position,
-            compute_from_parents=>$compute_from_parents
+            compute_from_parents=>$compute_from_parents,
+            forbid_cache=>$forbid_cache
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],
@@ -753,7 +757,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $file_handle = $geno->download($c);
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
