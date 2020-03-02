@@ -57,6 +57,8 @@ solGS.pca = {
 	  dataType = jQuery('#pca_data_type_select').val();  
 	}
 
+	var protocolId = jQuery('#pca_div #genotyping_protocol #genotyping_protocol_id').val();
+		console.log('pcaRun protocol id: ' + protocolId)
 	var traitId = jQuery('#trait_id').val();
 	var popDetails = solGS.getPopulationDetails();
 	
@@ -99,7 +101,8 @@ solGS.pca = {
 		'data_structure': dataStructure,
 		'dataset_id': datasetId,
 		'dataset_name': datasetName,
-		'trait_id': traitId
+		'trait_id': traitId,
+		'genotyping_protocol_id': protocolId
 	    };
 	    
 	    this.runPcaAnalysis(pcaArgs);
