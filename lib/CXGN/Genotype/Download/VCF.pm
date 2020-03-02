@@ -26,6 +26,7 @@ my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     limit=>$limit,
     offset=>$offset,
+    compute_from_parents=>0, #Whether to look at the pedigree to see if parents are genotyped and to calculate genotype from parents
     forbid_cache=>0 #If you want to get a guaranteed fresh result not from the file cache
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
@@ -142,6 +143,12 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 1
 );
 
+has 'compute_from_parents' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'forbid_cache' => (
     isa => 'Bool',
     is => 'ro',
@@ -185,6 +192,7 @@ sub download {
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
     my $forbid_cache = $self->forbid_cache;
+    my $compute_from_parents = $self->compute_from_parents;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -208,13 +216,20 @@ sub download {
         offset=>$offset,
         forbid_cache=>$forbid_cache
     });
-    return $genotypes_search->get_cached_file_VCF(
+    my @required_config = (
         $cluster_shared_tempdir_config,
         $backend_config,
         $cluster_host_config,
         $web_cluster_queue_config,
         $basepath_config
     );
+    if ($compute_from_parents) {
+        print STDERR Dumper "Computing genotype dosages VCF From Parents......";
+        return $genotypes_search->get_cached_file_VCF_compute_from_parents(@required_config);
+    }
+    else {
+        return $genotypes_search->get_cached_file_VCF(@required_config);
+    }
 }
 
 1;
