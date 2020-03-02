@@ -40,7 +40,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/solgs/cluster/index.mas';
+    $c->stash->{template} = '/solgs/cluster/analysis.mas';
 
 }
 
@@ -184,7 +184,7 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $cluster_type = 'k-means' if !$cluster_type;
     $data_type    = 'genotype' if !$data_type;
     $data_type    = lc($data_type);
-
+    
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id); 
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
@@ -832,7 +832,8 @@ sub create_cluster_genotype_data_query_jobs {
     my ($self, $c) = @_;
 
     my $data_str = $c->stash->{data_structure};
-       
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+  
     if ($data_str =~ /list/)
     {
 	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
@@ -846,7 +847,7 @@ sub create_cluster_genotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{cluster_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials);
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{cluster_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
     

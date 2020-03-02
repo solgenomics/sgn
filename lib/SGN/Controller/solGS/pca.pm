@@ -35,7 +35,7 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 	}
     }
     
-    $c->stash->{template} = '/solgs/pca/index.mas';
+    $c->stash->{template} = '/solgs/pca/analysis.mas';
 
 }
 
@@ -407,11 +407,13 @@ sub create_pca_phenotype_data_query_jobs {
     
 }
 
+
 sub create_pca_genotype_data_query_jobs {
     my ($self, $c) = @_;
 
     my $data_str = $c->stash->{data_structure};
-       
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+   
     if ($data_str =~ /list/)
     {
 	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
@@ -425,7 +427,7 @@ sub create_pca_genotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials);
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
     
