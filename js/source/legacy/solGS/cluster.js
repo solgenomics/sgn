@@ -188,7 +188,8 @@ solGS.cluster = {
 	var selectName    = clusterArgs.select_name;
 	var dataStr      = clusterArgs.data_structure;
 
-	var protocolId = jQuery('#genotyping_protocol_id').val();
+	var protocolId = jQuery('#cluster_div #genotyping_protocol #genotyping_protocol_id').val();
+	console.log('clusterresult protocol id: ' + protocolId)
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
 	if (trainingTraitsIds) {
@@ -602,9 +603,9 @@ solGS.cluster = {
             jQuery("#cluster_selected_population_type").val(selectedPopType);
 
 	    if (selectedPopType.match(/selection_index/)) {
-		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').show();
+		jQuery('#cluster_div #cluster_options #selection_proportion_div').show();
 	    } else {
-		jQuery('#cluster_canvas #cluster_options #selection_proportion_div').hide();	
+		jQuery('#cluster_div #cluster_options #selection_proportion_div').hide();	
 	    }
             
 	});
@@ -757,10 +758,10 @@ jQuery(document).ready( function() {
 	jQuery(document).ready(checkClusterPop);
 
 	function checkClusterPop() {
-	    if(jQuery('#cluster_canvas #cluster_select_a_population_div').is(':visible')) {
-		jQuery('#cluster_canvas #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
-		jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-		jQuery('#cluster_canvas #cluster_options').show();
+	    if(jQuery('#cluster_div #cluster_select_a_population_div').is(':visible')) {
+		jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
+		jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
+		jQuery('#cluster_div #cluster_options').show();
 	    } else {
 		setTimeout(checkClusterPop, 6000);
 	    }
@@ -772,9 +773,9 @@ jQuery(document).ready( function() {
 	dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);
 	var clusterTypeOpts =   solGS.cluster.createClusterTypeSelect();
 	
-	jQuery('#cluster_canvas #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
-	jQuery('#cluster_canvas #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-	jQuery("#cluster_canvas #cluster_options").show();
+	jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
+	jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
+	jQuery("#cluster_div #cluster_options").show();
 	
     }
 });
