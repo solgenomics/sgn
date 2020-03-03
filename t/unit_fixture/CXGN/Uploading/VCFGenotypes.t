@@ -492,4 +492,13 @@ $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_string);
 
+$ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false");
+$message = $response->decoded_content;
+print STDERR Dumper $message;
+is($message, 'stock_id	41782	41783
+41782	0.0317460317460317	-0.0317460317460317
+41783	-0.0317460317460317	0.0317460317460317
+');
+
 done_testing();
