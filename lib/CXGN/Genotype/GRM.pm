@@ -314,7 +314,7 @@ sub get_grm {
     #$r_block->run_block();
     #my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
 
-    my $cmd = 'R -e "library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); A_matrix <- A.mat(mat, min.MAF=0.05, max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    my $cmd = 'R -e "library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); A_matrix <- A.mat(mat, min.MAF=0.05, max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
