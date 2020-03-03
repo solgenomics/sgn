@@ -702,6 +702,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $protocol_id = $c->stash->{genotyping_protocol_id};
     
     if ($training_pop_id =~ /list/) 
     {
@@ -781,7 +782,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 
     $self->top_blups($c, $gebvs_file);
  
-    $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
+    $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|; 
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
     
@@ -990,10 +991,12 @@ sub output_files {
 }
 
 
-sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
-    my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
+sub download_blups :Path('/solgs/download/blups/pop') Args() {
+    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
 
     $c->stash->{pop_id} = $pop_id;
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
@@ -1018,10 +1021,12 @@ sub download_blups :Path('/solgs/download/blups/pop') Args(3) {
 }
 
 
-sub download_marker_effects :Path('/solgs/download/marker/pop') Args(3) {
-    my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
+sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
+    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
 
-    $c->stash->{pop_id} = $pop_id; 
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
         
@@ -1043,7 +1048,8 @@ sub download_urls {
     my ($self, $c) = @_;
     my $data_set_type = $c->stash->{data_set_type};
     my $pop_id;
-
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     no warnings 'uninitialized';
 
     if ($data_set_type =~ /combined populations/)
@@ -1057,9 +1063,9 @@ sub download_urls {
     
     my $trait_id          = $c->stash->{trait_id};
    
-    my $blups_url      = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id">Download all GEBVs</a> |;
-    my $marker_url     = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id">Download all marker effects</a> |;
-    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id">Download model accuracy report</a> |;
+    my $blups_url      = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download all GEBVs</a> |;
+    my $marker_url     = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download all marker effects</a> |;
+    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download model accuracy report</a> |;
    
     $c->stash(blups_download_url            => $blups_url,
               marker_effects_download_url   => $marker_url,
@@ -1083,10 +1089,12 @@ sub top_blups {
 }
 
 
-sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
-    my ($self, $c, $pop_id, $trait, $trait_id) = @_;   
+sub download_validation :Path('/solgs/download/validation/pop') Args() {
+    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
  
-    $c->stash->{pop_id} = $pop_id; 
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
         
@@ -1320,12 +1328,13 @@ sub list_predicted_selection_pops {
 }
 
 
-sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) {
-    my ($self, $c, $pop_id, $prediction, $prediction_id, $trait_id) = @_;   
+sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
+    my ($self, $c, $pop_id, $prediction, $prediction_id, $trait_id, $gp, $protocol_id) = @_;   
  
     $self->get_trait_details($c, $trait_id);
     $c->stash->{pop_id} = $pop_id;
-   
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     my $identifier = $pop_id . "_" . $prediction_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
     my $prediction_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
