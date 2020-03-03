@@ -47,10 +47,6 @@ export function WizardDownloads(main_id,wizard){
         var end_position = d3.select(".wizard-download-genotypes-end-position").node().value;
         var download_format = d3.select(".wizard-download-genotypes-format").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
-        if (compute_from_parents == true && download_format != 'DosageMatrix') {
-            alert('Can only download DosageMatrix format if you are computing genotypes from parent dosage');
-            return;
-        }
         var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}`;
         window.open(url,'_blank');
       });
