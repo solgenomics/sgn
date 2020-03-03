@@ -760,7 +760,7 @@ sub genotype_data {
 	my $protocol_detail= $self->protocol_detail(); 
 	$protocol_id = $protocol_detail->{protocol_id};
     }
-  
+    
     my $geno_search = CXGN::Genotype::Search->new({
 		bcs_schema => $self->schema(),
 		trial_list => [$trial_id],
@@ -1967,12 +1967,19 @@ sub protocol_detail {
 sub get_all_genotyping_protocols {
     my ($self, $trial_id) = @_;
 
-    my $q = 'SELECT distinct(genotyping_protocol_id) 
-                    FROM genotyping_protocolsXtrials
-                    WHERE trial_id = ?';
+    my $where = '';
+    if ($trial_id)
+    {
+	$where = ' WHERE trial_id = ?';
+    }
 
+    my $q = 'SELECT distinct(genotyping_protocol_id)
+                    FROM genotyping_protocolsXtrials' . $where;
+
+   
     my $sth = $self->context->dbc->dbh->prepare($q);
-    $sth->execute($trial_id);
+    
+    $trial_id ? $sth->execute($trial_id) : $sth->execute();
 
     my @protocol_ids;
     
@@ -2056,7 +2063,7 @@ sub get_dataset_genotype_data {
     my ($self, $dataset_id, $protocol_id) = @_;
    
     my $protocol_detail = $self->protocol_detail($protocol_id);
-    my $protocol_id = $protocol_detail->{protocol_id};
+    $protocol_id = $protocol_detail->{protocol_id};
 
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
