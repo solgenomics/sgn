@@ -1,0 +1,23 @@
+<%args>
+$protocol_id
+</%args>
+
+<button class="btn btn-danger" id="genotyping_protocol_detail_page_delete">Delete Genotyping Data For this Protocol</button>
+
+<script>
+
+jQuery('#genotyping_protocol_detail_page_delete').click(function(){
+    jQuery.ajax ({
+        url : '/ajax/genotyping_protocol/delete/<% $protocol_id %>',
+        success: function(response){
+            console.log(response);
+        },
+        error: function(response){
+            alert('Error deleting genotyping protocol!');
+        }
+
+    });
+});
+
+</script>
+
