@@ -31,6 +31,7 @@ sub index :Path('/tools/heritability/') :Args(0) {
     return;
   }
   $c->stash->{template} = '/tools/heritability/index.mas';
+  
 }
 
 1;

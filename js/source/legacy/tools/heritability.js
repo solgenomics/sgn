@@ -36,9 +36,9 @@ function checkPhenoH2Result () {
         url: '/phenotype/heritability/check/result/' + popId,
         success: function(response) {
             if (response.result) {
-		phenotypicheritability();					
+		phenotypicHeritability();					
             } else { 
-		jQuery("#run_pheno_h2").show();	
+		jQuery("#run_pheno_heritability").show();	
             }
 	}
     });
@@ -48,17 +48,17 @@ function checkPhenoH2Result () {
 
 jQuery(document).ready( function() { 
 
-    jQuery("#run_pheno_h2").click(function() {
-        phenotypicheritability();
-	jQuery("#run_pheno_h2").hide();
+    jQuery("#run_pheno_heritability").click(function() {
+        phenotypicHeritability();
+	jQuery("#run_pheno_heritability").hide();
     }); 
   
 });
 
 
 jQuery(document).on("click", "#run_genetic_heritability", function() {        
-    var popId   = jQuery("#H2_selected_population_id").val();
-    var popType = jQuery("#H2_selected_population_type").val();
+    var popId   = jQuery("#h2_selected_population_id").val();
+    var popType = jQuery("#h2_selected_population_type").val();
     
     //jQuery("#heritability_canvas").empty();
    
@@ -69,140 +69,6 @@ jQuery(document).on("click", "#run_genetic_heritability", function() {
     formatGenCorInputData(popId, popType);
          
 });
-
-
-function listGenCorPopulations ()  {
-    var modelData = solGS.sIndex.getTrainingPopulationData();
-   
-    var trainingPopIdName = JSON.stringify(modelData);
-   
-    var  popsList =  '<dl id="H2_selected_population" class="H2_dropdown">'
-        + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
-        + '<dd>'
-        + '<ul>'
-        + '<li>'
-        + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
-        + '</li>';  
- 
-    popsList += '</ul></dd></dl>'; 
-   
-    jQuery("#H2_select_a_population_div").empty().append(popsList).show();
-     
-    var dbSelPopsList;
-    if (modelData.id.match(/list/) == null) {
-        dbSelPopsList = solGS.sIndex.addSelectionPopulations();
-    }
-
-    if (dbSelPopsList) {
-            jQuery("#H2_select_a_population_div ul").append(dbSelPopsList); 
-    }
-      
-    var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
-   
-    if (listTypeSelPops) {
-        var selPopsList = solGS.sIndex.getListTypeSelPopulations();
-
-        if (selPopsList) {
-            jQuery("#H2_select_a_population_div ul").append(selPopsList);  
-        }
-    }
-
-    jQuery(".H2_dropdown dt a").click(function() {
-        jQuery(".H2_dropdown dd ul").toggle();
-    });
-                 
-    jQuery(".H2_dropdown dd ul li a").click(function() {
-      
-        var text = jQuery(this).html();
-           
-        jQuery(".H2_dropdown dt a span").html(text);
-        jQuery(".H2_dropdown dd ul").hide();
-                
-        var idPopName = jQuery("#H2_selected_population").find("dt a span.value").html();
-        idPopName     = JSON.parse(idPopName);
-        modelId       = jQuery("#model_id").val();
-                   
-        var selectedPopId   = idPopName.id;
-        var selectedPopName = idPopName.name;
-        var selectedPopType = idPopName.pop_type; 
-       
-        jQuery("#H2_selected_population_name").val(selectedPopName);
-        jQuery("#H2_selected_population_id").val(selectedPopId);
-        jQuery("#H2_selected_population_type").val(selectedPopType);
-                                
-    });
-                       
-    jQuery(".H2_dropdown").bind('click', function(e) {
-        var clicked = jQuery(e.target);
-               
-        if (! clicked.parents().hasClass("H2_dropdown"))
-            jQuery(".H2_dropdown dd ul").hide();
-
-        e.preventDefault();
-
-    });           
-}
-
-
-function formatGenCorInputData (popId, type, indexFile) {
-    var modelDetail = getPopulationDetails();
-
-    
-    var traitsIds = jQuery('#training_traits_ids').val();
-    if(traitsIds) {
-	traitsIds = traitsIds.split(',');
-    }
-
-    var modelId  = modelDetail.population_id;
-    jQuery.ajax({
-        type: 'POST',
-        dataType: 'json',
-        data: {'model_id': modelId,
-	       'h2_population_id': popId,
-	       'traits_ids': traitsIds,
-	       'type' : type,
-	       'index_file': indexFile},
-        url: '/heritability/genetic/data/',
-        success: function(response) {
-
-            if (response.status) {
-		
-                gebvsFile = response.gebvs_file;
-		indexFile = response.index_file;
-		
-                var divPlace;
-                if (indexFile) {
-                    divPlace = '#si_heritability_canvas';
-                }
-
-                var args = {
-                    'model_id': modelDetail.population_id, 
-                    'h2_population_id': popId, 
-                    'type': type,
-		    'traits_ids': traitsIds,
-                    'gebvs_file': gebvsFile,
-		    'index_file': indexFile,
-                    'div_place' : divPlace,
-                };
-		
-                runGenheritabilityAnalysis(args);
-
-            } else {
-                jQuery(divPlace +" #heritability_message")
-                    .css({"padding-left": '0px'})
-                    .html("This population has no valid traits to H2late.");
-		
-            }
-        },
-        error: function(response) {
-            jQuery(divPlace +"#heritability_message")
-                .css({"padding-left": '0px'})
-                .html("Error occured preparing the additive genetic data for heritability analysis.");
-	         
-            jQuery.unblockUI();
-        }         
-    });
-}
 
 
 function getPopulationDetails () {
@@ -221,7 +87,7 @@ function getPopulationDetails () {
 }
 
 
-function phenotypicheritability () {
+function phenotypicHeritability () {
  
     var population = getPopulationDetails();
     
@@ -235,13 +101,13 @@ function phenotypicheritability () {
             success: function(response) {
 	
                 if (response.result) {
-                    runPhenoheritabilityAnalysis();
+                    runPhenoHeritabilityAnalysis();
                 } else {
                     jQuery("#heritability_message")
                         .css({"padding-left": '0px'})
                         .html("This population has no phenotype data.");
 
-		    jQuery("#run_pheno_h2").show();
+		    jQuery("#run_pheno_heritability").show();
                 }
             },
             error: function(response) {
@@ -249,13 +115,13 @@ function phenotypicheritability () {
                     .css({"padding-left": '0px'})
                     .html("Error occured preparing the phenotype data for heritability analysis.");
 
-		jQuery("#run_pheno_h2").show();
+		jQuery("#run_pheno_heritability").show();
             }
     });     
 }
 
 
-function runPhenoheritabilityAnalysis () {
+function runPhenoHeritabilityAnalysis () {
     var population = getPopulationDetails();
     var popId     = population.population_id;
    
@@ -266,25 +132,25 @@ function runPhenoheritabilityAnalysis () {
         url: '/phenotypic/heritability/analysis/output',
         success: function(response) {
             if (response.status== 'success') {
-                plotheritability(response.data);
+                plotHeritability(response.data);
 		
-		var h2Download = "<a href=\"/download/phenotypic/heritability/population/" 
+		var corrDownload = "<a href=\"/download/phenotypic/heritability/population/" 
 		                    + popId + "\">Download heritability coefficients</a>";
 
-		jQuery("#heritability_canvas").append("<br />[ " + h2Download + " ]").show();
+		jQuery("#heritability_canvas").append("<br />[ " + corrDownload + " ]").show();
 	
 		if(document.URL.match('/breeders/trial/')) {
 		    displayTraitAcronyms(response.acronyms);
 		}
 		
                 jQuery("#heritability_message").empty();
-		jQuery("#run_pheno_h2").hide();
+		jQuery("#run_pheno_heritability").hide();
             } else {
                 jQuery("#heritability_message")
                     .css({"padding-left": '0px'})
                     .html("There is no heritability output for this dataset."); 
 		
-		jQuery("#run_pheno_h2").show();
+		jQuery("#run_pheno_heritability").show();
             }
         },
         error: function(response) {                          
@@ -292,76 +158,13 @@ function runPhenoheritabilityAnalysis () {
                 .css({"padding-left": '0px'})
                 .html("Error occured running the heritability analysis.");
 	    	
-	    jQuery("#run_pheno_h2").show();
+	    jQuery("#run_pheno_heritability").show();
         }                
     });
 }
 
 
-function runGenheritabilityAnalysis (args) {
-   
-    jQuery.ajax({
-        type: 'POST',
-        dataType: 'json',
-        data: args,
-        url: '/genetic/heritability/analysis/output',
-        success: function(response) {
-            if (response.status == 'success') {
-                
-                divPlace = args.div_place;
-               
-                if (divPlace === '#si_heritability_canvas') {
-		    jQuery("#si_heritability_message").empty();
-                    jQuery("#si_heritability_section").show();                 
-                }
-             
-                plotheritability(response.data, divPlace);
-                jQuery("#heritability_message").empty();
-               
-                
-                if (divPlace === '#si_heritability_canvas') {
-  
-                    var popName   = jQuery("#selected_population_name").val();                   
-                    var corLegDiv = "<div id=\"si_heritability_" 
-                        + popName.replace(/\s/g, "") 
-                        + "\"></div>";  
-                
-                    var legendValues = solGS.sIndex.legendParams();                 
-                    var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
-            
-                    jQuery("#si_heritability_canvas").append(corLegDivVal).show();
-  
-                } else {
-                    
-                    var popName = jQuery("#H2_selected_population_name").val(); 
-                    var corLegDiv  = "<div id=\"H2_heritability_" 
-                        + popName.replace(/\s/g, "") 
-                        + "\"></div>";
-                    
-                    var corLegDivVal = jQuery(corLegDiv).html(popName);            
-                    jQuery("#heritability_canvas").append(corLegDivVal).show(); 
-                }                        
-               
-            } else {
-                jQuery(divPlace + " #heritability_message")
-                    .css({"padding-left": '0px'})
-                    .html("There is no genetic heritability output for this dataset.");               
-            }
-            
-            jQuery.unblockUI();
-        },
-        error: function(response) {                          
-            jQuery(divPlace +" #heritability_message")
-                .css({"padding-left": '0px'})
-                .html("Error occured running the genetic heritability analysis.");
-             
-            jQuery.unblockUI();
-        }       
-    });
-}
-
-
-function plotheritability (data, divPlace) {
+function plotHeritability (data, divPlace) {
 
     data = data.replace(/\s/g, '');
     data = data.replace(/\\/g, '');
@@ -414,11 +217,11 @@ function plotheritability (data, divPlace) {
         .scale(yAxisScale)
         .orient("left");
        
-    var h2plot = svg.append("g")
+    var corrplot = svg.append("g")
         .attr("id", "heritability_plot")
         .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
        
-    h2plot.append("g")
+    corrplot.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height +")")
         .call(xAxis)
@@ -430,7 +233,7 @@ function plotheritability (data, divPlace) {
         .attr("fill", "#523CB5")
         .style({"text-anchor":"start", "fill": "#523CB5"});
           
-    h2plot.append("g")
+    corrplot.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate(0,0)")
         .call(yAxis)
@@ -441,11 +244,11 @@ function plotheritability (data, divPlace) {
         .attr("fill", "#523CB5")
         .style("fill", "#523CB5");
             
-    var h2 = [];
+    var corr = [];
     var coefs = [];   
     for (var i=0; i<data.coefficients.length; i++) {
         for (var j=0;  j<data.coefficients[i].length; j++) {
-            h2.push({"row":i, "col":j, "value": data.coefficients[i][j]});
+            corr.push({"row":i, "col":j, "value": data.coefficients[i][j]});
             
             if (data.coefficients[i][j] != 100) {
                 coefs.push(data.coefficients[i][j]);
@@ -453,8 +256,8 @@ function plotheritability (data, divPlace) {
         }
     }
                                  
-    var cell = h2plot.selectAll("rect")
-        .data(h2)  
+    var cell = corrplot.selectAll("rect")
+        .data(corr)  
         .enter().append("rect")
         .attr("class", "cell")
         .attr("x", function (d) { return corXscale(d.col)})
@@ -471,8 +274,8 @@ function plotheritability (data, divPlace) {
                 if(d.value != 100) {
                     d3.select(this)
                         .attr("stroke", "green")
-                    h2plot.append("text")
-                        .attr("id", "h2text")
+                    corrplot.append("text")
+                        .attr("id", "corrtext")
                         .text("[" + data.traits[d.row] 
                               + " vs. " + data.traits[d.col] 
                               + ": " + d3.format(".2f")(d.value) 
@@ -491,12 +294,12 @@ function plotheritability (data, divPlace) {
                 }
         })                
         .on("mouseout", function() {
-                d3.selectAll("text.h2label").remove()
-                d3.selectAll("text#h2text").remove()
+                d3.selectAll("text.corrlabel").remove()
+                d3.selectAll("text#corrtext").remove()
                 d3.select(this).attr("stroke","white")
             });
             
-    h2plot.append("rect")
+    corrplot.append("rect")
         .attr("height", height)
         .attr("width", width)
         .attr("fill", "none")
@@ -514,7 +317,7 @@ function plotheritability (data, divPlace) {
         legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
     }
  
-    var legend = h2plot.append("g")
+    var legend = corrplot.append("g")
         .attr("class", "cell")
         .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
         .attr("height", 100)
@@ -537,7 +340,7 @@ function plotheritability (data, divPlace) {
             else {return corZscale(d[1])}
         });
  
-    var legendTxt = h2plot.append("g")
+    var legendTxt = corrplot.append("g")
         .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
         .attr("id", "legendtext");
 
