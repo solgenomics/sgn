@@ -17,7 +17,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <& /util/import_javascript.mas, classes => ['solGS.genotypingProtocol'] &>
 
-<div class='container'>
+
   <div class='row text-center'
        id='genotyping_protocol'
        style='margin-top:30px;margin-bottom:60px;'>
@@ -37,12 +37,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	      id='genotyping_protocols_list_select'>
       </select>
     </div>
+
+   <input type='hidden'
+	   id='genotyping_protocol_id'
+	   value=''/>
   </div>
   
-  <input type='hidden'
-	 id='genotyping_protocol_id'
-	 value=''/>
-</div>
+  
+
 
   
     
