@@ -620,7 +620,7 @@ sub project_description {
     my @traits_lines = read_file($traits_file);
     my $traits_no = scalar(@traits_lines) - 1;
 
-    my $protocol_url = $c->controller('solGS::Utils')->create_protocol_url($c, $protocol_id);
+    my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
 
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
@@ -768,7 +768,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     $c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
     $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
-    my $protocol_url = $c->controller('solGS::Utils')->create_protocol_url($c, $protocol_id);
+    my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
     $c->stash->{protocol_url} = $protocol_url;
     
     my $identifier    = $training_pop_id . '_' . $selection_pop_id;
@@ -3183,13 +3183,7 @@ sub phenotype_file {
 
 sub genotype_trial_query_args {
     my ($self, $c, $pop_id, $protocol_id) = @_;
-
-    #$pop_id  = $c->stash->{pop_id} if !$pop_id;
-    #my $training_pop_id = $c->stash->{training_pop_id};
-    #my $selection_pop_id = $c->stash->{selection_pop_id};
-
-   # $pop_id  = $training_pop_id || $selection_pop_id if !$pop_id;
-    
+       
     my $geno_file;
     my $check_data_exists = $c->stash->{check_data_exists};
 
