@@ -492,4 +492,16 @@ $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_string);
 
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $access_token = $response->{access_token};
+
+$ua = LWP::UserAgent->new;
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$protocol_id?sgn_session_id=$access_token");
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {success=>1});
+
 done_testing();
