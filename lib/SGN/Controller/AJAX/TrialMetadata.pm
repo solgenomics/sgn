@@ -2024,6 +2024,7 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
 
 }
 
+
 sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2032,18 +2033,43 @@ sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_and_details_in_crossingtrial();
-    my @data;
-    foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-        push @data, [$cross_id, $cross_name];
-    };
+    my $result = $trial->get_crosses_in_crossingtrial();
+    my @data = @$result;
+#    print STDERR "CROSSES =".Dumper(\@data)."\n";
 
-    print STDERR "CROSSES =".Dumper(\@data)."\n";
     $c->stash->{rest} = { crosses  => \@data };
 }
 
 
+sub get_female_accessions : Chained('trial') PathPart('get_female_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_accessions_in_crossingtrial();
+    my @data = @$result;
+#    print STDERR "FEMALE ACCESSIONS =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { female_accessions  => \@data };
+}
+
+
+sub get_male_accessions : Chained('trial') PathPart('get_male_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_accessions_in_crossingtrial();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_accessions  => \@data };
+}
 
 
 sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {

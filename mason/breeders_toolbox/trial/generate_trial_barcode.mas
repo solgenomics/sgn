@@ -438,6 +438,57 @@ jQuery(document).ready(function () {
     });
 
 
+    jQuery('#female_accession_barcodes').click(function() {
+        jQuery('#generate_crossingtrial_barcode_dialog').modal("hide");
+        jQuery('#generate_trial_barcode_dialog').modal("show");
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_accessions',
+
+            success: function(response){
+                var female_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                for (i=0; i<response.female_accessions.length; i++) {
+                    female_accessions_html = female_accessions_html + response.female_accessions[i][1] + "\n";
+
+                }
+                female_accessions_html = female_accessions_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(female_accessions_html);
+
+            },
+            error: function(response){
+                alert("Error retrieving female accessions.");
+            }
+        });
+    });
+
+
+    jQuery('#male_accession_barcodes').click(function() {
+        jQuery('#generate_crossingtrial_barcode_dialog').modal("hide");
+        jQuery('#generate_trial_barcode_dialog').modal("show");
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_accessions',
+
+            success: function(response){
+                var male_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                for (i=0; i<response.male_accessions.length; i++) {
+                    male_accessions_html = male_accessions_html + response.male_accessions[i][1] + "\n";
+
+                }
+                male_accessions_html = male_accessions_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(male_accessions_html);
+
+            },
+            error: function(response){
+                alert("Error retrieving male accessions.");
+            }
+        });
+    });
+
 });
 
 </script>

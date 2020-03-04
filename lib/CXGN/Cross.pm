@@ -359,6 +359,72 @@ sub get_crosses_in_crossingtrial {
 }
 
 
+=head2 get_female_accessions_in_crossingtrial
+
+    Class method.
+    Returns all female accession names and ids in a specific crossing_experiment.
+    Example: my @female_accessions = CXGN::Cross->get_female_accessions_in_crossingtrial($schema, $trial_id)
+
+=cut
+
+sub get_female_accessions_in_crossingtrial {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_parent_typeid, $trial_id);
+
+    my @data = ();
+    while(my($female_accession_id, $female_accession_name) = $h->fetchrow_array()){
+        push @data, [$female_accession_id, $female_accession_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_male_accessions_in_crossingtrial
+
+    Class method.
+    Returns all male accession names and ids in a specific crossing_experiment.
+    Example: my @male_accessions = CXGN::Cross->get_male_accessions_in_crossingtrial($schema, $trial_id)
+
+=cut
+
+sub get_male_accessions_in_crossingtrial {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($male_parent_typeid, $trial_id);
+
+    my @data = ();
+    while(my($male_accession_id, $male_accession_name) = $h->fetchrow_array()){
+        push @data, [$male_accession_id, $male_accession_name]
+    }
+
+    return \@data;
+}
+
+
 =head2 get_crosses_and_details_in_crossingtrial
 
     Class method.
