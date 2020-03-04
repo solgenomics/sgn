@@ -804,8 +804,12 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
+    my $dir = $c->tempfiles_subdir('/grm_download_wizard');
+    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'grm_download_wizard/imageXXXX');
+
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
+        grm_temp_file=>$grm_tempfile,
         people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
