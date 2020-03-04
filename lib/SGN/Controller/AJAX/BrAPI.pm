@@ -3062,6 +3062,23 @@ sub observations_PUT {
 sub observations_GET {
 	my $self = shift;
 	my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Observations');
+    my $brapi_package_result = $brapi_module->search({
+        observationLevel => $clean_inputs->{observationLevel},
+        seasonDbId => $clean_inputs->{seasonDbId},
+        locationDbId => $clean_inputs->{locationDbId},
+        studyDbId => $clean_inputs->{studyDbId},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        programDbId => $clean_inputs->{programDbId},
+        observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
+        observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
+        observationUnitDbId => $clean_inputs->{observationUnitDbId}
+
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub markers_search_save  : Chained('brapi') PathPart('search/markers') Args(0) : ActionClass('REST') { }
@@ -3148,7 +3165,7 @@ sub observations_search_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
-	my $brapi_package_result = $brapi_module->observations_search({
+	my $brapi_package_result = $brapi_module->search({
         collectors => $clean_inputs->{collectors},
         observationDbIds => $clean_inputs->{observationDbIds},
         observationUnitDbIds => $clean_inputs->{observationUnitDbIds},

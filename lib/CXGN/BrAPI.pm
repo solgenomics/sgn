@@ -34,6 +34,8 @@ use CXGN::BrAPI::v2::Samples;
 use CXGN::BrAPI::v2::Trials;
 use CXGN::BrAPI::v2::Programs;
 use CXGN::BrAPI::v2::Traits;
+use CXGN::BrAPI::v2::Observations;
+
 
 has 'version' => (
 	isa => 'Str',
