@@ -2023,6 +2023,26 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
 
 }
 
+sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_and_details_in_crossingtrial();
+    my @data;
+    foreach my $r (@$result){
+        my @cross = @$r;
+        push @data, ($cross[0], $cross[1]);
+    };
+
+    $c->stash->{rest} = { crosses  => \@data };
+}
+
+
+
 
 sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
     my $self = shift;

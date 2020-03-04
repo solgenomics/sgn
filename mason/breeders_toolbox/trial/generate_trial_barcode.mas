@@ -269,6 +269,48 @@ $trial_stock_type => undef
 </div>
 
 
+<div class="modal fade" id="generate_crossingtrial_barcode_dialog" name="generate_crossingtrial_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="generateTrialBarcodeButtonDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateTrialBarcodeButtonDialog">Generate Barcode</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Generate barcodes for cross unique ids, female parents and male parents in this crossing experiment.
+                    </p>
+                    <center>
+                        <div class="well">
+                            <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                        </div>
+                        <p>
+                            <button type="button" class="btn btn-primary" name="cross_barcodes" id="cross_barcodes">Cross Unique ID Barcodes</button>
+                        </p>
+                        <p>
+                            <button type="button" class="btn btn-primary" name="female_accession_barcodes" id="female_accession_barcodes">Female Accession Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="female_plot_barcodes" id="female_plot_barcodes">Female Plot Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="female_plant_barcodes" id="female_plant_barcodes">Female Plant Barcodes</button>
+                        </p>
+                        <p>
+                            <button type="button" class="btn btn-primary" name="male_accession_barcodes" id="male_accession_barcodes">Male Accession Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="male_plot_barcodes" id="male_plot_barcodes">Male Plot Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="male_plant_barcodes" id="male_plant_barcodes">Male Plant Barcodes</button>
+                        </p>
+                    </center>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
 
 jQuery(document).ready(function () {
@@ -363,6 +405,28 @@ jQuery(document).ready(function () {
         });
 
     });
+
+    jQuery("#crossingtrial_barcode").click(function(){
+        jQuery("#generate_crossingtrial_barcode_dialog").modal("show");
+    });
+
+    jQuery('#cross_barcodes').click(function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_crosses',
+
+            success: function(response){
+                var crosses_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                for (i=0; i<response.crosses[1].length; i++) {
+                    crosses_html = crosses_html + response.crosses[1][i][0] + "\n";
+                }
+            },
+            error: function(response){
+                alert("Error retrieving crosses.");
+            }
+        });
+    });
+
 
 });
 
