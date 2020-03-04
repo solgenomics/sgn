@@ -1206,6 +1206,7 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plots();
+#    print STDERR "PLOTS =".Dumper(\@data)."\n";
 
     $c->stash->{rest} = { plots => \@data };
 }
@@ -2034,10 +2035,11 @@ sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
     my $result = $trial->get_crosses_and_details_in_crossingtrial();
     my @data;
     foreach my $r (@$result){
-        my @cross = @$r;
-        push @data, ($cross[0], $cross[1]);
+        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        push @data, [$cross_id, $cross_name];
     };
 
+    print STDERR "CROSSES =".Dumper(\@data)."\n";
     $c->stash->{rest} = { crosses  => \@data };
 }
 

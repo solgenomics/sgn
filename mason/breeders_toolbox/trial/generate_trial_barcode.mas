@@ -21,7 +21,9 @@ $trial_stock_type => undef
                     <p id = "barcode_dialog_subtitle2">
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                     </p>
+<!--
                     OR   <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="custom_barcode_trial_link">Design Custom Barcode</button>   ON LABEL DESIGNER PAGE!
+-->
                     <center>
                         <div class="well">
                             <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
@@ -274,7 +276,7 @@ $trial_stock_type => undef
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="generateTrialBarcodeButtonDialog">Generate Barcode</h4>
+                <h4 class="modal-title" id="generateCrossingTrialBarcodeButtonDialog">Generate Barcode</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -411,15 +413,23 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#cross_barcodes').click(function() {
+        jQuery('#generate_crossingtrial_barcode_dialog').modal("hide");
+        jQuery('#generate_trial_barcode_dialog').modal("show");
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_crosses',
 
             success: function(response){
                 var crosses_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
-                for (i=0; i<response.crosses[1].length; i++) {
-                    crosses_html = crosses_html + response.crosses[1][i][0] + "\n";
+
+                for (i=0; i<response.crosses.length; i++) {
+                    crosses_html = crosses_html + response.crosses[i][1] + "\n";
+
                 }
+                crosses_html = crosses_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(crosses_html);
+
             },
             error: function(response){
                 alert("Error retrieving crosses.");
