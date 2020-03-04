@@ -1,4 +1,19 @@
 
+=head1 NAME
+
+CXGN::MixedModels - a package to run user-specified mixed models
+
+=head1 DESCRIPTION
+
+  my $mm = CXGN::MixedModels->new();
+  my $mm->phenotype_file("t/data/phenotyp
+  my $mm->dependent_variables(qw | |);
+  my $mm->fixed_factors( qw | | );
+  my $mm->random_factors( qw| | );
+  my $mm->traits( qw|  | );
+
+
+=cut
 
 package CXGN::MixedModels;
 
