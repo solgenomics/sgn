@@ -146,7 +146,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <& /tools/available_seedlots.mas &>
+                    <table id="available_seedlots_table" class="table table-hover table-bordered">
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">
