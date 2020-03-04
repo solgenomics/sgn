@@ -24,6 +24,7 @@ __PACKAGE__->config(
         comp_root => [
             [ main => SGN->path_to('mason') ],
         ],
+        preamble => "use utf8; ",
     },
 );
 
