@@ -6,12 +6,17 @@ CXGN::MixedModels - a package to run user-specified mixed models
 =head1 DESCRIPTION
 
   my $mm = CXGN::MixedModels->new();
-  my $mm->phenotype_file("t/data/phenotyp
+  my $mm->phenotype_file("t/data/phenotype_data.csv");
   my $mm->dependent_variables(qw | |);
   my $mm->fixed_factors( qw | | );
   my $mm->random_factors( qw| | );
   my $mm->traits( qw|  | );
 
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=head1 METHODS
 
 =cut
 
@@ -23,24 +28,72 @@ use File::Slurp qw| slurp |;
 use CXGN::Tools::Run;
 use CXGN::Phenotypes::File;
 
+=head2 dependent_variables() 
+
+sets the dependent variables (a listref of traits)
+
+=cut
+
 has 'dependent_variables' => (is => 'rw', isa => 'ArrayRef[Str]|Undef');
 
+=head2 fixed_factors()
+
+sets the fixed factors (listref)
+
+=cut
+    
 has 'fixed_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
+=head2 fixed_factors_interaction()
+
+sets the fixed factors with interaction (listref)
+
+=cut
+    
 has 'fixed_factors_interaction' => (is => 'rw', isa => 'Ref', default => sub{[]});
 
+=head2 variable_slope_factors()
+
+=cut
+    
 has 'variable_slope_factors' => (is => 'rw', isa => 'Ref', default => sub{[]});
 
+=head2 random_factors()
+
+=cut
+    
 has 'random_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
+=head2 variable_slop_intersects
+
+=cut
+   
 has 'variable_slope_intersects' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
+=head2 traits()
+
+sets the traits
+
+=cut
+
 has 'traits' => (is => 'rw', isa => 'Ref');
+
+=head2 levels()
+
+
+
+=cut
 
 has 'levels' => (is => 'rw', isa => 'HashRef' );
 
 has 'phenotype_file' => (is => 'rw', isa => 'CXGN::Phenotypes::File|Undef');
 
+=head2 tempfile()
+
+the tempfile that contains the phenotypic information.
+
+=cut
+    
 has 'tempfile' => (is => 'rw', isa => 'Str|Undef');
 
 sub BUILD {
@@ -54,6 +107,12 @@ sub BUILD {
     $self->phenotype_file($phenotype_file);
 
 }
+
+=head2 generate_models()
+
+generates the model string, in lme4 format, from the current parameters
+
+=cut
 
 sub generate_model {
     my $self = shift;
@@ -124,6 +183,12 @@ sub generate_model {
     return $model;
 }
 
+=head2 run_models()
+
+runs the model along with the data provided in the phenotyping file
+
+=cut
+
 sub run_model {
     my $self = shift;
 
@@ -139,7 +204,7 @@ sub run_model {
 
     # run r script to create model
     #
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$tempfile."\" paramfile=\"".$tempfile.".params\"' /R/mixed_models.R $tempfile.out";
+    my $cmd = "R CMD BATCH  '--args datafile=\"".$tempfile."\" paramfile=\"".$tempfile.".params\"' R/mixed_models.R $tempfile.out";
 
     print STDERR Dumper($tempfile);
 
