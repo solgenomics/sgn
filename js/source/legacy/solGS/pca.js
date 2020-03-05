@@ -57,7 +57,7 @@ solGS.pca = {
 	  dataType = jQuery('#pca_data_type_select').val();  
 	}
 
-	var protocolId = jQuery('#pca_div #genotyping_protocol #genotyping_protocol_id').val();
+	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
 		console.log('pcaRun protocol id: ' + protocolId)
 	var traitId = jQuery('#trait_id').val();
 	var popDetails = solGS.getPopulationDetails();
@@ -589,6 +589,16 @@ jQuery(document).ready( function() {
     jQuery("#run_pca").click(function() {
 	solGS.pca.pcaRun();
     }); 
+  
+});
+
+jQuery(document).ready( function() { 
+
+    var url = document.URL;
+    
+    if (url.match(/solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)) {  
+	jQuery('#pca_data_type_select').html('<option selected="genotype">Genotype</option>');
+    }
   
 });
 
