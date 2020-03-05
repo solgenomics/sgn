@@ -831,7 +831,10 @@ CXGN.List.prototype = {
                     "type" : list_type
                 },
                 // Processes complex returned object into a datatables-friendly flat array of hashes
-                "dataSrc" : function (json) { return Object.values(json.seedlots).flat(2) }
+                "dataSrc" : function (json) {
+                    console.log("Returning data")
+                    return Object.values(json.seedlots).flat(2)
+                }
             },
             dom: 'Bfrtip',
             buttons: [
@@ -847,7 +850,6 @@ CXGN.List.prototype = {
                 { title: "Weight", "data": "weight_gram" }
             ],
         });
-
         jQuery('#new-list-from-seedlots').unbind('submit');
         jQuery("#new-list-from-seedlots").submit(function(){
             jQuery('#working_modal').modal('show');

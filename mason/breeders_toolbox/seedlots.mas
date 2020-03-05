@@ -37,7 +37,7 @@ $crossing_trials
                 <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
                 <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
                 <li>3) Use the "Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Inventory Android Application you can create your own CSV file and upload that.</li>
-                <li><b>For more info about the "Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory">Inventory</a>.</b></li>
+                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li>
                 <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
                 </ul>
             </div>
@@ -117,7 +117,7 @@ $crossing_trials
 
 <br/>
 
-<table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
+<table id="seedlots_table" class="table table-hover table-striped table-bordered">
 </table>
 
 <hr>
@@ -147,7 +147,7 @@ jQuery(document).ready(function(){
        source: '/ajax/stock/seedlot_name_autocomplete',
     });
 
-    var seedlots_table = jQuery('#available_seedlots_table').DataTable({
+    var seedlots_table = jQuery('#seedlots_table').DataTable({
         'searching' : false,
         'ordering'  : false,
         'processing': true,
@@ -197,7 +197,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#submit_seedlot_search').click( function() {
-        seedlots_table.search("available_seedlots_table").draw();
+        seedlots_table.search("seedlots_table").draw();
     });
 
     jQuery('#search_seedlot_form').keypress( function( e ) {
