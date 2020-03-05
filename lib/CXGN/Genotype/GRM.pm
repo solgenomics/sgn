@@ -363,7 +363,7 @@ sub download_grm {
     my $return_type = shift || 'filehandle';
     my $download_format = $self->download_format();
 
-    my $key = $self->grm_cache_key("download_grm");
+    my $key = $self->grm_cache_key("download_grm_".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
