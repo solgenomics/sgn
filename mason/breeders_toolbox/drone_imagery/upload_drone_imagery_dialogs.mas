@@ -58,7 +58,7 @@
                                     <th>Imaging Event Type</th>
                                     <th>Imaging Event Description</th>
                                     <th>Imaging Event Date</th>
-                                    <th>Camera</th>
+                                    <th>Sensor</th>
                                     <th>Field Trial Name</th>
                                     <th>Field Trial Description</th>
                                 </tr>
@@ -112,13 +112,18 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Camera Type:</label>
+                                <label class="col-sm-3 control-label">Sensor Type:</label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_upload_camera_info" name="drone_image_upload_camera_info">
                                         <option value="">Select One</option>
                                         <option value="micasense_5">Micasense 5 Bands</option>
                                         <option value="ccd_color">CCD Sensor Color Image</option>
                                         <option value="cmos_color">CMOS Sensor Color Image</option>
+                                        <option value="interpolated_elevation">Interpolated Elevation Image</option>
+                                        <option value="em38_interpolated_ch1.0m">EM38 Interpolated CH1.0m Image</option>
+                                        <option value="em38_interpolated_ch0.5m">EM38 Interpolated CH0.5m Image</option>
+                                        <option value="em38_interpolated_ih1.0m">EM38 Interpolated IH1.0m Image</option>
+                                        <option value="em38_interpolated_ih0.5m">EM38 Interpolated IH0.5m Image</option>
                                     </select>
                                 </div>
                             </div>
@@ -129,7 +134,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Imaging Event Date:</label>
+                                <label class="col-sm-3 control-label">Imaging Event Date (Must be after the planting date):</label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
@@ -147,7 +152,8 @@
                         <div class="well">
                             <ul>
                                 <li>Raw images (unstitched) coming from your drone can be uploaded in a zip file. We can then stitch them together into an orthophotomosaic of the entire drone run.</li>
-                                <li>Or you can choose to upload a single image and skip any stitching</li>
+                                <li>Or you can choose to upload a single image and skip any stitching.</li>
+                                <li>The single image can be for interpolated soil data, such as altitude or electrical conductance EC measurement s(CH1m, IH1m) from an EM38. </li>
                             </ul>
                         </div>
                         <div class="well">
