@@ -83,8 +83,8 @@ $model_link
 
 </&>
 
-<& /solgs/model/pca.mas &>
-
+<& /solgs/pca/analysis.mas &>
+  
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
