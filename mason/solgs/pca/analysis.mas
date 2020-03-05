@@ -76,10 +76,11 @@ $title = 'Select data type and run PCA';
 
 %}
 <!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
-% if ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//) {
+<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
+% if ($url !~ /pca\/analysis/ ) {
 <& /solgs/pca/pca_options.mas &>
 
-%} elsif ($url =~ /pca\/analysis/) {
+%} else {
 
    <& /solgs/pca/select_menu.mas &>
        
