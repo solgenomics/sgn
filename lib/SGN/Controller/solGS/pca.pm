@@ -293,12 +293,12 @@ sub pca_trials_genotype_data {
     my ($self, $c) = @_;
 
     my $combo_pops_id = $c->stash->{combo_pops_id};
-   
+  
     if ($combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
-	$c->stash->{genotype_file} = $c->stash->{trait_combined_geno_file};
-	my $geno_file = $c->stash->{genotype_file};
+	$c->stash->{genotype_file_name} = $c->stash->{trait_combined_geno_file};
+	my $geno_file = $c->stash->{genotype_file_name};
 
 	if (!-s $geno_file) 
 	{
@@ -351,7 +351,6 @@ sub pca_list_genotype_data {
     if ($referer =~ /solgs\/trait\/\d+\/population\//) 
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id); 
-	$c->stash->{genotype_file} = $c->stash->{genotype_file_name};
     }
     elsif ($referer =~ /solgs\/selection\//) 
     {
@@ -426,7 +425,13 @@ sub create_pca_genotype_data_query_jobs {
     }
     else
     {
+	if ($c->req->referer =~ /solgs\/selection\//) 
+	{
+	    $c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
+	}
+
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
+
 	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
@@ -619,15 +624,38 @@ sub pca_geno_input_files {
     
     my $data_type = $c->stash->{data_type};
     my $files;
-  
+    
     if ($data_type =~ /genotype/i)
-    {	
-	 $files = $c->stash->{genotype_files_list}
-	 || $c->stash->{genotype_file} 
-	 || $c->stash->{genotype_file_name};	
+    {
+	if ($c->req->referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)
+	{
+	    $self->training_selection_geno_files($c);
+	}
+	
+	$files = $c->stash->{genotype_files_list} || $c->stash->{genotype_file_name};	
     }
 
     $c->stash->{pca_geno_input_files} = $files;
+}
+
+
+sub training_selection_geno_files {
+    my ($self, $c) = @_;
+
+    my @files;
+
+    my $tr_pop = $c->stash->{training_pop_id};
+    my $sel_pop =  $c->stash->{selection_pop_id};
+  
+    foreach my $id (($tr_pop, $sel_pop)) 
+    {
+	$c->controller('solGS::Files')->genotype_file_name($c, $id);
+	push @files, $c->stash->{genotype_file_name};
+    }
+
+    my $files = join("\t", @files);
+
+    $c->stash->{genotype_files_list} = $files;
 }
 
 
