@@ -49,6 +49,7 @@ $plot_length => undef
 $field_size => undef
 $field_trial_is_planned_to_be_genotyped => undef
 $field_trial_is_planned_to_cross => undef
+$trial_stock_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -58,11 +59,19 @@ $field_trial_is_planned_to_cross => undef
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type &>
 
+% my $barcode_section_title = '';
+% if ($trial_stock_type eq 'family_name') {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or family names in this trial.';
+% } elsif ($trial_stock_type eq 'cross') {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or cross unique ids in this trial.';
+% } else {
+%     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
+% }
 <div class="row">
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => "Generate barcode labels for plots or plants or accessions in this trial.", button_id => "generate_trial_barcode_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
     </div>
     <div class="col-sm-6">
         <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
@@ -79,13 +88,13 @@ $field_trial_is_planned_to_cross => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Compute New Phenotypes</h4>", info_section_subtitle => 'Compute derived traits or compute plot phenotypes from plant phenotypes.', icon_class => "glyphicon glyphicon-floppy-save", info_section_id => "compute_derived_traits" &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Phenotypic data collection using Excel or Android Fieldbook. Also upload any additional files for this trial.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Phenotypic data collection using Excel or Android Fieldbook. Also upload any additional files for this trial.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_stock_type => $trial_stock_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Analysis Tools</h4>", info_section_subtitle => 'Run correlation, anova, population structure (PCA), or clustering. Also access HIDAP, if enabled on this site.', icon_class => "glyphicon glyphicon-signal", info_section_id => "trial_analysis_tools", hidap_enabled => $hidap_enabled, main_production_site_url => $main_production_site_url, breeding_program_name => $breeding_program_name, folder_name => $folder_name, trial_name => $trial_name &>
 
@@ -106,9 +115,9 @@ $field_trial_is_planned_to_cross => undef
 <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
 <& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, trial_type_id => $trial_type_id, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, field_size => $field_size, plot_width => $plot_width, plot_length => $plot_length, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross &>
 
-<& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name" &>
+<& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/download_fieldmap_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/trial_coords_upload_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
 <& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
@@ -121,9 +130,9 @@ $field_trial_is_planned_to_cross => undef
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
 <& /breeders_toolbox/upload_phenotype_datacollector.mas &>
 
-<& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
+<& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $trial_id &>
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>

@@ -1,3 +1,4 @@
 <!-- file needed to add more styles and js libraries to sites dependent on SGN -->
 % my $t = $m->request_args->{'page_title'};
-  <title><% $t ? "$t - " : '' %>Breedbase</title>
+  <title><% $t ? "$t - " : '' %>BreedBase</title>
+

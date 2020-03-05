@@ -22,6 +22,8 @@ use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
 use JSON;
+use CXGN::Trial;
+
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -355,6 +357,9 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     }
     my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
 
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+    $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
     $c->stash->{trial_name} = $project_name;
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
@@ -755,20 +760,6 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$schema,
-        accession_list=>[45642, 45636],
-        # tissue_sample_list=>$tissue_sample_list,
-        # trial_list=>$trial_list,
-        # protocol_id_list=>$protocol_id_list,
-        # marker_name_list=>['S80_265728', 'S80_265723']
-        # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
-        # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    #print STDERR Dumper $genotypes;
-
-    $c->stash->{data} = 'my data';
     $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
 }
 

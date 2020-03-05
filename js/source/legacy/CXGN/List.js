@@ -821,32 +821,58 @@ CXGN.List.prototype = {
         jQuery('#availible_seedlots_modal').modal('show');
         var accessions = this.getList(list_id);
         var list_type = this.getListType(list_id);
-        if (window.available_seedlots){
-            window.available_seedlots.build_table(accessions, list_type);
-        } else {
-            throw "avalilible_seedlots.mas not included";
-        }
+
+        jQuery('#available_seedlots_table').DataTable( {
+            'ajax': {
+                'url':  '/ajax/accessions/possible_seedlots',
+                "type": "POST",
+                "data"   : {
+                    "names" : accessions,
+                    "type" : list_type
+                },
+                // Processes complex returned object into a datatables-friendly flat array of hashes
+                "dataSrc" : function (json) { return Object.values(json.seedlots).flat(2) }
+            },
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            // Consider adding links using currently unused ids
+            'columns': [
+                { title: "Breeding Program", "data": "program" },
+                { title: "Seedlot Name", "data": "seedlot.0" },
+                { title: "Contents", "data": "contents.0" },
+                { title: "Seedlot Location", "data": "location" },
+                { title: "Count", "data": "count" },
+                { title: "Weight", "data": "weight_gram" }
+            ],
+        });
+
         jQuery('#new-list-from-seedlots').unbind('submit');
         jQuery("#new-list-from-seedlots").submit(function(){
             jQuery('#working_modal').modal('show');
             try {
-                var form = jQuery(this).serializeArray().reduce(function(map,obj){
-                    map[obj.name] = obj.value;
-                    return map;
-                }, {});
-                //console.log(form);
-                var list = new CXGN.List();
-                var names = window.available_seedlots.get_selected().map(function(d){
-                    return d.name;
-                });
-                var newListID = list.newList(form["name"]);
-                if (!newListID) throw "List creation failed.";
-                list.setListType(newListID,"seedlots");
-                var count = list.addBulk(newListID, names);
-                if (!count) throw "Added nothing to list or addition failed.";
-                jQuery('#working_modal').modal('hide');
-                alert("List \""+form["name"]+"\" created with "+count+" entries.");
-                self.renderLists('list_dialog');
+                // Add checkbox selection to the datatable, then retrieve selected seedlots to add to list
+                // https://datatables.net/extensions/select/examples/initialisation/checkbox.html
+
+
+                // var form = jQuery(this).serializeArray().reduce(function(map,obj){
+                //     map[obj.name] = obj.value;
+                //     return map;
+                // }, {});
+                // //console.log(form);
+                // var list = new CXGN.List();
+                // var names = window.available_seedlots.get_selected().map(function(d){
+                //     return d.name;
+                // });
+                // var newListID = list.newList(form["name"]);
+                // if (!newListID) throw "List creation failed.";
+                // list.setListType(newListID,"seedlots");
+                // var count = list.addBulk(newListID, names);
+                // if (!count) throw "Added nothing to list or addition failed.";
+                // jQuery('#working_modal').modal('hide');
+                // alert("List \""+form["name"]+"\" created with "+count+" entries.");
+                // self.renderLists('list_dialog');
             }
             catch(err) {
                 setTimeout(function(){throw err;});

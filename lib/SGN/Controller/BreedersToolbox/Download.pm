@@ -42,9 +42,9 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-	# redirect to login page
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
+	    # redirect to login page
+	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	    return;
     }
 
     $c->stash->{template} = '/breeders_toolbox/download.mas';
@@ -64,10 +64,10 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    $self->trial_download_log($c, $trial_id, "trial layout");
 
 #    if ($format eq "csv") {
-#	$self->download_layout_csv($c, $trial_id, $design);
+#       $self->download_layout_csv($c, $trial_id, $design);
 #    }
 #    else {
-#	$self->download_layout_excel($c, $trial_id, $design);
+#       $self->download_layout_excel($c, $trial_id, $design);
 #    }
 #}
 
@@ -87,12 +87,12 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    move($tempfile, $file_path);
 
 #    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "TrialLayoutCSV",
-#	},
+#   	{
+#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#   	    trial_id => $trial_id,
+#   	    filename => $file_path,
+#   	    format => "TrialLayoutCSV",
+#       },
 #	);
 
 #    $td->download();
@@ -121,12 +121,12 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    move($tempfile, $file_path);
 
 #    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "TrialLayoutExcel",
-#	},
+#   	{
+#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#   	    trial_id => $trial_id,
+#   	    filename => $file_path,
+#   	    format => "TrialLayoutExcel",
+#   	},
 #	);
 
 #    $td->download();
@@ -682,12 +682,14 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $format = $c->req->param("format") || "list_id";
     my $download_format = $c->req->param("download_format") || 'VCF';
     my $chromosome_numbers = $c->req->param("chromosome_number") ? [$c->req->param("chromosome_number")] : [];
     my $start_position = $c->req->param("start_position") || undef;
     my $end_position = $c->req->param("end_position") || undef;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
@@ -723,24 +725,22 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @accession_ids = @{$accession_id_hash->{transform}};
     }
 
-    my $dir = $c->tempfiles_subdir('genotype_download');
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
-
     my $filename = '';
     if ($download_format eq 'VCF') {
-        $tempfile = $tempfile.".vcf";
         $filename = 'BreedBaseGenotypesDownload.vcf';
     }
     else {
-        $tempfile = $tempfile.".tsv";
         $filename = 'BreedBaseGenotypesDownload.tsv';
     }
+
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
             bcs_schema=>$schema,
-            filename=>$tempfile,  #file path to write to
+            people_schema=>$people_schema,
+            cache_root_dir=>$c->config->{cache_file_path},
             accession_list=>\@accession_ids,
             #tissue_sample_list=>$tissue_sample_list,
             trial_list=>\@trial_ids,
@@ -748,6 +748,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             chromosome_list=>$chromosome_numbers,
             start_position=>$start_position,
             end_position=>$end_position,
+            compute_from_parents=>$compute_from_parents,
+            forbid_cache=>$forbid_cache
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],
@@ -755,7 +757,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $status = $geno->download();
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -764,8 +772,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     };
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-    my $output = read_file($tempfile);
-    $c->res->body($output);
+    $c->res->body($file_handle);
 }
 
 #Used from wizard page for downloading genetic relationship matrix (GRM)
@@ -773,6 +780,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -792,18 +800,19 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $dir = $c->tempfiles_subdir('genotype_download');
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "genotype_download/gt_download_XXXXX", UNLINK=> 0);
-    $tempfile = $tempfile.".tsv";
     my $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
+
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
-        get_grm_for_parental_accessions=>1
+        get_grm_for_parental_accessions=>$compute_from_parents
     });
-    $geno->download_grm($tempfile);
+    my $file_handle = $geno->download_grm();
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -812,8 +821,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     };
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-    my $output = read_file($tempfile);
-    $c->res->body($output);
+    $c->res->body($file_handle);
 }
 
 #=pod
@@ -841,6 +849,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my @trial_list = map { $_->[1] } @$trial_data;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $t = CXGN::List::Transform->new();
 
 
@@ -868,6 +877,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         accession_list=>$accession_id_data->{transform},
         trial_list=>$trial_id_data->{transform},
         protocol_id_list=>[$protocol_id]

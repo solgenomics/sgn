@@ -231,7 +231,7 @@ sub search {
         print STDERR "A trait list was included\n";
         foreach (@{$self->trait_list}){
             if ($_){
-                print STDERR "Working on trait $_\n";
+                #print STDERR "Working on trait $_\n";
                 push @or_clause, "observations @> '[{\"trait_id\" : $_}]'";
                 $trait_list_check{$_}++;
                 $filter_trait_ids = 1;

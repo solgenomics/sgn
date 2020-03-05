@@ -3,6 +3,9 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
+  <link rel="search" type="application/opensearchdescription+xml" title="Search Database" href="/documents/sgn_sol_search.xml" />
+
   <& /util/import_css.mas, paths => [
     '/css/new_sgn.css',
     '/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css',

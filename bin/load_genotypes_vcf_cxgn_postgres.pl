@@ -32,7 +32,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
  -q organism species name (required) e.g. "Manihot esculenta".
  -f reference genome name (required) e.g. "Mesculenta_511_v7"
- -B temporary file where the SQL COPY file is written.
+ -B temporary file where the SQL COPY file is written. make sure this is a fresh file between loadings.
 
  -h project_id (Will associate genotype data to an existing project_id)
  -j protocol_id (Will associate genotype data to an existing nd_protocol_id)
@@ -41,7 +41,7 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
  -z if sample names include an IGD number. sample names are in format 'sample_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
- -t Test run . Rolling back at the end.
+ -t Test run . Rolling back at the end. NOT IMPLEMENTED
  -w in the case that you have uploaded a normal VCF and you do not want to transpose it (because the transposition is memory intensive), use this flag
  -A accept warnings and continue with the storing. warnings are whether the samples already have genotype scores for a specific protocol/project
 
@@ -85,8 +85,17 @@ our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_r, $opt_i, $opt_t, $opt_p, $op
 
 getopts('H:U:i:r:u:c:o:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:');
 
-if (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written)\n");
+if ($opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
+    pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
+}
+elsif ($opt_h && !$opt_j && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
+    pod2usage(-verbose => 2, -message => "When a project id is given (-h) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure this is a fresh file between loadings.)\n");
+}
+elsif ($opt_j && $opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
+    pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) And a project id is given (-h) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path) -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
+}
+elsif (!$opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || !$opt_i || !$opt_p || !$opt_y || !$opt_m || !$opt_k || !$opt_l || !$opt_q || !$opt_r || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ){
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file), -r (archive path), -p (project name), -y (project year), -l (location name of project), -m (protocol name), -k (protocol description), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure this is a fresh file between loadings.)\n");
 }
 
 if ($opt_c ne 'transposedVCF' && $opt_c ne 'VCF') {
@@ -254,6 +263,7 @@ my $store_args = {
     phenome_schema=>$phenome_schema,
     observation_unit_type_name=>$obs_type,
     observation_unit_uniquenames=> $observation_unit_names_all,
+    accession_population_name=>$opt_g,
     project_id=>$opt_h,
     genotyping_facility=>$opt_n, #projectprop
     breeding_program_id=>$breeding_program_id, #project_rel

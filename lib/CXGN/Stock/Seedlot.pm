@@ -43,7 +43,7 @@ $phenome_schema->resultset("StockOwner")->find_or_create({
 
 To Update or Edit a seedlot do:
 
-my $seedlot = CXGN::Stock::Seedlot->new( 
+my $seedlot = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $seedlot_id,
 );
@@ -80,7 +80,7 @@ my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
 
 To Retrieve a single seedlot do:
 
-my $seedlot = CXGN::Stock::Seedlot->new( 
+my $seedlot = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $seedlot_id,
 );
@@ -549,20 +549,20 @@ sub verify_seedlot_plot_compatibility {
 }
 
 # class method
-=head2 Class method: verify_seedlot_accessions()
+=head2 Class method: verify_seedlot_accessions_crosses()
 
- Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, [[$seedlot_name, $accession_name]]);
- Desc:         Class method that verifies if a given list of pairs of seedlot_name and accession_name have the same underlying accession.
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, [[$seedlot_name, $accession_name]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_name and accession_name or seedlot_name and cross unique id have the same underlying accession/cross_unique_id.
  Ret:          success or error
  Args:         $schema, $stock_names, $seedlot_names
  Side Effects: accesses the database
 
 =cut
 
-sub verify_seedlot_accessions {
+sub verify_seedlot_accessions_crosses {
     my $class = shift;
     my $schema = shift;
-    my $pairs = shift; #arrayref of [ [seedlot_name, accession_name] ]
+    my $pairs = shift; #arrayref of [ [seedlot_name, accession_name] ] #note: the variable accession_name can be either accession or cross stock type
     my $error = '';
     my %return;
 
@@ -588,6 +588,7 @@ sub verify_seedlot_accessions {
         $seen_accession_names{$_->[1]}++;
     }
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
@@ -616,9 +617,9 @@ sub verify_seedlot_accessions {
             $accession_name = $accession_names[0];
         }
 
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>$accession_cvterm_id});
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>[$accession_cvterm_id, $cross_cvterm_id]});
         if (!$seedlot_rs->first){
-            $error .= "The seedlot: $seedlot_name is not linked to the accession: $accession_name.";
+            $error .= "The seedlot: $seedlot_name is not linked to the accession/cross_unique_id: $accession_name.";
         }
     }
     if ($error){

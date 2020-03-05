@@ -33,6 +33,7 @@ use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::Stock::RelatedStocks;
 use CXGN::BreederSearch;
 use CXGN::Genotype::Search;
+use JSON;
 
 use Bio::Chado::Schema;
 
@@ -1017,6 +1018,40 @@ sub cross_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+=head2 family_name_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub family_name_autocomplete : Local : ActionClass('REST') { }
+
+sub family_name_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='family_name' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
 =head2 population_autocomplete
 
  Usage:
@@ -1798,14 +1833,19 @@ sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('
 sub get_stock_datatables_genotype_data_GET  {
     my $self = shift;
     my $c = shift;
+    my $limit = $c->req->param('length') || 1000;
+    my $offset = $c->req->param('start') || 0;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
     my $stock_type = $stock->type();
 
     my %genotype_search_params = (
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>[],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[]
@@ -1816,20 +1856,42 @@ sub get_stock_datatables_genotype_data_GET  {
         $genotype_search_params{tissue_sample_list} = [$stock_id];
     }
     my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
 
     my @result;
-    foreach (@$genotypes){
-        push @result, [
-            '<a href = "/breeders_toolbox/trial/'.$_->{genotypingDataProjectDbId}.'">'.$_->{genotypingDataProjectName}.'</a>',
-            $_->{genotypingDataProjectDescription},
-            $_->{analysisMethod},
-            $_->{genotypeDescription},
-            '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$_->{markerProfileDbId}.'">Download</a>'
-        ];
+    my $counter = 0;
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
+
+        my $start_index = $offset;
+        my $end_index = $offset + $limit;
+        # print STDERR Dumper [$start_index, $end_index];
+
+        while (my $gt_line = <$fh>) {
+            if ($counter >= $start_index && $counter < $end_index) {
+                my $g = decode_json $gt_line;
+
+                push @result, [
+                    '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
+                    $g->{genotypingDataProjectDescription},
+                    $g->{analysisMethod},
+                    $g->{genotypeDescription},
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
+                ];
+            }
+            $counter++;
+        }
     }
 
-    $c->stash->{rest} = {data => \@result};
+    my $draw = $c->req->param('draw');
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
+
+    $c->stash->{rest} = { data => \@result, draw => $draw, recordsTotal => $counter,  recordsFiltered => $counter };
 }
 
 =head2 make_stock_obsolete
