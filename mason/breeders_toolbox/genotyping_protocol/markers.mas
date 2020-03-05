@@ -36,7 +36,7 @@ $protocol_id
 <script>
 
 jQuery(document).ready(function(){
-    
+
     var genotyping_protocol_table = jQuery('#protocol_markers_table').DataTable({
         'searching' : false,
         'ordering'  : false,
@@ -52,7 +52,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#marker_table_search_submit').click( function() {
-        genotyping_protocol_table.search("available_seedlots_table").draw();
+        genotyping_protocol_table.search("protocol_markers_table").draw();
     });
 
     jQuery('#markers_table_search_form').keypress( function( e ) {

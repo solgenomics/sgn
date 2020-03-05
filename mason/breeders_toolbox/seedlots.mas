@@ -117,7 +117,7 @@ $crossing_trials
 
 <br/>
 
-<table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
+<table id="seedlots_table" class="table table-hover table-striped table-bordered">
 </table>
 
 <hr>
@@ -147,7 +147,7 @@ jQuery(document).ready(function(){
        source: '/ajax/stock/seedlot_name_autocomplete',
     });
 
-    var seedlots_table = jQuery('#available_seedlots_table').DataTable({
+    var seedlots_table = jQuery('#seedlots_table').DataTable({
         'searching' : false,
         'ordering'  : false,
         'processing': true,
@@ -197,7 +197,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#submit_seedlot_search').click( function() {
-        seedlots_table.search("available_seedlots_table").draw();
+        seedlots_table.search("seedlots_table").draw();
     });
 
     jQuery('#search_seedlot_form').keypress( function( e ) {

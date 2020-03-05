@@ -1,4 +1,4 @@
-<& /util/import_javascript.mas, classes => [ 'CXGN.List'] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.List' ] &>
 <!-- Lists dialog -->
 
 <div class="modal fade" id="list_dialog" name="list_dialog" tabindex="-1" role="dialog" aria-labelledby="listDialog">
