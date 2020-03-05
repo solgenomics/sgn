@@ -376,7 +376,7 @@ ok($trial_design->set_plot_number_increment(1), "set plot increment");
 ok($trial_design->set_westcott_check_1("test_stock_for_trial1"), "set check 1");
 ok($trial_design->set_westcott_check_2("test_stock_for_trial2"), "set check 2");
 ok($trial_design->set_westcott_col(20), "set column number");
-ok($trial_design->set_design_type("westcott"), "set design type");
+ok($trial_design->set_design_type("Westcott"), "set design type");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
@@ -393,7 +393,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_name_westcott",
     trial_type=>$ayt_cvterm_id,
-    design_type => "westcott",
+    design_type => "Westcott",
     operator => "janedoe"
 						    }), "create trial object");
 

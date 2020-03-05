@@ -23,6 +23,11 @@
 
                             <br/><br/>
                             <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+
+                            <br/><br/>
+                            <center>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                             </center>
                         </&>
@@ -32,6 +37,11 @@
 
                             <p>An observation variable is composed of a trait for the attribute being observed, a method describing how the attribute was measured, and a scale indicating the units of the observation.</p>
                             <hr>
+
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -69,6 +79,11 @@
                                 <li>Here you can select a trait that already exists in an ontology in the database or you can add a new trait into an ontology.</li>
                             </ul>
                             <hr>
+
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -114,6 +129,11 @@
                             <p>A method defines the how it was measured measured. It is one component of an observation variable; the others are a trait and a scale.</p>
                             <hr>
 
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
+
                             <form class="form-horizontal">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Method Ontology Name: </label>
@@ -156,6 +176,11 @@
                         </&>
                         <&| /util/workflow.mas:step, title=> "Scale" &>
                             <& /page/page_title.mas, title=>"Define your scale" &>
+
+                            <center>
+                                <button class="btn btn-primary" name="add_new_observation_variable_ontology_add_button">Need a new ontology? Click here first.</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -256,8 +281,92 @@
     </div>
 </div>
 
+<div class="modal fade" id="add_new_observation_variable_ontology_dialog" name="add_new_observation_variable_ontology_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewObservationVariableOntologyDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addNewObservationVariableOntologyDialog">Add New Ontology</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /util/workflow.mas, id=> "add_new_ontology_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Start a new ontology" &>
+                            <ul>
+                                <li>In this workflow you can add a new ontology to the database. Once an ontology is added, you can add terms into it from the add observation variables workflow.</li>
+                                <li>Ontologies are tagged as being either for traits, methods, or scales</li>
+                            </ul>
+
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <&| /util/workflow.mas:step, title=> "Ontology" &>
+                            <& /page/page_title.mas, title=>"Define your ontology" &>
+
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Ontology Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_ontology_name" name="add_new_observation_variable_ontology_name" type="text" placeholder="e.g. MyBreedingProgram Grape Ontology"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Ontology Definition: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_ontology_definition" name="add_new_observation_variable_ontology_definition" type="text" placeholder="e.g. description of the ontology"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">New Ontology Database Identifier: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_new_observation_variable_ontology_db_name" name="add_new_observation_variable_ontology_db_name" type="text" placeholder="a unique identifier for the terms in the ontology e.g. CO322"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Ontology Type: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="add_new_observation_variable_ontology_type" name="add_new_observation_variable_ontology_type"/>
+                                            <option value="trait_ontology">Trait or Observation Variable</option>
+                                            <option value="method_ontology">Method</option>
+                                            <option value="unit_ontology">Scale</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                            <br/>
+
+                            <center>
+                                <button class="btn btn-primary" id="add_new_trait_observation_variable_ontology_step">Store Ontology</button>
+                            </center>
+
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your ontology is now in the database. Add new terms into it from the add observation variable workflow." &>
+                        </&>
+
+                    </&><!-- End of workflow -->
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready(function() {
+
+    jQuery('button[name="add_new_observation_variable_ontology_add_button"]').click(function(){
+        jQuery('#add_new_observation_variable_ontology_dialog').modal('show');
+    });
+
     jQuery('button[name="add_new_observation_variable_button"]').click(function(){
         jQuery('#add_new_observation_variable_dialog').modal('show');
 
@@ -308,7 +417,7 @@ jQuery(document).ready(function() {
             alert('Only select one trait ontology!');
         } else {
             add_new_trait_new_trait_db_id = selected[0];
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'db_id':selected[0] });
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_trait_select_div', { 'selectbox_name':'add_new_trait_existing_trait_select',    'selectbox_id':'add_new_trait_existing_trait_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
         }
     });
 
@@ -322,7 +431,7 @@ jQuery(document).ready(function() {
             alert('Only select one method ontology!');
         } else {
             add_new_trait_new_method_db_id = selected[0];
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_method_select_div', { 'selectbox_name':'add_new_trait_existing_method_select',    'selectbox_id':'add_new_trait_existing_method_select', 'empty':1, 'db_id':selected[0] });
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_method_select_div', { 'selectbox_name':'add_new_trait_existing_method_select',    'selectbox_id':'add_new_trait_existing_method_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
         }
     });
 
@@ -336,7 +445,7 @@ jQuery(document).ready(function() {
             alert('Only select one scale ontology!');
         } else {
             add_new_trait_new_scale_db_id = selected[0];
-            get_select_box('all_ontology_terms', 'add_new_trait_existing_scale_select_div', { 'selectbox_name':'add_new_trait_existing_scale_select',    'selectbox_id':'add_new_trait_existing_scale_select', 'empty':1, 'db_id':selected[0] });
+            get_select_box('all_ontology_terms', 'add_new_trait_existing_scale_select_div', { 'selectbox_name':'add_new_trait_existing_scale_select',    'selectbox_id':'add_new_trait_existing_scale_select', 'empty':1, 'db_id':selected[0], 'exclude_top_term':1 });
         }
     });
 
@@ -548,6 +657,41 @@ jQuery(document).ready(function() {
             error: function(response){
                 jQuery("#working_modal").modal("hide");
                 alert("Error saving observation variable.");
+            }
+        });
+    });
+
+    jQuery('#add_new_trait_observation_variable_ontology_step').click(function(){
+        jQuery.ajax ({
+            url: '/ajax/onto/store_ontology_identifier',
+            type: 'POST',
+            data: {
+                'ontology_name':jQuery('#add_new_observation_variable_ontology_name').val(),
+                'ontology_description':jQuery('#add_new_observation_variable_ontology_definition').val(),
+                'ontology_identifier':jQuery('#add_new_observation_variable_ontology_db_name').val(),
+                'ontology_type':jQuery('#add_new_observation_variable_ontology_type').val()
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                //if (response.message){
+                //    Workflow.complete('#add_new_trait_observation_variable_ontology_step');
+                //    Workflow.focus("#add_new_ontology_workflow", -1); //go to success page
+                //}
+                if (response.success) {
+                    alert(response.success);
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+                location.reload();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error saving ontology.");
             }
         });
     });

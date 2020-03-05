@@ -1,6 +1,8 @@
 
 package CXGN::Dataset::Cache;
 
+use strict;
+use warnings;
 use Moose;
 use Cache::File;
 use Digest::MD5 qw | md5_hex |;

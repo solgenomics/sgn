@@ -50,6 +50,7 @@ sub download {
     my @trial_ids = @{$self->trial_list()};
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
+    my $trial_stock_type = $self->trial_stock_type();
 
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
@@ -99,23 +100,32 @@ sub download {
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
 
+    my $stock_column_header;
+    if ($trial_stock_type eq 'family_name') {
+        $stock_column_header = 'family_name';
+    } elsif ($trial_stock_type eq 'cross') {
+        $stock_column_header = 'cross_unique_id';
+    } else {
+        $stock_column_header = 'accession_name';
+    }
+
     my $num_col_before_traits;
     my @column_headers;
     if ($self->data_level eq 'plots') {
         $num_col_before_traits = 9;
-        @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("plot_name", "$stock_column_header", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants') {
         $num_col_before_traits = 10;
-        @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("plant_name", "plot_name", "$stock_column_header", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'subplots') {
         $num_col_before_traits = 10;
-        @column_headers = ("subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("subplot_name", "plot_name", "$stock_column_header", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'plants_subplots') {
         $num_col_before_traits = 11;
-        @column_headers = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("plant_name", "subplot_name", "plot_name", "$stock_column_header", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     } elsif ($self->data_level eq 'tissue_samples') {
         $num_col_before_traits = 11;
-        @column_headers = ("tissue_sample_name", "plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
+        @column_headers = ("tissue_sample_name", "plant_name", "plot_name", "$stock_column_header", "plot_number", "block_number", "is_a_control", "rep_number", "planting_date", "harvest_date", "trial_name");
     }
 
     my $num_col_b = $num_col_before_traits;
@@ -363,7 +373,7 @@ sub download {
         $cvinfo{$trait->display_name()} = $trait;
         #print STDERR "**** Trait = " . $trait->display_name . "\n\n";
     }
-    
+
     #print STDERR "Self include notes is ".$self->include_notes."\n";
     if ( $self->include_notes()) {
         push @trait_list, 'notes';
