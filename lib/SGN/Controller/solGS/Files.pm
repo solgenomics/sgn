@@ -615,12 +615,13 @@ sub create_file_id {
     my $file_id;
     my $referer = $c->req->referer;
     
-    if ($referer =~ /solgs\/selection\//)
+    if ($referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)
     {
-	$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
-	$c->controller('solGS::List')->register_trials_list($c);
-	$combo_pops_id =  $c->stash->{combo_pops_id};
-	$file_id = $combo_pops_id;
+	#$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
+	##$c->controller('solGS::List')->register_trials_list($c);
+	#$combo_pops_id =  $c->stash->{combo_pops_id};
+	#$file_id = $combo_pops_id;
+	$file_id = join("-", ($training_pop_id, $selection_pop_id))
     }
     elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {
