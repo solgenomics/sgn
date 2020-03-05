@@ -2102,6 +2102,37 @@ sub get_male_plots : Chained('trial') PathPart('get_male_plots') Args(0) {
 }
 
 
+sub get_female_plants : Chained('trial') PathPart('get_female_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_plants_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "FEMALE PLANTS =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { female_plants => \@data };
+}
+
+
+sub get_male_plants : Chained('trial') PathPart('get_male_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_plants_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_plants => \@data };
+}
+
+
 sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;

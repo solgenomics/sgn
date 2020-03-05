@@ -548,6 +548,66 @@ jQuery(document).ready(function () {
     });
 
 
+    jQuery('#female_plant_barcodes').click(function() {
+        jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
+        jQuery('#generate_trial_barcode_dialog').modal("show");
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_plants',
+
+            success: function(response){
+                if (response.female_plants == '') {
+                    alert("This crossing experiment has no female plant entry.");
+                }
+                alert(response.female_plants);
+                var female_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                for (i=0; i<response.female_plants.length; i++) {
+                    female_plants_html = female_plants_html + response.female_plants[i][1] + "\n";
+
+                }
+                female_plants_html = female_plants_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(female_plants_html);
+
+            },
+            error: function(response){
+                alert("Error retrieving female plants.");
+            }
+        });
+    });
+
+
+    jQuery('#male_plant_barcodes').click(function() {
+        jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
+        jQuery('#generate_trial_barcode_dialog').modal("show");
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_plants',
+
+            success: function(response){
+                if (response.male_plants == '') {
+                    alert("This crossing experiment has no male plant entry.");
+                }
+                var male_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                for (i=0; i<response.male_plants.length; i++) {
+                    male_plants_html = male_plants_html + response.male_plants[i][1] + "\n";
+
+                }
+                male_plants_html = male_plants_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(male_plants_html);
+
+            },
+            error: function(response){
+                alert("Error retrieving male plants.");
+            }
+        });
+    });
+
+
+
 });
 
 </script>
