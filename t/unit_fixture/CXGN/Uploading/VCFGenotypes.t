@@ -493,12 +493,21 @@ print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_string);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, 'stock_id	41782	41783
-41782	0.0317460317460317	-0.0317460317460317
-41783	-0.0317460317460317	0.0317460317460317
+41782	-0.968253968253968	-1.03174603174603
+41783	-1.03174603174603	-0.968253968253968
+');
+
+$ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column");
+$message = $response->decoded_content;
+print STDERR Dumper $message;
+is($message, '41782	41782	-0.968253968253968
+41782	41783	-1.03174603174603
+41783	41783	-0.968253968253968
 ');
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
