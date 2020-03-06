@@ -498,9 +498,48 @@ sub get_data {
         }
     }
     if ($data_level eq "list") {
-        my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
-        foreach my $item (@{$list_data}) {
-            $design->{$item->[0]} = { 'list_item_name' => $item->[1], 'list_item_id' => $item->[0] };
+        my $list = CXGN::List->new( { dbh=> $c->dbc->dbh(), list_id=>$id });
+        my $list_data = $list->retrieve_elements_with_ids($id);
+        print STDERR "Working on a list of type ".$list->type();
+        if ($list->type() eq 'seedlots') { # Check list type, if seedlot retrieve seedlot details
+            # my $seedlot_obj = CXGN::Stock::Seedlot->new(
+            #     schema => $schema,
+            # );
+            my @seedlots = map { $_->[1] } @$list_data;
+            my $t = CXGN::List::Transform->new();
+            my $seedlot_t = $t->can_transform("stocks", "stock_ids");
+            my $seedlot_id_hash = $t->transform($schema, $seedlot_t, \@seedlots);
+            my @seedlot_ids = @{$seedlot_id_hash->{transform}};
+
+            foreach my $id (@seedlot_ids) {
+                my $seedlot_obj = CXGN::Stock::Seedlot->new(
+                    schema => $schema,
+                    seedlot_id => $id
+                );
+                my $transactions = $seedlot_obj->transactions();
+                my $operator = $transactions->[0]->{operator};
+                my $description = $transactions->[0]->{description};
+                my $accession_array = $seedlot_obj->accession();
+                $design->{$id} = {
+                    uniquename => $seedlot_obj->uniquename(),
+                    seedlot_id => $seedlot_obj->seedlot_id(),
+                    current_count => $seedlot_obj->current_count(),
+                    current_weight => $seedlot_obj->current_weight(),
+                    location_code => $seedlot_obj->location_code(),
+                    breeding_program => $seedlot_obj->breeding_program_name(),
+                    organization_name => $seedlot_obj->organization_name(),
+                    population_name => $seedlot_obj->population_name(),
+                    accession => @{$accession_array}[1],
+                    cross => $seedlot_obj->cross(),
+                    box_name => $seedlot_obj->box_name(),
+                    operator => $operator,
+                    description => $description
+                };
+            }
+        } else { # Just use list elements
+            foreach my $item (@{$list_data}) {
+                $design->{$item->[0]} = { 'list_item_name' => $item->[1], 'list_item_id' => $item->[0] };
+            }
         }
     }
     elsif ($data_level eq "plate") {
