@@ -180,7 +180,7 @@ sub get_grm {
     my @all_individual_accessions_stock_ids;
 
     # In this case a list of accessions is given, so get a GRM between these accessions
-    if ($accession_list && scalar(@$accession_list)>0){
+    if ($accession_list && scalar(@$accession_list)>0 && !$get_grm_for_parental_accessions){
         @all_individual_accessions_stock_ids = @$accession_list;
 
         foreach (@$accession_list) {
