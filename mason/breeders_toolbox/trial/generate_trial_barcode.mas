@@ -324,29 +324,31 @@ jQuery(document).ready(function () {
 
     if (trial_stock_type == 'family_name') {
         dialog_subtitle = 'Generate barcodes for plots, plants and family names used in this trial.';
-        dialog_subtitle2 = 'Generate barcodes for plots or plants or family names used in this trial.';
         barcode_button_label = 'Family Name Barcodes';
     } else if (trial_stock_type == 'cross') {
         dialog_subtitle = 'Generate barcodes for plots, plants and cross unique ids used in this trial.';
-        dialog_subtitle2 = 'Generate barcodes for plots or plants or cross unique ids used in this trial.';
         barcode_button_label = 'Cross Unique ID Barcodes';
     } else {
         dialog_subtitle = 'Generate barcodes for plots, plants and accessions used in this trial.';
-        dialog_subtitle2 = 'Generate barcodes for plots or plants or accessions used in this trial.';
         barcode_button_label = 'Accession Barcodes';
     }
 
     jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
 
-    jQuery('#barcode_dialog_subtitle2').text(dialog_subtitle2);
-
     document.getElementById('trial_stock_barcode').innerHTML = barcode_button_label;
 
     jQuery('#trial_stock_barcode').click(function() {
 
+        if (trial_stock_type == 'family_name') {
+            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for family names used in this trial');
+        } else if (trial_stock_type == 'cross') {
+            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for Cross unique ids used in this trial');
+        } else {
+            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for accessions used in this trial');
+        }
+
     	jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
-
             success: function(response) {
         		var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -364,6 +366,8 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#trial_plot_barcode').click(function() {
+
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for plots used in this trial');
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
@@ -384,6 +388,8 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#trial_plant_barcode').click(function() {
+
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for plants used in this trial');
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
