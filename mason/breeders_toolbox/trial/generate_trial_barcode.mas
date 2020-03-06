@@ -408,14 +408,14 @@ jQuery(document).ready(function () {
 
     });
 
-    jQuery("#crossingtrial_barcode").click(function(){
-        jQuery("#generate_crossing_experiment_barcode_dialog").modal("show");
+    jQuery('#crossing_experiment_barcode').click(function(){
+        jQuery('#generate_crossing_experiment_barcode_dialog').modal("show");
     });
 
     jQuery('#cross_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
-
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for cross unique ids');
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_crosses',
 
@@ -441,6 +441,7 @@ jQuery(document).ready(function () {
     jQuery('#female_accession_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female accessions');
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_accessions',
@@ -467,6 +468,7 @@ jQuery(document).ready(function () {
     jQuery('#male_accession_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male accessions');
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_accessions',
@@ -501,7 +503,7 @@ jQuery(document).ready(function () {
                     alert("This crossing experiment has no female plot entry.");
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-
+                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female plots');
                 }
                 var female_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -532,7 +534,7 @@ jQuery(document).ready(function () {
                     alert("This crossing experiment has no male plot entry.");
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-
+                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male plots');
                 }
                 var male_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -563,7 +565,7 @@ jQuery(document).ready(function () {
                     alert("This crossing experiment has no female plant entry.");
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
-
+                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female plants');
                 }
                 var female_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -594,6 +596,7 @@ jQuery(document).ready(function () {
                     alert("This crossing experiment has no male plant entry.");
                 } else {
                     jQuery('#generate_trial_barcode_dialog').modal("show");
+                    jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male plants');
                 }
                 var male_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
