@@ -492,7 +492,6 @@ jQuery(document).ready(function () {
 
     jQuery('#female_plot_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
-        jQuery('#generate_trial_barcode_dialog').modal("show");
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_plots',
@@ -500,6 +499,9 @@ jQuery(document).ready(function () {
             success: function(response){
                 if (response.female_plots == '') {
                     alert("This crossing experiment has no female plot entry.");
+                } else {
+                    jQuery('#generate_trial_barcode_dialog').modal("show");
+
                 }
                 var female_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -521,7 +523,6 @@ jQuery(document).ready(function () {
 
     jQuery('#male_plot_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
-        jQuery('#generate_trial_barcode_dialog').modal("show");
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_plots',
@@ -529,6 +530,9 @@ jQuery(document).ready(function () {
             success: function(response){
                 if (response.male_plots == '') {
                     alert("This crossing experiment has no male plot entry.");
+                } else {
+                    jQuery('#generate_trial_barcode_dialog').modal("show");
+
                 }
                 var male_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
@@ -550,7 +554,6 @@ jQuery(document).ready(function () {
 
     jQuery('#female_plant_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
-        jQuery('#generate_trial_barcode_dialog').modal("show");
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_plants',
@@ -558,8 +561,10 @@ jQuery(document).ready(function () {
             success: function(response){
                 if (response.female_plants == '') {
                     alert("This crossing experiment has no female plant entry.");
+                } else {
+                    jQuery('#generate_trial_barcode_dialog').modal("show");
+
                 }
-                alert(response.female_plants);
                 var female_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
                 for (i=0; i<response.female_plants.length; i++) {
@@ -580,7 +585,6 @@ jQuery(document).ready(function () {
 
     jQuery('#male_plant_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
-        jQuery('#generate_trial_barcode_dialog').modal("show");
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_plants',
@@ -588,6 +592,8 @@ jQuery(document).ready(function () {
             success: function(response){
                 if (response.male_plants == '') {
                     alert("This crossing experiment has no male plant entry.");
+                } else {
+                    jQuery('#generate_trial_barcode_dialog').modal("show");
                 }
                 var male_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 

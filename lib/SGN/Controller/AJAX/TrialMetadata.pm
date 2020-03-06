@@ -2098,7 +2098,7 @@ sub get_male_plots : Chained('trial') PathPart('get_male_plots') Args(0) {
     my $result = $trial->get_male_plots_in_crossing_experiment();
     my @data = @$result;
 
-    $c->stash->{rest} = { female_plots => \@data };
+    $c->stash->{rest} = { male_plots => \@data };
 }
 
 
