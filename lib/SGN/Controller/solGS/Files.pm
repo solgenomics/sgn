@@ -255,27 +255,13 @@ sub relationship_matrix_file {
     my $file_id = $pop_id . '-GP-' . $protocol_id;
 
     no warnings 'uninitialized';
-    
-    # my $cache_data;
-    # if ($data_set_type =~ /combined populations/)
-    # {
-    #     my $combo_identifier = $c->stash->{combo_pops_id};
-    #     $cache_data = {key       => 'relationship_matrix_combined_pops_'.  $combo_identifier,
-    #                    file      => 'relationship_matrix_combined_pops_' . $combo_identifier . '.txt',
-    #                    stash_key => 'relationship_matrix_file',
-    # 		       cache_dir => $c->stash->{solgs_cache_dir}
-
-    #     };
-    # }
-    # else 
-    # {
-    
-        my $cache_data = {key    => 'relationship_matrix_' . $file_id ,
-                       file      => 'relationship_matrix_' . $file_id . '.txt',
-                       stash_key => 'relationship_matrix_file',
-		       cache_dir => $c->stash->{solgs_cache_dir}
-        };
-   # }
+        
+    my $cache_data = {key    => 'relationship_matrix_' . $file_id ,
+		      file      => 'relationship_matrix_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
+    };
+  
 
     $self->cache_file($c, $cache_data);
 
@@ -340,7 +326,6 @@ sub all_traits_file {
     my ($self, $c, $pop_id) = @_;
 
     $pop_id = $c->stash->{pop_id} ||  $c->stash->{training_pop_id} if !$pop_id;
-    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'all_traits_pop' . $pop_id,
                       file      => 'all_traits_pop_' . $pop_id . '.txt',
@@ -357,8 +342,6 @@ sub traits_list_file {
     my ($self, $c, $pop_id) = @_;
  
     $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id} if !$pop_id;
-
-   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $cache_data = {key       => 'traits_list_pop' . $pop_id,
                       file      => 'traits_list_pop_' . $pop_id . '.txt',
@@ -525,9 +508,6 @@ sub selection_population_file {
 sub traits_acronym_file {
     my ($self, $c, $pop_id) = @_;
 
-   # my $pop_id = $c->stash->{pop_id};
-   # $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-
     my $cache_data = {key       => 'traits_acronym_pop' . $pop_id,
                       file      => 'traits_acronym_pop_' . $pop_id . '.txt',
                       stash_key => 'traits_acronym_file',
@@ -574,7 +554,7 @@ sub cache_file {
     }
 
     $c->stash->{$cache_data->{stash_key}} = $file;
-   # $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+  
 }
 
 
@@ -614,23 +594,21 @@ sub create_file_id {
         
     my $file_id;
     my $referer = $c->req->referer;
+
+    my $selectiion_pages = 'solgs\/selection\/'
+	. '|solgs\/combined\/model\/\d+\/selection\/'
+	. '|/solgs\/traits\/all\/population\/'
+	. '|solgs\/models\/combined\/trials\/';
     
-    if ($referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)
-    {
-	#$c->stash->{pops_ids_list} = [$training_pop_id, $selection_pop_id];
-	##$c->controller('solGS::List')->register_trials_list($c);
-	#$combo_pops_id =  $c->stash->{combo_pops_id};
-	#$file_id = $combo_pops_id;
-	$file_id = join("-", ($training_pop_id, $selection_pop_id))
-    }
-    elsif ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
+  
+    if ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
 	$file_id = $combo_pops_id;
 	$c->stash->{data_set_type} = 'combined_populations';
     } 
-    elsif ($referer =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) 
+    elsif ($referer =~ /$selection_pages/) 
     {
 	$file_id =  $selection_pop_id ? $training_pop_id . '-' . $selection_pop_id : $training_pop_id;
     }
@@ -659,12 +637,9 @@ sub create_file_id {
     }
     
     $file_id = $file_id . '-traits-' . $traits_selection_id if $traits_selection_id;
-    # $file_id = $file_id . '-trait-' . $traits_ids[0] if !$traits_selection_id && @traits_ids;
+ 
     if ($trait_id) 
     {
-	#$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-	#my $trait_abbr = $c->stash->{trait_abbr};
-	
 	$file_id = $file_id . '-' . $trait_id;
     }
 
