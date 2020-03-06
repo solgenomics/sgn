@@ -18,37 +18,29 @@ sub search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my @germplasm_ids = $inputs->{stock_ids} ? @{$inputs->{stock_ids}} : ();
-    my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
-    my @extract_ids = $inputs->{extract_ids} ? @{$inputs->{extract_ids}} : ();
-    my @sample_ids = $inputs->{sample_ids} ? @{$inputs->{sample_ids}} : ();
-    my @methods = $inputs->{protocol_ids} ? @{$inputs->{protocol_ids}} : ();
+    my @callset_id = $inputs->{callSetDbId}? @{$inputs->{callSetDbId}} : ();
+    my @callset_names = $inputs->{callSetName} ? @{$inputs->{callSetName}} : ();
+    my @germplasm_ids = $inputs->{germplasmDbId} ? @{$inputs->{germplasmDbId}} : ();
+    # my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
+    my @variant_ids = $inputs->{variantSetDbId} ? @{$inputs->{variantSetDbId}} : ();
+    my @sample_ids = $inputs->{sampleDbId} ? @{$inputs->{sampleDbId}} : ();
 
-    if (scalar(@extract_ids)>0){
-        push @$status, { 'error' => 'Search parameter extractDbId not supported' };
+    if (scalar(@variant_ids)>0){
+        push @$status, { 'error' => 'Search parameter variantSetDbId not supported' };
     }
     if (scalar(@sample_ids)>0){
         push @$status, { 'error' => 'Search parameter sampleDbId not supported' };
     }
+    if (scalar(@callset_names)>0){
+        push @$status, { 'error' => 'Search parameter callSetName not supported' };
+    }
 
     my $genotypes_search = CXGN::Genotype::Search->new({
-        # bcs_schema=>$self->bcs_schema,
-        # cache_root=>$c->config->{cache_file_path},
-        # accession_list=>\@germplasm_ids,
         # trial_list=>\@study_ids,
-        # protocol_id_list=>\@methods,
-        # # genotypeprop_hash_select=>['DS'],
-        # protocolprop_top_key_select=>[],
-        # protocolprop_marker_hash_select=>[],
-        markerprofile_id_list=>['1760'],
-
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        # markerprofile_id_list=>[$genotypeprop_id],
-        genotypeprop_hash_select=>['DS', 'GT', 'NT'],
-        protocolprop_top_key_select=>[],
-        protocolprop_marker_hash_select=>[],
-
+        markerprofile_id_list=>\@callset_id,
+        accession_list=>\@germplasm_ids,
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
@@ -113,7 +105,7 @@ sub search {
     my %result = (data => \@data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles-search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'CallSets result constructed');
 }
 
 sub detail {
@@ -123,7 +115,7 @@ sub detail {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $genotypeprop_id = $inputs->{callset_id};
+    my $callset_id = $inputs->{callset_id};
     my $sep_phased = $inputs->{sep_phased};
     my $sep_unphased = $inputs->{sep_unphased};
     my $unknown_string = $inputs->{unknown_string};
@@ -136,7 +128,7 @@ sub detail {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        markerprofile_id_list=>[$genotypeprop_id],
+        markerprofile_id_list=>[$callset_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
@@ -186,8 +178,7 @@ sub calls {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    # my @markerprofile_ids = $inputs->{callset_id} ? @{$inputs->{callset_id}} : ();
-    my @markerprofile_ids = $inputs->{callset_id};
+    my @callset_id = $inputs->{callset_id};
     my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
     my $sep_phased = $inputs->{sep_phased};
     my $sep_unphased = $inputs->{sep_unphased};
@@ -211,7 +202,7 @@ sub calls {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        markerprofile_id_list=>\@markerprofile_ids,
+        markerprofile_id_list=>\@callset_id,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
@@ -273,15 +264,15 @@ sub calls {
 
     } elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
 
-        my @data = (['marker', 'markerprofileDbId', 'genotype'], @scores);
+        # my @data = (['marker', 'markerprofileDbId', 'genotype'], @scores);
 
-        my $file_response = CXGN::BrAPI::FileResponse->new({
-            absolute_file_path => $file_path,
-            absolute_file_uri => $inputs->{main_production_site_url}.$uri,
-            format => $data_format,
-            data => \@data
-        });
-        @data_files = $file_response->get_datafiles();
+        # my $file_response = CXGN::BrAPI::FileResponse->new({
+        #     absolute_file_path => $file_path,
+        #     absolute_file_uri => $inputs->{main_production_site_url}.$uri,
+        #     format => $data_format,
+        #     data => \@data
+        # });
+        # @data_files = $file_response->get_datafiles();
     }
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);

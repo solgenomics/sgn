@@ -3407,15 +3407,12 @@ sub callsets_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('CallSets');
 	my $brapi_package_result = $brapi_module->search({
-		observationLevel => $clean_inputs->{observationLevel},
-        seasonDbId => $clean_inputs->{seasonDbId},
-        locationDbId => $clean_inputs->{locationDbId},
-        studyDbId => $clean_inputs->{studyDbId},
+		variantSetDbId => $clean_inputs->{variantSetDbId},
+        sampleDbId => $clean_inputs->{sampleDbId},
+        callSetName => $clean_inputs->{callSetName},
+        # studyDbId => $clean_inputs->{studyDbId},
         germplasmDbId => $clean_inputs->{germplasmDbId},
-        programDbId => $clean_inputs->{programDbId},
-        observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
-        observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
-        observationUnitDbId => $clean_inputs->{observationUnitDbId}
+        callSetDbId => $clean_inputs->{callSetDbId},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
