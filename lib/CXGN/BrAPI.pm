@@ -35,7 +35,8 @@ use CXGN::BrAPI::v2::Trials;
 use CXGN::BrAPI::v2::Programs;
 use CXGN::BrAPI::v2::Traits;
 use CXGN::BrAPI::v2::Observations;
-
+use CXGN::BrAPI::v2::CallSets;
+use CXGN::BrAPI::v2::VariantSets;
 
 has 'version' => (
 	isa => 'Str',

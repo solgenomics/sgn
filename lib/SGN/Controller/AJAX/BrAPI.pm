@@ -3361,6 +3361,163 @@ sub save_observation_results {
 	_standard_response_construction($c, $brapi_package_result, $http_status_code);
  }
 
+=head2 brapi/v2/callsets
+
+ Usage: To retrieve data for a single markerprofile
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+            "result": {
+                "germplasmDbId": 993,
+                "extractDbId" : 38383,
+                "markerprofileDbId": 37484,
+                "analysisMethod": "GBS-Pst1",
+                "encoding": "AA,BB,AB",
+                "data" : [ { "marker1": "AA" }, { "marker2":"AB" }, ... ]
+           }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub callsets : Chained('brapi') PathPart('callsets') Args(0) : ActionClass('REST') { }
+
+sub callsets_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub callsets_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->search({
+		observationLevel => $clean_inputs->{observationLevel},
+        seasonDbId => $clean_inputs->{seasonDbId},
+        locationDbId => $clean_inputs->{locationDbId},
+        studyDbId => $clean_inputs->{studyDbId},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        programDbId => $clean_inputs->{programDbId},
+        observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
+        observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
+        observationUnitDbId => $clean_inputs->{observationUnitDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_single : Chained('brapi') PathPart('callsets') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{callset_id} = $id; # this is genotypeprop_id
+}
+
+sub callsets_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub callsets_fetch_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub callsets_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->detail({
+		callset_id => $c->stash->{callset_id},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_call_detail : Chained('callsets_single') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub callsets_call_detail_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub callsets_call_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->calls({
+		callset_id => $c->stash->{callset_id},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_call_filter_detail : Chained('callsets_single') PathPart('calls') Args(1) : ActionClass('REST') { }
+
+sub callsets_call_filter_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->calls({
+		callset_id => $c->stash->{callset_id},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+
+sub variantsets : Chained('brapi') PathPart('variantsets') Args(0) : ActionClass('REST') { }
+
+sub variantsets_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub variantsets_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->search({
+		observationLevel => $clean_inputs->{observationLevel},
+        seasonDbId => $clean_inputs->{seasonDbId},
+        locationDbId => $clean_inputs->{locationDbId},
+        studyDbId => $clean_inputs->{studyDbId},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        programDbId => $clean_inputs->{programDbId},
+        observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
+        observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
+        observationUnitDbId => $clean_inputs->{observationUnitDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub save_results {
     my $self = shift;
     my $c = shift;
