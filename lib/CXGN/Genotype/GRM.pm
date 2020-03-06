@@ -220,7 +220,8 @@ sub get_grm {
         }
     }
     # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
-    elsif ($get_grm_for_parental_accessions && scalar(@$plot_list)>0) {
+    elsif ($get_grm_for_parental_accessions && $plot_list && scalar(@$plot_list)>0) {
+        print STDERR "COMPUTING GENOTYPE FROM PARENTS FOR PLOTS\n";
         my $plot_list_string = join ',', @$plot_list;
         my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
             FROM stock AS plot
@@ -288,6 +289,79 @@ sub get_grm {
                     }
                 }
                 push @individuals_stock_ids, $plot_stock_id;
+                my $genotype_string_scores = join "\t", @progeny_genotype;
+                $genotype_string .= $genotype_string_scores . "\n";
+                write_file($grm_tempfile, {append => 1}, $genotype_string);
+                undef @progeny_genotype;
+            }
+        }
+    }
+    # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
+    elsif ($get_grm_for_parental_accessions && $accession_list && scalar(@$accession_list)>0) {
+        print STDERR "COMPUTING GENOTYPE FROM PARENTS FOR ACCESSIONS\n";
+        my $accession_list_string = join ',', @$accession_list;
+        my $q = "SELECT accession.stock_id, female_parent.stock_id, male_parent.stock_id
+            FROM stock AS accession
+            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+            WHERE accession.type_id=$accession_cvterm_id AND accession.stock_id IN ($accession_list_string);";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my @accession_stock_ids_found = ();
+        my @female_stock_ids_found = ();
+        my @male_stock_ids_found = ();
+        while (my ($accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+            push @accession_stock_ids_found, $accession_stock_id;
+            push @female_stock_ids_found, $female_parent_stock_id;
+            push @male_stock_ids_found, $male_parent_stock_id;
+        }
+
+        print STDERR Dumper \@accession_stock_ids_found;
+        print STDERR Dumper \@female_stock_ids_found;
+        print STDERR Dumper \@male_stock_ids_found;
+
+        @all_individual_accessions_stock_ids = @accession_stock_ids_found;
+
+        for my $i (0..scalar(@accession_stock_ids_found)-1) {
+            my $female_stock_id = $female_stock_ids_found[$i];
+            my $male_stock_id = $male_stock_ids_found[$i];
+            my $accession_stock_id = $accession_stock_ids_found[$i];
+
+            my $dataset = CXGN::Dataset::Cache->new({
+                people_schema=>$people_schema,
+                schema=>$schema,
+                cache_root=>$cache_root_dir,
+                accessions=>[$female_stock_id, $male_stock_id]
+            });
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+            if (scalar(@$genotypes) > 0) {
+                # For old genotyping protocols without nd_protocolprop info...
+                if (scalar(@all_marker_objects) == 0) {
+                    foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
+                        push @all_marker_objects, {name => $o};
+                    }
+                }
+
+                my $genotype_string = "";
+                my @progeny_genotype;
+                # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
+                if ($genotypes->[0] && $genotypes->[1]) {
+                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
+                    foreach my $m (@all_marker_objects) {
+                        push @progeny_genotype, ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS}) / 2);
+                    }
+                }
+                elsif ($genotypes->[0]) {
+                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                    foreach my $m (@all_marker_objects) {
+                        push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
+                    }
+                }
+                push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @progeny_genotype;
                 $genotype_string .= $genotype_string_scores . "\n";
                 write_file($grm_tempfile, {append => 1}, $genotype_string);
