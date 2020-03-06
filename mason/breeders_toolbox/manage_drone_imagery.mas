@@ -123,7 +123,13 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_cropping_step">Save and Go to Next Step</button>
             </div>
 
-            <!--
+            <div id="manage_drone_imagery_standard_process_crop_load_div">
+                <img src="/img/wheel.gif" />
+            </div>
+
+            <canvas id="drone_imagery_standard_process_crop_original_stitched_div"></canvas>
+
+            <hr>
             <div class="well well-sm">
                 <form class="form-horizontal">
                     <div class="row">
@@ -140,13 +146,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 </form>
                 <button class="btn btn-primary" id="drone_imagery_standard_process_cropping_use_previous_cropping">Use Image Cropping</button>
             </div>
-            -->
-
-            <div id="manage_drone_imagery_standard_process_crop_load_div">
-                <img src="/img/wheel.gif" />
-            </div>
-
-            <canvas id="drone_imagery_standard_process_crop_original_stitched_div"></canvas>
 
         </&>
         <&| /util/workflow.mas:step, title=> "Thresholding" &>
