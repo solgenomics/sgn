@@ -1838,11 +1838,13 @@ sub get_stock_datatables_genotype_data_GET  {
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
     my $stock_type = $stock->type();
 
     my %genotype_search_params = (
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>[],
         protocolprop_top_key_select=>[],
@@ -1856,29 +1858,32 @@ sub get_stock_datatables_genotype_data_GET  {
     my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
     my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
 
-    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
-    my $header_line = <$fh>;
-    my $marker_objects = decode_json $header_line;
-
-    my $start_index = $offset;
-    my $end_index = $offset + $limit;
-    # print STDERR Dumper [$start_index, $end_index];
-
     my @result;
     my $counter = 0;
-    while (my $gt_line = <$fh>) {
-        if ($counter >= $start_index && $counter < $end_index) {
-            my $g = decode_json $gt_line;
-            
-            push @result, [
-                '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
-                $g->{genotypingDataProjectDescription},
-                $g->{analysisMethod},
-                $g->{genotypeDescription},
-                '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
-            ];
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
+
+        my $start_index = $offset;
+        my $end_index = $offset + $limit;
+        # print STDERR Dumper [$start_index, $end_index];
+
+        while (my $gt_line = <$fh>) {
+            if ($counter >= $start_index && $counter < $end_index) {
+                my $g = decode_json $gt_line;
+
+                push @result, [
+                    '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
+                    $g->{genotypingDataProjectDescription},
+                    $g->{analysisMethod},
+                    $g->{genotypeDescription},
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
+                ];
+            }
+            $counter++;
         }
-        $counter++;
     }
 
     my $draw = $c->req->param('draw');

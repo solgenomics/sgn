@@ -682,12 +682,14 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $format = $c->req->param("format") || "list_id";
     my $download_format = $c->req->param("download_format") || 'VCF';
     my $chromosome_numbers = $c->req->param("chromosome_number") ? [$c->req->param("chromosome_number")] : [];
     my $start_position = $c->req->param("start_position") || undef;
     my $end_position = $c->req->param("end_position") || undef;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
@@ -731,10 +733,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         $filename = 'BreedBaseGenotypesDownload.tsv';
     }
 
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
         {
             bcs_schema=>$schema,
+            people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
             accession_list=>\@accession_ids,
             #tissue_sample_list=>$tissue_sample_list,
@@ -743,6 +748,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             chromosome_list=>$chromosome_numbers,
             start_position=>$start_position,
             end_position=>$end_position,
+            compute_from_parents=>$compute_from_parents,
+            forbid_cache=>$forbid_cache
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],
@@ -750,7 +757,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             #offset=>$offset
         }
     );
-    my $file_handle = $geno->download($c);
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -789,13 +802,19 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
 
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
+    my $dir = $c->tempfiles_subdir('/grm_download_wizard');
+    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'grm_download_wizard/imageXXXX');
+
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
+        grm_temp_file=>$grm_tempfile,
         people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
-        get_grm_for_parental_accessions=>1
+        get_grm_for_parental_accessions=>$compute_from_parents
     });
     my $file_handle = $geno->download_grm();
 
@@ -834,6 +853,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my @trial_list = map { $_->[1] } @$trial_data;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $t = CXGN::List::Transform->new();
 
 
@@ -861,6 +881,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         accession_list=>$accession_id_data->{transform},
         trial_list=>$trial_id_data->{transform},
         protocol_id_list=>[$protocol_id]

@@ -79,7 +79,7 @@ $trial_stock_type
             </tr>
 
             <tr>
-                <td><b>Stock Type Used in This Trial</b></td>
+                <td><b>Stock Type Being Evaluated in This Trial</b></td>
                 <td>
                     <div id="stock_type_in_trial">
 % if ($trial_stock_type) {

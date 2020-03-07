@@ -1,4 +1,0 @@
-
-Error variance	8.229581
-Additive genetic variance	4.724966
-SNP heritability (h)	0.36

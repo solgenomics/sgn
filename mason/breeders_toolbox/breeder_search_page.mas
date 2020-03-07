@@ -179,6 +179,10 @@ $dataset_id => undef
                 <span>End Position</span>
                 <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control">
               </td>
+              <td>
+                <span>Compute From Parents</span>
+                <input type="checkbox" class="wizard-download-genotypes-parents-compute">
+              </td>
             </tr>
             <tr>
               <td colspan="3">

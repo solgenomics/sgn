@@ -341,20 +341,20 @@ sub _validate_with_plugin {
     if ($trial_stock_type eq 'family_name') {
         my @family_names = keys %seen_family_names;
         my $family_name_validator = CXGN::List::Validate->new();
-        my @family_names_missing = @{$family_name_validator->validate($schema,'family_names',\@family_names)->{'missing'}};
+        my @family_names_missing = @{$family_name_validator->validate($schema,'accessions_or_family_names',\@family_names)->{'missing'}};
 
         if (scalar(@family_names_missing) > 0) {
             $errors{'missing_stocks'} = \@family_names_missing;
-            push @error_messages, "The following family names are not in the database as uniquenames or synonyms: ".join(',',@family_names_missing);
+            push @error_messages, "The following family names or accessions are not in the database as uniquenames or synonyms: ".join(',',@family_names_missing);
         }
     } elsif ($trial_stock_type eq 'cross') {
         my @cross_unique_ids = keys %seen_cross_unique_ids;
         my $cross_unique_id_validator = CXGN::List::Validate->new();
-        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'crosses',\@cross_unique_ids)->{'missing'}};
+        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'accessions_or_crosses',\@cross_unique_ids)->{'missing'}};
 
         if (scalar(@crosses_missing) > 0) {
             $errors{'missing_stocks'} = \@crosses_missing;
-            push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+            push @error_messages, "The following cross unique ids or accessions are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
         }
     } else {
         my @accessions = keys %seen_accession_names;
@@ -378,7 +378,7 @@ sub _validate_with_plugin {
             push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
         }
 
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@pairs);
         if (exists($return->{error})){
             push @error_messages, $return->{error};
         }
