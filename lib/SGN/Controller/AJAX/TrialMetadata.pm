@@ -1905,7 +1905,7 @@ sub crosses_in_crossingtrial : Chained('trial') PathPart('crosses_in_crossingtri
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_crossingtrial();
+    my $result = $trial->get_crosses_in_crossing_experiment();
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name) =@$r;
@@ -2150,7 +2150,7 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
 
     my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_crossingtrial();
+    my $result = $trial->get_crosses_in_crossing_experiment();
 
     foreach my $r (@$result){
         my ($cross_stock_id, $cross_name) =@$r;
