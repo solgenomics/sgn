@@ -15,7 +15,10 @@ my $geno = CXGN::Genotype::GRM->new({
     protocol_id=>$protocol_id,
     get_grm_for_parental_accessions=>1,
     cache_root=>$cache_root,
-    download_format=>'matrix'
+    download_format=>'matrix',
+    minor_allele_frequency=>0.01,
+    marker_filter=>0.6,
+    individuals_filter=>0.8
 });
 my $grm = $geno->get_grm();
 
@@ -400,7 +403,7 @@ sub get_grm {
     #$r_block->run_block();
     #my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
 
-    my $cmd = 'R -e "library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); A_matrix <- A.mat(mat, min.MAF=0.05, max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf=0, markerFilter=1, indFilter=1); A_matrix <- A.mat(mat_clean, min.MAF=0.01, max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
