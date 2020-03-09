@@ -595,7 +595,7 @@ sub create_file_id {
     my $file_id;
     my $referer = $c->req->referer;
 
-    my $selectiion_pages = 'solgs\/selection\/'
+    my $selection_pages = 'solgs\/selection\/'
 	. '|solgs\/combined\/model\/\d+\/selection\/'
 	. '|/solgs\/traits\/all\/population\/'
 	. '|solgs\/models\/combined\/trials\/';
