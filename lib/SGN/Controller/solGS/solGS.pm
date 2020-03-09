@@ -109,6 +109,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
     my ($self, $c) = @_;
 
     my $show_result = $c->req->param('show_result');
+    
     my $limit = $show_result =~ /all/ ? undef : 10;
     
     my $projects_ids = $c->model('solGS::solGS')->all_gs_projects($limit);
@@ -142,6 +143,8 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 sub projects_links {
     my ($self, $c, $pr_rs) = @_;
 
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     $self->get_projects_details($c, $pr_rs);
     my $projects  = $c->stash->{projects_details};
     
@@ -172,7 +175,7 @@ sub projects_links {
 
 	    #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
-	    push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
+	    push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, 
 				   $pr_desc, $pr_location, $pr_year
 		];          
 
@@ -270,6 +273,8 @@ sub format_gs_projects {
 
    my @formatted_projects;
 
+   my $protocol_id = $c->stash->{genotyping_protocol_id};
+   
    foreach my $pr_id (keys %$projects) 
    { 
        my $pr_name     = $projects->{$pr_id}{project_name};
@@ -292,7 +297,7 @@ sub format_gs_projects {
 	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
        }
    }     
 
