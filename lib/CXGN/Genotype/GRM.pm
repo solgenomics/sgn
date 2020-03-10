@@ -14,7 +14,11 @@ my $geno = CXGN::Genotype::GRM->new({
     plot_id_list=>\@plot_id_list,
     protocol_id=>$protocol_id,
     get_grm_for_parental_accessions=>1,
-    cache_root=>$cache_root
+    cache_root=>$cache_root,
+    download_format=>'matrix',
+    minor_allele_frequency=>0.01,
+    marker_filter=>0.6,
+    individuals_filter=>0.8
 });
 my $grm = $geno->get_grm();
 
@@ -69,6 +73,12 @@ has 'cache_root' => (
     required => 1
 );
 
+has 'download_format' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
 has 'cache' => (
     isa => 'Cache::File',
     is => 'rw',
@@ -95,6 +105,24 @@ has 'protocol_id' => (
     isa => 'Int',
     is => 'rw',
     required => 1
+);
+
+has 'minor_allele_frequency' => (
+    isa => 'Num',
+    is => 'rw',
+    default => sub{0.05}
+);
+
+has 'marker_filter' => (
+    isa => 'Num',
+    is => 'rw',
+    default => sub{0.60}
+);
+
+has 'individuals_filter' => (
+    isa => 'Num',
+    is => 'rw',
+    default => sub{0.80}
 );
 
 has 'accession_id_list' => (
@@ -170,9 +198,12 @@ sub get_grm {
     @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
 
     my @individuals_stock_ids;
+    my @all_individual_accessions_stock_ids;
 
     # In this case a list of accessions is given, so get a GRM between these accessions
-    if ($accession_list && scalar(@$accession_list)>0){
+    if ($accession_list && scalar(@$accession_list)>0 && !$get_grm_for_parental_accessions){
+        @all_individual_accessions_stock_ids = @$accession_list;
+
         foreach (@$accession_list) {
             my $dataset = CXGN::Dataset::Cache->new({
                 people_schema=>$people_schema,
@@ -210,7 +241,8 @@ sub get_grm {
         }
     }
     # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
-    elsif ($get_grm_for_parental_accessions && scalar(@$plot_list)>0) {
+    elsif ($get_grm_for_parental_accessions && $plot_list && scalar(@$plot_list)>0) {
+        print STDERR "COMPUTING GENOTYPE FROM PARENTS FOR PLOTS\n";
         my $plot_list_string = join ',', @$plot_list;
         my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
             FROM stock AS plot
@@ -233,6 +265,8 @@ sub get_grm {
             push @plot_female_stock_ids_found, $female_parent_stock_id;
             push @plot_male_stock_ids_found, $male_parent_stock_id;
         }
+
+        @all_individual_accessions_stock_ids = @plot_accession_stock_ids_found;
 
         # print STDERR Dumper \@plot_stock_ids_found;
         # print STDERR Dumper \@plot_female_stock_ids_found;
@@ -283,6 +317,79 @@ sub get_grm {
             }
         }
     }
+    # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
+    elsif ($get_grm_for_parental_accessions && $accession_list && scalar(@$accession_list)>0) {
+        print STDERR "COMPUTING GENOTYPE FROM PARENTS FOR ACCESSIONS\n";
+        my $accession_list_string = join ',', @$accession_list;
+        my $q = "SELECT accession.stock_id, female_parent.stock_id, male_parent.stock_id
+            FROM stock AS accession
+            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+            WHERE accession.type_id=$accession_cvterm_id AND accession.stock_id IN ($accession_list_string);";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my @accession_stock_ids_found = ();
+        my @female_stock_ids_found = ();
+        my @male_stock_ids_found = ();
+        while (my ($accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+            push @accession_stock_ids_found, $accession_stock_id;
+            push @female_stock_ids_found, $female_parent_stock_id;
+            push @male_stock_ids_found, $male_parent_stock_id;
+        }
+
+        # print STDERR Dumper \@accession_stock_ids_found;
+        # print STDERR Dumper \@female_stock_ids_found;
+        # print STDERR Dumper \@male_stock_ids_found;
+
+        @all_individual_accessions_stock_ids = @accession_stock_ids_found;
+
+        for my $i (0..scalar(@accession_stock_ids_found)-1) {
+            my $female_stock_id = $female_stock_ids_found[$i];
+            my $male_stock_id = $male_stock_ids_found[$i];
+            my $accession_stock_id = $accession_stock_ids_found[$i];
+
+            my $dataset = CXGN::Dataset::Cache->new({
+                people_schema=>$people_schema,
+                schema=>$schema,
+                cache_root=>$cache_root_dir,
+                accessions=>[$female_stock_id, $male_stock_id]
+            });
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+            if (scalar(@$genotypes) > 0) {
+                # For old genotyping protocols without nd_protocolprop info...
+                if (scalar(@all_marker_objects) == 0) {
+                    foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
+                        push @all_marker_objects, {name => $o};
+                    }
+                }
+
+                my $genotype_string = "";
+                my @progeny_genotype;
+                # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
+                if ($genotypes->[0] && $genotypes->[1]) {
+                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
+                    foreach my $m (@all_marker_objects) {
+                        push @progeny_genotype, ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS}) / 2);
+                    }
+                }
+                elsif ($genotypes->[0]) {
+                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                    foreach my $m (@all_marker_objects) {
+                        push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
+                    }
+                }
+                push @individuals_stock_ids, $accession_stock_id;
+                my $genotype_string_scores = join "\t", @progeny_genotype;
+                $genotype_string .= $genotype_string_scores . "\n";
+                write_file($grm_tempfile, {append => 1}, $genotype_string);
+                undef @progeny_genotype;
+            }
+        }
+    }
 
     # print STDERR Dumper \@all_marker_names;
     # print STDERR Dumper \@individuals_stock_ids;
@@ -314,17 +421,22 @@ sub get_grm {
     #$r_block->run_block();
     #my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
 
-    my $cmd = 'R -e "library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); A_matrix <- A.mat(mat, min.MAF=0.05, max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    my $maf = $self->minor_allele_frequency();
+    my $marker_filter = $self->marker_filter();
+    my $individuals_filter = $self->individuals_filter();
+
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); A_matrix <- A.mat(mat_clean, min.MAF='.$maf.', max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
     my @grm;
     open(my $fh, "<", $grm_tempfile) or die "Can't open < $grm_tempfile: $!";
     while (my $row = <$fh>) {
+        chomp($row);
         my @vals = split "\t", $row;
         push @grm, \@vals;
     }
-    return (\@grm, \@individuals_stock_ids);
+    return (\@grm, \@individuals_stock_ids, \@all_individual_accessions_stock_ids);
 }
 
 sub grm_cache_key {
@@ -341,15 +453,19 @@ sub grm_cache_key {
     my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
     my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
-    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_$datatype");
+    my $maf = $self->minor_allele_frequency();
+    my $marker_filter = $self->marker_filter();
+    my $individuals_filter = $self->individuals_filter();
+    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype");
     return $key;
 }
 
 sub download_grm {
     my $self = shift;
     my $return_type = shift || 'filehandle';
+    my $download_format = $self->download_format();
 
-    my $key = $self->grm_cache_key("download_grm");
+    my $key = $self->grm_cache_key("download_grm_".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -363,25 +479,59 @@ sub download_grm {
         }
     }
     else {
-        my ($result_matrix, $stock_ids) = $self->get_grm();
+        my ($result_matrix, $stock_ids, $all_accession_stock_ids) = $self->get_grm();
 
-        my @header = ("stock_id");
-        push @header, @$stock_ids;
+        my $data = '';
+        if ($download_format eq 'matrix') {
+            my @header = ("stock_id");
+            push @header, @$stock_ids;
 
-        my $header_line = join "\t", @header;
-        my $data = "$header_line\n";
+            my $header_line = join "\t", @header;
+            $data = "$header_line\n";
 
-        my $row_num = 0;
-        foreach my $s (@$stock_ids) {
-            my @row = ($s);
-            my $col_num = 0;
-            foreach my $c (@$stock_ids) {
-                push @row, $result_matrix->[$row_num]->[$col_num];
-                $col_num++;
+            my $row_num = 0;
+            foreach my $s (@$stock_ids) {
+                my @row = ($s);
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    push @row, $result_matrix->[$row_num]->[$col_num];
+                    $col_num++;
+                }
+                my $line = join "\t", @row;
+                $data .= "$line\n";
+                $row_num++;
             }
-            my $line = join "\t", @row;
-            $data .= "$line";
-            $row_num++;
+        }
+        elsif ($download_format eq 'three_column') {
+            my %result_hash;
+            my $row_num = 0;
+            my %seen_stock_ids;
+            foreach my $s (@$stock_ids) {
+                my @row = ($s);
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                        $result_hash{$s}->{$c} = $result_matrix->[$row_num]->[$col_num];
+                        $seen_stock_ids{$s}++;
+                        $seen_stock_ids{$c}++;
+                    }
+                    $col_num++;
+                }
+                $row_num++;
+            }
+
+            foreach my $r (sort keys %result_hash) {
+                foreach my $s (sort keys %{$result_hash{$r}}) {
+                    my $val = $result_hash{$r}->{$s};
+                    $data .= "$r\t$s\t$val\n";
+                }
+            }
+
+            foreach my $a (@$all_accession_stock_ids) {
+                if (!exists($seen_stock_ids{$a})) {
+                    $data .= "$a\t$a\t1\n";
+                }
+            }
         }
         $self->cache()->set($key, $data);
         if ($return_type eq 'filehandle') {
