@@ -1300,9 +1300,11 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
     foreach my $lat (sort {$a <=> $b} keys %gps_images) {
         $html .= "<tr><td>".$lat."</td>";
         foreach my $lon (sort {$a <=> $b} keys %{$gps_images{$lat}}) {
+            $html .= "<td>";
             foreach my $img_id (@{$gps_images{$lat}->{$lon}}) {
-                $html .= "<td><span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id."'></span></td>";
+                $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id."'></span>";
             }
+            $html .= "</td>";
         }
         $html .= "</tr>";
     }
