@@ -107,6 +107,24 @@ has 'protocol_id' => (
     required => 1
 );
 
+has 'minor_allele_frequency' => (
+    isa => 'Num',
+    is => 'rw',
+    default => sub{0.05}
+);
+
+has 'marker_filter' => (
+    isa => 'Num',
+    is => 'rw',
+    default => sub{0.60}
+);
+
+has 'individuals_filter' => (
+    isa => 'Num',
+    is => 'rw',
+    default => sub{0.80}
+);
+
 has 'accession_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
@@ -321,9 +339,9 @@ sub get_grm {
             push @male_stock_ids_found, $male_parent_stock_id;
         }
 
-        print STDERR Dumper \@accession_stock_ids_found;
-        print STDERR Dumper \@female_stock_ids_found;
-        print STDERR Dumper \@male_stock_ids_found;
+        # print STDERR Dumper \@accession_stock_ids_found;
+        # print STDERR Dumper \@female_stock_ids_found;
+        # print STDERR Dumper \@male_stock_ids_found;
 
         @all_individual_accessions_stock_ids = @accession_stock_ids_found;
 
@@ -403,7 +421,11 @@ sub get_grm {
     #$r_block->run_block();
     #my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf=0, markerFilter=1, indFilter=1); A_matrix <- A.mat(mat_clean, min.MAF=0.01, max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    my $maf = $self->minor_allele_frequency();
+    my $marker_filter = $self->marker_filter();
+    my $individuals_filter = $self->individuals_filter();
+
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); A_matrix <- A.mat(mat_clean, min.MAF='.$maf.', max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -431,7 +453,10 @@ sub grm_cache_key {
     my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
     my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
-    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_$datatype");
+    my $maf = $self->minor_allele_frequency();
+    my $marker_filter = $self->marker_filter();
+    my $individuals_filter = $self->individuals_filter();
+    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype");
     return $key;
 }
 

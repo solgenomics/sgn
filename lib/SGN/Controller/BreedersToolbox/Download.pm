@@ -782,6 +782,9 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $download_format = $c->req->param("download_format") || 'matrix';
+    my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
+    my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
+    my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -816,7 +819,10 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>$compute_from_parents,
-        download_format=>$download_format
+        download_format=>$download_format,
+        minor_allele_frequency=>$minor_allele_frequency,
+        marker_filter=>$marker_filter,
+        individuals_filter=>$individuals_filter
     });
     my $file_handle = $geno->download_grm();
 
