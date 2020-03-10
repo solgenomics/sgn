@@ -66,7 +66,8 @@ sub patch {
 
     # Restricting search to "NEW" genotyping protocols which have nd_protocolprop information. Old genotyping protocols only had the DS value and shuold be assumed to be stored correctly.
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
-    my $q = "SELECT nd_protocol_id FROM nd_protocol JOIN nd_protocolprop USING(nd_protocol_id) WHERE nd_protocol.type_id=$geno_cvterm_id ORDER BY nd_protocol_id ASC;";
+    my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $q = "SELECT nd_protocol_id FROM nd_protocol JOIN nd_protocolprop USING(nd_protocol_id) WHERE nd_protocol.type_id=$geno_cvterm_id AND nd_protocolprop.type_id=$vcf_map_details_id ORDER BY nd_protocol_id ASC;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     while (my ($protocol_id) = $h->fetchrow_array()) {
