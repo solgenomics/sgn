@@ -336,9 +336,10 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <div class="well well-sm">
                 <ul>
-                    <li>You should only assign one image of a given plot-polygon type to a plot.</li>
-                    <li>Select an image and then click the four corners of the plot.</li>
-                    <li>Assign the plot-polygon type (e.g. green, red, NIR) and assign the plot name to the cropped polygon.</li>
+                    <li>(1) Select an image from the grid below and adjust the rotation.</li>
+                    <li>(2) Click the four corners encompassing a group of plots of interest. Alternatively, paste a previously used template.</li>
+                    <li>(3) Type the plot numbers corresponding to the drawn plot-polygons in the drawn table.</li>
+                    <li>(4) Click assign plot-polygons to save. Repeat steps 1 to 4 until all plots have been assigned an image.</li>
                 </ul>
             </div>
 
@@ -386,22 +387,26 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
-                    <label class="col-sm-3 control-label">Plot-polygon type: </label>
+                    <label class="col-sm-3 control-label">Number of Rows: </label>
                     <div class="col-sm-9">
-                        <div id="drone_imagery_standard_process_raw_images_image_type_select_div"></div>
+                        <input type="number" class="form-control" id="drone_imagery_standard_process_raw_images_number_rows" name="drone_imagery_standard_process_raw_images_number_rows" placeholder="0"/>
                     </div>
                 </div>
                 <div class="form-group form-group-sm">
-                    <label class="col-sm-3 control-label">Plot name: </label>
+                    <label class="col-sm-3 control-label">Number of Columns: </label>
                     <div class="col-sm-9">
-                        <div id="drone_imagery_standard_process_raw_images_plot_select_div"></div>
+                        <input type="number" class="form-control" id="drone_imagery_standard_process_raw_images_number_columns" name="drone_imagery_standard_process_raw_images_number_columns" placeholder="0"/>
                     </div>
                 </div>
             </div>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_draw_polygons" onclick="return false;">Draw Plot-Polygon (Does Not Save)</button>
+            <hr>
+
+            <div id="drone_imagery_standard_process_raw_images_polygon_assign_table" name="drone_imagery_standard_process_raw_images_polygon_assign_table"></div>
 
             <br/><br/>
             <center>
-            <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_assign_plot" onclick="return false;">Assign Plot Image</button>
+            <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_assign_plot" onclick="return false;">Assign Plot Images (Saves)</button>
             </center>
 
         </&>
@@ -2176,8 +2181,6 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_drone_run_band_id;
     var manage_drone_imagery_standard_process_raw_images_image_id;
     var manage_drone_imagery_standard_process_raw_images_rotated_image_id;
-    var manage_drone_imagery_standard_process_raw_images_selected_plot_name;
-    var manage_drone_imagery_standard_process_raw_images_selected_image_type_name;
     var manage_drone_imagery_standard_process_raw_images_polygon = [];
     var manage_drone_imagery_standard_process_raw_images_previous_polygon;
     var manage_drone_imagery_standard_process_raw_images_rotate_angle = 0.00;
@@ -2190,10 +2193,6 @@ jQuery(document).ready(function() {
         manage_drone_imagery_standard_process_raw_images_field_trial_id = jQuery(this).data('field_trial_id');
         manage_drone_imagery_standard_process_raw_images_drone_run_id = jQuery(this).data('drone_run_project_id');
 
-        get_select_box('stocks','drone_imagery_standard_process_raw_images_plot_select_div', {'name': 'drone_imagery_standard_process_raw_images_plot_select', 'id': 'drone_imagery_standard_process_raw_images_plot_select', 'empty':1, 'stock_type_name':'plot', 'trial_id_list':manage_drone_imagery_standard_process_raw_images_field_trial_id, 'multiple':0, 'names_as_select':1 });
-
-        get_select_box('drone_imagery_plot_polygon_types','drone_imagery_standard_process_raw_images_image_type_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_type_select', 'id': 'drone_imagery_standard_process_raw_images_image_type_select', 'empty':1, 'names_as_select':1 });
-    
         get_select_box('micasense_aligned_raw_images_grid','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
 
         get_select_box('plot_image_sizes','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
@@ -2207,6 +2206,9 @@ jQuery(document).ready(function() {
             url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
             success: function(response){
                 console.log(response);
+
+                background_image_width = response.image_width;
+                background_image_height = response.image_height;
 
                 var canvas = document.getElementById('drone_imagery_standard_process_raw_images_show');
                 ctx = canvas.getContext('2d');
@@ -2230,21 +2232,113 @@ jQuery(document).ready(function() {
         });
     });
 
-    jQuery('#drone_imagery_standard_process_raw_images_assign_plot').click(function(){
-        manage_drone_imagery_standard_process_raw_images_selected_plot_name = jQuery('#drone_imagery_standard_process_raw_images_plot_select').val();
-        manage_drone_imagery_standard_process_raw_images_selected_image_type_name = jQuery('#drone_imagery_standard_process_raw_images_image_type_select').val();
+    jQuery('#drone_imagery_standard_process_raw_images_draw_polygons').click(function(){
+        var manage_drone_imagery_standard_process_raw_images_num_rows = jQuery('#drone_imagery_standard_process_raw_images_number_rows').val();
+        var manage_drone_imagery_standard_process_raw_images_num_columns = jQuery('#drone_imagery_standard_process_raw_images_number_columns').val();
+    
+        if (manage_drone_imagery_standard_process_raw_images_num_rows == '') {
+            alert('Please give the number of rows in the area of interest!');
+            return false;
+        }
+        if (manage_drone_imagery_standard_process_raw_images_num_columns == '') {
+            alert('Please give the number of columns in the area of interest!');
+            return false;
+        }
 
-        if (manage_drone_imagery_standard_process_raw_images_selected_plot_name == '') {
-            alert('Please select a plot!');
+        if (crop_points.length < 4) {
+            alert('Please select an area of interest on the image first by clicking the four corner points.');
             return false;
         }
-        if (manage_drone_imagery_standard_process_raw_images_selected_image_type_name == '') {
-            alert('Please select a plot polygon type!');
-            return false;
+
+        plot_polygons_num_rows_generated = parseInt(manage_drone_imagery_standard_process_raw_images_num_rows);
+        plot_polygons_num_cols_generated = parseInt(manage_drone_imagery_standard_process_raw_images_num_columns);
+
+        var section_width = background_image_width;
+        var section_height = background_image_height;
+        var section_top_row_left_offset = parseInt(crop_points[0]['x']);
+        var section_bottom_row_left_offset = parseInt(crop_points[3]['x']);
+        var section_left_column_top_offset = parseInt(crop_points[0]['y']);
+        var section_left_column_bottom_offset = parseInt(background_image_height - crop_points[3]['y']);
+        var section_top_row_right_offset = parseInt(background_image_width - crop_points[1]['x']);
+        var section_right_column_bottom_offset = parseInt(background_image_height - crop_points[2]['y']);
+
+        var total_gradual_left_shift = section_bottom_row_left_offset - section_top_row_left_offset;
+        var col_left_shift_increment = total_gradual_left_shift / plot_polygons_num_rows_generated;
+
+        var total_gradual_vertical_shift = section_right_column_bottom_offset - section_left_column_bottom_offset;
+        var col_vertical_shift_increment = total_gradual_vertical_shift / plot_polygons_num_cols_generated;
+
+        var col_width = (section_width - section_top_row_left_offset - section_top_row_right_offset) / plot_polygons_num_cols_generated;
+        var row_height = (section_height - section_left_column_top_offset - section_left_column_bottom_offset) / plot_polygons_num_rows_generated;
+
+        var x_pos = section_top_row_left_offset;
+        var y_pos = section_left_column_top_offset;
+
+        var row_num = 1;
+        for (var i=0; i<plot_polygons_num_rows_generated; i++) {
+            for (var j=0; j<plot_polygons_num_cols_generated; j++) {
+                var x_pos_val = x_pos;
+                var y_pos_val = y_pos;
+                plot_polygons_generated_polygons.push([
+                    {x:x_pos_val, y:y_pos_val},
+                    {x:x_pos_val + col_width, y:y_pos_val},
+                    {x:x_pos_val + col_width, y:y_pos_val + row_height},
+                    {x:x_pos_val, y:y_pos_val + row_height}
+                ]);
+                x_pos = x_pos + col_width;
+                y_pos = y_pos - col_vertical_shift_increment;
+            }
+            x_pos = section_top_row_left_offset + (row_num * col_left_shift_increment);
+            y_pos = y_pos + row_height + total_gradual_vertical_shift;
+            row_num = row_num + 1;
         }
+        console.log(plot_polygons_generated_polygons);
+
+        plot_polygons_total_height_generated = row_height * plot_polygons_num_rows_generated;
+        plot_polygons_number_generated = plot_polygons_generated_polygons.length;
+
+        var drone_imagery_plot_polygons_new = {};
+        var drone_imagery_plot_polygons_display_new = {};
+
+        for (var i=0; i<plot_polygons_generated_polygons.length; i++) {
+            plot_polygons_ind_4_points = plot_polygons_generated_polygons[i];
+            plot_polygons_display_points = plot_polygons_ind_4_points;
+            if (plot_polygons_display_points.length == 4) {
+                plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+            }
+            drawPolyline(plot_polygons_display_points);
+            drawWaypoints(plot_polygons_display_points, i, 0);
+            drone_imagery_plot_generated_polygons[i] = plot_polygons_ind_4_points;
+            drone_imagery_plot_polygons_new[i] = plot_polygons_ind_4_points;
+            drone_imagery_plot_polygons_display[i] = plot_polygons_display_points;
+            drone_imagery_plot_polygons_display_new[i] = plot_polygons_display_points;
+        }
+
+        plot_polygons_template_dimensions.push({
+            'num_rows':plot_polygons_num_rows_generated,
+            'num_cols':plot_polygons_num_cols_generated,
+            'total_plot_polygons':plot_polygons_num_rows_generated*plot_polygons_num_cols_generated,
+            'plot_polygons':drone_imagery_plot_polygons_new,
+            'plot_polygons_display':drone_imagery_plot_polygons_display_new
+        });
+        console.log(plot_polygons_template_dimensions);
+
+        var table_html = '<table class="table table-bordered table-hover"><thead><tr><th>Generated Index</th><th>Plot Number</th></tr></thead><tbody>';
+        for (var gen_index in drone_imagery_plot_polygons_new) {
+            if (drone_imagery_plot_polygons_new.hasOwnProperty(gen_index)) {
+                table_html = table_html + '<tr><td>'+gen_index+'</td><td><input type="text" class="form-control" placeholder="e.g. 1001" name="manage_drone_imagery_standard_process_raw_images_given_plot_number" data-generated_index="'+gen_index+'"></td></tr>';
+            }
+        }
+        table_html = table_html + '</tbody></table>';
+        
+
+        jQuery('#drone_imagery_standard_process_raw_images_polygon_assign_table').html(table_html);
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_assign_plot').click(function(){
 
         jQuery.ajax({
-            url : '/api/drone_imagery/manual_assign_plot_polygon?image_id='+manage_drone_imagery_standard_process_raw_images_rotated_image_id+'&polygon='+JSON.stringify(crop_points)+'&plot_name='+manage_drone_imagery_standard_process_raw_images_selected_plot_name+'&image_type_name='+manage_drone_imagery_standard_process_raw_images_selected_image_type_name+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_raw_images_drone_run_band_id+'&angle_rotated='+manage_drone_imagery_standard_process_raw_images_rotate_angle,
+            url : '/api/drone_imagery/manual_assign_plot_polygon?image_id='+manage_drone_imagery_standard_process_raw_images_rotated_image_id+'&polygon='+JSON.stringify(drone_imagery_plot_polygons_new)+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_raw_images_drone_run_band_id+'&angle_rotated='+manage_drone_imagery_standard_process_raw_images_rotate_angle,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -3461,6 +3555,7 @@ jQuery(document).ready(function() {
                 crop_display_points.push({x:PosX, y:PosY});
             } else {
                 crop_display_points.push({x:PosX, y:PosY});
+                console.log(crop_points);
             }
             if (crop_display_points.length > 5){
                 crop_points = [];
