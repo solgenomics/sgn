@@ -372,6 +372,8 @@ sub generate_and_cache_layout {
     }
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "accession", "stock_type")->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "cross", "stock_type")->cvterm_id();
+    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "family_name", "stock_type")->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plant", "stock_type")->cvterm_id();
     my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "subplot", "stock_type")->cvterm_id();
@@ -444,11 +446,11 @@ sub generate_and_cache_layout {
     my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-        { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => $accession_cvterm_id },
+        { 'me.type_id' => { -in => [ $plot_of_cv, $tissue_sample_of_cv ] }, 'object.type_id' => { -in => [$accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id ]}},
         { 'join' => 'object' }
     );
     if ($accession_rs->count != 1){
-        die "There is more than one or no (".$accession_rs->count.") accession linked here!\n";
+        die "There is more than one or no (".$accession_rs->count.") accession/cross/family_name linked here!\n";
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
         my $source_rs = $plot->search_related('stock_relationship_subjects')->search(

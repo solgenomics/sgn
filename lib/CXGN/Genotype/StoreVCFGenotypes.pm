@@ -592,9 +592,9 @@ sub validate {
 
         my %all_names;
         my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-	$self->synonym_type_id($synonym_type_id);
+        $self->synonym_type_id($synonym_type_id);
         my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-	$self->accession_type_id($accession_type_id);
+        $self->accession_type_id($accession_type_id);
         my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stock.is_obsolete = 'F';";
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute();
@@ -795,10 +795,10 @@ sub store_metadata {
 
     $self->project_id($project_id);
 
-    #if population name given and samples are actually accession names
+    #if population name given, so we can add genotyped samples to population
     my $population_stock;
     my $population_stock_id;
-    if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+    if ($self->accession_population_name){
         $population_stock = $schema->resultset("Stock::Stock")->find_or_create({
             organism_id => $organism_id,
             name       => $self->accession_population_name,
@@ -847,6 +847,8 @@ sub store_metadata {
     }
     $self->protocol_id($protocol_id);
 
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    $self->accession_type_id($accession_type_id);
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     $self->tissue_sample_type_id($tissue_sample_type_id);
 
@@ -953,7 +955,7 @@ sub store_identifiers {
             my $stock_id = $stock_lookup_obj->{stock_id};
             my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
 
-            if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+            if ($self->accession_population_name){
                 my $pop_rs = $stock_relationship_schema->find_or_create({
                     type_id => $self->population_members_id(),
                     subject_id => $stock_id,

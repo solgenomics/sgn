@@ -1,4 +1,0 @@
-trait_id	trait_name	acronym
-70741	dry matter content percentage	DMCP
-70666	fresh root weight	FRW
-70773	fresh shoot weight measurement in kg	FSWMIK

@@ -70,6 +70,7 @@
                                                     <option value="intertek">Intertek</option>
                                                     <option value="dart">Dart</option>
                                                     <option value="bgi">BGI</option>
+                                                    <option value="IBRC_Japan">IBRC Japan</option>
                                                 </select>
                                             </div>
                                         </div>

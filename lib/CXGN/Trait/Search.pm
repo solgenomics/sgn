@@ -9,7 +9,6 @@ CXGN::Trait::Search - an object to handle searching for trait variables given cr
 my $trait_search = CXGN::Trait::Search->new({
     bcs_schema=>$schema,
     is_variable=>$is_variable,
-    trait_cv_name=>$cv_name,
     onto_root_namespaces=>\@ontology_db_ids,
     trait_definition_list=>\@trait_definitions,
     trait_id_list=>\@trait_ids,
@@ -44,12 +43,7 @@ has 'bcs_schema' => (
 has 'is_variable' => (
     isa => 'Str|Undef',
     is => 'rw',
-    default => 1
-);
-
-has 'trait_cv_name' => (
-    isa => 'Str|Undef',
-    is => 'rw',
+    default => 0
 );
 
 has 'ontology_db_id_list' => (
@@ -103,18 +97,9 @@ sub search {
     my $schema = $self->bcs_schema();
 
     my $is_variable = $self->is_variable();
-    my $trait_cv_name = $self->trait_cv_name();
     my $ontology_db_ids = $self->ontology_db_id_list();
 
     my %and_conditions;
-
-    if ($trait_cv_name){
-        my $trait_cv = $schema->resultset("Cv::Cv")->search( { name => $trait_cv_name } )->single;
-        my $trait_cv_id = $trait_cv->cv_id;
-
-        $and_conditions{'me.cv_id'} = $trait_cv_id;
-    }
-
     if ($ontology_db_ids && scalar(@$ontology_db_ids) > 0){
         $and_conditions{'db.db_id'} = {'-in' => $ontology_db_ids};
     }
@@ -151,13 +136,7 @@ sub search {
     );
 
     if ($is_variable) {
-        my $variable_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name);
-        if ($variable_of_cvterm){
-            my $variable_of_cvterm_id = $variable_of_cvterm->cvterm_id();
-            $where_join{'cvterm_relationship_subjects.type_id'} = $variable_of_cvterm_id;
-        } else {
-            $where_join{'type.name'} = 'VARIABLE_OF';
-        }
+        $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
     #$schema->storage->debug(1);

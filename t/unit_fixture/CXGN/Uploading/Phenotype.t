@@ -174,7 +174,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 my $post1_experiment_count = $experiment->count();
 my $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 60, "Check num rows in NdExperiment table after addition of phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 15, "Check num rows in NdExperiment table after addition of phenotyping spreadsheet upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post1_phenotype_count = $phenotype_rs->count();
@@ -186,19 +186,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 my $post1_exp_prop_count = $exp_prop_rs->count();
 my $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 120, "Check num rows in Experimentprop table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 30, "Check num rows in Experimentprop table after addition of phenotyping spreadsheet upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post1_exp_proj_count = $exp_proj_rs->count();
 my $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 60, "Check num rows in NdExperimentproject table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 15, "Check num rows in NdExperimentproject table after addition of phenotyping spreadsheet upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post1_exp_stock_count = $exp_stock_rs->count();
 my $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 15, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
@@ -222,7 +222,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 15, "Check num rows in NdExperimentMdFIles table after addition of phenotyping spreadsheet upload");
 
 
 
@@ -305,7 +305,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 my $post2_experiment_count = $experiment->count();
 my $post2_experiment_diff = $post2_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post2_experiment_diff."\n";
-ok($post2_experiment_diff == 120, "Check num rows in NdExperiment table after second addition of phenotyping spreadsheet upload");
+ok($post2_experiment_diff == 30, "Check num rows in NdExperiment table after second addition of phenotyping spreadsheet upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post2_phenotype_count = $phenotype_rs->count();
@@ -317,19 +317,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 my $post2_exp_prop_count = $exp_prop_rs->count();
 my $post2_exp_prop_diff = $post2_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post2_exp_prop_diff."\n";
-ok($post2_exp_prop_diff == 240, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_prop_diff == 60, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post2_exp_proj_count = $exp_proj_rs->count();
 my $post2_exp_proj_diff = $post2_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post2_exp_proj_diff."\n";
-ok($post2_exp_proj_diff == 120, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_proj_diff == 30, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post2_exp_stock_count = $exp_stock_rs->count();
 my $post2_exp_stock_diff = $post2_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post2_exp_stock_diff."\n";
-ok($post2_exp_stock_diff == 120, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_stock_diff == 30, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post2_exp_pheno_count = $exp_pheno_rs->count();
@@ -353,7 +353,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post2_exp_md_files_count = $exp_md_files_rs->count();
 my $post2_exp_md_files_diff = $post2_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_md_files_diff."\n";
-ok($post2_exp_md_files_diff == 120, "Check num rows in NdExperimentMdFIles table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_md_files_diff == 30, "Check num rows in NdExperimentMdFIles table after second addition of phenotyping spreadsheet upload");
 
 
 
@@ -469,7 +469,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 150, "Check num rows in NdExperiment table after addition of fieldbook upload");
+ok($post1_experiment_diff == 45, "Check num rows in NdExperiment table after addition of fieldbook upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
@@ -481,19 +481,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 300, "Check num rows in Experimentprop table after addition of fieldbook upload");
+ok($post1_exp_prop_diff == 90, "Check num rows in Experimentprop table after addition of fieldbook upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 150, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
+ok($post1_exp_proj_diff == 45, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 150, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
+ok($post1_exp_stock_diff == 45, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
@@ -517,7 +517,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 150, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
+ok($post1_exp_md_files_diff == 45, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
 
 
 
@@ -936,7 +936,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 207, "Check num rows in NdExperiment table after addition of datacollector upload");
+ok($post1_experiment_diff == 60, "Check num rows in NdExperiment table after addition of datacollector upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
@@ -948,19 +948,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 414, "Check num rows in Experimentprop table after addition of datacollector upload");
+ok($post1_exp_prop_diff == 120, "Check num rows in Experimentprop table after addition of datacollector upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 207, "Check num rows in NdExperimentproject table after addition of datacollector upload");
+ok($post1_exp_proj_diff == 60, "Check num rows in NdExperimentproject table after addition of datacollector upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 207, "Check num rows in NdExperimentstock table after addition of datacollector upload");
+ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of datacollector upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
@@ -984,7 +984,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 207, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
+ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
 
 
 
@@ -1668,7 +1668,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 325, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 75, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -1694,7 +1694,7 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 650, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 150, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -1707,7 +1707,7 @@ $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 325, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 75, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -1720,7 +1720,7 @@ $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 325, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 75, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -1772,7 +1772,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 325, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 75, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -1785,9 +1785,9 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 my $nd_experiment_stock_number;
 if (!$tn->has_plant_entries) {
 	$tn->create_plant_entities(2);
-	$nd_experiment_stock_number = 413;
+	$nd_experiment_stock_number = 135;
 } else {
-	$nd_experiment_stock_number = 383;
+	$nd_experiment_stock_number = 105;
 }
 
 #check that parse fails for plant spreadsheet file when using plot parser
@@ -2343,7 +2343,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 383, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 105, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2369,7 +2369,7 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 766, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 210, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2382,7 +2382,7 @@ $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 383, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 105, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2447,7 +2447,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 383, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 105, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -2597,7 +2597,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 393, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 111, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2623,7 +2623,7 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 786, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 222, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2636,7 +2636,7 @@ $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 393, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 111, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2649,7 +2649,7 @@ $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == $nd_experiment_stock_number+10, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == $nd_experiment_stock_number+6, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2701,7 +2701,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 393, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 111, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -5827,12 +5827,15 @@ is_deeply($parsed_file, {
 $mech->get_ok('http://localhost:3010/ajax/search/images?image_description_filename_composite=26');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsTotal' => 1,'recordsFiltered' => 1,'draw' => undef,'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>','']]});
+is($response->{recordsTotal}, 1);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
 
 $mech->get_ok('http://localhost:3010/ajax/search/images');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>','']],'recordsFiltered' => 2,'draw' => undef,'recordsTotal' => 2});
+is($response->{recordsTotal}, 2);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
+is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/phenotypes_associated_images/4picsimagephenotypespreadsheet.xls";
@@ -5882,7 +5885,10 @@ ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet associa
 $mech->get_ok('http://localhost:3010/ajax/search/images');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsFiltered' => 6,'recordsTotal' => 6,'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>',''],['<a href="/data/images/image_files/63/12/5d/a7/dad19de8898c2e509d7b6bcf/medium.jpg"  title="<a href=/image/view/2427>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/63/12/5d/a7/dad19de8898c2e509d7b6bcf/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2427\' >3</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/ac/31/ab/7e/9f332950a2f1d824a2100b61/medium.jpg"  title="<a href=/image/view/2428>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/31/ab/7e/9f332950a2f1d824a2100b61/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2428\' >1</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/1a/be/f4/eb/580da78f17245b318268df0d/medium.jpg"  title="<a href=/image/view/2429>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/1a/be/f4/eb/580da78f17245b318268df0d/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2429\' >4</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images, phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/a8/11/e4/76/e7f24fbccc79bed797b73a31/medium.jpg"  title="<a href=/image/view/2430>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/a8/11/e4/76/e7f24fbccc79bed797b73a31/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2430\' >2</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images, phenotype_spreadsheet_associated_images']],'draw' => undef});
+is($response->{recordsTotal}, 6);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
+is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
+is($response->{data}[2][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial');
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
@@ -5898,8 +5904,6 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is(scalar(@{$response->{results}}), 2);
 is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
-ok($response->{results}->[0]->{result}->{image_link});
-ok($response->{results}->[1]->{result}->{image_link});
 
 my $stored_image_ids_string = encode_json $stored_image_ids;
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=whitefly_count&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
@@ -5910,13 +5914,21 @@ is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
 ok($response->{results}->[0]->{result}->{image_link});
 ok($response->{results}->[1]->{result}->{image_link});
 
-my $stored_image_ids_string = encode_json $stored_image_ids;
-$mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-is(scalar(@{$response->{results}}), 2);
-is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
-ok($response->{results}->[0]->{result}->{image_link});
-ok($response->{results}->[1]->{result}->{image_link});
+
+my $python_dependencies_installed = `locate keras.py`;
+
+#print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
+
+SKIP: {
+    skip 'missing pyhton dependencies', 1 unless $python_dependencies_installed;
+    my $stored_image_ids_string = encode_json $stored_image_ids;
+    $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
+    $response = decode_json $mech->content;
+    print STDERR Dumper $response;
+    is(scalar(@{$response->{results}}), 2);
+    is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+    ok($response->{results}->[0]->{result}->{image_link});
+    ok($response->{results}->[1]->{result}->{image_link});
+}
 
 done_testing();
