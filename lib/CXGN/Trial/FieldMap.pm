@@ -51,16 +51,22 @@ has 'old_plot_id' => (isa => "Int",
 
 has 'old_plot_name' => (isa => "Str",
     is => 'rw',
-);    
+);
 
 has 'old_accession_id' => (isa => "Int",
 	is => 'rw',
 );
 
+has 'trial_stock_type' => (isa => "Str",
+	is => 'rw',
+	required => 0,
+);
+
+
 sub display_fieldmap {
 	my $self = shift;
 	my $schema = $self->bcs_schema;
-	my $trial_id = $self->trial_id; 
+	my $trial_id = $self->trial_id;
 
 	my $layout = CXGN::Trial::TrialLayout->new({
 		schema => $schema,
@@ -71,7 +77,7 @@ sub display_fieldmap {
 	my $design = $layout-> get_design();
     my $design_type = $layout->get_design_type();
     #print STDERR Dumper($design_type);
-  
+
 	my @plot_names = ();
     my @row_numbers = ();
     my @col_numbers = ();
@@ -94,7 +100,7 @@ sub display_fieldmap {
         my $accession_name = $v->{accession_name};
         my $plant_names = $v->{plant_names};
 		my $plot_number_fromDesign = $v->{plot_number};
-		
+
 		my $image_id = CXGN::Stock->new({
 			schema => $schema,
 			stock_id => $plot_id,
@@ -132,7 +138,7 @@ sub display_fieldmap {
 		if ($plot_name) {
 			push @plot_names, $plot_name;
 		}
-		
+
 		push @layout_info, {
             plot_id => $plot_id,
             plot_number => $plot_number,
@@ -143,9 +149,9 @@ sub display_fieldmap {
             plot_name => $plot_name,
             accession_name => $accession_name,
             plant_names => $plant_names,
-			plot_image_ids => \@plot_image_ids, 
+			plot_image_ids => \@plot_image_ids,
         };
-		
+
     }
 	@layout_info = sort { $a->{plot_number} <=> $b->{plot_number}} @layout_info;
 	my @plot_numbers;
@@ -156,15 +162,15 @@ sub display_fieldmap {
         $false_coord = 'false_coord';
 		my @row_instances = uniq @row_numbers;
 		my %unique_row_counts;
-		$unique_row_counts{$_}++ for @row_numbers;        
+		$unique_row_counts{$_}++ for @row_numbers;
         my @col_number2;
         for my $key (keys %unique_row_counts){
             push @col_number2, (1..$unique_row_counts{$key});
         }
-        for (my $i=0; $i < scalar(@layout_info); $i++){            
+        for (my $i=0; $i < scalar(@layout_info); $i++){
 			$layout_info[$i]->{'col_number'} = $col_number2[$i];
             push @col_numbers, $col_number2[$i];
-        }		
+        }
 	}
 	my $plot_popUp;
 	foreach my $hash (@layout_info){
@@ -179,7 +185,7 @@ sub display_fieldmap {
 		push @$result,  {plotname => $hash->{'plot_name'}, plot_id => $hash->{'plot_id'}, stock => $hash->{'accession_name'}, plotn => $hash->{'plot_number'}, blkn=>$hash->{'block_number'}, rep=>$hash->{'rep_number'}, row=>$hash->{'row_number'}, plot_image_ids=>$hash->{'plot_image_ids'}, col=>$hash->{'col_number'}, plot_msg=>$plot_popUp} ;
 	}
 	#print STDERR Dumper(\@col_numbers);
-	#print STDERR Dumper($result); 
+	#print STDERR Dumper($result);
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -394,10 +400,10 @@ sub replace_plot_accession_fieldMap {
 
 	my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
 	$h_replace->execute($new_accession_id,$old_accession_id,$old_plot_id);
-    
+
     my $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET uniquename = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
 	$h_replace_accessionName_in_plotName->execute($old_plot_id);
-    
+
     $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET name = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
 	$h_replace_accessionName_in_plotName->execute($old_plot_id);
 
@@ -408,26 +414,35 @@ sub replace_plot_accession_fieldMap {
 }
 
 
-sub replace_trial_accession_fieldMap {
+sub replace_trial_stock_fieldMap {
 	my $self = shift;
 	my $error;
 	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
-	my $new_accession = $self->new_accession;
-	my $old_accession_id = $self->old_accession_id;
+	my $new_stock = $self->new_accession;
+	my $old_stock_id = $self->old_accession_id;
 	my $trial_id = $self->trial_id;
+    my $trial_stock_type = $self->trial_stock_type;
 
-	print "New Accession: $new_accession and OLD Accession: $old_accession_id\n";
+	print "New Stock: $new_stock and OLD Stock: $old_stock_id\n";
 
-	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
+	my $new_stock_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_stock})->first->stock_id();
 	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+	my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
+	my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 
-	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
-	$h_update->execute($new_accession_id,$accession_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_accession_id);
+	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN (?,?,?) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
+    if ($trial_stock_type eq 'family_name') {
+		$h_update->execute($new_stock_id,$family_name_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+    } elsif ($trial_stock_type eq 'cross') {
+		$h_update->execute($new_stock_id,$cross_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+    } else {
+		$h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
+    }
 
     $self->_regenerate_trial_layout_cache();
 

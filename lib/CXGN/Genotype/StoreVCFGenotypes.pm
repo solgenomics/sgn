@@ -795,10 +795,10 @@ sub store_metadata {
 
     $self->project_id($project_id);
 
-    #if population name given and samples are actually accession names
+    #if population name given, so we can add genotyped samples to population
     my $population_stock;
     my $population_stock_id;
-    if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+    if ($self->accession_population_name){
         $population_stock = $schema->resultset("Stock::Stock")->find_or_create({
             organism_id => $organism_id,
             name       => $self->accession_population_name,
@@ -955,7 +955,7 @@ sub store_identifiers {
             my $stock_id = $stock_lookup_obj->{stock_id};
             my $genotypeprop_id = $stock_lookup_obj->{genotypeprop_id};
 
-            if ($self->accession_population_name && $self->observation_unit_type_name eq 'accession'){
+            if ($self->accession_population_name){
                 my $pop_rs = $stock_relationship_schema->find_or_create({
                     type_id => $self->population_members_id(),
                     subject_id => $stock_id,

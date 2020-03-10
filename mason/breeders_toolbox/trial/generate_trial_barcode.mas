@@ -3,6 +3,7 @@
 $trial_id => ''
 $trial_name => ''
 $identifier => ''
+$trial_stock_type => undef
 </%args>
 
 
@@ -17,9 +18,8 @@ $identifier => ''
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <p>
+                    <p id = "barcode_dialog_subtitle2">
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Generate barcode for plots and accessions.
                     </p>
                     OR   <button type="button" class="btn btn-primary" name="custom_barcode_trial_link" id="custom_barcode_trial_link">Design Custom Barcode</button>   ON LABEL DESIGNER PAGE!
                     <center>
@@ -73,7 +73,7 @@ $identifier => ''
                                          jQuery("#2D_fieldbook_option").hide();
                                        }
                                    });
-                                   
+
                                    jQuery('#custom_barcode_trial_link').click(function () {
                                        location.href = '/tools/label_designer';
                                    });
@@ -243,19 +243,18 @@ $identifier => ''
             </div>
             <div class="modal-body">
             <div class="container-fluid">
-                <p>
+                <p id = "barcode_dialog_subtitle">
                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                    Generate barcode for plots and accessions.
                 </p>
                     <center>
                     <div class="well">
                     <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                     </div>
                 <p>
-                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
-                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
-                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions Barcode</button>
-                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plot Barcodes</button>
+                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plant Barcodes</button>
+                    <button type="button" class="btn btn-primary" name="trial_stock_barcode" id="trial_stock_barcode"></button>
+                    <button type="button" class="btn btn-primary" name="custom_barcode" id="custom_barcode">Custom Barcodes</button>
                 </p>
 
                       </center>
@@ -274,13 +273,37 @@ $identifier => ''
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_accession_barcode').click(function() {
+    var trial_stock_type = "<% $trial_stock_type %>";
+    var dialog_subtitle = '';
+    var dialog_subtitle2 = '';
+    var barcode_button_label = '';
+
+    if (trial_stock_type == 'family_name') {
+        dialog_subtitle = 'Generate barcodes for plots, plants and family names used in this trial.';
+        dialog_subtitle2 = 'Generate barcodes for plots or plants or family names used in this trial.';
+        barcode_button_label = 'Family Name Barcodes';
+    } else if (trial_stock_type == 'cross') {
+        dialog_subtitle = 'Generate barcodes for plots, plants and cross unique ids used in this trial.';
+        dialog_subtitle2 = 'Generate barcodes for plots or plants or cross unique ids used in this trial.';
+        barcode_button_label = 'Cross Unique ID Barcodes';
+    } else {
+        dialog_subtitle = 'Generate barcodes for plots, plants and accessions used in this trial.';
+        dialog_subtitle2 = 'Generate barcodes for plots or plants or accessions used in this trial.';
+        barcode_button_label = 'Accession Barcodes';
+    }
+
+    jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
+
+    jQuery('#barcode_dialog_subtitle2').text(dialog_subtitle2);
+
+    document.getElementById('trial_stock_barcode').innerHTML = barcode_button_label;
+
+    jQuery('#trial_stock_barcode').click(function() {
 
     	jQuery.ajax ( {
-                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
 
-    		    success: function(response){
-
+            success: function(response) {
         		var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
 
         		for (i=0; i<response.accessions[0].length; i++) {
@@ -289,41 +312,39 @@ jQuery(document).ready(function () {
                 trial_accessions_html = trial_accessions_html + "</textarea>";
         		jQuery('#trial_accessions').empty();
         		jQuery('#trial_accessions').html(trial_accessions_html);
-        	    },
-        	    error: function(response){
+            },
+            error: function(response){
         		      alert("Error retrieving accessions.");
-        	    }
-        	});
+            }
         });
+    });
 
-        jQuery('#trial_plot_barcode').click(function() {
+    jQuery('#trial_plot_barcode').click(function() {
 
-            jQuery.ajax ( {
-                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
 
-                success: function(response){
-
-                    var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
-                    for (i=0; i<response.plots[0].length; i++) {
-            		    trial_plots_html = trial_plots_html + response.plots[0][i][1] + "\n";
-            		}
-                    trial_plots_html = trial_plots_html + "</textarea>";
-                    jQuery('#trial_accessions').empty();
-            		jQuery('#trial_accessions').html(trial_plots_html);
-            	    },
-            	    error: function(response){
-            		      alert("Error retrieving plots.");
+            success: function(response){
+                var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                for (i=0; i<response.plots[0].length; i++) {
+                    trial_plots_html = trial_plots_html + response.plots[0][i][1] + "\n";
                 }
-            });
+                trial_plots_html = trial_plots_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(trial_plots_html);
+            },
+            error: function(response){
+                alert("Error retrieving plots.");
+            }
         });
+    });
 
-        jQuery('#trial_plant_barcode').click(function() {
+    jQuery('#trial_plant_barcode').click(function() {
 
-            jQuery.ajax ( {
-                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
 
-                success: function(response){
-
+            success: function(response){
                 if (response.plants == '') {
                     alert("Trial has no plant entries.");
                 }
@@ -334,15 +355,15 @@ jQuery(document).ready(function () {
                 trial_plants_html = trial_plants_html + "</textarea>";
                 jQuery('#trial_accessions').empty();
                 jQuery('#trial_accessions').html(trial_plants_html);
-                },
-                error: function(response){
-                    alert("Error retrieving plants.");
-                }
-
-            });
+            },
+            error: function(response){
+                alert("Error retrieving plants.");
+            }
 
         });
 
     });
+
+});
 
 </script>

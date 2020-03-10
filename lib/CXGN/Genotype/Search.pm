@@ -10,6 +10,7 @@ PLEASE BE AWARE THAT THE DEFAULT OPTIONS FOR genotypeprop_hash_select, protocolp
 
 my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_list=>$accession_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
@@ -26,10 +27,16 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     return_only_first_genotypeprop_for_stock=>0, #THIS IS TO CONSERVE MEMORY USAGE
     limit=>$limit,
     offset=>$offset,
+    forbid_cache=>$forbid_cache
     # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}], NOT IMPLEMENTED
     # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}], NOT IMPLEMENTED
 });
-my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+# my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+
+# RECOMMENDED
+If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF functions instead.
+If you want results in json format use get_cached_file_search_json
+If you want results in json format for only the metadata (no genotype call data), use get_cached_file_search_json()
 
 =head1 DESCRIPTION
 
@@ -58,10 +65,18 @@ use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
 use File::Temp qw | tempfile |;
 use File::Copy;
+use POSIX;
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
     is => 'rw',
-    required => 1,
+    required => 1
+);
+
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
+    is => 'rw',
+    required => 1
 );
 
 has 'protocol_id_list' => (
@@ -153,6 +168,12 @@ has 'cache_expiry' => (
     isa => 'Int',
     is => 'rw',
     default => 0, # never expires?
+);
+
+has 'forbid_cache' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
 );
 
 has '_iterator_query_handle' => (
@@ -247,6 +268,8 @@ my ($count, $genotype_data) = $genotype_search->get_genotype_info();
 If you want to get results iteratively, use the init and iterator function defined below instead. Iterative retrieval minimizes memory load.
 
 If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF functions instead.
+If you want results in json format use get_cached_file_search_json
+If you want results in json format for only the metadata (no genotype call data), use get_cached_file_search_json()
 
 =cut
 
@@ -596,6 +619,8 @@ while (my ($count, $genotype_data) = $genotype_search->get_next_genotype_info) {
 }
 
 If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF functions instead.
+If you want results in json format use get_cached_file_search_json
+If you want results in json format for only the metadata (no genotype call data), use get_cached_file_search_json()
 
 =cut
 
@@ -785,6 +810,8 @@ while (my ($count, $genotype_data) = $genotype_search->get_next_genotype_info) {
 }
 
 If you just want to get a file with the genotype result in a dosage matrix or VCF file, use get_cached_file_dosage_matrix or get_cached_file_VCF instead.
+If you want results in json format use get_cached_file_search_json
+If you want results in json format for only the metadata (no genotype call data), use get_cached_file_search_json()
 
 =cut
 
@@ -1020,12 +1047,13 @@ Returns the genotype result in a line-by-line json format.
 Uses the file iterator to write the cached file, so that it uses little memory.
 
 First line in file has all marker objects, while subsequent lines have markerprofiles for each sample
+If you want results in json format for only the metadata (no genotype call data), pass 1 for metadata_only
 
 =cut
 
 sub get_cached_file_search_json {
     my $self = shift;
-    my $c = shift;
+    my $shared_cluster_dir_config = shift;
     my $metadata_only = shift;
     my $protocol_ids = $self->protocol_id_list;
 
@@ -1034,12 +1062,12 @@ sub get_cached_file_search_json {
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_json";
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_json";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1095,12 +1123,17 @@ sub get_cached_file_search_json {
 
         open my $out_copy, '<', $tempfile or die "Can't open output file: $!";
 
-        $self->cache()->set($key, '');
-        $file_handle = $self->cache()->handle($key);
-        copy($out_copy, $file_handle);
+        if (!$self->forbid_cache()) {
+            $self->cache()->set($key, '');
+            $file_handle = $self->cache()->handle($key);
+            copy($out_copy, $file_handle);
 
-        close $out_copy;
-        $file_handle = $self->cache()->handle($key);
+            close $out_copy;
+            $file_handle = $self->cache()->handle($key);
+        }
+        else {
+            $file_handle = $out_copy;
+        }
     }
     return $file_handle;
 }
@@ -1115,18 +1148,23 @@ Uses the file iterator to write the cached file, so that it uses little memory.
 
 sub get_cached_file_dosage_matrix {
     my $self = shift;
-    my $c = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $protocol_ids = $self->protocol_id_list;
+
     my $key = $self->key("get_cached_file_dosage_matrix");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_dosage_matrix";
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_dosage_matrix";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1186,10 +1224,10 @@ sub get_cached_file_dosage_matrix {
 
         my $cmd = CXGN::Tools::Run->new(
             {
-                backend => $c->config->{backend},
-                submit_host => $c->config->{cluster_host},
-                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_genotype_download_dosage_matrix",
-                queue => $c->config->{'web_cluster_queue'},
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
                 do_cleanup => 0,
                 out_file => $transpose_tempfile,
     #            out_file => $transpose_tempfile,
@@ -1201,7 +1239,7 @@ sub get_cached_file_dosage_matrix {
         # Do the transposition job on the cluster
         $cmd->run_cluster(
                 "perl ",
-                $c->config->{basepath} . "/bin/transpose_matrix.pl",
+                $basepath_config."/bin/transpose_matrix.pl",
                 $tempfile,
         );
         $cmd->is_cluster(1);
@@ -1209,30 +1247,215 @@ sub get_cached_file_dosage_matrix {
 
         open my $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
 
-        $self->cache()->set($key, '');
-        $file_handle = $self->cache()->handle($key);
-        copy($out_copy, $file_handle);
+        if (!$self->forbid_cache()) {
+            $self->cache()->set($key, '');
+            $file_handle = $self->cache()->handle($key);
+            copy($out_copy, $file_handle);
 
-        close $out_copy;
+            close $out_copy;
+            $file_handle = $self->cache()->handle($key);
+        }
+        else {
+            $file_handle = $out_copy;
+        }
+    }
+    return $file_handle;
+}
+
+=head2 get_cached_file_dosage_matrix_compute_from_parents()
+Computes the genotypes for the queried accessions computed from the parental dosages. Parents are known from pedigrees of accessions.
+Function for getting the file handle for the genotype search result from cache. Will write the cached file if it does not exist.
+Returns the genotype result as a dosage matrix format.
+Uses the file iterator to write the cached file, so that it uses little memory.
+=cut
+
+sub get_cached_file_dosage_matrix_compute_from_parents {
+    my $self = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
+    my $schema = $self->bcs_schema;
+    my $protocol_ids = $self->protocol_id_list;
+    my $accession_ids = $self->accession_list;
+    my $cache_root_dir = $self->cache_root();
+
+    if (scalar(@$protocol_ids)>1) {
+        die "Only one protocol at a time can be done when computing genotypes from parents\n";
+    }
+    my $protocol_id = $protocol_ids->[0];
+
+    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents");
+    $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
+
+    my $file_handle;
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        # Set the temp dir and temp output file
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_dosage_matrix_compute_from_parents";
+        mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+        my ($tmp_fh, $tempfile) = tempfile(
+            "wizard_download_XXXXX",
+            DIR=> $tmp_output_dir,
+        );
+
+        my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+        my $accession_list_string = join ',', @$accession_ids;
+        my $q = "SELECT accession.stock_id, female_parent.stock_id, male_parent.stock_id
+            FROM stock AS accession
+            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+            WHERE accession.stock_id IN ($accession_list_string) AND accession.type_id=$accession_cvterm_id ORDER BY accession.stock_id;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my @accession_stock_ids_found = ();
+        my @female_stock_ids_found = ();
+        my @male_stock_ids_found = ();
+        while (my ($accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+            push @accession_stock_ids_found, $accession_stock_id;
+            push @female_stock_ids_found, $female_parent_stock_id;
+            push @male_stock_ids_found, $male_parent_stock_id;
+        }
+
+        # print STDERR Dumper \@accession_stock_ids_found;
+        # print STDERR Dumper \@female_stock_ids_found;
+        # print STDERR Dumper \@male_stock_ids_found;
+
+        my %unique_germplasm;
+        my $protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id,
+            chromosome_list=>$self->chromosome_list,
+            start_position=>$self->start_position,
+            end_position=>$self->end_position
+        });
+        my $markers = $protocol->markers;
+        my @all_marker_objects = values %$markers;
+
+        no warnings 'uninitialized';
+        @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+        my $counter = 0;
+        for my $i (0..scalar(@accession_stock_ids_found)-1) {
+            my $female_stock_id = $female_stock_ids_found[$i];
+            my $male_stock_id = $male_stock_ids_found[$i];
+            my $accession_stock_id = $accession_stock_ids_found[$i];
+
+            my $dataset = CXGN::Dataset::Cache->new({
+                people_schema=>$self->people_schema,
+                schema=>$schema,
+                cache_root=>$cache_root_dir,
+                accessions=>[$female_stock_id, $male_stock_id]
+            });
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+
+            # For old protocols with no protocolprop info...
+            if (scalar(@all_marker_objects) == 0) {
+                foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
+                    push @all_marker_objects, {name => $o};
+                }
+            }
+
+            my $genotype_string = "";
+            if ($counter == 0) {
+                $genotype_string .= "Marker\t";
+                foreach my $m (@all_marker_objects) {
+                    $genotype_string .= $m->{name} . "\t";
+                }
+                $genotype_string .= "\n";
+            }
+
+            my $genotype_data_string = "";
+            foreach my $m (@all_marker_objects) {
+                my $current_genotype = '';
+                # If both parents are genotyped, calculate progeny genotype as a sum of parent dosage
+                if ($genotypes->[0] && $genotypes->[1]) {
+                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
+                    $current_genotype = ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS})/2);
+                }
+                # If one parent is genotyped, use that
+                elsif ($genotypes->[0]) {
+                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                    $current_genotype = ceil($parent1_genotype->{$m->{name}}->{DS}/2);
+                }
+                $genotype_data_string .= $current_genotype."\t";
+            }
+
+            $genotype_string .= $accession_stock_id."\t".$genotype_data_string."\n";
+            write_file($tempfile, {append => 1}, $genotype_string);
+            $counter++;
+        }
+
+        my $transpose_tempfile = $tempfile . "_transpose";
+
+        my $cmd = CXGN::Tools::Run->new(
+            {
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
+                do_cleanup => 0,
+                out_file => $transpose_tempfile,
+    #            out_file => $transpose_tempfile,
+                # don't block and wait if the cluster looks full
+                max_cluster_jobs => 1_000_000_000,
+            }
+        );
+
+        # Do the transposition job on the cluster
+        $cmd->run_cluster(
+                "perl ",
+                $basepath_config."/bin/transpose_matrix.pl",
+                $tempfile,
+        );
+        $cmd->is_cluster(1);
+        $cmd->wait;
+
+        open my $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+
+        if (!$self->forbid_cache()) {
+            $self->cache()->set($key, '');
+            $file_handle = $self->cache()->handle($key);
+            copy($out_copy, $file_handle);
+
+            close $out_copy;
+            $file_handle = $self->cache()->handle($key);
+        }
+        else {
+            $file_handle = $out_copy;
+        }
     }
     return $file_handle;
 }
 
 sub get_cached_file_VCF {
     my $self = shift;
-    my $c = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
+
     my $key = $self->key("get_cached_file_VCF");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
     my $protocol_ids = $self->protocol_id_list;
 
     my $file_handle;
-    if ($self->cache()->exists($key)) {
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
     }
     else {
         # Set the temp dir and temp output file
-        my $tmp_output_dir = $c->config->{cluster_shared_tempdir}."/tmp_genotype_download_VCF";
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_VCF";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1387,10 +1610,10 @@ sub get_cached_file_VCF {
 
         my $cmd = CXGN::Tools::Run->new(
             {
-                backend => $c->config->{backend},
-                submit_host => $c->config->{cluster_host},
-                temp_base => $c->config->{cluster_shared_tempdir} . "/tmp_genotype_download_VCF",
-                queue => $c->config->{'web_cluster_queue'},
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
                 do_cleanup => 0,
                 out_file => $transpose_tempfile,
     #            out_file => $transpose_tempfile,
@@ -1402,7 +1625,7 @@ sub get_cached_file_VCF {
         # Do the transposition job on the cluster
         $cmd->run_cluster(
                 "perl ",
-                $c->config->{basepath} . "/bin/transpose_matrix.pl",
+                $basepath_config."/bin/transpose_matrix.pl",
                 $tempfile,
         );
         $cmd->is_cluster(1);
@@ -1443,12 +1666,279 @@ sub get_cached_file_VCF {
 
         open my $out_copy, '<', $transpose_tempfile_hdr or die "Can't open output file: $!";
 
-        $self->cache()->set($key, '');
-        $file_handle = $self->cache()->handle($key);
-        copy($out_copy, $file_handle);
+        if (!$self->forbid_cache()) {
+            $self->cache()->set($key, '');
+            $file_handle = $self->cache()->handle($key);
+            copy($out_copy, $file_handle);
 
-        close $out_copy;
+            close $out_copy;
+            $file_handle = $self->cache()->handle($key);
+        }
+        else {
+            $file_handle = $out_copy;
+        }
+    }
+    return $file_handle;
+}
+
+=head2 get_cached_file_VCF_compute_from_parents()
+Computes the genotypes for the queried accessions computed from the parental dosages. Parents are known from pedigrees of accessions.
+Function for getting the file handle for the genotype search result from cache. Will write the cached file if it does not exist.
+Returns the genotype result as a dosage matrix format.
+Uses the file iterator to write the cached file, so that it uses little memory.
+=cut
+
+sub get_cached_file_VCF_compute_from_parents {
+    my $self = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
+    my $schema = $self->bcs_schema;
+    my $protocol_ids = $self->protocol_id_list;
+    my $accession_ids = $self->accession_list;
+    my $cache_root_dir = $self->cache_root();
+
+    if (scalar(@$protocol_ids)>1) {
+        die "Only one protocol at a time can be done when computing genotypes from parents\n";
+    }
+    my $protocol_id = $protocol_ids->[0];
+
+    my $key = $self->key("get_cached_file_VCF_compute_from_parents");
+    $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
+
+    my $file_handle;
+    if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
+    }
+    else {
+        # Set the temp dir and temp output file
+        my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_VCF_compute_from_parents";
+        mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+        my ($tmp_fh, $tempfile) = tempfile(
+            "wizard_download_XXXXX",
+            DIR=> $tmp_output_dir,
+        );
+
+        my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+        my $accession_list_string = join ',', @$accession_ids;
+        my $q = "SELECT accession.stock_id, female_parent.stock_id, male_parent.stock_id
+            FROM stock AS accession
+            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+            WHERE accession.stock_id IN ($accession_list_string) AND accession.type_id=$accession_cvterm_id ORDER BY accession.stock_id;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my @accession_stock_ids_found = ();
+        my @female_stock_ids_found = ();
+        my @male_stock_ids_found = ();
+        while (my ($accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+            push @accession_stock_ids_found, $accession_stock_id;
+            push @female_stock_ids_found, $female_parent_stock_id;
+            push @male_stock_ids_found, $male_parent_stock_id;
+        }
+
+        # print STDERR Dumper \@accession_stock_ids_found;
+        # print STDERR Dumper \@female_stock_ids_found;
+        # print STDERR Dumper \@male_stock_ids_found;
+
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+
+        my @all_protocol_info_lines = ("##INFO=<ID=VCFDownload, Description='VCFv4.2 FILE GENERATED BY BREEDBASE AT ".$timestamp."'>");
+
+        my %unique_germplasm;
+        my $protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id,
+            chromosome_list=>$self->chromosome_list,
+            start_position=>$self->start_position,
+            end_position=>$self->end_position
+        });
+        my $markers = $protocol->markers;
+        my @all_marker_objects = values %$markers;
+        push @all_protocol_info_lines, @{$protocol->header_information_lines};
+
+        no warnings 'uninitialized';
+        @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+
+        my $counter = 0;
+        for my $i (0..scalar(@accession_stock_ids_found)-1) {
+            my $female_stock_id = $female_stock_ids_found[$i];
+            my $male_stock_id = $male_stock_ids_found[$i];
+            my $accession_stock_id = $accession_stock_ids_found[$i];
+
+            my $dataset = CXGN::Dataset::Cache->new({
+                people_schema=>$self->people_schema,
+                schema=>$schema,
+                cache_root=>$cache_root_dir,
+                accessions=>[$female_stock_id, $male_stock_id]
+            });
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name', 'chrom', 'pos', 'alt', 'ref'], 1);
+
+            # For old protocols with no protocolprop info...
+            if (scalar(@all_marker_objects) == 0) {
+                foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
+                    push @all_marker_objects, {name => $o};
+                }
+            }
+
+            if (scalar(@$genotypes)>0) {
+                my $geno = $genotypes->[0];
+                $unique_germplasm{$accession_stock_id}++;
+
+                my $genotype_string = "";
+                if ($counter == 0) {
+                    $genotype_string .= "#CHROM\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . " \t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "POS\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . " \t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "ID\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $m->{name} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "REF\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{ref} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "ALT\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{alt} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "QUAL\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{qual} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "FILTER\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{filter} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "INFO\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{info} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "FORMAT\t";
+                    foreach my $m (@all_marker_objects) {
+                        my $format = 'DS'; #When calculating genotypes from parents, only will return dosages atleast for now
+                        $genotype_string .= $format . "\t";
+                        $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
+                        $m->{format} = $format;
+                    }
+                    $genotype_string .= "\n";
+                }
+                my $genotype_id = $geno->{germplasmName};
+                my $genotype_data_string = "";
+                foreach my $m (@all_marker_objects) {
+                    my $current_g = '';
+                    # If both parents are genotyped, calculate progeny genotype as a sum of parent dosage
+                    if ($genotypes->[0] && $genotypes->[1]) {
+                        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
+                        $current_g = ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS})/2);
+                    }
+                    # If one parent is genotyped, use that
+                    elsif ($genotypes->[0]) {
+                        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+                        $current_g = ceil($parent1_genotype->{$m->{name}}->{DS}/2);
+                    }
+                    $genotype_data_string .= $current_g."\t";
+                }
+                $genotype_string .= $genotype_id."\t".$genotype_data_string."\n";
+
+                write_file($tempfile, {append => 1}, $genotype_string);
+                $counter++;
+            }
+        }
+
+        my $transpose_tempfile = $tempfile . "_transpose";
+
+        my $cmd = CXGN::Tools::Run->new(
+            {
+                backend => $backend_config,
+                submit_host => $cluster_host_config,
+                temp_base => $tmp_output_dir,
+                queue => $web_cluster_queue_config,
+                do_cleanup => 0,
+                out_file => $transpose_tempfile,
+    #            out_file => $transpose_tempfile,
+                # don't block and wait if the cluster looks full
+                max_cluster_jobs => 1_000_000_000,
+            }
+        );
+
+        # Do the transposition job on the cluster
+        $cmd->run_cluster(
+                "perl ",
+                $basepath_config."/bin/transpose_matrix.pl",
+                $tempfile,
+        );
+        $cmd->is_cluster(1);
+        $cmd->wait;
+
+        my $transpose_tempfile_hdr = $tempfile . "_transpose_hdr";
+
+        open my $in,  '<',  $transpose_tempfile or die "Can't read input file: $!";
+        open my $out, '>', $transpose_tempfile_hdr or die "Can't write output file: $!";
+
+        #Get synonyms of the accessions
+        my $stocklookup = CXGN::Stock::StockLookup->new({schema => $self->bcs_schema});
+        my @accession_ids = keys %unique_germplasm;
+        my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
+        my $synonym_string = "## Synonyms of accessions: ";
+        while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
+            if(scalar(@{$synonym_list})>0){
+                if(not length($synonym_string)<1){
+                    $synonym_string.=" ";
+                }
+                $synonym_string.=$uniquename."=(";
+                $synonym_string.= (join ", ", @{$synonym_list}).")";
+            }
+        }
+        push @all_protocol_info_lines, $synonym_string;
+
+        my $vcf_header = join "\n", @all_protocol_info_lines;
+        $vcf_header .= "\n";
+
+        print $out $vcf_header;
+
+        while( <$in> )
+            {
+            print $out $_;
+            }
+        close $in;
+        close $out;
+
+        open my $out_copy, '<', $transpose_tempfile_hdr or die "Can't open output file: $!";
+
+        if (!$self->forbid_cache()) {
+            $self->cache()->set($key, '');
+            $file_handle = $self->cache()->handle($key);
+            copy($out_copy, $file_handle);
+
+            close $out_copy;
+            $file_handle = $self->cache()->handle($key);
+        }
+        else {
+            $file_handle = $out_copy;
+        }
     }
     return $file_handle;
 }

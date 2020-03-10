@@ -74,6 +74,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $project_name = $c->req->param('project_name');
     my $project_description = $c->req->param('project_description');
     my $year = $c->req->param('year');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my @stock_names;
     my $design_layout_view_html;
     my $design_info_view_html;
@@ -162,21 +163,21 @@ sub generate_experimental_design_POST : Args(0) {
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
     my $no_of_block_sequence = $c->req->param('no_of_block_sequence');
-    my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
-    my $replicated_accession_list = $c->req->param('replicated_accession_list');
+    my $unreplicated_stock_list = $c->req->param('unreplicated_stock_list');
+    my $replicated_stock_list = $c->req->param('replicated_stock_list');
     my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
 
-    my @replicated_accession;
-    if ($c->req->param('replicated_accession_list')) {
-        @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
+    my @replicated_stocks;
+    if ($c->req->param('replicated_stock_list')) {
+        @replicated_stocks = @{_parse_list_from_json($c->req->param('replicated_stock_list'))};
     }
-    my $number_of_replicated_accession = scalar(@replicated_accession);
+    my $number_of_replicated_stocks = scalar(@replicated_stocks);
 
-    my @unreplicated_accession;
-    if ($c->req->param('unreplicated_accession_list')) {
-        @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
+    my @unreplicated_stocks;
+    if ($c->req->param('unreplicated_stock_list')) {
+        @unreplicated_stocks = @{_parse_list_from_json($c->req->param('unreplicated_stock_list'))};
     }
-    my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
+    my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
 
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
@@ -189,21 +190,21 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
-    my $number_of_prep_accession = scalar(@stock_names);
+    my $number_of_prep_stocks = scalar(@stock_names);
     my $p_rep_total_plots;
     my $replicated_plots;
     my $unreplicated_plots;
     my $calculated_total_plot;
 
     if($design_type eq "p-rep"){
-        @stock_names = (@replicated_accession, @unreplicated_accession);
+        @stock_names = (@replicated_stocks, @unreplicated_stocks);
     #}
     #print STDERR Dumper(\@stock_names);
 
-        $number_of_prep_accession = scalar(@stock_names);
+        $number_of_prep_stocks = scalar(@stock_names);
         $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
-        $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
-        $unreplicated_plots = scalar(@unreplicated_accession);
+        $replicated_plots = $no_of_rep_times * $number_of_replicated_stocks;
+        $unreplicated_plots = scalar(@unreplicated_stocks);
         $calculated_total_plot = $replicated_plots + $unreplicated_plots;
     }
 
@@ -390,11 +391,11 @@ sub generate_experimental_design_POST : Args(0) {
         if ($plot_layout_format) {
             $trial_design->set_plot_layout_format($plot_layout_format);
         }
-        if ($number_of_replicated_accession) {
-            $trial_design->set_replicated_accession_no($number_of_replicated_accession);
+        if ($number_of_replicated_stocks) {
+            $trial_design->set_replicated_stock_no($number_of_replicated_stocks);
         }
-        if ($number_of_unreplicated_accession) {
-            $trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession);
+        if ($number_of_unreplicated_stocks) {
+            $trial_design->set_unreplicated_stock_no($number_of_unreplicated_stocks);
         }
         if ($row_in_design_number) {
             $trial_design->set_row_in_design_number($row_in_design_number);
@@ -438,9 +439,9 @@ sub generate_experimental_design_POST : Args(0) {
         #For printing the table view of the generated design there are two designs that are different from the others:
         # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type);
         $design_map_view = design_layout_map_view(\%design, $design_type);
-        $design_info_view_html = design_info_view(\%design, \%design_info);
+        $design_info_view_html = design_info_view(\%design, \%design_info, $trial_stock_type);
         my $design_json = encode_json(\%design);
         push @design_array,  $design_json;
         push @design_layout_view_html_array, $design_layout_view_html;
@@ -506,6 +507,7 @@ sub save_experimental_design_POST : Args(0) {
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
     my $breeding_program = $c->req->param('breeding_program_name');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
@@ -605,6 +607,7 @@ sub save_experimental_design_POST : Args(0) {
             field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            trial_stock_type => $trial_stock_type,
         );
 
         if ($field_size){
@@ -720,6 +723,64 @@ sub verify_stock_list_POST : Args(0) {
     }
 }
 
+sub verify_cross_list : Path('/ajax/trial/verify_cross_list') : ActionClass('REST') { }
+
+sub verify_cross_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('cross_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('cross_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @crosses_missing = @{$lv->validate($schema,'crosses',\@stock_names)->{'missing'}};
+    if (scalar(@crosses_missing) > 0){
+        my $error = 'The following crosses are not valid in the database, so you must add them first: '.join ',', @crosses_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
+sub verify_family_name_list : Path('/ajax/trial/verify_family_name_list') : ActionClass('REST') { }
+
+sub verify_family_name_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('family_name_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('family_name_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @family_names_missing = @{$lv->validate($schema,'family_names',\@stock_names)->{'missing'}};
+    if (scalar(@family_names_missing) > 0){
+        my $error = 'The following family names are not valid in the database, so you must add them first: '.join ',', @family_names_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
 sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass('REST') { }
 
 sub verify_seedlot_list_POST : Args(0) {
@@ -808,6 +869,7 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_crossing_trial;
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
+    my $trial_stock_type = $c->req->param('trial_upload_trial_stock_type');
 
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
@@ -875,7 +937,7 @@ sub upload_trial_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
     $parser->load_plugin('TrialExcelFormat');
     $parsed_data = $parser->parse();
 
@@ -895,7 +957,7 @@ sub upload_trial_file_POST : Args(0) {
             }
         }
 
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_stocks'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
         return;
     }
 
@@ -933,6 +995,7 @@ sub upload_trial_file_POST : Args(0) {
             field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            trial_stock_type => $trial_stock_type
         );
 
         print STDERR "Trial type is ".$trial_info_hash{'trial_type'}."\n";

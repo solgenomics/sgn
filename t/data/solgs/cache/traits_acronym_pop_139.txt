@@ -1,4 +1,0 @@
-Acronym	Trait name
-DMCP	dry matter content percentage
-FSWMIK	fresh shoot weight measurement in kg
-FRW	fresh root weight

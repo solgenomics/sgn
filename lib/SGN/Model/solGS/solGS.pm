@@ -762,14 +762,15 @@ sub genotype_data {
     }
     
     my $geno_search = CXGN::Genotype::Search->new({
-		bcs_schema => $self->schema(),
-		trial_list => [$trial_id],
-		protocol_id_list => [$protocol_id],
-		genotypeprop_hash_select=> ['DS'],
-		protocolprop_top_key_select=>[],
-		protocolprop_top_key_select=>[],
-		return_only_first_genotypeprop_for_stock=> 1,
-		});
+	bcs_schema => $self->schema(),
+	people_schema => $self->people_schema,
+	trial_list => [$trial_id],
+	protocol_id_list => [$protocol_id],
+	genotypeprop_hash_select=> ['DS'],
+	protocolprop_top_key_select=>[],
+	protocolprop_top_key_select=>[],
+	return_only_first_genotypeprop_for_stock=> 1,
+						  });
 
     $geno_search->init_genotype_iterator();
     return $geno_search;
@@ -815,6 +816,7 @@ sub genotypes_list_genotype_data {
     
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
+	people_schema => $self->people_schema,
 	accession_list => $genotypes_ids,
 	protocol_id_list => [$protocol_id],
 	genotypeprop_hash_select=> ['DS'],
@@ -2067,6 +2069,7 @@ sub get_dataset_genotype_data {
 
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
+	people_schema => $self->people_schema,
 	sp_dataset_id => $dataset_id,
 	protocol_id_list => [$protocol_id],
 	genotypeprop_hash_select=> ['DS'],

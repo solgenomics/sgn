@@ -13,6 +13,7 @@ sub _validate_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
+  my $trial_stock_type = $self->get_trial_stock_type();
   my %errors;
   my @error_messages;
   my %warnings;
@@ -24,6 +25,8 @@ sub _validate_with_plugin {
   my %seen_plot_names;
   my %seen_accession_names;
   my %seen_seedlot_names;
+  my %seen_cross_unique_ids;
+  my %seen_family_names;
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -54,7 +57,7 @@ sub _validate_with_plugin {
 
   #get column headers
   my $plot_name_head;
-  my $accession_name_head;
+  my $stock_name_head;
   my $seedlot_name_head;
   my $num_seed_per_plot_head;
   my $weight_gram_seed_per_plot_head;
@@ -70,7 +73,7 @@ sub _validate_with_plugin {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
   }
   if ($worksheet->get_cell(0,1)) {
-    $accession_name_head  = $worksheet->get_cell(0,1)->value();
+    $stock_name_head  = $worksheet->get_cell(0,1)->value();
   }
   if ($worksheet->get_cell(0,2)) {
     $plot_number_head  = $worksheet->get_cell(0,2)->value();
@@ -113,9 +116,21 @@ sub _validate_with_plugin {
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
     push @error_messages, "Cell A1: plot_name is missing from the header";
   }
-  if (!$accession_name_head || $accession_name_head ne 'accession_name') {
-    push @error_messages, "Cell B1: accession_name is missing from the header";
-  }
+
+    if ($trial_stock_type eq 'family_name') {
+        if (!$stock_name_head || $stock_name_head ne 'family_name') {
+            push @error_messages, "Cell B1: family_name is missing from the header";
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        if (!$stock_name_head || $stock_name_head ne 'cross_unique_id') {
+            push @error_messages, "Cell B1: cross_unique_id is missing from the header";
+        }
+    } else {
+        if (!$stock_name_head || $stock_name_head ne 'accession_name') {
+            push @error_messages, "Cell B1: accession_name is missing from the header";
+        }
+    }
+
   if (!$plot_number_head || $plot_number_head ne 'plot_number') {
     push @error_messages, "Cell C1: plot_number is missing from the header";
   }
@@ -153,7 +168,7 @@ sub _validate_with_plugin {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
     my $plot_name;
-    my $accession_name;
+    my $stock_name;
     my $seedlot_name;
     my $num_seed_per_plot = 0;
     my $weight_gram_seed_per_plot = 0;
@@ -169,7 +184,7 @@ sub _validate_with_plugin {
       $plot_name = $worksheet->get_cell($row,0)->value();
     }
     if ($worksheet->get_cell($row,1)) {
-      $accession_name = $worksheet->get_cell($row,1)->value();
+      $stock_name = $worksheet->get_cell($row,1)->value();
     }
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
@@ -203,7 +218,7 @@ sub _validate_with_plugin {
     }
 
     #skip blank lines
-    if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
+    if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
       next;
     }
 
@@ -230,13 +245,28 @@ sub _validate_with_plugin {
 
       #print STDERR "Check 03 ".localtime();
 
-    #accession name must not be blank
-    if (!$accession_name || $accession_name eq '') {
-      push @error_messages, "Cell B$row_name: accession name missing";
+    #stock_name must not be blank and must exist in the database
+    if ($trial_stock_type eq 'family_name') {
+        if (!$stock_name || $stock_name eq '') {
+            push @error_messages, "Cell B$row_name: family name missing";
+        } else {
+            $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_family_names{$stock_name}++;
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        if (!$stock_name || $stock_name eq '') {
+            push @error_messages, "Cell B$row_name: cross unique id missing";
+        } else {
+            $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+            $seen_cross_unique_ids{$stock_name}++;
+        }
     } else {
-      #accession name must exist in the database
-      $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-      $seen_accession_names{$accession_name}++;
+        if (!$stock_name || $stock_name eq '') {
+          push @error_messages, "Cell B$row_name: accession name missing";
+        } else {
+          $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_accession_names{$stock_name}++;
+        }
     }
 
       #print STDERR "Check 04 ".localtime();
@@ -286,7 +316,7 @@ sub _validate_with_plugin {
     if ($seedlot_name){
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $seen_seedlot_names{$seedlot_name}++;
-        push @pairs, [$seedlot_name, $accession_name];
+        push @pairs, [$seedlot_name, $stock_name];
     }
     if (defined($num_seed_per_plot) && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
@@ -308,14 +338,35 @@ sub _validate_with_plugin {
 
   }
 
-    my @accessions = keys %seen_accession_names;
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+    if ($trial_stock_type eq 'family_name') {
+        my @family_names = keys %seen_family_names;
+        my $family_name_validator = CXGN::List::Validate->new();
+        my @family_names_missing = @{$family_name_validator->validate($schema,'accessions_or_family_names',\@family_names)->{'missing'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        $errors{'missing_accessions'} = \@accessions_missing;
-        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        if (scalar(@family_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@family_names_missing;
+            push @error_messages, "The following family names or accessions are not in the database as uniquenames or synonyms: ".join(',',@family_names_missing);
+        }
+    } elsif ($trial_stock_type eq 'cross') {
+        my @cross_unique_ids = keys %seen_cross_unique_ids;
+        my $cross_unique_id_validator = CXGN::List::Validate->new();
+        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'accessions_or_crosses',\@cross_unique_ids)->{'missing'}};
+
+        if (scalar(@crosses_missing) > 0) {
+            $errors{'missing_stocks'} = \@crosses_missing;
+            push @error_messages, "The following cross unique ids or accessions are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+        }
+    } else {
+        my @accessions = keys %seen_accession_names;
+        my $accession_validator = CXGN::List::Validate->new();
+        my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+
+        if (scalar(@accessions_missing) > 0) {
+            $errors{'missing_stocks'} = \@accessions_missing;
+            push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        }
     }
+
 
     my @seedlot_names = keys %seen_seedlot_names;
     if (scalar(@seedlot_names)>0){
@@ -326,8 +377,8 @@ sub _validate_with_plugin {
             $errors{'missing_seedlots'} = \@seedlots_missing;
             push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
         }
-    
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
+
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@pairs);
         if (exists($return->{error})){
             push @error_messages, $return->{error};
         }
@@ -367,6 +418,7 @@ sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
   my $schema = $self->get_chado_schema();
+  my $trial_stock_type = $self->get_trial_stock_type();
   my $parser   = Spreadsheet::ParseExcel->new();
   my $excel_obj;
   my $worksheet;
@@ -388,33 +440,33 @@ sub _parse_with_plugin {
       }
   }
 
-  my %seen_accession_names;
+  my %seen_stock_names;
   for my $row ( 1 .. $row_max ) {
-      my $accession_name;
+      my $stock_name;
       if ($worksheet->get_cell($row,1)) {
-          $accession_name = $worksheet->get_cell($row,1)->value();
-          $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-          $seen_accession_names{$accession_name}++;
+          $stock_name = $worksheet->get_cell($row,1)->value();
+          $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+          $seen_stock_names{$stock_name}++;
       }
   }
   my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
   my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
-  my @accessions = keys %seen_accession_names;
-  my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+  my @stocks = keys %seen_stock_names;
+  my $stock_synonym_rs = $schema->resultset("Stock::Stock")->search({
       'me.is_obsolete' => { '!=' => 't' },
-      'stockprops.value' => { -in => \@accessions},
+      'stockprops.value' => { -in => \@stocks},
       'me.type_id' => $accession_cvterm_id,
       'stockprops.type_id' => $synonym_cvterm_id
   },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
-  my %acc_synonyms_lookup;
-  while (my $r=$acc_synonym_rs->next){
-      $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+  my %stock_synonyms_lookup;
+  while (my $r=$stock_synonym_rs->next){
+      $stock_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
   }
 
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
-    my $accession_name;
+    my $stock_name;
     my $plot_number;
     my $block_number;
     my $is_a_control;
@@ -431,9 +483,9 @@ sub _parse_with_plugin {
     }
     $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,1)) {
-      $accession_name = $worksheet->get_cell($row,1)->value();
+      $stock_name = $worksheet->get_cell($row,1)->value();
     }
-    $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+    $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
     if ($worksheet->get_cell($row,2)) {
       $plot_number =  $worksheet->get_cell($row,2)->value();
     }
@@ -469,7 +521,7 @@ sub _parse_with_plugin {
     }
 
     #skip blank lines
-    if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
+    if (!$plot_name && !$stock_name && !$plot_number && !$block_number) {
       next;
     }
 
@@ -483,17 +535,17 @@ sub _parse_with_plugin {
         $treatment_col++;
     }
 
-    if ($acc_synonyms_lookup{$accession_name}){
-        my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
-        if (scalar(@accession_names)>1){
-            print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+    if ($stock_synonyms_lookup{$stock_name}){
+        my @stock_names = keys %{$stock_synonyms_lookup{$stock_name}};
+        if (scalar(@stock_names)>1){
+            print STDERR "There is more than one uniquename for this synonym $stock_name. this should not happen!\n";
         }
-        $accession_name = $accession_names[0];
+        $stock_name = $stock_names[0];
     }
 
     my $key = $row;
     $design{$key}->{plot_name} = $plot_name;
-    $design{$key}->{stock_name} = $accession_name;
+    $design{$key}->{stock_name} = $stock_name;
     $design{$key}->{plot_number} = $plot_number;
     $design{$key}->{block_number} = $block_number;
     if ($is_a_control) {
@@ -518,7 +570,7 @@ sub _parse_with_plugin {
         $design{$key}->{num_seed_per_plot} = $num_seed_per_plot;
         $design{$key}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
     }
-  
+
   }
   #print STDERR Dumper \%design;
   $self->_set_parsed_data(\%design);

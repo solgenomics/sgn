@@ -210,7 +210,7 @@ var lo = new CXGN.List();
 
 function draw_cross_grid(female_accessions, male_accessions){
     console.log("draw cross grid");
-    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 10 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
+    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 20 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
     for(var i=0; i<male_accessions.length; i++){
         cross_grid_html = cross_grid_html + '<th>' + male_accessions[i] + '</th>';
     }
@@ -284,8 +284,8 @@ jQuery(document).ready(function($) {
                     alert(response.error);
                 }
                 if (response.success){
-                
-                
+
+
                     jQuery.ajax ({
                         url : '/ajax/odk/get_crossing_saved_ona_forms',
                         success: function(response_forms){
@@ -295,7 +295,7 @@ jQuery(document).ready(function($) {
                                 alert(response.error);
                             }
                             if (response_forms.success){
-                            
+
                                 var form_dropdown_select_html = '<select class="form-control" id="cross_wishlist_availabe_odk_crossing_forms"><option value="">Not Using ONA</option>';
                                 var allowed_forms = response_forms.odk_ona_forms;
                                 allowed_forms.push('<% $c->config->{odk_crossing_data_test_form_name} %>');
@@ -306,7 +306,7 @@ jQuery(document).ready(function($) {
                                 }
                                 form_dropdown_select_html = form_dropdown_select_html + '</select>';
                                 jQuery('#cross_wishlist_create_select_form_id_div').html(form_dropdown_select_html);
-                            
+
                             }
                         },
                         error: function(response_forms){
@@ -457,7 +457,7 @@ jQuery(document).ready(function($) {
         }
 
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
-        var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 10 : lowest )</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 20 : lowest )</th></tr></thead><tbody>';
         for(var i=0; i<female_accession_ids.length; i++){
             html = html + '<tr><td>' + female_accession_ids[i] + '</td><td><div name="cross_wishlist_male_selects" id="cross_wishlist_male_select_' +i+ '"></div></td><td><span id="cross_wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_accession_ids[i])+'" >Select Male(s)</span></td></tr>';
         };
@@ -506,7 +506,7 @@ jQuery(document).ready(function($) {
         female_trial_id;
         male_trial_id;
 
-        var male_accession_limit = 10;
+        var male_accession_limit = 20;
         if (active_tab == 'cross_wishlist_no_list_tab'){
             jQuery('input[name="cross_wishlist_final_priority"]').each(function() {
                 value = this.value;
@@ -553,7 +553,7 @@ jQuery(document).ready(function($) {
         for (f in female_male_tracker){
             var male_array = female_male_tracker[f];
             if (male_array.length > male_accession_limit){
-                alert('A maximum of 10 male accessions can be selected for each cross!');
+                alert('A maximum of 20 male accessions can be selected for each cross!');
                 return;
             }
         }
@@ -585,9 +585,9 @@ jQuery(document).ready(function($) {
             }
         });
     });
-    
+
     jQuery('#cross_wishlist_select_submits').click(function(){
-        var male_plot_limit = 10;
+        var male_plot_limit = 20;
         female_male_tracker = {};
         selected_plot_ids = [];
 
@@ -618,7 +618,7 @@ jQuery(document).ready(function($) {
         for (f in female_male_tracker){
             var male_array = female_male_tracker[f];
             if (male_array.length > male_plot_limit){
-                alert('A maximum of 10 male plots can be selected for each cross!');
+                alert('A maximum of 20 male plots can be selected for each cross!');
                 return;
             }
         }

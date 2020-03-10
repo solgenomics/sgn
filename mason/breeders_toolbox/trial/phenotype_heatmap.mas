@@ -10,7 +10,6 @@ $stockref => undef
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
     #trial_no_rowColMSG {display: none; }
-    #traitdiv {display: none; }
     #trial_heatmap_div  {display: none; }
     #chart {display: none; }
     #chart_fm {display: none; }
@@ -68,7 +67,7 @@ $stockref => undef
 </style>
 
 <div class="well well-sm">
-    <div class="form-group form-group-sm" id="traitdiv" >
+    <div class="form-group form-group-sm" id="traitdiv" style="display:inline-block">
         <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
         <div class="col-sm-12">
             <div id="heatmap_traits_assayed_dropdown">
@@ -89,10 +88,10 @@ $stockref => undef
     <br/>
     
 </div>
-<div class="col-sm-10" id="view_ctrl_button" style="display:none";>
+
+<div id="view_ctrl_button" style="display:none">
   <a id="view_ctrl_button_link"><button class="btn btn-primary"  type="button" id="view_ctrl_id_button" value="delete_cords" >View Controls</button></a>
 </div>
-<p></br>
 
 
 <div class="well well-sm">
@@ -116,6 +115,9 @@ $stockref => undef
     <!--    <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre> -->
     </div>
 </div>
+
+<canvas id='trial_phenotype_heatmap_download_image_canvas' width="3000" height="3000" style="display:none"></canvas>
+
 <div id="chart"></div>
 <!--<div class="col-sm-10" id="d_button" style="display:none";>
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;
@@ -392,8 +394,15 @@ jQuery(document).ready( function() {
     function assayed_trait_heatmap_view(selected) {
         var selectedTrait = selected;
         jQuery.ajax( {
-            //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
-            url: '/brapi/v1/phenotypes-search?observationLevel=plot&studyDbId='+trial_id+'&observationVariableDbId='+selectedTrait+'&pageSize=1000&page=0',
+            type: 'POST',
+            url: '/brapi/v1/phenotypes-search',
+            data: {
+                'observationLevel':'plot',
+                'studyDbId':trial_id,
+                'observationVariableDbId':selectedTrait,
+                'pageSize':1000,
+                'page':0
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -1305,13 +1314,15 @@ jQuery(document).ready( function() {
                     traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
                     for (i=0; i<varID.length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ varID[i] + " >" + varName[i] + "</option>";
+                        traits_assayed_html = traits_assayed_html + "<option value='"+ varID[i] + "' >" + varName[i] + "</option>";
                     }
                     traits_assayed_html = traits_assayed_html +"</optgroup>";
                     traits_assayed_html = traits_assayed_html +"</select>";
+
+                    traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
+
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");
                 } 
                 else {
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
@@ -1322,7 +1333,6 @@ jQuery(document).ready( function() {
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");               
                 }
             },
             error: function(response){
@@ -1335,7 +1345,6 @@ jQuery(document).ready( function() {
         d3.select("svg").remove();
         jQuery("#trait_heatmap").css("display", "none");
         jQuery("#trial_heatmap_div").css("display", "none");
-        jQuery("#traitdiv").css("display", "none");
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
@@ -1345,24 +1354,50 @@ jQuery(document).ready( function() {
 
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     selected = jQuery("#trait_list_dropdown").val();
-    if (selected == ''){ }
-    if (jQuery.isNumeric(selected)){
-        d3.select("svg").remove();
-        jQuery("#d3legend").css("display", "none");
-        jQuery("#container_fm").css("display", "none");
-        jQuery("#delete_button_fm").css("display", "none");
-        jQuery("#ctrldiv").css("display", "none");
-        jQuery("#view_ctrl_button").css("display", "inline-block");
-        assayed_trait_heatmap_view(selected); 
-
-    }
-    if (selected == 'fieldmap'){ 
+    if (selected == 'fieldmap'){
         d3.select("svg").remove();
         jQuery("#view_ctrl_button").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         field_map_view();
     }
-    
+    if (selected != ''){
+        d3.select("svg").remove();
+        jQuery("#d3legend").css("display", "none");
+        jQuery("#container_fm").css("display", "none");
+        jQuery("#delete_button_fm").css("display", "none");
+        jQuery("#ctrldiv").css("display", "none");
+        jQuery("#view_ctrl_button").show();
+        assayed_trait_heatmap_view(selected);
+    }
+  });
+
+  jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){
+      var html = d3.select("svg")
+            .attr("version", 1.1)
+            .attr("xmlns", "http://www.w3.org/2000/svg")
+            .node().parentNode.innerHTML;;
+
+      //console.log(html);
+      var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+      var img = '<img src="'+imgsrc+'">'; 
+
+      var canvas = document.getElementById("trial_phenotype_heatmap_download_image_canvas"),
+      context = canvas.getContext("2d");
+
+      var image = new Image;
+      image.src = imgsrc;
+      image.onload = function() {
+        context.drawImage(image, 0, 0);
+
+        var canvasdata = canvas.toDataURL("image/png");
+
+        var pngimg = '<img src="'+canvasdata+'">'; 
+
+        var a = document.createElement("a");
+        a.download = "trial_phenotype_heatmap.png";
+        a.href = canvasdata;
+        a.click();
+    };
   });
 
   jQuery("#suppress_plot_pheno_dialog_submit").click(function() {

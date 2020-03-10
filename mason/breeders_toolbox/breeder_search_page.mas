@@ -179,23 +179,41 @@ $dataset_id => undef
                 <span>End Position</span>
                 <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control">
               </td>
-            </tr>
-            <tr>
-              <td colspan="3">
-                <select class="wizard-download-genotypes-format form-control" >
-                    <option value="DosageMatrix">Dosage Matrix</option>
-                    <option value="VCF">VCF</option>
-                </select>
+              <td>
+                <span>Compute From Parents</span>
+                <input type="checkbox" class="wizard-download-genotypes-parents-compute">
               </td>
             </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <table class="table">
+                <tr>
+                  <td colspan="3">
+                    <select class="wizard-download-genotypes-format form-control" >
+                        <option value="DosageMatrix">Dosage Matrix (tsv)</option>
+                        <option value="VCF">VCF</option>
+                    </select>
+                  </td>
+                </tr>
+            </table>
+
             <button class="wizard-download-genotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                 Download Genotypes
             </button>
           </div>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <table class="table">
+              <tr>
+                <td colspan="3">
+                  <select class="wizard-download-genotypes-grm-format form-control" >
+                      <option value="matrix">Genomic Relationship Matrix (tsv)</option>
+                      <option value="three_column">3-Column Format (tsv)</option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+
             <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                 Download Genetic Relationship Matrix (GRM)
