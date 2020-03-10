@@ -1236,8 +1236,12 @@ sub get_micasense_aligned_raw_images : Path('/ajax/html/select/micasense_aligned
     my @result;
     foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
         my $image_ids_array = $saved_micasense_stacks->{$_};
-        my $image_ids = join ',', @$image_ids_array;
-        push @result, [$image_ids, $image_ids];
+        my @image_ids;
+        foreach (@$image_ids_array) {
+            push @image_ids, $_->{image_id};
+        }
+        my $image_ids_string = join ',', @image_ids;
+        push @result, [$image_ids_string, $image_ids_string];
     }
 
     if ($empty) {

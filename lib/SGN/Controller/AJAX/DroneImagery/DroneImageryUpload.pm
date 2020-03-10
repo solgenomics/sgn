@@ -823,7 +823,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 if ($csv->parse($row)) {
                     @columns = $csv->fields();
                 }
-                push @aligned_images, $columns[0];
+                push @aligned_images, \@columns;
             }
         close($fh_out);
 
@@ -848,12 +848,19 @@ sub upload_drone_imagery_POST : Args(0) {
             my $selected_drone_run_band_id = $project_rs->project_id();
 
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
-            foreach my $im (@{$raw_image_bands{$m->[3]}}) {
+            foreach my $image_info (@{$raw_image_bands{$m->[3]}}) {
+                my $im = $image_info->[0];
                 my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
                 $image->set_sp_person_id($user_id);
                 my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+                my $image_id = $image->get_image_id();
                 push @return_drone_run_band_image_urls, $image->get_image_url('original');
-                push @return_drone_run_band_image_ids, $image->get_image_id();
+                push @return_drone_run_band_image_ids, {
+                    image_id => $image_id,
+                    lat => $image_info->[1],
+                    long => $image_info->[2],
+                    alt => $image_info->[3]
+                };
             }
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
