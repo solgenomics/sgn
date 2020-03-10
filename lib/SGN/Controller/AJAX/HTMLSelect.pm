@@ -36,6 +36,7 @@ use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
 use JSON;
 use Image::Size;
+use Math::Round;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1253,6 +1254,60 @@ sub get_micasense_aligned_raw_images : Path('/ajax/html/select/micasense_aligned
         id => $id,
         choices => \@result,
     );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_aligned_raw_images_grid') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_micasense_stacks_grid_select";
+    my $name = $c->req->param("name") || "drone_imagery_micasense_stacks_grid_select";
+
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
+
+    my %gps_images;
+    my %longitudes;
+    my %latitudes;
+    foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+        my $image_ids_array = $saved_micasense_stacks->{$_};
+        my $nir_image = $image_ids_array->[3];
+        my $latitude = nearest(0.00001,$nir_image->{latitude});
+        my $longitude = nearest(0.00001,$nir_image->{longitude});
+        $longitudes{$longitude}++;
+        $latitudes{$latitude}++;
+        push @{$gps_images{$latitude}->{$longitude}}, $nir_image->{image_id};
+    }
+    # print STDERR Dumper \%longitudes;
+    # print STDERR Dumper \%latitudes;
+
+    my $html = "<table class='table table-bordered table-hover'><thead><tr><th>Latitudes</th>";
+    foreach my $lon (sort {$a <=> $b} keys %longitudes) {
+        $html .= "<th>".$lon."</th>";
+    }
+    $html .= "</tr></thead><tbody>";
+    foreach my $lat (sort {$a <=> $b} keys %gps_images) {
+        $html .= "<tr><td>".$lat."</td>";
+        foreach my $lon (sort {$a <=> $b} keys %{$gps_images{$lat}}) {
+            foreach my $img_id (@{$gps_images{$lat}->{$lon}}) {
+                $html .= "<td><span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id."'></span></td>";
+            }
+        }
+        $html .= "</tr>";
+    }
+    $html .= "</tbody></table>";
+
     $c->stash->{rest} = { select => $html };
 }
 

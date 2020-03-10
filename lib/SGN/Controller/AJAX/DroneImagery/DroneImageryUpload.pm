@@ -857,9 +857,9 @@ sub upload_drone_imagery_POST : Args(0) {
                 push @return_drone_run_band_image_urls, $image->get_image_url('original');
                 push @return_drone_run_band_image_ids, {
                     image_id => $image_id,
-                    lat => $image_info->[1],
-                    long => $image_info->[2],
-                    alt => $image_info->[3]
+                    latitude => $image_info->[1],
+                    longitude => $image_info->[2],
+                    altitude => $image_info->[3]
                 };
             }
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
