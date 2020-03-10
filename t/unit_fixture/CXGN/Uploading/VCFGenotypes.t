@@ -505,31 +505,41 @@ print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_string);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
-is($message, 'stock_id	41782	41783
-41782	-0.968253968253968	-1.03174603174603
-41783	-1.03174603174603	-0.968253968253968
-');
+my @grm1_split = split "\n", $message;
+my @grm1_vals;
+my $header1 = shift @grm1_split;
+foreach (@grm1_split) {
+    my @row = split "\t", $_;
+    push @grm1_vals, ($row[1], $row[2]);
+}
+is_deeply(\@grm1_vals, [-0.333333333333333,-1.66666666666667,-1.66666666666667,-0.333333333333333]);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
-is($message, '41782	41782	-0.968253968253968
-41782	41783	-1.03174603174603
-41783	41783	-0.968253968253968
-');
+my @grm2_split = split "\n", $message;
+my @grm2_vals;
+foreach (@grm2_split) {
+    my @row = split "\t", $_;
+    push @grm2_vals, $row[2];
+}
+is_deeply(\@grm2_vals, [-0.333333333333333,-1.66666666666667,-0.333333333333333]);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=three_column");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
-is($message, '38840	38840	-0.968253968253968
-38840	41782	-1.03174603174603
-41782	41782	-0.968253968253968
-');
+my @grm3_split = split "\n", $message;
+my @grm3_vals;
+foreach (@grm3_split) {
+    my @row = split "\t", $_;
+    push @grm3_vals, $row[2];
+}
+is_deeply(\@grm3_vals, [-0.333333333333333,-1.66666666666667,-0.333333333333333]);
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
