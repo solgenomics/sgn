@@ -1287,7 +1287,14 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
         my $longitude = nearest(0.00001,$nir_image->{longitude});
         $longitudes{$longitude}++;
         $latitudes{$latitude}++;
-        push @{$gps_images{$latitude}->{$longitude}}, $nir_image->{image_id};
+        my @stack_image_ids;
+        foreach (@$image_ids_array) {
+            push @stack_image_ids, $_->{image_id};
+        }
+        push @{$gps_images{$latitude}->{$longitude}}, {
+            nir_image_id => $nir_image->{image_id},
+            image_ids => \@stack_image_ids
+        };
     }
     # print STDERR Dumper \%longitudes;
     # print STDERR Dumper \%latitudes;
@@ -1301,8 +1308,8 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
         $html .= "<tr><td>".$lat."</td>";
         foreach my $lon (sort {$a <=> $b} keys %{$gps_images{$lat}}) {
             $html .= "<td>";
-            foreach my $img_id (@{$gps_images{$lat}->{$lon}}) {
-                $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id."'></span>";
+            foreach my $img_id_info (@{$gps_images{$lat}->{$lon}}) {
+                $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' ></span>";
             }
             $html .= "</td>";
         }

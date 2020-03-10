@@ -2180,6 +2180,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_drone_run_id;
     var manage_drone_imagery_standard_process_raw_images_drone_run_band_id;
     var manage_drone_imagery_standard_process_raw_images_image_id;
+    var manage_drone_imagery_standard_process_raw_images_stack_image_ids;
     var manage_drone_imagery_standard_process_raw_images_rotated_image_id;
     var manage_drone_imagery_standard_process_raw_images_polygon = [];
     var manage_drone_imagery_standard_process_raw_images_previous_polygon;
@@ -2201,6 +2202,7 @@ jQuery(document).ready(function() {
     jQuery(document).on('click', 'span[name="drone_imagery_standard_process_raw_images_image_id_select"]', function() {
         manage_drone_imagery_standard_process_raw_images_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_standard_process_raw_images_rotated_image_id = jQuery(this).data('image_id');
+        manage_drone_imagery_standard_process_raw_images_stack_image_ids = jQuery(this).data('image_ids');
 
         jQuery.ajax({
             url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
@@ -2330,15 +2332,33 @@ jQuery(document).ready(function() {
             }
         }
         table_html = table_html + '</tbody></table>';
-        
 
         jQuery('#drone_imagery_standard_process_raw_images_polygon_assign_table').html(table_html);
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_assign_plot').click(function(){
 
+        var manage_drone_imagery_standard_process_raw_images_given_plot_numbers = {};
+        jQuery('input[name="manage_drone_imagery_standard_process_raw_images_given_plot_number"]').each(function() {
+            if (jQuery(this).val() != '') {
+                manage_drone_imagery_standard_process_raw_images_given_plot_numbers[jQuery(this).data('generated_index')] = jQuery(this).val();
+            }
+        });
+        if (Object.keys(manage_drone_imagery_standard_process_raw_images_given_plot_numbers).length <= 1) {
+            alert('Please give the plot numbers corresponding to the generated index numbers of the plot polygons!');
+            return false;
+        }
+
         jQuery.ajax({
-            url : '/api/drone_imagery/manual_assign_plot_polygon?image_id='+manage_drone_imagery_standard_process_raw_images_rotated_image_id+'&polygon='+JSON.stringify(drone_imagery_plot_polygons_new)+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_raw_images_drone_run_band_id+'&angle_rotated='+manage_drone_imagery_standard_process_raw_images_rotate_angle,
+            url : '/api/drone_imagery/manual_assign_plot_polygon',
+            type : 'POST',
+            data : {
+                'image_ids':manage_drone_imagery_standard_process_raw_images_stack_image_ids,
+                'polygon':JSON.stringify(drone_imagery_plot_polygons_new),
+                'polygon_plot_numbers':JSON.stringify(manage_drone_imagery_standard_process_raw_images_given_plot_numbers),
+                'drone_run_band_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_band_id,
+                'angle_rotated':manage_drone_imagery_standard_process_raw_images_rotate_angle
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -2355,7 +2375,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert('Error cropping and saving plot image!')
+                alert('Error cropping and saving plot images!')
             }
         });
         return false;

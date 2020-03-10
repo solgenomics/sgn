@@ -945,21 +945,29 @@ sub _perform_plot_polygon_assign {
 }
 
 sub drone_imagery_manual_assign_plot_polygon : Path('/api/drone_imagery/manual_assign_plot_polygon') : ActionClass('REST') { }
-sub drone_imagery_manual_assign_plot_polygon_GET : Args(0) {
+sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $image_id = $c->req->param('image_id');
-    my $polygon = $c->req->param('polygon');
-    my $plot_name = $c->req->param('plot_name');
-    my $assign_plot_polygons_type = $c->req->param('image_type_name');
+    my $image_ids = decode_json $c->req->param('image_ids');
+    my $polygon_json = $c->req->param('polygon');
+    my $polygon_plot_numbers_json = $c->req->param('polygon_plot_numbers');
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $angle_rotated = $c->req->param('angle_rotated');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my %stock_polygon = ($plot_name => decode_json $polygon);
+    my $polygon_hash = decode_json $polygon_json;
+    my $polygon_plot_numbers_hash = decode_json $polygon_plot_numbers_json;
+
+    my %stock_polygon;
+    while (my ($generated_index, $plot_number) = each %$polygon_plot_numbers_hash) {
+        my $plot_polygon = $polygon_hash->{$generated_index};
+        $stock_polygon{$plot_number} = $plot_polygon;
+    }
+
+    # my %stock_polygon = ($plot_name => decode_json $polygon);
     my $stock_polygons = encode_json \%stock_polygon;
 
     my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $stock_polygons, $assign_plot_polygons_type, $user_id, $user_name, $user_role, 0);
