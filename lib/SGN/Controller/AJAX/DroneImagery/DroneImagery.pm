@@ -3832,41 +3832,53 @@ sub _perform_phenotype_calculation {
 
         my @image_paths;
         my @out_paths;
+        my %stock_images;
+        my %stock_info;
         foreach (@$result) {
             my $image_id = $_->{image_id};
+            my $stock_id = $_->{stock_id};
             my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
             my $image_url = $image->get_image_url("original");
             my $image_fullpath = $image->get_filename('original_converted', 'full');
             my $image_source_tag_small = $image->get_img_src_tag("tiny");
-            push @image_paths, $image_fullpath;
-
-            if ($phenotype_method ne 'zonal') {
-                my $dir = $c->tempfiles_subdir('/'.$temp_images_subdir);
-                my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_images_subdir.'/imageXXXX');
-                $archive_temp_image .= '.png';
-                push @out_paths, $archive_temp_image;
-            }
-
-            push @stocks, {
-                stock_id => $_->{stock_id},
+            
+            push @{$stock_images{$stock_id}}, $image_fullpath;
+            $stock_info{$stock_id} = {
+                stock_id => $stock_id,
                 stock_uniquename => $_->{stock_uniquename},
                 stock_type_id => $_->{stock_type_id},
                 image => '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
                 image_id => $image_id
             };
         }
-        #print STDERR Dumper \@image_paths;
-        my $image_paths_string = join ',', @image_paths;
+
+        my $dir = $c->tempfiles_subdir('/drone_imagery_calculate_phenotypes_input_file_dir');
+        my $temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_calculate_phenotypes_input_file_dir/fileXXXX');
+
+        open(my $F, ">", $temp_input_file) || die "Can't open file ".$temp_input_file;
+            foreach my $stock_id (sort keys %stock_images) {
+                my $images_string = join ',', @{$stock_images{$stock_id}};
+                print $F "$stock_id\t$images_string\n";
+
+                if ($phenotype_method ne 'zonal') {
+                    my $dir = $c->tempfiles_subdir('/'.$temp_images_subdir);
+                    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_images_subdir.'/imageXXXX');
+                    $archive_temp_image .= '.png';
+                    push @out_paths, $archive_temp_image;
+                }
+            }
+        close($F);
+
         my $out_paths_string = join ',', @out_paths;
 
         if ($out_paths_string) {
             $out_paths_string = ' --outfile_paths '.$out_paths_string;
         }
 
-        my $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
+        $dir = $c->tempfiles_subdir('/'.$temp_results_subdir);
         my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $temp_results_subdir.'/imageXXXX');
 
-        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths \''.$image_paths_string.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
+        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths_input_file \''.$temp_input_file.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
@@ -3888,23 +3900,24 @@ sub _perform_phenotype_calculation {
             my %plots_seen;
             my @traits_seen;
             if ($phenotype_method eq 'zonal' || $phenotype_method eq 'fourier_transform') {
-                if ($header_cols[0] ne 'nonzero_pixel_count' ||
-                    $header_cols[1] ne 'total_pixel_sum' ||
-                    $header_cols[2] ne 'mean_pixel_value' ||
-                    $header_cols[3] ne 'harmonic_mean_value' ||
-                    $header_cols[4] ne 'median_pixel_value' ||
-                    $header_cols[5] ne 'variance_pixel_value' ||
-                    $header_cols[6] ne 'stdev_pixel_value' ||
-                    $header_cols[7] ne 'pstdev_pixel_value' ||
-                    $header_cols[8] ne 'min_pixel_value' ||
-                    $header_cols[9] ne 'max_pixel_value' ||
-                    $header_cols[10] ne 'minority_pixel_value' ||
-                    $header_cols[11] ne 'minority_pixel_count' ||
-                    $header_cols[12] ne 'majority_pixel_value' ||
-                    $header_cols[13] ne 'majority_pixel_count' ||
-                    $header_cols[14] ne 'pixel_variety_count'
+                if ($header_cols[0] ne 'stock_id' ||
+                    $header_cols[1] ne 'nonzero_pixel_count' ||
+                    $header_cols[2] ne 'total_pixel_sum' ||
+                    $header_cols[3] ne 'mean_pixel_value' ||
+                    $header_cols[4] ne 'harmonic_mean_value' ||
+                    $header_cols[5] ne 'median_pixel_value' ||
+                    $header_cols[6] ne 'variance_pixel_value' ||
+                    $header_cols[7] ne 'stdev_pixel_value' ||
+                    $header_cols[8] ne 'pstdev_pixel_value' ||
+                    $header_cols[9] ne 'min_pixel_value' ||
+                    $header_cols[10] ne 'max_pixel_value' ||
+                    $header_cols[11] ne 'minority_pixel_value' ||
+                    $header_cols[12] ne 'minority_pixel_count' ||
+                    $header_cols[13] ne 'majority_pixel_value' ||
+                    $header_cols[14] ne 'majority_pixel_count' ||
+                    $header_cols[15] ne 'pixel_variety_count'
                 ) {
-                    $c->stash->{rest} = { error => "Pheno results must have header: 'nonzero_pixel_count', 'total_pixel_sum', 'mean_pixel_value', 'harmonic_mean_value', 'median_pixel_value', 'variance_pixel_value', 'stdev_pixel_value', 'pstdev_pixel_value', 'min_pixel_value', 'max_pixel_value', 'minority_pixel_value', 'minority_pixel_count', 'majority_pixel_value', 'majority_pixel_count', 'pixel_variety_count'" };
+                    $c->stash->{rest} = { error => "Pheno results must have header: 'stock_id', 'nonzero_pixel_count', 'total_pixel_sum', 'mean_pixel_value', 'harmonic_mean_value', 'median_pixel_value', 'variance_pixel_value', 'stdev_pixel_value', 'pstdev_pixel_value', 'min_pixel_value', 'max_pixel_value', 'minority_pixel_value', 'minority_pixel_count', 'majority_pixel_value', 'majority_pixel_count', 'pixel_variety_count'" };
                     return;
                 }
 
@@ -3931,28 +3944,34 @@ sub _perform_phenotype_calculation {
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
                     }
-                    #print STDERR Dumper \@columns;
-                    $stocks[$line]->{result} = \@columns;
 
-                    $plots_seen{$stocks[$line]->{stock_uniquename}} = 1;
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$non_zero_pixel_count_composed_trait_name} = [$columns[0], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$total_pixel_sum_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$mean_pixel_value_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$harmonic_mean_pixel_value_composed_trait_name} = [$columns[3], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$median_pixel_value_composed_trait_name} = [$columns[4], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$pixel_variance_composed_trait_name} = [$columns[5], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$pixel_standard_dev_composed_trait_name} = [$columns[6], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$pixel_pstandard_dev_composed_trait_name} = [$columns[7], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$minimum_pixel_value_composed_trait_name} = [$columns[8], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$maximum_pixel_value_composed_trait_name} = [$columns[9], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$minority_pixel_value_composed_trait_name} = [$columns[10], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$minority_pixel_count_composed_trait_name} = [$columns[11], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$majority_pixel_value_composed_trait_name} = [$columns[12], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$majority_pixel_count_composed_trait_name} = [$columns[13], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
-                    $zonal_stat_phenotype_data{$stocks[$line]->{stock_uniquename}}->{$pixel_group_count_composed_trait_name} = [$columns[14], $timestamp, $user_name, '', $stocks[$line]->{image_id}];
+                    my $stock_id = $columns[0];
+                    my $stock_uniquename = $stock_info{$stock_id}->{stock_uniquename};
+                    my $image_id = $stock_info{$stock_id}->{image_id};
+
+                    #print STDERR Dumper \@columns;
+                    $stock_info{$stock_id}->{result} = \@columns;
+
+                    $plots_seen{$stock_uniquename} = 1;
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$non_zero_pixel_count_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$total_pixel_sum_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$mean_pixel_value_composed_trait_name} = [$columns[3], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$harmonic_mean_pixel_value_composed_trait_name} = [$columns[4], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$median_pixel_value_composed_trait_name} = [$columns[5], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_variance_composed_trait_name} = [$columns[6], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_standard_dev_composed_trait_name} = [$columns[7], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_pstandard_dev_composed_trait_name} = [$columns[8], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$minimum_pixel_value_composed_trait_name} = [$columns[9], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$maximum_pixel_value_composed_trait_name} = [$columns[10], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$minority_pixel_value_composed_trait_name} = [$columns[11], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$minority_pixel_count_composed_trait_name} = [$columns[12], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$majority_pixel_value_composed_trait_name} = [$columns[13], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$majority_pixel_count_composed_trait_name} = [$columns[14], $timestamp, $user_name, '', $image_id];
+                    $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_group_count_composed_trait_name} = [$columns[15], $timestamp, $user_name, '', $image_id];
 
                     $line++;
                 }
+                @stocks = values %stock_info;
             }
 
         close $fh;

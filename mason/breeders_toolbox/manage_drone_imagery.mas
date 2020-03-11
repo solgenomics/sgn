@@ -2359,12 +2359,8 @@ jQuery(document).ready(function() {
                 'polygon_plot_numbers':JSON.stringify(manage_drone_imagery_standard_process_raw_images_given_plot_numbers),
                 'angle_rotated':manage_drone_imagery_standard_process_raw_images_rotate_angle
             },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
             success: function(response){
                 console.log(response);
-                jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
                 } else if (response.warning) {
@@ -2372,11 +2368,10 @@ jQuery(document).ready(function() {
                 } else {
                     get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
 
-                    alert('Plot-images saved!');
+                    //alert('Plot-images saved!');
                 }
             },
             error: function(response){
-                jQuery("#working_modal").modal("hide");
                 alert('Error cropping and saving plot images!')
             }
         });
