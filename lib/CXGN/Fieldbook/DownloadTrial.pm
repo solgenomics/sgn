@@ -138,6 +138,13 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
+has 'trial_stock_type'=> (
+    is => 'rw',
+    isa => 'Str',
+    required => 0,
+    default => 'accession'
+);
+
 sub download {
     my $self = shift;
     my %errors;
@@ -162,7 +169,8 @@ sub download {
         selected_columns => $self->selected_columns,
         include_measured => $self->include_measured,
         use_synonyms => $self->use_synonyms,
-        selected_trait_ids => $self->selected_trait_ids
+        selected_trait_ids => $self->selected_trait_ids,
+        trial_stock_type => $self->trial_stock_type
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){

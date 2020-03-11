@@ -112,7 +112,6 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
 		brapi_module_inst => {
-            context => $c,
 			bcs_schema => $bcs_schema,
 			metadata_schema => $metadata_schema,
 			phenome_schema => $phenome_schema,
@@ -1422,36 +1421,38 @@ sub germplasm_attributes_categories_process {
 =cut
 
 sub markerprofile_search_process {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
-	my $default_protocol = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}});
-	my $default_protocol_id = $default_protocol ? $default_protocol->nd_protocol_id : 0;
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
-	my $brapi_package_result = $brapi_module->markerprofiles_search({
-		study_ids => $clean_inputs->{studyDbId},
-		stock_ids => $clean_inputs->{germplasmDbId},
-		extract_ids => $clean_inputs->{extractDbId},
-		sample_ids => $clean_inputs->{sampleDbId},
-		protocol_ids => $clean_inputs->{methodDbId}
-	});
-	_standard_response_construction($c, $brapi_package_result);
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $default_protocol = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}});
+    my $default_protocol_id = $default_protocol ? $default_protocol->nd_protocol_id : 0;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_search({
+        cache_file_path => $c->config->{cache_file_path},
+        shared_cluster_dir => $c->config->{cluster_shared_tempdir},
+        study_ids => $clean_inputs->{studyDbId},
+        stock_ids => $clean_inputs->{germplasmDbId},
+        extract_ids => $clean_inputs->{extractDbId},
+        sample_ids => $clean_inputs->{sampleDbId},
+        protocol_ids => $clean_inputs->{methodDbId}
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
 
 sub markerprofiles_list_POST {
-	my $self = shift;
-	my $c = shift;
-	markerprofile_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    markerprofile_search_process($self, $c);
 }
 
 sub markerprofiles_list_GET {
-	my $self = shift;
-	my $c = shift;
-	markerprofile_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    markerprofile_search_process($self, $c);
 }
 
 
@@ -1486,35 +1487,37 @@ sub markerprofiles_list_GET {
 =cut
 
 sub markerprofiles_single : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) {
-	my $self = shift;
-	my $c = shift;
-	my $id = shift;
-	$c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
+    my $self = shift;
+    my $c = shift;
+    my $id = shift;
+    $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
 }
 
 sub genotype_fetch : Chained('markerprofiles_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub genotype_fetch_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
 }
 
 sub genotype_fetch_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
-	my $brapi_package_result = $brapi_module->markerprofiles_detail({
-		markerprofile_id => $c->stash->{markerprofile_id},
-		unknown_string => $clean_inputs->{unknownString}->[0],
-		sep_phased => $clean_inputs->{sepPhased}->[0],
-		sep_unphased => $clean_inputs->{sepUnphased}->[0],
-		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
-	});
-	_standard_response_construction($c, $brapi_package_result);
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_detail({
+        cache_file_path => $c->config->{cache_file_path},
+        shared_cluster_dir => $c->config->{cluster_shared_tempdir},
+        markerprofile_id => $c->stash->{markerprofile_id},
+        unknown_string => $clean_inputs->{unknownString}->[0],
+        sep_phased => $clean_inputs->{sepPhased}->[0],
+        sep_unphased => $clean_inputs->{sepUnphased}->[0],
+        expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1562,15 +1565,15 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
 sub allelematrices : Chained('brapi') PathPart('allelematrices-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrices_POST {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrices_GET {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrices_new : Chained('brapi') PathPart('allelematrices') Args(0) : ActionClass('REST') { }
@@ -1599,45 +1602,47 @@ sub allelematrices_cached_GET {
 sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrix_POST {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrix_GET {
-	my $self = shift;
-	my $c = shift;
-	allelematrix_search_process($self, $c);
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
 }
 
 sub allelematrix_search_process {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
 
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $format = $clean_inputs->{format}->[0];
-	my $file_path;
-	my $uri;
-	if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
-		my $dir = $c->tempfiles_subdir('download');
-		($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
-	}
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
-	my $brapi_package_result = $brapi_module->markerprofiles_allelematrix({
-		markerprofile_ids => $clean_inputs->{markerprofileDbId},
-		marker_ids => $clean_inputs->{markerDbId},
-		unknown_string => $clean_inputs->{unknownString}->[0],
-		sep_phased => $clean_inputs->{sepPhased}->[0],
-		sep_unphased => $clean_inputs->{sepUnphased}->[0],
-		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
-		format => $format,
-		main_production_site_url => $c->config->{main_production_site_url},
-		file_path => $file_path,
-		file_uri => $uri
-	});
-	_standard_response_construction($c, $brapi_package_result);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $format = $clean_inputs->{format}->[0];
+    my $file_path;
+    my $uri;
+    if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+        my $dir = $c->tempfiles_subdir('download');
+        ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
+    }
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_allelematrix({
+        cache_file_path => $c->config->{cache_file_path},
+        shared_cluster_dir => $c->config->{cluster_shared_tempdir},
+        markerprofile_ids => $clean_inputs->{markerprofileDbId},
+        marker_ids => $clean_inputs->{markerDbId},
+        unknown_string => $clean_inputs->{unknownString}->[0],
+        sep_phased => $clean_inputs->{sepPhased}->[0],
+        sep_unphased => $clean_inputs->{sepUnphased}->[0],
+        expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+        format => $format,
+        main_production_site_url => $c->config->{main_production_site_url},
+        file_path => $file_path,
+        file_uri => $uri
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 

@@ -80,6 +80,75 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
 
 }
 
+=head2 store_ontology_identifier
+
+Creates a ontology identifier by adding an entry in the DB, cv, and cvterm tables.
+
+=cut
+
+sub store_ontology_identifier: Path('/ajax/onto/store_ontology_identifier') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    #print STDERR Dumper $c->req->params();
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to create ontology!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to create ontology!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add ontology." };
+        $c->detach();
+    }
+
+    my $ontology_name = $c->req->param("ontology_name");
+    my $ontology_description = $c->req->param("ontology_description");
+    my $ontology_identifier = $c->req->param("ontology_identifier");
+    my $ontology_type = $c->req->param("ontology_type");
+
+    my %finish;
+    if ($c->config->{allow_observation_variable_submission_interface}) {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        my $return = $onto->store_ontology_identifier(
+            $ontology_name,
+            $ontology_description,
+            $ontology_identifier,
+            $ontology_type
+        );
+        if ($return->{error}) {
+            $finish{error} = $return->{error};
+        } elsif ($return->{success}) {
+            $finish{success} = 'Saved new ontology <a href="/cvterm/'.$return->{new_term}->[0].'/view">'.$return->{new_term}->[1].'</a><br>';
+        } else {
+            $finish{error} = 'Something went wrong!';
+        }
+    } else {
+        $finish{error} = 'On this database it is not allowed for users to add their own ontology! Please contact us!';
+    }
+    $c->stash->{rest} = \%finish;
+}
+
 =head2 store_trait_method_scale_observation_variable
 
 Creates a new term in the designated observation variable cv and links it to component trait, method, and scale terms through cvterm_relationship. will create trait, method, and scale terms in their own ontologies if they need to be.

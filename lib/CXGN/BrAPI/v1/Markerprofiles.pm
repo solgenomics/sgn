@@ -14,10 +14,11 @@ extends 'CXGN::BrAPI::v1::Common';
 sub markerprofiles_search {
     my $self = shift;
     my $inputs = shift;
-    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $cache_file_path = $inputs->{cache_file_path};
+    my $shared_cluster_dir = $inputs->{shared_cluster_dir};
     my @germplasm_ids = $inputs->{stock_ids} ? @{$inputs->{stock_ids}} : ();
     my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
     my @extract_ids = $inputs->{extract_ids} ? @{$inputs->{extract_ids}} : ();
@@ -33,7 +34,8 @@ sub markerprofiles_search {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
+        people_schema=>$self->people_schema,
+        cache_root=>$cache_file_path,
         accession_list=>\@germplasm_ids,
         trial_list=>\@study_ids,
         protocol_id_list=>\@methods,
@@ -43,7 +45,7 @@ sub markerprofiles_search {
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
+    my $file_handle = $genotypes_search->get_cached_file_search_json($shared_cluster_dir, 1); #Metadata only returned
     my @data;
 
     my $start_index = $page*$page_size;
@@ -52,20 +54,22 @@ sub markerprofiles_search {
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
-    while( <$fh> ) {
-        if ($counter >= $start_index && $counter <= $end_index) {
-            my $gt = decode_json $_;
-            push @data, {
-                markerprofileDbId => qq|$gt->{markerProfileDbId}|,
-                germplasmDbId => qq|$gt->{germplasmDbId}|,
-                uniqueDisplayName => $gt->{genotypeUniquename},
-                extractDbId => qq|$gt->{stock_id}|,
-                sampleDbId => qq|$gt->{stock_id}|,
-                analysisMethod => $gt->{analysisMethod},
-                resultCount => $gt->{resultCount}
-            };
+    if ($header_line) {
+        while( <$fh> ) {
+            if ($counter >= $start_index && $counter <= $end_index) {
+                my $gt = decode_json $_;
+                push @data, {
+                    markerprofileDbId => qq|$gt->{markerProfileDbId}|,
+                    germplasmDbId => qq|$gt->{germplasmDbId}|,
+                    uniqueDisplayName => $gt->{genotypeUniquename},
+                    extractDbId => qq|$gt->{stock_id}|,
+                    sampleDbId => qq|$gt->{stock_id}|,
+                    analysisMethod => $gt->{analysisMethod},
+                    resultCount => $gt->{resultCount}
+                };
+            }
+            $counter++;
         }
-        $counter++;
     }
 
     my %result = (data => \@data);
@@ -77,10 +81,11 @@ sub markerprofiles_search {
 sub markerprofiles_detail {
     my $self = shift;
     my $inputs = shift;
-    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $cache_file_path = $inputs->{cache_file_path};
+    my $shared_cluster_dir = $inputs->{shared_cluster_dir};
     my $genotypeprop_id = $inputs->{markerprofile_id};
     my $sep_phased = $inputs->{sep_phased};
     my $sep_unphased = $inputs->{sep_unphased};
@@ -93,54 +98,59 @@ sub markerprofiles_detail {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
+        people_schema=>$self->people_schema,
+        cache_root=>$cache_file_path,
         markerprofile_id_list=>[$genotypeprop_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($shared_cluster_dir, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
     my $counter = 0;
+    my @data;
+    my %result;
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
-    my $marker_objects = decode_json $header_line;
-    my $gt_line = <$fh>;
-    my $gt = decode_json $gt_line;
-    my $genotype = $gt->{selected_genotype_hash};
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
+        my $gt_line = <$fh>;
+        my $gt = decode_json $gt_line;
+        my $genotype = $gt->{selected_genotype_hash};
 
-    my @data;
-    foreach my $m_obj (@$marker_objects) {
-        my $m = $m_obj->{name};
-        if ($counter >= $start_index && $counter <= $end_index) {
-            my $geno = '';
-            if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
-                $geno = $genotype->{$m}->{'NT'};
+        foreach my $m_obj (@$marker_objects) {
+            my $m = $m_obj->{name};
+            if ($counter >= $start_index && $counter <= $end_index) {
+                my $geno = '';
+                if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
+                    $geno = $genotype->{$m}->{'NT'};
+                }
+                elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
+                    $geno = $genotype->{$m}->{'GT'};
+                }
+                elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
+                    $geno = $genotype->{$m}->{'DS'};
+                }
+                push @data, {$m => $geno};
             }
-            elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
-                $geno = $genotype->{$m}->{'GT'};
-            }
-            elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
-                $geno = $genotype->{$m}->{'DS'};
-            }
-            push @data, {$m => $geno};
+            $counter++;
         }
-        $counter++;
+
+        %result = (
+            germplasmDbId=>qq|$gt->{germplasmDbId}|,
+            uniqueDisplayName=>$gt->{genotypeUniquename},
+            extractDbId=>qq|$gt->{stock_id}|,
+            sampleDbId=>qq|$gt->{stock_id}|,
+            markerprofileDbId=>qq|$gt->{markerProfileDbId}|,
+            analysisMethod=>$gt->{analysisMethod},
+            #encoding=>"AA,BB,AB",
+            data => \@data
+        );
     }
 
-    my %result = (
-        germplasmDbId=>qq|$gt->{germplasmDbId}|,
-        uniqueDisplayName=>$gt->{genotypeUniquename},
-        extractDbId=>qq|$gt->{stock_id}|,
-        sampleDbId=>qq|$gt->{stock_id}|,
-        markerprofileDbId=>qq|$gt->{markerProfileDbId}|,
-        analysisMethod=>$gt->{analysisMethod},
-        #encoding=>"AA,BB,AB",
-        data => \@data
-    );
     my $pagination;
     my @data_files;
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles detail result constructed');
@@ -170,10 +180,11 @@ sub markerprofiles_methods {
 sub markerprofiles_allelematrix {
     my $self = shift;
     my $inputs = shift;
-    my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+    my $cache_file_path = $inputs->{cache_file_path};
+    my $shared_cluster_dir = $inputs->{shared_cluster_dir};
     my @markerprofile_ids = $inputs->{markerprofile_ids} ? @{$inputs->{markerprofile_ids}} : ();
     my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
     my $sep_phased = $inputs->{sep_phased};
@@ -197,49 +208,52 @@ sub markerprofiles_allelematrix {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
+        people_schema=>$self->people_schema,
+        cache_root=>$cache_file_path,
         markerprofile_id_list=>\@markerprofile_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($shared_cluster_dir, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
     my $counter = 0;
+    my @data;
+    my @scores;
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
-    my $marker_objects = decode_json $header_line;
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
 
-    my @data;
-    my @scores;
-    while (my $gt_line = <$fh>) {
-        my $gt = decode_json $gt_line;
-        my $genotype = $gt->{selected_genotype_hash};
-        my @ordered_refmarkers = sort keys(%$genotype);
-        my $genotypeprop_id = $gt->{markerProfileDbId};
+        while (my $gt_line = <$fh>) {
+            my $gt = decode_json $gt_line;
+            my $genotype = $gt->{selected_genotype_hash};
+            my @ordered_refmarkers = sort keys(%$genotype);
+            my $genotypeprop_id = $gt->{markerProfileDbId};
 
-        foreach my $m (@ordered_refmarkers) {
-            if ($counter >= $start_index && $counter <= $end_index) {
-                my $geno = '';
-                if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
-                    $geno = $genotype->{$m}->{'NT'};
+            foreach my $m (@ordered_refmarkers) {
+                if ($counter >= $start_index && $counter <= $end_index) {
+                    my $geno = '';
+                    if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
+                        $geno = $genotype->{$m}->{'NT'};
+                    }
+                    elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
+                        $geno = $genotype->{$m}->{'GT'};
+                    }
+                    elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
+                        $geno = $genotype->{$m}->{'DS'};
+                    }
+                    push @scores, [
+                        qq|$m|,
+                        qq|$genotypeprop_id|,
+                        $geno
+                    ];
                 }
-                elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
-                    $geno = $genotype->{$m}->{'GT'};
-                }
-                elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
-                    $geno = $genotype->{$m}->{'DS'};
-                }
-                push @scores, [
-                    qq|$m|,
-                    qq|$genotypeprop_id|,
-                    $geno
-                ];
+                $counter++;
             }
-            $counter++;
         }
     }
     #print STDERR Dumper \@scores;

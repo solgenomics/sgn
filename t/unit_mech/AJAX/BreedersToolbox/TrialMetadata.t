@@ -99,7 +99,7 @@ print STDERR Dumper $response;
 my @accessions = @{$response->{accessions}->[0]};
 @last_n = @accessions[-4..-1];
 print STDERR Dumper \@last_n;
-is_deeply($response, {'accessions' => [[{'accession_name' => 'test_accession1','stock_id' => 38840},{'stock_id' => 38841,'accession_name' => 'test_accession2'},{'stock_id' => 38842,'accession_name' => 'test_accession3'},{'stock_id' => 38843,'accession_name' => 'test_accession4'},{'stock_id' => 38844,'accession_name' => 'test_accession5'}]]});
+is_deeply($response, {'accessions' => [[{'accession_name' => 'test_accession1','stock_id' => 38840, 'stock_type' => 'accession'},{'stock_id' => 38841,'accession_name' => 'test_accession2', 'stock_type' => 'accession'},{'stock_id' => 38842,'accession_name' => 'test_accession3', 'stock_type' => 'accession'},{'stock_id' => 38843,'accession_name' => 'test_accession4', 'stock_type' => 'accession'},{'stock_id' => 38844,'accession_name' => 'test_accession5', 'stock_type' => 'accession'}]]});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/controls');
 $response = decode_json $mech->content;

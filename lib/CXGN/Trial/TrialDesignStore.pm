@@ -223,10 +223,12 @@ store() will do the following for GENOTYPING LAYOUT trials:
 
 =over 5 
 
+
 =item 1)
 
 Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = genotyping_layout.
 =item 2) 
+
 
 Foreach tissue_sample in the design hash, searches for the source_observation_unit's stock_name. The source_observation_unit can be in order of descending desireability: tissue_sample, plant, plot, or accession
 
