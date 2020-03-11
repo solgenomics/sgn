@@ -2197,7 +2197,7 @@ jQuery(document).ready(function() {
 
         get_select_box('micasense_aligned_raw_images_grid','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
 
-        get_select_box('plot_image_sizes','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
+        get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
     });
 
     jQuery(document).on('click', 'span[name="drone_imagery_standard_process_raw_images_image_id_select"]', function() {
@@ -2370,6 +2370,8 @@ jQuery(document).ready(function() {
                 } else if (response.warning) {
                     alert(response.warning);
                 } else {
+                    get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
+
                     alert('Plot-images saved!');
                 }
             },
@@ -3556,15 +3558,50 @@ jQuery(document).ready(function() {
             drone_imagery_standard_process_plot_polygon_click_type = '';
         }
         else if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_previous_polygon') {
-            var manage_drone_imagery_standard_process_raw_images_previous_polygon_array = manage_drone_imagery_standard_process_raw_images_previous_polygon.split(',');
-            manage_drone_imagery_standard_process_raw_images_polygon = [
-                {'x':PosX, 'y':PosY},
-                {'x':PosX+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[0]), 'y':PosY},
-                {'x':PosX+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[0]), 'y':PosY+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[1])},
-                {'x':PosX, 'y':PosY+parseInt(manage_drone_imagery_standard_process_raw_images_previous_polygon_array[1])}
-            ];
-            crop_points = manage_drone_imagery_standard_process_raw_images_polygon;
-            plotPolygonsTemplatePasteRawImage(PosX, PosY, manage_drone_imagery_standard_process_raw_images_polygon);
+            var manage_drone_imagery_standard_process_raw_images_previous_polygon_template = JSON.parse(decodeURI(manage_drone_imagery_standard_process_raw_images_previous_polygon));
+
+            manage_drone_imagery_standard_process_raw_images_previous_polygon = [];
+            for (var index in manage_drone_imagery_standard_process_raw_images_previous_polygon_template) {
+                if (manage_drone_imagery_standard_process_raw_images_previous_polygon_template.hasOwnProperty(index)) {
+                    manage_drone_imagery_standard_process_raw_images_previous_polygon.push(manage_drone_imagery_standard_process_raw_images_previous_polygon_template[index]);
+                }
+            }
+            console.log(manage_drone_imagery_standard_process_raw_images_previous_polygon);
+
+            var PosX_shift = manage_drone_imagery_standard_process_raw_images_previous_polygon[0][0]['x']-PosX;
+            var PosY_shift = manage_drone_imagery_standard_process_raw_images_previous_polygon[0][0]['y']-PosY;
+
+            for (var i=0; i<manage_drone_imagery_standard_process_raw_images_previous_polygon.length; i++) {
+                plot_polygons_ind_4_points = manage_drone_imagery_standard_process_raw_images_previous_polygon[i];
+                plot_polygons_display_points = plot_polygons_ind_4_points;
+                if (plot_polygons_display_points.length == 4) {
+                    plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+                }
+                console.log(plot_polygons_display_points);
+                var plot_polygons_display_points_shifted = [];
+                for (var j=0; j<plot_polygons_display_points.length; j++) {
+                    plot_polygons_display_points_shifted.push({'x':plot_polygons_display_points[j]['x']-PosX_shift, 'y':plot_polygons_display_points[j]['y']-PosY_shift});
+                }
+                plot_polygons_display_points = plot_polygons_display_points_shifted;
+                drawPolyline(plot_polygons_display_points);
+                drawWaypoints(plot_polygons_display_points, i, 0);
+                drone_imagery_plot_generated_polygons[i] = plot_polygons_display_points;
+                manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new[i] = plot_polygons_display_points;
+                drone_imagery_plot_polygons_display[i] = plot_polygons_display_points;
+            }
+
+            crop_points = manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new;
+            
+            var table_html = '<table class="table table-bordered table-hover"><thead><tr><th>Generated Index</th><th>Plot Number</th></tr></thead><tbody>';
+            for (var gen_index in manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new) {
+                if (manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new.hasOwnProperty(gen_index)) {
+                    table_html = table_html + '<tr><td>'+gen_index+'</td><td><input type="text" class="form-control" placeholder="e.g. 1001" name="manage_drone_imagery_standard_process_raw_images_given_plot_number" data-generated_index="'+gen_index+'"></td></tr>';
+                }
+            }
+            table_html = table_html + '</tbody></table>';
+
+            jQuery('#drone_imagery_standard_process_raw_images_polygon_assign_table').html(table_html);
+            
             drone_imagery_standard_process_plot_polygon_click_type = '';
         }
         else {

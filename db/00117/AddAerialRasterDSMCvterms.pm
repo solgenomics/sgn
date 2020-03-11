@@ -71,7 +71,8 @@ sub patch {
             'raw_boundaries_bottom_right_drone_imagery'
         ],
         'project_property' => [
-            'drone_run_raw_images_saved_micasense_stacks'
+            'drone_run_raw_images_saved_micasense_stacks',
+            'drone_run_band_plot_polygons_partial'
         ]
     };
 

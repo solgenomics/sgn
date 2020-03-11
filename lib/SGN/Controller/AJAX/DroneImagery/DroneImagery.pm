@@ -1042,7 +1042,28 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
         my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $rotated_image_id, $drone_run_band_project_id, $stock_polygons, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
     }
 
-    my $manual_plot_polygon_template = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
+
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$manual_plot_polygon_template_partial, project_id=>$drone_run_project_id});
+    if ($previous_plot_polygons_rs->count > 1) {
+        die "There should not be more than one saved entry for partial plot polygon template for a drone run";
+    }
+
+    my @save_stock_polygons;
+    if ($previous_plot_polygons_rs->count > 0) {
+        @save_stock_polygons = @{decode_json $previous_plot_polygons_rs->first->value};
+    }
+    push @save_stock_polygons, $polygon_hash;
+
+    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$manual_plot_polygon_template_partial,
+        project_id=>$drone_run_project_id,
+        rank=>0,
+        value=> encode_json(\@save_stock_polygons)
+    },
+    {
+        key=>'projectprop_c1'
+    });
 
     $c->stash->{rest} = {success => 1};
 }

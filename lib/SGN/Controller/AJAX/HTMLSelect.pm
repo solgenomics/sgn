@@ -37,6 +37,7 @@ use CXGN::Dataset;
 use JSON;
 use Image::Size;
 use Math::Round;
+use URI::Encode qw(uri_encode uri_decode);
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1319,6 +1320,44 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
     }
     $html .= "</tbody></table>";
 
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_templates_partial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_template_partial_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_template_partial_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
+    my $q = "SELECT value FROM projectprop WHERE project_id=? AND type_id=$manual_plot_polygon_template_partial;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($drone_run_project_id);
+
+    my @result;
+    while (my ($value) = $h->fetchrow_array()) {
+        if ($value) {
+            my $partial_templates = decode_json $value;
+            foreach (@$partial_templates) {
+                push @result, [uri_encode(encode_json($_)), scalar(keys %$_)." Plots"];
+            }
+        }
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
     $c->stash->{rest} = { select => $html };
 }
 
