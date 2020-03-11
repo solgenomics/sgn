@@ -277,6 +277,10 @@ has 'has_subplots_cvterm' => (isa => 'Int', is => 'rw');
 
 has 'has_tissues_cvterm' => (isa => 'Int', is => 'rw');
 
+has 'cross_cvterm_id' => (isa => 'Int', is => 'rw');
+
+has 'family_name_cvterm_id' => (isa => 'Int', is => 'rw');
+
 sub BUILD {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema();
@@ -356,6 +360,10 @@ sub BUILD {
     $self->set_has_subplots_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id());
     
     $self->set_has_tissues_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id());
+
+    $self->set_cross_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id());
+   $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
+    
     
 }
 
@@ -583,11 +591,28 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id);
+                #$parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id);
 
-                if (!$parent_stock) {
-                    die ("Error while saving trial layout: no stocks found matching $stock_name");
+		if ($trial_stock_type eq 'cross') {
+                    $parent_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
+                    if (!$parent_stock) {
+                        die ("Error while saving trial layout: no cross found matching $stock_name");
+                    }
+                } elsif ($trial_stock_type eq 'family_name') {
+                    $parent_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
+                    if (!$parent_stock) {
+                        die ("Error while saving trial layout: no family name found matching $stock_name");
+                    }
+                } else {
+                    $parent_stock = $stock_lookup->get_stock($accession_cvterm_id);
+                    if (!$parent_stock) {
+                        die ("Error while saving trial layout: no accession found matching $stock_name");
+                    }
                 }
+		
+                #if (!$parent_stock) {
+                #    die ("Error while saving trial layout: no stocks found matching $stock_name");
+                #}
 
                 $stock_id_checked = $parent_stock->stock_id();
                 $stock_name_checked = $parent_stock->uniquename;
