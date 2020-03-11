@@ -1304,12 +1304,14 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
         $html .= "<th>".$lon."</th>";
     }
     $html .= "</tr></thead><tbody>";
-    foreach my $lat (sort {$a <=> $b} keys %gps_images) {
+    foreach my $lat (sort {$a <=> $b} keys %latitudes) {
         $html .= "<tr><td>".$lat."</td>";
-        foreach my $lon (sort {$a <=> $b} keys %{$gps_images{$lat}}) {
+        foreach my $lon (sort {$a <=> $b} keys %longitudes) {
             $html .= "<td>";
-            foreach my $img_id_info (@{$gps_images{$lat}->{$lon}}) {
-                $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' ></span>";
+            if ($gps_images{$lat}->{$lon}) {
+                foreach my $img_id_info (@{$gps_images{$lat}->{$lon}}) {
+                    $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' ></span>";
+                }
             }
             $html .= "</td>";
         }

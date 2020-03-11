@@ -948,12 +948,15 @@ sub drone_imagery_manual_assign_plot_polygon : Path('/api/drone_imagery/manual_a
 sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $image_ids = decode_json $c->req->param('image_ids');
+    my @image_ids = $c->req->param('image_ids[]');
     my $polygon_json = $c->req->param('polygon');
     my $polygon_plot_numbers_json = $c->req->param('polygon_plot_numbers');
-    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my $angle_rotated = $c->req->param('angle_rotated');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -961,29 +964,84 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     my $polygon_hash = decode_json $polygon_json;
     my $polygon_plot_numbers_hash = decode_json $polygon_plot_numbers_json;
 
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+
+    my $q = "SELECT stock.uniquename FROM stock
+        JOIN stockprop USING(stock_id)
+        JOIN nd_experiment_stock USING(stock_id)
+        JOIN nd_experiment USING(nd_experiment_id)
+        JOIN nd_experiment_project USING(nd_experiment_id)
+        WHERE project_id = $field_trial_id
+        AND nd_experiment.type_id = $field_experiment_cvterm_id
+        AND stockprop.type_id = $plot_number_cvterm_id
+        AND stockprop.value = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+
     my %stock_polygon;
     while (my ($generated_index, $plot_number) = each %$polygon_plot_numbers_hash) {
+        $h->execute($plot_number);
+        my ($uniquename) = $h->fetchrow_array();
         my $plot_polygon = $polygon_hash->{$generated_index};
-        $stock_polygon{$plot_number} = $plot_polygon;
+        my $last_point = pop @$plot_polygon;
+        if (scalar(@$plot_polygon) != 4){
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$uniquename.' should be 4 long!'};
+            $c->detach();
+        }
+        $stock_polygon{$uniquename} = $plot_polygon;
     }
 
-    # my %stock_polygon = ($plot_name => decode_json $polygon);
-    my $stock_polygons = encode_json \%stock_polygon;
+    my $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
 
-    my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $image_id, $drone_run_band_project_id, $stock_polygons, $assign_plot_polygons_type, $user_id, $user_name, $user_role, 0);
+    my $q_drone_run_bands = "SELECT drone_run_band.project_id, drone_run_band_project_type.value
+        FROM project AS drone_run
+        JOIN project_relationship ON (drone_run.project_id = project_relationship.object_project_id AND project_relationship.type_id=$project_relationship_type_id)
+        JOIN project as drone_run_band ON (drone_run_band.project_id=project_relationship.subject_project_id)
+        JOIN projectprop AS drone_run_band_project_type ON (drone_run_band_project_type.project_id=drone_run_band.project_id AND drone_run_band_project_type.type_id=$drone_run_band_project_type_cvterm_id)
+        WHERE drone_run.project_id=?;";
+    my $h_drone_run_bands = $schema->storage->dbh->prepare($q_drone_run_bands);
+    $h_drone_run_bands->execute($drone_run_project_id);
+    my %drone_run_bands_all;
+    while (my ($drone_run_band_id, $drone_run_band_type) = $h_drone_run_bands->fetchrow_array()) {
+        $drone_run_bands_all{$drone_run_band_type} = $drone_run_band_id;
+    }
+    print STDERR Dumper \%drone_run_bands_all;
+
+    my $drone_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my @plot_polygon_type_ids = (
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_edge_imagery', 'project_md_image')->cvterm_id()
+    );
+    my @plot_polygon_type_objects;
+    foreach (@plot_polygon_type_ids) {
+        push @plot_polygon_type_objects, $drone_image_types->{$_};
+    }
+
+    my $stock_polygons = encode_json \%stock_polygon;
+    my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+
+    foreach my $index (0..scalar(@image_ids)-1) {
+        my $drone_run_band_project_type = $plot_polygon_type_objects[$index]->{drone_run_project_types}->[0];
+        my $plot_polygon_type = $plot_polygon_type_objects[$index]->{name};
+        my $image_id = $image_ids[$index];
+        my $drone_run_band_project_id = $drone_run_bands_all{$drone_run_band_project_type};
+
+        my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+        $archive_rotate_temp_image .= '.png';
+
+        my $rotate_return = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $angle_rotated, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image);
+        my $rotated_image_id = $rotate_return->{rotated_image_id};
+
+        my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $rotated_image_id, $drone_run_band_project_id, $stock_polygons, $plot_polygon_type, $user_id, $user_name, $user_role, 0);
+    }
 
     my $manual_plot_polygon_template = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
 
-    my $plot_polygon_info = {
-        rotate_angle => $angle_rotated,
-        plot_name => $plot_name,
-        image_id => $image_id,
-        drone_run_band_project_id => $drone_run_band_project_id,
-        plot_polygon_type => $assign_plot_polygons_type,
-        polygon => $stock_polygons
-    };
-
-    $c->stash->{rest} = $return;
+    $c->stash->{rest} = {success => 1};
 }
 
 sub drone_imagery_save_plot_polygons_template : Path('/api/drone_imagery/save_plot_polygons_template') : ActionClass('REST') { }
