@@ -60,7 +60,7 @@ solGS.waitPage = function (page, args) {
 
 	args = getArgsFromUrl(page, args);
 	args = JSON.stringify(args);
-	
+
 	jQuery.ajax({
 	    type    : 'POST',
 	    dataType: 'json',
@@ -505,17 +505,19 @@ solGS.waitPage = function (page, args) {
 	    
 	    var urlStr = url.split(/\/+/);
 	    var gpr = urlStr[6];
-	  
+	   
 	    if (args === undefined) {
 		args = { 
 		    'training_pop_id' : [ urlStr[4] ], 
 		    'analysis_type' : 'population download',
-		    'data_set_type' : 'single population'
+		    'data_set_type' : 'single population',
+		    'genotyping_protocol_id': urlStr[6]
 		};
 	    } else {
 		args['training_pop_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
-		args['data_set_type'] = 'single population';	
+		args['data_set_type'] = 'single population';
+		args['genotyping_protocol_id'] = urlStr[6];
 	    }
 	} else if (url.match(/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\//)) {
 
@@ -551,7 +553,7 @@ solGS.waitPage = function (page, args) {
 	}
 
 	var protocolId = args.genotyping_protocol_id;
-
+	
 	if(!protocolId) {
 	    protocolId = jQuery('#genotyping_protocol_id').val();
 	}
