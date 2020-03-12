@@ -158,8 +158,7 @@ sub genotypes_list_genotype_data {
     my $protocol_id   = $args->{genotyping_protocol_id};
 
     my $model = $self->get_model();   
-    my $geno_data = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
-    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids);
+    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
     
     $self->write_geno_data($model, $search_obj, $geno_file);
 
