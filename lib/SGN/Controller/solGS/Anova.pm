@@ -85,10 +85,7 @@ sub anova_traits {
 
      my $trial_id = $c->stash->{trial_id};
 
-     my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
-				  trial_id => $trial_id});
-
-     my $traits = $trial->get_traits_assayed();
+     my $traits = $c->controller('solGS::Utils')->trial_traits($c, $trial_id);
      my $clean_traits = $self->remove_ontology($c, $traits);
 
      $c->stash->{rest}{anova_traits} = $clean_traits;
