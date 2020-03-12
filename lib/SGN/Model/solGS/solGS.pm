@@ -1969,7 +1969,7 @@ sub protocol_detail {
 sub get_all_genotyping_protocols {
     my ($self, $trial_id) = @_;
 
-    my $where = '';
+    my $where = ' WHERE genotyping_protocol_id > 0';
     if ($trial_id)
     {
 	$where = ' WHERE trial_id = ?';
