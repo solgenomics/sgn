@@ -1669,6 +1669,47 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="upload_drone_imagery_standard_process_additional_raw_images_dialog" name="upload_drone_imagery_standard_process_additional_raw_images_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryStandardProcessAdditionalRawImagesDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadDroneImageryStandardProcessAdditionalRawImagesDialog">Upload Additional Raw Image Captures</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_additional_raw_images_form" name="upload_drone_imagery_additional_raw_images_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label>
+                            <div class="col-sm-9" >
+                                <input type="file" id="upload_drone_imagery_additional_raw_images_zipfile" name="upload_drone_imagery_additional_raw_images_zipfile" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip with 5 images in it): </label>
+                            <div class="col-sm-9" >
+                                <input type="file" id="upload_drone_imagery_additional_raw_images_calibration_zipfile" name="upload_drone_imagery_additional_raw_images_calibration_zipfile" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="upload_drone_imagery_additional_raw_images_drone_run_id" name="upload_drone_imagery_additional_raw_images_drone_run_id" value="" />
+                        <input type="hidden" id="upload_drone_imagery_additional_raw_images_field_trial_id" name="upload_drone_imagery_additional_raw_images_field_trial_id" value="" />
+                    </form><br/>
+
+                    <center>
+                        <button type="button" class="btn btn-info" name="upload_drone_imagery_additional_raw_images_submit" id="upload_drone_imagery_additional_raw_images_submit">Submit</button>
+                    </center>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 
 <script>
@@ -2190,6 +2231,40 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {}; 
     var ctx;
     var dronecroppingImg;
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_stadard_process_raw_images_add_images"]', function(){
+        manage_drone_imagery_standard_process_raw_images_field_trial_id = jQuery(this).data('field_trial_id');
+        manage_drone_imagery_standard_process_raw_images_drone_run_id = jQuery(this).data('drone_run_project_id');
+        jQuery('#upload_drone_imagery_additional_raw_images_drone_run_id').val(manage_drone_imagery_standard_process_raw_images_drone_run_id);
+        jQuery('#upload_drone_imagery_additional_raw_images_field_trial_id').val(manage_drone_imagery_standard_process_raw_images_field_trial_id);
+        jQuery('#upload_drone_imagery_standard_process_additional_raw_images_dialog').modal('show');
+    });
+
+    jQuery('#upload_drone_imagery_additional_raw_images_submit').click(function(){
+        standard_process_upload_additional_raw_images();
+    });
+
+    function standard_process_upload_additional_raw_images() {
+        jQuery('#upload_drone_imagery_additional_raw_images_form').attr("action", "/api/drone_imagery/upload_drone_imagery_additional_raw_images");
+        jQuery("#upload_drone_imagery_additional_raw_images_form").submit();
+    }
+
+    jQuery('#upload_drone_imagery_additional_raw_images_form').iframePostForm({
+        json: true,
+        post: function () {
+            jQuery('#working_modal').modal("show");
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+            }
+            else {
+                location.reload;
+            }
+        }
+    });
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_raw_images"]', function() {
         showManageDroneImagerySection('manage_drone_imagery_standard_process_raw_images_div');
