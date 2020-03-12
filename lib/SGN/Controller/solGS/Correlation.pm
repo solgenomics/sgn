@@ -263,6 +263,7 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
   
     if (!-s $corre_json_file)
     {
+	$c->controller('solGS::Utils')->save_metadata($c);
         $self->run_pheno_correlation_analysis($c);  
         $corre_json_file = $c->stash->{corre_coefficients_json_file}; 
     }

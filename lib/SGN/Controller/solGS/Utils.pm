@@ -190,6 +190,19 @@ sub get_clean_trial_trait_names {
 }
 
 
+sub save_metadata {
+    my ($self, $c) = @_;
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+
+    if (!-s $metadata_file)
+    {
+	my $metadata   = $c->model('solGS::solGS')->trial_metadata();   
+	write_file($metadata_file, join("\t", @$metadata));
+    }
+    
+}
 
 
 ####

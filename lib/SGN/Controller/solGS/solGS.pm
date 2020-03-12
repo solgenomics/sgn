@@ -487,7 +487,8 @@ sub population : Path('/solgs/population') Args() {
 	$c->stash->{template} = "/generic_message.mas"; 
     }
     else 
-    {	
+    {
+	$c->controller('solGS::Utils')->save_metadata($c);	
         $self->get_all_traits($c);  
         $self->project_description($c, $pop_id);
  
