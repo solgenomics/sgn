@@ -396,13 +396,11 @@ sub parse_arguments {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
 	  }
 
-	  my $protocol_id;
 	  if ($k eq 'genotyping_protocol_id') 
 	  {
-	      $protocol_id =  $arguments->{$k};      
-	  }
-	  
-	  $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);	
+	      my $protocol_id =  $arguments->{$k};  
+	      $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);	  
+	  }	  
       }
   }
 	    
@@ -831,6 +829,7 @@ sub create_training_data {
 
     my $analysis_page = $c->stash->{analysis_page};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     if ($analysis_page =~ /solgs\/population\//)
     {
 	my $pop_id = $c->stash->{model_id};	 
