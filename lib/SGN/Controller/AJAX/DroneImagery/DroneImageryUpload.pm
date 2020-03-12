@@ -614,7 +614,8 @@ sub upload_drone_imagery_POST : Args(0) {
 
             $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_boundaries/fileXXXX');
 
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path' --temporary_development_path '/home/nmorales/Downloads'";
+            # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path' --temporary_development_path '/home/nmorales/Downloads'";
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImagePlotBoundaries.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --field_layout_path '$field_layout_path' --field_layout_params '$field_layout_params_path'";
 
             # @stitched_bands = (
             #     ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_stitched_result_band1],
@@ -792,7 +793,8 @@ sub upload_drone_imagery_POST : Args(0) {
 
             $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
 
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
+            # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path'";
 
             @stitched_bands = (
                 ["Band 1", "Blue", "Blue (450-520nm)", 0],
@@ -1014,7 +1016,8 @@ sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
 
         $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
 
-        $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
+        # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
+        $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path'";
 
         @stitched_bands = (
             ["Band 1", "Blue", "Blue (450-520nm)", 0],
