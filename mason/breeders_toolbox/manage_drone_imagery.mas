@@ -409,6 +409,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_assign_plot" onclick="return false;">Assign Plot Images (Saves)</button>
             </center>
 
+            <hr>
+            <div id="drone_imagery_standard_process_raw_images_assigned_plot_images" name="drone_imagery_standard_process_raw_images_assigned_plot_images"></div>
         </&>
     </&>
 
@@ -2198,6 +2200,23 @@ jQuery(document).ready(function() {
         get_select_box('micasense_aligned_raw_images_grid','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
 
         get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_drone_run_image_counts?drone_run_id='+manage_drone_imagery_standard_process_raw_images_drone_run_id,
+            success: function(response){
+                console.log(response);
+                var html = '<table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_assigned_plot_images"><thead><tr><th>Plot Name</th><th>Plot Number</th><th>Image Counts</th></thead><tbody>';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + '<tr><td>'+response.data[i]['plot_name'] + '</td><td>' + response.data[i]['plot_number'] + '</td><td>' + response.data[i]['image_counts'] + '</td></tr>';
+                }
+                html = html +'</tbody></table>';
+                jQuery('#drone_imagery_standard_process_raw_images_assigned_plot_images').html(html);
+                jQuery('#manage_drone_imagery_standard_process_assigned_plot_images').DataTable();
+            },
+            error: function(response){
+                alert('Error retrieving drone run image counts!')
+            }
+        });
     });
 
     jQuery(document).on('click', 'span[name="drone_imagery_standard_process_raw_images_image_id_select"]', function() {
@@ -2367,6 +2386,23 @@ jQuery(document).ready(function() {
                     alert(response.warning);
                 } else {
                     get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
+
+                    jQuery.ajax({
+                        url : '/api/drone_imagery/get_drone_run_image_counts?drone_run_id='+manage_drone_imagery_standard_process_raw_images_drone_run_id,
+                        success: function(response){
+                            console.log(response);
+                            var html = '<table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_assigned_plot_images"><thead><tr><th>Plot Name</th><th>Plot Number</th><th>Image Counts</th></thead><tbody>';
+                            for (var i=0; i<response.data.length; i++) {
+                                html = html + '<tr><td>'+response.data[i]['plot_name'] + '</td><td>' + response.data[i]['plot_number'] + '</td><td>' + response.data[i]['image_counts'] + '</td></tr>';
+                            }
+                            html = html +'</tbody></table>';
+                            jQuery('#drone_imagery_standard_process_raw_images_assigned_plot_images').html(html);
+                            jQuery('#manage_drone_imagery_standard_process_assigned_plot_images').DataTable();
+                        },
+                        error: function(response){
+                            alert('Error retrieving drone run image counts!')
+                        }
+                    });
 
                     //alert('Plot-images saved!');
                 }

@@ -3575,6 +3575,62 @@ sub _perform_phenotype_automated {
     };
 }
 
+sub drone_imagery_get_drone_run_image_counts : Path('/api/drone_imagery/get_drone_run_image_counts') : ActionClass('REST') { }
+sub drone_imagery_get_drone_run_image_counts_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_id = $c->req->param('drone_run_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $plot_polygon_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my @plot_polygon_minimal_cvterm_ids;
+    while (my ($plot_polygon_type_cvterm_id, $plot_polygon_type) = each %$plot_polygon_types) {
+        my $processes = $plot_polygon_type->{standard_process};
+        foreach (@$processes) {
+            if ($_ eq 'minimal') {
+                push @plot_polygon_minimal_cvterm_ids, $plot_polygon_type_cvterm_id;
+            }
+        }
+    }
+
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $q = "SELECT value FROM stockprop WHERE stock_id=? and type_id=$plot_number_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    my %plot_image_counts;
+    my %plot_numbers;
+    foreach my $plot_polygons_images_cvterm_id (@plot_polygon_minimal_cvterm_ids) {
+        my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+            bcs_schema=>$schema,
+            drone_run_project_id_list=>[$drone_run_id],
+            project_image_type_id=>$plot_polygons_images_cvterm_id
+        });
+        my ($result, $total_count) = $images_search->search();
+        foreach (@$result) {
+            my $plot_id = $_->{stock_id};
+            my $plot_name = $_->{stock_uniquename};
+            $plot_image_counts{$plot_name}->{$_->{project_image_type_name}}++;
+            $h->execute($plot_id);
+            my ($plot_number) = $h->fetchrow_array();
+            $plot_numbers{$plot_name} = $plot_number;
+        }
+    }
+
+    my @return;
+    while (my ($stock_name, $obj) = each %plot_image_counts) {
+        my $image_counts_string = '';
+        while (my ($image_type, $count) = each %$obj) {
+            $image_counts_string .= "$image_type: $count<br/>";
+        }
+        push @return, {plot_name => $stock_name, plot_number => $plot_numbers{$stock_name}, image_counts => $image_counts_string};
+    }
+
+    $c->stash->{rest} = {data => \@return};
+}
+
 sub drone_imagery_calculate_phenotypes : Path('/api/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
 sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;

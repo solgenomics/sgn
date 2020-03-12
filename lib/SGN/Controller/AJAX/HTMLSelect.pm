@@ -1340,13 +1340,18 @@ sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_te
     $h->execute($drone_run_project_id);
 
     my @result;
+    my %unique_results;
     while (my ($value) = $h->fetchrow_array()) {
         if ($value) {
             my $partial_templates = decode_json $value;
             foreach (@$partial_templates) {
-                push @result, [uri_encode(encode_json($_)), scalar(keys %$_)." Plots"];
+                $unique_results{scalar(keys %$_)." Plots"} = uri_encode(encode_json($_));
             }
         }
+    }
+
+    while (my ($k, $v) = each %unique_results) {
+        push @result, [$v, $k];
     }
 
     if ($empty) {
