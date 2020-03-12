@@ -181,8 +181,6 @@ function <% $div_name %>_deleteProp(cvtermprop_value, cvtermprop_id) {
       success: function(response) {  
         if ('message' in response) {  alert(response.message); } 
         if ('error'   in response) {  alert(response.error);   }
-        alert("The property was deleted.");
-  
       },
       error: function(response) {
         alert('An error occurred. Please try again later.');
