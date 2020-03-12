@@ -33,11 +33,41 @@ jQuery(document).ready(function(){
                 { title: "Cross Combination", "data": "cross_combination" },
                 { title: "Cross Type", "data": "cross_type" },
                 { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_parent_id+"/view'>"+row.female_parent_name+"</a>"; } },
-                { title: "Male Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_parent_id+"/view'>"+row.male_parent_name+"</a>"; } },
-                { title: "Female Plot", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_plot_id+"/view'>"+row.female_plot_name+"</a>"; } },
-                { title: "Male Plot", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_plot_id+"/view'>"+row.male_plot_name+"</a>"; } },
-                { title: "Female Plant", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_plant_id+"/view'>"+row.female_plant_name+"</a>"; } },
-                { title: "Male Plant", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_plant_id+"/view'>"+row.male_plant_name+"</a>"; } },
+                { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
+                    if (row.male_parent_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.male_parent_id+"/view'>"+row.male_parent_name+"</a>";
+                    }
+                }},
+                { title: "Female Plot", "data": null, "render": function ( data, type, row ) {
+                    if (row.female_plot_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.female_plot_id+"/view'>"+row.female_plot_name+"</a>";
+                    }
+                }},
+                { title: "Male Plot", "data": null, "render": function ( data, type, row ) {
+                    if (row.male_plot_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.male_plot_id+"/view'>"+row.male_plot_name+"</a>";
+                    }
+                }},
+                { title: "Female Plant", "data": null, "render": function ( data, type, row ) {
+                    if (row.female_plant_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.female_plant_id+"/view'>"+row.female_plant_name+"</a>";
+                    }
+                }},
+                { title: "Male Plant", "data": null, "render": function ( data, type, row ) {
+                    if (row.male_plant_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.male_plant_id+"/view'>"+row.male_plant_name+"</a>";
+                    }
+                }},
             ],
             "fnInitComplete": function(oSettings, json) {
                 //console.log(json);
