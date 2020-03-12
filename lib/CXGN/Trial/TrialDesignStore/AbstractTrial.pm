@@ -593,18 +593,18 @@ sub store {
                 $stock_lookup->set_stock_name($stock_name);
                 #$parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id);
 
-		if ($trial_stock_type eq 'cross') {
+		if ($self->get_trial_stock_type() eq 'cross') {
                     $parent_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
                     if (!$parent_stock) {
                         die ("Error while saving trial layout: no cross found matching $stock_name");
                     }
-                } elsif ($trial_stock_type eq 'family_name') {
+                } elsif ($self->get_trial_stock_type() eq 'family_name') {
                     $parent_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
                     if (!$parent_stock) {
                         die ("Error while saving trial layout: no family name found matching $stock_name");
                     }
                 } else {
-                    $parent_stock = $stock_lookup->get_stock($accession_cvterm_id);
+                    $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
                     if (!$parent_stock) {
                         die ("Error while saving trial layout: no accession found matching $stock_name");
                     }
@@ -618,7 +618,7 @@ sub store {
                 $stock_name_checked = $parent_stock->uniquename;
                 $stock_type_checked = $parent_stock->type_id;
                 $organism_id_checked = $parent_stock->organism_id();
-            }
+	    }
 
             #create the plot, if plot given
             my $new_plot_id;
