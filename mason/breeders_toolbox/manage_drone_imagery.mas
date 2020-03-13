@@ -2499,6 +2499,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_standard_process_raw_images_clear_polygon').click(function(){
         crop_points = [];
+        manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
 
         jQuery.ajax({
             url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
