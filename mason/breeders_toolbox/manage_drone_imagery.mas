@@ -2441,7 +2441,7 @@ jQuery(document).ready(function() {
                 manage_drone_imagery_standard_process_raw_images_given_plot_numbers[jQuery(this).data('generated_index')] = jQuery(this).val();
             }
         });
-        if (Object.keys(manage_drone_imagery_standard_process_raw_images_given_plot_numbers).length <= 1) {
+        if (Object.keys(manage_drone_imagery_standard_process_raw_images_given_plot_numbers).length < 1) {
             alert('Please give the plot numbers corresponding to the generated index numbers of the plot polygons!');
             return false;
         }
