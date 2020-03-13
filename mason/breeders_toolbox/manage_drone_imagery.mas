@@ -2297,6 +2297,7 @@ jQuery(document).ready(function() {
     jQuery(document).on('click', 'span[name="drone_imagery_standard_process_raw_images_image_id_select"]', function() {
         manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
         crop_points = [];
+        plot_polygons_generated_polygons = [];
 
         manage_drone_imagery_standard_process_raw_images_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_standard_process_raw_images_rotated_image_id = jQuery(this).data('image_id');
@@ -2501,6 +2502,7 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_standard_process_raw_images_clear_polygon').click(function(){
         crop_points = [];
         manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
+        plot_polygons_generated_polygons = [];
 
         jQuery.ajax({
             url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
