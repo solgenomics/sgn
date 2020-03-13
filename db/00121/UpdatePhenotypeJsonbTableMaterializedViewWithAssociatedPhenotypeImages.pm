@@ -74,6 +74,11 @@ sub patch {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
     my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
     my $breeding_program_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
     my $treatment_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
@@ -120,8 +125,8 @@ SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uni
     LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id = nd_experiment.nd_experiment_id)
     LEFT JOIN phenotype USING(phenotype_id)
     JOIN cvterm AS observationunit_cvterm ON(observationunit.type_id=observationunit_cvterm.cvterm_id)
-    JOIN stock_relationship ON(observationunit.stock_id=stock_relationship.subject_id)
-    JOIN stock AS germplasm ON(stock_relationship.object_id=germplasm.stock_id AND germplasm.type_id = $accession_type_id)
+    JOIN stock_relationship ON(observationunit.stock_id=stock_relationship.subject_id AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id))
+    JOIN stock AS germplasm ON(stock_relationship.object_id=germplasm.stock_id AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id))
     LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images ON (nd_experiment.nd_experiment_id = nd_experiment_md_images.nd_experiment_id)
     LEFT JOIN metadata.md_image AS md_image ON (nd_experiment_md_images.image_id = md_image.image_id)
     LEFT JOIN phenome.project_md_image AS project_md_image ON (md_image.image_id = project_md_image.image_id)
