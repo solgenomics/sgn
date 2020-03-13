@@ -2296,6 +2296,7 @@ jQuery(document).ready(function() {
 
     jQuery(document).on('click', 'span[name="drone_imagery_standard_process_raw_images_image_id_select"]', function() {
         manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
+        crop_points = [];
 
         manage_drone_imagery_standard_process_raw_images_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_standard_process_raw_images_rotated_image_id = jQuery(this).data('image_id');
