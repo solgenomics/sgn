@@ -3670,6 +3670,7 @@ jQuery(document).ready(function() {
             drone_imagery_standard_process_plot_polygon_click_type = '';
         }
         else if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_previous_polygon') {
+            manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
             var manage_drone_imagery_standard_process_raw_images_previous_polygon_template = JSON.parse(decodeURI(manage_drone_imagery_standard_process_raw_images_previous_polygon));
 
             manage_drone_imagery_standard_process_raw_images_previous_polygon = [];
