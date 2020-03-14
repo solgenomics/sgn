@@ -50,11 +50,11 @@ use SGN::Model::Cvterm;
 
 =head2 jbrowse_link
 
+=head2 blast_db_id
+
 =head2 ftp_link
 
 =head2 ncbi_link
-
-=head2 blast_db_id
 
 =head2 sp_person_id
 
@@ -91,17 +91,17 @@ has 'publication' => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'jbrowse_link' => (isa => 'Maybe[Str]', is => 'rw');
 
+has 'blast_db_id' => (isa => 'Maybe[Int]', is => 'rw');
+
 has 'ftp_link'  => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'ncbi_link' => (isa => 'Maybe[Str]', is => 'rw');
-
-has 'blast_db_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 has 'sp_person_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 has 'timestamp' => (isa => 'Maybe[Str]', is => 'rw');
 
-has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link ftp_link ncbi_link blast_db_id stockprop_id stock_id sp_person_id timestamp | ] } );
+has 'allowed_fields' => (isa => 'Ref', is => 'ro', default =>  sub {  [ qw | organization website genbank_accession funded_by funder_project_id contact_email sequencing_year publication jbrowse_link blast_db_id ftp_link ncbi_link stockprop_id stock_id sp_person_id timestamp | ] } );
 
 
 sub BUILD {
@@ -496,10 +496,10 @@ sub validate {
 	push @warnings, "Need jbrowse link for sequencing project";
     }
     if (!defined($self->ftp_link())) {
-	push @warnings, "Need jbrowse link for sequencing project";
+	push @warnings, "Need ftp link for sequencing project";
     }
     if (!defined($self->ncbi_link())) {
-    push @warnings, "Need jbrowse link for sequencing project";
+    push @warnings, "Need ncbi link for sequencing project";
     }
 
     if (@errors) {
