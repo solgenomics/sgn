@@ -108,7 +108,7 @@
                             </div>
                         </div>
                         <div>
-                            <input id="stock_id"  name="stock_id" value="`+stock_id+`" />
+                            <input type="hidden" id="stock_id"  name="stock_id" value="`+stock_id+`" />
                             <input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
                         </div>
                     </div> <!-- modal-body -->
