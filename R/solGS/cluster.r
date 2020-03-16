@@ -108,6 +108,7 @@ extractGenotype <- function(inputFiles) {
     }
 
     genoData <- data.frame(genoData)
+    genoData <-roundAlleleDosage(genoData)
 }
 
 set.seed(235)
@@ -116,6 +117,10 @@ clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
+
+    if (sum(is.na(clusterData)) > 0) {
+        clusterData <- na.roughfix(clusterData)
+    }
     
     pca    <- prcomp(clusterData, retx = TRUE)
     pca    <- summary(pca)

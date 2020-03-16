@@ -46,6 +46,8 @@ genoMetaData     <- c()
 filteredGenoFile <- c()
 phenoData        <- c()
 
+set.seed(235)
+
 pcF <- grepl("genotype", ignore.case=TRUE, inputFiles)
 dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
 
@@ -139,9 +141,18 @@ if (dataType == 'genotype') {
 
 pcaData <- c()
 if (!is.null(genoData)) {
-    pcaData <- genoData
+    genoData <- roundAlleleDosage(genoData)
+    genoData <- column_to_rownames(genoData, 'rn')
+    pcaData  <- genoData
+    genoData <- NULL
 } else if(!is.null(phenoData)) {
     pcaData <- phenoData
+}
+
+
+message("No. of missing values, ", sum(is.na(pcaData)) )
+if (sum(is.na(pcaData)) > 0) {
+    pcaData <- na.roughfix(pcaData)
 }
 
 pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)
