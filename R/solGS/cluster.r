@@ -95,20 +95,29 @@ extractGenotype <- function(inputFiles) {
     }
 
    
-    if (is.null(filteredGenoFile) == TRUE) {
-        ##genoDataFilter::filterGenoData
-        genoData <- filterGenoData(genoData, maf = 0.01)
-        genoData <- column_to_rownames(genoData, 'rn')
+    ## if (is.null(filteredGenoFile) == TRUE) {
+    ##     ##genoDataFilter::filterGenoData
+    ##     genoData <- filterGenoData(genoData, maf = 0.01)
+    ##     genoData <- column_to_rownames(genoData, 'rn')
 
-        message("No. of geno missing values, ", sum(is.na(genoData)))
-        if (sum(is.na(genoData)) > 0) {
-            genoDataMissing <- c('yes')
-            genoData <- na.roughfix(genoData)
-        }
-    }
+    ##     message("No. of geno missing values, ", sum(is.na(genoData)))
+    ##     if (sum(is.na(genoData)) > 0) {
+    ##         genoDataMissing <- c('yes')
+    ##         genoData <- na.roughfix(genoData)
+    ##     }
+    ## }
 
+    genoData <- filterGenoData(genoData, maf = 0.01)
+    genoData <- column_to_rownames(genoData, 'rn')
+    
     genoData <- data.frame(genoData)
-    genoData <-roundAlleleDosage(genoData)
+
+    if (sum(is.na(clusterData)) > 0) {
+        clusterData <- na.roughfix(clusterData)
+    }
+    
+    genoData <- roundAlleleDosage(genoData)
+    genoData <- column_to_rownames(genoData, 'rn')
 }
 
 set.seed(235)
@@ -117,10 +126,6 @@ clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
-
-    if (sum(is.na(clusterData)) > 0) {
-        clusterData <- na.roughfix(clusterData)
-    }
     
     pca    <- prcomp(clusterData, retx = TRUE)
     pca    <- summary(pca)
