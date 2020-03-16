@@ -142,7 +142,7 @@ sub get_sequencing_project_infos {
 
     my @stockprops = $class->_retrieve_stockprops($schema, $stock_id, "sequencing_project_info");
 
-    print STDERR "Stockprops = ".Dumper(\@stockprops);
+    #print STDERR "Stockprops = ".Dumper(\@stockprops);
 
     my @infos = ();
     foreach my $sp (@stockprops) {
@@ -161,7 +161,7 @@ sub get_sequencing_project_infos {
 	push @infos, $hash;
     }
 
-    print STDERR "Hashes = ".Dumper(\@infos);
+    #print STDERR "Hashes = ".Dumper(\@infos);
     return \@infos;
 }
 
