@@ -398,6 +398,12 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                         <input type="number" class="form-control" id="drone_imagery_standard_process_raw_images_number_columns" name="drone_imagery_standard_process_raw_images_number_columns" placeholder="0"/>
                     </div>
                 </div>
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-3 control-label">Partial Template Name: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="drone_imagery_standard_process_raw_images_partial_template_name" name="drone_imagery_standard_process_raw_images_partial_template_name" placeholder="e.g. smaller 2 by 4"/>
+                    </div>
+                </div>
             </div>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_draw_polygons" onclick="return false;">Draw Plot-Polygon (Does Not Save)</button>
             <hr>
@@ -2435,6 +2441,11 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_standard_process_raw_images_assign_plot').click(function(){
 
+        var manage_drone_imagery_standard_process_raw_images_partial_template_name = jQuery('#drone_imagery_standard_process_raw_images_partial_template_name').val();
+        if (manage_drone_imagery_standard_process_raw_images_partial_template_name == '') {
+            alert('Please give a partial template name');
+            return false;
+        }
         var manage_drone_imagery_standard_process_raw_images_given_plot_numbers = {};
         jQuery('input[name="manage_drone_imagery_standard_process_raw_images_given_plot_number"]').each(function() {
             if (jQuery(this).val() != '') {
@@ -2455,7 +2466,8 @@ jQuery(document).ready(function() {
                 'image_ids':manage_drone_imagery_standard_process_raw_images_stack_image_ids,
                 'polygon':JSON.stringify(manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new),
                 'polygon_plot_numbers':JSON.stringify(manage_drone_imagery_standard_process_raw_images_given_plot_numbers),
-                'angle_rotated':manage_drone_imagery_standard_process_raw_images_rotate_angle
+                'angle_rotated':manage_drone_imagery_standard_process_raw_images_rotate_angle,
+                'partial_template_name':manage_drone_imagery_standard_process_raw_images_partial_template_name
             },
             success: function(response){
                 console.log(response);

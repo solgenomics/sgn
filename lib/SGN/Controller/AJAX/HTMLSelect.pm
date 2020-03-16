@@ -1344,8 +1344,11 @@ sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_te
     while (my ($value) = $h->fetchrow_array()) {
         if ($value) {
             my $partial_templates = decode_json $value;
-            foreach (@$partial_templates) {
-                $unique_results{scalar(keys %$_)." Plots"} = uri_encode(encode_json($_));
+            foreach my $t (@$partial_templates) {
+                my $image_id = $t->{image_id};
+                my $polygon = $t->{polygon};
+                my $template_name = $t->{template_name};
+                $unique_results{$template_name.": ".scalar(keys %$polygon)." Plots"} = uri_encode(encode_json($polygon));
             }
         }
     }

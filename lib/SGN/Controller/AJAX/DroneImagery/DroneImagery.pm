@@ -961,6 +961,7 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     my $field_trial_id = $c->req->param('field_trial_id');
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my $angle_rotated = $c->req->param('angle_rotated');
+    my $partial_template_name = $c->req->param('partial_template_name');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -1053,7 +1054,11 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     if ($previous_plot_polygons_rs->count > 0) {
         @save_stock_polygons = @{decode_json $previous_plot_polygons_rs->first->value};
     }
-    push @save_stock_polygons, $polygon_hash;
+    push @save_stock_polygons, {
+        template_name => $partial_template_name,
+        image_id => $image_ids[3],
+        polygon => $polygon_hash
+    };
 
     my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$manual_plot_polygon_template_partial,
