@@ -131,7 +131,7 @@ has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_
 
 sub get_design {
     my $self = shift;
-    print STDERR Dumper $self->{design};
+    #print STDERR Dumper $self->{design};
      return $self->{design};
 }
 

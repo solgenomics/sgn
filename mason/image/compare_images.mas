@@ -1,0 +1,126 @@
+
+<%args>
+$stock_id
+</%args>
+
+<div class="modal fade" id="stock_detail_page_compare_images_dialog" name="stock_detail_page_compare_images_dialog" tabindex="-1" role="dialog" aria-labelledby="stockDetailPageCompareImagesDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="stockDetailPageCompareImagesDialog">Compare Images</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "stock_detail_page_compare_images_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Comparison" &>
+                    <& /page/page_title.mas, title=>"Select the comparison you are interested in" &>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Comparison: </label>
+                            <div class="col-sm-9" >
+                                <select id="stock_detail_page_compare_images_comparison_select" class="form-control">
+                                    <option value="compare_pixel_values_two_images">Compare pixel values for two different images</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="stock_detail_page_compare_images_comparison_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Image Selection" &>
+                    <& /page/page_title.mas, title=>"Select the images you are interested in comparing" &>
+
+                    <table class="table table-bordered table-hover" id="stock_detail_page_compare_images_images_type_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Image</th>
+                                <th>Field Trial</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Band Name</th>
+                                <th>Drone Run Band Type</th>
+                                <th>Plot Polygon Type</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="stock_detail_page_compare_images_images_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Result" &>
+                    <& /page/page_title.mas, title=>"Image comparison results" &>
+
+                    <div id="stock_detail_page_compare_images_result_div"></div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+
+    jQuery('#stock_images_section_compare_images_button').click(function() {
+        jQuery('#stock_detail_page_compare_images_dialog').modal('show');
+    });
+
+    jQuery('#stock_detail_page_compare_images_comparison_select_step').click(function(){
+
+        jQuery('#stock_detail_page_compare_images_images_type_table').DataTable({
+            destroy : true,
+            paging : false,
+            ajax : '/api/drone_imagery/plot_polygon_types_images?select_checkbox_name=stock_detail_page_compare_images_plot_polygon_type_select&stock_ids=<% $stock_id %>'
+        });
+
+        Workflow.complete("#stock_detail_page_compare_images_comparison_select_step");
+        Workflow.focus('#stock_detail_page_compare_images_workflow', 1);
+    });
+
+    jQuery('#stock_detail_page_compare_images_images_select_step').click(function(){
+        var compare_images_selected_image_ids = []
+        jQuery('input[name="stock_detail_page_compare_images_plot_polygon_type_select"]:checked').each(function() {
+            compare_images_selected_image_ids.push(jQuery(this).val());
+        });
+        if (compare_images_selected_image_ids.length != 2){
+            alert('Please select two image types!');
+            return false;
+        } else {
+    
+            jQuery.ajax({
+                url : '/api/drone_imagery/compare_images?stock_id=<% $stock_id %>&image_ids='+JSON.stringify(compare_images_selected_image_ids)+'&comparison_type='+jQuery('#stock_detail_page_compare_images_comparison_select').val(),
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    var html = '<a target=_blank href="'+response.result+'">File</a>';
+                    jQuery('#stock_detail_page_compare_images_result_div').html(html);
+
+                    Workflow.complete("#stock_detail_page_compare_images_images_select_step");
+                    Workflow.focus('#stock_detail_page_compare_images_workflow', 2);
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error comparing images!')
+                }
+            });
+        }
+    });
+
+});
+</script>

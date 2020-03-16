@@ -76,7 +76,7 @@ sub file_members {
     #print STDERR Dumper \@file_members;
     my %seen_files;
     foreach (@file_members) {
-        if (exists($seen_files{$_->{'fileName'}}) || $_->{'compressedSize'} == 0 || index($_->{'fileName'}, '.DS_Store') != -1 || index($_->{'fileName'}, '.fieldbook') != -1 || index($_->{'fileName'}, '.thumbnails') != -1) {
+        if (exists($seen_files{$_->{'fileName'}}) || $_->{'compressedSize'} == 0 || index($_->{'fileName'}, '.DS_Store') != -1 || index($_->{'fileName'}, '.fieldbook') != -1 || index($_->{'fileName'}, '.thumbnails') != -1 || index($_->{'fileName'}, '__MACOSX') != -1) {
             next;
         } else {
             $seen_files{$_->{'fileName'}} = 1;
