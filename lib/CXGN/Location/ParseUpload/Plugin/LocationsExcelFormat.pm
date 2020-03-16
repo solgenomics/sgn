@@ -39,7 +39,7 @@ sub parse {
 
     for my $row ( 1 .. $row_max ) {
         my $row_num = $row+1;
-        our($name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude) = undef;
+        our($name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude,$noaa_station_id) = undef;
 
         # check that name is defined and isn't already in database
         if ($worksheet->get_cell($row,0)) {
@@ -146,8 +146,15 @@ sub parse {
             push @errors, "Row $row_num, column I: Altitude $altitude is not a number between -418 (Dead Sea) and 8,848 (Mt. Everest).\n";
         }
 
-        print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
-        push @rows, [$name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude];
+        if ($worksheet->get_cell($row,9)) {
+            $noaa_station_id = $worksheet->get_cell($row,9)->value();
+        }
+        if (!$noaa_station_id) {
+            push @errors, "Row $row_num, column J: NOAA Station ID is undefined.\n";
+        }
+
+        print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude, $noaa_station_id\n";
+        push @rows, [$name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude,$noaa_station_id];
     }
 
     if (scalar @errors > 0) {

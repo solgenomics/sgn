@@ -88,35 +88,35 @@ sub new {
 
     my $trial_rs = $schema->resultset("Project::Projectprop")->search( { project_id => $trial_id },{ join => 'type' });
 
-    my $object;
     if ($trial_id && $trial_rs->count() == 0) {
-        $object = CXGN::PhenotypingTrial->new($args);
+        return CXGN::PhenotypingTrial->new($args);
     }
 
+    my $object;
     while (my $trial_row = $trial_rs->next()) { 
         my $name = $trial_row->type()->name();
         my $val = $trial_row->value();
-        #print STDERR Dumper [$name, $val];
+        # print STDERR Dumper [$name, $val];
         if ($val eq "genotyping_plate") {
-            $object = CXGN::GenotypingTrial->new($args);
+            return CXGN::GenotypingTrial->new($args);
         }
         elsif ($name eq "crossing_trial") {
-            $object = CXGN::CrossingTrial->new($args);
+            return CXGN::CrossingTrial->new($args);
         }
         elsif ($name eq "analysis") {
-            $object = CXGN::Analysis->new($args);
+            return CXGN::Analysis->new($args);
         }
         elsif ($val eq "treatment") {
-            $object = CXGN::ManagementFactor->new($args);
+            return CXGN::ManagementFactor->new($args);
         }
         elsif ($val eq "genotype_data_project") {
-            $object = CXGN::GenotypeDataProject->new($args);
+            return CXGN::GenotypeDataProject->new($args);
         }
         elsif ($val eq "drone_run") {
-            $object = CXGN::AerialImagingEventProject->new($args);
+            return CXGN::AerialImagingEventProject->new($args);
         }
         elsif ($val eq "drone_run_band") {
-            $object = CXGN::AerialImagingEventBandProject->new($args);
+            return CXGN::AerialImagingEventBandProject->new($args);
         }
         else {
             $object = CXGN::PhenotypingTrial->new($args);

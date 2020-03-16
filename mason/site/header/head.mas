@@ -31,6 +31,10 @@
 
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables-min", "jquerymigrate", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
 
+<script type="text/javascript"
+  src="http://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
 <& /site/header/local_head.mas &>
 <& /site/header/analytics.mas &>
 

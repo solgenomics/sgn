@@ -19,8 +19,7 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
 <%perl>
-#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Drone Imagery</button><button class='btn btn-primary' style='margin:3px' id='keras_cnn_drone_imagery_link'>Train Keras CNN Model</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Drone Phenotypes</button>";
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
@@ -29,7 +28,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
 <div id="manage_drone_imagery_standard_process_div" style="display:none">
 
-    <& /page/page_title.mas, title=>"Manage Drone Imagery: Run A Standard Process" &>
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Run A Standard Process On Orthophotomosaics" &>
 
     <&| /util/workflow.mas, id=> "manage_drone_imagery_standard_process_workflow" &>
         <&| /util/workflow.mas:step, title=> "Intro" &>
@@ -124,7 +123,13 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_cropping_step">Save and Go to Next Step</button>
             </div>
 
-            <!--
+            <div id="manage_drone_imagery_standard_process_crop_load_div">
+                <img src="/img/wheel.gif" />
+            </div>
+
+            <canvas id="drone_imagery_standard_process_crop_original_stitched_div"></canvas>
+
+            <hr>
             <div class="well well-sm">
                 <form class="form-horizontal">
                     <div class="row">
@@ -141,13 +146,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 </form>
                 <button class="btn btn-primary" id="drone_imagery_standard_process_cropping_use_previous_cropping">Use Image Cropping</button>
             </div>
-            -->
-
-            <div id="manage_drone_imagery_standard_process_crop_load_div">
-                <img src="/img/wheel.gif" />
-            </div>
-
-            <canvas id="drone_imagery_standard_process_crop_original_stitched_div"></canvas>
 
         </&>
         <&| /util/workflow.mas:step, title=> "Thresholding" &>
@@ -303,13 +301,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                         <input name="drone_imagery_standard_process_phenotypes_select" value="zonal" type="checkbox" checked disabled> Zonal Statistics: nonzero_pixel_count, total_pixel_sum, mean_pixel_value, harmonic_mean_value, median_pixel_value, variance_pixel_value, stdev_pixel_value, pstdev_pixel_value, min_pixel_value, max_pixel_value, minority_pixel_value, minority_pixel_count, majority_pixel_value, majority_pixel_count, pixel_variety_count <br/>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
-                    <div class="col-sm-7">
-                        <div id="drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select_div">
-                        </div>
-                    </div>
-                </div>
             </form>
             <br/>
 
@@ -318,6 +309,114 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <center>
             <button type="button" class="btn btn-info" id="manage_drone_imagery_standard_process_phenotypes_step">Finish</button>
             </center>
+        </&>
+    </&>
+
+</div>
+
+<div id="manage_drone_imagery_standard_process_raw_images_div" style="display:none">
+
+    <& /page/page_title.mas, title=>"Manage Drone Imagery: Run A Standard Process On Raw Images" &>
+
+    <&| /util/workflow.mas, id=> "manage_drone_imagery_standard_process_raw_images_workflow" &>
+        <&| /util/workflow.mas:step, title=> "Intro" &>
+            <& /page/page_title.mas, title=>"This workflow will guide you through applying a standard process to your aerial imaging bands" &>
+
+            <div class="well well-sm">
+                <p>This process will allow you to manually assign plot-polygons to the raw images.</p>
+            </div>
+
+            <br/><br/>
+            <center>
+            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+            </center>
+        </&>
+        <&| /util/workflow.mas:step, title=> "Plot Polygons" &>
+            <& /page/page_title.mas, title=>"Manually assign plot-polygons to raw images" &>
+
+            <div class="well well-sm">
+                <ul>
+                    <li>(1) Select an image from the grid below and adjust the rotation.</li>
+                    <li>(2) Click the four corners encompassing a group of plots of interest. Alternatively, paste a previously used template.</li>
+                    <li>(3) Type the plot numbers corresponding to the drawn plot-polygons in the drawn table.</li>
+                    <li>(4) Click assign plot-polygons to save. Repeat steps 1 to 4 until all plots have been assigned an image.</li>
+                </ul>
+            </div>
+
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-2 control-label">Click Raw Image Stack: </label>
+                    <div class="col-sm-10">
+                        <div id="drone_imagery_standard_process_raw_images_image_id_select_div"></div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+
+            <canvas id="drone_imagery_standard_process_raw_images_show"></canvas>
+
+            <hr>
+            <form class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Rotate Counter-Clockwise Degrees: </label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="drone_imagery_standard_process_raw_images_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_rotate_degrees_input" type="text" placeholder="Number of degrees to rotate" value="0.00"/>
+                    </div>
+                </div>
+            </form>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_rotate_image" onclick="return false;">Rotate Image</button>
+            <hr>
+
+            <hr>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_save_polygon" onclick="return false;">Save Plot-Polygon</button>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_polygon" onclick="return false;">Paste Plot-Polygon</button>
+            <button class="btn btn-danger btn-sm" id="drone_imagery_standard_process_raw_images_clear_polygon" onclick="return false;">Start Over</button>
+            <hr>
+
+            <hr>
+            <form class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Previously used plot-polygons: </label>
+                    <div class="col-sm-6">
+                        <div id="drone_imagery_standard_process_raw_images_previous_polygons_div"></div>
+                    </div>
+                </div>
+            </form>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon" onclick="return false;">Paste Previously Used Plot-Polygon</button>
+            <hr>
+
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-3 control-label">Number of Rows: </label>
+                    <div class="col-sm-9">
+                        <input type="number" class="form-control" id="drone_imagery_standard_process_raw_images_number_rows" name="drone_imagery_standard_process_raw_images_number_rows" placeholder="0"/>
+                    </div>
+                </div>
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-3 control-label">Number of Columns: </label>
+                    <div class="col-sm-9">
+                        <input type="number" class="form-control" id="drone_imagery_standard_process_raw_images_number_columns" name="drone_imagery_standard_process_raw_images_number_columns" placeholder="0"/>
+                    </div>
+                </div>
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-3 control-label">Template Name: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="drone_imagery_standard_process_raw_images_partial_template_name" name="drone_imagery_standard_process_raw_images_partial_template_name" placeholder="e.g. 3rd Range 2x4"/>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_draw_polygons" onclick="return false;">Draw Plot-Polygon (Does Not Save)</button>
+            <hr>
+
+            <div id="drone_imagery_standard_process_raw_images_polygon_assign_table" name="drone_imagery_standard_process_raw_images_polygon_assign_table"></div>
+
+            <br/><br/>
+            <center>
+            <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_assign_plot" onclick="return false;">Assign Plot Images (Saves)</button>
+            </center>
+
+            <hr>
+            <div id="drone_imagery_standard_process_raw_images_assigned_plot_images" name="drone_imagery_standard_process_raw_images_assigned_plot_images"></div>
         </&>
     </&>
 
@@ -725,18 +824,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
       <div class="modal-body">
           <div class="container-fluid">
-
-              <form class="form-horizontal">
-                  <div class="form-group">
-                      <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
-                      <div class="col-sm-7">
-                          <div id="drone_imagery_calculate_phenotypes_zonal_stats_time_select_div">
-                          </div>
-                      </div>
-                  </div>
-              </form>
-              <br/>
-
               <div id="drone_imagery_calculate_phenotypes_zonal_stats_week_term_div"></div>
           </div>
 
@@ -784,19 +871,17 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-
-            <form class="form-horizontal">
-                <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
-                    <div class="col-sm-7">
-                        <div id="drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select_div">
-                        </div>
-                    </div>
-                </div>
-            </form>
-            <br/>
-
             <div id="drone_imagery_week_term_div"></div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-5 control-label">Phenotype Process:</label>
+            <div class="col-sm-7">
+                <select class="form-control" id="drone_imagery_generate_phenotypes_process_type" name="drone_imagery_generate_phenotypes_process_type">
+                    <option value="minimal,minimal_vi">Minimal</option>
+                    <option value="extended">Extended</option>
+                </select>
+            </div>
         </div>
 
       </div>
@@ -817,18 +902,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-
-            <form class="form-horizontal">
-                <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
-                    <div class="col-sm-7">
-                        <div id="drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select_div">
-                        </div>
-                    </div>
-                </div>
-            </form>
-            <br/>
-
             <div id="drone_imagery_minimal_vi_standard_process_week_term_div"></div>
         </div>
 
@@ -850,18 +923,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-
-            <form class="form-horizontal">
-                <div class="form-group">
-                    <label class="col-sm-5 control-label">Select Time Point In Drone Run Series:</label>
-                    <div class="col-sm-7">
-                        <div id="drone_imagery_calculate_phenotypes_extended_standard_process_time_select_div">
-                        </div>
-                    </div>
-                </div>
-            </form>
-            <br/>
-
             <div id="drone_imagery_extended_standard_process_week_term_div"></div>
         </div>
 
@@ -950,11 +1011,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <&| /util/workflow.mas, id=> "drone_imagery_calculate_statistics_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in. Selected field trials should have some common accessions between them." &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_trial_select_div"></div>
                             </div>
@@ -969,6 +1030,15 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">Observation Variable Type: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="drone_imagery_calculate_statistics_select_observation_variable_type">
+                                    <option value="time_ontology">Time Series</option>
+                                    <option value="">Single Trait</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_calculate_statistics_trait_select_div"></div>
@@ -982,11 +1052,20 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <&| /util/workflow.mas:step, title=> "Statistics" &>
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
-                    <div id ="drone_imagery_calculate_statistics_select_div">
-                    </div>
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
+                        <option value="lmer_germplasmname_block">LMER y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
+                        <option value="marss_germplasmname_block">MARSS prediction for each germplasmName</option>
                     </select>
+
+                    <div id="drone_imagery_calculate_statistics_marss_div" style="display:none">
+                        $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
+                        <hr>
+                        <select class="form-control" id="drone_imagery_calculate_statistics_select_marss" name="drone_imagery_calculate_statistics_select_marss">
+                            <option value="marss_predict_last_time_point">Predict Last Time Point</option>
+                            <option value="marss_predict_last_two_time_points">Predict Last Two Time Point</option>
+                        </select>
+                    </div>
 
                     <br/><br/>
                     <center>
@@ -1011,30 +1090,51 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_keras_cnn_dialog" name="drone_imagery_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryKerasCNNDialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryKerasCNNDialog">Train and Predict Using Keras CNN Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <button class="btn btn-primary" id="drone_imagery_keras_cnn_train_link">Train Keras CNN Model Using Images and Phenotypes In Database</button>
+            <br/><br/>
+            <button class="btn btn-primary" id="drone_imagery_keras_cnn_predict_link">Predict Phenotypes Using Images and Trained Keras Model CNN</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_train_keras_cnn_dialog" name="drone_imagery_train_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryTrainKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryTrainKerasCNNDialog">Select a dataset to train Keras CNN</h4>
+        <h4 class="modal-title" id="droneImageryTrainKerasCNNDialog">Train Keras CNN Model</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "drone_imagery_train_keras_model_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through training a keras model using images and phenotypes in the database" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through training a keras model using images and phenotypes in the database." &>
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial you are interested in" &>
+                <&| /util/workflow.mas:step, title=> "Field Trial(s)" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_train_keras_cnn_trial_select_div"></div>
                             </div>
@@ -1050,9 +1150,15 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Traits Phenotyped in the Selected Field Trial: </label>
-                            <div class="col-sm-7" >
+                            <label class="col-sm-3 control-label">Trait Phenotyped in the Selected Field Trial(s) To Predict: </label>
+                            <div class="col-sm-9" >
                                 <div id="drone_imagery_train_keras_cnn_trait_select_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s) As Auxiliary Trait(s): </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_train_keras_cnn_aux_trait_select_div"></div>
                             </div>
                         </div>
                     </form>
@@ -1061,17 +1167,35 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_trait_select_step">Go to Next Step</button>
                     </center>
                 </&>
+                <&| /util/workflow.mas:step, title=> "Population Selection" &>
+                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to train on images from all germplasm in the selected field trial(s)." &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Population(s) to include in training (Leave blank to include images from all germplasm in the selected field trials): </label>
+                            <div class="col-sm-7" >
+                                <div id="drone_imagery_train_keras_cnn_population_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_population_select_step">Go to Next Step</button>
+                    </center>
+                </&>
                 <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
                     <& /page/page_title.mas, title=>"Select the drone runs you are interested in using in the model" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_train_keras_drone_runs_table">
                         <thead>
                             <tr>
-                                <th>Select</th>
+                                <th>Select <br/><input type="checkbox" id="drone_image_train_keras_drone_runs_table_select_all" checked>Select All</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Type</th>
                                 <th>Drone Run Description</th>
                                 <th>Drone Run Date</th>
+                                <th>Drone Run GDD</th>
+                                <th>Camera Type</th>
                                 <th>Field Trial Name</th>
                                 <th>Field Trial Description</th>
                             </tr>
@@ -1089,6 +1213,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <table class="table table-bordered table-hover" id="drone_image_train_keras_plot_polygon_image_type_table">
                         <thead>
                             <tr>
+                                <!--th>Select <br/><input type="checkbox" id="drone_image_train_keras_plot_polygon_image_type_table_select_all" checked>Select All</th-->
                                 <th>Select</th>
                                 <th>Field Trial</th>
                                 <th>Drone Run Name</th>
@@ -1109,9 +1234,212 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <& /page/page_title.mas, title=>"Train the model!" &>
 
                     <br/><br/>
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Model Type: </label>
+                            <div class="col-sm-8" >
+                                <select class="form-control" id="drone_image_train_keras_model_type" name="drone_image_train_keras_model_type" >
+                                    <option value="KerasCNNSequentialSoftmaxCategorical">Keras CNN Sequential 16-32-64-128-512 Linear Regression</option>
+                                    <option value="KerasCNNMLPExample">Keras CNN and MLP Example</option>
+                                    <option value="SimpleKerasTunerCNNSequentialSoftmaxCategorical">Simple Keras Tuner CNN Sequential 16-32-64-128-512 Linear Regression</option>
+                                    <option value="KerasTunerCNNSequentialSoftmaxCategorical">Keras Tuner CNN Sequential 16-32-64-128-512 Linear Regression</option>
+                                    <option value="KerasCNNInceptionResNetV2">Keras CNN InceptionResNetV2 Linear Regression</option>
+                                    <option value="KerasCNNLSTMDenseNet121ImageNetWeights">Keras LSTM DenseNet121 ImageNet Weights Linear Regression</option>
+                                    <option value="KerasCNNInceptionResNetV2ImageNetWeights">Keras CNN Pre-Trained InceptionResNetV2 ImageNet Weights Linear Regression</option>
+                                    <option value="KerasCNNDenseNet121ImageNetWeights">Keras DenseNet121 ImageNet Weights Linear Regression</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Model Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="drone_image_train_keras_model_name" name="drone_image_train_keras_model_name" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Model Description: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="text" id="drone_image_train_keras_model_desc" name="drone_image_train_keras_model_desc" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Genotyping Protocol for GRM: </label>
+                            <div class="col-sm-8" >
+                                <div id="drone_image_train_keras_model_genotyping_protocol_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Use Parents of Accessions For In-silico Hybrid: </label>
+                            <div class="col-sm-8" >
+                                <select class="form-control" id="drone_image_train_keras_model_use_parents_grm" name="drone_image_train_keras_model_use_parents_grm" >
+                                    <option value="yes">Yes, GRM for parents of accessions if genotyped</option>
+                                    <option value="no">No, GRM for accessions if genotyped</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Submit</button>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Train and Save Keras CNN Model</button>
                     </center>
+
+                    <div id="drone_imagery_train_keras_model_results_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_predict_keras_cnn_dialog" name="drone_imagery_predict_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryPredictKerasCNNDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryPredictKerasCNNDialog">Predict Phenotypes Using Trained Keras CNN Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_predict_keras_model_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained Kera CNN Models and images in the database." &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in sourcing images from for prediction" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_predict_keras_cnn_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Keras CNN Model Selection" &>
+                    <& /page/page_title.mas, title=>"Select the Keras CNN Model for prediction" &>
+
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Trained Keras CNN Model: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_predict_keras_cnn_model_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Population Selection" &>
+                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to train on images from all germplasm in the selected field trial(s)." &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Population(s) to include in training (Leave blank to include images from all germplasm in the selected field trials): </label>
+                            <div class="col-sm-7" >
+                                <div id="drone_imagery_predict_keras_cnn_population_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_population_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
+                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from for prediction" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_predict_keras_drone_runs_table">
+                        <thead>
+                            <tr>
+                                <th>Select <br/><input type="checkbox" id="drone_image_predict_keras_drone_runs_table_select_all" checked>Select All</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Type</th>
+                                <th>Drone Run Description</th>
+                                <th>Drone Run Date</th>
+                                <th>Drone Run GDD</th>
+                                <th>Camera Type</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_drone_run_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Images Selection" &>
+                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from for prediction" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_predict_keras_plot_polygon_image_type_table">
+                        <thead>
+                            <tr>
+                                <!--th>Select <br/><input type="checkbox" id="drone_image_predict_keras_plot_polygon_image_type_table_select_all" checked>Select All</th-->
+                                <th>Select</th>
+                                <th>Field Trial</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Band Name</th>
+                                <th>Drone Run Band Type</th>
+                                <th>Plot Polygon Type</th>
+                                <th>Number of Images</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_plot_polygon_type_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Confirm" &>
+                    <& /page/page_title.mas, title=>"Predict Phenotypes!" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Prediction Model: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="drone_imagery_keras_model_prediction_select">
+                                    <option value="standard_cnn">Standard CNN Prediction</option>
+                                    <option value="cnn_prediction_mixed_model">CNN Prediction For Mixed Model Prediction</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div" style="display:none">
+                        $$y_t = \beta_{CNN,pred} + rep + 1|\mbox{GermplasmName}$$
+                    </div>
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_predict_keras_model_confirm_step">Submit</button>
+                    </center>
+
+                    <div id="drone_imagery_predict_keras_model_results_div">
+                    </div>
                 </&>
             </&>
 
@@ -1166,6 +1494,226 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
     </div>
   </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_calculate_gdd_dialog" name="drone_imagery_calculate_gdd_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalculateGDDDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalculateGDDDialog">Calculate Growing Degree Days</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="well well-sm">
+                Growing Degree Days (GDD) are calculated using the average high and low temperature for each day from planting date to the date of the imaging event. <a href="https://www.canr.msu.edu/news/understanding_growing_degree_days" target=_blank >More Information on GDD</a>. The average daily high and low temperature is fetched from the <a href="https://www.ncdc.noaa.gov/cdo-web/webservices/v2" target=_blank>NOAA NCDC</a>.
+            </div>
+
+            <div id="drone_imagery_calculate_gdd_time_div"></div>
+
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Base Temperature:</label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="drone_imagery_calculate_gdd_base_temperature_input">
+                            <option value="50">50F</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Formula:</label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="drone_imagery_calculate_gdd_formula_input">
+                            <option value="average_daily_temp_sum">GDD = sum_over_days ( ( (Max Temp + Min Temp)/2 ) - Base Temp)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_upload_gdd_submit">Calculate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_compare_images_dialog" name="drone_imagery_compare_images_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCompareImagesDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCompareImagesDialog">Compare Images</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_compare_images_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Comparison" &>
+                    <& /page/page_title.mas, title=>"Select the comparison you are interested in" &>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Comparison: </label>
+                            <div class="col-sm-9" >
+                                <select id="drone_imagery_compare_images_comparison_select" class="form-control">
+                                    <option value="compare_pixel_values_two_images">Compare pixel values for two different aerial field images</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_compare_images_comparison_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Field Trial(s)" &>
+                    <& /page/page_title.mas, title=>"Select the field trials you are interested in comparing" &>
+
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_compare_images_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_compare_images_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Imaging Event(s)" &>
+                    <& /page/page_title.mas, title=>"Select the imaging events you are interested in comparing" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_compare_images_drone_runs_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Type</th>
+                                <th>Drone Run Description</th>
+                                <th>Drone Run Date</th>
+                                <th>Drone Run GDD</th>
+                                <th>Camera Type</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_compare_images_drone_runs_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Imaging Event Band(s)" &>
+                    <& /page/page_title.mas, title=>"Select the imaging event bands you are interested in comparing" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_compare_images_drone_run_bands_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Type</th>
+                                <th>Drone Run Description</th>
+                                <th>Drone Run Date</th>
+                                <th>Drone Run GDD</th>
+                                <th>Camera Type</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_compare_images_drone_run_bands_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Image Selection" &>
+                    <& /page/page_title.mas, title=>"Select the images you are interested in comparing" &>
+
+                    <table class="table table-bordered table-hover" id="drone_imagery_compare_images_images_type_table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Field Trial</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Band Name</th>
+                                <th>Drone Run Band Type</th>
+                                <th>Plot Polygon Type</th>
+                                <th>Number of Images</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_compare_images_images_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Result" &>
+                    <& /page/page_title.mas, title=>"Image comparison results" &>
+
+                    <div id="drone_imagery_compare_images_result_div"></div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_drone_imagery_standard_process_additional_raw_images_dialog" name="upload_drone_imagery_standard_process_additional_raw_images_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryStandardProcessAdditionalRawImagesDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadDroneImageryStandardProcessAdditionalRawImagesDialog">Upload Additional Raw Image Captures</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_additional_raw_images_form" name="upload_drone_imagery_additional_raw_images_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label>
+                            <div class="col-sm-9" >
+                                <input type="file" id="upload_drone_imagery_additional_raw_images_zipfile" name="upload_drone_imagery_additional_raw_images_zipfile" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip with 5 images in it): </label>
+                            <div class="col-sm-9" >
+                                <input type="file" id="upload_drone_imagery_additional_raw_images_calibration_zipfile" name="upload_drone_imagery_additional_raw_images_calibration_zipfile" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="upload_drone_imagery_additional_raw_images_drone_run_id" name="upload_drone_imagery_additional_raw_images_drone_run_id" value="" />
+                        <input type="hidden" id="upload_drone_imagery_additional_raw_images_field_trial_id" name="upload_drone_imagery_additional_raw_images_field_trial_id" value="" />
+                    </form><br/>
+
+                    <center>
+                        <button type="button" class="btn btn-info" name="upload_drone_imagery_additional_raw_images_submit" id="upload_drone_imagery_additional_raw_images_submit">Submit</button>
+                    </center>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
@@ -1608,13 +2156,11 @@ jQuery(document).ready(function() {
                     if (response.error) {
                         alert(response.error);
                     }
-                    get_select_box('ontology_children','drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select_div', {'selectbox_id':'drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select', 'selectbox_name':'drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                    var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Ontology Term Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                    var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
                     jQuery('#drone_imagery_standard_process_week_term_div').html(html);
-                    if (response.time_ontology_cvterm_id) {
-                        manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_cvterm_id;
-                    }
+
+                    manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_day_cvterm_id;
                 },
                 error: function(response){
                     alert('Error getting time terms!');
@@ -1629,8 +2175,10 @@ jQuery(document).ready(function() {
 
     jQuery('#manage_drone_imagery_standard_process_phenotypes_step').click(function(){
         var selected = [];
+
         if (manage_drone_imagery_standard_process_phenotype_time == '') {
-            manage_drone_imagery_standard_process_phenotype_time = jQuery('#drone_imagery_standard_process_calculate_phenotypes_zonal_stats_time_select').val();
+            alert('Time of phenotype not set! This should not happen! Please contact us.');
+            return false;
         }
 
         jQuery('input[name="drone_imagery_standard_process_phenotypes_select"]:checked').each(function() {
@@ -1673,6 +2221,360 @@ jQuery(document).ready(function() {
         location.reload();
     })
 
+    //
+    // Standard process on raw images
+    //
+
+    var manage_drone_imagery_standard_process_raw_images_field_trial_id;
+    var manage_drone_imagery_standard_process_raw_images_drone_run_id;
+    var manage_drone_imagery_standard_process_raw_images_drone_run_band_id;
+    var manage_drone_imagery_standard_process_raw_images_image_id;
+    var manage_drone_imagery_standard_process_raw_images_stack_image_ids;
+    var manage_drone_imagery_standard_process_raw_images_rotated_image_id;
+    var manage_drone_imagery_standard_process_raw_images_polygon = [];
+    var manage_drone_imagery_standard_process_raw_images_previous_polygon;
+    var manage_drone_imagery_standard_process_raw_images_rotate_angle = 0.00;
+    var manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {}; 
+    var ctx;
+    var dronecroppingImg;
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_stadard_process_raw_images_add_images"]', function(){
+        manage_drone_imagery_standard_process_raw_images_field_trial_id = jQuery(this).data('field_trial_id');
+        manage_drone_imagery_standard_process_raw_images_drone_run_id = jQuery(this).data('drone_run_project_id');
+        jQuery('#upload_drone_imagery_additional_raw_images_drone_run_id').val(manage_drone_imagery_standard_process_raw_images_drone_run_id);
+        jQuery('#upload_drone_imagery_additional_raw_images_field_trial_id').val(manage_drone_imagery_standard_process_raw_images_field_trial_id);
+        jQuery('#upload_drone_imagery_standard_process_additional_raw_images_dialog').modal('show');
+    });
+
+    jQuery('#upload_drone_imagery_additional_raw_images_submit').click(function(){
+        standard_process_upload_additional_raw_images();
+    });
+
+    function standard_process_upload_additional_raw_images() {
+        jQuery('#upload_drone_imagery_additional_raw_images_form').attr("action", "/api/drone_imagery/upload_drone_imagery_additional_raw_images");
+        jQuery("#upload_drone_imagery_additional_raw_images_form").submit();
+    }
+
+    jQuery('#upload_drone_imagery_additional_raw_images_form').iframePostForm({
+        json: true,
+        post: function () {
+            jQuery('#working_modal').modal("show");
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+            }
+            else {
+                location.reload;
+            }
+        }
+    });
+
+    jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_raw_images"]', function() {
+        showManageDroneImagerySection('manage_drone_imagery_standard_process_raw_images_div');
+
+        manage_drone_imagery_standard_process_raw_images_field_trial_id = jQuery(this).data('field_trial_id');
+        manage_drone_imagery_standard_process_raw_images_drone_run_id = jQuery(this).data('drone_run_project_id');
+
+        get_select_box('micasense_aligned_raw_images_grid','drone_imagery_standard_process_raw_images_image_id_select_div', {'name': 'drone_imagery_standard_process_raw_images_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id });
+
+        get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_drone_run_image_counts?drone_run_id='+manage_drone_imagery_standard_process_raw_images_drone_run_id,
+            success: function(response){
+                console.log(response);
+                var html = '<table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_assigned_plot_images"><thead><tr><th>Plot Name</th><th>Plot Number</th><th>Image Counts</th></thead><tbody>';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + '<tr><td>'+response.data[i]['plot_name'] + '</td><td>' + response.data[i]['plot_number'] + '</td><td>' + response.data[i]['image_counts'] + '</td></tr>';
+                }
+                html = html +'</tbody></table>';
+                jQuery('#drone_imagery_standard_process_raw_images_assigned_plot_images').html(html);
+                jQuery('#manage_drone_imagery_standard_process_assigned_plot_images').DataTable();
+            },
+            error: function(response){
+                alert('Error retrieving drone run image counts!')
+            }
+        });
+    });
+
+    jQuery(document).on('click', 'span[name="drone_imagery_standard_process_raw_images_image_id_select"]', function() {
+        manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
+        crop_points = [];
+        plot_polygons_generated_polygons = [];
+
+        manage_drone_imagery_standard_process_raw_images_image_id = jQuery(this).data('image_id');
+        manage_drone_imagery_standard_process_raw_images_rotated_image_id = jQuery(this).data('image_id');
+        manage_drone_imagery_standard_process_raw_images_stack_image_ids = jQuery(this).data('image_ids');
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
+            success: function(response){
+                console.log(response);
+
+                background_image_width = response.image_width;
+                background_image_height = response.image_height;
+
+                var canvas = document.getElementById('drone_imagery_standard_process_raw_images_show');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                };
+                image.src = response.image_url;
+                dronecroppingImg = canvas;
+                dronecroppingImg.onmousedown = GetCoordinatesCroppedImage;
+
+                manage_drone_imagery_standard_process_raw_images_drone_run_band_id = response.drone_run_band_project_id;
+            },
+            error: function(response){
+                alert('Error retrieving image!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_draw_polygons').click(function(){
+        var manage_drone_imagery_standard_process_raw_images_num_rows = jQuery('#drone_imagery_standard_process_raw_images_number_rows').val();
+        var manage_drone_imagery_standard_process_raw_images_num_columns = jQuery('#drone_imagery_standard_process_raw_images_number_columns').val();
+    
+        if (manage_drone_imagery_standard_process_raw_images_num_rows == '') {
+            alert('Please give the number of rows in the area of interest!');
+            return false;
+        }
+        if (manage_drone_imagery_standard_process_raw_images_num_columns == '') {
+            alert('Please give the number of columns in the area of interest!');
+            return false;
+        }
+
+        if (crop_points.length < 4) {
+            alert('Please select an area of interest on the image first by clicking the four corner points.');
+            return false;
+        }
+
+        plot_polygons_num_rows_generated = parseInt(manage_drone_imagery_standard_process_raw_images_num_rows);
+        plot_polygons_num_cols_generated = parseInt(manage_drone_imagery_standard_process_raw_images_num_columns);
+
+        var section_width = background_image_width;
+        var section_height = background_image_height;
+        var section_top_row_left_offset = parseInt(crop_points[0]['x']);
+        var section_bottom_row_left_offset = parseInt(crop_points[3]['x']);
+        var section_left_column_top_offset = parseInt(crop_points[0]['y']);
+        var section_left_column_bottom_offset = parseInt(background_image_height - crop_points[3]['y']);
+        var section_top_row_right_offset = parseInt(background_image_width - crop_points[1]['x']);
+        var section_right_column_bottom_offset = parseInt(background_image_height - crop_points[2]['y']);
+
+        var total_gradual_left_shift = section_bottom_row_left_offset - section_top_row_left_offset;
+        var col_left_shift_increment = total_gradual_left_shift / plot_polygons_num_rows_generated;
+
+        var total_gradual_vertical_shift = section_right_column_bottom_offset - section_left_column_bottom_offset;
+        var col_vertical_shift_increment = total_gradual_vertical_shift / plot_polygons_num_cols_generated;
+
+        var col_width = (section_width - section_top_row_left_offset - section_top_row_right_offset) / plot_polygons_num_cols_generated;
+        var row_height = (section_height - section_left_column_top_offset - section_left_column_bottom_offset) / plot_polygons_num_rows_generated;
+
+        var x_pos = section_top_row_left_offset;
+        var y_pos = section_left_column_top_offset;
+
+        var row_num = 1;
+        for (var i=0; i<plot_polygons_num_rows_generated; i++) {
+            for (var j=0; j<plot_polygons_num_cols_generated; j++) {
+                var x_pos_val = x_pos;
+                var y_pos_val = y_pos;
+                plot_polygons_generated_polygons.push([
+                    {x:x_pos_val, y:y_pos_val},
+                    {x:x_pos_val + col_width, y:y_pos_val},
+                    {x:x_pos_val + col_width, y:y_pos_val + row_height},
+                    {x:x_pos_val, y:y_pos_val + row_height}
+                ]);
+                x_pos = x_pos + col_width;
+                y_pos = y_pos - col_vertical_shift_increment;
+            }
+            x_pos = section_top_row_left_offset + (row_num * col_left_shift_increment);
+            y_pos = y_pos + row_height + total_gradual_vertical_shift;
+            row_num = row_num + 1;
+        }
+        console.log(plot_polygons_generated_polygons);
+
+        plot_polygons_total_height_generated = row_height * plot_polygons_num_rows_generated;
+        plot_polygons_number_generated = plot_polygons_generated_polygons.length;
+
+        manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {}; 
+        var drone_imagery_plot_polygons_display_new = {};
+
+        for (var i=0; i<plot_polygons_generated_polygons.length; i++) {
+            plot_polygons_ind_4_points = plot_polygons_generated_polygons[i];
+            plot_polygons_display_points = plot_polygons_ind_4_points;
+            if (plot_polygons_display_points.length == 4) {
+                plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+            }
+            drawPolyline(plot_polygons_display_points);
+            drawWaypoints(plot_polygons_display_points, i, 0);
+            drone_imagery_plot_generated_polygons[i] = plot_polygons_ind_4_points;
+            manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new[i] = plot_polygons_ind_4_points;
+            drone_imagery_plot_polygons_display[i] = plot_polygons_display_points;
+            drone_imagery_plot_polygons_display_new[i] = plot_polygons_display_points;
+        }
+
+        plot_polygons_template_dimensions.push({
+            'num_rows':plot_polygons_num_rows_generated,
+            'num_cols':plot_polygons_num_cols_generated,
+            'total_plot_polygons':plot_polygons_num_rows_generated*plot_polygons_num_cols_generated,
+            'plot_polygons':manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new,
+            'plot_polygons_display':drone_imagery_plot_polygons_display_new
+        });
+        console.log(plot_polygons_template_dimensions);
+
+        var table_html = '<table class="table table-bordered table-hover"><thead><tr><th>Generated Index</th><th>Plot Number</th></tr></thead><tbody>';
+        for (var gen_index in manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new) {
+            if (manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new.hasOwnProperty(gen_index)) {
+                table_html = table_html + '<tr><td>'+gen_index+'</td><td><input type="text" class="form-control" placeholder="e.g. 1001" name="manage_drone_imagery_standard_process_raw_images_given_plot_number" data-generated_index="'+gen_index+'"></td></tr>';
+            }
+        }
+        table_html = table_html + '</tbody></table>';
+
+        jQuery('#drone_imagery_standard_process_raw_images_polygon_assign_table').html(table_html);
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_assign_plot').click(function(){
+
+        var manage_drone_imagery_standard_process_raw_images_partial_template_name = jQuery('#drone_imagery_standard_process_raw_images_partial_template_name').val();
+        if (manage_drone_imagery_standard_process_raw_images_partial_template_name == '') {
+            alert('Please give a partial template name');
+            return false;
+        }
+        var manage_drone_imagery_standard_process_raw_images_given_plot_numbers = {};
+        jQuery('input[name="manage_drone_imagery_standard_process_raw_images_given_plot_number"]').each(function() {
+            if (jQuery(this).val() != '') {
+                manage_drone_imagery_standard_process_raw_images_given_plot_numbers[jQuery(this).data('generated_index')] = jQuery(this).val();
+            }
+        });
+        if (Object.keys(manage_drone_imagery_standard_process_raw_images_given_plot_numbers).length < 1) {
+            alert('Please give the plot numbers corresponding to the generated index numbers of the plot polygons!');
+            return false;
+        }
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/manual_assign_plot_polygon',
+            type : 'POST',
+            data : {
+                'field_trial_id':manage_drone_imagery_standard_process_raw_images_field_trial_id,
+                'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id,
+                'image_ids':manage_drone_imagery_standard_process_raw_images_stack_image_ids,
+                'polygon':JSON.stringify(manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new),
+                'polygon_plot_numbers':JSON.stringify(manage_drone_imagery_standard_process_raw_images_given_plot_numbers),
+                'angle_rotated':manage_drone_imagery_standard_process_raw_images_rotate_angle,
+                'partial_template_name':manage_drone_imagery_standard_process_raw_images_partial_template_name
+            },
+            success: function(response){
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                } else if (response.warning) {
+                    alert(response.warning);
+                } else {
+                    get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
+
+                    jQuery.ajax({
+                        url : '/api/drone_imagery/get_drone_run_image_counts?drone_run_id='+manage_drone_imagery_standard_process_raw_images_drone_run_id,
+                        success: function(response){
+                            console.log(response);
+                            var html = '<table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_assigned_plot_images"><thead><tr><th>Plot Name</th><th>Plot Number</th><th>Image Counts</th></thead><tbody>';
+                            for (var i=0; i<response.data.length; i++) {
+                                html = html + '<tr><td>'+response.data[i]['plot_name'] + '</td><td>' + response.data[i]['plot_number'] + '</td><td>' + response.data[i]['image_counts'] + '</td></tr>';
+                            }
+                            html = html +'</tbody></table>';
+                            jQuery('#drone_imagery_standard_process_raw_images_assigned_plot_images').html(html);
+                            jQuery('#manage_drone_imagery_standard_process_assigned_plot_images').DataTable();
+                        },
+                        error: function(response){
+                            alert('Error retrieving drone run image counts!')
+                        }
+                    });
+
+                    //alert('Plot-images saved!');
+                }
+            },
+            error: function(response){
+                alert('Error cropping and saving plot images!')
+            }
+        });
+        return false;
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_rotate_image').click(function(){
+        var rotate_stitched_image_degrees = parseFloat(jQuery('#drone_imagery_standard_process_raw_images_rotate_degrees_input').val());
+        applyShowRotateImage(manage_drone_imagery_standard_process_raw_images_image_id, manage_drone_imagery_standard_process_raw_images_drone_run_band_id, rotate_stitched_image_degrees, 'drone_imagery_standard_process_raw_images_show');
+        manage_drone_imagery_standard_process_raw_images_rotate_angle = rotate_stitched_image_degrees;
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_clear_polygon').click(function(){
+        crop_points = [];
+        manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
+        plot_polygons_generated_polygons = [];
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
+            success: function(response){
+                console.log(response);
+
+                var canvas = document.getElementById('drone_imagery_standard_process_raw_images_show');
+                ctx = canvas.getContext('2d');
+                var image = new Image();
+                image.onload = function () {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                };
+                image.src = response.image_url;
+                dronecroppingImg = canvas;
+                dronecroppingImg.onmousedown = GetCoordinatesCroppedImage;
+            },
+            error: function(response){
+                alert('Error retrieving image!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_save_polygon').click(function() {
+        if (crop_points.length != 4) {
+            alert('Click the four corners of the plot in the image first!');
+            return false;
+        }
+        else {
+            manage_drone_imagery_standard_process_raw_images_polygon = crop_points;
+        }
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_paste_polygon').click(function(){
+        if (manage_drone_imagery_standard_process_raw_images_polygon.length != 4) {
+            alert('First save a plot-polygon!');
+            return false;
+        }
+        else {
+            drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_polygon';
+            alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
+        }
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon').click(function(){
+        manage_drone_imagery_standard_process_raw_images_previous_polygon = jQuery('#drone_imagery_standard_process_raw_images_plot_sizes_select').val();
+        console.log(manage_drone_imagery_standard_process_raw_images_previous_polygon);
+        if (manage_drone_imagery_standard_process_raw_images_previous_polygon == '') {
+            alert('To do this first select a previously used polygon, if there exists one!');
+            return false;
+        }
+        drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_previous_polygon';
+        alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
+    });
+
+    //
+    // Phenotype calc buttons
+    //
+
     jQuery(document).on('click', 'button[name="project_drone_imagery_phenotype_run"]', function(){
         manage_drone_imagery_standard_process_drone_run_project_id = jQuery(this).data('drone_run_project_id');
 
@@ -1689,13 +2591,11 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 }
-                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
                 jQuery('#drone_imagery_week_term_div').html(html);
-                if (response.time_ontology_cvterm_id) {
-                    manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_cvterm_id;
-                }
+
+                manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_day_cvterm_id;
             },
             error: function(response){
                 alert('Error getting time terms!');
@@ -1708,10 +2608,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_trial_select').click(function(){
         if (manage_drone_imagery_standard_process_phenotype_time == '') {
-            manage_drone_imagery_standard_process_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_trial_time_select').val();
-        }
-        if (manage_drone_imagery_standard_process_phenotype_time == '') {
-            alert('Please select a time term!');
+            alert('Time of phenotype not set! This should not happen so please contact us!');
             return false;
         }
 
@@ -1719,7 +2616,7 @@ jQuery(document).ready(function() {
 
         jQuery.ajax({
             type: 'GET',
-            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type=extended',
+            url: '/api/drone_imagery/generate_phenotypes?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_phenotype_time+'&standard_process_type='+jQuery('#drone_imagery_generate_phenotypes_process_type').val(),
             dataType: "json",
             success: function(response){
                 console.log(response);
@@ -1761,13 +2658,10 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 }
-                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
                 jQuery('#drone_imagery_minimal_vi_standard_process_week_term_div').html(html);
-                if (response.time_ontology_cvterm_id) {
-                    manage_drone_imagery_standard_process_minimal_vi_phenotype_time = response.time_ontology_cvterm_id;
-                }
+                manage_drone_imagery_standard_process_minimal_vi_phenotype_time = response.time_ontology_day_cvterm_id;
             },
             error: function(response){
                 alert('Error getting time terms!');
@@ -1780,10 +2674,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_minimal_vi_standard_process_select').click(function() {
         if (manage_drone_imagery_standard_process_minimal_vi_phenotype_time == '') {
-            manage_drone_imagery_standard_process_minimal_vi_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_minimal_vi_standard_process_time_select').val();
-        }
-        if (manage_drone_imagery_standard_process_minimal_vi_phenotype_time == '') {
-            alert('Please select a time term!');
+            alert('Time of phenotype not set for minimal vi process! This should not happen so please contact us');
             return false;
         }
 
@@ -1850,13 +2741,10 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 }
-                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_extended_standard_process_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_extended_standard_process_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
                 jQuery('#drone_imagery_extended_standard_process_week_term_div').html(html);
-                if (response.time_ontology_cvterm_id) {
-                    manage_drone_imagery_standard_process_extended_phenotype_time = response.time_ontology_cvterm_id;
-                }
+                manage_drone_imagery_standard_process_extended_phenotype_time = response.time_ontology_day_cvterm_id;
             },
             error: function(response){
                 alert('Error getting time terms!');
@@ -1868,10 +2756,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_extended_standard_process_select').click(function(){
         if (manage_drone_imagery_standard_process_extended_phenotype_time == '') {
-            manage_drone_imagery_standard_process_extended_phenotype_time = jQuery('#drone_imagery_calculate_phenotypes_extended_standard_process_time_select').val();
-        }
-        if (manage_drone_imagery_standard_process_extended_phenotype_time == '') {
-            alert('Please select a time term!');
+            alert('Time of phenotype not set for extended standard process! This should not happen so please contact us!');
             return false;
         }
 
@@ -1879,7 +2764,7 @@ jQuery(document).ready(function() {
 
         jQuery.ajax({
             type: 'GET',
-            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time+'&standard_process_type=extended',
+            url: '/api/drone_imagery/standard_process_extended_apply?drone_run_project_id='+manage_drone_imagery_standard_process_extended_drone_run_project_id+'&time_days_cvterm_id='+manage_drone_imagery_standard_process_extended_phenotype_time+'&standard_process_type=extended',
             dataType: "json",
             success: function(response){
                 console.log(response);
@@ -1970,24 +2855,43 @@ jQuery(document).ready(function() {
     // Calculate statistics
     //
 
-    var manage_drone_imagery_calculate_statistics_field_trial_id = undefined;
+    var manage_drone_imagery_calculate_statistics_field_trial_id_array = undefined;
+    var manage_drone_imagery_calculate_statistics_field_trial_id_string = "";
+    var manage_drone_imagery_calculate_statistics_observation_variable_type;
     var manage_drone_imagery_calculate_statistics_trait_ids = [];
     var manage_drone_imagery_calculate_statistics_select = '';
 
     jQuery('#drone_imagery_calculate_statistics_link').click(function(){
-        jQuery('#drone_imagery_calculate_statistics_dialog').modal('show');
-        get_select_box('trials', 'drone_imagery_calculate_statistics_trial_select_div', { 'name' : 'drone_imagery_calculate_statistics_field_trial_id', 'id' : 'drone_imagery_calculate_statistics_field_trial_id', 'empty':1, 'multiple':0 });
+        get_select_box('trials', 'drone_imagery_calculate_statistics_trial_select_div', { 'name' : 'drone_imagery_calculate_statistics_field_trial_id', 'id' : 'drone_imagery_calculate_statistics_field_trial_id', 'empty':1, 'multiple':1 });
 
-        manage_drone_imagery_calculate_statistics_field_trial_id = undefined;
-        manage_drone_imagery_calculate_statistics_trait_ids = [];
+        jQuery('#drone_imagery_calculate_statistics_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').change(function(){
+        manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
+        if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
+            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
+        }
+        else {
+            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type });
+        }
     });
 
     jQuery('#drone_imagery_calculate_statistics_field_trial_select_step').click(function(){
-        manage_drone_imagery_calculate_statistics_field_trial_id = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
-        if (manage_drone_imagery_calculate_statistics_field_trial_id == '') {
+        manage_drone_imagery_calculate_statistics_field_trial_id_array = undefined;
+        manage_drone_imagery_calculate_statistics_field_trial_id_string = "";
+        manage_drone_imagery_calculate_statistics_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
+        manage_drone_imagery_calculate_statistics_field_trial_id_string = manage_drone_imagery_calculate_statistics_field_trial_id_array.join(",");
+        manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
+        if (manage_drone_imagery_calculate_statistics_field_trial_id_string == '') {
             alert('Please select a field trial first!');
         } else {
-            get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id, 'stock_type':'plot' });
+            if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
+                get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type, 'select_format':'component_table_select' });
+            }
+            else {
+                get_select_box('traits', 'drone_imagery_calculate_statistics_trait_select_div', { 'name' : 'drone_imagery_calculate_statistics_trait_id_select', 'id' : 'drone_imagery_calculate_statistics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_calculate_statistics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_calculate_statistics_observation_variable_type });
+            }
 
             Workflow.complete("#drone_imagery_calculate_statistics_field_trial_select_step");
             Workflow.focus('#drone_imagery_calculate_statistics_workflow', 1);
@@ -1996,11 +2900,23 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_statistics_trait_select_step').click(function(){
-        manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
-        if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
-            alert('Please select at least one observation variable!');
-            return false;
+        manage_drone_imagery_calculate_statistics_trait_ids = [];
+
+        if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
+            jQuery('input[name="drone_imagery_calculate_statistics_trait_id_select"]').each(function() {
+                if (this.checked){
+                    manage_drone_imagery_calculate_statistics_trait_ids.push(jQuery(this).val());
+                }
+            });
         }
+        else {
+            manage_drone_imagery_calculate_statistics_trait_ids = jQuery('#drone_imagery_calculate_statistics_trait_id_select').val();
+            if (manage_drone_imagery_calculate_statistics_trait_ids == null || manage_drone_imagery_calculate_statistics_trait_ids == undefined) {
+                alert('Please select at least one observation variable!');
+                return false;
+            }
+        }
+
         if (manage_drone_imagery_calculate_statistics_trait_ids.length < 1){
             alert('Please select at least one observation variable!');
         } else {
@@ -2010,16 +2926,32 @@ jQuery(document).ready(function() {
         return false;
     });
 
+    jQuery('#drone_imagery_calculate_statistics_select_input').change(function(){
+        manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
+        if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block') {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
+        }
+    });
+
     jQuery('#drone_imagery_calculate_statistics_select_step').click(function(){
         manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
+
+        if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block' && manage_drone_imagery_calculate_statistics_observation_variable_type != 'time_ontology') {
+            alert('The MARSS model fit and prediction only works for Time Series traits! Please go to Trait Selection and select time series traits.');
+            return false;
+        }
 
         jQuery.ajax({
             url : '/api/drone_imagery/calculate_statistics',
             type : 'POST',
             data : {
                 'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
-                'field_trial_id_list':JSON.stringify([manage_drone_imagery_calculate_statistics_field_trial_id]),
-                'statistics_select':manage_drone_imagery_calculate_statistics_select
+                'field_trial_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_field_trial_id_array),
+                'statistics_select':manage_drone_imagery_calculate_statistics_select,
+                'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -2027,16 +2959,21 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-
-                var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th></tr></thead><tbody>';
-                for (var i=0; i<response.length; i++) {
-                    html = html + '<tr><td>'+response[i][0]+'</td><td>'+response[i][1]+'</td></tr>';
+                
+                if (response.error) {
+                    alert(response.error);
                 }
-                html = html + '</tbody></table>';
-                jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
+                else {
+                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
+                    for (var i=0; i<response.length; i++) {
+                        html = html + '<tr><td>'+response[i][0]+'</td><td>'+response[i][1]+'</td><td><img src="'+response[i][2]+'"></td></tr>';
+                    }
+                    html = html + '</tbody></table>';
+                    jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
 
-                Workflow.complete("#drone_imagery_calculate_statistics_select_step");
-                Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
+                    Workflow.complete("#drone_imagery_calculate_statistics_select_step");
+                    Workflow.focus('#drone_imagery_calculate_statistics_workflow', 3);
+                }
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -2046,34 +2983,100 @@ jQuery(document).ready(function() {
     });
 
     //
+    // Growing Degree Days Calculation
+    //
+
+    var manage_drone_imagery_calculate_gdd_field_trial_id;
+    var manage_drone_imagery_calculate_gdd_drone_run_project_id;
+    var manage_drone_imagery_calculate_gdd_phenotype_time;
+
+    jQuery(document).on('click', 'button[name=drone_imagery_drone_run_calculate_gdd]', function() {
+        manage_drone_imagery_calculate_gdd_field_trial_id = jQuery(this).data('field_trial_id');
+        manage_drone_imagery_calculate_gdd_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id,
+            success: function(response){
+                console.log(response);
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
+                jQuery('#drone_imagery_calculate_gdd_time_div').html(html);
+                manage_drone_imagery_calculate_gdd_phenotype_time = response.time_ontology_day_cvterm_id;
+
+                jQuery('#drone_imagery_calculate_gdd_dialog').modal('show');
+            },
+            error: function(response){
+                alert('Error getting gdd!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_upload_gdd_submit').click(function(){
+        var manage_drone_imagery_calculate_gdd_base_temp = jQuery('#drone_imagery_calculate_gdd_base_temperature_input').val();
+        var manage_drone_imagery_calculate_gdd_formula = jQuery('#drone_imagery_calculate_gdd_formula_input').val();
+        jQuery.ajax({
+            url : '/api/drone_imagery/growing_degree_days?drone_run_project_id='+manage_drone_imagery_calculate_gdd_drone_run_project_id+'&formula='+manage_drone_imagery_calculate_gdd_formula+'&gdd_base_temperature='+manage_drone_imagery_calculate_gdd_base_temp+'&field_trial_id='+manage_drone_imagery_calculate_gdd_field_trial_id,
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+                location.reload();
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error calculating growing degree days!');
+            }
+        });
+    });
+
+    //
     // Keras CNN Training JS
     //
 
     var manage_drone_imagery_train_keras_drone_run_ids = [];
-    var manage_drone_imagery_train_keras_field_trial_id;
+    var manage_drone_imagery_train_keras_field_trial_id_array = [];
+    var manage_drone_imagery_train_keras_field_trial_id_string = '';
     var manage_drone_imagery_train_keras_trait_id;
+    var manage_drone_imagery_train_keras_aux_trait_ids;
     var manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
+    var manage_drone_imagery_train_keras_temporary_model_file = '';
+    var manage_drone_imagery_train_keras_temporary_model_input_file = '';
+    var manage_drone_imagery_train_keras_temporary_model_input_aux_file = '';
+    var manage_drone_imagery_train_keras_class_map = '';
+
+    var manage_drone_imagery_predict_keras_drone_run_ids = [];
+    var manage_drone_imagery_predict_keras_field_trial_id_array = [];
+    var manage_drone_imagery_predict_keras_field_trial_id_string = '';
+    var manage_drone_imagery_predict_keras_plot_polygon_type_ids = [];
+    var manage_drone_imagery_predict_keras_model_id = '';
 
     jQuery('#keras_cnn_drone_imagery_link').click(function(){
-        get_select_box('trials', 'drone_imagery_train_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_train_keras_cnn_field_trial_id', 'id' : 'drone_imagery_train_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
-        jQuery('#drone_imagery_train_keras_cnn_dialog').modal('show');
+        jQuery('#drone_imagery_keras_cnn_dialog').modal('show');
+    });
 
-        manage_drone_imagery_train_keras_drone_run_ids = [];
-        manage_drone_imagery_train_keras_field_trial_id = undefined;
-        manage_drone_imagery_train_keras_trait_id = undefined;
-        manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
+    jQuery('#drone_imagery_keras_cnn_train_link').click(function(){
+        get_select_box('trials', 'drone_imagery_train_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_train_keras_cnn_field_trial_id', 'id' : 'drone_imagery_train_keras_cnn_field_trial_id', 'empty':1, 'multiple':1 });
+
+        jQuery('#drone_imagery_train_keras_cnn_dialog').modal('show');
     });
 
     jQuery('#drone_imagery_train_keras_model_field_trial_select_step').click(function(){
-        manage_drone_imagery_train_keras_field_trial_id = jQuery('#drone_imagery_train_keras_cnn_field_trial_id').val();
-        if (manage_drone_imagery_train_keras_field_trial_id == '') {
+        manage_drone_imagery_train_keras_field_trial_id_array = [];
+        manage_drone_imagery_train_keras_field_trial_id_string = '';
+        manage_drone_imagery_train_keras_field_trial_id_array = jQuery('#drone_imagery_train_keras_cnn_field_trial_id').val();
+        manage_drone_imagery_train_keras_field_trial_id_string = manage_drone_imagery_train_keras_field_trial_id_array.join(",");
+        if (manage_drone_imagery_train_keras_field_trial_id_string == '') {
             alert('Please select a field trial first!');
         } else {
-            get_select_box('traits', 'drone_imagery_train_keras_cnn_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_trait_id', 'id' : 'drone_imagery_train_keras_cnn_trait_id', 'empty':1, 'multiple':0, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id, 'stock_type':'plot' });
+            get_select_box('traits', 'drone_imagery_train_keras_cnn_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_trait_id', 'id' : 'drone_imagery_train_keras_cnn_trait_id', 'empty':1, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_train_keras_cnn_aux_trait_select_div', { 'name' : 'drone_imagery_train_keras_cnn_aux_trait_ids', 'id' : 'drone_imagery_train_keras_cnn_aux_trait_ids', 'empty':1, 'multiple':1, 'trial_ids':manage_drone_imagery_train_keras_field_trial_id_string, 'stock_type':'plot' });
 
             jQuery('#drone_image_train_keras_drone_runs_table').DataTable({
+                paging : false,
                 destroy : true,
-                ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=train_keras_drone_imagery_drone_run_select&field_trial_id='+manage_drone_imagery_train_keras_field_trial_id
+                ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=train_keras_drone_imagery_drone_run_select&checkbox_select_all=1&field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string
             });
 
             Workflow.complete("#drone_imagery_train_keras_model_field_trial_select_step");
@@ -2083,17 +3086,29 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_train_keras_model_trait_select_step').click(function(){
+        manage_drone_imagery_train_keras_trait_id = undefined;
+        manage_drone_imagery_train_keras_aux_trait_ids = undefined;
         manage_drone_imagery_train_keras_trait_id = jQuery('#drone_imagery_train_keras_cnn_trait_id').val();
+        manage_drone_imagery_train_keras_aux_trait_ids = jQuery('#drone_imagery_train_keras_cnn_aux_trait_ids').val();
         if (manage_drone_imagery_train_keras_trait_id == undefined || manage_drone_imagery_train_keras_trait_id == 'null' || manage_drone_imagery_train_keras_trait_id == '') {
             alert('Please select a phenotyped trait first!');
         } else {
+
+            get_select_box('stocks', 'drone_imagery_train_keras_cnn_population_select_div', { 'name' : 'drone_imagery_train_keras_cnn_population_id', 'id' : 'drone_imagery_train_keras_cnn_population_id', 'empty':1, 'multiple':1, 'stock_type_name':'population' });
+
             Workflow.complete("#drone_imagery_train_keras_model_trait_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 3);
         }
         return false;
     });
 
+    jQuery('#drone_imagery_train_keras_model_population_select_step').click(function(){
+        Workflow.complete("#drone_imagery_train_keras_model_population_select_step");
+        Workflow.focus('#drone_imagery_train_keras_model_workflow', 4);
+    });
+
     jQuery('#drone_imagery_train_keras_model_drone_run_select_step').click(function(){
+        manage_drone_imagery_train_keras_drone_run_ids = [];
         jQuery('input[name="train_keras_drone_imagery_drone_run_select"]:checked').each(function() {
             manage_drone_imagery_train_keras_drone_run_ids.push(jQuery(this).val());
         });
@@ -2104,16 +3119,29 @@ jQuery(document).ready(function() {
             jQuery('#drone_image_train_keras_plot_polygon_image_type_table').DataTable({
                 destroy : true,
                 paging : false,
-                ajax : '/api/drone_imagery/plot_polygon_types?select_checkbox_name=train_keras_drone_imagery_plot_polygon_type_select&field_trial_id='+manage_drone_imagery_train_keras_field_trial_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)
+                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_standard_4=1&select_checkbox_name=train_keras_drone_imagery_plot_polygon_type_select&field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)
             });
 
             Workflow.complete("#drone_imagery_train_keras_model_drone_run_select_step");
-            Workflow.focus('#drone_imagery_train_keras_model_workflow', 4);
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
         }
         return false;
     });
 
+    jQuery('#drone_image_train_keras_drone_runs_table_select_all').change(function(){
+        jQuery('input[name="train_keras_drone_imagery_drone_run_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_train_keras_drone_runs_table_select_all').prop("checked"));
+        });
+    });
+
+    jQuery('#drone_image_train_keras_plot_polygon_image_type_table_select_all').change(function() {
+        jQuery('input[name="train_keras_drone_imagery_plot_polygon_type_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_train_keras_plot_polygon_image_type_table_select_all').prop("checked"));
+        });
+    });
+
     jQuery('#drone_imagery_train_keras_model_plot_polygon_type_select_step').click(function(){
+        manage_drone_imagery_train_keras_plot_polygon_type_ids = [];
         jQuery('input[name="train_keras_drone_imagery_plot_polygon_type_select"]:checked').each(function() {
             manage_drone_imagery_train_keras_plot_polygon_type_ids.push(jQuery(this).val());
         });
@@ -2121,24 +3149,264 @@ jQuery(document).ready(function() {
             alert('Please select at least one plot polygon type!');
         } else {
             Workflow.complete("#drone_imagery_train_keras_model_plot_polygon_type_select_step");
-            Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
+            Workflow.focus('#drone_imagery_train_keras_model_workflow', 6);
         }
+
+        get_select_box('genotyping_protocol', 'drone_image_train_keras_model_genotyping_protocol_div', { 'name' : 'drone_image_train_keras_model_genotyping_protocol_select', 'id' : 'drone_image_train_keras_model_genotyping_protocol_select', 'empty':1 });
+
         return false;
     });
 
     jQuery('#drone_imagery_train_keras_model_confirm_step').click(function(){
+        manage_drone_imagery_train_keras_temporary_model_file = '';
+        manage_drone_imagery_train_keras_temporary_model_input_file = '';
+        manage_drone_imagery_train_keras_temporary_model_input_aux_file = '';
+        manage_drone_imagery_train_keras_class_map = '';
+
+        var drone_imagery_keras_model_name = jQuery('#drone_image_train_keras_model_name').val();
+        var drone_imagery_keras_model_desc = jQuery('#drone_image_train_keras_model_desc').val();
+        var drone_imagery_keras_model_type = jQuery('#drone_image_train_keras_model_type').val();
+        if (drone_imagery_keras_model_type =='' || drone_imagery_keras_model_name == '' || drone_imagery_keras_model_desc == '') {
+            alert('Please give a model type, name, and description!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/api/drone_imagery/train_keras_model',
+                type: "POST",
+                data : {
+                    'field_trial_ids' : manage_drone_imagery_train_keras_field_trial_id_string,
+                    'trait_id' : manage_drone_imagery_train_keras_trait_id,
+                    'aux_trait_id' : manage_drone_imagery_train_keras_aux_trait_ids,
+                    'drone_run_ids' : JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids),
+                    'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids),
+                    'save_model' : 1,
+                    'model_name' : drone_imagery_keras_model_name,
+                    'model_description' : drone_imagery_keras_model_desc,
+                    'model_type' : drone_imagery_keras_model_type,
+                    'population_id' : jQuery('#drone_imagery_train_keras_cnn_population_id').val(),
+                    'nd_protocol_id' : jQuery('#drone_image_train_keras_model_genotyping_protocol_select').val(),
+                    'use_parents_grm' : jQuery('#drone_image_train_keras_model_use_parents_grm').val()
+                },
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        alert("Trained Keras CNN Model saved!");
+                    }
+
+                    var html = "<hr><a href='"+response.loss_history_file+"' target=_blank>Loss History</a><hr><h4>Results</h4><br/><br/>";
+                    html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
+                    for (var i=0; i<response.results.length; i++) {
+                        html = html + "<tr><td>"+response.results[i]+"</td></tr>";
+                    }
+                    html = html + "</tbody></table>";
+
+                    //html = html + '<hr><h3>Save Model for Predictions</h3><div class="form-horizontal"><div class="form-group"><label class="col-sm-6 control-label">Model Name: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_name" name="drone_imagery_save_keras_model_name" type="text" /></div></div><div class="form-group"><label class="col-sm-6 control-label">Model Description: </label><div class="col-sm-6"><input class="form-control" id="drone_imagery_save_keras_model_desc" name="drone_imagery_save_keras_model_desc" type="text" /></div></div></div><button class="btn btn-primary" id="drone_imagery_keras_model_save">Save Model (Required For Using For Prediction)</button>';
+
+                    manage_drone_imagery_train_keras_temporary_model_input_file = response.model_input_file;
+                    manage_drone_imagery_train_keras_temporary_model_input_aux_file = response.model_input_aux_file;
+                    manage_drone_imagery_train_keras_temporary_model_file = response.model_temp_file;
+                    manage_drone_imagery_train_keras_class_map = response.class_map;
+
+                    jQuery('#drone_imagery_train_keras_model_results_div').html(html);
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error training keras model!')
+                }
+            });
+        }
+    });
+
+    jQuery(document).on('click', '#drone_imagery_keras_model_save', function() {
+        var manage_drone_imagery_train_keras_model_save_name = jQuery('#drone_imagery_save_keras_model_name').val();
+        var manage_drone_imagery_train_keras_model_save_desc = jQuery('#drone_imagery_save_keras_model_desc').val();
+        if (manage_drone_imagery_train_keras_model_save_name == '' || manage_drone_imagery_train_keras_model_save_desc == '') {
+            alert('A model name and description are required for saving!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/api/drone_imagery/save_keras_model?field_trial_ids='+manage_drone_imagery_train_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids)+'&model_file='+manage_drone_imagery_train_keras_temporary_model_file+'&model_input_file='+manage_drone_imagery_train_keras_temporary_model_input_file+'&model_input_aux_file='+manage_dromanage_drone_imagery_train_keras_temporary_model_input_aux_file+'&model_name='+manage_drone_imagery_train_keras_model_save_name+'&model_description='+manage_drone_imagery_train_keras_model_save_desc+'&class_map='+JSON.stringify(manage_drone_imagery_train_keras_class_map)+'&trait_id='+manage_drone_imagery_train_keras_trait_id,
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        alert('Trained Keras CNN Model Saved! You can now use it for prediction!');
+                    }
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error saving keras model!')
+                }
+            });
+        }
+    });
+
+    jQuery('#drone_imagery_keras_cnn_predict_link').click(function(){
+        get_select_box('trials', 'drone_imagery_predict_keras_cnn_trial_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'id' : 'drone_imagery_predict_keras_cnn_field_trial_id', 'empty':1, 'multiple':0 });
+        get_select_box('trained_keras_cnn_models', 'drone_imagery_predict_keras_cnn_model_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_model_id', 'id' : 'drone_imagery_predict_keras_cnn_model_id', 'empty':1 });
+
+        jQuery('#drone_imagery_predict_keras_cnn_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_field_trial_select_step').click(function(){
+        manage_drone_imagery_predict_keras_field_trial_id_array = [];
+        manage_drone_imagery_predict_keras_field_trial_id_string = '';
+        manage_drone_imagery_predict_keras_field_trial_id_string = jQuery('#drone_imagery_predict_keras_cnn_field_trial_id').val();
+        //manage_drone_imagery_predict_keras_field_trial_id_array = jQuery('#drone_imagery_predict_keras_cnn_field_trial_id').val();
+        //manage_drone_imagery_predict_keras_field_trial_id_string = manage_drone_imagery_predict_keras_field_trial_id_array.join(",");
+        if (manage_drone_imagery_predict_keras_field_trial_id_string == '') {
+            alert('Please select a field trial first!');
+        } else {
+
+            jQuery('#drone_image_predict_keras_drone_runs_table').DataTable({
+                destroy : true,
+                paging : false,
+                ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=predict_keras_drone_imagery_drone_run_select&checkbox_select_all=1&field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string
+            });
+
+            Workflow.complete("#drone_imagery_predict_keras_model_field_trial_select_step");
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery('#drone_image_predict_keras_drone_runs_table_select_all').change(function(){
+        jQuery('input[name="predict_keras_drone_imagery_drone_run_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_predict_keras_drone_runs_table_select_all').prop("checked"));
+        });
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_select_step').click(function(){
+        manage_drone_imagery_predict_keras_model_id = '';
+        manage_drone_imagery_predict_keras_model_id = jQuery('#drone_imagery_predict_keras_cnn_model_id').val();
+        if (manage_drone_imagery_predict_keras_model_id == '') {
+            alert('Please select a trained Keras CNN model before proceeding!');
+        }
+        else {
+            get_select_box('stocks', 'drone_imagery_predict_keras_cnn_population_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_population_id', 'id' : 'drone_imagery_predict_keras_cnn_population_id', 'empty':1, 'multiple':1, 'stock_type_name':'population' });
+
+            Workflow.complete("#drone_imagery_predict_keras_model_select_step");
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 3);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_population_select_step').click(function(){
+        Workflow.complete("#drone_imagery_predict_keras_model_population_select_step");
+        Workflow.focus('#drone_imagery_predict_keras_model_workflow', 4);
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_drone_run_select_step').click(function(){
+        manage_drone_imagery_predict_keras_drone_run_ids = [];
+        jQuery('input[name="predict_keras_drone_imagery_drone_run_select"]:checked').each(function() {
+            manage_drone_imagery_predict_keras_drone_run_ids.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_predict_keras_drone_run_ids.length < 1){
+            alert('Please select at least one drone run!');
+        } else {
+
+            jQuery('#drone_image_predict_keras_plot_polygon_image_type_table').DataTable({
+                destroy : true,
+                paging : false,
+                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_standard_4=1&select_checkbox_name=predict_keras_drone_imagery_plot_polygon_type_select&field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids)
+            });
+
+            Workflow.complete("#drone_imagery_predict_keras_model_drone_run_select_step");
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 5);
+        }
+        return false;
+    });
+
+    jQuery('#drone_image_predict_keras_plot_polygon_image_type_table_select_all').change(function() {
+        jQuery('input[name="predict_keras_drone_imagery_plot_polygon_type_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_predict_keras_plot_polygon_image_type_table_select_all').prop("checked"));
+        });
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_plot_polygon_type_select_step').click(function(){
+        manage_drone_imagery_predict_keras_plot_polygon_type_ids = [];
+        jQuery('input[name="predict_keras_drone_imagery_plot_polygon_type_select"]:checked').each(function() {
+            manage_drone_imagery_predict_keras_plot_polygon_type_ids.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_predict_keras_plot_polygon_type_ids.length < 1){
+            alert('Please select at least one plot polygon type!');
+        } else {
+            Workflow.complete("#drone_imagery_predict_keras_model_plot_polygon_type_select_step");
+            Workflow.focus('#drone_imagery_predict_keras_model_workflow', 6);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_keras_model_prediction_select').change(function(){
+        if (jQuery(this).val() == 'cnn_prediction_mixed_model') {
+            jQuery('#drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_keras_model_prediction_cnn_prediction_mixed_model_div').hide();
+        }
+    });
+
+    jQuery('#drone_imagery_predict_keras_model_confirm_step').click(function(){
         jQuery.ajax({
-            url : '/api/drone_imagery/train_keras_model?field_trial_id='+manage_drone_imagery_train_keras_field_trial_id+'&trait_id='+manage_drone_imagery_train_keras_trait_id+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_train_keras_drone_run_ids)+'&plot_polygon_type_ids='+JSON.stringify(manage_drone_imagery_train_keras_plot_polygon_type_ids),
+            url : '/api/drone_imagery/predict_keras_model',
+            type: "POST",
+            data: {
+                'field_trial_ids' : manage_drone_imagery_predict_keras_field_trial_id_string,
+                'drone_run_ids' : JSON.stringify(manage_drone_imagery_predict_keras_drone_run_ids),
+                'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids),
+                'model_id' : manage_drone_imagery_predict_keras_model_id,
+                'model_prediction_type' : jQuery('#drone_imagery_keras_model_prediction_select').val(),
+                'population_id' : jQuery('#drone_imagery_predict_keras_cnn_population_id').val()
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                }
+
+                var html = "<hr><h4>Prediction Results: "+response.trained_trait_name+"</h4>";
+                html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Stock</th><th>Prediction</th><th>True Phenotype Value</th></tr></thead><tbody>";
+                for (var i=0; i<response.results.length; i++) {
+                    html = html + "<tr><td><a href='/stock/"+response.results[i][1]+"/view' target=_blank>"+response.results[i][0]+"</a></td><td>"+response.results[i][2]+"</td><td>"+response.results[i][3]+"</td></tr>";
+                }
+                html = html + "</tbody></table>";
+
+                html = html + "<a href='"+response.activation_output+"' target=_blank>Download Activation Result</a><a href='"+response.corr_plot+"' target=_blank>Download Correlation</a>";
+
+                if (response.evaluation_results.length > 0) {
+                    html = html + "<hr><h4>Model Evaluation Results</h4><br/><br/>";
+                    html = html + "<table class='table table-bordered table-hover'><thead><tr><th>Results</th></tr></thead><tbody>";
+                    for (var i=0; i<response.evaluation_results.length; i++) {
+                        html = html + "<tr><td>"+response.evaluation_results[i]+"</td></tr>";
+                    }
+                    html = html + "</tbody></table>";
+                }
+
+                jQuery('#drone_imagery_predict_keras_model_results_div').html(html);
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
-                alert('Error training keras model!')
+                alert('Error predicting keras model!')
             }
         });
     });
@@ -2190,6 +3458,8 @@ jQuery(document).ready(function() {
                     ctx.drawImage(this, 0, 0);
                 };
                 image.src = response.rotated_image_url;
+
+                manage_drone_imagery_standard_process_raw_images_rotated_image_id = response.rotated_image_id;
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -2321,7 +3591,6 @@ jQuery(document).ready(function() {
     // Image Cropping JS
     //
 
-    var ctx;
     var trial_id;
     var stitched_image_id;
     var rotated_stitched_image_id;
@@ -2407,18 +3676,74 @@ jQuery(document).ready(function() {
         }
         PosX = PosX - ImgPos[0];
         PosY = PosY - ImgPos[1];
-        if (crop_points.length < 4){
-            crop_points.push({x:PosX, y:PosY});
-            crop_display_points.push({x:PosX, y:PosY});
-        } else {
-            crop_display_points.push({x:PosX, y:PosY});
+
+        if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_polygon') {
+            plotPolygonsTemplatePasteRawImage(PosX, PosY, manage_drone_imagery_standard_process_raw_images_polygon);
+            drone_imagery_standard_process_plot_polygon_click_type = '';
         }
-        if (crop_display_points.length > 5){
-            crop_points = [];
-            crop_display_points = [];
+        else if (drone_imagery_standard_process_plot_polygon_click_type == 'standard_process_raw_images_paste_previous_polygon') {
+            manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
+            var manage_drone_imagery_standard_process_raw_images_previous_polygon_template = JSON.parse(decodeURI(manage_drone_imagery_standard_process_raw_images_previous_polygon));
+
+            manage_drone_imagery_standard_process_raw_images_previous_polygon = [];
+            for (var index in manage_drone_imagery_standard_process_raw_images_previous_polygon_template) {
+                if (manage_drone_imagery_standard_process_raw_images_previous_polygon_template.hasOwnProperty(index)) {
+                    manage_drone_imagery_standard_process_raw_images_previous_polygon.push(manage_drone_imagery_standard_process_raw_images_previous_polygon_template[index]);
+                }
+            }
+            console.log(manage_drone_imagery_standard_process_raw_images_previous_polygon);
+
+            var PosX_shift = manage_drone_imagery_standard_process_raw_images_previous_polygon[0][0]['x']-PosX;
+            var PosY_shift = manage_drone_imagery_standard_process_raw_images_previous_polygon[0][0]['y']-PosY;
+
+            for (var i=0; i<manage_drone_imagery_standard_process_raw_images_previous_polygon.length; i++) {
+                plot_polygons_ind_4_points = manage_drone_imagery_standard_process_raw_images_previous_polygon[i];
+                plot_polygons_display_points = plot_polygons_ind_4_points;
+                if (plot_polygons_display_points.length == 4) {
+                    plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+                }
+                console.log(plot_polygons_display_points);
+                var plot_polygons_display_points_shifted = [];
+                for (var j=0; j<plot_polygons_display_points.length; j++) {
+                    plot_polygons_display_points_shifted.push({'x':plot_polygons_display_points[j]['x']-PosX_shift, 'y':plot_polygons_display_points[j]['y']-PosY_shift});
+                }
+                plot_polygons_display_points = plot_polygons_display_points_shifted;
+                drawPolyline(plot_polygons_display_points);
+                drawWaypoints(plot_polygons_display_points, i, 0);
+                drone_imagery_plot_generated_polygons[i] = plot_polygons_display_points;
+                manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new[i] = plot_polygons_display_points;
+                drone_imagery_plot_polygons_display[i] = plot_polygons_display_points;
+            }
+
+            crop_points = manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new;
+            
+            var table_html = '<table class="table table-bordered table-hover"><thead><tr><th>Generated Index</th><th>Plot Number</th></tr></thead><tbody>';
+            for (var gen_index in manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new) {
+                if (manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new.hasOwnProperty(gen_index)) {
+                    table_html = table_html + '<tr><td>'+gen_index+'</td><td><input type="text" class="form-control" placeholder="e.g. 1001" name="manage_drone_imagery_standard_process_raw_images_given_plot_number" data-generated_index="'+gen_index+'"></td></tr>';
+                }
+            }
+            table_html = table_html + '</tbody></table>';
+
+            jQuery('#drone_imagery_standard_process_raw_images_polygon_assign_table').html(table_html);
+            
+            drone_imagery_standard_process_plot_polygon_click_type = '';
         }
-        drawPolyline(crop_display_points);
-        drawWaypoints(crop_display_points, undefined, 0);
+        else {
+            if (crop_points.length < 4){
+                crop_points.push({x:PosX, y:PosY});
+                crop_display_points.push({x:PosX, y:PosY});
+            } else {
+                crop_display_points.push({x:PosX, y:PosY});
+                console.log(crop_points);
+            }
+            if (crop_display_points.length > 5){
+                crop_points = [];
+                crop_display_points = [];
+            }
+            drawPolyline(crop_display_points);
+            drawWaypoints(crop_display_points, undefined, 0);
+        }
     }
 
     function drawPolyline(points){
@@ -2939,6 +4264,27 @@ jQuery(document).ready(function() {
         droneImageryDrawPlotPolygonActiveTemplatesTable(drone_imagery_plot_polygons_active_templates, plot_polygons_template_dimensions);
 
         droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
+    }
+
+    function plotPolygonsTemplatePasteRawImage(posx, posy, polygon) {
+        var plot_polygon_top_left_position = polygon[0];
+        var plot_polygon_template_paste_x_diff = plot_polygon_top_left_position['x'] - posx;
+        var plot_polygon_template_paste_y_diff = plot_polygon_top_left_position['y'] - posy;
+
+        crop_points = [
+            {x:polygon[0]['x'] - plot_polygon_template_paste_x_diff, y:polygon[0]['y'] - plot_polygon_template_paste_y_diff},
+            {x:polygon[1]['x'] - plot_polygon_template_paste_x_diff, y:polygon[1]['y'] - plot_polygon_template_paste_y_diff},
+            {x:polygon[2]['x'] - plot_polygon_template_paste_x_diff, y:polygon[2]['y'] - plot_polygon_template_paste_y_diff},
+            {x:polygon[3]['x'] - plot_polygon_template_paste_x_diff, y:polygon[3]['y'] - plot_polygon_template_paste_y_diff}
+        ];
+
+        plot_polygons_ind_4_points = JSON.parse(JSON.stringify(crop_points));
+        plot_polygons_display_points = plot_polygons_ind_4_points;
+        if (plot_polygons_display_points.length == 4) {
+            plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+        }
+        drawPolyline(plot_polygons_display_points);
+        drawWaypoints(plot_polygons_display_points, 1, 0);
     }
 
     function droneImageryDrawPlotPolygonActiveTemplatesTable(div_id, plot_polygons_template_dimensions){
@@ -4170,13 +5516,10 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 }
-                get_select_box('ontology_children','drone_imagery_calculate_phenotypes_zonal_stats_time_select_div', {'selectbox_id':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'selectbox_name':'drone_imagery_calculate_phenotypes_zonal_stats_time_select', 'empty':1, 'rel_cvterm':'is_a', 'rel_cv':'relationship', 'parent_node_cvterm':'time of year|TIME:0000005', 'selected':response.time_ontology_cvterm_id });
 
-                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks Difference</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_term+"<br/></center>";
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
                 jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_week_term_div').html(html);
-                if (response.time_ontology_cvterm_id) {
-                    manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = response.time_ontology_cvterm_id;
-                }
+                manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = response.time_ontology_day_cvterm_id;
             },
             error: function(response){
                 alert('Error getting time terms!');
@@ -4189,7 +5532,8 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_channel_select').click(function(){
         if (manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id == '') {
-            manage_drone_image_calculate_phenotypes_zonal_time_cvterm_id = jQuery('#drone_imagery_calculate_phenotypes_zonal_stats_time_select').val();
+            alert('Time of phenotype not set for calculate zonal stats. This should not happen so please contact us!');
+            return false;
         }
 
         jQuery.ajax({
@@ -4569,6 +5913,131 @@ jQuery(document).ready(function() {
     });
 
     //
+    // Compare Aerial Field Images
+    //
+
+    var drone_imagery_compare_images_comparison_type = '';
+    var drone_imagery_compare_images_field_trial_ids = [];
+    var drone_imagery_compare_images_field_trial_id_string = '';
+    var drone_imagery_compare_images_drone_run_ids = [];
+    var drone_imagery_compare_images_drone_run_band_ids = [];
+    var drone_imagery_compare_images_image_types = [];
+
+    jQuery('#drone_imagery_compare_field_images_link').click(function(){
+        jQuery('#drone_imagery_compare_images_dialog').modal('show');
+
+        drone_imagery_compare_images_comparison_type =   '';
+        drone_imagery_compare_images_field_trial_ids = [];
+        drone_imagery_compare_images_field_trial_id_string = '';
+        drone_imagery_compare_images_drone_run_ids = [];
+        drone_imagery_compare_images_image_types = [];
+    });
+
+    jQuery('#drone_imagery_compare_images_comparison_select_step').click(function(){
+        get_select_box('trials', 'drone_imagery_compare_images_trial_select_div', { 'name' : 'drone_imagery_compare_images_field_trial_id', 'id' : 'drone_imagery_compare_images_field_trial_id', 'empty':1, 'multiple':1 });
+    
+        Workflow.complete("#drone_imagery_compare_images_comparison_select_step");
+        Workflow.focus('#drone_imagery_compare_images_workflow', 1);
+        return false;
+    });
+
+    jQuery('#drone_imagery_compare_images_field_trial_select_step').click(function(){
+        drone_imagery_compare_images_field_trial_ids = [];
+        drone_imagery_compare_images_field_trial_id_string = '';
+        drone_imagery_compare_images_field_trial_ids = jQuery('#drone_imagery_compare_images_field_trial_id').val();
+        drone_imagery_compare_images_field_trial_id_string = drone_imagery_compare_images_field_trial_ids.join(",");
+        if (drone_imagery_compare_images_field_trial_id_string == '') {
+            alert('Please select a field trial first!');
+        } else {
+            jQuery('#drone_image_compare_images_drone_runs_table').DataTable({
+                destroy : true,
+                ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=drone_imagery_compare_images_drone_run_select&field_trial_ids='+drone_imagery_compare_images_field_trial_id_string
+            });
+        
+            Workflow.complete("#drone_imagery_compare_images_field_trial_select_step");
+            Workflow.focus('#drone_imagery_compare_images_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_compare_images_drone_runs_select_step').click(function(){
+        drone_imagery_compare_images_drone_run_ids = [];
+        jQuery('input[name="drone_imagery_compare_images_drone_run_select"]:checked').each(function() {
+            drone_imagery_compare_images_drone_run_ids.push(jQuery(this).val());
+        });
+        if (drone_imagery_compare_images_drone_run_ids.length < 1){
+            alert('Please select at least one drone run!');
+        } else if (drone_imagery_compare_images_drone_run_ids.length > 2){
+            alert('Please select a maximum of two drone runs, given that we can only compare two images at a time here.');
+        } else {
+            jQuery('#drone_image_compare_images_drone_run_bands_table').DataTable({
+                destroy : true,
+                ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_compare_images_band_select&drone_run_project_ids='+JSON.stringify(drone_imagery_compare_images_drone_run_ids)
+            });
+
+            Workflow.complete("#drone_imagery_compare_images_drone_runs_select_step");
+            Workflow.focus('#drone_imagery_compare_images_workflow', 3);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_compare_images_drone_run_bands_select_step').click(function(){
+        drone_imagery_compare_images_drone_run_band_ids = [];
+        jQuery('input[name="drone_run_compare_images_band_select"]:checked').each(function() {
+            drone_imagery_compare_images_drone_run_band_ids.push(jQuery(this).val());
+        });
+        if (drone_imagery_compare_images_drone_run_band_ids.length < 1){
+            alert('Please select at least one drone run band!');
+        } else if (drone_imagery_compare_images_drone_run_band_ids.length > 2){
+            alert('Please select a maximum of two drone run bands, given that we can only compare two images at a time here.');
+        } else {
+            jQuery('#drone_imagery_compare_images_images_type_table').DataTable({
+                destroy : true,
+                paging : false,
+                ajax : '/api/drone_imagery/plot_polygon_types?select_checkbox_name=drone_imagery_compare_images_plot_polygon_type_select&field_trial_ids='+drone_imagery_compare_images_field_trial_id_string+'&drone_run_ids='+JSON.stringify(drone_imagery_compare_images_drone_run_ids)+'&field_trial_images_only=1+&drone_run_band_ids='+JSON.stringify(drone_imagery_compare_images_drone_run_band_ids)
+            });
+
+            Workflow.complete("#drone_imagery_compare_images_drone_run_bands_select_step");
+            Workflow.focus('#drone_imagery_compare_images_workflow', 4);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_compare_images_images_select_step').click(function(){
+        drone_imagery_compare_images_image_types = [];
+        jQuery('input[name="drone_imagery_compare_images_plot_polygon_type_select"]:checked').each(function() {
+            drone_imagery_compare_images_image_types.push(jQuery(this).val());
+        });
+        if (drone_imagery_compare_images_image_types.length < 1){
+            alert('Please select at least one image type!');
+        } else if (drone_imagery_compare_images_image_types.length > 2){
+            alert('Please select a maximum of two image types, given that we can only compare two images at a time here.');
+        } else {
+            jQuery.ajax({
+                url : '/api/drone_imagery/compare_images?drone_run_ids='+JSON.stringify(drone_imagery_compare_images_drone_run_ids)+'&drone_run_band_ids='+JSON.stringify(drone_imagery_compare_images_drone_run_band_ids)+'&image_type_ids='+JSON.stringify(drone_imagery_compare_images_image_types)+'&comparison_type='+jQuery('#drone_imagery_compare_images_comparison_select').val(),
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+
+                    var html = '<a target=_blank href="'+response.result+'">File</a>';
+                    jQuery('#drone_imagery_compare_images_result_div').html(html);
+
+                    Workflow.complete("#drone_imagery_compare_images_images_select_step");
+                    Workflow.focus('#drone_imagery_compare_images_workflow', 5);
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error comparing images!')
+                }
+            });
+        }
+        return false;
+    });
+
+    //
     // Delete drone run
     //
 
@@ -4615,6 +6084,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_top_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4625,6 +6095,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_plot_polygons_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4635,6 +6106,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_calculate_phenotypes_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4645,6 +6117,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_remove_background_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4655,6 +6128,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_rotate_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4665,6 +6139,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').show();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_vegetative_index_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4675,6 +6150,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').show();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_standard_process_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4685,6 +6161,18 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').show();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_loading_div').hide();
+        } else if (section_div_id == 'manage_drone_imagery_standard_process_raw_images_div'){
+            jQuery('#manage_drone_imagery_crop_div').hide();
+            jQuery('#manage_drone_imagery_top_div').hide();
+            jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+            jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+            jQuery('#manage_drone_imagery_remove_background_div').hide();
+            jQuery('#manage_drone_imagery_rotate_div').hide();
+            jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').show();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_loading_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -4695,6 +6183,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_rotate_div').hide();
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
             jQuery('#manage_drone_imagery_loading_div').show();
         }
         window.scrollTo(0,0);

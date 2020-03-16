@@ -55,8 +55,12 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         my $last_name = $split[1];
         $first_name =~ s/\s+//g;
         $last_name =~ s/\s+//g;
-        push @first_names, $first_name;
-        push @last_names, $last_name;
+        if ($first_name) {
+            push @first_names, $first_name;
+        }
+        if ($last_name) {
+            push @last_names, $last_name;
+        }
     }
 
     my $limit = $params->{length};

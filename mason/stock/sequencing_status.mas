@@ -7,7 +7,6 @@ $stock_id
   entries => ["sequenced_accessions"]
 &>
 
-
 <div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
     <div class="modal-dialog" role="modal">
         <div class="form-search">
@@ -120,8 +119,8 @@ $stock_id
 </div>
 
 <script>
-jQuery(document).ready( function() {
-    var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
+jQuery(window).ready( function() {
+//    var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
 });
 </script>
 

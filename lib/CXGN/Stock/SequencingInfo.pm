@@ -142,7 +142,7 @@ sub get_sequencing_project_infos {
 
     my @stockprops = $class->_retrieve_stockprops($schema, $stock_id, "sequencing_project_info");
 
-    print STDERR "Stockprops = ".Dumper(\@stockprops);
+    #print STDERR "Stockprops = ".Dumper(\@stockprops);
 
     my @infos = ();
     foreach my $sp (@stockprops) {
@@ -161,7 +161,7 @@ sub get_sequencing_project_infos {
 	push @infos, $hash;
     }
 
-    print STDERR "Hashes = ".Dumper(\@infos);
+    #print STDERR "Hashes = ".Dumper(\@infos);
     return \@infos;
 }
 
@@ -400,7 +400,7 @@ sub from_hash {
 
     my $allowed_fields = $self->allowed_fields();
 
-    print STDERR Dumper($hash);
+    #print STDERR Dumper($hash);
 
     foreach my $f (@$allowed_fields) {
 	print STDERR "Processing $f ($hash->{$f})...\n";
@@ -425,7 +425,7 @@ sub to_json {
 
     my $allowed_fields = $self->allowed_fields();
 
-    print STDERR Dumper($allowed_fields);
+    #print STDERR Dumper($allowed_fields);
     my $data;
 
     foreach my $f (@$allowed_fields) {
