@@ -1056,7 +1056,7 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     }
     push @save_stock_polygons, {
         template_name => $partial_template_name,
-        image_id => $image_ids[3],
+        image_id => $image_ids[3], #NIR image id
         polygon => $polygon_hash
     };
 

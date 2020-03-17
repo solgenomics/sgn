@@ -1278,6 +1278,25 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
         $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
     }
 
+    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
+    my $q = "SELECT value FROM projectprop WHERE project_id=? AND type_id=$manual_plot_polygon_template_partial;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($drone_run_project_id);
+
+    my @result;
+    my %unique_image_polygons;
+    while (my ($value) = $h->fetchrow_array()) {
+        if ($value) {
+            my $partial_templates = decode_json $value;
+            foreach my $t (@$partial_templates) {
+                my $nir_image_id = $t->{image_id};
+                my $polygon = $t->{polygon};
+                my $template_name = $t->{template_name};
+                push @{$unique_image_polygons{$nir_image_id}}, $template_name;
+            }
+        }
+    }
+
     my %gps_images;
     my %longitudes;
     my %latitudes;
@@ -1292,9 +1311,12 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
         foreach (@$image_ids_array) {
             push @stack_image_ids, $_->{image_id};
         }
+        my $nir_image_id = $nir_image->{image_id};
+        my $template_string = $unique_image_polygons{$nir_image_id} ? join ',', @{$unique_image_polygons{$nir_image_id}} : '';
         push @{$gps_images{$latitude}->{$longitude}}, {
-            nir_image_id => $nir_image->{image_id},
-            image_ids => \@stack_image_ids
+            nir_image_id => $nir_image_id,
+            image_ids => \@stack_image_ids,
+            template_name => $template_string
         };
     }
     # print STDERR Dumper \%longitudes;
@@ -1312,6 +1334,9 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
             if ($gps_images{$lat}->{$lon}) {
                 foreach my $img_id_info (@{$gps_images{$lat}->{$lon}}) {
                     $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' ></span>";
+                    if ($img_id_info->{template_name}) {
+                        $html .= "Templates: ".$img_id_info->{template_name};
+                    }
                 }
             }
             $html .= "</td>";
