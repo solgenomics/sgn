@@ -382,7 +382,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </div>
                 </div>
             </form>
-            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon" onclick="return false;">Paste Previously Used Plot-Polygon</button>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon" onclick="return false;">Paste Previously Used Plot-Polygon To A New Point</button>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon_in_place" onclick="return false;">Paste Previously Used Plot-Polygon</button>
             <hr>
 
             <div class="form-horizontal">
@@ -2234,7 +2235,8 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_raw_images_polygon = [];
     var manage_drone_imagery_standard_process_raw_images_previous_polygon;
     var manage_drone_imagery_standard_process_raw_images_rotate_angle = 0.00;
-    var manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {}; 
+    var manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
+    var manage_drone_imagery_standard_process_raw_images_previous_polygons = [];
     var ctx;
     var dronecroppingImg;
 
@@ -2308,6 +2310,11 @@ jQuery(document).ready(function() {
         manage_drone_imagery_standard_process_raw_images_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_standard_process_raw_images_rotated_image_id = jQuery(this).data('image_id');
         manage_drone_imagery_standard_process_raw_images_stack_image_ids = jQuery(this).data('image_ids');
+        var manage_drone_imagery_standard_process_raw_images_previous_polygons_string = jQuery(this).data('polygons');
+        if (manage_drone_imagery_standard_process_raw_images_previous_polygons_string != '') {
+            manage_drone_imagery_standard_process_raw_images_previous_polygons = JSON.parse(decodeURI(manage_drone_imagery_standard_process_raw_images_previous_polygons_string));
+        }
+        console.log(manage_drone_imagery_standard_process_raw_images_previous_polygons);
 
         jQuery.ajax({
             url : '/api/drone_imagery/get_image?size=original_converted&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
@@ -2569,6 +2576,10 @@ jQuery(document).ready(function() {
         }
         drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_previous_polygon';
         alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon_in_place').click(function(){
+        
     });
 
     //

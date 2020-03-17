@@ -1292,7 +1292,10 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
                 my $nir_image_id = $t->{image_id};
                 my $polygon = $t->{polygon};
                 my $template_name = $t->{template_name};
-                push @{$unique_image_polygons{$nir_image_id}}, $template_name;
+                push @{$unique_image_polygons{$nir_image_id}}, {
+                    template_name => $template_name,
+                    polygon => $polygon
+                };
             }
         }
     }
@@ -1312,11 +1315,20 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
             push @stack_image_ids, $_->{image_id};
         }
         my $nir_image_id = $nir_image->{image_id};
-        my $template_string = $unique_image_polygons{$nir_image_id} ? join ',', @{$unique_image_polygons{$nir_image_id}} : '';
+        my @template_strings;
+        my @polygons;
+        if ($unique_image_polygons{$nir_image_id}) {
+            foreach (@{$unique_image_polygons{$nir_image_id}}) {
+                push @polygons, $_->{polygon};
+                push @template_strings, $_->{template_name};
+            }
+        }
+        my $template_string = join ',', @template_strings;
         push @{$gps_images{$latitude}->{$longitude}}, {
             nir_image_id => $nir_image_id,
             image_ids => \@stack_image_ids,
-            template_name => $template_string
+            template_names => $template_string,
+            polygons => \@polygons
         };
     }
     # print STDERR Dumper \%longitudes;
@@ -1333,9 +1345,9 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
             $html .= "<td>";
             if ($gps_images{$lat}->{$lon}) {
                 foreach my $img_id_info (@{$gps_images{$lat}->{$lon}}) {
-                    $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' ></span>";
-                    if ($img_id_info->{template_name}) {
-                        $html .= "Templates: ".$img_id_info->{template_name};
+                    $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' data-polygons='".uri_encode(encode_json($img_id_info->{polygons}))."' ></span>";
+                    if ($img_id_info->{template_names}) {
+                        $html .= "Templates: ".$img_id_info->{template_names};
                     }
                 }
             }
