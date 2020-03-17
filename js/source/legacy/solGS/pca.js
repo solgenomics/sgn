@@ -153,9 +153,8 @@ solGS.pca = {
 		    jQuery("#run_pca").show();
 
 		} else {
-                    jQuery("#pca_canvas .multi-spinner-container").hide();
+                    jQuery("#pca_canvas .multi-spinner-container").hide();		  
 		    jQuery("#pca_message").html(res.status);
-		    //jQuery("#pca_message").html('Error occured running the PCA.');
 		    jQuery("#run_pca").show();
 		}
 	    },

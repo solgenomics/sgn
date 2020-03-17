@@ -85,20 +85,14 @@ sub pca_run :Path('/pca/run/') Args() {
 	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};	
     }
       
-    my $ret->{status} = 'PCA analysis failed';
-   
     if (!$self->check_pca_output($c)) 
     {
-	    $self->run_pca($c);	  	
+	$self->run_pca($c);	  	
     }
     
     $self->format_pca_output($c);
-    my $res = $c->stash->{formatted_pca_output};
-    if ($res) {
-	$ret = $res;
-    }   
-    $ret = to_json($ret);
-       
+    my $ret = $c->stash->{formatted_pca_output};   
+    $ret = to_json($ret);       
     $c->res->content_type('application/json');
     $c->res->body($ret);    
 
@@ -112,10 +106,10 @@ sub check_pca_output {
 
     if ($file_id)
     {
-	$self->format_pca_output($c);
-	my $pca_output = $c->stash->{formatted_pca_output};
-
-	if (ref($pca_output) eq 'HASH') 
+	$self->pca_scores_file($c);	
+	my $pca_scores_file = $c->stash->{pca_scores_file};
+	
+	if (-s $pca_scores_file) 
 	{
 	    return 1;
 	}
@@ -132,7 +126,8 @@ sub format_pca_output {
     my ($self, $c) = @_;
 
     my $file_id = $c->stash->{file_id};
-
+    my $ret->{status} = undef;
+    
     if ($file_id)
     {
 	$self->pca_scores_file($c);
@@ -143,7 +138,6 @@ sub format_pca_output {
 	
 	if ( -s $pca_scores_file && -s $pca_variance_file)
 	{
-	    my $ret->{status} = undef;
 	    my $pca_scores    = $c->controller('solGS::Utils')->read_file_data($pca_scores_file);
 	    my $pca_variances = $c->controller('solGS::Utils')->read_file_data($pca_variance_file);
 
@@ -151,7 +145,7 @@ sub format_pca_output {
         
 	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
 	    my $trial_names =  $c->stash->{trials_names};
-
+	    
 	    if ($pca_scores)
 	    {
 		$ret->{pca_scores} = $pca_scores;
@@ -163,12 +157,13 @@ sub format_pca_output {
 		$ret->{output_link}  = $output_link;
 		$ret->{data_type} = $c->stash->{data_type};
 	    }
-
+	 
 	    $c->stash->{formatted_pca_output} = $ret;
 	}
 	else
 	{
-	    $c->stash->{formatted_pca_output} = undef;
+	    $ret->{status} = $self->error_message($c);
+	    $c->stash->{formatted_pca_output} = $ret;
 	}
     }
     else
@@ -179,13 +174,47 @@ sub format_pca_output {
 }
 
 
+sub error_message {
+    my ($self, $c) = @_;
+
+    $self->pca_scores_file($c);
+    my $pca_scores_file = $c->stash->{pca_scores_file};
+
+    $self->pca_input_files($c);
+    my $files = $c->stash->{pca_input_files};
+
+    my $error_message;
+
+    my @data_exists;
+    my @data_files = split(/\s/, read_file($files));
+       
+    foreach my $file (@data_files)
+    {
+	push @data_exists, 1 if -s $file;
+    }
+    
+    if (!@data_exists) 
+    {
+	my $data_type = $c->stash->{data_type};	
+	$error_message = "There is no $data_type for this dataset.";
+    }
+    elsif (@data_exists && !-s $pca_scores_file)
+    {
+	$error_message = 'The PCA R Script failed.';
+    }
+
+    return $error_message;
+}
+
+
 sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
     my ($self, $c, $file_id) = @_;
-   
-    my $pca_dir = $c->stash->{pca_cache_dir};
-    my $pca_file = catfile($pca_dir,  "pca_scores_${file_id}.txt");
-  
-    unless (!-e $pca_file || -s $pca_file <= 1) 
+
+    $c->stash->{file_id} = $file_id;
+    $self->pca_scores_file($c);
+    my $pca_file = $c->stash->{pca_scores_file};
+    
+    if (-s $pca_file) 
     {
 	my @pca_data;
 	my $count=1;
@@ -596,7 +625,7 @@ sub pca_input_files {
     my $tmp_dir = $c->stash->{pca_temp_dir};
     
     my $name     = "pca_input_files_${file_id}"; 
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  catfile($tmp_dir, $name); #$c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
 
     my $files;
     my $data_type = $c->stash->{data_type};
