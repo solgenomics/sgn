@@ -37,6 +37,8 @@ use CXGN::BrAPI::v2::Traits;
 use CXGN::BrAPI::v2::Observations;
 use CXGN::BrAPI::v2::CallSets;
 use CXGN::BrAPI::v2::VariantSets;
+use CXGN::BrAPI::v2::Variants;
+use CXGN::BrAPI::v2::Germplasm;
 
 has 'version' => (
 	isa => 'Str',
