@@ -138,7 +138,8 @@ solGS.pca = {
 		
 		    var plotData = {
 			'scores': res.pca_scores, 
-			'variances': res.pca_variances, 
+			'variances': res.pca_variances,
+			'loadings': res.pca_loadings,
 			'pop_id': res.pop_id, 
 			'list_id': listId,
 			'list_name': listName,
@@ -265,6 +266,7 @@ solGS.pca = {
 
 	var scores      = plotData.scores;
 	var variances   = plotData.variances;
+	var loadings    = plotData.loadings;
 	var trialsNames = plotData.trials_names;
 	
 	var pc12 = [];
@@ -459,20 +461,44 @@ solGS.pca = {
 
 	var popName = "";
 	if (plotData.list_name) {
-	    popName = ' -- ' + plotData.list_name;
+	    popName = plotData.list_name;
 	}
 
-	var pcaDownload;
+	popName = popName ? popName + ' -- ' + plotData.data_type : plotData.data_type;
+	
+	var pcaSoresDownload;
 	if (id)  {
-	    pcaDownload = "/download/pca/scores/population/" + id;
+	    pcaScoresDownload = "/download/pca/scores/population/" + id;
 	}
 	
 	pcaPlot.append("a")
-	    .attr("xlink:href", pcaDownload)
+	    .attr("xlink:href", pcaScoresDownload)
 	    .append("text")
-	    .text("[ Download PCA scores ]" + popName + ' -- ' + plotData.data_type)
+	    .text("[ Download PCA Scores")
 	    .attr("y", pad.top + height + 75)
             .attr("x", pad.left)
+            .attr("font-size", 14)
+            .style("fill", "#954A09")
+
+	var pcaLoadingsDownload;
+	if (id)  {
+	    pcaLoadingsDownload = "/download/pca/loadings/population/" + id;
+	}
+	
+	pcaPlot.append("a")
+	    .attr("xlink:href", pcaLoadingsDownload)
+	    .append("text")
+	    .text(" | Loadings ]")
+	    .attr("y", pad.top + height + 75)
+            .attr("x", pad.left + 155)
+            .attr("font-size", 14)
+            .style("fill", "#954A09")
+
+	pcaPlot.append("a")
+	    .append("text")
+	    .text(popName)
+	    .attr("y", pad.top + height + 75)
+            .attr("x", pad.left + 250)
             .attr("font-size", 14)
             .style("fill", "#954A09")
 

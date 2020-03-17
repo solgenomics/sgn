@@ -131,25 +131,30 @@ sub format_pca_output {
     if ($file_id)
     {
 	$self->pca_scores_file($c);
-	my $pca_scores_file = $c->stash->{pca_scores_file};
+	my $scores_file = $c->stash->{pca_scores_file};
 
 	$self->pca_variance_file($c);
-	my $pca_variance_file = $c->stash->{pca_variance_file};
+	my $variance_file = $c->stash->{pca_variance_file};
+
+	$self->pca_loadings_file($c);
+	my $loadings_file = $c->stash->{pca_loadings_file};
 	
-	if ( -s $pca_scores_file && -s $pca_variance_file)
+	if ( -s $scores_file && -s $variance_file)
 	{
-	    my $pca_scores    = $c->controller('solGS::Utils')->read_file_data($pca_scores_file);
-	    my $pca_variances = $c->controller('solGS::Utils')->read_file_data($pca_variance_file);
+	    my $scores    = $c->controller('solGS::Utils')->read_file_data($scores_file);
+	    my $variances = $c->controller('solGS::Utils')->read_file_data($variance_file);
+	    my $loadings = $c->controller('solGS::Utils')->read_file_data($loadings_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
         
 	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
 	    my $trial_names =  $c->stash->{trials_names};
 	    
-	    if ($pca_scores)
+	    if ($scores)
 	    {
-		$ret->{pca_scores} = $pca_scores;
-		$ret->{pca_variances} = $pca_variances;
+		$ret->{pca_scores} = $scores;
+		$ret->{pca_variances} = $variances;
+		$ret->{pca_loadings} = $loadings;
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
 		$ret->{list_id} = $c->stash->{list_id};
@@ -222,6 +227,34 @@ sub download_pca_scores : Path('/download/pca/scores/population') Args(1) {
 	foreach my $row ( read_file($pca_file) )
 	{
 	    if ($count==1) {  $row = 'Individuals' . $row;}             
+	    $row = join(",", split(/\s/, $row));
+	    $row .= "\n";
+ 
+	    push @pca_data, [ $row ];
+	    $count++;
+	}
+   
+	$c->res->content_type("text/plain");
+	$c->res->body(join "",  map{ $_->[0] } @pca_data);   
+    }  
+}
+
+
+sub download_pca_loadings : Path('/download/pca/loadings/population') Args(1) {
+    my ($self, $c, $file_id) = @_;
+
+    $c->stash->{file_id} = $file_id;
+    $self->pca_loadings_file($c);
+    my $loadings_file = $c->stash->{pca_loadings_file};
+    
+    if (-s $loadings_file) 
+    {
+	my @pca_data;
+	my $count=1;
+
+	foreach my $row ( read_file($loadings_file) )
+	{
+	    if ($count==1) {  $row = 'Variables' . $row;}             
 	    $row = join(",", split(/\s/, $row));
 	    $row .= "\n";
  
