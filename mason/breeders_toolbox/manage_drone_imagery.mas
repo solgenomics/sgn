@@ -2579,7 +2579,20 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon_in_place').click(function(){
-        
+        for (var i=0; i<manage_drone_imagery_standard_process_raw_images_previous_polygons.length; i++) {
+            var previous_polygon = manage_drone_imagery_standard_process_raw_images_previous_polygons[i];
+            for (var property in previous_polygon) {
+                if (previous_polygon.hasOwnProperty(property)) {
+                    plot_polygons_ind_4_points = previous_polygon[property];
+                    plot_polygons_display_points = plot_polygons_ind_4_points;
+                    if (plot_polygons_display_points.length == 4) {
+                        plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
+                    }
+                    drawPolyline(plot_polygons_display_points);
+                    drawWaypoints(plot_polygons_display_points, i, 0);
+                }
+            }
+        }
     });
 
     //
