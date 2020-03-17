@@ -13,8 +13,6 @@ use File::Path qw / mkpath  /;
 use File::Copy;
 use File::Basename;
 use CXGN::Phenome::Population;
-use CXGN::Fieldbook::DownloadTrial;
-use CXGN::Trial;
 use JSON;
 use Try::Tiny;
 use Scalar::Util qw /weaken reftype/;
@@ -34,7 +32,7 @@ sub check_pheno_h2_result :Path('/phenotype/heritability/check/result/') Args(1)
    
     if (-s $h2_output_file && $pop_id =~ /\d+/) 
     {
-	$ret->{result} = 1;                
+    $ret->{result} = 1;                
     }    
 
     $ret = to_json($ret);
@@ -46,44 +44,44 @@ sub check_pheno_h2_result :Path('/phenotype/heritability/check/result/') Args(1)
 
 
 sub heritability_phenotype_data :Path('/heritability/phenotype/data/') Args(0) {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->req->param('population_id');
+    $c->stash->{pop_id} = $pop_id;
+    my $referer = $c->req->referer;
+   
+    my $phenotype_file;
+    
+    if ($referer =~ /qtl/)
+    {    
+    my $phenotype_dir = $c->stash->{solqtl_cache_dir};
+        $phenotype_file   = 'phenodata_' . $pop_id;
+        $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
+    }
+    else
+    {    
+    $c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+    $phenotype_file = $c->stash->{phenotype_file_name};
+    }
 
-    # my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    unless (-s $phenotype_file)
+    {     
+        $self->create_heritability_phenodata_file($c);
+        $phenotype_file =  $c->stash->{phenotype_file_name};
+    }
 
-    my $self = shift;
-    my $c = shift;
-    my $trial_id = $c->req->param('trial_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $ds = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    # my $traits = $ds->retrieve_traits();
-    # my @trait_info;
-    # foreach my $t (@$traits) {
-    #       my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
-    #     push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
-    # }
+    my $ret->{result} = undef;
 
-    my $trial = $schema->resultset('Project::Project')->find({project_id => $trial_id});
-    $c->tempfiles_subdir("heritability_files");
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"heritability_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $ds2 = $c->config->{basepath}."/".$tempfile;
-        my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
-        bcs_schema => $schema,
-        # metadata_schema => $metadata_schema,
-        # phenome_schema => $phenome_schema,
-        trial_id => $trial_id,
-        tempfile => $tempfile,
-        # selected_trait_ids => \@selected_traits,
-    });
-    my $phenotype_data_ref = $ds2->retrieve_phenotypes();
+    if (-s $phenotype_file)
+    {
+        $ret->{result} = 1;             
+    } 
+   
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);    
 
-    # print STDERR Dumper(@trait_info);
-    $c->stash->{rest} = {
-        # options => \@trait_info,
-        tempfile => $tempfile."_phenotype.txt",
-#        tempfile => $file_response,
-    };
 }
 
 
@@ -116,7 +114,7 @@ sub heritability_genetic_data :Path('/heritability/genetic/data/') Args(0) {
     {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
-	$ret->{index_file} = $index_file;
+    $ret->{index_file} = $index_file;
 
     }
 
@@ -151,9 +149,9 @@ sub create_heritability_phenodata_file {
         my $dir       = $c->stash->{solqtl_cache_dir};
        
         $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
-	
+    
         unless ($phenotype_file) 
-	{           
+    {           
             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);       
             $phenotype_file =  $pop->phenotype_file($c);
         }
@@ -161,21 +159,21 @@ sub create_heritability_phenodata_file {
     } 
     else
     {           
-	$self->h2_pheno_query_jobs_file($c);
-	my $queries =$c->stash->{h2_pheno_query_jobs_file};
+    $self->h2_pheno_query_jobs_file($c);
+    my $queries =$c->stash->{h2_pheno_query_jobs_file};
        
-	$c->stash->{dependent_jobs} = $queries;
-	$c->controller('solGS::solGS')->run_async($c);
+    $c->stash->{dependent_jobs} = $queries;
+    $c->controller('solGS::solGS')->run_async($c);
 
-	$c->controller("solGS::Files")->phenotype_file_name($c, $pop_id); 
-	$phenotype_file = $c->stash->{phenotype_file_name};
+    $c->controller("solGS::Files")->phenotype_file_name($c, $pop_id); 
+    $phenotype_file = $c->stash->{phenotype_file_name};
     }
     
 
     my $h2_cache_dir = $c->stash->{heritability_cache_dir};
    
     copy($phenotype_file, $h2_cache_dir) 
-	or die "could not copy $phenotype_file to $h2_cache_dir";
+    or die "could not copy $phenotype_file to $h2_cache_dir";
    
     my $file = basename($phenotype_file);
     $c->stash->{phenotype_file_name} = catfile($h2_cache_dir, $file);
@@ -265,12 +263,12 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
     
     if (-s $h2_json_file)
     {
-	$self->trait_acronyms($c);
-	my $acronyms = $c->stash->{acronym};
+    $self->trait_acronyms($c);
+    my $acronyms = $c->stash->{acronym};
     
-	$ret->{acronyms} = $acronyms;
+    $ret->{acronyms} = $acronyms;
         $ret->{status}   = 'success';
-        $ret->{data}     = read_file($h2_json_file);	
+        $ret->{data}     = read_file($h2_json_file); 
     } 
         
     $ret = to_json($ret);
@@ -281,64 +279,64 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
 }
 
 
-sub genetic_heritability_analysis_output :Path('/genetic/heritability/analysis/output') Args(0) {
-    my ($self, $c) = @_;
+# sub genetic_heritability_analysis_output :Path('/genetic/heritability/analysis/output') Args(0) {
+#     my ($self, $c) = @_;
 
-    $c->stash->{h2_pop_id} = $c->req->param('h2_population_id');
-    $c->stash->{model_id}     = $c->req->param('model_id');
-    $c->stash->{type}         = $c->req->param('type');
+#     $c->stash->{h2_pop_id} = $c->req->param('h2_population_id');
+#     $c->stash->{model_id}     = $c->req->param('model_id');
+#     $c->stash->{type}         = $c->req->param('type');
     
-    my $h2_pop_id = $c->req->param('h2_population_id');
-    my $model_id    = $c->req->param('model_id');
-    my $type        = $c->req->param('type');
+#     my $h2_pop_id = $c->req->param('h2_population_id');
+#     my $model_id    = $c->req->param('model_id');
+#     my $type        = $c->req->param('type');
 
-    my $gebvs_file = $c->req->param('gebvs_file');
-    my $index_file = $c->req->param('index_file');
+#     my $gebvs_file = $c->req->param('gebvs_file');
+#     my $index_file = $c->req->param('index_file');
     
-    $c->stash->{data_input_file} = $gebvs_file;
+#     $c->stash->{data_input_file} = $gebvs_file;
 
-    $c->stash->{selection_index_file} = $index_file;
-    $c->stash->{gebvs_file} = $gebvs_file;
+#     $c->stash->{selection_index_file} = $index_file;
+#     $c->stash->{gebvs_file} = $gebvs_file;
     
-    $c->stash->{pop_id} = $h2_pop_id;
+#     $c->stash->{pop_id} = $h2_pop_id;
   
-    if (-s $gebvs_file) 
-    { 
-        $self->run_genetic_heritability_analysis($c);       
-    }
+#     if (-s $gebvs_file) 
+#     { 
+#         $self->run_genetic_heritability_analysis($c);       
+#     }
     
-    my $ret->{status} = 'failed';
-    my $h2_json_file = $c->stash->{genetic_h2_json_file};
+#     my $ret->{status} = 'failed';
+#     my $h2_json_file = $c->stash->{genetic_h2_json_file};
     
-    if (-s $h2_json_file)
-    { 
-        $ret->{status}   = 'success';
-        $ret->{data}     = read_file($h2_json_file);
-    } 
+#     if (-s $h2_json_file)
+#     { 
+#         $ret->{status}   = 'success';
+#         $ret->{data}     = read_file($h2_json_file);
+#     } 
     
-    $ret = to_json($ret);
+#     $ret = to_json($ret);
        
-    $c->res->content_type('application/json');
-    $c->res->body($ret);    
+#     $c->res->content_type('application/json');
+#     $c->res->body($ret);    
 
-}
+# }
 
 
-sub run_genetic_heritability_analysis {
-    my ($self, $c) = @_;
+# sub run_genetic_heritability_analysis {
+#     my ($self, $c) = @_;
           
-    $self->temp_geno_h2_input_file($c);
-    $self->temp_geno_h2_output_file($c);
+#     $self->temp_geno_h2_input_file($c);
+#     $self->temp_geno_h2_output_file($c);
 
-    $c->stash->{h2_input_files}  = $c->stash->{temp_geno_h2_input_file};
-    $c->stash->{h2_output_files} = $c->stash->{temp_geno_h2_output_file};
+#     $c->stash->{h2_input_files}  = $c->stash->{temp_geno_h2_input_file};
+#     $c->stash->{h2_output_files} = $c->stash->{temp_geno_h2_output_file};
    
-    $c->stash->{heritability_type} = "genetic-heritability";
-    $c->stash->{heritability_script} = "R/solGS/genetic_heritability.r";
+#     $c->stash->{heritability_type} = "genetic-heritability";
+#     $c->stash->{heritability_script} = "R/heritability/h2_rscript.R";
     
-    $self->run_heritability_analysis($c);
+#     $self->run_heritability_analysis($c);
 
-}
+# }
 
 
 sub download_phenotypic_heritability : Path('/download/phenotypic/heritability/population') Args(1) {
@@ -350,22 +348,22 @@ sub download_phenotypic_heritability : Path('/download/phenotypic/heritability/p
   
     unless (!-e $h2_file || -s $h2_file <= 1) 
     {
-	my @h2_data;
-	my $count=1;
+    my @h2_data;
+    my $count=1;
 
-	foreach my $row ( read_file($h2_file) )
-	{
-	    if ($count==1) {  $row = 'Traits,' . $row;}             
-	    $row =~ s/NA//g; 
-	    $row = join(",", split(/\s/, $row));
-	    $row .= "\n";
+    foreach my $row ( read_file($h2_file) )
+    {
+        if ($count==1) {  $row = 'Traits,' . $row;}             
+        $row =~ s/NA//g; 
+        $row = join(",", split(/\s/, $row));
+        $row .= "\n";
  
-	    push @h2_data, [ $row ];
-	    $count++;
-	}
+        push @h2_data, [ $row ];
+        $count++;
+    }
    
-	$c->res->content_type("text/plain");
-	$c->res->body(join "",  map{ $_->[0] } @h2_data);              
+    $c->res->content_type("text/plain");
+    $c->res->body(join "",  map{ $_->[0] } @h2_data);              
     }  
 }
 
@@ -377,9 +375,9 @@ sub temp_pheno_h2_output_file {
     $self->pheno_heritability_output_files($c);
    
     my $files = join ("\t",
-			  $c->stash->{h2_coefficients_table_file},
-			  $c->stash->{h2_coefficients_json_file},			  
-	);
+              $c->stash->{h2_coefficients_table_file},
+              $c->stash->{h2_coefficients_json_file},              
+    );
      
     my $tmp_dir = $c->stash->{heritability_temp_dir};
     my $name = "pheno_h2_output_files_${pop_id}"; 
@@ -408,11 +406,11 @@ sub temp_pheno_h2_input_file {
     my $metadata_file = $c->stash->{phenotype_metadata_file};
    
     my $files = join ("\t",
-		      $pheno_file,
-		      $formatted_pheno_file,
-		      $metadata_file,
-		      $c->req->referer,              
-	);
+              $pheno_file,
+              $formatted_pheno_file,
+              $metadata_file,
+              $c->req->referer,              
+    );
      
     my $tmp_dir = $c->stash->{heritability_temp_dir};
     my $name = "pheno_h2_input_files_${pop_id}"; 
@@ -430,9 +428,9 @@ sub temp_geno_h2_output_file {
     $self->genetic_heritability_output_files($c);
    
     my $files = join ("\t",
-			  $c->stash->{genetic_h2_table_file},
-			  $c->stash->{genetic_h2_json_file},			  
-	);
+              $c->stash->{genetic_h2_table_file},
+              $c->stash->{genetic_h2_json_file},           
+    );
      
     my $tmp_dir = $c->stash->{heritability_temp_dir};
     my $name = "geno_h2_output_files_${pop_id}"; 
@@ -453,9 +451,9 @@ sub temp_geno_h2_input_file {
     my $index_file = $c->stash->{selection_index_file};
   
     my $files = join ("\t",
-		      $gebvs_file,  
-		      $index_file
-	);
+              $gebvs_file,  
+              $index_file
+    );
      
     my $tmp_dir = $c->stash->{heritability_temp_dir};
     my $name = "geno_h2_input_files_${pop_id}"; 
@@ -480,7 +478,7 @@ sub run_pheno_heritability_analysis {
         
     $c->stash->{heritability_type} = "pheno-heritability";
 
-    $c->stash->{heritability_script} = "R/solGS/phenotypic_heritability.r";
+    $c->stash->{heritability_script} = "R/heritability/h2_rscript.R";
     
     $self->run_heritability_analysis($c);
 
@@ -504,7 +502,7 @@ sub run_heritability_analysis {
     $c->stash->{dependent_jobs} = $r_jobs_file;
     
     $c->controller('solGS::solGS')->run_async($c);
-	
+    
 }
 
 
@@ -530,7 +528,7 @@ sub h2_pheno_r_jobs {
 
     if (reftype $jobs ne 'ARRAY') 
     {
-	$jobs = [$jobs];
+    $jobs = [$jobs];
     }
 
     $c->stash->{h2_pheno_r_jobs} = $jobs;
@@ -545,10 +543,10 @@ sub h2_pheno_r_jobs_file {
     my $jobs = $c->stash->{h2_pheno_r_jobs};
       
     my $temp_dir = $c->stash->{heritability_temp_dir};
-    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'h2-r-jobs-file');	   
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'h2-r-jobs-file');      
    
     nstore $jobs, $jobs_file
-	or croak "heritability r jobs : $! serializing heritability r jobs to $jobs_file";
+    or croak "heritability r jobs : $! serializing heritability r jobs to $jobs_file";
 
     $c->stash->{h2_pheno_r_jobs_file} = $jobs_file;
     
@@ -564,7 +562,7 @@ sub h2_pheno_query_jobs {
 
     if (reftype $jobs ne 'ARRAY') 
     {
-	$jobs = [$jobs];
+    $jobs = [$jobs];
     }
     
     $c->stash->{h2_pheno_query_jobs} = $jobs;
@@ -582,11 +580,11 @@ sub h2_pheno_query_jobs_file {
   
     if ($jobs->[0])
     {
-	my $temp_dir = $c->stash->{heritability_temp_dir};
-	$jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');	   
+    my $temp_dir = $c->stash->{heritability_temp_dir};
+    $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');       
    
-	nstore $jobs, $jobs_file
-	    or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
+    nstore $jobs, $jobs_file
+        or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
     }
 
     $c->stash->{h2_pheno_query_jobs_file} = $jobs_file;

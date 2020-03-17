@@ -1,126 +1,119 @@
+ #SNOPSIS
+
+ #runs phenotypic heritability analysis.
+ #Correlation coeffiecients are stored in tabular and json formats 
+
+ #AUTHOR
+ # Isaak Y Tecle (iyt2@cornell.edu)
 
 
-library("methods")
-library("dplyr")
+options(echo = FALSE)
 
-##### Get data #####
-args = commandArgs(trailingOnly = TRUE)
+library(ltm)
+library(rjson)
+library(data.table)
+#library(phenoAnalysis)
+library(dplyr)
+#library(rbenchmark)
+library(methods)
 
-pheno <- scan(grep("input_files", allArgs, value = TRUE),
-                    what = "character")
+allArgs <- commandArgs()
+
 
 outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
                     what = "character")
 
-# figure3_file_name = paste(pheno, ".figure3.png", sep="")
-figure3_file_name <- args[2]
-figure4_file_name <- args[3]
-h2File <- args[4]
+inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
+                    what = "character")
 
 
+refererQtl <- grep("qtl", inputFiles, value=TRUE)
 
-#Calculating missing data
-missingData <- apply(pheno, 2, function(x) sum(is.na(x)))
-md = data.frame(missingData)
+phenoDataFile      <- grep("\\/phenotype_data", inputFiles, value=TRUE)
+formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, fixed = FALSE, value = TRUE)
+metadataFile       <-  grep("metadata", inputFiles, value=TRUE)
 
-#Removing traits with more than 60% of missing data
-z=0
-for (i in 40:ncol(pheno)){
-  if (md[i,1]/nrow(pheno)>0.6){
-    pheno[[i-z]] <- NULL
-    z = z+1
+h2CoefficientsFile     <- grep("h2_coefficients_table", outputFiles, value=TRUE)
+h2CoefficientsJsonFile <- grep("h2_coefficients_json", outputFiles, value=TRUE)
+
+formattedPhenoData <- c()
+phenoData          <- c()
+
+phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
+                                   na.strings = c("NA", "", "--", "-", ".", "..")
+                                   ))
+
+metaData <- scan(metadataFile, what="character")
+
+allTraitNames <- c()
+nonTraitNames <- c()
+naTraitNames  <- c()
+
+if (length(refererQtl) != 0) {
+
+  allNames      <- names(phenoData)
+  nonTraitNames <- c("ID")
+  allTraitNames <- allNames[! allNames %in% nonTraitNames]
+
+} else {
+  allNames <- names(phenoData)
+  nonTraitNames <- metaData
+
+  allTraitNames <- allNames[! allNames %in% nonTraitNames]
+}
+
+print(allTraitNames)
+
+colnames(phenoData)
+
+n=0
+for (i in 40:ncol(phenoData)){
+  test = is.numeric(phenoData[,i])
+  if (test == "TRUE"){
+    n = n +1
   }
 }
 
-colnames(pheno)
-traits <- colnames(pheno)[40:ncol(pheno)]
-
-n=0
-for (i in 40:ncol(pheno)){
-	test = is.numeric(pheno[,i])
-	if (test == "TRUE"){
-		n = n +1
-	}
-}
-
-
-# n = round(n/2)
-
-z=1
-png(figure3_file_name,height=900)
-par(mar=c(4,4,2,2))
-par(mfrow=c(n,2))
-for(i in 40:ncol(pheno)){
-	test = is.numeric(pheno[,i])
-	if (test == "TRUE") {
-		hist(pheno[,i], main = "Data Distribution", xlab = traits[z])
-		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
-		z=z+1
-	}
-	else {
-		z=z+1
-	}
-}
-dev.off()
-
-# z=1
-# png(figure4_file_name,height=900)
-# par(mar=c(4,4,2,2))
-# par(mfrow=c(n,2))
-# for(i in 40:ncol(pheno)){
-# 	test = is.numeric(pheno[,i])
-# 	if (test == "TRUE") {
-# 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
-# 		z=z+1
-# 	}
-# 	else {
-# 		z=z+1
-# 	}
-# }
-# dev.off()
-
-#Calculating components of variance and heritability
-her = rep(NA,(ncol(pheno)-39))
-Vg = rep(NA,(ncol(pheno)-39))
-Ve = rep(NA,(ncol(pheno)-39))
-resp_var = rep(NA,(ncol(pheno)-39))
+her = rep(NA,(ncol(phenoData)-39))
+Vg = rep(NA,(ncol(phenoData)-39))
+Ve = rep(NA,(ncol(phenoData)-39))
+resp_var = rep(NA,(ncol(phenoData)-39))
 numb = 1
 
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
 
-for (i in 40:(ncol(pheno))) {
-	test = is.numeric(pheno[,i])
-	if (test == "TRUE") {
-	  outcome = colnames(pheno)[i]
-	  
-	  model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + replicate + blockNumber,
-	                na.action = na.exclude,
-	                data=pheno)
-	  
-	  
-	  variance = as.data.frame(VarCorr(model))
-	  gvar = variance [1,'vcov']
-	  ervar = variance [2,'vcov']
-	  
-	  H2 = gvar/ (gvar + (ervar))
-	  H2nw = format(round(H2, 4), nsmall = 4)
-	  her[numb] = round(as.numeric(H2nw), digits =2)
-	  Vg[numb] = round(as.numeric(gvar), digits = 2)
-	  Ve[numb] = round(as.numeric(ervar), digits = 2)
-	  resp_var[numb] = colnames(pheno)[i]
-	  
-	  numb = numb + 1
+for (i in 40:(ncol(phenoData))) {
+  test = is.numeric(phenoData[,i])
+  if (test == "TRUE") {
+    outcome = colnames(phenoData)[i]
+    
+    model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
+                  na.action = na.exclude,
+                  data=phenoData)
+    
+    
+    variance = as.data.frame(VarCorr(model))
+    gvar = variance [1,'vcov']
+    ervar = variance [2,'vcov']
+    
+    H2 = gvar/ (gvar + (ervar))
+    H2nw = format(round(H2, 4), nsmall = 4)
+    her[numb] = round(as.numeric(H2nw), digits =2)
+    Vg[numb] = round(as.numeric(gvar), digits = 2)
+    Ve[numb] = round(as.numeric(ervar), digits = 2)
+    resp_var[numb] = colnames(phenoData)[i]
+    
+    numb = numb + 1
     }
     else {
-    	resp_var[numb] = colnames(pheno)[i]
-      	i = i+1	
+      resp_var[numb] = colnames(phenoData)[i]
+        i = i+1 
     }
 }
 
 #Prepare information to export data
 Heritability = data.frame(resp_var,Vg, Ve, her)
-
 library(tidyverse)
 Heritability = Heritability %>% 
   rename(
@@ -129,22 +122,57 @@ Heritability = Heritability %>%
     Vg = Vg,
     Ve = Ve
   )
-
-fwrite(coefficients,
-       file      = Heritability,
-       row.names = TRUE,
-       sep       = "\t",
-       quote     = FALSE,
-       )
-
 print(Heritability)
 
 library(gridExtra)
-png(h2File, height=(25*numb), width=800)
+png(h2CoefficientsFile, height=(25*numb), width=800)
 par(mar=c(4,4,2,2))
 p<-tableGrob(Heritability)
 grid.arrange(p)
 dev.off()
 
 
-#-------------------------------------------------------------------------
+
+#remove rows and columns that are all "NA"
+heritability2json <- function(mat) {
+    mat <- as.list(as.data.frame(t(mat)))
+    names(mat) <- NULL
+    toJSON(mat)
+}
+
+traits <- Heritability$trait
+
+heritabilityList <- list(
+                     "traits" = toJSON(traits),
+                     "coeffiecients" =heritability2json(Heritability)
+                   )
+
+heritabilityJson <- paste("{",paste("\"", names(heritabilityList), "\":", heritabilityList, collapse=","), "}")
+
+heritabilityJson <- list(heritabilityJson)
+
+fwrite(Heritability,
+       file      = h2CoefficientsFile,
+       row.names = FALSE,
+       sep       = "\t",
+       quote     = FALSE,
+       )
+
+fwrite(heritabilityJson,
+       file      = h2CoefficientsJsonFile,
+       col.names = FALSE,
+       row.names = FALSE,
+       qmethod   = "escape"
+       )
+
+## if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
+##   fwrite(formattedPhenoData,
+##          file      = formattedPhenoFile,
+##          sep       = "\t",
+##          row.names = TRUE,
+##          quote     = FALSE,
+##          )
+## }
+
+
+q(save = "no", runLast = FALSE)

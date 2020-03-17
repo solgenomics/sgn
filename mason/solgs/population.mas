@@ -84,12 +84,12 @@ $acronym
      pop_id  => $pop_id,
 &>
 
-<& population/heritability.mas, 
-     pop_id  => $pop_id,
-&>
-
 <& population/acronym.mas,
    acronym => $acronym,
+&>
+
+<& /tools/heritability/heritability.mas, 
+     pop_id  => $pop_id,
 &>
 
 %} 
