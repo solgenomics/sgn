@@ -35,6 +35,9 @@ use CXGN::Stock::Search;
 use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
 use JSON;
+use Image::Size;
+use Math::Round;
+use URI::Encode qw(uri_encode uri_decode);
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -689,6 +692,34 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trained_keras_cnn_model_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+
+    my @keras_cnn_models;
+    my $q = "SELECT nd_protocol_id, name, description FROM nd_protocol WHERE type_id=$trained_keras_cnn_model_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    while (my ($nd_protocol_id, $name, $description) = $h->fetchrow_array()) {
+        push @keras_cnn_models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_keras_cnn_select";
+    my $name = $c->req->param("name") || "html_keras_cnn_select";
+
+    @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@keras_cnn_models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -696,7 +727,15 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $stock_id = $c->req->param('stock_id') || 'all';
     my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
+    my $trait_format = $c->req->param('trait_format');
+    my $contains_composable_cv_type = $c->req->param('contains_composable_cv_type');
+    my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $multiple = $c->req->param('multiple');
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
 
     if ($data_level eq 'all') {
         $data_level = '';
@@ -720,31 +759,83 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             my @val = ($_->[0], $_->[2]."|".$_->[1]);
             push @traits, \@val;
         }
-	} elsif ($trial_ids ne 'all') {
-		my @trial_ids = split ',', $trial_ids;
-		my %unique_traits_ids;
-		foreach (@trial_ids){
-			my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
-			my $traits_assayed = $trial->get_traits_assayed($data_level);
-			foreach (@$traits_assayed) {
-				$unique_traits_ids{$_->[0]} = [$_->[0], $_->[1]." (".$_->[2]." Phenotypes)"];
-			}
-		}
-        @traits = values %unique_traits_ids;
-	}
+    } elsif ($trial_ids ne 'all') {
+        my @trial_ids = split ',', $trial_ids;
+        my %unique_traits_ids;
+        my %unique_traits_ids_count;
+        my %unique_traits_ids_drone_project;
+        foreach (@trial_ids){
+            my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+            my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, $contains_composable_cv_type);
+            foreach (@$traits_assayed) {
+                $unique_traits_ids{$_->[0]} = $_;
+                if ($_->[5]) {
+                    push @{$unique_traits_ids_drone_project{$_->[0]}}, $_->[5];
+                }
+                if ($_->[3]) {
+                    $unique_traits_ids_count{$_->[0]} += $_->[3];
+                }
+            }
+        }
+        if ($select_format eq 'component_table_select') {
+            my $html = '<table class="table table-hover table-bordered" id="'.$id.'"><thead><th>Observation Variable Components</th><th>Select</th></thead><tbody>';
+            my %unique_components;
+            foreach (values %unique_traits_ids) {
+                foreach my $component (@{$_->[2]}) {
+                    $unique_components{$_->[0]}->{num_pheno} = $_->[3];
+                    $unique_components{$_->[0]}->{imaging_project_id} = $_->[4];
+                    $unique_components{$_->[0]}->{imaging_project_name} = $_->[5];
+                    if ($component->{cv_type} && $component->{cv_type} eq $contains_composable_cv_type) {
+                        $unique_components{$_->[0]}->{contains_cv_type} = $component->{name};
+                    }
+                    else {
+                        push @{$unique_components{$_->[0]}->{cv_types}}, $component->{name};
+                    }
+                }
+            }
+            my %separated_components;
+            while (my ($k, $v) = each %unique_components) {
+                my $string_cv_types = join ',', @{$v->{cv_types}};
+                push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}, $v->{num_pheno}, $v->{imaging_project_id}, $v->{imaging_project_name}];
+            }
+            while (my ($k, $v) = each %separated_components) {
+                $html .= "<tr><td>".$k."</td><td>";
+                foreach (@$v) {
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
+                    if ($_->[3] && $_->[4]) {
+                        $html .= " From ".$_->[4];
+                    }
+                    $html .= ")<br/>";
+                }
+                $html .= "</td></tr>";
+            }
+            $html .= "</tbody></table>";
+            $c->stash->{rest} = { select => $html };
+            $c->detach;
+        }
+        elsif ($select_format eq 'html_select') {
+            foreach (values %unique_traits_ids) {
+                my $text = $_->[1];
+                my $phenotype_count = $unique_traits_ids_count{$_->[0]};
+                if (exists($unique_traits_ids_drone_project{$_->[0]})) {
+                    my $imaging_project_names = join ',', @{$unique_traits_ids_drone_project{$_->[0]}};
+                    $text .= " ($imaging_project_names $phenotype_count Phenotypes)";
+                } else {
+                    $text .= " (".$phenotype_count." Phenotypes)";
+                }
+                push @traits, [$_->[0], $text];
+            }
+        }
+    }
 
-	@traits = sort { $a->[1] cmp $b->[1] } @traits;
-
-    my $id = $c->req->param("id") || "html_trial_select";
-    my $name = $c->req->param("name") || "html_trial_select";
-	my $size = $c->req->param("size");
+    @traits = sort { $a->[1] cmp $b->[1] } @traits;
 
     my $html = simple_selectbox_html(
-      multiple => 1,
+      multiple => $multiple,
       name => $name,
       id => $id,
       choices => \@traits,
-	  size => $size
+      size => $size
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -1065,6 +1156,249 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     my @result;
     while (my $r = $drone_imagery_plot_polygons_rs->next) {
         push @result, [$r->projectprop_id, $r->get_column('project_name')];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_drone_imagery_plot_polygon_types : Path('/ajax/html/select/drone_imagery_plot_polygon_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $names_as_select = $c->req->param("names_as_select") || 0;
+    my $standard_process = $c->req->param("standard_process_type") || 'minimal';
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $plot_polygon_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+
+    my %terms;
+    while (my($type_id, $o) = each %$plot_polygon_image_types) {
+        my %standard_processes = map {$_ => 1} @{$o->{standard_process}};
+        if (exists($standard_processes{$standard_process})) {
+            $terms{$type_id} = $o;
+        }
+    }
+
+    my @result;
+    foreach my $type_id (sort keys %terms) {
+        my $t = $terms{$type_id};
+        if ($names_as_select) {
+            push @result, [$t->{name}, $t->{name}];
+        } else {
+            push @result, [$type_id, $t->{name}];
+        }
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_micasense_aligned_raw_images : Path('/ajax/html/select/micasense_aligned_raw_images') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
+
+    my @result;
+    foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+        my $image_ids_array = $saved_micasense_stacks->{$_};
+        my @image_ids;
+        foreach (@$image_ids_array) {
+            push @image_ids, $_->{image_id};
+        }
+        my $image_ids_string = join ',', @image_ids;
+        push @result, [$image_ids_string, $image_ids_string];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_aligned_raw_images_grid') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_micasense_stacks_grid_select";
+    my $name = $c->req->param("name") || "drone_imagery_micasense_stacks_grid_select";
+
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
+
+    my %gps_images;
+    my %longitudes;
+    my %latitudes;
+    foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+        my $image_ids_array = $saved_micasense_stacks->{$_};
+        my $nir_image = $image_ids_array->[3];
+        my $latitude = nearest(0.00001,$nir_image->{latitude});
+        my $longitude = nearest(0.00001,$nir_image->{longitude});
+        $longitudes{$longitude}++;
+        $latitudes{$latitude}++;
+        my @stack_image_ids;
+        foreach (@$image_ids_array) {
+            push @stack_image_ids, $_->{image_id};
+        }
+        push @{$gps_images{$latitude}->{$longitude}}, {
+            nir_image_id => $nir_image->{image_id},
+            image_ids => \@stack_image_ids
+        };
+    }
+    # print STDERR Dumper \%longitudes;
+    # print STDERR Dumper \%latitudes;
+
+    my $html = "<table class='table table-bordered table-hover'><thead><tr><th>Latitudes</th>";
+    foreach my $lon (sort {$a <=> $b} keys %longitudes) {
+        $html .= "<th>".$lon."</th>";
+    }
+    $html .= "</tr></thead><tbody>";
+    foreach my $lat (sort {$a <=> $b} keys %latitudes) {
+        $html .= "<tr><td>".$lat."</td>";
+        foreach my $lon (sort {$a <=> $b} keys %longitudes) {
+            $html .= "<td>";
+            if ($gps_images{$lat}->{$lon}) {
+                foreach my $img_id_info (@{$gps_images{$lat}->{$lon}}) {
+                    $html .= "<span class='glyphicon glyphicon-picture' name='".$name."' data-image_id='".$img_id_info->{nir_image_id}."' data-image_ids='".encode_json($img_id_info->{image_ids})."' ></span>";
+                }
+            }
+            $html .= "</td>";
+        }
+        $html .= "</tr>";
+    }
+    $html .= "</tbody></table>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_templates_partial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_template_partial_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_template_partial_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
+    my $q = "SELECT value FROM projectprop WHERE project_id=? AND type_id=$manual_plot_polygon_template_partial;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($drone_run_project_id);
+
+    my @result;
+    my %unique_results;
+    while (my ($value) = $h->fetchrow_array()) {
+        if ($value) {
+            my $partial_templates = decode_json $value;
+            foreach my $t (@$partial_templates) {
+                my $image_id = $t->{image_id};
+                my $polygon = $t->{polygon};
+                my $template_name = $t->{template_name};
+                $unique_results{$template_name.": ".scalar(keys %$polygon)." Plots"} = uri_encode(encode_json($polygon));
+            }
+        }
+    }
+
+    while (my ($k, $v) = each %unique_results) {
+        push @result, [$v, $k];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_plot_image_sizes : Path('/ajax/html/select/plot_image_sizes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_plot_polygon_type_select";
+    my $name = $c->req->param("name") || "drone_imagery_plot_polygon_type_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>[$drone_run_project_id],
+    });
+    my ($result, $total_count) = $images_search->search();
+
+    my @result;
+    my %unique_sizes;
+    foreach (@$result) {
+        my $image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
+        my $image_url = $image->get_image_url('original_converted');
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my @size = imgsize($image_fullpath);
+        my $str = join ',', @size;
+        $unique_sizes{$str} = \@size;
+    }
+
+    while (my($str, $size) = each %unique_sizes) {
+        push @result, [$str, $size->[0]." width and ".$size->[1]." height"];
     }
 
     if ($empty) {

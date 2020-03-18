@@ -19,6 +19,8 @@ my $json = "{
     \"organization\" : \"BTI\",
     \"contact_email\" : \"mcclintock\@btiscience.org\",
     \"jbrowse_link\" : \"https://solgenomics.net/jbrowse/myfav\",
+    \"ftp_link\" : \"https://solgenomics.net/ftp/myfav\",
+    \"ncbi_link\" : \"https://solgenomics.net/ncbi/myfav\",
     \"website\" : \"https://solgenomics.net\"
 }";
 
@@ -28,6 +30,8 @@ $si->from_json($json);
 is($si->organization(), "BTI", "organization test");
 is($si->contact_email(), 'mcclintock@btiscience.org', "contact email test");
 is($si->jbrowse_link(), "https://solgenomics.net/jbrowse/myfav", "jbrowse link test");
+is($si->ftp_link(), "https://solgenomics.net/ftp/myfav", "ftp link test");
+is($si->ncbi_link(), "https://solgenomics.net/ncbi/myfav", "ncbi link test");
 is($si->website(), "https://solgenomics.net", "website accessor test");
 
 
@@ -46,6 +50,8 @@ my $si2 = CXGN::Stock::SequencingInfo->new( { schema => $f->bcs_schema(), stockp
 is($si2->organization(), "BTI", "organization test");
 is($si2->contact_email(), 'mcclintock@btiscience.org', "contact email test");
 is($si2->jbrowse_link(), "https://solgenomics.net/jbrowse/myfav", "jbrowse link test");
+is($si2->ftp_link(), "https://solgenomics.net/ftp/myfav", "ftp link test");
+is($si2->ncbi_link(), "https://solgenomics.net/ncbi/myfav", "ncbi link test");
 is($si2->website(), "https://solgenomics.net", "website accessor test");
 is($si2->stock_id(), $si->stock_id(), "stock_id test");
 
