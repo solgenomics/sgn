@@ -311,16 +311,10 @@ function createHeritabilityTable (tableId) {
 }
 
 function plotHeritability (data, divPlace) {
-
-    data = data.replace(/\s/g, '');
-    data = data.replace(/\\/g, '');
-    data = data.replace(/^\"/, '');
-    data = data.replace(/\"$/, '');
-    data = data.replace(/\"NA\"/g, 100);
-    
-    data = JSON.parse(data);
+    console.log(data)
+  
     if (data) {
-    var tableId = data;    
+    var tableId = 'heritability_table';    
     var table = createHeritabilityTable(tableId);
 
     jQuery('#heritability_canvas').append(table); 
