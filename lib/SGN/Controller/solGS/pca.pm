@@ -34,8 +34,21 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 	    $c->stash->{data_set_type} = 'combined_populations';	
 	}
     }
+
+    if ($id)
+    {
+	$c->stash->{file_id} = $id;
+	$self->format_pca_output($c);
+	my $ret = $c->stash->{formatted_pca_output};   
+	$ret = to_json($ret);       
+	$c->res->content_type('application/json');
+	$c->res->body($ret);  
+    }
+    else
+    {
     
-    $c->stash->{template} = '/solgs/pca/analysis.mas';
+	$c->stash->{template} = '/solgs/pca/analysis.mas';
+   }
 
 }
 
@@ -133,22 +146,22 @@ sub format_pca_output {
 	$self->pca_scores_file($c);
 	my $scores_file = $c->stash->{pca_scores_file};
 
-	$self->pca_variance_file($c);
-	my $variance_file = $c->stash->{pca_variance_file};
+	$self->pca_variances_file($c);
+	my $variances_file = $c->stash->{pca_variances_file};
 
 	$self->pca_loadings_file($c);
 	my $loadings_file = $c->stash->{pca_loadings_file};
 	
-	if ( -s $scores_file && -s $variance_file)
+	if ( -s $scores_file && -s $variances_file)
 	{
 	    my $scores    = $c->controller('solGS::Utils')->read_file_data($scores_file);
-	    my $variances = $c->controller('solGS::Utils')->read_file_data($variance_file);
+	    my $variances = $c->controller('solGS::Utils')->read_file_data($variances_file);
 	    my $loadings = $c->controller('solGS::Utils')->read_file_data($loadings_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
         
-	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-	    my $trial_names =  $c->stash->{trials_names};
+	    #$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+	    my $trial_names;# =  $c->stash->{trials_names};
 	    
 	    if ($scores)
 	    {
@@ -255,6 +268,34 @@ sub download_pca_loadings : Path('/download/pca/loadings/population') Args(1) {
 	foreach my $row ( read_file($loadings_file) )
 	{
 	    if ($count==1) {  $row = 'Variables' . $row;}             
+	    $row = join(",", split(/\s/, $row));
+	    $row .= "\n";
+ 
+	    push @pca_data, [ $row ];
+	    $count++;
+	}
+   
+	$c->res->content_type("text/plain");
+	$c->res->body(join "",  map{ $_->[0] } @pca_data);   
+    }  
+}
+
+
+sub download_pca_variances : Path('/download/pca/variances/population') Args(1) {
+    my ($self, $c, $file_id) = @_;
+
+    $c->stash->{file_id} = $file_id;
+    $self->pca_variances_file($c);
+    my $variances_file = $c->stash->{pca_variances_file};
+    
+    if (-s $variances_file) 
+    {
+	my @pca_data;
+	my $count=1;
+
+	foreach my $row ( read_file($variances_file) )
+	{
+	    if ($count==1) {  $row = 'PCs' . $row;}             
 	    $row = join(",", split(/\s/, $row));
 	    $row .= "\n";
  
@@ -574,7 +615,7 @@ sub pca_scores_file {
 }
 
 
-sub pca_variance_file {
+sub pca_variances_file {
     my ($self, $c) = @_;
     
     my $file_id = $c->stash->{file_id};
@@ -582,9 +623,9 @@ sub pca_variance_file {
 
     $c->stash->{cache_dir} = $pca_dir;
 
-    my $cache_data = {key       => "pca_variance_${file_id}",
-                      file      => "pca_variance_${file_id}.txt",
-                      stash_key => 'pca_variance_file'
+    my $cache_data = {key       => "pca_variances_${file_id}",
+                      file      => "pca_variances_${file_id}.txt",
+                      stash_key => 'pca_variances_file'
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -617,13 +658,13 @@ sub pca_output_files {
      
     $self->pca_scores_file($c);
     $self->pca_loadings_file($c);
-    $self->pca_variance_file($c);
+    $self->pca_variances_file($c);
     $self->combined_pca_trials_data_file($c);
 
     my $file_list = join ("\t",
                           $c->stash->{pca_scores_file},
                           $c->stash->{pca_loadings_file},
-			  $c->stash->{pca_variance_file},
+			  $c->stash->{pca_variances_file},
 			  $c->stash->{combined_pca_data_file},
 	);
      

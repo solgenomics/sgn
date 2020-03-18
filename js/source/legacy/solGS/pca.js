@@ -57,8 +57,9 @@ solGS.pca = {
 	  dataType = jQuery('#pca_data_type_select').val();  
 	}
 
-	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
-		console.log('pcaRun protocol id: ' + protocolId)
+	var protocolId = jQuery('#genotyping_protocol_id').val();
+	console.log('pcaRun protocol id: ' + protocolId)
+	
 	var traitId = jQuery('#trait_id').val();
 	var popDetails = solGS.getPopulationDetails();
 	
@@ -464,45 +465,41 @@ solGS.pca = {
 	    popName = plotData.list_name;
 	}
 
-	popName = popName ? popName + ' -- ' + plotData.data_type : plotData.data_type;
+	popName = popName ? popName + ' -- ' + plotData.data_type : ' -- ' + plotData.data_type;
 	
-	var pcaSoresDownload;
-	if (id)  {
-	    pcaScoresDownload = "/download/pca/scores/population/" + id;
-	}
+	var pcaScoresDownload = "/download/pca/scores/population/" + id;
 	
 	pcaPlot.append("a")
 	    .attr("xlink:href", pcaScoresDownload)
 	    .append("text")
-	    .text("[ Download PCA Scores")
+	    .text("Download PCA [ Scores")
 	    .attr("y", pad.top + height + 75)
             .attr("x", pad.left)
             .attr("font-size", 14)
-            .style("fill", "#954A09")
-
-	var pcaLoadingsDownload;
-	if (id)  {
-	    pcaLoadingsDownload = "/download/pca/loadings/population/" + id;
-	}
+            .style("fill", "#954A09");
+	
+	var pcaLoadingsDownload = "/download/pca/loadings/population/" + id;
 	
 	pcaPlot.append("a")
 	    .attr("xlink:href", pcaLoadingsDownload)
 	    .append("text")
-	    .text(" | Loadings ]")
+	    .text(" | Loadings")
 	    .attr("y", pad.top + height + 75)
             .attr("x", pad.left + 155)
             .attr("font-size", 14)
-            .style("fill", "#954A09")
+            .style("fill", "#954A09");
 
+	var pcaVariancesDownload = "/download/pca/variances/population/" + id;
+	
 	pcaPlot.append("a")
+	    .attr("xlink:href", pcaVariancesDownload)
 	    .append("text")
-	    .text(popName)
+	    .text(" | Variances ]")
 	    .attr("y", pad.top + height + 75)
-            .attr("x", pad.left + 250)
+            .attr("x", pad.left + 230)
             .attr("font-size", 14)
-            .style("fill", "#954A09")
-
-
+            .style("fill", "#954A09");
+	
 	// var shareLink;
 	// if (plotData.output_link)  {
 	//     shareLink = plotData.output_link;
@@ -511,11 +508,22 @@ solGS.pca = {
 	// pcaPlot.append("a")
 	//     .attr("xlink:href", shareLink)
 	//     .append("text")
-	//     .text("[Share plot]")
-	//     .attr("y", pad.top + height + 100)
-        //     .attr("x", pad.left)
+	//     .text(" | Share plot]")
+	//     .attr("y", pad.top + height + 75)
+        //     .attr("x", pad.left + 310)
         //     .attr("font-size", 14)
         //     .style("fill", "#954A09")
+
+	pcaPlot.append("a")
+	    .append("text")
+	    .text(popName)
+	    .attr("y", pad.top + height + 75)
+            .attr("x", pad.left + 310)
+            .attr("font-size", 14)
+            .style("fill", "#954A09");
+
+
+
 	
 	if (trialsNames && Object.keys(trialsNames).length > 1) {
 	    var trialsIds = jQuery.unique(trials);
@@ -589,6 +597,8 @@ jQuery(document).ready( function() {
     var url = document.URL;
     
     if (url.match(/pca\/analysis/)) {
+
+	
     
         var list = new CXGN.List();
         var listMenu = list.listSelect("pca_pops", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
@@ -632,7 +642,9 @@ jQuery(document).ready( function() {
      
     var url = document.URL;
     
-    if (url.match(/pca\/analysis/)) {  
+    if (url.match(/pca\/analysis/)) {
+
+	
         var selectId;
 	var selectName;
         var dataStructure;
