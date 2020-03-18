@@ -12,7 +12,7 @@ options(echo = FALSE)
 library(ltm)
 library(rjson)
 library(data.table)
-#library(phenoAnalysis)
+library(phenoAnalysis)
 library(dplyr)
 #library(rbenchmark)
 library(methods)
@@ -44,6 +44,10 @@ phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
                                    ))
 
 metaData <- scan(metadataFile, what="character")
+
+message('pheno file ', phenoDataFile)
+print(phenoData[1:3, ])
+print(metaData)
 
 allTraitNames <- c()
 nonTraitNames <- c()
@@ -81,16 +85,22 @@ resp_var = rep(NA,(ncol(phenoData)-39))
 numb = 1
 
 library(lmerTest)
-# Still need check temp data to ensure wright dimension
-
+                                        # Still need check temp data to ensure wright dimension
+print('phenodata before modeling')
+print(phenoData[1:3, ])
 for (i in 40:(ncol(phenoData))) {
-  test = is.numeric(phenoData[,i])
+    test = is.numeric(phenoData[,i])
+     print(paste0('test ', test))
   if (test == "TRUE") {
     outcome = colnames(phenoData)[i]
     
-    model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
-                  na.action = na.exclude,
-                  data=phenoData)
+    print(paste0('outcome ', outcome))
+    # (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
+    ## model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|blockNumber),
+    ##               na.action = na.exclude,
+    ##               data=phenoData)
+
+    model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
     
     
     variance = as.data.frame(VarCorr(model))
@@ -114,9 +124,10 @@ for (i in 40:(ncol(phenoData))) {
 
 #Prepare information to export data
 Heritability = data.frame(resp_var,Vg, Ve, her)
-library(tidyverse)
+print(Heritability)
+#library(tidyverse)
 Heritability = Heritability %>% 
-  rename(
+  dplyr::rename(
     trait = resp_var,
     Hert = her,
     Vg = Vg,
