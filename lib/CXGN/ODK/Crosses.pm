@@ -346,7 +346,7 @@ sub save_ona_cross_info {
                             $status_trial_identifier = 'FieldActivities/PlantStatus/plant_statusID';
                             $status_accession_identifier = 'FieldActivities/PlantStatus/plant_statusID';
                         } else {
-                            print STDERR Dumper $a;
+                            #print STDERR Dumper $a;
                         }
                         my $image_temp_file_info = $attachment_lookup{$a->{$attachment_identifier}};
                         my $image_temp_file = $image_temp_file_info->[0];
@@ -426,7 +426,7 @@ sub save_ona_cross_info {
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                        print STDERR Dumper $a;
+                        #print STDERR Dumper $a;
                     }
                 }
                 elsif ($activity_category eq 'laboratory'){
@@ -467,7 +467,7 @@ sub save_ona_cross_info {
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                        print STDERR Dumper $a;
+                        #print STDERR Dumper $a;
                     }
                 }
                 elsif ($activity_category eq 'screenhouse'){
@@ -482,12 +482,12 @@ sub save_ona_cross_info {
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                        print STDERR Dumper $a;
+                        #print STDERR Dumper $a;
                     }
                 }
                 else {
                     print STDERR "UNKNOWN ONA ODK $activity_category\n";
-                    print STDERR Dumper $a;
+                    #print STDERR Dumper $a;
                 }
             }
         }
@@ -510,7 +510,7 @@ sub save_ona_cross_info {
         return { success => 1 };
 
     } else {
-        print STDERR Dumper $resp;
+        #print STDERR Dumper $resp;
         return { error => "Could not connect to ONA" };
     }
 }
@@ -859,7 +859,7 @@ sub create_odk_cross_progress_tree {
 
                                                     my $user_category = $action_hash->{'userCategory'};
                                                     if ($user_category eq 'field'){
-                                                        print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
+                                                        #print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
                                                         my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
                                                         if ($activity_name eq 'firstPollination'){
                                                             $barcode_female_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
@@ -1220,7 +1220,7 @@ sub _get_plot_id_from_barcode_id {
     my ($plot_id) = $id_full =~ /plot_id\:(.*)Accession/;
     $plot_id =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
-    print STDERR "BARCODE PLOT ID =".Dumper($plot_id)."\n";
+    #print STDERR "BARCODE PLOT ID =".Dumper($plot_id)."\n";
     return $plot_id;
 }
 
@@ -1228,7 +1228,7 @@ sub _get_plot_id_from_barcode_id {
 sub _get_accession_from_plot {
     my $self = shift;
     my $plot_id = shift;
-    print STDERR "PLOT ID =".Dumper($plot_id)."\n";
+    #print STDERR "PLOT ID =".Dumper($plot_id)."\n";
     my $schema = $self->bcs_schema;
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -1247,7 +1247,7 @@ sub _get_accession_from_plot {
     } else {
         $accession_name = $accession[0];
     }
-    print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
+    #print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
 
     return $accession_name;
 
