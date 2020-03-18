@@ -252,13 +252,14 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
    
     $self->pheno_heritability_output_files($c);
     my $h2_json_file = $c->stash->{h2_coefficients_json_file};
-   
+    my $h2_table_file = $c->stash->{h2_coefficients_table_file}; 
     my $ret->{status} = 'failed';
-  
+
     if (!-s $h2_json_file)
     {
         $self->run_pheno_heritability_analysis($c);  
-        $h2_json_file = $c->stash->{h2_coefficients_json_file}; 
+        $h2_json_file = $c->stash->{h2_coefficients_json_file};
+	$h2_table_file = $c->stash->{h2_coefficients_table_file}; 
     }
     
     if (-s $h2_json_file)
@@ -267,8 +268,12 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
     my $acronyms = $c->stash->{acronym};
     
     $ret->{acronyms} = $acronyms;
-        $ret->{status}   = 'success';
-        $ret->{data}     = read_file($h2_json_file); 
+    $ret->{status}   = 'success';
+
+    print STDERR "\nheritability table file: $h2_table_file\n";
+    my $data = $c->controller('solGS::Utils')->read_file_data($h2_table_file);
+    $ret->{data} = $data;
+    #$ret->{data}     = read_file($h2_json_file); 
     } 
         
     $ret = to_json($ret);
