@@ -859,14 +859,15 @@ sub create_odk_cross_progress_tree {
 
                                                     my $user_category = $action_hash->{'userCategory'};
                                                     if ($user_category eq 'field'){
+                                                        print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
                                                         my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
                                                         if ($activity_name eq 'firstPollination'){
                                                             $barcode_female_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
                                                             $barcode_male_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
                                                             $barcode_female_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
                                                             $barcode_male_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                            $db_female_accession_name = _get_accession_from_plot($barcode_female_plot_id),
-                                                            $db_male_accession_name => _get_accession_from_plot($barcode_male_plot_id),
+                                                            $db_female_accession_name = $self-> _get_accession_from_plot($barcode_female_plot_id),
+                                                            $db_male_accession_name = $self-> _get_accession_from_plot($barcode_male_plot_id),
                                                             my $activity_summary = {
                                                                 #femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
                                                                 #maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
@@ -1227,7 +1228,8 @@ sub _get_plot_id_from_barcode_id {
 sub _get_accession_from_plot {
     my $self = shift;
     my $plot_id = shift;
-    my $schema = $self->get_bcs_schema();
+    print STDERR "PLOT ID =".Dumper($plot_id)."\n";
+    my $schema = $self->bcs_schema;
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
