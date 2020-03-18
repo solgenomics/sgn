@@ -1,10 +1,10 @@
  #SNOPSIS
 
  #runs phenotypic heritability analysis.
- #Correlation coeffiecients are stored in tabular and json formats 
+ #Heritability coeffiecients are stored in tabular and json formats 
 
  #AUTHOR
- # Isaak Y Tecle (iyt2@cornell.edu)
+ # Christiano Simoes (ccs263@cornell.edu)
 
 
 options(echo = FALSE)
@@ -70,11 +70,27 @@ print(allTraitNames)
 
 colnames(phenoData)
 
-n=0
+#Calculating missing data
+missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
+md = data.frame(missingData)
+
+
+#Removing traits with more than 60% of missing data
+z=0
+for (i in 40:ncol(phenoData)){
+  if (md[i,1]/nrow(phenoData)>0.6){
+    phenoData[[i-z]] <- NULL
+    z = z+1
+  }
+}
+
+#Removing non numeric data
+z=0
 for (i in 40:ncol(phenoData)){
   test = is.numeric(phenoData[,i])
-  if (test == "TRUE"){
-    n = n +1
+  print(paste0('test', test))
+  if (test == 'FALSE'){
+    phenoData[,i] <- NULL
   }
 }
 
@@ -83,24 +99,18 @@ Vg = rep(NA,(ncol(phenoData)-39))
 Ve = rep(NA,(ncol(phenoData)-39))
 resp_var = rep(NA,(ncol(phenoData)-39))
 numb = 1
-
 library(lmerTest)
-                                        # Still need check temp data to ensure wright dimension
 print('phenodata before modeling')
 print(phenoData[1:3, ])
 for (i in 40:(ncol(phenoData))) {
-    test = is.numeric(phenoData[,i])
-     print(paste0('test ', test))
-  if (test == "TRUE") {
-    outcome = colnames(phenoData)[i]
-    
-    print(paste0('outcome ', outcome))
-    # (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
-    ## model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|blockNumber),
-    ##               na.action = na.exclude,
-    ##               data=phenoData)
+    outcome = colnames(phenoData)[i]    
+    model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
+                  na.action = na.exclude,
+                  data=phenoData)
 
-    model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
+    print(paste0('outcome ', outcome))
+ 
+    # model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
     
     
     variance = as.data.frame(VarCorr(model))
@@ -113,13 +123,14 @@ for (i in 40:(ncol(phenoData))) {
     Vg[numb] = round(as.numeric(gvar), digits = 2)
     Ve[numb] = round(as.numeric(ervar), digits = 2)
     resp_var[numb] = colnames(phenoData)[i]
+
+    numb = numb+1
     
-    numb = numb + 1
-    }
-    else {
-      resp_var[numb] = colnames(phenoData)[i]
-        i = i+1 
-    }
+    # }
+    # else {
+    #   resp_var[numb] = colnames(phenoData)[i]
+    #     i = i+1 
+    # }
 }
 
 #Prepare information to export data
@@ -134,15 +145,6 @@ Heritability = Heritability %>%
     Ve = Ve
   )
 print(Heritability)
-
-library(gridExtra)
-png(h2CoefficientsFile, height=(25*numb), width=800)
-par(mar=c(4,4,2,2))
-p<-tableGrob(Heritability)
-grid.arrange(p)
-dev.off()
-
-
 
 #remove rows and columns that are all "NA"
 heritability2json <- function(mat) {
@@ -175,15 +177,6 @@ fwrite(heritabilityJson,
        row.names = FALSE,
        qmethod   = "escape"
        )
-
-## if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
-##   fwrite(formattedPhenoData,
-##          file      = formattedPhenoFile,
-##          sep       = "\t",
-##          row.names = TRUE,
-##          quote     = FALSE,
-##          )
-## }
 
 
 q(save = "no", runLast = FALSE)

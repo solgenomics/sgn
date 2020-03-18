@@ -225,7 +225,7 @@ function phenotypicHeritability () {
  
     var population = getPopulationDetails();
     
-    // jQuery("#heritability_message").html("Running heritability... please wait...");
+    jQuery("#heritability_message").html("Running heritability... please wait...");
          
     jQuery.ajax({
             type: 'POST',

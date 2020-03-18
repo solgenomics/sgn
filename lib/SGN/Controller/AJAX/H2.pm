@@ -264,10 +264,10 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
     
     if (-s $h2_json_file)
     {
-    $self->trait_acronyms($c);
-    my $acronyms = $c->stash->{acronym};
+    # $self->trait_acronyms($c);
+    # my $acronyms = $c->stash->{acronym};
     
-    $ret->{acronyms} = $acronyms;
+    # $ret->{acronyms} = $acronyms;
     $ret->{status}   = 'success';
 
     print STDERR "\nheritability table file: $h2_table_file\n";

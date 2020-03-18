@@ -21,7 +21,7 @@ colnames(pheno) <- new_names
 
 
 #Calculating missing data
-missingData <- apply(pheno, 2, function(x) sum(is.na(x)))
+missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
 md = data.frame(missingData)
 
 #Removing traits with more than 60% of missing data
