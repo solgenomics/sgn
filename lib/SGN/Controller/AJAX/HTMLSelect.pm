@@ -1290,11 +1290,11 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
             my $partial_templates = decode_json $value;
             foreach my $t (@$partial_templates) {
                 my $nir_image_id = $t->{image_id};
-                my $polygon = $t->{polygon};
+                my $polygon = $t->{stock_polygon};
                 my $template_name = $t->{template_name};
                 push @{$unique_image_polygons{$nir_image_id}}, {
                     template_name => $template_name,
-                    polygon => $polygon
+                    stock_polygon => $polygon
                 };
             }
         }
@@ -1319,7 +1319,7 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
         my @polygons;
         if ($unique_image_polygons{$nir_image_id}) {
             foreach (@{$unique_image_polygons{$nir_image_id}}) {
-                push @polygons, $_->{polygon};
+                push @polygons, $_->{stock_polygon};
                 push @template_strings, $_->{template_name};
             }
         }

@@ -2356,7 +2356,7 @@ jQuery(document).ready(function() {
                                         plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
                                     }
                                     drawPolyline(plot_polygons_display_points);
-                                    drawWaypoints(plot_polygons_display_points, i, 0);
+                                    drawWaypoints(plot_polygons_display_points, property, 0);
                                 }
                             }
                         }
@@ -2437,7 +2437,7 @@ jQuery(document).ready(function() {
                                         plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
                                     }
                                     drawPolyline(plot_polygons_display_points);
-                                    drawWaypoints(plot_polygons_display_points, i, 0);
+                                    drawWaypoints(plot_polygons_display_points, property, 0);
                                 }
                             }
                         }
@@ -2762,7 +2762,7 @@ jQuery(document).ready(function() {
                         plot_polygons_display_points.push(plot_polygons_ind_4_points[0]);
                     }
                     drawPolyline(plot_polygons_display_points);
-                    drawWaypoints(plot_polygons_display_points, i, 0);
+                    drawWaypoints(plot_polygons_display_points, property, 0);
                 }
             }
         }

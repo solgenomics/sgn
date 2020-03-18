@@ -1057,7 +1057,8 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     push @save_stock_polygons, {
         template_name => $partial_template_name,
         image_id => $image_ids[3], #NIR image id
-        polygon => $polygon_hash
+        polygon => $polygon_hash,
+        stock_polygon => \%stock_polygon
     };
 
     my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
