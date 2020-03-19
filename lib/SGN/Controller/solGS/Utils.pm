@@ -46,6 +46,29 @@ sub read_file_data {
 }
 
 
+sub structure_downloadable_data {
+    my ($self, $file, $row_name) = @_;
+
+    my @data;
+    if (-s $file) 
+    {
+	my $count = 1;
+	foreach my $row (read_file($file) )
+	{
+	    $row_name = "\t" if !$row_name;
+	    $row = $row_name . $row  if $count == 1;	              
+	    $row = join("\t", split(/\s/, $row));
+	    $row .= "\n";
+	    
+	    push @data, [ $row ];
+	    $count++;
+	}
+    }
+
+    return \@data;
+}
+
+
 sub top_10 {
     my ($self, $file) = @_;
       
