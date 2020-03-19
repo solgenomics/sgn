@@ -100,13 +100,13 @@ solGS.dataset = {
     },
 
 
-    datasetTrialsTrainingPop: function(datasetId) {
+    datasetTrialsTrainingPop: function (datasetId) {
 	jQuery.ajax({  
             type: 'POST',
             dataType: "json",
             url: '/solgs/get/dataset/trials',
             data: {'dataset_id': datasetId},
-            success: function(res) {
+            success: function (res) {
 		
 		var trialsIds = res.trials_ids;
 		var comboPopsId = res.combo_pops_id; 
@@ -143,7 +143,7 @@ solGS.dataset = {
     },
 
 
-    datasetPlotsTrainingPop: function(datasetId, datasetName) {
+    datasetPlotsTrainingPop: function (datasetId, datasetName) {
 	this.queueDatasetPlotsTrainingPop(datasetId, datasetName);	
     },
 
@@ -249,7 +249,7 @@ solGS.dataset = {
 		dataType: 'json',
 		data: {'arguments': args},
 		url: '/solgs/check/predicted/dataset/selection',                   
-		success: function(response) {	
+		success: function (response) {	
 		    args = JSON.parse(args);
 		    
 		    if (response.output) {
@@ -257,7 +257,7 @@ solGS.dataset = {
 			
 			if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
 			    solGS.sIndex.listSelectionIndexPopulations();
-			    listGenCorPopulations();
+			    solGS.correlation.listGenCorPopulations();
 			    solGS.geneticGain.ggSelectionPopulations();
 			    solGS.cluster.listClusterPopulations();
 			} 			
@@ -284,7 +284,7 @@ solGS.dataset = {
     },
 
     
-    displayPredictedDatasetTypeSelectionPops: function(args, output) {
+    displayPredictedDatasetTypeSelectionPops: function (args, output) {
    
 	var datasetName = args.dataset_name;
 	var datasetId   = args.dataset_id;
