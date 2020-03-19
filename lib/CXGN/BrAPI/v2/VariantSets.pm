@@ -267,7 +267,6 @@ sub calls {
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
         trial_list=>[$variantset_id],
-        markerprofile_id_list=>\@callset_id,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
