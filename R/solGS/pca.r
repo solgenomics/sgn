@@ -104,6 +104,7 @@ if (dataType == 'genotype') {
         phenoData <- na.omit(phenoData)
     }
 
+    phenoData <- phenoData[, apply(phenoData, 2, var) != 0 ]
     phenoData <- scale(phenoData, center=TRUE, scale=TRUE)
     phenoData <- round(phenoData, 3)
 }
