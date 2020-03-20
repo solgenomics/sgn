@@ -88,19 +88,25 @@ if (file.info(genoFile)$size == 0) {
 readFilteredGenoData <- c()
 filteredGenoData <- c()
 if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
-  filteredGenoData     <- fread(filteredGenoFile, na.strings = c("NA", "", "--", "-"),  header = TRUE)
+    filteredGenoData     <- fread(filteredGenoFile,
+                                  na.strings = c("NA", "", "--", "-"),
+                                  header = TRUE)
   readFilteredGenoData <- 1
 }
 
 genoData <- c()
 if (is.null(filteredGenoData)) {
-  genoData <- fread(genoFile, na.strings = c("NA", "", "--", "-"),  header = TRUE)
+    genoData <- fread(genoFile,
+                      na.strings = c("NA", "", "--", "-"),
+                      header = TRUE)
+    
   genoData <- unique(genoData, by='V1')
 }
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
-  formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
-                                            na.strings = c("NA", "", "--", "-", ".")
+    formattedPhenoData <- data.frame(fread(formattedPhenoFile,
+                                           header = TRUE,
+                                           na.strings = c("NA", "", "--", "-", ".")
                                             ))
 
 } else {
@@ -114,8 +120,10 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
     stop("phenotype data file is empty.")
   }
 
-  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", "", "--", "-", "."), header = TRUE)
-  phenoData <- data.frame(phenoData)
+  phenoData <- data.frame(fread(phenoFile,
+                     sep="\t",
+                     na.strings = c("NA", "", "--", "-", "."),
+                     header = TRUE))
 }
 
 phenoTrait <- c()
@@ -210,7 +218,10 @@ filteredPredGenoData     <- c()
 ## } else
 if (length(selectionFile) != 0) {
     
-  selectionData <- fread(selectionFile, na.strings = c("NA", "", "--", "-"),)
+    selectionData <- fread(selectionFile,
+                           header = TRUE,
+                           na.strings = c("NA", "", "--", "-"))
+    
   selectionData <- unique(selectionData, by='V1')
   
   selectionData <- filterGenoData(selectionData, maf=0.01)
@@ -295,7 +306,8 @@ relationshipMatrixFile <- grep("relationship_matrix", outputFiles, value = TRUE)
 
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
-    relationshipMatrix <- as.data.frame(fread(relationshipMatrixFile))
+      relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
+                                             header = TRUE))
 
     rownames(relationshipMatrix) <- relationshipMatrix[, 1]
     relationshipMatrix[, 1]      <- NULL
@@ -384,7 +396,8 @@ if (length(selectionData) == 0) {
   if (length(combinedGebvsFile) != 0) {
       fileSize <- file.info(combinedGebvsFile)$size
       if (fileSize != 0 ) {
-          combinedGebvs <- data.frame(fread(combinedGebvsFile))
+          combinedGebvs <- data.frame(fread(combinedGebvsFile,
+                                            header = TRUE))
 
         rownames(combinedGebvs) <- combinedGebvs[,1]
           combinedGebvs[,1]       <- NULL

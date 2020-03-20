@@ -60,6 +60,7 @@ if (dataType == 'genotype') {
     } else {
         genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
         genoData     <- fread(genoDataFile,
+                              header = TRUE,
                               na.strings = c("NA", " ", "--", "-", "."))
         
         genoData     <- unique(genoData, by='V1')
@@ -72,7 +73,7 @@ if (dataType == 'genotype') {
             genoData <- data.frame(genoData)
             genoData <- column_to_rownames(genoData, 'V1')          
         } else {
-            genoData <- fread(filteredGenoFile)
+            genoData <- fread(filteredGenoFile,  header = TRUE)
         }
     }
 } else if (dataType == 'phenotype') {
@@ -102,7 +103,7 @@ if (dataType == 'genotype') {
         phenoData <- cleanAveragePhenotypes(inputFiles, metaFile)       
         phenoData <- na.omit(phenoData)
     }
-    
+
     phenoData <- scale(phenoData, center=TRUE, scale=TRUE)
     phenoData <- round(phenoData, 3)
 }

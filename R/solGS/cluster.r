@@ -73,7 +73,10 @@ extractGenotype <- function(inputFiles) {
         genoData$trial <- NULL
     } else {
         genoFile <- genoFiles
-        genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-", "."))
+        genoData <- fread(genoFile,
+                          header = TRUE,
+                          na.strings = c("NA", " ", "--", "-", "."))
+        
         genoData <- unique(genoData, by = 'V1')
         
         filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
@@ -84,7 +87,7 @@ extractGenotype <- function(inputFiles) {
             genoData <- column_to_rownames(genoData, 'V1')
             
         } else {
-            genoData <- fread(filteredGenoFile)
+            genoData <- fread(filteredGenoFile, header = TRUE)
         }
     }
 
@@ -146,7 +149,7 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
 
     if (grepl('gebv', dataType, ignore.case = TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
-        gebvsData <- data.frame(fread(gebvsFile))
+        gebvsData <- data.frame(fread(gebvsFile, header = TRUE))
        
         clusterNa   <- gebvsData %>% filter_all(any_vars(is.na(.)))
         clusterData <- column_to_rownames(gebvsData, 'V1')    
@@ -166,7 +169,7 @@ sIndexFile <- grep("selection_index", inputFiles, value = TRUE)
 selectedIndexGenotypes <- c()
 
 if (length(sIndexFile) != 0) {   
-    sIndexData <- data.frame(fread(sIndexFile))
+    sIndexData <- data.frame(fread(sIndexFile, header = TRUE))
     selectionProp <- selectionProp * 0.01
     selectedIndexGenotypes <- sIndexData %>% top_frac(selectionProp)
     selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
