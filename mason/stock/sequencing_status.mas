@@ -75,6 +75,18 @@ $stock_id
                                 <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20" /><br />
                             </div>
                         </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">FTP link</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="FTP link" name="ftp_link" id="ftp_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">NCBI link</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="NCBI link" name="ncbi_link" id="ncbi_link" size="20" /><br />
+                            </div>
+                        </div>                        
                         <div>
                             <input type="hidden" id="sequencing_status_stock_id"  name="sequencing_status_stock_id" value="<% $stock_id %>" />
                             <input type="hidden" id="stockprop_id"  name="stockprop_id" />
