@@ -515,7 +515,7 @@ foreach (@grm1_split) {
     my @row = split "\t", $_;
     push @grm1_vals, ($row[1], $row[2]);
 }
-is_deeply(\@grm1_vals, [-0.333333333333333,-1.66666666666667,-1.66666666666667,-0.333333333333333]);
+is_deeply(\@grm1_vals, [1.63636363636364,-1.63636363636364,-1.63636363636364,1.63636363636364]);
 
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
@@ -527,7 +527,7 @@ foreach (@grm2_split) {
     my @row = split "\t", $_;
     push @grm2_vals, $row[2];
 }
-is_deeply(\@grm2_vals, [-0.333333333333333,-1.66666666666667,-0.333333333333333]);
+is_deeply(\@grm2_vals, [1.63636363636364,-1.63636363636364,1.63636363636364]);
 
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
@@ -539,7 +539,7 @@ foreach (@grm3_split) {
     my @row = split "\t", $_;
     push @grm3_vals, $row[2];
 }
-is_deeply(\@grm3_vals, [-0.333333333333333,-1.66666666666667,-0.333333333333333]);
+is_deeply(\@grm3_vals, [0.666666666666667,-0.666666666666667,0.666666666666667]);
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
