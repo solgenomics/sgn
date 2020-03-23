@@ -105,11 +105,6 @@ has 'create_date' => (
 
 #Filtering KEYS
 
-has 'marker_name_list' => (
-    isa => 'ArrayRef[Str]|Undef',
-    is => 'ro',
-);
-
 has 'chromosome_list' => (
     isa => 'ArrayRef[Int]|ArrayRef[Str]|Undef',
     is => 'ro',
