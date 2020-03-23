@@ -211,7 +211,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$_]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes)>0) {
                 my $p1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
@@ -283,7 +283,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes) > 0) {
                 # For old genotyping protocols without nd_protocolprop info...
@@ -343,7 +343,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes) > 0) {
                 # For old genotyping protocols without nd_protocolprop info...
