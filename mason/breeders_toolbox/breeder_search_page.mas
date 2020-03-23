@@ -189,20 +189,31 @@ $dataset_id => undef
             <table class="table">
                 <tr>
                   <td colspan="3">
+                    <span>Format</span>
                     <select class="wizard-download-genotypes-format form-control" >
-                        <option value="DosageMatrix">Dosage Matrix (tsv)</option>
-                        <option value="VCF">VCF</option>
+                        <option value="DosageMatrix">Dosage Matrix File Format (tsv)</option>
+                        <option value="VCF">VCF File Format</option>
                     </select>
                   </td>
+                  <td colspan="3">
+                    <span>Marker Set Filter</span>
+                    <select class="wizard-download-genotypes-marker-set-list-id form-control" id="wizard-download-genotypes-marker-set-list-id"></select>
+                  </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <button class="wizard-download-genotypes btn btn-sm btn-primary">
+                            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                            Download Genotypes
+                        </button>
+                    </td>
+                    <td colspan="3">
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
+                            Manage Marker Sets
+                        </button>
+                    </td>
                 </tr>
             </table>
-
-            <td colspan="3">
-                <button class="wizard-download-genotypes btn btn-sm btn-primary">
-                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                    Download Genotypes
-                </button>
-            </td>
           </div>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <table class="table">
@@ -222,6 +233,7 @@ $dataset_id => undef
                 </tr>
               <tr>
                 <td colspan="3">
+                  <span>Format</span>
                   <select class="wizard-download-genotypes-grm-format form-control" >
                       <option value="matrix">Genomic Relationship Matrix (tsv)</option>
                       <option value="three_column">3-Column Format (tsv)</option>
@@ -233,7 +245,7 @@ $dataset_id => undef
             <td colspan="3">
                 <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
                     <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                    Download Genetic Relationship Matrix (GRM)
+                    Download Genomic Relationship Matrix (GRM)
                 </button>
             </td>
 
