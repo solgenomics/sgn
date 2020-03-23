@@ -372,7 +372,7 @@ sub get_genotype_info {
     }
     if ($marker_name_list && scalar(@$marker_name_list)>0) {
         my $search_vals_sql = "'".join ("','" , @$marker_name_list)."'";
-        push @where_clause, "nd_protocolprop.value->'markers' \\?& array[$search_vals_sql]";
+        push @where_clause, "nd_protocolprop.value->'marker_names' \\?& array[$search_vals_sql]";
     }
     if ($marker_search_hash_list && scalar(@$marker_search_hash_list)>0) {
         foreach (@$marker_search_hash_list){
@@ -732,7 +732,7 @@ sub init_genotype_iterator {
     }
     if ($marker_name_list && scalar(@$marker_name_list)>0) {
         my $search_vals_sql = "'".join ("','" , @$marker_name_list)."'";
-        push @where_clause, "nd_protocolprop.value->'markers' \\?& array[$search_vals_sql]";
+        push @where_clause, "nd_protocolprop.value->'marker_names' \\?& array[$search_vals_sql]";
     }
     if ($marker_search_hash_list && scalar(@$marker_search_hash_list)>0) {
         foreach (@$marker_search_hash_list){
