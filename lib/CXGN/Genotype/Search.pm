@@ -1372,7 +1372,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, $self->chromosome_list, $self->start_position, $self->end_position, $self->marker_name_list);
 
             # For old protocols with no protocolprop info...
             if (scalar(@all_marker_objects) == 0) {
@@ -1802,7 +1802,7 @@ sub get_cached_file_VCF_compute_from_parents {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name', 'chrom', 'pos', 'alt', 'ref'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name', 'chrom', 'pos', 'alt', 'ref'], 1, $self->chromosome_list, $self->start_position, $self->end_position, $self->marker_name_list);
 
             # For old protocols with no protocolprop info...
             if (scalar(@all_marker_objects) == 0) {
