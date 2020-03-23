@@ -1,7 +1,14 @@
 
 
-library("methods")
-library("dplyr")
+library(ltm)
+library(rjson)
+library(data.table)
+library(phenoAnalysis)
+library(dplyr)
+#library(rbenchmark)
+library(methods)
+library(data.table)
+library(phenoAnalysis)
 
 ##### Get data #####
 args = commandArgs(trailingOnly = TRUE)
@@ -21,7 +28,7 @@ colnames(pheno) <- new_names
 
 
 #Calculating missing data
-missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
+missingData <- apply(pheno, 2, function(x) sum(is.na(x)))
 md = data.frame(missingData)
 
 #Removing traits with more than 60% of missing data
@@ -36,6 +43,17 @@ for (i in 40:ncol(pheno)){
 colnames(pheno)
 traits <- colnames(pheno)[40:ncol(pheno)]
 
+#Removing non numeric data
+z=0
+for (i in 40:ncol(pheno)){
+  test = is.numeric(pheno[,i])
+  print(paste0('test', test))
+  if (test == 'FALSE'){
+    pheno[,i] <- NULL
+  }
+}
+
+
 n=0
 for (i in 40:ncol(pheno)){
 	test = is.numeric(pheno[,i])
@@ -43,9 +61,6 @@ for (i in 40:ncol(pheno)){
 		n = n +1
 	}
 }
-
-
-# n = round(n/2)
 
 z=1
 png(figure3_file_name,height=250*n)
@@ -64,59 +79,49 @@ for(i in 40:ncol(pheno)){
 }
 dev.off()
 
-# z=1
-# png(figure4_file_name,height=900)
-# par(mar=c(4,4,2,2))
-# par(mfrow=c(n,2))
-# for(i in 40:ncol(pheno)){
-# 	test = is.numeric(pheno[,i])
-# 	if (test == "TRUE") {
-# 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
-# 		z=z+1
-# 	}
-# 	else {
-# 		z=z+1
-# 	}
-# }
-# dev.off()
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
 Vg = rep(NA,(ncol(pheno)-39))
 Ve = rep(NA,(ncol(pheno)-39))
 resp_var = rep(NA,(ncol(pheno)-39))
-numb = 1
 
+
+#checkning number of locations
+locs <- unique(pheno$locationDbId)
+szloc <- length(locs)
+
+numb = 1
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
 
 for (i in 40:(ncol(pheno))) {
-	test = is.numeric(pheno[,i])
-	if (test == "TRUE") {
-	  outcome = colnames(pheno)[i]
-	  
-	  model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
-	                na.action = na.exclude,
-	                data=pheno)
-	  
-	  
+	outcome = colnames(pheno)[i]    
+    print(paste0('outcome ', outcome))
+    if (szloc == 1){
+      model <- lmer(get(outcome)~(1|germplasmName)+replicate+blockNumber,
+        na.action = na.exclude,
+        data=pheno)
+    }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate +
+        blockNumber + germplasmName:locationDbId,
+        na.action = na.exclude,
+        data=pheno)
+    }
+    
 	  variance = as.data.frame(VarCorr(model))
 	  gvar = variance [1,'vcov']
 	  ervar = variance [2,'vcov']
 	  
 	  H2 = gvar/ (gvar + (ervar))
 	  H2nw = format(round(H2, 4), nsmall = 4)
-	  her[numb] = round(as.numeric(H2nw), digits =2)
+	  her[numb] = round(as.numeric(H2nw), digits =3)
 	  Vg[numb] = round(as.numeric(gvar), digits = 2)
 	  Ve[numb] = round(as.numeric(ervar), digits = 2)
 	  resp_var[numb] = colnames(pheno)[i]
 	  
 	  numb = numb + 1
-    }
-    else {
-    	resp_var[numb] = colnames(pheno)[i]
-      	i = i+1	
-    }
+
 }
 
 #Prepare information to export data

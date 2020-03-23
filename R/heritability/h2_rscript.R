@@ -98,19 +98,33 @@ her = rep(NA,(ncol(phenoData)-39))
 Vg = rep(NA,(ncol(phenoData)-39))
 Ve = rep(NA,(ncol(phenoData)-39))
 resp_var = rep(NA,(ncol(phenoData)-39))
+
+
+#Counting number of locations to create model
+locs <- unique(phenoData$locationDbId)
+szloc <- length(locs)
+
+
 numb = 1
 library(lmerTest)
 print('phenodata before modeling')
 print(phenoData[1:3, ])
 for (i in 40:(ncol(phenoData))) {
     outcome = colnames(phenoData)[i]    
-    model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate + blockNumber,
-                  na.action = na.exclude,
-                  data=phenoData)
 
     print(paste0('outcome ', outcome))
+    if (szloc == 1){
+      model <- lmer(get(outcome)~(1|germplasmName)+replicate+blockNumber,
+        na.action = na.exclude,
+        data=phenoData)
+    }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + 
+        replicate + blockNumber + germplasmName:locationDbId,
+        na.action = na.exclude,
+        data=phenoData)
+    }
  
-    # model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
+    #model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
     
     
     variance = as.data.frame(VarCorr(model))
@@ -119,7 +133,7 @@ for (i in 40:(ncol(phenoData))) {
     
     H2 = gvar/ (gvar + (ervar))
     H2nw = format(round(H2, 4), nsmall = 4)
-    her[numb] = round(as.numeric(H2nw), digits =2)
+    her[numb] = round(as.numeric(H2nw), digits =3)
     Vg[numb] = round(as.numeric(gvar), digits = 2)
     Ve[numb] = round(as.numeric(ervar), digits = 2)
     resp_var[numb] = colnames(phenoData)[i]
