@@ -268,13 +268,13 @@ protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
 protocol_property	vcf_map_details	Information about protocol, such as marker names, header info lines, and reference_genome_name	6/20/2018	nm529	00098
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
-composable_cvs	trait_ontology		05/01/2017		00073
-composable_cvs	composed_trait_ontology		05/01/2017		00073
-composable_cvs	object_ontology		05/01/2017		00073
-composable_cvs	attribute_ontology		05/01/2017		00073
-composable_cvs	method_ontology		05/01/2017		00073
-composable_cvs	unit_ontology		05/01/2017		00073
-composable_cvs	time_ontology		05/01/2017		00073
+composable_cvtypes	trait_ontology		05/01/2017		00073
+composable_cvtypes	composed_trait_ontology		05/01/2017		00073
+composable_cvtypes	object_ontology		05/01/2017		00073
+composable_cvtypes	attribute_ontology		05/01/2017		00073
+composable_cvtypes	method_ontology		05/01/2017		00073
+composable_cvtypes	unit_ontology		05/01/2017		00073
+composable_cvtypes	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
 phenotype_property  phenotype_outlier   suppressed phenotype measurement    01/04/2018  aco46   00089
 project_md_image	raw_drone_imagery	Raw images uploaded as drone imagery	9/6/2018	nm529	00103

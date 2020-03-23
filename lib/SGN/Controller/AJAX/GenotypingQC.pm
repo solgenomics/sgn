@@ -46,6 +46,7 @@ sub upload_genotype_qc_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my @error_status;
     my @success_status;
 
@@ -148,13 +149,14 @@ sub upload_genotype_qc_verify_POST : Args(0) {
 
     my $stored_genotypes = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         protocol_id_list=>[$protocol_id],
         genotypeprop_hash_select=>['GT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
         return_only_first_genotypeprop_for_stock=>0
     });
-    my $stored_genotypes_result = $stored_genotypes->get_genotype_info();
+    my $count = $stored_genotypes->init_genotype_iterator();
 
     my %distance_matrix;
     my %seen_stored_genotype_names;
@@ -165,8 +167,8 @@ sub upload_genotype_qc_verify_POST : Args(0) {
             markers=>$protocol_info->{marker_names}
         });
         
-        foreach (@$stored_genotypes_result) {
-            my $stock_name = $_->{stock_name};
+        foreach (my $stored_gt = $stored_genotypes->get_next_genotype_info()) {
+            my $stock_name = $stored_gt->{stock_name};
             $seen_stored_genotype_names{$stock_name}++;
             my $gt = CXGN::Genotype->new({
                 marker_encoding=>'GT',

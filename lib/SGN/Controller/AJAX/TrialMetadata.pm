@@ -302,6 +302,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
     my $display = $c->req->param('display');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -358,6 +359,16 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional = ' ,accession.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $trial_stock_type_id;
+    if ($trial_stock_type eq 'family_name') {
+        $trial_stock_type_id = $family_name_type_id;
+    } elsif ($trial_stock_type eq 'cross') {
+        $trial_stock_type_id = $cross_type_id;
+    } else {
+        $trial_stock_type_id = $accesion_type_id;
+    }
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -386,7 +397,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
 
@@ -462,6 +473,18 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_stocks : Chained('trial') PathPart('stocks') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my $stocks = $trial->get_accessions();
+
+    $c->stash->{rest} = { data => $stocks };
 }
 
 sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
@@ -1522,12 +1545,13 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
-sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
+sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   my $self = shift;
   my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-  my $old_accession_id = $c->req->param('old_accession_id');
-  my $new_accession = $c->req->param('new_accession');
+  my $old_stock_id = $c->req->param('old_stock_id');
+  my $new_stock = $c->req->param('new_stock');
+  my $trial_stock_type = $c->req->param('trial_stock_type');
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
@@ -1535,25 +1559,26 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
     return;
   }
 
-  if (!$new_accession){
-    $c->stash->{rest} = { error => "Provide new accession name." };
+  if (!$new_stock){
+    $c->stash->{rest} = { error => "Provide new stock name." };
     return;
   }
 
-  my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+  my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
-    old_accession_id => $old_accession_id,
-    new_accession => $new_accession,
+    old_accession_id => $old_stock_id,
+    new_accession => $new_stock,
+    trial_stock_type => $trial_stock_type,
   });
 
-  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+  my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
      if ($return_error) {
        $c->stash->{rest} = { error => $return_error };
        return;
      }
 
-  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
@@ -1609,7 +1634,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   $c->stash->{rest} = { success => 1};
 }
 
-sub substitute_accession : Chained('trial') PathPart('substitute_accession') Args(0) {
+sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   my $self = shift;
 	my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -1626,7 +1651,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   if ($plot_1_id == $plot_2_id){
-    $c->stash->{rest} = { error => "Choose a different plot/accession in 'select Accession 2' to perform this operation." };
+    $c->stash->{rest} = { error => "Choose a different plot/stock in 'select plot 2' to perform this operation." };
     return;
   }
 

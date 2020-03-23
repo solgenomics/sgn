@@ -36,8 +36,8 @@ $crossing_trials
                 <ul>
                 <li>1) Make sure your seedlots are in the database. Use "Add New Seedlot" to add a single seedlot or "Upload New Seedlots" to add many.</li>
                 <li>2) Make sure your seedlots are barcoded. You can print these barcodes from the database.</li>
-                <li>3) Use the "Seed Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Seed Inventory Android Application you can create your own CSV file and upload that.</li>
-                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="http://www.wheatgenetics.org/research/software/35-inventory">Seed Inventory</a>.</b></li>
+                <li>3) Use the "Inventory" Android Application to scan seedlot barcodes and record weight. Then click "Upload Inventory" on the Manage Seedlots page to upload this info into the database. If you do not want to use the Inventory Android Application you can create your own CSV file and upload that.</li>
+                <li><b>For more info about the "Seed Inventory" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.inventory/">Inventory</a>.</b></li>
                 <li>It is also possible to manually enter a transaction by going to the seedlot detail page and clicking "Add New Transaction".</li>
                 </ul>
             </div>
@@ -72,14 +72,22 @@ $crossing_trials
         </div>
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
-            <div class="col-sm-9" >
+            <div class="col-sm-7" >
                 <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
+            </div>
+            <div class="col-sm-2 form-check form-check-inline align-bottom">
+              <input class="form-check-input" type="checkbox" id="exact_accession" value="1">
+              <label class="form-check-label" for="exact_accession">exact match</label>
             </div>
         </div>
         <div class="form-group form-group-sm">
             <label class="col-sm-3 control-label">Contents (Cross Unique ID): </label>
-            <div class="col-sm-9" >
+            <div class="col-sm-7" >
                 <input class="form-control" id="search_seedlot_form_contents_cross" type="text" />
+            </div>
+            <div class="col-sm-2 form-check form-check-inline align-bottom">
+              <input class="form-check-input" type="checkbox" id="exact_cross" value="1">
+              <label class="form-check-label" for="exact_cross">exact match</label>
             </div>
         </div>
         <div class="form-group form-group-sm">
@@ -154,6 +162,8 @@ jQuery(document).ready(function(){
                      d.location     = jQuery('#search_seedlot_form_location').val();
                      d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
                      d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
+                     d.exact_accession = jQuery('#exact_accession').is(":checked") ? 1 : 0;
+                     d.exact_cross = jQuery('#exact_cross').is(":checked") ? 1 : 0;
                 }
         },
         columns: [
@@ -169,7 +179,6 @@ jQuery(document).ready(function(){
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
-            //console.log(json);
             if (!isLoggedIn()) {
                 jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
             } else {

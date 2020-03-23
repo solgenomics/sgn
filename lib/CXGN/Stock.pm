@@ -10,11 +10,11 @@ This object was re-factored from CXGN::Chado::Stock and moosified.
 
 CXGN::Stock should be used for all appropriate stock related queries.
 
-The stock table stores different types of objects, such as accessions, 
-plots, populations, tissue_samples, etc. 
+The stock table stores different types of objects, such as accessions,
+plots, populations, tissue_samples, etc.
 
-CXGN::Stock is the parent object for different flavors of objects 
-representing these derived types, such as CXGN::Stock::Seedlot, or 
+CXGN::Stock is the parent object for different flavors of objects
+representing these derived types, such as CXGN::Stock::Seedlot, or
 CXGN::Stock::TissueSample. (Currently there is no CXGN::Stock::Plot, but
 that should probably be added in the future, along with a factory
 object that instantiates the correct object given the stock_id).
@@ -62,7 +62,7 @@ has 'schema' => (
 =head2 accessor phenome_schema()
 
  Usage:
- Desc:         provides access the the CXGN::People::Schema, needed for 
+ Desc:         provides access the the CXGN::People::Schema, needed for
                certain user related functions
  Ret:
  Args:
@@ -325,7 +325,7 @@ has 'name' => (
 
 =head2 accessor uniquename()
 
- Usage:         
+ Usage:
  Desc:         the canonical name of the accession.
  Ret:
  Args:
@@ -1276,7 +1276,7 @@ sub _store_stockprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    #print STDERR Dumper $type;
+    # print STDERR Dumper $type;
     my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
     my @arr = split ',', $value;
     foreach (@arr){
@@ -1525,7 +1525,7 @@ sub merge {
     my $parent_1_count=0;
     my $parent_2_count=0;
     my $other_stock_deleted = 'NO';
-
+    my $pui_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'PUI', 'stock_property')->cvterm_id();
 
     my $schema = $self->schema();
 
@@ -1533,7 +1533,10 @@ sub merge {
     #
     my $sprs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $other_stock_id });
     while (my $row = $sprs->next()) {
-
+      if ($delete_other_stock && ($row->type_id() eq $pui_cvterm_id)) {
+          # Do not save PUIs of stocks that will be deleted
+          next;
+        }
 	# check if this stockprop already exists for this stock; save only if not
 	#
 	my $thissprs = $schema->resultset("Stock::Stockprop")->search(
@@ -1674,7 +1677,7 @@ sub merge {
     my $sars = $phenome_schema->resultset("StockAllele")->search( { stock_id => $other_stock_id });
     while (my $row = $sars->next()) {
 	$row->stock_id($self->stock_id());
-	$row->udate();
+	$row->update();
 	print STDERR "Moving stock alleles from stock $other_stock_id to stock ".$self->stock_id()."\n";
 	$stock_allele_count++;
     }

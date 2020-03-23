@@ -35,6 +35,7 @@ use CXGN::UploadFile;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
+use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
 use CXGN::Pedigree::AddFamilyNames;
 use CXGN::Pedigree::AddPopulations;
@@ -830,7 +831,18 @@ sub upload_progenies_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('progenies_upload_file');
+    my $upload_new_accessions = $c->req->upload('progenies_new_upload_file');
+    my $upload_exist_accessions = $c->req->upload('progenies_exist_upload_file');
+    my $upload;
+    my $upload_type;
+    if ($upload_new_accessions) {
+        $upload = $upload_new_accessions;
+        $upload_type = 'ProgeniesExcel';
+    }
+    if ($upload_exist_accessions) {
+        $upload = $upload_exist_accessions;
+        $upload_type = 'ProgeniesExistingAccessionsExcel';
+    }
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -899,7 +911,7 @@ sub upload_progenies_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('ProgeniesExcel');
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
@@ -921,12 +933,11 @@ sub upload_progenies_POST : Args(0) {
     }
 
     #add the progeny
-    if ($parsed_data){
+    if ($parsed_data && $upload_new_accessions){
         my %progeny_hash = %{$parsed_data};
         foreach my $cross_name_key (keys %progeny_hash){
             my $progenies_ref = $progeny_hash{$cross_name_key};
             my @progenies = @{$progenies_ref};
-
             my $progeny_add = CXGN::Pedigree::AddProgeny->new({
                 chado_schema => $chado_schema,
                 phenome_schema => $phenome_schema,
@@ -942,6 +953,23 @@ sub upload_progenies_POST : Args(0) {
         }
     }
 
+    if ($parsed_data && $upload_exist_accessions){
+        my %progeny_hash = %{$parsed_data};
+        foreach my $cross_name_key (keys %progeny_hash){
+            my $progenies_ref = $progeny_hash{$cross_name_key};
+            my @progenies = @{$progenies_ref};
+            my $progeny_exist_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+                chado_schema => $chado_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progenies,
+            });
+            if (!$progeny_exist_add->add_progenies_existing_accessions()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                return;
+            }
+        }
+    }
     $c->stash->{rest} = {success => "1",};
 }
 
