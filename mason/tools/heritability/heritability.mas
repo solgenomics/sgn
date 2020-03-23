@@ -6,7 +6,7 @@ population/heritability.mas - heritability output section
 
 =AUTHOR
 
-Isaak Y Tecle (iyt2@cornell.edu)
+Chris Simoes (ccs263@cornell.edu)
 
 =cut
 
@@ -41,7 +41,7 @@ $pop_id = $trial_id if $trial_id;
 </style>
 
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "tools.heritability"] &>
+<& /util/import_javascript.mas, entries => ["d3.d3Min", "heritability"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 0, 

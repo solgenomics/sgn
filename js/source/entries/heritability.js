@@ -1,6 +1,6 @@
 /** 
 * heritability coefficients plotting using d3
-* Isaak Y Tecle <iyt2@cornell.edu>
+* Chris Simoes <cs263@cornell.edu>
 *
 */
 
@@ -55,20 +55,6 @@ jQuery(document).ready( function() {
   
 });
 
-
-// jQuery(document).on("click", "#run_genetic_heritability", function() {        
-//     var popId   = jQuery("#h2_selected_population_id").val();
-//     var popType = jQuery("#h2_selected_population_type").val();
-    
-//     //jQuery("#heritability_canvas").empty();
-   
-//     jQuery("#heritability_message")
-//         .css({"padding-left": '0px'})
-//         .html("Running genetic heritability analysis...");
-    
-//     formatGenCorInputData(popId, popType);
-         
-// });
 
 
 function listGenCorPopulations ()  {
