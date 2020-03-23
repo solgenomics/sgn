@@ -181,6 +181,11 @@ has '_iterator_query_handle' => (
     is => 'rw'
 );
 
+has '_filtered_markers' => (
+    isa => 'HashRef',
+    is => 'rw'
+);
+
 has '_snp_genotyping_cvterm_id' => (
     isa => 'Int',
     is => 'rw'
@@ -968,8 +973,7 @@ sub get_next_genotype_info {
             }
         }
 
-
-
+        $self->_filtered_markers(\%filtered_markers);
 
     #    my @found_genotypeprop_ids = keys %genotypeprop_hash;
         my @genotypeprop_hash_select_arr;
@@ -1090,6 +1094,7 @@ sub get_cached_file_search_json {
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+        @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         $self->init_genotype_iterator();
         my $counter = 0;
@@ -1100,6 +1105,7 @@ sub get_cached_file_search_json {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
+                @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
             }
 
             if ($metadata_only) {
@@ -1187,6 +1193,7 @@ sub get_cached_file_dosage_matrix {
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+        @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         $self->init_genotype_iterator();
         my $counter = 0;
@@ -1197,6 +1204,7 @@ sub get_cached_file_dosage_matrix {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
+                @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
             }
 
             my $genotype_string = "";
@@ -1342,6 +1350,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
 
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+        @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
         for my $i (0..scalar(@accession_stock_ids_found)-1) {
@@ -1362,6 +1371,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
                 foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
+                @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
             }
 
             my $genotype_string = "";
@@ -1486,6 +1496,7 @@ sub get_cached_file_VCF {
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+        @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         $self->init_genotype_iterator();
         my $counter = 0;
@@ -1496,6 +1507,7 @@ sub get_cached_file_VCF {
                 foreach my $o (sort genosort keys %{$geno->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
+                @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
             }
 
             $unique_germplasm{$geno->{germplasmDbId}}++;
@@ -1767,6 +1779,7 @@ sub get_cached_file_VCF_compute_from_parents {
 
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+        @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
         for my $i (0..scalar(@accession_stock_ids_found)-1) {
@@ -1787,6 +1800,7 @@ sub get_cached_file_VCF_compute_from_parents {
                 foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
                     push @all_marker_objects, {name => $o};
                 }
+                @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
             }
 
             if (scalar(@$genotypes)>0) {
@@ -1962,6 +1976,23 @@ sub genosort {
     } else {
         return -1;
     }
+}
+
+sub _check_filtered_markers {
+    my $self = shift;
+    my $all_marker_objs = shift;
+    my @all_marker_objects = @$all_marker_objs;
+    my @filtered_marker_objects;
+    if ($self->_filtered_markers && scalar(keys %{$self->_filtered_markers}) > 0) {
+        my $filtered_markers = $self->_filtered_markers;
+        foreach (@all_marker_objects) {
+            if (exists($filtered_markers->{$_->{name}})) {
+                push @filtered_marker_objects, $_;
+            }
+        }
+        @all_marker_objects = @filtered_marker_objects;
+    }
+    return @all_marker_objects;
 }
 
 1;
