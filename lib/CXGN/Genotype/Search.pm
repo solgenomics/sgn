@@ -738,6 +738,9 @@ sub init_genotype_iterator {
     if ($marker_name_list && scalar(@$marker_name_list)>0) {
         my $search_vals_sql = "'".join ("','" , @$marker_name_list)."'";
         push @where_clause, "nd_protocolprop.value->'marker_names' \\?& array[$search_vals_sql]";
+
+        my %filtered_markers = map {$_ => 1} @$marker_name_list;
+        $self->_filtered_markers(\%filtered_markers);
     }
     if ($marker_search_hash_list && scalar(@$marker_search_hash_list)>0) {
         foreach (@$marker_search_hash_list){
@@ -926,10 +929,15 @@ sub get_next_genotype_info {
             if (defined($end_position)) {
                 $end_position_where = " AND (s.value->>'pos')::int <= $end_position";
             }
+            my $marker_name_list_where = '';
+            if ($marker_name_list && scalar(@$marker_name_list)>0) {
+                my $search_vals_sql = '\''.join ('\', \'' , @$marker_name_list).'\'';
+                $marker_name_list_where = "AND (s.value->>'name')::text IN ($search_vals_sql)";
+            }
 # N.B. it is okay to embed these values because they come from type-checked Moose accessors
             my $protocolprop_q = "SELECT nd_protocol_id, s.key $protocolprop_hash_select_sql
                 FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s
-                WHERE $protocolprop_where_markers_sql $chromosome_where $start_position_where $end_position_where;";
+                WHERE $protocolprop_where_markers_sql $chromosome_where $start_position_where $end_position_where $marker_name_list_where;";
             #print STDERR Dumper $protocolprop_q;
             my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
             $protocolprop_h->execute();
@@ -972,8 +980,6 @@ sub get_next_genotype_info {
                 }
             }
         }
-
-        $self->_filtered_markers(\%filtered_markers);
 
     #    my @found_genotypeprop_ids = keys %genotypeprop_hash;
         my @genotypeprop_hash_select_arr;
@@ -1091,12 +1097,13 @@ sub get_cached_file_search_json {
             push @all_marker_objects, values %$markers;
         }
 
+        $self->init_genotype_iterator();
+
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
-        $self->init_genotype_iterator();
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
@@ -1190,12 +1197,13 @@ sub get_cached_file_dosage_matrix {
             push @all_marker_objects, values %$markers;
         }
 
+        $self->init_genotype_iterator();
+
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
-        $self->init_genotype_iterator();
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
@@ -1493,12 +1501,13 @@ sub get_cached_file_VCF {
             push @all_marker_objects, values %$markers;
         }
 
+        $self->init_genotype_iterator();
+
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
-        $self->init_genotype_iterator();
         my $counter = 0;
         while (my $geno = $self->get_next_genotype_info) {
 
