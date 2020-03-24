@@ -1460,12 +1460,15 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
                 if ($genotypes->[0] && $genotypes->[1]) {
                     my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
                     my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                    $current_genotype = ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS})/2);
+                    my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
+                    my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
+                    $current_genotype = ceil(($p1 + $p2)/2);
                 }
                 # If one parent is genotyped, use that
                 elsif ($genotypes->[0]) {
                     my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    $current_genotype = ceil($parent1_genotype->{$m->{name}}->{DS}/2);
+                    my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
+                    $current_genotype = ceil($p1/2);
                 }
                 $genotype_data_string .= $current_genotype."\t";
             }
@@ -1937,12 +1940,15 @@ sub get_cached_file_VCF_compute_from_parents {
                     if ($genotypes->[0] && $genotypes->[1]) {
                         my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
                         my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                        $current_g = ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS})/2);
+                        my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
+                        my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
+                        $current_g = ceil(($p1 + $p2)/2);
                     }
                     # If one parent is genotyped, use that
                     elsif ($genotypes->[0]) {
                         my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                        $current_g = ceil($parent1_genotype->{$m->{name}}->{DS}/2);
+                        my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
+                        $current_g = ceil($p1/2);
                     }
                     $genotype_data_string .= $current_g."\t";
                 }
