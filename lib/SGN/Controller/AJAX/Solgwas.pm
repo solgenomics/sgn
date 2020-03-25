@@ -357,37 +357,37 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     close $filehandle;
     close $filehandle_out;
 
-
-# Hardcoded number of markers to be selected - make this selectable by user?
-    my $markers_selected = 500;
-#    my @column_selection = (0,2);
-# Initialize column selection so the row.names are selected first
-    my @column_selection = (0);
-    my %columns_seen;
-    for (my $i=0; $i <= $markers_selected; $i++) {
-        my $random_current = int(rand($marker_total));
-        redo if $columns_seen{$random_current}++;
-        push @column_selection, $random_current;
-        print STDERR $random_current . "\n";
-    }
-
-    open my $filehandle_in, "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
-    open my $filehandle_out2, ">", "$geno_filepath3" or die "Could not create $geno_filepath3: $!\n";
-
-#    foreach my $item (@column_selection) {
-    while ( my $line = <$filehandle_in> ) {
-        my $curr_line;
-        my @first_item = (split /\s+/, $line);
-        foreach my $item (@column_selection) {
-            $curr_line .= $first_item[$item] . "\t";
-        }
-#           $curr_line .= "\n";
-        print STDERR $curr_line . "\n";
-        print $filehandle_out2 "$curr_line\n";
-    }
-
-    close $filehandle_in;
-    close $filehandle_out2;
+# 
+# # Hardcoded number of markers to be selected - make this selectable by user?
+#     my $markers_selected = 500;
+# #    my @column_selection = (0,2);
+# # Initialize column selection so the row.names are selected first
+#     my @column_selection = (0);
+#     my %columns_seen;
+#     for (my $i=0; $i <= $markers_selected; $i++) {
+#         my $random_current = int(rand($marker_total));
+#         redo if $columns_seen{$random_current}++;
+#         push @column_selection, $random_current;
+#         print STDERR $random_current . "\n";
+#     }
+#
+#     open my $filehandle_in, "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+#     open my $filehandle_out2, ">", "$geno_filepath3" or die "Could not create $geno_filepath3: $!\n";
+#
+# #    foreach my $item (@column_selection) {
+#     while ( my $line = <$filehandle_in> ) {
+#         my $curr_line;
+#         my @first_item = (split /\s+/, $line);
+#         foreach my $item (@column_selection) {
+#             $curr_line .= $first_item[$item] . "\t";
+#         }
+# #           $curr_line .= "\n";
+#         print STDERR $curr_line . "\n";
+#         print $filehandle_out2 "$curr_line\n";
+#     }
+#
+#     close $filehandle_in;
+#     close $filehandle_out2;
 
 #    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
@@ -406,7 +406,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             "Rscript ",
             $c->config->{basepath} . "/R/solgwas/solgwas_script.R",
             $pheno_filepath,
-            $geno_filepath3,
+            $geno_filepath2,
             $trait_id,
             $figure3file,
             $figure4file,
