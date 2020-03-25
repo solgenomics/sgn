@@ -134,7 +134,7 @@ has 'design' => (
 
 subtype 'Trial',
   as 'Ref',
-    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ },
+    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ || $_ =~ /CXGN::ManagementFactor/},
   message { "The string, $_, was not a valid trial object type"};
 
 
@@ -274,7 +274,7 @@ sub get_layout_output {
                 data_level=>'plot'
             });
             $exact_performance_hash = $exact->search();
-            print STDERR "Exact Performance hash is ".Dumper($exact_performance_hash)."\n";
+            #print STDERR "Exact Performance hash is ".Dumper($exact_performance_hash)."\n";
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plot', ['treatment_experiment']) : [];
@@ -377,7 +377,8 @@ sub get_layout_output {
         my @missing = @{$synonym_list->{'missing'}};
 
         if (scalar @missing) {
-            print STDERR "Traits @missing don't have synonyms. Sticking with full trait names instead\n";
+            #print STDERR "Traits @missing don't have synonyms. Sticking with full trait names instead\n";
+
             #push @error_messages, "Traits @missing don't have synonyms. Please turn off synonym option before proceeding\n";
             #$errors{'error_messages'} = \@error_messages;
             #return \%errors;

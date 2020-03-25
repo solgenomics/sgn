@@ -57,8 +57,12 @@ export function WizardDownloads(main_id,wizard){
         var accession_ids = accessions.map(d=>d.id);
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
+        var download_format = d3.select(".wizard-download-genotypes-grm-format").node().value;
+        var maf = d3.select(".wizard-download-genotypes-grm-maf").node().value;
+        var marker_filter = d3.select(".wizard-download-genotypes-grm-marker-filter").node().value;
+        var individuals_filter = d3.select(".wizard-download-genotypes-grm-individuals-filter").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
-        var url = document.location.origin+`/breeders/download_grm_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}&compute_from_parents=${compute_from_parents}`;
+        var url = document.location.origin+`/breeders/download_grm_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&minor_allele_frequency=${maf}&marker_filter=${marker_filter}&individuals_filter=${individuals_filter}`;
         window.open(url,'_blank');
       });
 

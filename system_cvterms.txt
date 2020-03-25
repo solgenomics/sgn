@@ -16,6 +16,7 @@ experiment_type	genotyping_layout				00052
 experiment_type	phenotyping_experiment				00052
 experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
+experiment_type	trained_keras_cnn_model_experiment	For linking a trained keras cnn model in nd_protocol to its model files in md_files	10/01/2019	nm529	00116
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
@@ -35,6 +36,7 @@ geolocation_property	adm3	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	region	From BrAPI	03/27/2017	nm529	00076
 geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	noaa_station_id	For storing the nearest NOAA Station ID for a location	09/02/2019	nm529	00114
 list_types	identifier_generation		08/21/2018	nm529	00102
 list_types	genotyping_trials		03/23/2018	nm529	00092
 list_types	tissue_samples		02/15/2018	nm529	00091
@@ -113,6 +115,8 @@ project_property	genotyping_facility_status	For genotyping plate to indicate the
 project_property	genotyping_plate_format	For genotyping plate to indicate if 96 well or other	2/16/2017	nm529	00091
 project_property	genotyping_plate_sample_type	For genotyping plate to indicate the type of sample in plate e.g. DNA	2/16/2017	nm529	00091
 project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
+project_property	drone_run_averaged_temperature_growing_degree_days	The averaged-temperature growing degree days corresponding to a drone run event	09/02/2019	nm529	00114
+project_property	drone_run_related_time_cvterms_json	A json string containing time cvterms to annotate the drone run	09/02/2019	nm529	00114
 project_property	drone_run_project_type	To distinguish the type of drone run being stored (Aerial Medium to High Res, Aerial Low Res)	10/5/2018	nm529	00103
 project_property	drone_run_camera_type	To identify the camera used in the drone run (micasense 5 band, cmos, ccd)	10/5/2018	nm529	00103
 project_property	drone_run_band_project_type	To distinguish the type of band being stored under a drone run (red, blue, nir, etc)	10/5/2018	nm529	00103
@@ -132,11 +136,13 @@ project_property	drone_run_band_background_removed_thresholded_ndvi_mask_origina
 project_property	drone_run_band_background_removed_thresholded_ndre_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded ndre mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_threshold	The threshold at which the image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_plot_polygons	The pixel coordinates for the defined plot polygons	10/5/2018	nm529	00103
+project_property	drone_run_band_plot_polygons_partial	The pixel coordinates for the defined plot polygons, but only for sets of plots not the whole field	03/11/2020	nm529	00117
 project_property	drone_run_standard_process_in_progress	Running a standard process on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_phenotype_calculation_in_progress	Running a standard process to calculate phenotypes on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_completed	If the drone run had the standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_extended_completed	If the drone run had the extended standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_vi_completed	If the drone run had the vegetative index standard process run	10/5/2018	nm529	00103
+project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw Micasense images, the captures are aligned and this records which image is in which capture	02/17/2020	nm529	00117
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -268,6 +274,9 @@ protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
 protocol_property	vcf_map_details	Information about protocol, such as marker names, header info lines, and reference_genome_name	6/20/2018	nm529	00098
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
+protocol_property	trained_keras_cnn_model_trait	The trait for which the Keras CNN model was trained	9/30/2019	nm529	00116
+protocol_property	trained_keras_cnn_model_type	The type of Keras CNN model trained e.g. InceptionResNetV2	9/30/2019	nm529	00116
+protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073
@@ -278,6 +287,10 @@ composable_cvtypes	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
 phenotype_property  phenotype_outlier   suppressed phenotype measurement    01/04/2018  aco46   00089
 project_md_image	raw_drone_imagery	Raw images uploaded as drone imagery	9/6/2018	nm529	00103
+project_md_image	raw_boundaries_top_left_drone_imagery	Raw drone imagery for getting top left boundary	2/6/2020	nm529	00103
+project_md_image	raw_boundaries_top_right_drone_imagery	Raw drone imagery for getting top right boundary	2/6/2020	nm529	00103
+project_md_image	raw_boundaries_bottom_left_drone_imagery	Raw drone imagery for getting bottom left boundary	2/6/2020	nm529	00103
+project_md_image	raw_boundaries_bottom_right_drone_imagery	Raw drone imagery for getting bottom right boundary	2/6/2020	nm529	00103
 project_md_image	stitched_drone_imagery	Stitched image from uploaded drone imagery	9/6/2018	nm529	00103
 project_md_image	denoised_stitched_drone_imagery	Denoised stitched image	10/5/2018	nm529	00103
 project_md_image	rotated_stitched_drone_imagery	Rotated stitched image	10/5/2018	nm529	00103
@@ -297,6 +310,7 @@ project_md_image	threshold_background_removed_stitched_drone_imagery_bw	Stitched
 project_md_image	threshold_background_removed_stitched_drone_imagery_rgb_channel_1	Stitched rgb image without background (soil, etc) via threshold channel 1	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_stitched_drone_imagery_rgb_channel_2	Stitched rgb image without background (soil, etc) via threshold channel 2	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_stitched_drone_imagery_rgb_channel_3	Stitched rgb image without background (soil, etc) via threshold channel 3	10/5/2018	nm529	00103
+project_md_image	threshold_background_removed_stitched_drone_imagery_raster_dsm	Stitched raster DSM images elevation image	12/12/2019	nm529	00117
 project_md_image	threshold_background_removed_tgi_stitched_drone_imagery	Vegetative index TGI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_vari_stitched_drone_imagery	Vegetative index VARI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
 project_md_image	threshold_background_removed_ndvi_stitched_drone_imagery	Vegetative index NDVI stitched image without background via threshold (soil, etc)	10/5/2018	nm529	00103
@@ -325,6 +339,7 @@ project_md_image	observation_unit_polygon_nir_imagery	Cropped image for an obser
 project_md_image	observation_unit_polygon_mir_imagery	Cropped image for an observation unit polygon from original mir image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_fir_imagery	Cropped image for an observation unit polygon from original fir image	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_tir_imagery	Cropped image for an observation unit polygon from original tir image	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_raster_dsm_imagery	Cropped image for an observation unit polygon from raster DSM elevation image	12/12/2019	nm529	00117
 project_md_image	observation_unit_polygon_bw_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original black and white image after background removed via threshold	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_1	Cropped image for an observation unit polygon from original rgb image after background removed via threshold channel 1	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_rgb_background_removed_threshold_imagery_channel_2	Cropped image for an observation unit polygon from original rgb image after background removed via threshold channel 2	10/5/2018	nm529	00103
@@ -337,6 +352,7 @@ project_md_image	observation_unit_polygon_nir_background_removed_threshold_image
 project_md_image	observation_unit_polygon_mir_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original mir image after background removed via threshold	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_fir_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original fir image after background removed via threshold	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_tir_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original tir image after background removed via threshold	10/5/2018	nm529	00103
+project_md_image	observation_unit_polygon_raster_dsm_background_removed_threshold_imagery	Cropped image for an observation unit polygon from original raster DSM image after background removed via threshold	12/12/2019	nm529	00117
 project_md_image	observation_unit_polygon_tgi_imagery	Cropped image for an observation unit polygon from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_vari_imagery	Cropped image for an observation unit polygon from VARI vegetative index	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_ndvi_imagery	Cropped image for an observation unit polygon from NDVI vegetative index	10/5/2018	nm529	00103

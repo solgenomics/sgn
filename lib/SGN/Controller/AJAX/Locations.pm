@@ -54,6 +54,7 @@ __PACKAGE__->config(
        my $latitude    = $params->{latitude} || undef;
        my $longitude   = $params->{longitude} || undef;
        my $altitude    = $params->{altitude} || undef;
+       my $noaa_station_id    = $params->{noaa_station_id} || undef;
 
        if (! $c->user()) {
            $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
@@ -78,7 +79,8 @@ __PACKAGE__->config(
            location_type => $type,
            latitude => $latitude,
            longitude => $longitude,
-           altitude => $altitude
+           altitude => $altitude,
+           noaa_station_id => $noaa_station_id
        });
 
        my $store = $location->store_location();
@@ -198,7 +200,8 @@ __PACKAGE__->config(
              location_type => $data[5],
              latitude => $data[6],
              longitude => $data[7],
-             altitude => $data[8]
+             altitude => $data[8],
+             noaa_station_id => $data[9],
          });
 
          my $store = $location->store_location();

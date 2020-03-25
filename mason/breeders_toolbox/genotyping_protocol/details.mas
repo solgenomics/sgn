@@ -39,12 +39,22 @@ $sample_observation_unit_type_name
             <tr>
                 <td><b>Header Information Description</b></td>
                 <td>
-                    <ul>
-%  foreach (@$header_information_lines){
-%       $_ =~ tr/<>//d;
-%       print "<li>$_</li>";
-%  }
-                    </ul>
+% my @trimmed;
+% my $header_line_count = 0;
+% foreach (@$header_information_lines){
+%    if ($header_line_count < 10) {
+%        $_ =~ tr/<>//d;
+%        push @trimmed, $_;
+%    }
+%    else {
+%        push @trimmed, "### ----- SHOWING FIRST 10 LINES ONLY ----- ###";
+%        last;
+%    }
+%    $header_line_count++;
+% }
+% my $description = join '<br/>', @trimmed;
+% $description = $description ? $description : 'NA';
+% print "$description";
                 </td>
             </tr>
 

@@ -36,3 +36,5 @@ $create_date
 <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_protocol_markers" &>
 
 <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.', icon_class => "glyphicon glyphicon-save-file", info_section_id => "genotyping_protocol_genotype_data" &>
+
+<& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Delete Genotyping Protocol and All Data</h4>", info_section_subtitle => 'Delete genotyping protocol and all data from this protocol.', icon_class => "glyphicon glyphicon-trash", info_section_id => "genotyping_protocol_delete_genotype_data" &>

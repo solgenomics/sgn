@@ -94,7 +94,7 @@ sub retrieve {
         my $line;
         foreach (@possible_cols){
             if ($selected_cols{$_}){
-                print STDERR "Working on column $_\n";
+                #print STDERR "Working on column $_\n";
                 if ($_ eq 'location_name'){
                     push @$line, $location_name;
                 } elsif ($_ eq 'plot_geo_json'){
