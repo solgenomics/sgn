@@ -129,7 +129,7 @@ sub details {
             my $breeding_program_id = $folder->breeding_program->project_id();
 
 			my %result = (
-                active=>'yes',
+                active=>JSON::true,
 				additionalInfo=>\%additional_info,
                 commonCropName=>$crop,
                 contacts=>undef,
@@ -243,7 +243,7 @@ sub _get_folders {
     unless ( scalar @folder_studies < 1 && (%location_id_list || %study_id_list || %study_name_list || %location_names_list || %trial_id_list )) { #skip empty folders if call was issued with search paramaters
         if ($trial_filter < 1 ){
             push @{$data}, {
-                            active=>'yes',
+                            active=>JSON::true,
                             additionalInfo=>\%additional_info,
                             commonCropName=>$crop,
                             contacts=>undef,
