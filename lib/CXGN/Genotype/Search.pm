@@ -183,7 +183,8 @@ has '_iterator_query_handle' => (
 
 has '_filtered_markers' => (
     isa => 'HashRef',
-    is => 'rw'
+    is => 'rw',
+    default => sub {{}}
 );
 
 has '_snp_genotyping_cvterm_id' => (
@@ -780,8 +781,9 @@ sub init_genotype_iterator {
         my $search_vals_sql = "'".join ("','" , @$marker_name_list)."'";
         push @where_clause, "nd_protocolprop.value->'marker_names' \\?& array[$search_vals_sql]";
 
-        %filtered_markers = map {$_ => 1} @$marker_name_list;
-        $self->_filtered_markers(\%filtered_markers);
+        foreach (@$marker_name_list) {
+            $self->_filtered_markers()->{$_}++;
+        }
     }
     if ($marker_search_hash_list && scalar(@$marker_search_hash_list)>0) {
         foreach (@$marker_search_hash_list){
@@ -1153,10 +1155,15 @@ sub get_cached_file_search_json {
                 nd_protocol_id => $_,
                 chromosome_list=>$self->chromosome_list,
                 start_position=>$self->start_position,
-                end_position=>$self->end_position
+                end_position=>$self->end_position,
+                marker_name_list=>$self->marker_name_list
             });
             my $markers = $protocol->markers;
             push @all_marker_objects, values %$markers;
+        }
+
+        foreach (@all_marker_objects) {
+            $self->_filtered_markers()->{$_->{name}}++;
         }
 
         $self->init_genotype_iterator();
@@ -1253,12 +1260,16 @@ sub get_cached_file_dosage_matrix {
                 nd_protocol_id => $_,
                 chromosome_list=>$self->chromosome_list,
                 start_position=>$self->start_position,
-                end_position=>$self->end_position
+                end_position=>$self->end_position,
+                marker_name_list=>$self->marker_name_list
             });
             my $markers = $protocol->markers;
             push @all_marker_objects, values %$markers;
         }
 
+        foreach (@all_marker_objects) {
+            $self->_filtered_markers()->{$_->{name}}++;
+        }
         $self->init_genotype_iterator();
 
         #VCF should be sorted by chromosome and position
@@ -1365,9 +1376,6 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my %filtered_markers = map {$_ => 1} @$marker_name_list;
-    $self->_filtered_markers(\%filtered_markers);
-
     my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
@@ -1417,10 +1425,15 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             nd_protocol_id => $protocol_id,
             chromosome_list=>$self->chromosome_list,
             start_position=>$self->start_position,
-            end_position=>$self->end_position
+            end_position=>$self->end_position,
+            marker_name_list=>$self->marker_name_list
         });
         my $markers = $protocol->markers;
         my @all_marker_objects = values %$markers;
+
+        foreach (@all_marker_objects) {
+            $self->_filtered_markers()->{$_->{name}}++;
+        }
 
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
@@ -1563,11 +1576,16 @@ sub get_cached_file_VCF {
                 nd_protocol_id => $_,
                 chromosome_list=>$self->chromosome_list,
                 start_position=>$self->start_position,
-                end_position=>$self->end_position
+                end_position=>$self->end_position,
+                marker_name_list=>$self->marker_name_list
             });
             my $markers = $protocol->markers;
             push @all_protocol_info_lines, @{$protocol->header_information_lines};
             push @all_marker_objects, values %$markers;
+        }
+
+        foreach (@all_marker_objects) {
+            $self->_filtered_markers()->{$_->{name}}++;
         }
 
         $self->init_genotype_iterator();
@@ -1796,9 +1814,6 @@ sub get_cached_file_VCF_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my %filtered_markers = map {$_ => 1} @$marker_name_list;
-    $self->_filtered_markers(\%filtered_markers);
-
     my $key = $self->key("get_cached_file_VCF_compute_from_parents");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
@@ -1853,11 +1868,16 @@ sub get_cached_file_VCF_compute_from_parents {
             nd_protocol_id => $protocol_id,
             chromosome_list=>$self->chromosome_list,
             start_position=>$self->start_position,
-            end_position=>$self->end_position
+            end_position=>$self->end_position,
+            marker_name_list=>$self->marker_name_list
         });
         my $markers = $protocol->markers;
         my @all_marker_objects = values %$markers;
         push @all_protocol_info_lines, @{$protocol->header_information_lines};
+
+        foreach (@all_marker_objects) {
+            $self->_filtered_markers()->{$_->{name}}++;
+        }
 
         no warnings 'uninitialized';
         @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
