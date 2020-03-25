@@ -77,40 +77,37 @@ extractGenotype <- function(inputFiles) {
                           header = TRUE,
                           na.strings = c("NA", " ", "--", "-", "."))
         
-        genoData <- unique(genoData, by = 'V1')
-        
-        filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
-
-        if (!is.null(genoData)) { 
-
-            genoData <- data.frame(genoData)
-            genoData <- column_to_rownames(genoData, 'V1')
-            
-        } else {
-            genoData <- fread(filteredGenoFile, header = TRUE)
+        if (is.null(genoData)) { 
+            filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
+            genoData <- fread(filteredGenoFile, header = TRUE)         
         }
     }
 
+   
     if (is.null(genoData)) {
         stop("There is no genotype dataset.")
         q("no", 1, FALSE)
-    }
+    } else {
 
-   
-    if (is.null(filteredGenoFile) == TRUE) {
         ##genoDataFilter::filterGenoData
-        genoData <- filterGenoData(genoData, maf = 0.01)
-        genoData <- column_to_rownames(genoData, 'rn')
+        genoData <- unique(genoData, by = 'V1')
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')
+
+        genoData <- convertToNumeric(genoData)
+        genoData <- filterGenoData(genoData, maf=0.01)
+        genoData <- roundAlleleDosage(genoData)
 
         message("No. of geno missing values, ", sum(is.na(genoData)))
         if (sum(is.na(genoData)) > 0) {
             genoDataMissing <- c('yes')
             genoData <- na.roughfix(genoData)
         }
+        
+        genoData <- data.frame(genoData)
+        
     }
-
-    genoData <- data.frame(genoData)
-    
+      
 }
 
 set.seed(235)
