@@ -1753,9 +1753,37 @@ sub programs_list_GET {
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
 	my $brapi_package_result = $brapi_module->search({
 		program_names => $clean_inputs->{programName},
+		programNames => $clean_inputs->{programName},
 		abbreviations => $clean_inputs->{abbreviation},
+		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceSources => $clean_inputs->{externalReferenceSource},
+		commonCropNames => $clean_inputs->{commonCropName},
         crop => $c->config->{supportedCrop}
 	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub programs_single  : Chained('brapi') PathPart('programs') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $program_id = shift;
+
+	$c->stash->{program_id} = $program_id;
+}
+
+sub programs_detail  : Chained('programs_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub programs_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Programs');
+	my $brapi_package_result = $brapi_module->detail(
+		$c->stash->{program_id},
+		$c->config->{supportedCrop}
+	);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
