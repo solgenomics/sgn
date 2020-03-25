@@ -121,6 +121,7 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
       DIR=> $nirs_tmp_output,
     );
 
+    my $pheno_filepath = $tempfile . "_phenotype.txt";
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $nirs_tmp_output . "/" . $tempfile;
@@ -161,7 +162,7 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     # my $job;
     $cmd->run_cluster(
             "Rscript ",
-            $c->config->{basepath} . "/R/NIRS/nirs.R",
+            $c->config->{basepath} . "/R/Nirs/nirs.R",
             $pheno_name, # args[1]
             $preprocessing_boolean, # args[2]
             $num_iterations, # args[3]
@@ -182,17 +183,17 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
 
    # TODO 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/nirs_files/";
-    copy($h2File, $figure_path);
-    copy($figure3file, $figure_path);
-    copy($figure4file, $figure_path);
+    copy($modelmethod, $figure_path);
+    copy($tune_length, $figure_path);
+    copy($cv_scheme, $figure_path);
 
-    my $h2Filebasename = basename($h2File);
+    my $h2Filebasename = basename($modelmethod);
     my $h2File_response = "/documents/tempfiles/nirs_files/" . $h2Filebasename;
     
-    my $figure3basename = basename($figure3file);
+    my $figure3basename = basename($tune_length);
     my $figure3_response = "/documents/tempfiles/nirs_files/" . $figure3basename;
     
-    my $figure4basename = basename($figure4file);
+    my $figure4basename = basename($cv_scheme);
     my $figure4_response = "/documents/tempfiles/nirs_files/" . $figure4basename;
 
 

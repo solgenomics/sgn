@@ -35,18 +35,6 @@
     </div>
 
 
-    <div class = "">
-    <label for = ></div>
-    <& /page/html_select.mas, name=>$name, $choices=> [ [ 1, "France"], [ 2, "Spain" ] ], label=>"select country", $id=>"27", params => 'onchange="alert('foo')"', multiple=>0  &>
-
-
-    <div >
-    <input type="checkbox" name="fruit" value="Apple"> Apple
-    <input type="checkbox" name="fruit" value="Orange"> Orange 
-    <input type="checkbox" name="fruit" value="Banana"> Banana 
-    </div>
-
-
   <div class="form-group form-inline">
     <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
     <br>
