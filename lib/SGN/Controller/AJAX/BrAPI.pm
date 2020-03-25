@@ -1078,9 +1078,22 @@ sub trials_search_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Trials');
-	my $brapi_package_result = $brapi_module->trials_search({
-		locationDbIds => $clean_inputs->{locationDbId},
+	my $brapi_package_result = $brapi_module->search({
+		crop => $c->config->{supportedCrop},
+		contactDbIds => $clean_inputs->{contactDbId},
+		searchDateRangeStart  => $clean_inputs->{searchDateRangeStart},
+		searchDateRangeEnd  => $clean_inputs->{searchDateRangeEnd},
+		trialPUIs => $clean_inputs->{trialPUI},
+		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceSources => $clean_inputs->{externalReferenceSource},
+		active  => $clean_inputs->{active},
+		commonCropNames  => $clean_inputs->{commonCropName},
 		programDbIds => $clean_inputs->{programDbId},
+		locationDbIds => $clean_inputs->{locationDbId},
+		studyDbIds  => $clean_inputs->{studyDbId},
+		trialDbIds  => $clean_inputs->{trialDbId},
+		trialNames  => $clean_inputs->{trialName},
+
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1110,10 +1123,26 @@ sub trials_detail_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Trials');
-	my $brapi_package_result = $brapi_module->trial_details(
-		$c->stash->{trial_id}
+	my $brapi_package_result = $brapi_module->details(
+		$c->stash->{trial_id},
+		$c->config->{supportedCrop}
 	);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub trials_search_save  : Chained('brapi') PathPart('search/trials') Args(0) : ActionClass('REST') { }
+
+sub trials_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Trials');
+}
+
+sub trials_search_retrieve : Chained('brapi') PathPart('search/trials') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Trials');
 }
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
@@ -2703,7 +2732,14 @@ sub observationvariable_list_GET {
 	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->search(undef, $c);
+	my $brapi_package_result = $brapi_module->search({
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		traitClasses => $clean_inputs->{traitClass},
+		studyDbId => $clean_inputs->{studyDbId},
+		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceSources => $clean_inputs->{externalReferenceSource},
+		supportedCrop =>$supported_crop,
+	});
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2715,10 +2751,11 @@ sub observationvariable_detail_GET {
 	my $trait_id = shift;
 	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->observation_variable_detail(
-		$trait_id
+	my $brapi_package_result = $brapi_module->detail(
+		$trait_id,$c
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -3079,6 +3116,28 @@ sub observations_GET {
 
     });
     _standard_response_construction($c, $brapi_package_result);
+}
+
+=head2 brapi/v1/markers
+
+ Usage: To retrieve observations
+ Desc: BrAPI v1.3
+ Args:
+ Side Effects: deprecated on BrAPI v2.0
+
+=cut
+
+sub markers_search  : Chained('brapi') PathPart('markers') Args(0) : ActionClass('REST') { }
+
+sub markers_search_GET {
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markers');
+	my $brapi_package_result = $brapi_module->search();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub markers_search_save  : Chained('brapi') PathPart('search/markers') Args(0) : ActionClass('REST') { }

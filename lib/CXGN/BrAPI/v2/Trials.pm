@@ -9,7 +9,7 @@ use CXGN::BrAPI::JSONResponse;
 
 extends 'CXGN::BrAPI::v2::Common';
 
-sub trials_search {
+sub search {
 	my $self = shift;
 	my $search_params = shift;
 	my $schema = $self->bcs_schema;
@@ -72,6 +72,16 @@ sub trials_search {
         %program_name_list = map { $_ => 1} @program_names;
     }
 
+    my %trial_id_list;
+    if (scalar(@trial_dbids)>0){
+        %trial_id_list = map { $_ => 1} @trial_dbids;
+    }
+
+    my %trial_name_list;
+    if (scalar(@trial_names)>0){
+        %trial_name_list = map { $_ => 1} @trial_names;
+    }
+
     if (scalar(@commoncrop_names)>0) {
         if ( !grep( /^$crop$/, @commoncrop_names ) ) {
             $continue = $continue + 1;
@@ -86,7 +96,7 @@ sub trials_search {
         foreach my $program (@$programs) {
             unless (%program_id_list && !exists($program_id_list{$program->[0]}) || %program_name_list && !exists($program_name_list{$program->[1]})) { # for each program not excluded, retrieve folders and studies
                 $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1],  "program_description" => $program->[2] };
-                $data = _get_folders($program, $schema, $data, 'breeding_program', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list);
+                $data = _get_folders($program, $schema, $data, 'breeding_program', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
             }
         }
     }
@@ -98,7 +108,7 @@ sub trials_search {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials result constructed');
 }
 
-sub trial_details {
+sub details {
 	my $self = shift;
 	my $folder_id = shift;
     my $crop = shift;
@@ -157,10 +167,14 @@ sub _get_folders {
     my $location_names_list = shift;
     my $study_id_list = shift;
     my $study_name_list = shift;
+    my $trial_id_list = shift;
+    my $trial_name_list = shift;
     my %location_id_list = %{$location_id_list};
     my %location_names_list = %{$location_names_list};
     my %study_id_list = %{$study_id_list};
     my %study_name_list = %{$study_name_list};
+    my %trial_id_list = %{$trial_id_list};
+    my %trial_name_list = %{$trial_name_list};
     my %additional_info;
     my @folder_studies;
 
@@ -170,15 +184,15 @@ sub _get_folders {
         foreach my $study (sort keys %studies) {
 
 			if ($studies{$study}->{'folder_for_trials'}) { # it's a folder, recurse a layer deeper
-                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list);
+                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
             }
             elsif (!$studies{$study}->{'folder_for_crosses'} && !$studies{$study}->{'folder_for_trials'} && $studies{$study}->{'trial_folder'}) { # it's a folder, recurse a layer deeper
-                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list);
+                $data = _get_folders($studies{$study}, $schema, $data, 'folder', $crop, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
             }
             elsif ($studies{$study}->{'design'}) { # it's a study, add it to studies array
                 my $passes_search = 1;
                 if (%location_id_list) {
-                    if (!exists($location_id_list{ $studies{$study}->{'project location'}}) ) { #print Dumper \$studies{$study};
+                    if (!exists($location_id_list{ $studies{$study}->{'project location'}}) ) {
                         $passes_search = 0;
                     }
                 }
@@ -214,29 +228,39 @@ sub _get_folders {
                         locationName=>$location_name
                     };
                 }
-			}
-		}
-	}
+    		}
+    	}
+    }
 
-    unless ( scalar @folder_studies < 1 && (%location_id_list || %study_id_list || %study_name_list || %location_names_list)) { #skip empty folders if call was issued with search paramaters
-        push @{$data}, {
-                        active=>'yes',
-                        additionalInfo=>\@folder_studies, #\%additional_info,
-                        commonCropName=>$crop,
-                        contacts=>undef,
-                        datasetAuthorships=>undef,
-                        documentationURL=>undef,
-                        endDate=>undef,
-                        externalReferences=>undef,
-                        programDbId=>qq|$self->{'program_id'}|,
-                        programName=>$self->{'program_name'},
-                        publications=>undef,
-                        startDate=>undef,
-                        trialDbId=>qq|$self->{'id'}|,
-                        trialName=>$self->{'name'},
-                        trialDescription=>$self->{'program_description'},
-                        trialPUI=>undef
-    				};
+    my $trial_filter = 0;
+
+    if (scalar(keys %trial_id_list) > 0 && !exists($trial_id_list{ $self->{'id'} } )){
+        $trial_filter = 1;
+    } elsif (scalar(keys %trial_name_list) > 0 && !exists($trial_name_list{ $self->{'name'} } )){
+        $trial_filter = 1;
+    } 
+
+    unless ( scalar @folder_studies < 1 && (%location_id_list || %study_id_list || %study_name_list || %location_names_list || %trial_id_list )) { #skip empty folders if call was issued with search paramaters
+        if ($trial_filter < 1 ){
+            push @{$data}, {
+                            active=>'yes',
+                            additionalInfo=>\%additional_info,
+                            commonCropName=>$crop,
+                            contacts=>undef,
+                            datasetAuthorships=>undef,
+                            documentationURL=>undef,
+                            endDate=>undef,
+                            externalReferences=>undef,
+                            programDbId=>qq|$self->{'program_id'}|,
+                            programName=>$self->{'program_name'},
+                            publications=>undef,
+                            startDate=>undef,
+                            trialDbId=>qq|$self->{'id'}|,
+                            trialName=>$self->{'name'},
+                            trialDescription=>$self->{'program_description'},
+                            trialPUI=>undef
+            }				
+        }; 
     }
 
 	return $data;
