@@ -1356,6 +1356,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     my $basepath_config = shift;
     my $schema = $self->bcs_schema;
     my $protocol_ids = $self->protocol_id_list;
+    my $marker_name_list = $self->marker_name_list;
     my $accession_ids = $self->accession_list;
     my $cache_root_dir = $self->cache_root();
 
@@ -1363,6 +1364,9 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
         die "Only one protocol at a time can be done when computing genotypes from parents\n";
     }
     my $protocol_id = $protocol_ids->[0];
+
+    my %filtered_markers = map {$_ => 1} @$marker_name_list;
+    $self->_filtered_markers(\%filtered_markers);
 
     my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
@@ -1785,11 +1789,15 @@ sub get_cached_file_VCF_compute_from_parents {
     my $protocol_ids = $self->protocol_id_list;
     my $accession_ids = $self->accession_list;
     my $cache_root_dir = $self->cache_root();
+    my $marker_name_list = $self->marker_name_list;
 
     if (scalar(@$protocol_ids)>1) {
         die "Only one protocol at a time can be done when computing genotypes from parents\n";
     }
     my $protocol_id = $protocol_ids->[0];
+
+    my %filtered_markers = map {$_ => 1} @$marker_name_list;
+    $self->_filtered_markers(\%filtered_markers);
 
     my $key = $self->key("get_cached_file_VCF_compute_from_parents");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
