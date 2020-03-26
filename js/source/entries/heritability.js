@@ -300,12 +300,12 @@ function plotHeritability (data, divPlace) {
     console.log(data)
   
     if (data) {
-    var tableId = 'heritability_table';    
-    var table = createHeritabilityTable(tableId);
+    var h2tableId = 'heritability_table';    
+    var h2table = createHeritabilityTable(h2tableId);
 
-    jQuery('#heritability_canvas').append(table); 
+    jQuery('#heritability_canvas').append(h2table); 
        
-    jQuery('#' + tableId).dataTable({
+    jQuery('#' + h2tableId).dataTable({
             'searching'    : true,
             'ordering'     : true,
             'processing'   : true,
