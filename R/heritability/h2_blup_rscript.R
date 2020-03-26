@@ -7,8 +7,13 @@ library(phenoAnalysis)
 library(dplyr)
 #library(rbenchmark)
 library(methods)
-library(data.table)
-library(phenoAnalysis)
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(grid)
+library(gridExtra)
+library(ggplot2)
+
 
 ##### Get data #####
 args = commandArgs(trailingOnly = TRUE)
@@ -62,23 +67,72 @@ for (i in 40:ncol(pheno)){
 	}
 }
 
-z=1
-png(figure3_file_name,height=250*n)
-par(mar=c(4,4,2,2))
-par(mfrow=c(n,2))
-for(i in 40:ncol(pheno)){
-	test = is.numeric(pheno[,i])
-	if (test == "TRUE") {
-		hist(pheno[,i], main = "Data Distribution", xlab = traits[z])
-		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
-		z=z+1
-	}
-	else {
-		z=z+1
-	}
-}
-dev.off()
+# z=1
+# png(figure3_file_name,height=250*n)
+# par(mar=c(4,4,2,2))
+# par(mfrow=c(n,2))
+# for(i in 40:ncol(pheno)){
+# 	test = is.numeric(pheno[,i])
+# 	if (test == "TRUE") {
+# 		hist(pheno[,i], main = "Data Distribution", xlab = traits[z])
+# 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
+# 		z=z+1
+# 	}
+# 	else {
+# 		z=z+1
+# 	}
+# }
+# dev.off()
 
+
+
+names <- colnames(pheno)
+cbPalette <- c("blue","red","orange","green","yellow")
+
+z=1
+s=1
+pl = list()
+hl = list()
+for (i in 40:ncol(pheno)){
+  data1 = c()
+  data1 <- pheno[,i]
+  data <- data.frame(
+    name=c( names[i]),
+    value=c( data1 )
+  )
+  print(cbPalette[z])
+  
+ pl[[s]]<- ggplot(data, aes(x=name, y=value)) +
+                     geom_boxplot(fill=cbPalette[z], alpha=0.4) +
+                     scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+                     geom_jitter(color="black", size=0.4, alpha=0.9) +
+                     theme_ipsum() +
+                     theme(
+                       legend.position="none",
+                       plot.title = element_text(size=11)
+                     ) +
+                     ggtitle("") +
+                     xlab("")
+ hl[[s]]<- ggplot(data, aes(value, fill = cut(value, 100))) +
+                   geom_histogram(show.legend = FALSE) +
+                   scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+                   theme_minimal() +
+                   labs(x = names[i], y = "") +
+                   ggtitle("")
+ 
+ z=z+1
+  if (z>5) {
+    z=1
+  }
+  s=s+1
+}
+int <- length(40:ncol(pheno))
+cat("The int is: ", int,"\n")
+ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2)
+if (int<8){
+	int=8
+}
+ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80, units = "in")
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
