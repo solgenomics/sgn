@@ -45,6 +45,25 @@ sub search {
     my $image_width_min = $params->{imageWidthMin}->[0] || undef;
     my $mimetypes_arrayref  = $params->{mimeTypes } || ($params->{mimeTypes} || ());
 
+    if (($phenotype_ids_arrayref && scalar(@$phenotype_ids_arrayref)>0) || ($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) || ($image_location_arrayref && scalar(@$image_location_arrayref)>0)){
+        push @$status, { 'error' => 'The following parameters are not implemented: observationDbId, externalReferenceID, externalReferenceSources, imageLocation' };
+    }
+
+    my %imagefile_names_arrayref;
+    if ($imagefile_names_arrayref && scalar(@$imagefile_names_arrayref)>0){
+        %imagefile_names_arrayref = map { $_ => 1} @$imagefile_names_arrayref;
+    }
+
+    my %phenotype_ids_arrayref;
+    if ($phenotype_ids_arrayref && scalar(@$phenotype_ids_arrayref)>0){
+        %phenotype_ids_arrayref = map { $_ => 1} @$phenotype_ids_arrayref;
+    }
+
+    my %mimetypes_arrayref;
+    if ($mimetypes_arrayref &&scalar(@$mimetypes_arrayref)>0){
+        %mimetypes_arrayref = map { $_ => 1} @$mimetypes_arrayref;
+    }
+
     my $image_search = CXGN::Image::Search->new({
         bcs_schema=>$self->bcs_schema(),
         people_schema=>$self->people_schema(),
@@ -63,6 +82,9 @@ sub search {
 
     my @data;
     foreach (@$result) {
+        my $mimetype = _get_mimetype($_->{'image_file_ext'}); 
+        if ( (%mimetypes_arrayref && !exists($mimetypes_arrayref{$mimetype}))) { next; }
+        if ( (%imagefile_names_arrayref && !exists($imagefile_names_arrayref{$_->{'image_original_filename'}}))) { next; }
         if ( $image_timestamp_start && _to_comparable($_->{'image_modified_date'}) lt _to_comparable($image_timestamp_start) ) {  next; } 
         if ( $image_timestamp_end && _to_comparable($_->{'image_modified_date'}) gt _to_comparable($image_timestamp_end) ) { next; } 
 
@@ -125,6 +147,7 @@ sub search {
             },
             observationDbIds => [@observationDbIds],
         };
+      #  }
     }
 
     my %result = (data => \@data);
@@ -216,7 +239,7 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Image detail constructed');
 }
 
- sub image_metadata_store {
+sub image_metadata_store {
     my $self = shift;
     my $params = shift;
     my $image_dir = shift;
@@ -426,7 +449,7 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status());
 }
 
- sub image_data_store {
+sub image_data_store {
     my $self = shift;
     my $image_dir = shift;
     my $image_id = shift;
