@@ -117,7 +117,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
     mkdir $stability_tmp_output if ! -d $stability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
-      "ammi_download_XXXXX",
+      "stability_download_XXXXX",
       DIR=> $stability_tmp_output,
     );
 
