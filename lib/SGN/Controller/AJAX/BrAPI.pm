@@ -3262,6 +3262,80 @@ sub observations_search_process {
 }
 
 
+=head2 brapi/<version>/images
+
+ Usage: To retrieve observations
+ Desc:
+ Request body example:
+ {
+}
+ Response JSON example:
+
+{
+  "metadata": {
+    "datafiles": [
+    ],
+    "pagination": {
+      "currentPage": 0,
+      "pageSize": 1000,
+      "totalCount": 10,
+      "totalPages": 1
+    },
+    "status": [
+      {
+        "message": "Request accepted, response successful",
+        "messageType": "INFO"
+      }
+    ]
+  },
+  "result": {
+    "data": [
+      {
+        "additionalInfo": {},
+        "copyright": "Copyright 2018 Bob Robertson",
+        "description": "This is a picture of a tomato",
+        "descriptiveOntologyTerms": [],
+        "externalReferences": [
+          {
+            "referenceID": "doi:10.155454/12349537E12",
+            "referenceSource": "DOI"
+          }
+        ],
+        "imageDbId": "a55efb9c",
+        "imageFileName": "image_0000231.jpg",
+        "imageFileSize": 50000,
+        "imageHeight": 550,
+        "imageLocation": {
+          "geometry": {
+            "coordinates": [
+              -76.506042,
+              42.417373,
+              123
+            ],
+            "type": "Point"
+          },
+          "type": "Feature"
+        },
+        "imageName": "Tomato Image 1",
+        "imageTimeStamp": "2018-01-01T14:47:23-0600",
+        "imageURL": "https://wiki.brapi.org/images/tomato",
+        "imageWidth": 700,
+        "mimeType": "image/jpeg",
+        "observationDbIds": [
+          "d05dd235",
+          "8875177d"
+        ],
+        "observationUnitDbId": "b7e690b6"
+      }
+    ]
+  }
+ }
+
+ Args:
+ Side Effects:
+
+=cut
+
 sub images : Chained('brapi') PathPart('images') Args(0) : ActionClass('REST') { }
 
 sub images_GET {

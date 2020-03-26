@@ -19,7 +19,7 @@ use File::Slurp;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-extends 'CXGN::BrAPI::v1::Common';
+extends 'CXGN::BrAPI::v2::Common';
 
 sub save_results {
     my $self = shift;
