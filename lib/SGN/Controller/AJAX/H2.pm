@@ -424,7 +424,7 @@ sub h2_pheno_query_jobs_file {
     if ($jobs->[0])
     {
     my $temp_dir = $c->stash->{heritability_temp_dir};
-ss    $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');       
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');       
    
     nstore $jobs, $jobs_file
         or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
