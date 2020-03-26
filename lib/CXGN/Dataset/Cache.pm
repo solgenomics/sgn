@@ -52,6 +52,10 @@ sub genotype_key {
     my $protocolprophash = shift;
     my $protocolpropmarkerhash = shift;
     my $return_only_first_genotypeprop_for_stock = shift;
+    my $chromosome_list = shift;
+    my $start_position = shift;
+    my $end_position = shift;
+    my $marker_name_list = shift;
 
     #print STDERR Dumper($self->_get_dataref());
     my $json = JSON->new();
@@ -64,7 +68,11 @@ sub genotype_key {
     $genotypeprophash = $json->encode( $genotypeprophash || [] );
     $protocolprophash = $json->encode( $protocolprophash || [] );
     $protocolpropmarkerhash = $json->encode( $protocolpropmarkerhash || [] );
-    my $key = md5_hex($dataref.$protocol_id.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$return_only_first_genotypeprop_for_stock."_$datatype");
+    $chromosome_list = $json->encode( $chromosome_list || [] );
+    $start_position = $start_position || '';
+    $end_position = $end_position || '';
+    $marker_name_list = $json->encode( $marker_name_list || [] );
+    my $key = md5_hex($dataref.$protocol_id.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$return_only_first_genotypeprop_for_stock.$chromosome_list.$start_position.$end_position.$marker_name_list."_$datatype");
     return $key;
 }
 
@@ -83,8 +91,12 @@ override('retrieve_genotypes',
         my $protocolprop_top_key_select = shift;
         my $protocolprop_marker_hash_select = shift;
         my $return_only_first_genotypeprop_for_stock = shift;
+        my $chromosome_list = shift || [];
+        my $start_position = shift;
+        my $end_position = shift;
+        my $marker_name_list = shift || [];
         
-        my $key = $self->genotype_key("retrieve_genotypes", $protocol_id, undef, undef, undef, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock);
+        my $key = $self->genotype_key("retrieve_genotypes", $protocol_id, undef, undef, undef, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock, $chromosome_list, $start_position, $end_position, $marker_name_list);
 
         if ($self->cache()->exists($key)) {
             my $genotype_json = $self->cache()->get($key);
