@@ -72,9 +72,6 @@ varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
 formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
 
-formattedPhenoData <- c()
-phenoData          <- c()
-
 genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
 
 if (is.null(genoFile)) {
@@ -87,21 +84,40 @@ if (file.info(genoFile)$size == 0) {
 
 readFilteredGenoData <- c()
 filteredGenoData <- c()
+formattedPhenoData <- c()
+phenoData          <- c()
+genoData           <- c()
+
 if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
     filteredGenoData     <- fread(filteredGenoFile,
                                   na.strings = c("NA", "", "--", "-"),
                                   header = TRUE)
-  readFilteredGenoData <- 1
+
+    genoData <-  data.frame(filteredGenoData)
+    genoData <- column_to_rownames(genoData, 'V1') 
+    readFilteredGenoData <- 1
 }
 
-genoData <- c()
+
 if (is.null(filteredGenoData)) {
     genoData <- fread(genoFile,
                       na.strings = c("NA", "", "--", "-"),
                       header = TRUE)
     
-  genoData <- unique(genoData, by='V1')
+    genoData <- unique(genoData, by='V1')
+    genoData <- data.frame(genoData)
+    genoData <- column_to_rownames(genoData, 'V1')    
+   
+  #genoDataFilter::filterGenoData
+    genoData <- convertToNumeric(genoData)
+    genoData <- filterGenoData(genoData, maf=0.01)
+    genoData <- roundAlleleDosage(genoData)
+    
+    filteredGenoData   <- genoData
+    
 }
+
+genoData <- genoData[order(row.names(genoData)), ]
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
     formattedPhenoData <- data.frame(fread(formattedPhenoFile,
@@ -168,24 +184,6 @@ if (datasetInfo == 'combined populations') {
 
 colnames(phenoTrait)  <- c('genotypes', trait)
 
-if (is.null(filteredGenoData)) {
- 
-  #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData, maf=0.01)
-  genoData <- roundAlleleDosage(genoData)
-
-  genoData <- as.data.frame(genoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
-  filteredGenoData   <- genoData
-  
-} else {
-  genoData           <- as.data.frame(filteredGenoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
-}
-
-genoData <- genoData[order(row.names(genoData)), ]
 
 selectionTempFile <- grep("selection_population", inputFiles, value = TRUE)
 
@@ -221,16 +219,16 @@ if (length(selectionFile) != 0) {
     selectionData <- fread(selectionFile,
                            header = TRUE,
                            na.strings = c("NA", "", "--", "-"))
-    
-  selectionData <- unique(selectionData, by='V1')
-  
-  selectionData <- filterGenoData(selectionData, maf=0.01)
-  selectionData <- roundAlleleDosage(selectionData)
-  
-  selectionData  <- data.frame(selectionData)
-  rownames(selectionData) <- selectionData[, 1]
-  selectionData[, 1]      <- NULL
-  filteredPredGenoData <- selectionData
+
+    selectionData <- unique(selectionData, by='V1')
+    selectionData <- data.frame(selectionData)
+    selectionData <- column_to_rownames(selectionData, 'V1')      
+   
+    selectionData <- convertToNumeric(selectionData)
+    selectionData <- filterGenoData(selectionData, maf=0.01)
+    selectionData <- roundAlleleDosage(selectionData)  
+
+    filteredPredGenoData <- selectionData
 }
 
 
@@ -241,7 +239,7 @@ if (sum(is.na(genoData)) > 0) {
   genoDataMissing<- c('yes')
 
   genoData <- na.roughfix(genoData)
-  genoData <- data.matrix(genoData)
+  genoData <- data.frame(genoData)
 }
 
 #create phenotype and genotype datasets with
@@ -273,7 +271,8 @@ if (length(selectionData) != 0) {
   
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
-    selectionData <- data.matrix(na.roughfix(selectionData))    
+    selectionData <- na.roughfix(selectionData)
+    selectionData <- data.frame(selectionData)
   }
 }
 

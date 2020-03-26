@@ -92,7 +92,8 @@ extractGenotype <- function(inputFiles) {
         ##genoDataFilter::filterGenoData
         genoData <- unique(genoData, by = 'V1')
         genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')
+        genoData <- column_to_rownames(genoData, 'V1')       
+    
 
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
@@ -100,12 +101,11 @@ extractGenotype <- function(inputFiles) {
 
         message("No. of geno missing values, ", sum(is.na(genoData)))
         if (sum(is.na(genoData)) > 0) {
-            genoDataMissing <- c('yes')
-            genoData <- na.roughfix(genoData)
+        genoDataMissing <- c('yes')
+        genoData <- na.roughfix(genoData)
         }
-        
+    
         genoData <- data.frame(genoData)
-        
     }
       
 }
