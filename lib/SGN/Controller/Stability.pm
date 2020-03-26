@@ -30,8 +30,13 @@ sub index :Path('/tools/stability/') :Args(0) {
     $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     return;
   }
+<<<<<<< HEAD:lib/SGN/Controller/Stability.pm
 
   $c->stash->{template} = '/tools/stability/index.mas';
+=======
+  $c->stash->{template} = '/tools/heritability/index.mas';
+  
+>>>>>>> chris_h2:lib/SGN/Controller/Heritability.pm
 }
 
 1;

@@ -205,9 +205,15 @@ jQuery(document).ready(function() {
   jQuery('#runAMMI').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
+<<<<<<< HEAD:mason/tools/stability/index.mas
       $('#stability_files').empty();
     } else {
       $('#stability_files').empty();
+=======
+      $('#heritability_output').empty();
+    } else {
+      $('#heritability_output').empty();
+>>>>>>> chris_h2:mason/tools/heritability/index.mas
       if ($('#pheno_select').val() != ""){
         var dataset_id = $('#available_datasets').val();
         var trait_id = $('#pheno_select').val();
@@ -224,6 +230,7 @@ jQuery(document).ready(function() {
               alert(response.error);
             }
             else {
+<<<<<<< HEAD:mason/tools/stability/index.mas
               var AMMIFile_response = response.AMMITable;
               var fig1_response = response.figure1;
               var fig2_response = response.figure2;
@@ -240,6 +247,20 @@ jQuery(document).ready(function() {
           },
           error: function(response) {
             alert("An error occurred, the service may temporarily be unavailable");
+=======
+              var fig1_response = response.h2Table;
+              var fig2_response = response.figure3;
+        //alert("Response ID: "+temp_response);
+            //alert("Response ID: "+fig1_response);
+
+              $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
+              $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
+            }
+          },
+          error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            alert(err.Message);
+>>>>>>> chris_h2:mason/tools/heritability/index.mas
           }
         });
       }

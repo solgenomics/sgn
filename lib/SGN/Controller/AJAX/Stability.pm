@@ -117,8 +117,13 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
     mkdir $stability_tmp_output if ! -d $stability_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
+<<<<<<< HEAD:lib/SGN/Controller/AJAX/Stability.pm
       "stability_download_XXXXX",
       DIR=> $stability_tmp_output,
+=======
+      "h2_download_XXXXX",
+      DIR=> $heritability_tmp_output,
+>>>>>>> chris_h2:lib/SGN/Controller/AJAX/Heritability.pm
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
@@ -145,9 +150,8 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $figure3file = $tempfile . "_" . "figure3.png";
 
 
-    # $trait_id =~ tr/ /./;
-    # $trait_id =~ tr/\//./;
-
+    $trait_id =~ tr/ /./;
+    $trait_id =~ tr/\//./;
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -166,8 +170,11 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $c->config->{basepath} . "/R/stability/ammi_script.R",
             $pheno_filepath,
             $trait_id,
+<<<<<<< HEAD:lib/SGN/Controller/AJAX/Stability.pm
             $figure1file,
             $figure2file,
+=======
+>>>>>>> chris_h2:lib/SGN/Controller/AJAX/Heritability.pm
             $figure3file,
             $AMMIFile
     );
