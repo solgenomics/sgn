@@ -485,9 +485,12 @@ sub download_grm {
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        $result_hash{$s}->{$c} = $result_matrix->[$row_num]->[$col_num];
-                        $seen_stock_ids{$s}++;
-                        $seen_stock_ids{$c}++;
+                        my $val = $result_matrix->[$row_num]->[$col_num];
+                        if ($val || $val == 0) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
                     }
                     $col_num++;
                 }
