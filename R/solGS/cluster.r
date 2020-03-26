@@ -73,41 +73,41 @@ extractGenotype <- function(inputFiles) {
         genoData$trial <- NULL
     } else {
         genoFile <- genoFiles
-        genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-", "."))
-        genoData <- unique(genoData, by = 'V1')
+        genoData <- fread(genoFile,
+                          header = TRUE,
+                          na.strings = c("NA", " ", "--", "-", "."))
         
-        filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
-
-        if (!is.null(genoData)) { 
-
-            genoData <- data.frame(genoData)
-            genoData <- column_to_rownames(genoData, 'V1')
-            
-        } else {
-            genoData <- fread(filteredGenoFile)
+        if (is.null(genoData)) { 
+            filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
+            genoData <- fread(filteredGenoFile, header = TRUE)         
         }
-    }
-
-    if (is.null(genoData)) {
-        stop("There is no genotype dataset.")
-        q("no", 1, FALSE)
     }
 
    
-    if (is.null(filteredGenoFile) == TRUE) {
+    if (is.null(genoData)) {
+        stop("There is no genotype dataset.")
+        q("no", 1, FALSE)
+    } else {
+
         ##genoDataFilter::filterGenoData
-        genoData <- filterGenoData(genoData, maf = 0.01)
-        genoData <- column_to_rownames(genoData, 'rn')
+        genoData <- unique(genoData, by = 'V1')
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')       
+    
+
+        genoData <- convertToNumeric(genoData)
+        genoData <- filterGenoData(genoData, maf=0.01)
+        genoData <- roundAlleleDosage(genoData)
 
         message("No. of geno missing values, ", sum(is.na(genoData)))
         if (sum(is.na(genoData)) > 0) {
-            genoDataMissing <- c('yes')
-            genoData <- na.roughfix(genoData)
+        genoDataMissing <- c('yes')
+        genoData <- na.roughfix(genoData)
         }
-    }
-
-    genoData <- data.frame(genoData)
     
+        genoData <- data.frame(genoData)
+    }
+      
 }
 
 set.seed(235)
@@ -146,7 +146,7 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
 
     if (grepl('gebv', dataType, ignore.case = TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
-        gebvsData <- data.frame(fread(gebvsFile))
+        gebvsData <- data.frame(fread(gebvsFile, header = TRUE))
        
         clusterNa   <- gebvsData %>% filter_all(any_vars(is.na(.)))
         clusterData <- column_to_rownames(gebvsData, 'V1')    
@@ -166,7 +166,7 @@ sIndexFile <- grep("selection_index", inputFiles, value = TRUE)
 selectedIndexGenotypes <- c()
 
 if (length(sIndexFile) != 0) {   
-    sIndexData <- data.frame(fread(sIndexFile))
+    sIndexData <- data.frame(fread(sIndexFile, header = TRUE))
     selectionProp <- selectionProp * 0.01
     selectedIndexGenotypes <- sIndexData %>% top_frac(selectionProp)
     selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
