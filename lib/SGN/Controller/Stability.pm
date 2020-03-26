@@ -30,6 +30,7 @@ sub index :Path('/tools/stability/') :Args(0) {
     $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     return;
   }
+
   $c->stash->{template} = '/tools/stability/index.mas';
 }
 
