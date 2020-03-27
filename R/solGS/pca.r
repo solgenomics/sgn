@@ -62,20 +62,25 @@ if (dataType == 'genotype') {
     } else {
         genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
         genoData     <- fread(genoDataFile,
+                              header = TRUE,
                               na.strings = c("NA", " ", "--", "-", "."))
         
-        genoData     <- unique(genoData, by='V1')
-        
-        filteredGenoFile <- grep("filtered_genotype_data_",
+    
+        if (is.null(genoData)) { 
+       
+            filteredGenoFile <- grep("filtered_genotype_data_",
                                  genoDataFile,
                                  value = TRUE)
 
-        if (!is.null(genoData)) { 
-            genoData <- data.frame(genoData)
-            genoData <- column_to_rownames(genoData, 'V1')          
-        } else {
-            genoData <- fread(filteredGenoFile)
+            if (filteredGenoFile) {
+                genoData <- fread(filteredGenoFile,  header = TRUE)
+            }         
         }
+
+        genoData <- unique(genoData, by='V1')
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')       
+        
     }
 } else if (dataType == 'phenotype') {
 
@@ -104,7 +109,8 @@ if (dataType == 'genotype') {
         phenoData <- cleanAveragePhenotypes(inputFiles, metaFile)       
         phenoData <- na.omit(phenoData)
     }
-    
+
+    phenoData <- phenoData[, apply(phenoData, 2, var) != 0 ]
     phenoData <- scale(phenoData, center=TRUE, scale=TRUE)
     phenoData <- round(phenoData, 3)
 }
@@ -115,22 +121,22 @@ if (is.null(genoData) && is.null(phenoData)) {
   q("no", 1, FALSE)
 } 
 
-## genoDataMissing <- c()
-## if (dataType == 'genotype') {
-##     if (is.null(filteredGenoFile) == TRUE) {
-##         ##genoDataFilter::filterGenoData       
-##         genoData <- filterGenoData(genoData, maf=0.01)
-##         genoData <- column_to_rownames(genoData, 'rn')
 
-##         message("No. of geno missing values, ", sum(is.na(genoData)) )
-##         if (sum(is.na(genoData)) > 0) {
-##             genoDataMissing <- c('yes')
-##             genoData <- na.roughfix(genoData)
-##         }
-##     }
+genoDataMissing <- c()
+if (dataType == 'genotype') {
+    if (is.null(filteredGenoFile) == TRUE) {
+        ##genoDataFilter::filterGenoData
+        genoData <- convertToNumeric(genoData)
+        genoData <- filterGenoData(genoData, maf=0.01)
+        genoData <- roundAlleleDosage(genoData)
+    
+        message("No. of geno missing values, ", sum(is.na(genoData)) )
+        if (sum(is.na(genoData)) > 0) {
+            genoDataMissing <- c('yes')
+            genoData <- na.roughfix(genoData)
+        }
+    }
 
-##     genoData <- data.frame(genoData)
-## }
 
 ## nCores <- detectCores()
 ## message('no cores: ', nCores)
@@ -142,16 +148,11 @@ if (is.null(genoData) && is.null(phenoData)) {
 
 pcaData <- c()
 if (!is.null(genoData)) {
-
-    genoData <- filterGenoData(genoData, maf=0.01)
-    genoData <- column_to_rownames(genoData, 'rn')
-    
-    genoData <- roundAlleleDosage(genoData)
-    genoData <- column_to_rownames(genoData, 'rn')
-    pcaData  <- genoData
+    pcaData <- genoData
     genoData <- NULL
 } else if(!is.null(phenoData)) {
     pcaData <- phenoData
+    phenoData <- NULL
 }
 
 

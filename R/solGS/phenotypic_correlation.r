@@ -50,8 +50,10 @@ if ( length(refererQtl) != 0 ) {
                                    )
 } else {
 
-  phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
-                                   na.strings = c("NA", "", "--", "-", ".", "..")
+    phenoData <- data.frame(fread(phenoDataFile,
+                                     header = TRUE,
+                                     sep="\t",
+                                     na.strings = c("NA", "", "--", "-", ".", "..")
                                    ))
 }
 
@@ -118,7 +120,6 @@ if (length(refererQtl) == 0  ) {
                         data.frame
                              
 }
-
 
 print(formattedPhenoData[1:2, ])
 

@@ -506,15 +506,17 @@ solGS.cluster = {
 	var dataType    = jQuery('#'+selectId + ' #cluster_data_type_select').val();
 	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
 	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
-	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val();
-	var popType = jQuery('#cluster_selected_population_type').val();
-	
+
+	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
+
 	if (selectionProp) {
 	    selectionProp = selectionProp.replace(/%/, '');
 	    selectionProp = selectionProp.replace(/\s+/g, '');
 	}
-	
-	kNumber = kNumber.replace(/\s+/g, '');
+
+	if (kNumber) {
+	    kNumber = kNumber.replace(/\s+/g, '');
+	}
 	
 	return {'data_type' : dataType,
 		'cluster_type': clusterType,
@@ -767,7 +769,7 @@ jQuery(document).ready( function() {
 	    }
 	} 
 							 	
-    } else if (page.match(/breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//)) {
+    } else if (page.match(/cluster\/analysis\/|breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//)) {
 
 	var dataTypeOpts = ['Genotype', 'Phenotype'];
 	dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);

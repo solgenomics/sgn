@@ -43,7 +43,7 @@ trGebv   <- c()
 gebvsCol <- 'GEBVs'
 
 for (trGebvFile in trGebvFiles) {
-    gebv <- data.frame(fread(trGebvFile))
+    gebv <- data.frame(fread(trGebvFile, header = TRUE))
     trait <- names(gebv)[2]
     colnames(gebv)[2] <- gebvsCol
     gebv$trait <- trait
@@ -54,7 +54,7 @@ trGebv$pop <- 'training'
 slGebv <- c()
 
 for (slGebvFile in slGebvFiles) { 
-    gebv <- data.frame(fread(slGebvFile))
+    gebv <- data.frame(fread(slGebvFile, header = TRUE))
     trait <- names(gebv)[2]
     colnames(gebv)[2] <- gebvsCol
     gebv$trait <- trait

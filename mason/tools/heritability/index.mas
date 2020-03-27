@@ -1,0 +1,344 @@
+
+<%doc>
+</%doc>
+
+<%args>
+
+</%args>
+
+<%perl>
+  use JSON::Any;
+
+
+</%perl>
+
+
+<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+<& /page/page_title.mas, title=>"Heritability" &>
+
+
+<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+  <input type="hidden" name="outformat" value="0" />
+
+
+  <div class="form-group form-inline">
+    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+    <br>
+
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <br>
+    <br>
+
+    </div>
+
+
+      <div class="form-group form-inline">
+        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
+      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+      <br>
+      <br>
+      <br>
+      <center>
+        <div id="trait_histogram_plot">
+        </div>
+      </center>
+    
+      <br>
+      <br>
+      <br>
+      <center>
+        <div id="pca_output"></div>
+      </center>
+
+
+    <br>
+
+
+    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
+        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
+        <br>
+
+        </div>
+
+            <div style="text-align: center">
+              <button class="btn btn-primary" id="runH2" type="submit" name="runH2" value="runH2">Run Heritability</button>
+            </div>
+            <br />
+
+    <div id="tempfile" style="display:none" >
+    </div>
+
+
+
+
+
+</&>
+
+
+
+
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+
+
+
+  <center>
+    <div id="sgn_blast_graph" style="display:none">
+        <div id="myCanvas">
+          Your browser does not support the HTML5 canvas
+        </div>
+    </div>
+  </center>
+  <br>
+  <center>
+    <div id="heritability_output"></div>
+  </center>
+  <div id="Overview_output"></div>
+  <div id="Coverage_output"></div>
+  <div id="Table_output" style="min-width:900px;"></div>
+  <div id="Bioperl_output"></div>
+  <div id="Basic_output"></div>
+
+</&>
+
+
+
+
+
+<script>
+
+
+jQuery(document).ready(function() {
+  if (isLoggedIn()) {
+    get_select_box("datasets", "dataset_select");
+  }
+  else {
+    alert('You must be logged in to use Heritability');
+  }
+  $('#pheno_select').attr("disabled",true).html('');
+  jQuery('#dataset_select').click(function() {
+    $('#pheno_select').attr("disabled",true).html('');
+    $('#trait_histogram_plot').html('');
+    $('#heritability_output').empty();
+  });
+  jQuery('#selectDataset').click(function() {
+    var dataset_id = jQuery('#available_datasets').val();
+//    alert("Dataset ID: "+dataset_id);
+    $.ajax({
+      url: '/ajax/heritability/shared_phenotypes',
+      data: {'dataset_id': dataset_id},
+      success: function(response) {
+        if (response.error) {
+          $('#dataset_select').val('ERROR');
+        }
+        else {
+//	    alert(response.options);
+//	    	    alert(response.options.length);
+	var option_html = '<option selected="selected" value=""> </option>';
+	  for (var i = 0; i < response.options.length; i++) {
+	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+	  }
+	  $('#pheno_select').attr("disabled",false).html(option_html);
+      jQuery('#tempfile').html(response.tempfile);
+
+
+	}
+
+      },
+      error: function(response) {
+        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
+      }
+    });
+  });
+
+
+  jQuery('#preview_trait_histogram_btn').on('click', function() {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+    } else {
+      //alert("Inside trait preview");
+      var tempfile = jQuery('#tempfile').html();
+      var trait = jQuery('#pheno_select').val();
+      //alert(trait);
+      jQuery.ajax( {
+          url: '/ajax/heritability/getdata',
+          data: { 'file' : tempfile },
+          success: function(r)  {
+          //alert("data grabbed "+JSON.stringify(r.data));
+          var v = {
+              "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+              "width": 200,
+              "height": 100,
+              "padding": 5,
+              "data": { 'values': r.data },
+              "mark": "bar",
+              "encoding": {
+              "x": {
+                "bin": true,
+                "field": trait,
+                "type": "quantitative"
+              },
+              "y": {
+                "aggregate": "count",
+                "type": "quantitative"
+              }
+             }
+            };
+
+   //alert("embedding"+ JSON.stringify(v));
+            vegaEmbed("#trait_histogram_plot", v);
+            //alert("done");
+          },
+
+
+        error: function(e) { alert('error!'); }
+      });
+    };
+  });
+
+
+  jQuery('#runH2').click( function () {
+    if (!jQuery('#pheno_select').val()) {
+      alert("Please select a dataset and trait.")
+      $('#heritability_output').empty();
+    } else {
+      $('#heritability_output').empty();
+      if ($('#pheno_select').val() != ""){
+        var dataset_id = $('#available_datasets').val();
+        var trait_id = $('#pheno_select').val();
+        $.ajax({
+          url: '/ajax/heritability/generate_results',
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+          },
+          timeout: 30000000,
+          success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+              alert(response.error);
+            }
+            else {
+              var fig1_response = response.h2Table;
+              var fig2_response = response.figure3;
+        //alert("Response ID: "+temp_response);
+            //alert("Response ID: "+fig1_response);
+
+              $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
+              $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
+            }
+          },
+          error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            alert(err.Message);
+          }
+        });
+      }
+    };
+  });
+
+
+});
+
+
+
+
+
+
+
+
+</script>
+
+
+<!-- STYLE -->
+<style>
+
+h1 {
+  display:none;
+}
+
+.seq_map {
+	color: #777777;
+	width: 700px;
+	position:relative;
+	overflow: auto;
+	align: left;
+}
+
+.blast_select_box {
+  width:300px;
+  margin-right:10px;
+}
+
+.blast_select_label {
+  width:100px;
+  margin-right:10px;
+  line-height: 32px;
+}
+
+.ui-dialog {
+	position:relative;
+}
+
+#region_square {
+	position:absolute;
+	vertical-align:middle;
+}
+.help_dialog {
+	color:blue;
+	cursor:pointer
+}
+#desc_dialog {
+	overflow: auto;
+	position: relative;
+}
+.help_box {
+	background-color:#EEEEFE;
+	border-color:#AAA;
+	border-width:2px;
+	border-style:solid;
+	border-radius:5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#sequence {
+  min-height: 80px;
+  max-height: 300px;
+/*  min-width: 700px;*/
+  max-width: 98%;
+}
+
+.download_tag {
+  display:none;
+}
+
+/* BLAST canvas Graph */
+
+.width-1000 {
+  width: 1000px;
+  text-align: center;
+}
+
+#sgn_blast_graph {
+  overflow:hidden;
+}
+
+#myCanvas {
+/*  border-style: solid;*/
+/*  border-width: 1px;*/
+/*  border-color: #ddd;*/
+/*  border-width:0px 1px 1px 1px;*/
+  height:450px;
+  width:1020px;
+  overflow:scroll;
+  overflow-x: hidden;
+}
+
+
+</style>

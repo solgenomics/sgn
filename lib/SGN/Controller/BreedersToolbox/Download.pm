@@ -734,6 +734,20 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+    my $marker_set_list_id = $c->req->param('marker_set_list_id');
+
+    my @marker_name_list;
+    if ($marker_set_list_id) {
+        my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $marker_set_list_id });
+        my $elements = $list->elements();
+
+        foreach my $e (@$elements) {
+            my $o = decode_json $e;
+            if (exists($o->{marker_name})) {
+                push @marker_name_list, $o->{marker_name};
+            }
+        }
+    }
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         $download_format,    #can be either 'VCF' or 'DosageMatrix'
@@ -749,10 +763,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             start_position=>$start_position,
             end_position=>$end_position,
             compute_from_parents=>$compute_from_parents,
-            forbid_cache=>$forbid_cache
+            forbid_cache=>$forbid_cache,
+            marker_name_list=>\@marker_name_list
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
-            #marker_name_list=>['S80_265728', 'S80_265723'],
             #limit=>$limit,
             #offset=>$offset
         }
@@ -782,6 +796,9 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $download_format = $c->req->param("download_format") || 'matrix';
+    my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
+    my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
+    my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -816,7 +833,10 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         accession_id_list=>\@accession_ids,
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>$compute_from_parents,
-        download_format=>$download_format
+        download_format=>$download_format,
+        minor_allele_frequency=>$minor_allele_frequency,
+        marker_filter=>$marker_filter,
+        individuals_filter=>$individuals_filter
     });
     my $file_handle = $geno->download_grm();
 

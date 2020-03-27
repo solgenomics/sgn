@@ -189,23 +189,51 @@ $dataset_id => undef
             <table class="table">
                 <tr>
                   <td colspan="3">
+                    <span>Format</span>
                     <select class="wizard-download-genotypes-format form-control" >
-                        <option value="DosageMatrix">Dosage Matrix (tsv)</option>
-                        <option value="VCF">VCF</option>
+                        <option value="DosageMatrix">Dosage Matrix File Format (tsv)</option>
+                        <option value="VCF">VCF File Format</option>
                     </select>
                   </td>
+                  <td colspan="3">
+                    <span>Marker Set Filter</span>
+                    <select class="wizard-download-genotypes-marker-set-list-id form-control" id="wizard-download-genotypes-marker-set-list-id"></select>
+                  </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <button class="wizard-download-genotypes btn btn-sm btn-primary">
+                            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                            Download Genotypes
+                        </button>
+                    </td>
+                    <td colspan="3">
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
+                            Manage Marker Sets
+                        </button>
+                    </td>
                 </tr>
             </table>
-
-            <button class="wizard-download-genotypes btn btn-sm btn-primary">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Download Genotypes
-            </button>
           </div>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <table class="table">
+                <tr>
+                    <td>
+                      <span>Minor Allele Frequency</span>
+                      <input placeholder="0.05" value="0.05" type="number" class="wizard-download-genotypes-grm-maf form-control">
+                    </td>
+                    <td>
+                      <span>Marker Filter</span>
+                      <input placeholder="0.60" value="0.60" type="number" class="wizard-download-genotypes-grm-marker-filter form-control">
+                    </td>
+                    <td>
+                      <span>Individuals Filter</span>
+                      <input placeholder="0.80" value="0.80" type="number" class="wizard-download-genotypes-grm-individuals-filter form-control">
+                    </td>
+                </tr>
               <tr>
                 <td colspan="3">
+                  <span>Format</span>
                   <select class="wizard-download-genotypes-grm-format form-control" >
                       <option value="matrix">Genomic Relationship Matrix (tsv)</option>
                       <option value="three_column">3-Column Format (tsv)</option>
@@ -214,10 +242,13 @@ $dataset_id => undef
               </tr>
             </table>
 
-            <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Download Genetic Relationship Matrix (GRM)
-            </button>
+            <td colspan="3">
+                <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
+                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                    Download Genomic Relationship Matrix (GRM)
+                </button>
+            </td>
+
           </div>
         </div>
       </div>

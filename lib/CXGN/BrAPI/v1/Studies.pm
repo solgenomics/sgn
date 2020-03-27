@@ -208,20 +208,28 @@ sub search_results {
 			seasonDbId => "",
 			year       => $_->{"year"}
 		);
+		my $planting_date;
+		if ($_->{project_planting_date}) {
+			$planting_date = format_date($_->{project_planting_date});
+		}
+		my $harvest_date;
+		if ($_->{project_harvest_date}) {
+			$harvest_date = format_date($_->{project_harvest_date});
+		}
 
         my %data_obj = (
 			active=>JSON::true,
 			additionalInfo=>\%additional_info,
 			commonCropName => $supported_crop,
 			documentationURL => "",
-			endDate => $_->{project_planting_date} == "" ? undef : $_->{project_planting_date},
+			endDate => $harvest_date ? $harvest_date :  undef ,
 			locationDbId => $_->{location_id},
 			locationName => $_->{location_name},
 			name => $_->{trial_name},
 			programDbId => qq|$_->{breeding_program_id}|,
 			programName => $_->{breeding_program_name},
 			seasons => [\%season],
-			startDate => $_->{project_harvest_date} == "" ? undef : $_->{project_harvest_date},
+			startDate => $planting_date ? $planting_date : undef,
             studyDbId => qq|$_->{trial_id}|,
 			studyName => $_->{trial_name},
 			studyType => $_->{trial_type},
@@ -306,17 +314,13 @@ sub studies_detail {
 				$location_id = $t->get_location()->[0];
 				$location_name = $t->get_location()->[1];
 			}
-			my $planting_date = '';
+			my $planting_date;
 			if ($t->get_planting_date()) {
-				$planting_date = $t->get_planting_date();
-				my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-				$planting_date = $t->strftime("%Y-%m-%d");
+				$planting_date = format_date($t->get_planting_date());
 			}
-			my $harvest_date = '';
+			my $harvest_date;
 			if ($t->get_harvest_date()) {
-				$harvest_date = $t->get_harvest_date();
-				my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
-				$harvest_date = $t->strftime("%Y-%m-%d");
+				$harvest_date = format_date($t->get_harvest_date());
 			}
 			my $contacts = $t->get_trial_contacts();
 			my $brapi_contacts;
@@ -364,7 +368,7 @@ sub studies_detail {
 				contacts=>$brapi_contacts,
 				dataLinks=>\@data_links,
 				documentationURL=>"",
-				endDate => $harvest_date == "" ? undef : $harvest_date,
+				endDate => $harvest_date ? $harvest_date : undef,
 				lastUpdate=>{
 					version => '',
 					timestamp => undef
@@ -387,7 +391,7 @@ sub studies_detail {
 					name=>$location->[1],
 				},
 				seasons=>\@years,
-				startDate => $planting_date == "" ? undef : $planting_date,
+				startDate => $planting_date ? $planting_date : undef,
 				studyDbId=>qq|$study_db_id|,
 				studyDescription=>$t->get_description(),
 				studyName=>$t->get_name(),
@@ -866,6 +870,18 @@ sub get_stockprop_hash {
 	}
 	#print STDERR Dumper $prop_hash;
 	return $prop_hash;
+}
+
+sub format_date {
+
+	my $str_date = shift;
+	my $date;
+	if ($str_date) {
+		my  $formatted_time = Time::Piece->strptime($str_date, '%Y-%B-%d');
+		$date =  $formatted_time->strftime("%Y-%m-%d");
+	}
+
+	return $date;
 }
 
 1;

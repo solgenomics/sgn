@@ -346,7 +346,7 @@ sub save_ona_cross_info {
                             $status_trial_identifier = 'FieldActivities/PlantStatus/plant_statusID';
                             $status_accession_identifier = 'FieldActivities/PlantStatus/plant_statusID';
                         } else {
-                            print STDERR Dumper $a;
+                            #print STDERR Dumper $a;
                         }
                         my $image_temp_file_info = $attachment_lookup{$a->{$attachment_identifier}};
                         my $image_temp_file = $image_temp_file_info->[0];
@@ -426,7 +426,7 @@ sub save_ona_cross_info {
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                        print STDERR Dumper $a;
+                        #print STDERR Dumper $a;
                     }
                 }
                 elsif ($activity_category eq 'laboratory'){
@@ -467,7 +467,7 @@ sub save_ona_cross_info {
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                        print STDERR Dumper $a;
+                        #print STDERR Dumper $a;
                     }
                 }
                 elsif ($activity_category eq 'screenhouse'){
@@ -482,12 +482,12 @@ sub save_ona_cross_info {
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                        print STDERR Dumper $a;
+                        #print STDERR Dumper $a;
                     }
                 }
                 else {
                     print STDERR "UNKNOWN ONA ODK $activity_category\n";
-                    print STDERR Dumper $a;
+                    #print STDERR Dumper $a;
                 }
             }
         }
@@ -510,7 +510,7 @@ sub save_ona_cross_info {
         return { success => 1 };
 
     } else {
-        print STDERR Dumper $resp;
+        #print STDERR Dumper $resp;
         return { error => "Could not connect to ONA" };
     }
 }
@@ -653,6 +653,14 @@ sub create_odk_cross_progress_tree {
     my %top_level_contents;
     my @top_level_json;
     my %summary_info;
+    my $barcode_female_plot_name;
+    my $barcode_male_plot_name;
+    my $barcode_female_plot_id;
+    my $barcode_male_plot_id;
+    my $db_female_accession_name;
+    my $db_male_accession_name;
+
+
     while (my ($top_level, $female_accession_hash) = each %combined){
         if (exists($seen_top_levels{$top_level})){
             die "top level $top_level not unique \n";
@@ -851,13 +859,22 @@ sub create_odk_cross_progress_tree {
 
                                                     my $user_category = $action_hash->{'userCategory'};
                                                     if ($user_category eq 'field'){
+                                                        #print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
                                                         my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
                                                         if ($activity_name eq 'firstPollination'){
+                                                            $barcode_female_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
+                                                            $barcode_male_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
+                                                            $barcode_female_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
+                                                            $barcode_male_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
+                                                            $db_female_accession_name = $self-> _get_accession_from_plot($barcode_female_plot_id),
+                                                            $db_male_accession_name = $self-> _get_accession_from_plot($barcode_male_plot_id),
                                                             my $activity_summary = {
-                                                                femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
-                                                                maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
-                                                                femalePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
-                                                                malePlotName => _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
+                                                                #femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
+                                                                #maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
+                                                                femaleAccessionName => $db_female_accession_name,
+                                                                maleAccessionName => $db_male_accession_name,
+                                                                femalePlotName => $barcode_female_plot_name,
+                                                                malePlotName => $barcode_male_plot_name,
                                                                 date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
                                                             };
                                                             push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
@@ -1196,5 +1213,45 @@ sub _get_plot_name_from_barcode_id {
     my @id_split = split ' plot_id: ', $id_full;
     return $id_split[0];
 }
+
+
+sub _get_plot_id_from_barcode_id {
+    my $id_full = shift;
+    my ($plot_id) = $id_full =~ /plot_id\:(.*)Accession/;
+    $plot_id =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
+
+    #print STDERR "BARCODE PLOT ID =".Dumper($plot_id)."\n";
+    return $plot_id;
+}
+
+
+sub _get_accession_from_plot {
+    my $self = shift;
+    my $plot_id = shift;
+    #print STDERR "PLOT ID =".Dumper($plot_id)."\n";
+    my $schema = $self->bcs_schema;
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $q = "SELECT stock.uniquename FROM stock_relationship
+             JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock.type_id = ?
+             WHERE stock_relationship.subject_id = ? AND stock_relationship.type_id =?";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($accession_type_id, $plot_id, $plot_of_type_id);
+
+    my @accession= $h->fetchrow_array();
+    my $accession_name;
+    if (scalar(@accession) > 1) {
+        print STDERR "This plot id is associated with more than one accession uniquename\n";
+    } else {
+        $accession_name = $accession[0];
+    }
+    #print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
+
+    return $accession_name;
+
+}
+
 
 1;

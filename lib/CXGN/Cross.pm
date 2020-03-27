@@ -327,15 +327,15 @@ sub get_progeny_info {
 }
 
 
-=head2 get_crosses_in_crossingtrial
+=head2 get_crosses_in_crossing_experiment
 
     Class method.
     Returns all cross names and ids in a specific crossing_experiment.
-    Example: my @crosses = CXGN::Cross->get_crosses_in_crossingtrial($schema, $trial_id)
+    Example: my @crosses = CXGN::Cross->get_crosses_in_crossing_experiment($schema, $trial_id)
 
 =cut
 
-sub get_crosses_in_crossingtrial {
+sub get_crosses_in_crossing_experiment {
     my $self = shift;
     my $schema = $self->schema;
     my $trial_id = $self->trial_id;
@@ -353,6 +353,204 @@ sub get_crosses_in_crossingtrial {
     my @data = ();
     while(my($cross_id, $cross_name) = $h->fetchrow_array()){
         push @data, [$cross_id, $cross_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_female_accessions_in_crossing_experiment
+
+    Class method.
+    Returns all female accession names and ids in a specific crossing_experiment.
+    Example: my @female_accessions = CXGN::Cross->get_female_accessions_in_crossing_experiment($schema, $trial_id)
+
+=cut
+
+sub get_female_accessions_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_parent_typeid, $trial_id);
+
+    my @data = ();
+    while(my($female_accession_id, $female_accession_name) = $h->fetchrow_array()){
+        push @data, [$female_accession_id, $female_accession_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_male_accessions_in_crossing_experiment
+
+    Class method.
+    Returns all male accession names and ids in a specific crossing_experiment.
+    Example: my @male_accessions = CXGN::Cross->get_male_accessions_in_crossing_experiment($schema, $trial_id)
+
+=cut
+
+sub get_male_accessions_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($male_parent_typeid, $trial_id);
+
+    my @data = ();
+    while(my($male_accession_id, $male_accession_name) = $h->fetchrow_array()){
+        push @data, [$male_accession_id, $male_accession_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_female_plots_in_crossing_experiment
+
+    Class method.
+    Returns all female plot names and ids in a specific crossing_experiment.
+    Example: my @female_plots = CXGN::Cross->get_female_plots_in_crossing_experiment($schema, $trial_id)
+
+=cut
+
+sub get_female_plots_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $female_plot_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plot_typeid, $trial_id);
+
+    my @data = ();
+    while(my($female_plot_id, $female_plot_name) = $h->fetchrow_array()){
+        push @data, [$female_plot_id, $female_plot_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_male_plots_in_crossing_experiment
+
+    Class method.
+    Returns all male plot names and ids in a specific crossing_experiment.
+    Example: my @male_plots = CXGN::Cross->get_female_plots_in_crossing_experiment($schema, $trial_id)
+
+=cut
+
+sub get_male_plots_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $male_plot_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($male_plot_typeid, $trial_id);
+
+    my @data = ();
+    while(my($male_plot_id, $male_plot_name) = $h->fetchrow_array()){
+        push @data, [$male_plot_id, $male_plot_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_female_plants_in_crossing_experiment
+
+    Class method.
+    Returns all female plant names and ids in a specific crossing_experiment.
+    Example: my @female_plants = CXGN::Cross->get_female_plants_in_crossing_experiment($schema, $trial_id)
+
+=cut
+
+sub get_female_plants_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $female_plant_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plant_typeid, $trial_id);
+
+    my @data = ();
+    while(my($female_plant_id, $female_plant_name) = $h->fetchrow_array()){
+        push @data, [$female_plant_id, $female_plant_name]
+    }
+
+    return \@data;
+}
+
+
+=head2 get_male_plants_in_crossing_experiment
+
+    Class method.
+    Returns all male plant names and ids in a specific crossing_experiment.
+    Example: my @male_plants = CXGN::Cross->get_male_plants_in_crossing_experiment($schema, $trial_id)
+
+=cut
+
+sub get_male_plants_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $male_plant_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($male_plant_typeid, $trial_id);
+
+    my @data = ();
+    while(my($male_plant_id, $male_plant_name) = $h->fetchrow_array()){
+        push @data, [$male_plant_id, $male_plant_name]
     }
 
     return \@data;

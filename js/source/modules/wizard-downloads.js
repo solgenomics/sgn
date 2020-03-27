@@ -47,7 +47,8 @@ export function WizardDownloads(main_id,wizard){
         var end_position = d3.select(".wizard-download-genotypes-end-position").node().value;
         var download_format = d3.select(".wizard-download-genotypes-format").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
-        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}`;
+        var marker_set_list_id = d3.select(".wizard-download-genotypes-marker-set-list-id").node().value;
+        var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&marker_set_list_id=${marker_set_list_id}`;
         window.open(url,'_blank');
       });
     main.selectAll(".wizard-download-genetic-relationship-matrix")
@@ -58,8 +59,11 @@ export function WizardDownloads(main_id,wizard){
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
         var download_format = d3.select(".wizard-download-genotypes-grm-format").node().value;
+        var maf = d3.select(".wizard-download-genotypes-grm-maf").node().value;
+        var marker_filter = d3.select(".wizard-download-genotypes-grm-marker-filter").node().value;
+        var individuals_filter = d3.select(".wizard-download-genotypes-grm-individuals-filter").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
-        var url = document.location.origin+`/breeders/download_grm_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}`;
+        var url = document.location.origin+`/breeders/download_grm_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&minor_allele_frequency=${maf}&marker_filter=${marker_filter}&individuals_filter=${individuals_filter}`;
         window.open(url,'_blank');
       });
 
