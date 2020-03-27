@@ -2617,6 +2617,16 @@ sub maps_marker_linkagegroup_detail_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+=head2 brapi/<version>/locations
+
+ Usage: To retrieve locations.
+ Desc:
+ Return JSON example:
+ Args:
+ Side Effects:
+
+=cut
+
 sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClass('REST') { }
 
 sub locations_list_POST {
@@ -2632,7 +2642,7 @@ sub locations_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
-	my $brapi_package_result = $brapi_module->locations_list();
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2646,10 +2656,24 @@ sub locations_detail_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
-	my $brapi_package_result = $brapi_module->locations_list($location_id);
+	my $brapi_package_result = $brapi_module->detail($location_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub locations_search_save  : Chained('brapi') PathPart('search/locations') Args(0) : ActionClass('REST') { }
+
+sub locations_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Locations');
+}
+
+sub locations_search_retrieve : Chained('brapi') PathPart('search/locations') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Locations');
+}
 
 sub observationvariable_data_type_list : Chained('brapi') PathPart('variables/datatypes') Args(0) : ActionClass('REST') { }
 

@@ -39,7 +39,7 @@ sub search {
     my @trial_PUIs = $search_params->{trialPUIs} ? @{$search_params->{trialPUIs}} : ();
 
     if (scalar(@contact_dbids)>0 || scalar(@daterange_start)>0 || scalar(@daterange_end)>0 || scalar(@trial_PUIs)>0 || scalar(@externalreference_sources)>0 || scalar(@externalreference_ids)>0){
-        push @$status, { 'error' => 'The following parameters are not implemented: contactDbId, searchDateRangeStart, searchDateRangeEnd, trialPUI, externalReferenceID, externalReferenceSource' };
+        push @$status, { 'error' => 'The following search parameters are not implemented: contactDbId, searchDateRangeStart, searchDateRangeEnd, trialPUI, externalReferenceID, externalReferenceSource' };
     }
 
     my %location_id_list;

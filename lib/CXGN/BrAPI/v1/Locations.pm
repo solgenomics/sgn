@@ -9,7 +9,7 @@ use CXGN::BrAPI::JSONResponse;
 
 extends 'CXGN::BrAPI::v1::Common';
 
-sub locations_list {
+sub search {
 	my $self = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;

@@ -46,7 +46,7 @@ sub search {
     my $mimetypes_arrayref  = $params->{mimeTypes } || ($params->{mimeTypes} || ());
 
     if (($phenotype_ids_arrayref && scalar(@$phenotype_ids_arrayref)>0) || ($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) || ($image_location_arrayref && scalar(@$image_location_arrayref)>0)){
-        push @$status, { 'error' => 'The following parameters are not implemented: observationDbId, externalReferenceID, externalReferenceSources, imageLocation' };
+        push @$status, { 'error' => 'The following search parameters are not implemented: observationDbId, externalReferenceID, externalReferenceSources, imageLocation' };
     }
 
     my %imagefile_names_arrayref;
@@ -60,7 +60,7 @@ sub search {
     }
 
     my %mimetypes_arrayref;
-    if ($mimetypes_arrayref &&scalar(@$mimetypes_arrayref)>0){
+    if ($mimetypes_arrayref && scalar(@$mimetypes_arrayref)>0){
         %mimetypes_arrayref = map { $_ => 1} @$mimetypes_arrayref;
     }
 
