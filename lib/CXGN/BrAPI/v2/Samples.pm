@@ -84,29 +84,39 @@ sub search {
     my $page = $self->page;
     my $status = $self->status;
     my @data;
-
+    
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
-    my @tissue_ids = $search_params->{sampleDbId} ? @{$search_params->{sampleDbIds}} : ();
-    my @tissue_names = $search_params->{sampleName} ? @{$search_params->{sampleName}} : ();
-    my @geno_trial_ids = $search_params->{plateDbId} ? @{$search_params->{plateDbIds}} : ();
-    my @geno_trial_names = $search_params->{plateName} ? @{$search_params->{plateName}} : ();
-    my @accession_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbIds}} : ();
-    my @accession_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
-    my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbIds}} : ();
-    my @obs_names = $search_params->{observationUnitName} ? @{$search_params->{observationUnitName}} : ();
+    my @tissue_ids = $search_params->{sampleDbId} || ($search_params->{sampleDbIds} || ());
+    my @study_names = $search_params->{studyName} || ($search_params->{studyNames} || ());
+    my @study_ids = $search_params->{studyDbId} || ($search_params->{studyDbIds} || ());
+    my @plate_ids = $search_params->{plateDbId} || ($search_params->{plateDbIds} || ());
+    my @accession_ids = $search_params->{germplasmDbId} || ($search_params->{germplasmDbIds} || ());
+    my @accession_names = $search_params->{germplasmName} || ($search_params->{germplasmNames} || ());
+    my @obs_ids = $search_params->{observationUnitDbId} || ($search_params->{observationUnitDbIds} || ());
+    my @externalreference_ids = $search_params->{externalReferenceID} || ($search_params->{externalReferenceIDs} || ());
+    my @externalreference_sources = $search_params->{externalReferenceSource} || ($search_params->{externalReferenceSources} || ());
+
+    if (scalar(@externalreference_sources)>0 || scalar(@externalreference_ids)>0){
+        push @$status, { 'error' => 'The following search parameters are not implemented: externalReferenceID, externalReferenceSource' };
+    }
+
+    my @geno_trial_ids = [];
+    if (@study_ids || @plate_ids){
+        @geno_trial_ids = (@study_ids, @plate_ids); 
+    }
 
     my $sample_search = CXGN::Stock::TissueSample::Search->new({
         bcs_schema=>$self->bcs_schema,
         tissue_sample_db_id_list => \@tissue_ids,
-        tissue_sample_name_list => \@tissue_names,
-        plate_db_id_list => \@geno_trial_ids,
-        plate_name_list => \@geno_trial_names,
+        # tissue_sample_name_list => \@tissue_names,
+        plate_db_id_list => @geno_trial_ids,
+        plate_name_list => \@study_names,
         germplasm_db_id_list => \@accession_ids,
         germplasm_name_list => \@accession_names,
         observation_unit_db_id_list => \@obs_ids,
-        observation_unit_name_list => \@obs_names,
+        # observation_unit_name_list => \@obs_names,
         limit => $limit,
         offset => $offset
     });

@@ -2852,26 +2852,11 @@ sub samples_list_new : Chained('brapi') PathPart('samples') Args(0) : ActionClas
 sub samples_list_new_GET {
     my $self = shift;
     my $c = shift;
-    _sample_search_process($self, $c);
-}
-
-sub _sample_search_process_new {
-    my $self = shift;
-    my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Samples');
-    my $brapi_package_result = $brapi_module->search({
-        sampleDbId => $clean_inputs->{sampleDbId},
-        sampleName => $clean_inputs->{sampleName},
-        plateDbId => $clean_inputs->{plateDbId},
-        plateName => $clean_inputs->{plateName},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        germplasmName => $clean_inputs->{germplasmName},
-        observationUnitDbId => $clean_inputs->{observationUnitDbId},
-        observationUnitName => $clean_inputs->{observationUnitName},
-    });
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
     _standard_response_construction($c, $brapi_package_result);
 }
 
