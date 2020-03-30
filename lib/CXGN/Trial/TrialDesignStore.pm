@@ -274,6 +274,8 @@ use Data::Dumper;
 use CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 use CXGN::Trial::TrialDesignStore::GenotypingTrial;
 use CXGN::Trial::TrialDesignStore::Analysis;
+use CXGN::Trial::TrialDesignStore::CrossingTrial;
+use CXGN::Trial::TrialDesignStore::FamilyTrial;
 
 sub new {
     my $class = shift;
@@ -292,9 +294,17 @@ sub new {
     if ($args->{is_analysis} == 1) {
 	$type = "analysis";
     }
-    
+
     if( (! $args->{is_genotyping}) && (! $args->{is_analysis}) ) { 
 	$type = "phenotyping_trial";
+    }
+
+    if ($type eq "phenotyping_trial" && $args->{trial_stock_type} eq "cross") {
+	$type = "cross";
+    }
+
+    if ($type eq "phenotyping_trial" && $args->{trial_stock_type} eq "family_name") {
+	$type = "family";
     }
     
     my $object;
@@ -309,6 +319,15 @@ sub new {
     if ($type eq "analysis") {
 	print STDERR "Generating ANALYSIS TRIAL...\n";
 	$object = CXGN::Trial::TrialDesignStore::Analysis->new($args);
+    }
+    if ($type eq "cross") {
+	print STDERR "Generating CROSSING TRIAL...\n";
+	$object = CXGN::Trial::TrialDesignStore::CrossingTrial->new($args);
+    }
+
+    if ($type eq "family") {
+	print STDERR "Generating FAMILY TRIAL...\n";
+	$object = CXGN::Trial::TrialDesignStore::FamilyTrial->new($args);
     }
 
     return $object;

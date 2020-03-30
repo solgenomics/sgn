@@ -162,24 +162,32 @@ has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date'
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0, default => 'accession');
 
-#Trial linkage when saving a field trial
+# Trial linkage when saving a field trial
+#
 has 'field_trial_is_planned_to_cross' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_cross', required => 0);
 has 'field_trial_is_planned_to_be_genotyped' => (isa => 'Str', is => 'rw', predicate => 'has_field_trial_is_planned_to_be_genotyped', required => 0);
 has 'field_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_field_trial_from_field_trial', required => 0);
 has 'crossing_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_crossing_trial_from_field_trial', required => 0);
 
-#Trial linkage when saving either a field trial or genotyping plate
+# Trial linkage when saving either a field trial or genotyping plate
+#
 has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_genotyping_trial_from_field_trial', required => 0);
 
-#Properties for genotyping plates
+# Properties for genotyping plates
+#
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
-has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
+
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
 has 'genotyping_facility_submitted' => (isa => 'Str', is => 'rw');
 has 'genotyping_facility' => (isa => 'Str', is => 'rw');
 has 'genotyping_plate_format' => (isa => 'Str', is => 'rw');
 has 'genotyping_plate_sample_type' => (isa => 'Str', is => 'rw');
+
+# properties for analyses
+#
+has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
+
 
 
 sub trial_name_already_exists {
@@ -286,7 +294,7 @@ sub save_trial {
 	elsif ($self->get_is_analysis()) { 
 	    print STDERR "Generating an analysis trial...\n";
 	    $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'analysis_experiment')->cvterm_id();
-	} 
+	}
 	else {
 	    print STDERR "Generating a phenotyping trial...\n";
 	    $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'field_layout', 'experiment_type')->cvterm_id();
@@ -385,9 +393,10 @@ sub save_trial {
 	}
 
 	if (!$self->get_is_genotyping) {
-        if ($self->has_trial_stock_type && $self->get_trial_stock_type){
-		    $project->create_projectprops({
-			    $trial_stock_type_cvterm->name() => $self->get_trial_stock_type
+	    if ($self->has_trial_stock_type && $self->get_trial_stock_type){
+		$project->create_projectprops(
+		    {
+			$trial_stock_type_cvterm->name() => $self->get_trial_stock_type()
 		    });
 	    }
     }
@@ -412,7 +421,7 @@ sub save_trial {
 		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
 		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
 		operator => $self->get_operator,
-        trial_stock_type => $self->get_trial_stock_type
+		trial_stock_type => $self->get_trial_stock_type(),
 	});
 	my $error;
 	my $validate_design_error = $trial_design_store->validate_design();
