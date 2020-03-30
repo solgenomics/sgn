@@ -7,6 +7,9 @@ use namespace::autoclean;
 extends 'CXGN::Trial::TrialLayout::AbstractLayout';
 
 
+has 'source_stock_types' => (isa => 'Ref', is=> 'rw', default =>sub {  [ 'plot', 'cross', 'family_name' ] });
+
+
 has 'plot_dimensions' => (
     isa => 'ArrayRef',
     is => 'ro',

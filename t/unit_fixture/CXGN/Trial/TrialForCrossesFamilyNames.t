@@ -229,6 +229,7 @@ my @family_names;
 my @fam_rep_nums;
 my @fam_plot_names;
 
+print STDERR "FAMILY TRIAL DESIGN: ".Dumper($fam_trial_design);
 # note:cross and family_name stock types use the same accession_name key as accession stock type in trial design
 foreach my $fam_plot_num (keys %$fam_trial_design) {
     push @fam_plot_nums, $fam_plot_num;

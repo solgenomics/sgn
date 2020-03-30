@@ -35,7 +35,7 @@ has 'experiment_type' => (
     required => 1,
 );
 
-has 'source_stock_types' => (isa => 'Ref', is=> 'rw', default =>sub {  [ 'plot', 'cross', 'family_name' ] });
+has 'source_stock_types' => (isa => 'Ref', is=> 'rw', default =>sub {  [ 'plot' ] });
 
 # To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate any errors in the stored layout.
 has 'verify_layout' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_layout', reader => 'get_verify_layout');
@@ -110,7 +110,10 @@ sub _lookup_trial_id {
       return;
   }
   $self->_set_design_type($self->_get_design_type_from_project());
-  $self->_set_design($self->_get_design_from_trial());
+    $self->_set_design($self->_get_design_from_trial());
+
+    print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
+    
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
