@@ -128,10 +128,11 @@ for (i in 40:ncol(pheno)){
 }
 int <- length(40:ncol(pheno))
 cat("The int is: ", int,"\n")
-ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2)
+ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2, pdf(file=NULL))
 if (int<8){
 	int=8
 }
+
 pdf(NULL)
 ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80, units = "in", pdf(NULL))
 
