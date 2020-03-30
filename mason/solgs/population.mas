@@ -89,7 +89,7 @@ $acronym
 &>
 
 <& /tools/heritability/heritability.mas, 
-     pop_id  => $pop_id,
+     pop_id  => $training_pop_id,
 &>
 
 %} 
