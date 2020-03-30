@@ -83,6 +83,11 @@ $sample_observation_unit_type_name => undef
 
 </%args>
 
+<& /util/import_javascript.mas,
+   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
+  entries => ["sequenced_accessions"]
+&>
+
 <div class="row">
     <div class="col-sm-12">
         <div class="well">
@@ -135,8 +140,8 @@ $sample_observation_unit_type_name => undef
                                 <& /solgs/anova/analysis.mas,
                                     trial_id => $trial_id
                                 &>
-
-                                <!-- Population structure analysis PCA -->
+                           
+                                 <!-- Population structure analysis PCA -->
                                 <& /solgs/pca/analysis.mas,
                                     trial_id => $trial_id
                                   &>
@@ -145,6 +150,12 @@ $sample_observation_unit_type_name => undef
                                 <& /solgs/cluster/analysis.mas,
                                     trial_id => $trial_id
                                 &>
+
+
+                                  <& /tools/heritability/heritability.mas,
+                                    trial_id => $trial_id
+                                &>
+
 
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
@@ -199,6 +210,8 @@ $sample_observation_unit_type_name => undef
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
 % if ($info_section_id eq 'stock_images_section'){
+                                <& /image/compare_images.mas, stock_id => $stock_id &>
+
                                 <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>0 &>
                                     <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh, additional_image_button_id=>'stock_images' &>
                                 </&>
@@ -284,6 +297,9 @@ $sample_observation_unit_type_name => undef
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
 % } #End genotyping_protocol_genotype_data
+% if ($info_section_id eq 'genotyping_protocol_delete_genotype_data') {
+                                <& /breeders_toolbox/genotyping_protocol/delete_genotype_data.mas, protocol_id => $protocol_id &>
+% }
 
 % if ($info_section_id eq 'crossingtrial_details'){
                                 <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>

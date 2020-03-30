@@ -68,6 +68,8 @@ function clear_dialog_entries() {
     jQuery('#publication').val(undefined);
     jQuery('#jbrowse_link').val(undefined);
     jQuery('#blast_db_id').val(undefined);
+    jQuery('#ftp_link').val(undefined);
+    jQuery('#ncbi_link').val(undefined);
     jQuery('#stockprop_id').val(undefined);
     jQuery('#website').val(undefined);
 }
@@ -109,6 +111,8 @@ export function edit_sequencing_info(stockprop_id) {
 		jQuery('#publication').val(r.data.publication);
 		jQuery('#jbrowse_link').val(r.data.jbrowse_link);
 		jQuery('#blast_db_id').val(r.data.blast_db_id);
+        jQuery('#ftp_link').val(r.data.ftp_link);
+        jQuery('#ncbi_link').val(r.data.ncbi_link);
 		jQuery('#stockprop_id').val(r.data.stockprop_id);
 		jQuery('#sequencing_status_stock_id').val(r.data.stock_id);
 		jQuery('#website').val(r.data.website);

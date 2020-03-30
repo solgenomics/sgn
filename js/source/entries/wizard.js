@@ -172,7 +172,10 @@ export function WizardSetup(main_id){
     
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
     var dat = new WizardDatasets(d3.select(main_id).select(".wizard-datasets").node(),wiz);
-    
+
+    var lo = new CXGN.List();
+    jQuery('#wizard-download-genotypes-marker-set-list-id').html(lo.listSelect('wizard-download-genotypes-marker-set-list-id', ['markers'], 'Select a marker set', 'refresh', undefined));
+
     return {
       wizard:wiz,
       reload_lists: load_lists

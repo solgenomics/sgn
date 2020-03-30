@@ -211,6 +211,7 @@ sub _retrieve_nd_protocolprop_markers_array {
 
 #class method
 sub list {
+    print STDERR "Protocol list search\n";
     my $schema = shift;
     my $protocol_list = shift;
     my $accession_list = shift;
@@ -309,6 +310,7 @@ sub list {
 
 #class method
 sub list_simple {
+    print STDERR "Protocol list simple search\n";
     my $schema = shift;
     my @where_clause;
 
