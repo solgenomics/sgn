@@ -88,6 +88,10 @@ $acronym
    acronym => $acronym,
 &>
 
+<& /tools/heritability/heritability.mas, 
+     pop_id  => $training_pop_id,
+&>
+
 %} 
 % else
 % {

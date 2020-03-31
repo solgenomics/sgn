@@ -173,18 +173,21 @@ function <% $div_name %>_addProp() {
 
 
 function <% $div_name %>_deleteProp(cvtermprop_value, cvtermprop_id) { 
-  confirm('Delete cvtermprop '+cvtermprop_value+'?');
-  jQuery.ajax( { 
-    method: 'GET',
-    url: '/cvterm/prop/delete',
-    data: { 'cvtermprop_id' : cvtermprop_id },
-    success: function(response) {  
-      if ('message' in response) {  alert(response.message); } 
-      if ('error'   in response) {  alert(response.error);   }
-    },
-    error: function(response) { alert('An error occurred. Please try again later.'); }
-  });
-
+  if (confirm('Delete cvtermprop '+cvtermprop_value+'?')) { 
+    jQuery.ajax( { 
+      method: 'GET',
+      url: '/cvterm/prop/delete',
+      data: { 'cvtermprop_id' : cvtermprop_id },
+      success: function(response) {  
+        if ('message' in response) {  alert(response.message); } 
+        if ('error'   in response) {  alert(response.error);   }
+      },
+      error: function(response) {
+        alert('An error occurred. Please try again later.');
+      }
+  
+    });
+  }
   <% $div_name %>_getProps();
 }
 

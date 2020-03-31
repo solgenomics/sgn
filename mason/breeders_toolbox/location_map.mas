@@ -9,7 +9,7 @@ $user_id => undef
 <div id="location_map" style="height: 540px;"></div>
 
 <div class="modal fade" id="store_location_dialog" name="store_location_dialog" tabindex="-1" role="dialog" aria-labelledby="storeLocationDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -304,25 +304,31 @@ $user_id => undef
                       <option value="Other">Other</option>
                   </select>
               </div>
-	    </div>
-      <div class="form-group">
-              <label class="col-sm-2 control-label">Latitude: </label>
-              <div class="col-sm-10">
-    <input class="form-control" name="location_latitude" id="location_latitude" type="text" size="4"/>
-              </div>
-      </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Longitude: </label>
-      	      <div class="col-sm-10">
-		<input class="form-control" name="location_longitude" id="location_longitude" type="text" size="4"/>
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Altitude (m): </label>
-      	      <div class="col-sm-10">
-		<input class="form-control" name="location_altitude" id="location_altitude" type="text" size="4"/>
-              </div>
-	    </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Latitude: </label>
+            <div class="col-sm-10">
+                <input class="form-control" name="location_latitude" id="location_latitude" type="text" size="4"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Longitude: </label>
+            <div class="col-sm-10">
+                <input class="form-control" name="location_longitude" id="location_longitude" type="text" size="4"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Altitude (m): </label>
+            <div class="col-sm-10">
+                <input class="form-control" name="location_altitude" id="location_altitude" type="text" size="4"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-6 control-label">Nearest NOAA Weather Station ID: (<a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a>)</label>
+            <div class="col-sm-6">
+                <input class="form-control" name="location_noaa_station_id" id="location_noaa_station_id" type="text" placeholder="e.g. GHCND:USC00300331"/>
+            </div>
+        </div>
 	  </form>
         </div>
       </div>
@@ -366,31 +372,63 @@ jQuery(document).ready(function() {
             programs.push($(this).text());
         });
 
-       programs = programs.join("&");
-       var type = $('#location_type').val();
-       var latitude = $('#location_latitude').val();
-       var longitude = $('#location_longitude').val();
-       var altitude = $('#location_altitude').val();
-       console.log("Location programs to store are "+JSON.stringify(programs));
-       //console.log("Location name to store is "+name);
-       //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
+        var noaa_station_id = $('#location_noaa_station_id').val();
 
-       if (name == '') { alert('A location name is required.');  return; }
+        programs = programs.join("&");
+        var type = $('#location_type').val();
+        var latitude = $('#location_latitude').val();
+        var longitude = $('#location_longitude').val();
+        var altitude = $('#location_altitude').val();
+        console.log("Location programs to store are "+JSON.stringify(programs));
+        //console.log("Location name to store is "+name);
+        //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
-       $.ajax({
-         type: 'POST',
-         url: '/ajax/location/store',
-         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'programs': programs, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
-         success: function(response) {
-                  if (response.error) { alert(response.error); }
-                  else {
-                      alert(response.success);
-                      $('#store_location_dialog').modal("hide");
-                      location.reload();
-                  }
-                 },
-         error: function() { alert('An error occurred while storing the location details. Please try again later.'); }
-       });
+        if (name == '') { alert('A location name is required.');  return; }
+
+        $.ajax({
+            type: 'POST',
+            url: '/ajax/location/store',
+            data: {
+                'id': id,
+                'name': name,
+                'abbreviation': abbreviation,
+                'country_name': country_name,
+                'country_code': country_code,
+                'programs': programs,
+                'type': type,
+                'latitude':latitude,
+                'longitude':longitude,
+                'altitude': altitude,
+                'noaa_station_id': noaa_station_id
+            },
+            success: function(response) {
+                if (response.error) { alert(response.error); }
+                else {
+                    if (noaa_station_id != '') {
+                        $.ajax({
+                            url:'https://www.ncdc.noaa.gov/cdo-web/api/v2/stations/'+noaa_station_id,
+                            headers:{ token:'<% $c->config->{noaa_ncdc_access_token} %>' },
+                            success: function(response) {
+                                console.log(response);
+                                if (response.name) {
+                                    alert('Found NOAA Station from given NOAA StationID: '+response.name);
+                                }
+                                else {
+                                    alert('Could not verify the NOAA StationID you provided, however, your details were still updated.');
+                                }
+                                $('#store_location_dialog').modal("hide");
+                                location.reload();
+                            },
+                            error: function() {
+                                alert('The NOAA NCDC authorization token may not be valid! We could not verify your NOAA StationID. Please contact us!');
+                            }
+                        });
+                    }
+                    alert(response.success);
+                }
+            },
+            error: function() { alert('An error occurred while storing the location details. Please try again later.'); }
+        });
    });
 
 });
@@ -715,6 +753,7 @@ function onEachFeature(feature, layer) {
         $('#location_latitude').val(loc_data.properties.Latitude);
         $('#location_longitude').val(loc_data.properties.Longitude);
         $('#location_altitude').val(loc_data.properties.Altitude);
+        $('#location_noaa_station_id').val(loc_data.properties.NOAAStationID);
         $('#store_location_dialog').modal("show");
     }
 

@@ -169,8 +169,15 @@ sub trial_details_GET   {
     my $c = shift;
 
     my $trial = $c->stash->{trial};
+    my $planting_date = $trial->get_planting_date();
+    my $harvest_date = $trial->get_harvest_date();
 
-    $c->stash->{rest} = { details => $trial->get_details() };
+    $c->stash->{rest} = {
+        details => {
+            planting_date => $planting_date,
+            harvest_date => $harvest_date
+        }
+    };
 
 }
 
@@ -1377,6 +1384,7 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
         data_level => 'plots',
         #treatment_project_ids => [1,2],
         selected_columns => $selected_cols,
+        include_measured => "false"
     });
     my $output = $trial_layout_download->get_layout_output();
 

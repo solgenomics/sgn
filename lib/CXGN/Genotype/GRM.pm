@@ -211,7 +211,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$_]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes)>0) {
                 my $p1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
@@ -283,7 +283,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes) > 0) {
                 # For old genotyping protocols without nd_protocolprop info...
@@ -294,26 +294,13 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my @progeny_genotype;
-                # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
-                if ($genotypes->[0] && $genotypes->[1]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                    foreach my $m (@all_marker_objects) {
-                        push @progeny_genotype, ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS}) / 2);
-                    }
-                }
-                elsif ($genotypes->[0]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    foreach my $m (@all_marker_objects) {
-                        push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
-                    }
-                }
+                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+
                 push @individuals_stock_ids, $plot_stock_id;
-                my $genotype_string_scores = join "\t", @progeny_genotype;
+                my $genotype_string_scores = join "\t", @$progeny_genotype;
                 $genotype_string .= $genotype_string_scores . "\n";
                 write_file($grm_tempfile, {append => 1}, $genotype_string);
-                undef @progeny_genotype;
+                undef $progeny_genotype;
             }
         }
     }
@@ -356,7 +343,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes) > 0) {
                 # For old genotyping protocols without nd_protocolprop info...
@@ -367,26 +354,13 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my @progeny_genotype;
-                # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
-                if ($genotypes->[0] && $genotypes->[1]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                    foreach my $m (@all_marker_objects) {
-                        push @progeny_genotype, ceil(($parent1_genotype->{$m->{name}}->{DS} + $parent2_genotype->{$m->{name}}->{DS}) / 2);
-                    }
-                }
-                elsif ($genotypes->[0]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    foreach my $m (@all_marker_objects) {
-                        push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
-                    }
-                }
+                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+
                 push @individuals_stock_ids, $accession_stock_id;
-                my $genotype_string_scores = join "\t", @progeny_genotype;
+                my $genotype_string_scores = join "\t", @$progeny_genotype;
                 $genotype_string .= $genotype_string_scores . "\n";
                 write_file($grm_tempfile, {append => 1}, $genotype_string);
-                undef @progeny_genotype;
+                undef $progeny_genotype;
             }
         }
     }
@@ -425,7 +399,7 @@ sub get_grm {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); A_matrix <- A.mat(mat_clean, min.MAF='.$maf.', max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix-1, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); A_matrix <- A.mat(mat_clean-1, min.MAF='.$maf.', max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -511,9 +485,12 @@ sub download_grm {
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        $result_hash{$s}->{$c} = $result_matrix->[$row_num]->[$col_num];
-                        $seen_stock_ids{$s}++;
-                        $seen_stock_ids{$c}++;
+                        my $val = $result_matrix->[$row_num]->[$col_num];
+                        if ($val || $val == 0) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
                     }
                     $col_num++;
                 }
@@ -563,6 +540,40 @@ sub genosort {
     } else {
         return -1;
     }
+}
+
+sub _compute_progeny_genotypes {
+    my $genotypes = shift;
+    my $all_marker_objects = shift;
+
+    my @progeny_genotype;
+    # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
+    if ($genotypes->[0] && $genotypes->[1]) {
+        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
+        foreach my $m (@$all_marker_objects) {
+            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA' || $parent2_genotype->{$m->{name}}->{DS} ne 'NA') {
+                my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
+                my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
+                push @progeny_genotype, ceil(($p1 + $p2) / 2);
+            }
+            else {
+                push @progeny_genotype, 'NA';
+            }
+        }
+    }
+    elsif ($genotypes->[0]) {
+        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
+        foreach my $m (@$all_marker_objects) {
+            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA') {
+                push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
+            }
+            else {
+                push @progeny_genotype, 'NA';
+            }
+        }
+    }
+    return \@progeny_genotype;
 }
 
 1;

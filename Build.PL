@@ -140,6 +140,7 @@ my $build = SGN::Build->new(
         'MooseX::Singleton'                        => 0,
         'Number::Format'                           => 0,
         'namespace::autoclean'                     => 0,
+        'Parallel::ForkManager'                     => 0,
 	'Params::Util'                             => 0,
 	'PDF::API2'                                => 0,
 	'PDF::Create'                              => 0,
