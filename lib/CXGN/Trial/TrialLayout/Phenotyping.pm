@@ -8,7 +8,16 @@ extends 'CXGN::Trial::TrialLayout::AbstractLayout';
 
 sub BUILD {
     my $self = shift;
-    has 'source_stock_types' => (isa => 'Ref', is=> 'rw', default =>sub {  [ 'plot', 'cross', 'family_name', 'subplot', 'plant' ] });
+
+    print STDERR "BUILD CXGN::Trial::TrialLayout::Phenotyping...\n";
+    $self->set_source_stock_types([ 'plot', 'cross', 'family_name', 'subplot', 'plant' ] );
+    $self->convert_source_stock_types_to_ids();
+
+    print STDERR "Set source stock types to ".join(", ", @{$self->get_source_stock_types()});
+        # probably better to lazy load the action design...
+    #
+    $self->_lookup_trial_id();
+    #$self->_get_design_from_trial();
 }
 
 has 'plot_dimensions' => (

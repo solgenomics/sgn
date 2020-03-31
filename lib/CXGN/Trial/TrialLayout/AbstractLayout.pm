@@ -25,7 +25,7 @@ has 'trial_id' => (
     isa => 'Int',
     is => 'rw',
     predicate => 'has_trial_id',
-    trigger => \&_lookup_trial_id,
+    #trigger => \&_lookup_trial_id,
     required => 1
 );
 
@@ -35,7 +35,9 @@ has 'experiment_type' => (
     required => 1,
 );
 
-has 'source_stock_types' => (isa => 'Ref', is=> 'rw', default =>sub {  [ 'plot' ] });
+has 'source_stock_types' => (isa => 'Ref', is=> 'rw', default =>sub {  []  });
+
+has 'source_stock_type_ids' => (isa => 'ArrayRef', is => 'rw', default => sub { [] });
 
 # To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate any errors in the stored layout.
 has 'verify_layout' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_layout', reader => 'get_verify_layout');
@@ -82,14 +84,33 @@ has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbe
 sub BUILD {
     my $self = shift;
     my $args = shift;
-#probably better to lazy load the action design...
-    $self->generate_and_cache_layout();
 
+    
+    
+    print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout...\n";
 }
+
+
+sub convert_source_stock_types_to_ids {
+    my $self = shift;
+    my @source_cvterm_ids;
+
+    print STDERR "Converting source stock types to ids... \n";
+    
+    
+    foreach my $source_stock (@{$self->get_source_stock_types()}) {
+	print STDERR "Converting $source_stock to ... ";
+	my $source_stock_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), $source_stock, "stock_type")->cvterm_id();
+	print STDERR "$source_stock_cvterm_id . \n";
+	push @source_cvterm_ids, $source_stock_cvterm_id;
+    }
+    $self->set_source_stock_type_ids(\@source_cvterm_ids);
+}
+
 
 sub _lookup_trial_id {
     my $self = shift;
-    print STDERR "CXGN::Trial::TrialLayout ".localtime."\n";
+    print STDERR "CXGN::Trial::TrialLayout AbstractLayout _lookup_trial_id() ".localtime."\n";
     $self->get_schema->storage->dbh->do('SET search_path TO public,sgn');
 
   #print STDERR "Check 2.1: ".localtime()."\n";
@@ -99,7 +120,10 @@ sub _lookup_trial_id {
     return;
   }
 
-  if (!$self->_get_trial_year_from_project()) {return;}
+    if (!$self->_get_trial_year_from_project()) {
+	print STDERR "Trial has no associated trial year... quitting!\n";
+      return;
+  }
 
   $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
@@ -109,10 +133,12 @@ sub _lookup_trial_id {
       print STDERR "Trial has no design type... not creating layout object.\n";
       return;
   }
-  $self->_set_design_type($self->_get_design_type_from_project());
-    $self->_set_design($self->_get_design_from_trial());
 
-    print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
+    $self->_set_design_type($self->_get_design_type_from_project());
+
+    my $design = $self->_set_design($self->_get_design_from_trial());
+
+  print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
     
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
   $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
@@ -231,11 +257,13 @@ sub _get_design_from_trial {
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_cvterm_id });
     my $trial_has_plants = $project->projectprops->find({ 'type_id' => $trial_has_plants_cvterm_id });
     if ($trial_layout_json) {
+	print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
         my $design = decode_json $trial_layout_json->value;
         #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
         if ($trial_has_plants){
             my @plot_values = values %$design;
             if (!exists($plot_values[0]->{plant_index_numbers})) {
+		print STDERR "Regenerating cache to include plants...\n";
                 $self->generate_and_cache_layout();
             } else {
                 print STDERR "TrialLayout from cache ".localtime."\n";
@@ -246,7 +274,10 @@ sub _get_design_from_trial {
             return $design;
         }
     } else {
-        $self->generate_and_cache_layout();
+	print STDERR "Regenerating cache...\n";
+        my $design = $self->generate_and_cache_layout();
+	print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
+	return $design;
     }
 }
 
@@ -286,7 +317,9 @@ sub generate_and_cache_layout {
             ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
         $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
     }
-    
+
+
+    print STDERR "Getting cvterm ids...\n";
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "accession", "stock_type")->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "cross", "stock_type")->cvterm_id();
     my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "family_name", "stock_type")->cvterm_id();
@@ -328,6 +361,8 @@ sub generate_and_cache_layout {
     my $notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'notes', 'stock_property')->cvterm_id();
     my $ncbi_taxonomy_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'ncbi_taxonomy_id', 'stock_property')->cvterm_id();
     my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot_geo_json', 'stock_property' )->cvterm_id();
+    print STDERR "Done.\n";
+    
     my $json = JSON->new();
     
     @plots = @{$plots_ref};
@@ -368,8 +403,11 @@ sub generate_and_cache_layout {
 	my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$ncbi_taxonomy_id_cvterm_id} ? join ',', @{$stockprop_hash{$ncbi_taxonomy_id_cvterm_id}} : undef;
 	my $plot_geo_json_prop = $stockprop_hash{$plot_geo_json_cvterm_id} ? $stockprop_hash{$plot_geo_json_cvterm_id}->[0] : undef;
 	my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_instance", "stock_type")->cvterm_id();
+
+	
+	
 	my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-	    { 'me.type_id' => { -in => [ $plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $analysis_of_cvterm_id ] }, 'object.type_id' => { -in => [ $accession_cvterm_id, $analysis_instance_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id ]} },
+	    { 'me.type_id' => { -in => [ $plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $analysis_of_cvterm_id ] }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
 	    { 'join' => 'object' }
 	    );
 	if ($accession_rs->count != 1){
@@ -377,7 +415,8 @@ sub generate_and_cache_layout {
 	}
 	if ($self->get_experiment_type eq 'genotyping_layout'){
 	    my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
-		{ 'me.type_id' => { -in => [ $tissue_sample_of_cvterm_id ] }, 'object.type_id' => { -in => [$accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id] } },
+		{ 'me.type_id' => { -in => [ $tissue_sample_of_cvterm_id ] }, 'object.type_id' => { -in => [ $accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id, $subplot_cvterm_id ] } },
+		# was $accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id, $subplot_cvterm_id
 		{ 'join' => 'object' }
 		)->search_related('object');
 	    while (my $r=$source_rs->next){
@@ -652,7 +691,9 @@ sub generate_and_cache_layout {
     if ($self->get_verify_layout || $self->get_verify_physical_map){
         return \%verify_errors;
     }
-    
+
+	print STDERR "DESIGN AS READ : ".Dumper(\%design);
+	
     return \%design;
 }
 
@@ -769,12 +810,10 @@ sub _get_plots {
     }
 
     # get source stock types
-    my @source_cvterm_ids;
+    my $source_cvterm_ids = $self->get_source_stock_type_ids();
 
-    foreach my $source_stock ($self->get_source_stock_types()) { 
-	my $source_stock_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), $source_stock, "stock_type")->cvterm_id();
-	push @source_cvterm_ids, $source_stock_cvterm_id;
-    }
+    print STDERR "CURRENT SOURCE CVTERM IDS: ".join(", ",@$source_cvterm_ids)."\n";
+
 #    my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
 #    my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "analysis_instance", "stock_type")->cvterm_id();
     #my $unit_type_id;
@@ -791,11 +830,11 @@ sub _get_plots {
     # 	print STDERR "EXP TYPE = analysis_experiment ($analysis_instance_cvterm_id)... \n";
     # 	$unit_type_id = $analysis_instance_cvterm_id;
     # }
-    @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => {-in =>[ @source_cvterm_ids ] } });
+    @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => {-in => $source_cvterm_ids } });
     
     #debug...
-    #print STDERR "PLOT LIST: \n";
-    #print STDERR  join "\n", map { $_->name() } @plots;
+    print STDERR "PLOT LIST: \n";
+    print STDERR  join "\n", map { $_->name() } @plots;
     
     return \@plots;
 }
