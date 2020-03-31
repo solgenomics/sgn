@@ -69,9 +69,10 @@ extractGenotype <- function(inputFiles) {
 
     if (length(genoFiles) > 1) {   
         genoData <- combineGenoData(genoFiles)
-        
+    
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
+        
     } else {
         genoFile <- genoFiles
         genoData <- fread(genoFile,
@@ -82,8 +83,11 @@ extractGenotype <- function(inputFiles) {
             filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
             genoData <- fread(filteredGenoFile, header = TRUE)
         }
-    }
 
+        genoData <- unique(genoData, by = 'V1')
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')               
+    }
    
     if (is.null(genoData)) {
         stop("There is no genotype dataset.")
@@ -91,11 +95,6 @@ extractGenotype <- function(inputFiles) {
     } else {
 
         ##genoDataFilter::filterGenoData
-        genoData <- unique(genoData, by = 'V1')
-        genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')       
-    
-
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
         genoData <- roundAlleleDosage(genoData)
@@ -107,8 +106,7 @@ extractGenotype <- function(inputFiles) {
         }
 
         genoData <- data.frame(genoData)
-    }
-      
+    } 
 }
 
 set.seed(235)
