@@ -291,7 +291,7 @@ solGS.sIndex = {
 		                     
 		    var popType = jQuery("#si_canvas #selected_population_type").val();
 		    var popId   = jQuery("#si_canvas #selected_population_id").val();
-                    formatGenCorInputData(popId, popType, indexFile);
+                    solGS.correlation.formatGenCorInputData(popId, popType, indexFile);
 
 		    jQuery('#si_canvas #selected_pop').val('');
 	
