@@ -27,7 +27,17 @@
 
 
   <div class = "form-group form-inline">
-  <label for = cv_select>Available cross-validation methods: </label><div id = "cv_select"></div>
+   <label for = cv_select>Available cross-validation methods: </label>
+   <select class="form-control input-sm" id="cv_select">
+    <option selected value="random">Random</option>
+    <option value="stratified">Stratified</option>
+    <option value="CV1">CV1</option>
+    <option value="CV2">CV2</option>
+    <option value="CV0">CV0</option>
+    <option value="CV00">CV00</option>
+   </select>
+   <div id = "cv_select">
+  </div>
   <br>
     <button class="btn btn-primary" id="selectCV" type="submit" name="selectCV" value="selectCV">Select cross-validation scheme</button>
     <br>
@@ -36,50 +46,88 @@
 
 
   <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+    <label for="dataset_select">Available datasets: </label><div id="dataset_select"></div>
     <br>
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select dataset</button>
     <br>
     <br>
     </div>
 
-
-      <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
-      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="trait_histogram_plot">
-        </div>
-      </center>
-    
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
-
-
+  <div class="form-group form-inline">
+    <label class="blast_select_label" for="pheno_select">Available&nbsptraits:&nbsp; </label>
+    <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
     <br>
+    <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+    <br>
+    <center>
+      <div id="trait_histogram_plot">
+      </div>
+    </center>
+    <br>
+    <button class="btn btn-primary" id="selectTrait" type="submit" name="selectTrait" value="selectTrait">Select trait</button>
+  </div>
+    <br>
+  </div>
 
 
-    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-        <br>
+  <div class="form-group form-inline">
+    <input type="checkbox" id="preprocessing_select" name="preprocessing_select" value="preprocessing">
+    <label for="preprocessing_select">&nbspInclude preprocessing?</label>
+    <br>
+    <br>
+  </div>
 
-        </div>
 
-            <div style="text-align: center">
-              <button class="btn btn-primary" id="runH2" type="submit" name="runH2" value="runH2">Run Heritability</button>
-            </div>
-            <br />
+  <div class="form-group form-inline">
+   <label for = niter_select>Number of sampling iterations&nbsp</label>
+   <input type="number" id="niter_select" name="niter_select" min="1" max="100" step="1" value="10">
+   <br>
+   <br>
+  </div> 
 
-    <div id="tempfile" style="display:none" >
-    </div>
+
+  <div class = "form-group form-inline">
+   <label for = model_algorithm_select>Available model algorithms: </label>
+   <select class="form-control input-sm" id="model_algorithm_select">
+    <option selected value="pls">PLSR</option>
+    <option value="rf">Random Forest</option>
+    <option value="svmLinear">SVM with linear kernel</option>
+    <option value="svmRadial">SVM with radial kernel</option>
+   </select>
+   <div id = "model_algorithm_select">
+  </div>
+    <br>
+    <button class="btn btn-primary" id="selectAlgorithm" type="submit" name="selectAlgorithm" value="selectAlgorithm">Select algorithm</button>
+    <br>
+    <br>
+  </div>
+
+
+  <div class="form-group form-inline">
+   <label for = tuneLength_select>Tuning length&nbsp</label>
+   <input type="number" id="tuneLength_select" name="tuneLength_select" min="1" max="30" step="1" value="10">
+   <br>
+   <br>
+  </div> 
+
+
+  <div class="form-group form-inline">
+    <input type="checkbox" id="saveModel_select" name="saveModel_select" value="save_model">
+    <label for="saveModel_select">&nbspSave model?</label>
+    <br>
+    <br>
+  </div>
+
+
+  </div>
+
+  <div style="text-align: center">
+    <button class="btn btn-primary" id="runTestModelPerformance" type="submit" name="runTestModelPerformance" value="runTestModelPerformance">Test model performance</button>
+  </div>
+  <br/>
+
+  <div id="tempfile" style="display:none" >
+  </div>
 
 
 
