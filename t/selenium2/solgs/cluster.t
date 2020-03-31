@@ -31,12 +31,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
 
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel_pops);
-    $d->find_element_ok('//img[@id="k-means-plot-list_14-genotype-k-4-gp-1"]', 'xpath', 'check k-means plot')->click();
+    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
+    sleep(40);
+    $d->find_element_ok('//img[@id="k-means-plot-list_19-genotype-k-4-gp-1"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="60 plot naccri"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
@@ -50,13 +51,13 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(20);
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel_pops);
+    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
     sleep(5);
-    $d->find_element_ok('//img[@id="k-means-plot-list_15-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();
+    $d->find_element_ok('//img[@id="k-means-plot-list_14-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="Trials list"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
@@ -70,13 +71,13 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel_pops);  
+    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);  
     $d->find_element_ok('//img[@id="k-means-plot-list_10-genotype-k-4-gp-1"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
   
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="Trials list"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
@@ -90,12 +91,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel_pops);  
+    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);  
     $d->find_element_ok('//img[@id="k-means-plot-list_10-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="two trials dataset"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
@@ -109,12 +110,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel_pops);  
-    $d->find_element_ok('//img[@id="k-means-plot-dataset_1-genotype-k-4-gp-1"]', 'xpath', 'plot displayed')->click();    
+    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);  
+    $d->find_element_ok('//img[@id="k-means-plot-dataset_11-genotype-k-4-gp-1"]', 'xpath', 'plot displayed')->click();    
     sleep(5);
 
     $d->get_ok('/cluster/analysis', 'cluster home page');     
-    sleep(1);
+    sleep(3);
     $d->find_element_ok('//select[@id="cluster_genotypes_list_select"]/option[text()="two trials dataset"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
@@ -128,16 +129,16 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Run Cluster', 'partial_link_text', 'run cluster')->click();
     sleep(60);
     my $sel_pops = $d->find_element('//*[contains(text(), "Select a")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel_pops); 
+    my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops); 
     sleep(5);
-    $d->find_element_ok('//img[@id="k-means-plot-dataset_1-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();  
+    $d->find_element_ok('//img[@id="k-means-plot-dataset_11-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
 
     
     $d->get_ok('/breeders/trial/139', 'trial detail home page');     
     sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
     sleep(5);    
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
@@ -153,7 +154,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $analysis_tools = $d->find_element('cluster_canvas', 'id', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-400);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-300);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(1);
@@ -174,7 +175,7 @@ $d->while_logged_in_as("submitter", sub {
     `cp -r $solgs_data /tmp/localhost/GBSApeKIgenotypingv4/`;
     sleep(10);  
   
-    $d->get_ok('solgs/traits/all/population/139/traits/1039861645/gp/1', 'models page');
+    $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
     sleep(5);
    
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
@@ -214,7 +215,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(20);
+    sleep(30);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
@@ -235,7 +236,7 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(50);
-    $d->find_element_ok('//img[@id="k-means-plot-139-list_14-traits-1971973596-genotype-k-5-gp-1"]', 'xpath', 'check k-means plot')->click();  
+    $d->find_element_ok('//img[@id="k-means-plot-139-list_19-traits-1971973596-genotype-k-5-gp-1"]', 'xpath', 'check k-means plot')->click();  
     sleep(10);
  
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -254,7 +255,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
     sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-139-list_14-traits-1971973596-gebv-k-5"]', 'xpath', 'check k-means plot')->click();
+    $d->find_element_ok('//img[@id="k-means-plot-139-list_19-traits-1971973596-gebv-k-5"]', 'xpath', 'check k-means plot')->click();
     sleep(3);
     
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -276,7 +277,7 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-    $d->find_element_ok('//img[@id="k-means-plot-139-dataset_2-traits-1971973596-genotype-k-5-gp-1"]', 'xpath', 'check k-means plot')->click();  
+    $d->find_element_ok('//img[@id="k-means-plot-139-dataset_4-traits-1971973596-genotype-k-5-gp-1"]', 'xpath', 'check k-means plot')->click();  
     sleep(3);
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -295,7 +296,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
     sleep(20);
-    $d->find_element_ok('//img[@id="k-means-plot-139-dataset_2-traits-1971973596-gebv-k-5"]', 'xpath', 'check k-means plot')->click();  
+    $d->find_element_ok('//img[@id="k-means-plot-139-dataset_4-traits-1971973596-gebv-k-5"]', 'xpath', 'check k-means plot')->click();  
     sleep(3);
     
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
