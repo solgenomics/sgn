@@ -124,7 +124,7 @@ if (is.null(genoData) && is.null(phenoData)) {
 
 genoDataMissing <- c()
 if (dataType == 'genotype') {
-    if (is.null(filteredGenoFile) == TRUE) {
+   # if (is.null(filteredGenoFile) == TRUE) {
         ##genoDataFilter::filterGenoData
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
@@ -133,9 +133,9 @@ if (dataType == 'genotype') {
         message("No. of geno missing values, ", sum(is.na(genoData)) )
         if (sum(is.na(genoData)) > 0) {
             genoDataMissing <- c('yes')
-            genoData <- na.roughfix(genoData)
+           # genoData <- na.roughfix(genoData)
         }
-    }
+}
 
 
 ## nCores <- detectCores()
