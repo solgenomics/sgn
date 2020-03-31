@@ -166,7 +166,7 @@ $d->while_logged_in_as("submitter", sub {
     my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
     sleep(5);
-    $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(10);
     $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
     sleep(70);
